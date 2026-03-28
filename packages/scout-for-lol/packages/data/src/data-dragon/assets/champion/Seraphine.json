@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Seraphine": {
       "id": "Seraphine",
@@ -49,6 +49,69 @@
           "chromas": true
         },
         {
+          "id": "147005",
+          "num": 5,
+          "name": "Graceful Phoenix Seraphine (Ruby)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "147006",
+          "num": 6,
+          "name": "Graceful Phoenix Seraphine (Emerald)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "147007",
+          "num": 7,
+          "name": "Graceful Phoenix Seraphine (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "147008",
+          "num": 8,
+          "name": "Graceful Phoenix Seraphine (Sapphire)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "147009",
+          "num": 9,
+          "name": "Graceful Phoenix Seraphine (Obsidian)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "147010",
+          "num": 10,
+          "name": "Graceful Phoenix Seraphine (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "147011",
+          "num": 11,
+          "name": "Graceful Phoenix Seraphine (Pearl)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "147012",
+          "num": 12,
+          "name": "Graceful Phoenix Seraphine (Turquoise)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "147013",
+          "num": 13,
+          "name": "Graceful Phoenix Seraphine (Golden Tiger)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
           "id": "147014",
           "num": 14,
           "name": "Ocean Song Seraphine",
@@ -61,10 +124,129 @@
           "chromas": false
         },
         {
+          "id": "147016",
+          "num": 16,
+          "name": "Ocean Song Seraphine (Ruby)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "147017",
+          "num": 17,
+          "name": "Ocean Song Seraphine (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "147018",
+          "num": 18,
+          "name": "Ocean Song Seraphine (Sapphire)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "147019",
+          "num": 19,
+          "name": "Ocean Song Seraphine (Catseye)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "147020",
+          "num": 20,
+          "name": "Ocean Song Seraphine (Emerald)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "147021",
+          "num": 21,
+          "name": "Ocean Song Seraphine (Amethyst)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "147022",
+          "num": 22,
+          "name": "Ocean Song Seraphine (Obsidian)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "147023",
+          "num": 23,
+          "name": "Ocean Song Seraphine (Pearl)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
           "id": "147024",
           "num": 24,
           "name": "Faerie Court Seraphine",
           "chromas": true
+        },
+        {
+          "id": "147025",
+          "num": 25,
+          "name": "Faerie Court Seraphine (Ruby)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "147026",
+          "num": 26,
+          "name": "Faerie Court Seraphine (Catseye)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "147027",
+          "num": 27,
+          "name": "Faerie Court Seraphine (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "147028",
+          "num": 28,
+          "name": "Faerie Court Seraphine (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "147029",
+          "num": 29,
+          "name": "Faerie Court Seraphine (Emerald)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "147030",
+          "num": 30,
+          "name": "Faerie Court Seraphine (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "147031",
+          "num": 31,
+          "name": "Faerie Court Seraphine (Obsidian)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "147032",
+          "num": 32,
+          "name": "Faerie Court Seraphine (Turquoise)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "147033",
+          "num": 33,
+          "name": "Faerie Court Seraphine (Winsome)",
+          "chromas": false,
+          "parentSkin": 24
         },
         {
           "id": "147034",
@@ -73,10 +255,108 @@
           "chromas": true
         },
         {
+          "id": "147035",
+          "num": 35,
+          "name": "Star Guardian Seraphine (Ruby)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "147036",
+          "num": 36,
+          "name": "Star Guardian Seraphine (Sapphire)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "147037",
+          "num": 37,
+          "name": "Star Guardian Seraphine (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "147038",
+          "num": 38,
+          "name": "Star Guardian Seraphine (Turquoise)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "147039",
+          "num": 39,
+          "name": "Star Guardian Seraphine (Emerald)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "147040",
+          "num": 40,
+          "name": "Star Guardian Seraphine (Pearl)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "147041",
+          "num": 41,
+          "name": "Star Guardian Seraphine (Obsidian)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "147042",
+          "num": 42,
+          "name": "Star Guardian Seraphine (Rainbow)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
           "id": "147043",
           "num": 43,
           "name": "Battle Dove Seraphine",
           "chromas": true
+        },
+        {
+          "id": "147044",
+          "num": 44,
+          "name": "Battle Dove Seraphine (Ruby)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "147045",
+          "num": 45,
+          "name": "Battle Dove Seraphine (Emerald)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "147046",
+          "num": 46,
+          "name": "Battle Dove Seraphine (Amethyst)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "147047",
+          "num": 47,
+          "name": "Battle Dove Seraphine (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "147048",
+          "num": 48,
+          "name": "Battle Dove Seraphine (Turquoise)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "147049",
+          "num": 49,
+          "name": "Battle Dove Seraphine (Nightwire)",
+          "chromas": false,
+          "parentSkin": 43
         },
         {
           "id": "147050",
@@ -85,17 +365,132 @@
           "chromas": true
         },
         {
+          "id": "147051",
+          "num": 51,
+          "name": "Dumpling Darlings Seraphine (Ruby)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "147052",
+          "num": 52,
+          "name": "Dumpling Darlings Seraphine (Catseye)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "147053",
+          "num": 53,
+          "name": "Dumpling Darlings Seraphine (Emerald)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "147054",
+          "num": 54,
+          "name": "Dumpling Darlings Seraphine (Turquoise)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "147055",
+          "num": 55,
+          "name": "Dumpling Darlings Seraphine (Sapphire)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "147056",
+          "num": 56,
+          "name": "Dumpling Darlings Seraphine (Amethyst)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "147057",
+          "num": 57,
+          "name": "Dumpling Darlings Seraphine (Obsidian)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "147058",
+          "num": 58,
+          "name": "Dumpling Darlings Seraphine (Pearl)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
           "id": "147059",
           "num": 59,
           "name": "Firecracker Seraphine",
           "chromas": true
+        },
+        {
+          "id": "147060",
+          "num": 60,
+          "name": "Firecracker Seraphine (Ruby)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "147061",
+          "num": 61,
+          "name": "Firecracker Seraphine (Catseye)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "147062",
+          "num": 62,
+          "name": "Firecracker Seraphine (Emerald)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "147063",
+          "num": 63,
+          "name": "Firecracker Seraphine (Sapphire)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "147064",
+          "num": 64,
+          "name": "Firecracker Seraphine (Turquoise)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "147065",
+          "num": 65,
+          "name": "Firecracker Seraphine (Obsidian)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "147066",
+          "num": 66,
+          "name": "Firecracker Seraphine (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "147067",
+          "num": 67,
+          "name": "Firecracker Seraphine (Pearl)",
+          "chromas": false,
+          "parentSkin": 59
         }
       ],
       "lore": "Born in Piltover to Zaunite parents, Seraphine can hear the souls of others—the world sings to her, and she sings back. Though these sounds overwhelmed her in her youth, she now draws on them for inspiration, turning the chaos into a symphony. She performs for the sister cities to remind their citizens that they're not alone, that they're stronger together, and that, in her eyes, their potential is limitless.",
       "blurb": "Born in Piltover to Zaunite parents, Seraphine can hear the souls of others—the world sings to her, and she sings back. Though these sounds overwhelmed her in her youth, she now draws on them for inspiration, turning the chaos into a symphony. She...",
       "allytips": [],
       "enemytips": [],
-      "tags": ["Support", "Mage"],
+      "tags": [
+        "Support",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 0,
@@ -144,23 +539,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 7.5, 7, 6.5, 6],
+          "cooldown": [
+            8,
+            7.5,
+            7,
+            6.5,
+            6
+          ],
           "cooldownBurn": "8/7.5/7/6.5/6",
-          "cost": [60, 70, 80, 90, 100],
+          "cost": [
+            60,
+            70,
+            80,
+            90,
+            100
+          ],
           "costBurn": "60/70/80/90/100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -178,7 +645,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [900, 900, 900, 900, 900],
+          "range": [
+            900,
+            900,
+            900,
+            900,
+            900
+          ],
           "rangeBurn": "900",
           "image": {
             "full": "SeraphineQ.png",
@@ -209,23 +682,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [22, 22, 22, 22, 22],
+          "cooldown": [
+            22,
+            22,
+            22,
+            22,
+            22
+          ],
           "cooldownBurn": "22",
-          "cost": [70, 75, 80, 85, 90],
+          "cost": [
+            70,
+            75,
+            80,
+            85,
+            90
+          ],
           "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -243,7 +788,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "SeraphineW.png",
@@ -262,7 +813,11 @@
           "description": "Seraphine deals damage and impairs the movement of enemies in a line.",
           "tooltip": "Seraphine unleashes a heavy soundwave, dealing <magicDamage>{{ finaldamage }} magic damage</magicDamage> to enemies in a line and <status>Slowing</status> them by {{ slowvalue }}% for {{ slowduration }} seconds.<br /><br />Enemies that are already <status>Slowed</status> are <status>Rooted</status> instead, and <status>Immobilized</status> enemies are <status>Stunned</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow Duration", "Cooldown"],
+            "label": [
+              "Damage",
+              "Slow Duration",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ slowduration }} -> {{ slowdurationNL }}",
@@ -270,23 +825,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 10.5, 10, 9.5, 9],
+          "cooldown": [
+            11,
+            10.5,
+            10,
+            9.5,
+            9
+          ],
           "cooldownBurn": "11/10.5/10/9.5/9",
-          "cost": [60, 60, 60, 60, 60],
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -304,7 +931,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1300, 1300, 1300, 1300, 1300],
+          "range": [
+            1300,
+            1300,
+            1300,
+            1300,
+            1300
+          ],
           "rangeBurn": "1300",
           "image": {
             "full": "SeraphineE.png",
@@ -323,7 +956,11 @@
           "description": "Seraphine deals damage and charms enemies hit, refreshing the range with every allied or enemy champion hit.",
           "tooltip": "Seraphine takes the stage, projecting a captivating force that <status>Charms</status> for {{ rchannelduration }} seconds and deals <magicDamage>{{ r1totaldamage }} magic damage</magicDamage>.<br /><br />Any champions struck (including allies) become part of the performance, extending the range of this Ability. Allied champions gain maximum <keywordMajor>Notes</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Initial Damage", "Charm Duration", "Cooldown"],
+            "label": [
+              "Initial Damage",
+              "Charm Duration",
+              "Cooldown"
+            ],
             "effect": [
               "{{ r1basedamage }} -> {{ r1basedamageNL }}",
               "{{ rchannelduration }} -> {{ rchanneldurationNL }}",
@@ -331,23 +968,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [160, 140, 120],
+          "cooldown": [
+            160,
+            140,
+            120
+          ],
           "cooldownBurn": "160/140/120",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -365,7 +1050,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "SeraphineR.png",

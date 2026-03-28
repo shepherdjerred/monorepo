@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Katarina": {
       "id": "Katarina",
@@ -85,10 +85,73 @@
           "chromas": false
         },
         {
+          "id": "55011",
+          "num": 11,
+          "name": "Warring Kingdoms Katarina (Golden)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
           "id": "55012",
           "num": 12,
           "name": "Battle Academia Katarina",
           "chromas": true
+        },
+        {
+          "id": "55013",
+          "num": 13,
+          "name": "Battle Academia Katarina (Ruby)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "55014",
+          "num": 14,
+          "name": "Battle Academia Katarina (Formal)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "55015",
+          "num": 15,
+          "name": "Battle Academia Katarina (Sapphire)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "55016",
+          "num": 16,
+          "name": "Battle Academia Katarina (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "55017",
+          "num": 17,
+          "name": "Battle Academia Katarina (Obsidian)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "55018",
+          "num": 18,
+          "name": "Battle Academia Katarina (Citrine)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "55019",
+          "num": 19,
+          "name": "Battle Academia Katarina (Pearl)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "55020",
+          "num": 20,
+          "name": "Battle Academia Katarina (Turquoise)",
+          "chromas": false,
+          "parentSkin": 12
         },
         {
           "id": "55021",
@@ -97,16 +160,177 @@
           "chromas": true
         },
         {
+          "id": "55022",
+          "num": 22,
+          "name": "Blood Moon Katarina (Ruby)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "55023",
+          "num": 23,
+          "name": "Blood Moon Katarina (Sapphire)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "55024",
+          "num": 24,
+          "name": "Blood Moon Katarina (Obsidian)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "55025",
+          "num": 25,
+          "name": "Blood Moon Katarina (Emerald)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "55026",
+          "num": 26,
+          "name": "Blood Moon Katarina (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "55027",
+          "num": 27,
+          "name": "Blood Moon Katarina (Citrine)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "55028",
+          "num": 28,
+          "name": "Blood Moon Katarina (Pearl)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
           "id": "55029",
           "num": 29,
           "name": "Battle Queen Katarina",
           "chromas": true
         },
         {
+          "id": "55030",
+          "num": 30,
+          "name": "Battle Queen Katarina (Ruby)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "55031",
+          "num": 31,
+          "name": "Battle Queen Katarina (Sapphire)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "55032",
+          "num": 32,
+          "name": "Battle Queen Katarina (Emerald)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "55033",
+          "num": 33,
+          "name": "Battle Queen Katarina (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "55034",
+          "num": 34,
+          "name": "Battle Queen Katarina (Pearl)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "55035",
+          "num": 35,
+          "name": "Battle Queen Katarina (Obsidian)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "55036",
+          "num": 36,
+          "name": "Battle Queen Katarina (Coronation)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
           "id": "55037",
           "num": 37,
           "name": "High Noon Katarina",
           "chromas": true
+        },
+        {
+          "id": "55038",
+          "num": 38,
+          "name": "High Noon Katarina (Ruby)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "55039",
+          "num": 39,
+          "name": "High Noon Katarina (Catseye)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "55040",
+          "num": 40,
+          "name": "High Noon Katarina (Emerald)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "55041",
+          "num": 41,
+          "name": "High Noon Katarina (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "55042",
+          "num": 42,
+          "name": "High Noon Katarina (Sapphire)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "55043",
+          "num": 43,
+          "name": "High Noon Katarina (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "55044",
+          "num": 44,
+          "name": "High Noon Katarina (Pearl)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "55045",
+          "num": 45,
+          "name": "High Noon Katarina (Obsidian)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "55046",
+          "num": 46,
+          "name": "High Noon Katarina (Nomad)",
+          "chromas": false,
+          "parentSkin": 37
         },
         {
           "id": "55047",
@@ -121,6 +345,69 @@
           "chromas": false
         },
         {
+          "id": "55049",
+          "num": 49,
+          "name": "Faerie Court Katarina (Ruby)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "55050",
+          "num": 50,
+          "name": "Faerie Court Katarina (Citrine)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "55051",
+          "num": 51,
+          "name": "Faerie Court Katarina (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "55052",
+          "num": 52,
+          "name": "Faerie Court Katarina (Emerald)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "55053",
+          "num": 53,
+          "name": "Faerie Court Katarina (Turquoise)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "55054",
+          "num": 54,
+          "name": "Faerie Court Katarina (Obsidian)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "55055",
+          "num": 55,
+          "name": "Faerie Court Katarina (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "55056",
+          "num": 56,
+          "name": "Faerie Court Katarina (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "55057",
+          "num": 57,
+          "name": "Faerie Court Katarina (Winsome)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
           "id": "55059",
           "num": 59,
           "name": "Chosen of the Wolf Katarina",
@@ -133,10 +420,129 @@
           "chromas": true
         },
         {
+          "id": "55061",
+          "num": 61,
+          "name": "Chosen of the Wolf Katarina (Ruby)",
+          "chromas": true,
+          "parentSkin": 59
+        },
+        {
+          "id": "55062",
+          "num": 62,
+          "name": "Chosen of the Wolf Katarina (Emerald)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "55063",
+          "num": 63,
+          "name": "Chosen of the Wolf Katarina (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "55064",
+          "num": 64,
+          "name": "Chosen of the Wolf Katarina (Sapphire)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "55065",
+          "num": 65,
+          "name": "Chosen of the Wolf Katarina (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "55066",
+          "num": 66,
+          "name": "Chosen of the Wolf Katarina (Turquoise)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "55067",
+          "num": 67,
+          "name": "Chosen of the Wolf Katarina (Obsidian)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "55068",
+          "num": 68,
+          "name": "Chosen of the Wolf Katarina (Pearl)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "55069",
+          "num": 69,
+          "name": "Prestige Masque of the Black Rose Katarina (Enigma)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
           "id": "55070",
           "num": 70,
           "name": "Petals of Spring Katarina",
           "chromas": false
+        },
+        {
+          "id": "55071",
+          "num": 71,
+          "name": "Petals of Spring Katarina (Ruby)",
+          "chromas": true,
+          "parentSkin": 70
+        },
+        {
+          "id": "55072",
+          "num": 72,
+          "name": "Petals of Spring Katarina (Catseye)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "55073",
+          "num": 73,
+          "name": "Petals of Spring Katarina (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "55074",
+          "num": 74,
+          "name": "Petals of Spring Katarina (Sapphire)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "55075",
+          "num": 75,
+          "name": "Petals of Spring Katarina (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "55076",
+          "num": 76,
+          "name": "Petals of Spring Katarina (Pearl)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "55077",
+          "num": 77,
+          "name": "Petals of Spring Katarina (Peridot)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "55078",
+          "num": 78,
+          "name": "Petals of Spring Katarina (Emerald)",
+          "chromas": false,
+          "parentSkin": 70
         }
       ],
       "lore": "Decisive in judgment and lethal in combat, Katarina is a Noxian assassin of the highest caliber. Eldest daughter to the legendary General Du Couteau, she made her talents known with swift kills against unsuspecting enemies. Her fiery ambition has driven her to pursue heavily-guarded targets, even at the risk of endangering her allies—but no matter the mission, Katarina will not hesitate to execute her duty amid a whirlwind of serrated daggers.",
@@ -150,7 +556,10 @@
         "Katarina's abilities deal magic damage, so even if she's building Attack Damage items, get magic resistance to counter her.",
         "Try to save a disable for when Katarina uses her Death Lotus."
       ],
-      "tags": ["Assassin", "Mage"],
+      "tags": [
+        "Assassin",
+        "Mage"
+      ],
       "partype": "None",
       "info": {
         "attack": 4,
@@ -187,30 +596,105 @@
           "description": "Katarina throws a <font color='#FFF673'>Dagger</font> at the target that then bounces to nearby enemies before ricocheting onto the ground.",
           "tooltip": "Katarina throws a <keywordMajor>Dagger</keywordMajor>, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the target and {{ maxbounces }} nearby enemies. The <keywordMajor>Dagger</keywordMajor> then ricochets onto the ground behind the primary target.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Base Damage", "Cooldown"],
+            "label": [
+              "Base Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 10, 9, 8, 7],
+          "cooldown": [
+            11,
+            10,
+            9,
+            8,
+            7
+          ],
           "cooldownBurn": "11/10/9/8/7",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [2, 2, 2, 2, 2],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -228,7 +712,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [625, 625, 625, 625, 625],
+          "range": [
+            625,
+            625,
+            625,
+            625,
+            625
+          ],
           "rangeBurn": "625",
           "image": {
             "full": "KatarinaQ.png",
@@ -247,30 +737,105 @@
           "description": "Katarina gains a burst of Move Speed, tossing a <font color='#FFF673'>Dagger</font> into the air directly above herself.",
           "tooltip": "Katarina tosses a <keywordMajor>Dagger</keywordMajor> into the air and gains <speed>{{ e4 }}% Move Speed</speed> decaying over {{ e2 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Move Speed", "Cooldown"],
+            "label": [
+              "Move Speed",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e4 }}% -> {{ e4NL }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [15, 14, 13, 12, 11],
+          "cooldown": [
+            15,
+            14,
+            13,
+            12,
+            11
+          ],
           "cooldownBurn": "15/14/13/12/11",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [1.25, 1.25, 1.25, 1.25, 1.25],
-            [0, 0, 0, 0, 0],
-            [50, 60, 70, 80, 90],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              1.25,
+              1.25,
+              1.25,
+              1.25,
+              1.25
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              50,
+              60,
+              70,
+              80,
+              90
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -288,7 +853,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [25000, 25000, 25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "KatarinaW.png",
@@ -307,30 +878,105 @@
           "description": "Katarina blinks to the target, striking it if its an enemy, or striking the nearest enemy otherwise.",
           "tooltip": "Katarina blinks in the wink of an eye to the target ally, enemy, or <keywordMajor>Dagger</keywordMajor>. If it is an enemy, Katarina strikes for <magicDamage>{{ totaldamage }} magic damage</magicDamage> - otherwise she strikes the nearest enemy in range.<br /><br />Picking up a <keywordMajor>Dagger</keywordMajor> will reduce this Ability's Cooldown by <scaleLevel>{{ daggercooldownreduction }}</scaleLevel> seconds (<scaleLevel>{{ tooltipdaggerreduction }}</scaleLevel>). Katarina can blink to any location near the target.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11, 10, 9, 8],
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -348,7 +994,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [725, 725, 725, 725, 725],
+          "range": [
+            725,
+            725,
+            725,
+            725,
+            725
+          ],
           "rangeBurn": "725",
           "image": {
             "full": "KatarinaEWrapper.png",
@@ -367,7 +1019,11 @@
           "description": "Katarina becomes a flurry of blades, dealing massive magic damage while she channels to the 3 nearest enemy champions.",
           "tooltip": "Katarina becomes a flurry of blades, rapidly attacking the three nearest enemy champions with a flurry of knives. Each knife deals <magicDamage>{{ damagecalc }} magic damage</magicDamage> and <physicalDamage>{{ addamagecalc }} physical damage</physicalDamage>, and applies {{ grievousamount*100 }}% Grievous Wounds for {{ grievousduration }} seconds.<br /><br />Total over {{ duration }} seconds to each enemy: <magicDamage>{{ totaldamagecalc }} magic damage</magicDamage> and <physicalDamage>{{ totaladdamagecalc }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage Per Knife", "Cooldown", "On Hit Damage Modifier"],
+            "label": [
+              "Damage Per Knife",
+              "Cooldown",
+              "On Hit Damage Modifier"
+            ],
             "effect": [
               "{{ damagepertick }} -> {{ damagepertickNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -375,23 +1031,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [75, 60, 45],
+          "cooldown": [
+            75,
+            60,
+            45
+          ],
           "cooldownBurn": "75/60/45",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -409,7 +1113,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [550, 550, 550],
+          "range": [
+            550,
+            550,
+            550
+          ],
           "rangeBurn": "550",
           "image": {
             "full": "KatarinaR.png",

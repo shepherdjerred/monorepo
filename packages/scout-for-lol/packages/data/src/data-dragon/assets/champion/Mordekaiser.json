@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Mordekaiser": {
       "id": "Mordekaiser",
@@ -61,10 +61,115 @@
           "chromas": true
         },
         {
+          "id": "82007",
+          "num": 7,
+          "name": "Dark Star Mordekaiser (Pearl)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "82008",
+          "num": 8,
+          "name": "Dark Star Mordekaiser (Antimatter)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "82009",
+          "num": 9,
+          "name": "Dark Star Mordekaiser (Sapphire)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "82010",
+          "num": 10,
+          "name": "Dark Star Mordekaiser (Ruby)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "82011",
+          "num": 11,
+          "name": "Dark Star Mordekaiser (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "82012",
+          "num": 12,
+          "name": "Dark Star Mordekaiser (Emerald)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
           "id": "82013",
           "num": 13,
           "name": "PROJECT: Mordekaiser",
           "chromas": true
+        },
+        {
+          "id": "82014",
+          "num": 14,
+          "name": "PROJECT: Mordekaiser (Ruby)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "82015",
+          "num": 15,
+          "name": "PROJECT: Mordekaiser (Catseye)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "82016",
+          "num": 16,
+          "name": "PROJECT: Mordekaiser (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "82017",
+          "num": 17,
+          "name": "PROJECT: Mordekaiser (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "82018",
+          "num": 18,
+          "name": "PROJECT: Mordekaiser (Amethyst)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "82019",
+          "num": 19,
+          "name": "PROJECT: Mordekaiser (Emerald)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "82020",
+          "num": 20,
+          "name": "PROJECT: Mordekaiser (Pearl)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "82021",
+          "num": 21,
+          "name": "PROJECT: Mordekaiser (Rainbow)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "82022",
+          "num": 22,
+          "name": "PROJECT: Mordekaiser (Reckoning)",
+          "chromas": false,
+          "parentSkin": 13
         },
         {
           "id": "82023",
@@ -73,10 +178,129 @@
           "chromas": true
         },
         {
+          "id": "82024",
+          "num": 24,
+          "name": "Pentakill III: Lost Chapter Mordekaiser (Ruby)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "82025",
+          "num": 25,
+          "name": "Pentakill III: Lost Chapter Mordekaiser (Citrine)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "82026",
+          "num": 26,
+          "name": "Pentakill III: Lost Chapter Mordekaiser (Peridot)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "82027",
+          "num": 27,
+          "name": "Pentakill III: Lost Chapter Mordekaiser (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "82028",
+          "num": 28,
+          "name": "Pentakill III: Lost Chapter Mordekaiser (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "82029",
+          "num": 29,
+          "name": "Pentakill III: Lost Chapter Mordekaiser (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "82030",
+          "num": 30,
+          "name": "Pentakill III: Lost Chapter Mordekaiser (Sandstone)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "82031",
+          "num": 31,
+          "name": "Pentakill III: Lost Chapter Mordekaiser (Obsidian)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
           "id": "82032",
           "num": 32,
           "name": "High Noon Mordekaiser",
           "chromas": true
+        },
+        {
+          "id": "82033",
+          "num": 33,
+          "name": "High Noon Mordekaiser (Ruby)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "82034",
+          "num": 34,
+          "name": "High Noon Mordekaiser (Catseye)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "82035",
+          "num": 35,
+          "name": "High Noon Mordekaiser (Emerald)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "82036",
+          "num": 36,
+          "name": "High Noon Mordekaiser (Sapphire)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "82037",
+          "num": 37,
+          "name": "High Noon Mordekaiser (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "82038",
+          "num": 38,
+          "name": "High Noon Mordekaiser (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "82039",
+          "num": 39,
+          "name": "High Noon Mordekaiser (Obsidian)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "82040",
+          "num": 40,
+          "name": "High Noon Mordekaiser (Pearl)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "82041",
+          "num": 41,
+          "name": "High Noon Mordekaiser (Nomad)",
+          "chromas": false,
+          "parentSkin": 32
         },
         {
           "id": "82042",
@@ -85,10 +309,80 @@
           "chromas": true
         },
         {
+          "id": "82043",
+          "num": 43,
+          "name": "Ashen Graveknight Mordekaiser (Emberwoken)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
           "id": "82044",
           "num": 44,
           "name": "Old God Mordekaiser",
           "chromas": true
+        },
+        {
+          "id": "82045",
+          "num": 45,
+          "name": "Old God Mordekaiser (Ruby)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "82046",
+          "num": 46,
+          "name": "Old God Mordekaiser (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "82047",
+          "num": 47,
+          "name": "Old God Mordekaiser (Catseye)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "82048",
+          "num": 48,
+          "name": "Old God Mordekaiser (Amethyst)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "82049",
+          "num": 49,
+          "name": "Old God Mordekaiser (Pearl)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "82050",
+          "num": 50,
+          "name": "Old God Mordekaiser (Emerald)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "82051",
+          "num": 51,
+          "name": "Old God Mordekaiser (Obsidian)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "82052",
+          "num": 52,
+          "name": "Old God Mordekaiser (Sandstone)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "82053",
+          "num": 53,
+          "name": "Old God Mordekaiser (Profane)",
+          "chromas": false,
+          "parentSkin": 44
         },
         {
           "id": "82054",
@@ -109,7 +403,10 @@
         "Damage he deals can be converted into a large shield, and consumed for health",
         "Realm of Death will cut you off from your teammates completely. Try to save mobility spells to escape Mordekaiser once inside"
       ],
-      "tags": ["Fighter", "Mage"],
+      "tags": [
+        "Fighter",
+        "Mage"
+      ],
       "partype": "Shield",
       "info": {
         "attack": 4,
@@ -146,7 +443,11 @@
           "description": "Mordekaiser smashes the ground with his mace dealing damage to each enemy struck. Damage is increased when hitting a single enemy.",
           "tooltip": "Mordekaiser smashes the ground with Nightfall dealing <magicDamage>{{ qdamage }} magic damage</magicDamage>, increased to <magicDamage>{{ empowereddamagetooltip }}</magicDamage> if it hits only a single enemy.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Isolation Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Isolation Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ qbasedamage }} -> {{ qbasedamageNL }}",
               "{{ isolationscalar*100.000000 }}% -> {{ isolationscalarnl*100.000000 }}%",
@@ -154,23 +455,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 7, 6, 5, 4],
+          "cooldown": [
+            8,
+            7,
+            6,
+            5,
+            4
+          ],
           "cooldownBurn": "8/7/6/5/4",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -188,7 +561,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [675, 675, 675, 675, 675],
+          "range": [
+            675,
+            675,
+            675,
+            675,
+            675
+          ],
           "rangeBurn": "675",
           "image": {
             "full": "MordekaiserQ.png",
@@ -207,30 +586,105 @@
           "description": "Mordekaiser stores damage he deals and takes to create a shield. He may consume the shield to heal.",
           "tooltip": "<passive>Passive:</passive> Mordekaiser stores {{ damageconversion*100 }}% of the damage he deals and {{ damagetakenconversion*100 }}% of the damage he takes.<br /><br /><active>Active:</active> Mordekaiser gains the stored damage as <shield>Shield</shield>. He may <recast>Recast</recast> this Ability to restore <healing>{{ healingpercent*100 }}% of the remaining Shield as Health</healing>.<br /><br />Minimum Shield: <shield>{{ minhealthtooltip }}</shield><br />Maximum Shield: <shield>{{ maxhealthtooltip }}</shield>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Healing Percent", "Cooldown"],
+            "label": [
+              "Healing Percent",
+              "Cooldown"
+            ],
             "effect": [
               "{{ healingpercent*100.000000 }}% -> {{ healingpercentnl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11, 10, 9, 8],
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -248,7 +702,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [25000, 25000, 25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "MordekaiserW.png",
@@ -267,7 +727,11 @@
           "description": "Mordekaiser pulls all enemies in an area.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Mordekaiser gains {{ magicpen*100 }}% Magic Penetration.<br /><br /><spellActive>Active:</spellActive> Mordekaiser pulls enemies in his direction, dealing <magicDamage>{{ totaldamage }} magic damage.</magicDamage>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Percent Magic Penetration", "Damage", "Cooldown"],
+            "label": [
+              "Percent Magic Penetration",
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ magicpen*100.000000 }}% -> {{ magicpennl*100.000000 }}%",
               "{{ damage }} -> {{ damageNL }}",
@@ -275,23 +739,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [18, 16, 14, 12, 10],
+          "cooldown": [
+            18,
+            16,
+            14,
+            12,
+            10
+          ],
           "cooldownBurn": "18/16/14/12/10",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -309,7 +845,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [700, 700, 700, 700, 700],
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "MordekaiserE.png",
@@ -328,27 +870,79 @@
           "description": "Mordekaiser drags his victim to a different dimension with him and steals a portion of their stats. If he kills them, he keeps the stats until the victim respawns.",
           "tooltip": "Mordekaiser banishes a champion to the Death Realm with him for {{ spiritrealmduration }}s, stealing {{ statstealpercentscalar*100 }}% of their core stats for the duration.<br /><br />If Mordekaiser kills that enemy in the Death Realm he consumes their soul, keeping the stats he stole until the target respawns.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
+            "label": [
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
-          "cooldown": [140, 120, 100],
+          "cooldown": [
+            140,
+            120,
+            100
+          ],
           "cooldownBurn": "140/120/100",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -366,7 +960,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [650, 650, 650],
+          "range": [
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "MordekaiserR.png",

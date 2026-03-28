@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Graves": {
       "id": "Graves",
@@ -67,10 +67,73 @@
           "chromas": true
         },
         {
+          "id": "104008",
+          "num": 8,
+          "name": "Pool Party Graves (Citrine)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "104009",
+          "num": 9,
+          "name": "Pool Party Graves (Amethyst)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "104010",
+          "num": 10,
+          "name": "Pool Party Graves (Sapphire)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "104011",
+          "num": 11,
+          "name": "Pool Party Graves (Emerald)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "104012",
+          "num": 12,
+          "name": "Pool Party Graves (Ruby)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "104013",
+          "num": 13,
+          "name": "Pool Party Graves (Turquoise)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
           "id": "104014",
           "num": 14,
           "name": "Victorious Graves",
           "chromas": true
+        },
+        {
+          "id": "104015",
+          "num": 15,
+          "name": "Victorious Graves (Flex)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "104016",
+          "num": 16,
+          "name": "Victorious Graves (Solo/Duo)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "104017",
+          "num": 17,
+          "name": "Victorious Graves (3v3)",
+          "chromas": false,
+          "parentSkin": 14
         },
         {
           "id": "104018",
@@ -79,10 +142,115 @@
           "chromas": true
         },
         {
+          "id": "104019",
+          "num": 19,
+          "name": "Praetorian Graves (Ruby)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "104020",
+          "num": 20,
+          "name": "Praetorian Graves (Citrine)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "104021",
+          "num": 21,
+          "name": "Praetorian Graves (Sapphire)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "104022",
+          "num": 22,
+          "name": "Praetorian Graves (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "104023",
+          "num": 23,
+          "name": "Praetorian Graves (Obsidian)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "104024",
+          "num": 24,
+          "name": "Praetorian Graves (Pearl)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
           "id": "104025",
           "num": 25,
           "name": "Battle Professor Graves",
           "chromas": true
+        },
+        {
+          "id": "104026",
+          "num": 26,
+          "name": "Snow Day Graves (Golden)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "104027",
+          "num": 27,
+          "name": "Battle Professor Graves (Ruby)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "104028",
+          "num": 28,
+          "name": "Battle Professor Graves (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "104029",
+          "num": 29,
+          "name": "Battle Professor Graves (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "104030",
+          "num": 30,
+          "name": "Battle Professor Graves (Pearl)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "104031",
+          "num": 31,
+          "name": "Battle Professor Graves (Sapphire)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "104032",
+          "num": 32,
+          "name": "Battle Professor Graves (Obsidian)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "104033",
+          "num": 33,
+          "name": "Battle Professor Graves (Turquoise)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "104034",
+          "num": 34,
+          "name": "Battle Professor Graves (Formal)",
+          "chromas": false,
+          "parentSkin": 25
         },
         {
           "id": "104035",
@@ -91,16 +259,128 @@
           "chromas": true
         },
         {
+          "id": "104036",
+          "num": 36,
+          "name": "Sentinel Graves (Ruby)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "104037",
+          "num": 37,
+          "name": "Sentinel Graves (Emerald)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "104038",
+          "num": 38,
+          "name": "Sentinel Graves (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "104039",
+          "num": 39,
+          "name": "Sentinel Graves (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "104040",
+          "num": 40,
+          "name": "Sentinel Graves (Pearl)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "104041",
+          "num": 41,
+          "name": "Sentinel Graves (Resolute)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
           "id": "104042",
           "num": 42,
           "name": "EDG Graves",
           "chromas": true
         },
         {
+          "id": "104043",
+          "num": 43,
+          "name": "EDG Graves (Elite)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
           "id": "104045",
           "num": 45,
           "name": "Porcelain Graves",
           "chromas": false
+        },
+        {
+          "id": "104046",
+          "num": 46,
+          "name": "Porcelain Graves (Ruby)",
+          "chromas": true,
+          "parentSkin": 45
+        },
+        {
+          "id": "104047",
+          "num": 47,
+          "name": "Porcelain Graves (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "104048",
+          "num": 48,
+          "name": "Porcelain Graves (Pearl)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "104049",
+          "num": 49,
+          "name": "Porcelain Graves (Emerald)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "104050",
+          "num": 50,
+          "name": "Porcelain Graves (Obsidian)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "104051",
+          "num": 51,
+          "name": "Porcelain Graves (Turquoise)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "104052",
+          "num": 52,
+          "name": "Porcelain Graves (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "104053",
+          "num": 53,
+          "name": "Porcelain Graves (Catseye)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "104054",
+          "num": 54,
+          "name": "Porcelain Graves (Opulent)",
+          "chromas": false,
+          "parentSkin": 45
         }
       ],
       "lore": "Malcolm Graves is a renowned mercenary, gambler, and thief—a wanted man in every city and empire he has visited. Even though he has an explosive temper, he possesses a strict sense of criminal honor, often enforced at the business end of his double-barreled shotgun Destiny. In recent years, he has reconciled a troubled partnership with Twisted Fate, and together they have prospered once more in the turmoil of Bilgewater's criminal underbelly.",
@@ -113,7 +393,9 @@
         "Graves deals mostly physical damage so Armor is an effective counter.",
         "Leaving the Smoke Screen's area of effect removes the harmful effect immediately."
       ],
-      "tags": ["Marksman"],
+      "tags": [
+        "Marksman"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 8,
@@ -164,23 +446,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [13, 11.25, 9.5, 7.75, 6],
+          "cooldown": [
+            13,
+            11.25,
+            9.5,
+            7.75,
+            6
+          ],
           "cooldownBurn": "13/11.25/9.5/7.75/6",
-          "cost": [80, 80, 80, 80, 80],
+          "cost": [
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
           "costBurn": "80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -198,7 +552,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [925, 925, 925, 925, 925],
+          "range": [
+            925,
+            925,
+            925,
+            925,
+            925
+          ],
           "rangeBurn": "925",
           "image": {
             "full": "GravesQLineSpell.png",
@@ -217,7 +577,11 @@
           "description": "Graves fires a smoke canister at the target area creating a cloud of smoke that reduces sight range. Enemies caught in the initial impact are dealt magic damage and have their Move Speed reduced briefly.",
           "tooltip": "Graves creates a cloud of black smoke for 4 seconds, <status>Slowing</status> enemies inside by {{ e2 }}% and blocking their vision outside the area. The initial impact deals <magicDamage>{{ impactdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "@AbilityResourceName@ Cost", "Cooldown"],
+            "label": [
+              "Damage",
+              "@AbilityResourceName@ Cost",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cost }} -> {{ costNL }}",
@@ -225,23 +589,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [26, 24, 22, 20, 18],
+          "cooldown": [
+            26,
+            24,
+            22,
+            20,
+            18
+          ],
           "cooldownBurn": "26/24/22/20/18",
-          "cost": [70, 75, 80, 85, 90],
+          "cost": [
+            70,
+            75,
+            80,
+            85,
+            90
+          ],
           "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
-            [60, 110, 160, 210, 260],
-            [50, 50, 50, 50, 50],
-            [200, 200, 200, 200, 200],
-            [4, 4, 4, 4, 4],
-            [0.5, 0.5, 0.5, 0.5, 0.5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              60,
+              110,
+              160,
+              210,
+              260
+            ],
+            [
+              50,
+              50,
+              50,
+              50,
+              50
+            ],
+            [
+              200,
+              200,
+              200,
+              200,
+              200
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -259,7 +695,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [950, 950, 950, 950, 950],
+          "range": [
+            950,
+            950,
+            950,
+            950,
+            950
+          ],
           "rangeBurn": "950",
           "image": {
             "full": "GravesSmokeGrenade.png",
@@ -278,7 +720,11 @@
           "description": "Graves dashes forward gaining an Armor and Magic Resist boost for several seconds. If Graves dashes towards an enemy champion, gain two stacks of True Grit instead. Hitting enemies with basic attacks lowers the cooldown of this skill and refreshes the resistance boost.",
           "tooltip": "Graves dashes and reloads one <keywordMajor>Shell</keywordMajor> into his shotgun. He also gains a stack for {{ buffduration }} seconds (max {{ maxstacks }} stacks) or two stacks if he dashes towards an enemy champion. Stacks grant him <scaleArmor>{{ armorperstack }} Armor</scaleArmor> and <scaleMR>{{ mrgrant }} Magic Resist</scaleMR>. Stacks are refreshed when damaging a non-minion.<br /><br />Each bullet hit from Graves' Attacks reduces this Ability's Cooldown by {{ cooldownperhit }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Armor", "Magic Resist", "Cooldown"],
+            "label": [
+              "Armor",
+              "Magic Resist",
+              "Cooldown"
+            ],
             "effect": [
               "{{ armorperstack }} -> {{ armorperstackNL }}",
               "{{ armorperstack*0.500000 }} -> {{ armorperstacknl*0.500000 }}",
@@ -286,23 +732,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 15, 14, 13, 12],
+          "cooldown": [
+            16,
+            15,
+            14,
+            13,
+            12
+          ],
           "cooldownBurn": "16/15/14/13/12",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [30, 40, 50, 60, 70],
-            [4, 4, 4, 4, 4],
-            [20, 25, 30, 35, 40],
-            [0.5, 0.5, 0.5, 0.5, 0.5],
-            [0, 0, 0, 0, 0],
-            [750, 750, 750, 750, 750],
-            [375, 375, 375, 375, 375],
-            [275, 275, 275, 275, 275],
-            [60, 60, 60, 60, 60],
-            [8, 8, 8, 8, 8]
+            [
+              30,
+              40,
+              50,
+              60,
+              70
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              20,
+              25,
+              30,
+              35,
+              40
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              750,
+              750,
+              750,
+              750,
+              750
+            ],
+            [
+              375,
+              375,
+              375,
+              375,
+              375
+            ],
+            [
+              275,
+              275,
+              275,
+              275,
+              275
+            ],
+            [
+              60,
+              60,
+              60,
+              60,
+              60
+            ],
+            [
+              8,
+              8,
+              8,
+              8,
+              8
+            ]
           ],
           "effectBurn": [
             null,
@@ -320,7 +838,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [425, 425, 425, 425, 425],
+          "range": [
+            425,
+            425,
+            425,
+            425,
+            425
+          ],
           "rangeBurn": "425",
           "image": {
             "full": "GravesMove.png",
@@ -339,7 +863,11 @@
           "description": "Graves fires an explosive shell dealing heavy damage to the first champion it hits. After hitting a champion or reaching the end of its range, the shell explodes dealing damage in a cone.",
           "tooltip": "Graves fires an explosive cartridge, blasting himself backwards. The cartridge deals <physicalDamage>{{ damage }} physical damage</physicalDamage> to the first enemy hit. After hitting an enemy champion or reaching the end of its range, the cartridge explodes outward, dealing <physicalDamage>{{ falloffdamage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Primary Damage", "Cone Damage", "Cooldown"],
+            "label": [
+              "Primary Damage",
+              "Cone Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ rbasedamage }} -> {{ rbasedamageNL }}",
               "{{ rfalloffdamage }} -> {{ rfalloffdamageNL }}",
@@ -347,23 +875,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [100, 80, 60],
+          "cooldown": [
+            100,
+            80,
+            60
+          ],
           "cooldownBurn": "100/80/60",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -381,7 +957,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "GravesChargeShot.png",

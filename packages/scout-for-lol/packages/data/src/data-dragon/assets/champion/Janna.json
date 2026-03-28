@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Janna": {
       "id": "Janna",
@@ -73,10 +73,80 @@
           "chromas": true
         },
         {
+          "id": "40009",
+          "num": 9,
+          "name": "Sacred Sword Janna (Peridot)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "40010",
+          "num": 10,
+          "name": "Sacred Sword Janna (Sapphire)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "40011",
+          "num": 11,
+          "name": "Sacred Sword Janna (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "40012",
+          "num": 12,
+          "name": "Sacred Sword Janna (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
           "id": "40013",
           "num": 13,
           "name": "Bewitching Janna",
           "chromas": true
+        },
+        {
+          "id": "40014",
+          "num": 14,
+          "name": "Bewitching Janna (Ruby)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "40015",
+          "num": 15,
+          "name": "Bewitching Janna (Citrine)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "40016",
+          "num": 16,
+          "name": "Bewitching Janna (Emerald)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "40017",
+          "num": 17,
+          "name": "Bewitching Janna (Rainbow)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "40018",
+          "num": 18,
+          "name": "Bewitching Janna (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "40019",
+          "num": 19,
+          "name": "Bewitching Janna (Golden)",
+          "chromas": false,
+          "parentSkin": 13
         },
         {
           "id": "40020",
@@ -85,16 +155,170 @@
           "chromas": true
         },
         {
+          "id": "40021",
+          "num": 21,
+          "name": "Guardian of the Sands Janna (Ruby)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "40022",
+          "num": 22,
+          "name": "Guardian of the Sands Janna (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "40023",
+          "num": 23,
+          "name": "Guardian of the Sands Janna (Sapphire)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "40024",
+          "num": 24,
+          "name": "Guardian of the Sands Janna (Peridot)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "40025",
+          "num": 25,
+          "name": "Guardian of the Sands Janna (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "40026",
+          "num": 26,
+          "name": "Guardian of the Sands Janna (Catseye)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
           "id": "40027",
           "num": 27,
           "name": "Battle Queen Janna",
           "chromas": true
         },
         {
+          "id": "40028",
+          "num": 28,
+          "name": "Battle Queen Janna (Ruby)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "40029",
+          "num": 29,
+          "name": "Battle Queen Janna (Catseye)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "40030",
+          "num": 30,
+          "name": "Battle Queen Janna (Peridot)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "40031",
+          "num": 31,
+          "name": "Battle Queen Janna (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "40032",
+          "num": 32,
+          "name": "Battle Queen Janna (Amethyst)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "40033",
+          "num": 33,
+          "name": "Battle Queen Janna (Coronation)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "40034",
+          "num": 34,
+          "name": "Battle Queen Janna (Pearl)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "40035",
+          "num": 35,
+          "name": "Battle Queen Janna (Obsidian)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
           "id": "40036",
           "num": 36,
           "name": "Crystal Rose Janna",
           "chromas": true
+        },
+        {
+          "id": "40037",
+          "num": 37,
+          "name": "Crystal Rose Janna (Ruby)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "40038",
+          "num": 38,
+          "name": "Crystal Rose Janna (Sapphire)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "40039",
+          "num": 39,
+          "name": "Crystal Rose Janna (Emerald)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "40040",
+          "num": 40,
+          "name": "Crystal Rose Janna (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "40041",
+          "num": 41,
+          "name": "Crystal Rose Janna (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "40042",
+          "num": 42,
+          "name": "Crystal Rose Janna (Catseye)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "40043",
+          "num": 43,
+          "name": "Crystal Rose Janna (Pearl)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "40044",
+          "num": 44,
+          "name": "Crystal Rose Janna (Obsidian)",
+          "chromas": false,
+          "parentSkin": 36
         },
         {
           "id": "40045",
@@ -109,10 +333,136 @@
           "chromas": false
         },
         {
+          "id": "40047",
+          "num": 47,
+          "name": "Cyber Halo Janna (Ruby)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "40048",
+          "num": 48,
+          "name": "Cyber Halo Janna (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "40049",
+          "num": 49,
+          "name": "Cyber Halo Janna (Peridot)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "40050",
+          "num": 50,
+          "name": "Cyber Halo Janna (Catseye)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "40051",
+          "num": 51,
+          "name": "Cyber Halo Janna (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "40052",
+          "num": 52,
+          "name": "Cyber Halo Janna (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "40053",
+          "num": 53,
+          "name": "Cyber Halo Janna (Pearl)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "40054",
+          "num": 54,
+          "name": "Cyber Halo Janna (Turquoise)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "40055",
+          "num": 55,
+          "name": "Cyber Halo Janna (Ace)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
           "id": "40056",
           "num": 56,
           "name": "Heavenscale Janna",
           "chromas": true
+        },
+        {
+          "id": "40057",
+          "num": 57,
+          "name": "Heavenscale Janna (Ruby)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "40058",
+          "num": 58,
+          "name": "Heavenscale Janna (Turquoise)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "40059",
+          "num": 59,
+          "name": "Heavenscale Janna (Amethyst)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "40060",
+          "num": 60,
+          "name": "Heavenscale Janna (Catseye)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "40061",
+          "num": 61,
+          "name": "Heavenscale Janna (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "40062",
+          "num": 62,
+          "name": "Heavenscale Janna (Emerald)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "40063",
+          "num": 63,
+          "name": "Heavenscale Janna (Sapphire)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "40064",
+          "num": 64,
+          "name": "Heavenscale Janna (Obsidian)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "40065",
+          "num": 65,
+          "name": "Heavenscale Janna (Lustrous)",
+          "chromas": false,
+          "parentSkin": 56
         },
         {
           "id": "40066",
@@ -133,7 +483,10 @@
         "Listen for the charge up sound on Howling Gale in case Janna is trying to hit you with it from off screen or from brush.",
         "Janna's at her strongest when buffing another ally. If you can harass her ally, it will weaken her ability to fight you."
       ],
-      "tags": ["Support", "Mage"],
+      "tags": [
+        "Support",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 3,
@@ -182,23 +535,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 14, 14, 14, 14],
+          "cooldown": [
+            14,
+            14,
+            14,
+            14,
+            14
+          ],
           "cooldownBurn": "14",
-          "cost": [90, 95, 100, 105, 110],
+          "cost": [
+            90,
+            95,
+            100,
+            105,
+            110
+          ],
           "costBurn": "90/95/100/105/110",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -216,7 +641,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1075, 1075, 1075, 1075, 1075],
+          "range": [
+            1075,
+            1075,
+            1075,
+            1075,
+            1075
+          ],
           "rangeBurn": "1075",
           "image": {
             "full": "HowlingGale.png",
@@ -251,23 +682,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 7.5, 7, 6.5, 6],
+          "cooldown": [
+            8,
+            7.5,
+            7,
+            6.5,
+            6
+          ],
           "cooldownBurn": "8/7.5/7/6.5/6",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -285,7 +788,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [4294967295, 4294967295, 4294967295, 4294967295, 4294967295],
+          "range": [
+            4294967295,
+            4294967295,
+            4294967295,
+            4294967295,
+            4294967295
+          ],
           "rangeBurn": "4294967295",
           "image": {
             "full": "SowTheWind.png",
@@ -318,23 +827,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 15, 14, 13, 12],
+          "cooldown": [
+            16,
+            15,
+            14,
+            13,
+            12
+          ],
           "cooldownBurn": "16/15/14/13/12",
-          "cost": [70, 75, 80, 85, 90],
+          "cost": [
+            70,
+            75,
+            80,
+            85,
+            90
+          ],
           "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -352,7 +933,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "EyeOfTheStorm.png",
@@ -371,30 +958,81 @@
           "description": "Janna surrounds herself in a magical storm, throwing enemies back. After the storm has settled, soothing winds heal nearby allies while the ability is active.",
           "tooltip": "Janna summons a magical monsoon, <status>Knocking Back</status> nearby enemies then healing nearby allies for <healing>{{ totalheal }} Health</healing> over {{ e3 }} seconds. Moving or using an Ability ends the monsoon early.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Heal Per Second", "Cooldown"],
+            "label": [
+              "Heal Per Second",
+              "Cooldown"
+            ],
             "effect": [
               "{{ healbasepersecond }} -> {{ healbasepersecondNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [130, 115, 100],
+          "cooldown": [
+            130,
+            115,
+            100
+          ],
           "cooldownBurn": "130/115/100",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [300, 450, 600],
-            [3, 3, 3],
-            [700, 700, 700],
-            [875, 875, 875],
-            [875, 875, 875],
-            [1200, 1200, 1200],
-            [10, 10, 10],
-            [0.5, 0.5, 0.5],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              300,
+              450,
+              600
+            ],
+            [
+              3,
+              3,
+              3
+            ],
+            [
+              700,
+              700,
+              700
+            ],
+            [
+              875,
+              875,
+              875
+            ],
+            [
+              875,
+              875,
+              875
+            ],
+            [
+              1200,
+              1200,
+              1200
+            ],
+            [
+              10,
+              10,
+              10
+            ],
+            [
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -412,7 +1050,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [725, 725, 725],
+          "range": [
+            725,
+            725,
+            725
+          ],
           "rangeBurn": "725",
           "image": {
             "full": "ReapTheWhirlwind.png",

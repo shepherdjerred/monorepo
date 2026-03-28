@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Vayne": {
       "id": "Vayne",
@@ -61,6 +61,27 @@
           "chromas": false
         },
         {
+          "id": "67007",
+          "num": 7,
+          "name": "Dragonslayer Vayne Chaos Green",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "67008",
+          "num": 8,
+          "name": "Dragonslayer Vayne Chaos Red",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "67009",
+          "num": 9,
+          "name": "Dragonslayer Vayne Chaos Silver",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
           "id": "67010",
           "num": 10,
           "name": "Soulstealer Vayne",
@@ -97,10 +118,115 @@
           "chromas": true
         },
         {
+          "id": "67016",
+          "num": 16,
+          "name": "FPX Vayne (Elite)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "67017",
+          "num": 17,
+          "name": "Spirit Blossom Vayne (Ruby)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "67018",
+          "num": 18,
+          "name": "Spirit Blossom Vayne (Citrine)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "67019",
+          "num": 19,
+          "name": "Spirit Blossom Vayne (Emerald)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "67020",
+          "num": 20,
+          "name": "Spirit Blossom Vayne (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "67021",
+          "num": 21,
+          "name": "Spirit Blossom Vayne (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "67022",
+          "num": 22,
+          "name": "Spirit Blossom Vayne (Obsidian)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "67023",
+          "num": 23,
+          "name": "Spirit Blossom Vayne (Pearl)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "67024",
+          "num": 24,
+          "name": "Spirit Blossom Vayne (Night Blossom)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
           "id": "67025",
           "num": 25,
           "name": "Sentinel Vayne",
           "chromas": true
+        },
+        {
+          "id": "67026",
+          "num": 26,
+          "name": "Sentinel Vayne (Ruby)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "67027",
+          "num": 27,
+          "name": "Sentinel Vayne (Emerald)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "67028",
+          "num": 28,
+          "name": "Sentinel Vayne (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "67029",
+          "num": 29,
+          "name": "Sentinel Vayne (Amethyst)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "67030",
+          "num": 30,
+          "name": "Sentinel Vayne (Sapphire)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "67031",
+          "num": 31,
+          "name": "Sentinel Vayne (Resolute)",
+          "chromas": false,
+          "parentSkin": 25
         },
         {
           "id": "67032",
@@ -115,10 +241,150 @@
           "chromas": false
         },
         {
+          "id": "67034",
+          "num": 34,
+          "name": "Firecracker Vayne (Golden Tiger)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "67035",
+          "num": 35,
+          "name": "Battle Bat Vayne (Ruby)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "67036",
+          "num": 36,
+          "name": "Battle Bat Vayne (Citrine)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "67037",
+          "num": 37,
+          "name": "Battle Bat Vayne (Emerald)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "67038",
+          "num": 38,
+          "name": "Battle Bat Vayne (Turquoise)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "67039",
+          "num": 39,
+          "name": "Battle Bat Vayne (Sapphire)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "67040",
+          "num": 40,
+          "name": "Battle Bat Vayne (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "67041",
+          "num": 41,
+          "name": "Battle Bat Vayne (Sandstone)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "67042",
+          "num": 42,
+          "name": "Battle Bat Vayne (Obsidian)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "67043",
+          "num": 43,
+          "name": "Battle Bat Vayne (Nightwire)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
           "id": "67044",
           "num": 44,
           "name": "Dawnbringer Vayne",
           "chromas": true
+        },
+        {
+          "id": "67045",
+          "num": 45,
+          "name": "Dawnbringer Vayne (Ruby)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "67046",
+          "num": 46,
+          "name": "Dawnbringer Vayne (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "67047",
+          "num": 47,
+          "name": "Dawnbringer Vayne (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "67048",
+          "num": 48,
+          "name": "Dawnbringer Vayne (Sapphire)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "67049",
+          "num": 49,
+          "name": "Dawnbringer Vayne (Emerald)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "67050",
+          "num": 50,
+          "name": "Dawnbringer Vayne (Citrine)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "67051",
+          "num": 51,
+          "name": "Dawnbringer Vayne (Obsidian)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "67052",
+          "num": 52,
+          "name": "Dawnbringer Vayne (Rainbow)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "67053",
+          "num": 53,
+          "name": "Soulstealer Vayne (First Decennial)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "67054",
+          "num": 54,
+          "name": "Soulstealer Vayne (Tenfold Triumph)",
+          "chromas": false,
+          "parentSkin": 10
         },
         {
           "id": "67055",
@@ -127,10 +393,80 @@
           "chromas": true
         },
         {
+          "id": "67056",
+          "num": 56,
+          "name": "Dragonmancer Vayne (Ruby)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "67057",
+          "num": 57,
+          "name": "Dragonmancer Vayne (Citrine)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "67058",
+          "num": 58,
+          "name": "Dragonmancer Vayne (Turquoise)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "67059",
+          "num": 59,
+          "name": "Dragonmancer Vayne (Sapphire)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "67060",
+          "num": 60,
+          "name": "Dragonmancer Vayne (Amethyst)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "67061",
+          "num": 61,
+          "name": "Dragonmancer Vayne (Emerald)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "67062",
+          "num": 62,
+          "name": "Dragonmancer Vayne (Obsidian)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "67063",
+          "num": 63,
+          "name": "Dragonmancer Vayne (Pearl)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
           "id": "67064",
           "num": 64,
           "name": "Risen Legend Vayne",
           "chromas": true
+        },
+        {
+          "id": "67065",
+          "num": 65,
+          "name": "Risen Legend Vayne (Paragon)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "67066",
+          "num": 66,
+          "name": "Risen Legend Vayne (Mythclimber)",
+          "chromas": false,
+          "parentSkin": 64
         }
       ],
       "lore": "Shauna Vayne is a deadly, remorseless Demacian monster hunter, who has dedicated her life to finding and destroying the demon that murdered her family. Armed with a wrist-mounted crossbow and a heart full of vengeance, she is only truly happy when slaying practitioners or creations of the dark arts, striking from the shadows with a flurry of silver bolts.",
@@ -144,7 +480,10 @@
         "Vayne is fragile - turn the pressure up on her and she will be forced to play cautiously.",
         "Deny Vayne the opportunity to pin you against walls."
       ],
-      "tags": ["Marksman", "Assassin"],
+      "tags": [
+        "Marksman",
+        "Assassin"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 10,
@@ -181,30 +520,105 @@
           "description": "Vayne tumbles, maneuvering to carefully place her next shot. Her next attack deals bonus damage.",
           "tooltip": "Vayne rolls a short distance, and deals an additional <physicalDamage>{{ adratiobonus }} physical damage</physicalDamage> on her next Attack.<br /><br /><rules>This Ability triggers spell effects upon dealing damage.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "AD Ratio %"],
+            "label": [
+              "Cooldown",
+              "AD Ratio %"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ totaladratio*100.000000 }}% -> {{ totaladrationl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [6, 5, 4, 3, 2],
+          "cooldown": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
           "cooldownBurn": "6/5/4/3/2",
-          "cost": [30, 30, 30, 30, 30],
+          "cost": [
+            30,
+            30,
+            30,
+            30,
+            30
+          ],
           "costBurn": "30",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -222,7 +636,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [300, 300, 300, 300, 300],
+          "range": [
+            300,
+            300,
+            300,
+            300,
+            300
+          ],
           "rangeBurn": "300",
           "image": {
             "full": "VayneTumble.png",
@@ -241,7 +661,11 @@
           "description": "Vayne tips her bolts with a rare metal, toxic to evil things. The third consecutive attack or ability against the same target deals a percentage of the target's max health as bonus true damage.",
           "tooltip": "<spellPassive>Passive</spellPassive>: Every third consecutive Attack or Ability against an enemy deals an additional <trueDamage>{{ totaldamage }} max Health true damage</trueDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["True Damage %", "Minimum Damage", "Monster Damage"],
+            "label": [
+              "True Damage %",
+              "Minimum Damage",
+              "Monster Damage"
+            ],
             "effect": [
               "{{ maxhealthratio*100.000000 }}% -> {{ maxhealthrationl*100.000000 }}%",
               "{{ damagefloor }} -> {{ damagefloorNL }}",
@@ -249,23 +673,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [0, 0, 0, 0, 0],
+          "cooldown": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "cooldownBurn": "0",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -283,7 +779,13 @@
           "vars": [],
           "costType": "Passive",
           "maxammo": "-1",
-          "range": [750, 750, 750, 750, 750],
+          "range": [
+            750,
+            750,
+            750,
+            750,
+            750
+          ],
           "rangeBurn": "750",
           "image": {
             "full": "VayneSilveredBolts.png",
@@ -302,30 +804,105 @@
           "description": "Vayne draws a heavy crossbow from her back, and fires a huge bolt at her target, knocking them back and dealing damage. If they collide with terrain, they are impaled, dealing bonus damage and stunning them.",
           "tooltip": "Vayne fires a bolt that <status>Knocks Back</status> and deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>. If the target collides with terrain, they take <physicalDamage>{{ empowereddamagett }} bonus physical damage</physicalDamage> and become <status>Stunned</status> for {{ stunduration }} seconds. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage"],
+            "label": [
+              "Cooldown",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ damage }} -> {{ damageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [20, 18, 16, 14, 12],
+          "cooldown": [
+            20,
+            18,
+            16,
+            14,
+            12
+          ],
           "cooldownBurn": "20/18/16/14/12",
-          "cost": [90, 90, 90, 90, 90],
+          "cost": [
+            90,
+            90,
+            90,
+            90,
+            90
+          ],
           "costBurn": "90",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -343,7 +920,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [550, 550, 550, 550, 550],
+          "range": [
+            550,
+            550,
+            550,
+            550,
+            550
+          ],
           "rangeBurn": "550",
           "image": {
             "full": "VayneCondemn.png",
@@ -376,23 +959,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [100, 85, 70],
+          "cooldown": [
+            100,
+            85,
+            70
+          ],
           "cooldownBurn": "100/85/70",
-          "cost": [80, 80, 80],
+          "cost": [
+            80,
+            80,
+            80
+          ],
           "costBurn": "80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -410,7 +1041,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1, 1, 1],
+          "range": [
+            1,
+            1,
+            1
+          ],
           "rangeBurn": "1",
           "image": {
             "full": "VayneInquisition.png",

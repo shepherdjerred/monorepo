@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Olaf": {
       "id": "Olaf",
@@ -61,6 +61,62 @@
           "chromas": false
         },
         {
+          "id": "2007",
+          "num": 7,
+          "name": "Brolaf (Turquoise)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "2008",
+          "num": 8,
+          "name": "Brolaf (Citrine)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "2009",
+          "num": 9,
+          "name": "Brolaf (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "2010",
+          "num": 10,
+          "name": "Brolaf (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "2011",
+          "num": 11,
+          "name": "Brolaf (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "2012",
+          "num": 12,
+          "name": "Brolaf (Granite)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "2013",
+          "num": 13,
+          "name": "Brolaf (Sapphire)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "2014",
+          "num": 14,
+          "name": "Brolaf (Obsidian)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
           "id": "2015",
           "num": 15,
           "name": "SKT T1 Olaf",
@@ -73,10 +129,129 @@
           "chromas": true
         },
         {
+          "id": "2017",
+          "num": 17,
+          "name": "Dragonslayer Olaf (Sapphire)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "2018",
+          "num": 18,
+          "name": "Dragonslayer Olaf (Citrine)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "2019",
+          "num": 19,
+          "name": "Dragonslayer Olaf (Emerald)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "2020",
+          "num": 20,
+          "name": "Dragonslayer Olaf (Amethyst)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "2021",
+          "num": 21,
+          "name": "Dragonslayer Olaf (Ruby)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "2022",
+          "num": 22,
+          "name": "Dragonslayer Olaf (Pearl)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "2023",
+          "num": 23,
+          "name": "Dragonslayer Olaf (Obsidian)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "2024",
+          "num": 24,
+          "name": "Dragonslayer Olaf (Meteorite)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
           "id": "2025",
           "num": 25,
           "name": "Sentinel Olaf",
           "chromas": true
+        },
+        {
+          "id": "2026",
+          "num": 26,
+          "name": "Sentinel Olaf (Ruby)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "2027",
+          "num": 27,
+          "name": "Sentinel Olaf (Catseye)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "2028",
+          "num": 28,
+          "name": "Sentinel Olaf (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "2029",
+          "num": 29,
+          "name": "Sentinel Olaf (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "2030",
+          "num": 30,
+          "name": "Sentinel Olaf (Sapphire)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "2031",
+          "num": 31,
+          "name": "Sentinel Olaf (Pearl)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "2032",
+          "num": 32,
+          "name": "Sentinel Olaf (Emerald)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "2033",
+          "num": 33,
+          "name": "Sentinel Olaf (Turquoise)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "2034",
+          "num": 34,
+          "name": "Sentinel Olaf (Resolute)",
+          "chromas": false,
+          "parentSkin": 25
         },
         {
           "id": "2035",
@@ -85,10 +260,122 @@
           "chromas": true
         },
         {
+          "id": "2036",
+          "num": 36,
+          "name": "Pentakill III: Lost Chapter Olaf (Ruby)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "2037",
+          "num": 37,
+          "name": "Pentakill III: Lost Chapter Olaf (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "2038",
+          "num": 38,
+          "name": "Pentakill III: Lost Chapter Olaf (Catseye)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "2039",
+          "num": 39,
+          "name": "Pentakill III: Lost Chapter Olaf (Emerald)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "2040",
+          "num": 40,
+          "name": "Pentakill III: Lost Chapter Olaf (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "2041",
+          "num": 41,
+          "name": "Pentakill III: Lost Chapter Olaf (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "2042",
+          "num": 42,
+          "name": "Pentakill III: Lost Chapter Olaf (Pearl)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "2043",
+          "num": 43,
+          "name": "Pentakill III: Lost Chapter Olaf (Obsidian)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
           "id": "2044",
           "num": 44,
           "name": "Infernal Olaf",
           "chromas": true
+        },
+        {
+          "id": "2045",
+          "num": 45,
+          "name": "Infernal Olaf (Ruby)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "2046",
+          "num": 46,
+          "name": "Infernal Olaf (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "2047",
+          "num": 47,
+          "name": "Infernal Olaf (Catseye)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "2048",
+          "num": 48,
+          "name": "Infernal Olaf (Emerald)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "2049",
+          "num": 49,
+          "name": "Infernal Olaf (Turquoise)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "2050",
+          "num": 50,
+          "name": "Infernal Olaf (Sapphire)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "2051",
+          "num": 51,
+          "name": "Infernal Olaf (Amethyst)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "2052",
+          "num": 52,
+          "name": "Infernal Olaf (Rainbow)",
+          "chromas": false,
+          "parentSkin": 44
         }
       ],
       "lore": "An unstoppable force of destruction, the axe-wielding Olaf wants nothing but to die in glorious combat. Hailing from the brutal Freljordian peninsula of Lokfar, he once received a prophecy foretelling his peaceful passing—a coward's fate, and a great insult among his people. Seeking death, and fueled by rage, he rampaged across the land, slaughtering scores of great warriors and legendary beasts in search of any opponent who could stop him. Now a brutal enforcer for the Winter's Claw, he seeks his end in the great wars to come.",
@@ -102,7 +389,10 @@
         "Preventing Olaf from reaching his axe will minimize the amount of harassment he can cause in the laning phase.",
         "Olaf has reduced defenses from damage during Ragnarok, despite being immune to disables. If you can't escape from Olaf during Ragnarok, try focusing your damage on him with your teammates."
       ],
-      "tags": ["Fighter", "Tank"],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 9,
@@ -130,7 +420,7 @@
         "attackdamage": 68,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 2.7,
-        "attackspeed": 0.694
+        "attackspeed": 0.72
       },
       "spells": [
         {
@@ -139,7 +429,12 @@
           "description": "Olaf throws an axe into the ground at a target location, dealing damage to enemies it passes through and reducing their Armor and Move Speed. If Olaf picks up the axe, the ability's cooldown is reset.",
           "tooltip": "Olaf throws an axe, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>Slowing</status> by {{ slowamount*100 }}% for up to {{ e3 }} seconds (based on distance travelled). Champions hit lose <scaleArmor>{{ shredamount*100 }}% Armor</scaleArmor> for {{ debuffduration }} seconds.<br /><br />If Olaf picks up the axe, this Ability's Cooldown is reduced to {{ tooltipcdrefund }} seconds, or fully refunded if {{ tooltipcdrefund }} seconds has elapsed.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow", "Monster Damage", "Mana Cost"],
+            "label": [
+              "Damage",
+              "Slow",
+              "Monster Damage",
+              "Mana Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ slowamount*100.000000 }}% -> {{ slowamountnl*100.000000 }}%",
@@ -148,32 +443,104 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 9, 9, 9, 9],
+          "cooldown": [
+            9,
+            9,
+            9,
+            9,
+            9
+          ],
           "cooldownBurn": "9",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [80, 125, 170, 215, 260],
-            [30, 30, 30, 30, 30],
-            [2.5, 2.5, 2.5, 2.5, 2.5],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [800, 800, 800, 800, 800],
-            [400, 400, 400, 400, 400],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
-            "80/125/170/215/260",
-            "30",
-            "2.5",
-            "1.5",
-            "800",
-            "400",
+            "0",
+            "0",
+            "3",
+            "0",
+            "0",
+            "0",
             "0",
             "0",
             "0",
@@ -182,7 +549,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1000, 1000, 1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "OlafAxeThrowCast.png",
@@ -201,7 +574,11 @@
           "description": "Olaf's Attack Speed is increased and he gains a Shield.",
           "tooltip": "Olaf gains <attackSpeed>{{ attackspeed*100 }}% Attack Speed</attackSpeed> for {{ duration }} seconds, and <shield>{{ baseshield }} plus {{ shieldpercmissinghp*100 }}% missing Health Shield (up to a maximum of {{ maxshieldcalc }} Shield below {{ thresholdformax*100 }}% Health)</shield> for {{ shieldduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Attack Speed", "Base Shield", "Cooldown"],
+            "label": [
+              "Attack Speed",
+              "Base Shield",
+              "Cooldown"
+            ],
             "effect": [
               "{{ attackspeed*100.000000 }}% -> {{ attackspeednl*100.000000 }}%",
               "{{ baseshield }} -> {{ baseshieldNL }}",
@@ -209,23 +586,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 15, 14, 13, 12],
+          "cooldown": [
+            16,
+            15,
+            14,
+            13,
+            12
+          ],
           "cooldownBurn": "16/15/14/13/12",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -243,7 +692,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [700, 700, 700, 700, 700],
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "OlafFrenziedStrikes.png",
@@ -262,35 +717,110 @@
           "description": "Olaf attacks with such force that it deals true damage to his target and himself, refunding the Health cost if he destroys the target.",
           "tooltip": "Olaf ferociously swings his axes, dealing <trueDamage>{{ totaldamage }} true damage</trueDamage>. If the enemy dies, the cost is refunded.<br /><br />Attacks lower the Cooldown of this Ability by 1 second, increased to 2 seconds when attacking monsters.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 10, 9, 8, 7],
+          "cooldown": [
+            11,
+            10,
+            9,
+            8,
+            7
+          ],
           "cooldownBurn": "11/10/9/8/7",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [70, 115, 160, 205, 250],
-            [30, 30, 30, 30, 30],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              70,
+              115,
+              160,
+              205,
+              250
+            ],
+            [
+              40,
+              40,
+              40,
+              40,
+              40
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
             "70/115/160/205/250",
-            "30",
+            "40",
             "0",
             "0",
             "0",
@@ -303,7 +833,13 @@
           "vars": [],
           "costType": "Health",
           "maxammo": "-1",
-          "range": [325, 325, 325, 325, 325],
+          "range": [
+            325,
+            325,
+            325,
+            325,
+            325
+          ],
           "rangeBurn": "325",
           "image": {
             "full": "OlafRecklessStrike.png",
@@ -336,23 +872,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [100, 90, 80],
+          "cooldown": [
+            100,
+            90,
+            80
+          ],
           "cooldownBurn": "100/90/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -370,7 +954,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400],
+          "range": [
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "OlafRagnarok.png",

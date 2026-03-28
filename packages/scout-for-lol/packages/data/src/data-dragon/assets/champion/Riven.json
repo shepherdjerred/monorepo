@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Riven": {
       "id": "Riven",
@@ -67,10 +67,73 @@
           "chromas": true
         },
         {
+          "id": "92008",
+          "num": 8,
+          "name": "Battle Bunny Riven (Catseye)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "92009",
+          "num": 9,
+          "name": "Battle Bunny Riven (Granite)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "92010",
+          "num": 10,
+          "name": "Battle Bunny Riven (Emerald)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "92011",
+          "num": 11,
+          "name": "Battle Bunny Riven (Astral)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "92012",
+          "num": 12,
+          "name": "Battle Bunny Riven (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "92013",
+          "num": 13,
+          "name": "Battle Bunny Riven (Ruby)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "92014",
+          "num": 14,
+          "name": "Battle Bunny Riven (Amethyst)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "92015",
+          "num": 15,
+          "name": "Battle Bunny Riven (Sapphire)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
           "id": "92016",
           "num": 16,
           "name": "Dawnbringer Riven",
           "chromas": true
+        },
+        {
+          "id": "92017",
+          "num": 17,
+          "name": "Dragonblade Riven (Golden)",
+          "chromas": false,
+          "parentSkin": 5
         },
         {
           "id": "92018",
@@ -79,10 +142,24 @@
           "chromas": true
         },
         {
+          "id": "92019",
+          "num": 19,
+          "name": "Reignited Worlds 2012 Riven (Golden)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
           "id": "92020",
           "num": 20,
           "name": "Valiant Sword Riven",
           "chromas": false
+        },
+        {
+          "id": "92021",
+          "num": 21,
+          "name": "Arcade Riven (K.O.)",
+          "chromas": false,
+          "parentSkin": 6
         },
         {
           "id": "92022",
@@ -97,10 +174,143 @@
           "chromas": true
         },
         {
+          "id": "92024",
+          "num": 24,
+          "name": "Dawnbringer Riven (Paragon)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "92025",
+          "num": 25,
+          "name": "Pulsefire Riven (Chrono)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "92026",
+          "num": 26,
+          "name": "Spirit Blossom Riven (Sapphire)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "92027",
+          "num": 27,
+          "name": "Spirit Blossom Riven (Ruby)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "92028",
+          "num": 28,
+          "name": "Spirit Blossom Riven (Catseye)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "92029",
+          "num": 29,
+          "name": "Spirit Blossom Riven (Emerald)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "92030",
+          "num": 30,
+          "name": "Spirit Blossom Riven (Obsidian)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "92031",
+          "num": 31,
+          "name": "Spirit Blossom Riven (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "92032",
+          "num": 32,
+          "name": "Spirit Blossom Riven (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "92033",
+          "num": 33,
+          "name": "Spirit Blossom Riven (Night Blossom)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
           "id": "92034",
           "num": 34,
           "name": "Sentinel Riven",
           "chromas": true
+        },
+        {
+          "id": "92035",
+          "num": 35,
+          "name": "Sentinel Riven (Ruby)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "92036",
+          "num": 36,
+          "name": "Sentinel Riven (Citrine)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "92037",
+          "num": 37,
+          "name": "Sentinel Riven (Emerald)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "92038",
+          "num": 38,
+          "name": "Sentinel Riven (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "92039",
+          "num": 39,
+          "name": "Sentinel Riven (Sapphire)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "92040",
+          "num": 40,
+          "name": "Sentinel Riven (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "92041",
+          "num": 41,
+          "name": "Sentinel Riven (Turquoise)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "92042",
+          "num": 42,
+          "name": "Sentinel Riven (Pearl)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "92043",
+          "num": 43,
+          "name": "Sentinel Riven (Resolute)",
+          "chromas": false,
+          "parentSkin": 34
         },
         {
           "id": "92044",
@@ -115,16 +325,191 @@
           "chromas": false
         },
         {
+          "id": "92046",
+          "num": 46,
+          "name": "Battle Bunny Prime Riven (Ruby)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "92047",
+          "num": 47,
+          "name": "Battle Bunny Prime Riven (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "92048",
+          "num": 48,
+          "name": "Battle Bunny Prime Riven (Citrine)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "92049",
+          "num": 49,
+          "name": "Battle Bunny Prime Riven (Emerald)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "92050",
+          "num": 50,
+          "name": "Battle Bunny Prime Riven (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "92051",
+          "num": 51,
+          "name": "Battle Bunny Prime Riven (Sapphire)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "92052",
+          "num": 52,
+          "name": "Battle Bunny Prime Riven (Obsidian)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "92053",
+          "num": 53,
+          "name": "Battle Bunny Prime Riven (Pearl)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "92054",
+          "num": 54,
+          "name": "Battle Bunny Prime Riven (Nightwire)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
           "id": "92055",
           "num": 55,
           "name": "Broken Covenant Riven",
           "chromas": true
         },
         {
+          "id": "92056",
+          "num": 56,
+          "name": "Dawnbringer Riven (Nightbringer)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "92057",
+          "num": 57,
+          "name": "Broken Covenant Riven (Ruby)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "92058",
+          "num": 58,
+          "name": "Broken Covenant Riven (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "92059",
+          "num": 59,
+          "name": "Broken Covenant Riven (Sapphire)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "92060",
+          "num": 60,
+          "name": "Broken Covenant Riven (Emerald)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "92061",
+          "num": 61,
+          "name": "Broken Covenant Riven (Obsidian)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "92062",
+          "num": 62,
+          "name": "Broken Covenant Riven (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
           "id": "92063",
           "num": 63,
           "name": "Primal Ambush Riven",
           "chromas": true
+        },
+        {
+          "id": "92064",
+          "num": 64,
+          "name": "Primal Ambush Riven (Ruby)",
+          "chromas": false,
+          "parentSkin": 63
+        },
+        {
+          "id": "92065",
+          "num": 65,
+          "name": "Primal Ambush Riven (Citrine)",
+          "chromas": false,
+          "parentSkin": 63
+        },
+        {
+          "id": "92066",
+          "num": 66,
+          "name": "Primal Ambush Riven (Emerald)",
+          "chromas": false,
+          "parentSkin": 63
+        },
+        {
+          "id": "92067",
+          "num": 67,
+          "name": "Primal Ambush Riven (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 63
+        },
+        {
+          "id": "92068",
+          "num": 68,
+          "name": "Primal Ambush Riven (Sapphire)",
+          "chromas": false,
+          "parentSkin": 63
+        },
+        {
+          "id": "92069",
+          "num": 69,
+          "name": "Primal Ambush Riven (Amethyst)",
+          "chromas": false,
+          "parentSkin": 63
+        },
+        {
+          "id": "92070",
+          "num": 70,
+          "name": "Primal Ambush Riven (Turquoise)",
+          "chromas": false,
+          "parentSkin": 63
+        },
+        {
+          "id": "92071",
+          "num": 71,
+          "name": "Primal Ambush Riven (Obsidian)",
+          "chromas": false,
+          "parentSkin": 63
+        },
+        {
+          "id": "92072",
+          "num": 72,
+          "name": "Battle Bunny Prime Riven (Paragon)",
+          "chromas": false,
+          "parentSkin": 44
         }
       ],
       "lore": "Once a swordmaster in the warhosts of Noxus, Riven is an expatriate in a land she previously tried to conquer. She rose through the ranks on the strength of her conviction and brutal efficiency, and was rewarded with a legendary runic blade and a warband of her own. However, on the Ionian front, Riven's faith in her homeland was tested and ultimately broken. Having severed all ties to the empire, she now seeks to find her place in a shattered world, even as rumors abound that Noxus itself has been reforged...",
@@ -138,7 +523,10 @@
         "All of Riven's damage is physical, prioritize high Armor if an opposing Riven gets out of control.",
         "Riven excels at dueling multiple melee attackers at once, as she will be on an almost equal footing damage-wise. If pairing up against Riven, don't go in as double melee until she has expended her full combo."
       ],
-      "tags": ["Fighter", "Assassin"],
+      "tags": [
+        "Fighter",
+        "Assassin"
+      ],
       "partype": "None",
       "info": {
         "attack": 8,
@@ -175,30 +563,105 @@
           "description": "Riven lashes out in a series of strikes. This ability can be reactivated three times in a short time frame with the third hit knocking back nearby enemies.",
           "tooltip": "Riven dashes forward, dealing <physicalDamage>{{ firstslashdamage }} physical damage</physicalDamage>. She can <recast>Recast</recast> this Ability twice. The first <recast>Recast</recast> is the same as the original, but the second has a different effect:<br /><br /><recast>Recast</recast>: Riven leaps forward and slams, dealing <physicalDamage>{{ firstslashdamage }} physical damage</physicalDamage> and <status>Knocks Up</status> nearby enemies for 0.75 seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Attack Damage Ratio"],
+            "label": [
+              "Damage",
+              "Attack Damage Ratio"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ adratio*100.000000 }}% -> {{ adrationl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [13, 13, 13, 13, 13],
+          "cooldown": [
+            13,
+            13,
+            13,
+            13,
+            13
+          ],
           "cooldownBurn": "13",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [45, 75, 105, 135, 165],
-            [30, 55, 80, 105, 130],
-            [150, 225, 300, 375, 450],
-            [2, 2, 2, 2, 2],
-            [65, 70, 75, 80, 85],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              45,
+              75,
+              105,
+              135,
+              165
+            ],
+            [
+              30,
+              55,
+              80,
+              105,
+              130
+            ],
+            [
+              150,
+              225,
+              300,
+              375,
+              450
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              65,
+              70,
+              75,
+              80,
+              85
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -216,7 +679,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [275, 275, 275, 275, 275],
+          "range": [
+            275,
+            275,
+            275,
+            275,
+            275
+          ],
           "rangeBurn": "275",
           "image": {
             "full": "RivenTriCleave.png",
@@ -235,30 +704,105 @@
           "description": "Riven emits a Ki Burst, damaging and stunning nearby enemies.",
           "tooltip": "Riven's sword emits a burst of runic energy, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>Stunning</status> for {{ e5 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 10, 9, 8, 7],
+          "cooldown": [
+            11,
+            10,
+            9,
+            8,
+            7
+          ],
           "cooldownBurn": "11/10/9/8/7",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [65, 95, 125, 155, 185],
-            [40, 70, 100, 130, 160],
-            [3, 3, 3, 3, 3],
-            [0.75, 0.75, 0.75, 0.75, 0.75],
-            [0.75, 0.75, 0.75, 0.75, 0.75],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              65,
+              95,
+              125,
+              155,
+              185
+            ],
+            [
+              40,
+              70,
+              100,
+              130,
+              160
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              0.75,
+              0.75,
+              0.75,
+              0.75,
+              0.75
+            ],
+            [
+              0.75,
+              0.75,
+              0.75,
+              0.75,
+              0.75
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -276,7 +820,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [260, 260, 260, 260, 260],
+          "range": [
+            260,
+            260,
+            260,
+            260,
+            260
+          ],
           "rangeBurn": "260",
           "image": {
             "full": "RivenMartyr.png",
@@ -295,30 +845,105 @@
           "description": "Riven steps forward a short distance and blocks incoming damage.",
           "tooltip": "Riven quickly dashes and gains <shield>{{ totalshield }} Shield</shield> for 1.5 seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Shield Amount", "Cooldown"],
+            "label": [
+              "Shield Amount",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e2 }} -> {{ e2NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9, 8, 7, 6],
+          "cooldown": [
+            10,
+            9,
+            8,
+            7,
+            6
+          ],
           "cooldownBurn": "10/9/8/7/6",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [70, 95, 120, 145, 170],
-            [70, 95, 120, 145, 170],
-            [4, 4, 4, 4, 4],
-            [800, 800, 800, 800, 800],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              70,
+              95,
+              120,
+              145,
+              170
+            ],
+            [
+              70,
+              95,
+              120,
+              145,
+              170
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              800,
+              800,
+              800,
+              800,
+              800
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -336,7 +961,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [250, 250, 250, 250, 250],
+          "range": [
+            250,
+            250,
+            250,
+            250,
+            250
+          ],
           "rangeBurn": "250",
           "image": {
             "full": "RivenFeint.png",
@@ -367,23 +998,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 90, 60],
+          "cooldown": [
+            120,
+            90,
+            60
+          ],
           "cooldownBurn": "120/90/60",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [100, 150, 200],
-            [300, 450, 600],
-            [20, 20, 20],
-            [15, 15, 15],
-            [25, 25, 25],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              100,
+              150,
+              200
+            ],
+            [
+              300,
+              450,
+              600
+            ],
+            [
+              20,
+              20,
+              20
+            ],
+            [
+              15,
+              15,
+              15
+            ],
+            [
+              25,
+              25,
+              25
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -401,7 +1080,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [200, 200, 200],
+          "range": [
+            200,
+            200,
+            200
+          ],
           "rangeBurn": "200",
           "image": {
             "full": "RivenFengShuiEngine.png",

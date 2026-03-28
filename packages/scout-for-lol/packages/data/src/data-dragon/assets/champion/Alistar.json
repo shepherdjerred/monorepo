@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Alistar": {
       "id": "Alistar",
@@ -85,6 +85,62 @@
           "chromas": true
         },
         {
+          "id": "12011",
+          "num": 11,
+          "name": "Moo Cow Alistar (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "12012",
+          "num": 12,
+          "name": "Moo Cow Alistar (Peridot)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "12013",
+          "num": 13,
+          "name": "Moo Cow Alistar (Catseye)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "12014",
+          "num": 14,
+          "name": "Moo Cow Alistar (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "12015",
+          "num": 15,
+          "name": "Moo Cow Alistar (Jasper)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "12016",
+          "num": 16,
+          "name": "Moo Cow Alistar (Sapphire)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "12017",
+          "num": 17,
+          "name": "Moo Cow Alistar (Citrine)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "12018",
+          "num": 18,
+          "name": "Moo Cow Alistar (Amethyst)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
           "id": "12019",
           "num": 19,
           "name": "Hextech Alistar",
@@ -97,10 +153,59 @@
           "chromas": true
         },
         {
+          "id": "12021",
+          "num": 21,
+          "name": "Conqueror Alistar (Golden)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
           "id": "12022",
           "num": 22,
           "name": "Blackfrost Alistar",
           "chromas": true
+        },
+        {
+          "id": "12023",
+          "num": 23,
+          "name": "Blackfrost Alistar (Ruby)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "12024",
+          "num": 24,
+          "name": "Blackfrost Alistar (Turquoise)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "12025",
+          "num": 25,
+          "name": "Blackfrost Alistar (Emerald)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "12026",
+          "num": 26,
+          "name": "Blackfrost Alistar (Amethyst)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "12027",
+          "num": 27,
+          "name": "Blackfrost Alistar (Obsidian)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "12028",
+          "num": 28,
+          "name": "Blackfrost Alistar (Pearl)",
+          "chromas": false,
+          "parentSkin": 22
         },
         {
           "id": "12029",
@@ -109,10 +214,115 @@
           "chromas": true
         },
         {
+          "id": "12030",
+          "num": 30,
+          "name": "Lunar Beast Alistar (Ruby)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "12031",
+          "num": 31,
+          "name": "Lunar Beast Alistar (Sapphire)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "12032",
+          "num": 32,
+          "name": "Lunar Beast Alistar (Catseye)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "12033",
+          "num": 33,
+          "name": "Lunar Beast Alistar (Amethyst)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "12034",
+          "num": 34,
+          "name": "Lunar Beast Alistar (Vitality)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "12035",
+          "num": 35,
+          "name": "Lunar Beast Alistar (Obsidian)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "12036",
+          "num": 36,
+          "name": "Lunar Beast Alistar (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
           "id": "12040",
           "num": 40,
           "name": "Elderwood Alistar",
           "chromas": false
+        },
+        {
+          "id": "12041",
+          "num": 41,
+          "name": "Elderwood Alistar (Ruby)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "12042",
+          "num": 42,
+          "name": "Elderwood Alistar (Catseye)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "12043",
+          "num": 43,
+          "name": "Elderwood Alistar (Emerald)",
+          "chromas": true,
+          "parentSkin": 40
+        },
+        {
+          "id": "12044",
+          "num": 44,
+          "name": "Elderwood Alistar (Amethyst)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "12045",
+          "num": 45,
+          "name": "Elderwood Alistar (Sapphire)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "12046",
+          "num": 46,
+          "name": "Elderwood Alistar (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "12047",
+          "num": 47,
+          "name": "Elderwood Alistar (Pearl)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "12048",
+          "num": 48,
+          "name": "Elderwood Alistar (Obsidian)",
+          "chromas": false,
+          "parentSkin": 40
         }
       ],
       "lore": "Always a mighty warrior with a fearsome reputation, Alistar seeks revenge for the death of his clan at the hands of the Noxian empire. Though he was enslaved and forced into the life of a gladiator, his unbreakable will was what kept him from truly becoming a beast. Now, free of the chains of his former masters, he fights in the name of the downtrodden and the disadvantaged, his rage as much a weapon as his horns, hooves and fists.",
@@ -127,7 +337,10 @@
         "Watch out for the Pulverize-Headbutt combo when around turrets.",
         "When Alistar uses his ultimate, it's often better to move back and wait until the effect wears off before attacking him."
       ],
-      "tags": ["Tank", "Support"],
+      "tags": [
+        "Tank",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 6,
@@ -164,7 +377,11 @@
           "description": "Alistar smashes the ground, dealing damage to nearby enemies and tossing them into the air.",
           "tooltip": "Alistar smashes the ground, <status>Knocking Up</status> enemies for {{ knockupduration }} second and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "@AbilityResourceName@ Cost", "Damage"],
+            "label": [
+              "Cooldown",
+              "@AbilityResourceName@ Cost",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}",
@@ -172,23 +389,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 13, 12, 11, 10],
+          "cooldown": [
+            14,
+            13,
+            12,
+            11,
+            10
+          ],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -206,7 +495,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [365, 365, 365, 365, 365],
+          "range": [
+            365,
+            365,
+            365,
+            365,
+            365
+          ],
           "rangeBurn": "365",
           "image": {
             "full": "Pulverize.png",
@@ -225,7 +520,11 @@
           "description": "Alistar rams a target with his head, dealing damage and knocking the target back.",
           "tooltip": "Alistar rams into an enemy, <status>Knocking</status> them <status>Back</status> and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "@AbilityResourceName@ Cost", "Damage"],
+            "label": [
+              "Cooldown",
+              "@AbilityResourceName@ Cost",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}",
@@ -233,23 +532,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 13, 12, 11, 10],
+          "cooldown": [
+            14,
+            13,
+            12,
+            11,
+            10
+          ],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [700, 700, 700, 700, 700],
-            [0.75, 0.75, 0.75, 0.75, 0.75],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              700,
+              700,
+              700,
+              700,
+              700
+            ],
+            [
+              0.75,
+              0.75,
+              0.75,
+              0.75,
+              0.75
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -267,7 +638,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "Headbutt.png",
@@ -286,7 +663,11 @@
           "description": "Alistar tramples nearby enemy units, ignoring unit collision and gaining stacks if he damages an enemy champion. At full stacks Alistar's next basic attack against an enemy champion deals additional magic damage and stuns them.",
           "tooltip": "Alistar begins trampling the ground, becoming Ghosted and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> over {{ e3 }} seconds to nearby enemies. Each pulse that damages a champion grants a stack.<br /><br />At {{ e5 }} stacks, Alistar's next Attack against champions <status>Stuns</status> for {{ e6 }} second and deals an additional <magicDamage>{{ attackbonusdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "@AbilityResourceName@ Cost", "Damage"],
+            "label": [
+              "Cooldown",
+              "@AbilityResourceName@ Cost",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}",
@@ -294,23 +675,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11.5, 11, 10.5, 10],
+          "cooldown": [
+            12,
+            11.5,
+            11,
+            10.5,
+            10
+          ],
           "cooldownBurn": "12/11.5/11/10.5/10",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [80, 110, 140, 170, 200],
-            [50, 50, 50, 50, 50],
-            [5, 5, 5, 5, 5],
-            [350, 350, 350, 350, 350],
-            [5, 5, 5, 5, 5],
-            [1, 1, 1, 1, 1],
-            [5, 5, 5, 5, 5],
-            [20, 20, 20, 20, 20],
-            [15, 15, 15, 15, 15],
-            [0, 0, 0, 0, 0]
+            [
+              80,
+              110,
+              140,
+              170,
+              200
+            ],
+            [
+              50,
+              50,
+              50,
+              50,
+              50
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              350,
+              350,
+              350,
+              350,
+              350
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              20,
+              20,
+              20,
+              20,
+              20
+            ],
+            [
+              15,
+              15,
+              15,
+              15,
+              15
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -328,7 +781,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [350, 350, 350, 350, 350],
+          "range": [
+            350,
+            350,
+            350,
+            350,
+            350
+          ],
           "rangeBurn": "350",
           "image": {
             "full": "AlistarE.png",
@@ -347,30 +806,81 @@
           "description": "Alistar lets out a wild roar, removing all crowd control effects on himself, and reducing incoming physical and magical damage for the duration.",
           "tooltip": "Alistar immediately cleanses all <status>Disabling</status> effects and takes {{ rdamagereduction }}% reduced damage for {{ rduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage Reduction"],
+            "label": [
+              "Cooldown",
+              "Damage Reduction"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ rdamagereduction }}% -> {{ rdamagereductionNL }}%"
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -388,7 +898,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1, 1, 1],
+          "range": [
+            1,
+            1,
+            1
+          ],
           "rangeBurn": "1",
           "image": {
             "full": "FerociousHowl.png",

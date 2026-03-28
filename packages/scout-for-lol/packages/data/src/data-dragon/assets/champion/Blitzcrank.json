@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Blitzcrank": {
       "id": "Blitzcrank",
@@ -67,10 +67,87 @@
           "chromas": false
         },
         {
+          "id": "53008",
+          "num": 8,
+          "name": "Blitzcrank Steel Molten",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
+          "id": "53009",
+          "num": 9,
+          "name": "Blitzcrank Steel Cobalt",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
+          "id": "53010",
+          "num": 10,
+          "name": "Blitzcrank Steel Gunmetal",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
           "id": "53011",
           "num": 11,
           "name": "Battle Boss Blitzcrank",
           "chromas": true
+        },
+        {
+          "id": "53012",
+          "num": 12,
+          "name": "Battle Boss Blitzcrank (Catseye)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "53013",
+          "num": 13,
+          "name": "Battle Boss Blitzcrank (Rainbow)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "53014",
+          "num": 14,
+          "name": "Battle Boss Blitzcrank (Citrine)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "53015",
+          "num": 15,
+          "name": "Battle Boss Blitzcrank (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "53016",
+          "num": 16,
+          "name": "Battle Boss Blitzcrank (Ruby)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "53017",
+          "num": 17,
+          "name": "Battle Boss Blitzcrank (Sapphire)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "53018",
+          "num": 18,
+          "name": "Battle Boss Blitzcrank (Pearl)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "53019",
+          "num": 19,
+          "name": "Battle Boss Blitzcrank (Turquoise)",
+          "chromas": false,
+          "parentSkin": 11
         },
         {
           "id": "53020",
@@ -91,10 +168,94 @@
           "chromas": true
         },
         {
+          "id": "53023",
+          "num": 23,
+          "name": "Witch's Brew Blitzcrank (Ruby)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "53024",
+          "num": 24,
+          "name": "Witch's Brew Blitzcrank (Catseye)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "53025",
+          "num": 25,
+          "name": "Witch's Brew Blitzcrank (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "53026",
+          "num": 26,
+          "name": "Witch's Brew Blitzcrank (Emerald)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "53027",
+          "num": 27,
+          "name": "Witch's Brew Blitzcrank (Turquoise)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "53028",
+          "num": 28,
+          "name": "Witch's Brew Blitzcrank (Obsidian)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
           "id": "53029",
           "num": 29,
           "name": "Space Groove Blitz & Crank",
           "chromas": true
+        },
+        {
+          "id": "53030",
+          "num": 30,
+          "name": "Space Groove Blitz & Crank (Ruby)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "53031",
+          "num": 31,
+          "name": "Space Groove Blitz & Crank (Catseye)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "53032",
+          "num": 32,
+          "name": "Space Groove Blitz & Crank (Amethyst)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "53033",
+          "num": 33,
+          "name": "Space Groove Blitz & Crank (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "53034",
+          "num": 34,
+          "name": "Space Groove Blitz & Crank (Pearl)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "53035",
+          "num": 35,
+          "name": "Space Groove Blitz & Crank (Disco)",
+          "chromas": false,
+          "parentSkin": 29
         },
         {
           "id": "53036",
@@ -103,16 +264,198 @@
           "chromas": true
         },
         {
+          "id": "53037",
+          "num": 37,
+          "name": "Victorious Blitzcrank (Solo/Duo Platinum)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "53038",
+          "num": 38,
+          "name": "Victorious Blitzcrank (Solo/Duo Diamond)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "53039",
+          "num": 39,
+          "name": "Victorious Blitzcrank (Solo/Duo Master)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "53040",
+          "num": 40,
+          "name": "Victorious Blitzcrank (Solo/Duo Grandmaster)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "53041",
+          "num": 41,
+          "name": "Victorious Blitzcrank (Solo/Duo Challenger)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "53042",
+          "num": 42,
+          "name": "Victorious Blitzcrank (Flex Platinum)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "53043",
+          "num": 43,
+          "name": "Victorious Blitzcrank (Flex Diamond)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "53044",
+          "num": 44,
+          "name": "Victorious Blitzcrank (Flex Master)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "53045",
+          "num": 45,
+          "name": "Victorious Blitzcrank (Flex Grandmaster)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "53046",
+          "num": 46,
+          "name": "Victorious Blitzcrank (Flex Challenger)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
           "id": "53047",
           "num": 47,
           "name": "Zenith Games Blitzcrank",
           "chromas": true
         },
         {
+          "id": "53048",
+          "num": 48,
+          "name": "Zenith Games Blitzcrank (Ruby)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "53049",
+          "num": 49,
+          "name": "Zenith Games Blitzcrank (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "53050",
+          "num": 50,
+          "name": "Zenith Games Blitzcrank (Citrine)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "53051",
+          "num": 51,
+          "name": "Zenith Games Blitzcrank (Sapphire)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "53052",
+          "num": 52,
+          "name": "Zenith Games Blitzcrank (Emerald)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "53053",
+          "num": 53,
+          "name": "Zenith Games Blitzcrank (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "53054",
+          "num": 54,
+          "name": "Zenith Games Blitzcrank (Pearl)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "53055",
+          "num": 55,
+          "name": "Zenith Games Blitzcrank (Obsidian)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
           "id": "53056",
           "num": 56,
           "name": "Beezcrank",
           "chromas": true
+        },
+        {
+          "id": "53057",
+          "num": 57,
+          "name": "Beezcrank (Ruby)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "53058",
+          "num": 58,
+          "name": "Beezcrank (Sapphire)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "53059",
+          "num": 59,
+          "name": "Beezcrank (Emerald)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "53060",
+          "num": 60,
+          "name": "Beezcrank (Pearl)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "53061",
+          "num": 61,
+          "name": "Beezcrank (Obsidian)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "53062",
+          "num": 62,
+          "name": "Beezcrank (Amethyst)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "53063",
+          "num": 63,
+          "name": "Beezcrank (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "53064",
+          "num": 64,
+          "name": "Beezcrank (Rainbow)",
+          "chromas": false,
+          "parentSkin": 56
         }
       ],
       "lore": "Blitzcrank is an enormous, near-indestructible automaton from Zaun, originally built to dispose of hazardous waste. However, he found this primary purpose too restricting, and modified his own form to better serve the fragile people of the Sump. Blitzcrank selflessly uses his strength and durability to protect others, extending a helpful metal fist or burst of energy to subdue any troublemakers.",
@@ -125,7 +468,10 @@
         "Blitzcrank's passive Mana Barrier grants him a shield when he is low on health.",
         "Staying behind creeps can prevent you from being Rocket Grabbed. Blitzcrank's Rocket Grab only pulls the first enemy target it encounters."
       ],
-      "tags": ["Tank", "Support"],
+      "tags": [
+        "Tank",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 4,
@@ -162,30 +508,105 @@
           "description": "Blitzcrank fires their right hand to grab an opponent on its path, dealing damage and dragging it back to them.",
           "tooltip": "Blitzcrank fires their right hand, <status>Pulling</status> the first enemy hit towards them and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [20, 19, 18, 17, 16],
+          "cooldown": [
+            20,
+            19,
+            18,
+            17,
+            16
+          ],
           "cooldownBurn": "20/19/18/17/16",
-          "cost": [100, 100, 100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [90, 140, 190, 240, 290],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              90,
+              140,
+              190,
+              240,
+              290
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -203,7 +624,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1079, 1079, 1079, 1079, 1079],
+          "range": [
+            1079,
+            1079,
+            1079,
+            1079,
+            1079
+          ],
           "rangeBurn": "1079",
           "image": {
             "full": "RocketGrab.png",
@@ -222,30 +649,105 @@
           "description": "Blitzcrank super charges themself to get dramatically increased Move and Attack Speed. They are temporarily slowed after the effect ends.",
           "tooltip": "Blitzcrank supercharges themself, gaining <speed>{{ movespeedmod*100 }}% decaying Move Speed</speed> and <attackSpeed>{{ attackspeedmod*100 }}% Attack Speed</attackSpeed> for {{ duration }} seconds.<br /><br />Afterwards, Blitzcrank is <status>Slowed</status> by {{ movespeedmodreduction*100 }}% for {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Move Speed", "Attack Speed"],
+            "label": [
+              "Move Speed",
+              "Attack Speed"
+            ],
             "effect": [
               "{{ movespeedmod*100.000000 }}% -> {{ movespeedmodnl*100.000000 }}%",
               "{{ attackspeedmod*100.000000 }}% -> {{ attackspeedmodnl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [15, 15, 15, 15, 15],
+          "cooldown": [
+            15,
+            15,
+            15,
+            15,
+            15
+          ],
           "cooldownBurn": "15",
-          "cost": [75, 75, 75, 75, 75],
+          "cost": [
+            75,
+            75,
+            75,
+            75,
+            75
+          ],
           "costBurn": "75",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -263,7 +765,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1, 1, 1, 1, 1],
+          "range": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
           "rangeBurn": "1",
           "image": {
             "full": "Overdrive.png",
@@ -282,27 +790,103 @@
           "description": "Blitzcrank charges up their fist to make the next attack deal double damage and pop their target up in the air.",
           "tooltip": "Blitzcrank charges up their fist, causing their next Attack to <status>Knock Up</status> for {{ ccduration }} second(s) and deal <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
+            "label": [
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [7, 6.5, 6, 5.5, 5],
+          "cooldown": [
+            7,
+            6.5,
+            6,
+            5.5,
+            5
+          ],
           "cooldownBurn": "7/6.5/6/5.5/5",
-          "cost": [25, 25, 25, 25, 25],
+          "cost": [
+            25,
+            25,
+            25,
+            25,
+            25
+          ],
           "costBurn": "25",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -320,7 +904,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [300, 300, 300, 300, 300],
+          "range": [
+            300,
+            300,
+            300,
+            300,
+            300
+          ],
           "rangeBurn": "300",
           "image": {
             "full": "PowerFist.png",
@@ -353,23 +943,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [60, 40, 20],
+          "cooldown": [
+            60,
+            40,
+            20
+          ],
           "cooldownBurn": "60/40/20",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -387,7 +1025,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600],
+          "range": [
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "StaticField.png",

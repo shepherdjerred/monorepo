@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Diana": {
       "id": "Diana",
@@ -43,6 +43,55 @@
           "chromas": false
         },
         {
+          "id": "131004",
+          "num": 4,
+          "name": "Lunar Goddess Diana (Ruby)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "131005",
+          "num": 5,
+          "name": "Lunar Goddess Diana (Pearl)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "131006",
+          "num": 6,
+          "name": "Lunar Goddess Diana (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "131007",
+          "num": 7,
+          "name": "Lunar Goddess Diana (Turquoise)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "131008",
+          "num": 8,
+          "name": "Lunar Goddess Diana (Amethyst)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "131009",
+          "num": 9,
+          "name": "Lunar Goddess Diana (Peridot)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "131010",
+          "num": 10,
+          "name": "Lunar Goddess Diana (Obsidian)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
           "id": "131011",
           "num": 11,
           "name": "Blood Moon Diana",
@@ -55,10 +104,87 @@
           "chromas": true
         },
         {
+          "id": "131013",
+          "num": 13,
+          "name": "Dark Waters Diana (Pearl)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "131014",
+          "num": 14,
+          "name": "Dark Waters Diana (Ruby)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "131015",
+          "num": 15,
+          "name": "Dark Waters Diana (Obsidian)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "131016",
+          "num": 16,
+          "name": "Dark Waters Diana (Turquoise)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "131017",
+          "num": 17,
+          "name": "Dark Waters Diana (Sapphire)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
           "id": "131018",
           "num": 18,
           "name": "Dragonslayer Diana",
           "chromas": true
+        },
+        {
+          "id": "131019",
+          "num": 19,
+          "name": "Dragonslayer Diana (Ruby)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "131020",
+          "num": 20,
+          "name": "Dragonslayer Diana (Citrine)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "131021",
+          "num": 21,
+          "name": "Dragonslayer Diana (Emerald)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "131022",
+          "num": 22,
+          "name": "Dragonslayer Diana (Sapphire)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "131023",
+          "num": 23,
+          "name": "Dragonslayer Diana (Pearl)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "131024",
+          "num": 24,
+          "name": "Dragonslayer Diana (Obsidian)",
+          "chromas": false,
+          "parentSkin": 18
         },
         {
           "id": "131025",
@@ -79,10 +205,136 @@
           "chromas": true
         },
         {
+          "id": "131028",
+          "num": 28,
+          "name": "Sentinel Diana (Ruby)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "131029",
+          "num": 29,
+          "name": "Sentinel Diana (Citrine)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "131030",
+          "num": 30,
+          "name": "Sentinel Diana (Emerald)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "131031",
+          "num": 31,
+          "name": "Sentinel Diana (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "131032",
+          "num": 32,
+          "name": "Sentinel Diana (Sapphire)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "131033",
+          "num": 33,
+          "name": "Sentinel Diana (Pearl)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "131034",
+          "num": 34,
+          "name": "Sentinel Diana (Turquoise)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "131035",
+          "num": 35,
+          "name": "Sentinel Diana (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "131036",
+          "num": 36,
+          "name": "Sentinel Diana (Resolute)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
           "id": "131037",
           "num": 37,
           "name": "Firecracker Diana",
           "chromas": true
+        },
+        {
+          "id": "131038",
+          "num": 38,
+          "name": "Firecracker Diana (Ruby)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "131039",
+          "num": 39,
+          "name": "Firecracker Diana (Sapphire)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "131040",
+          "num": 40,
+          "name": "Firecracker Diana (Emerald)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "131041",
+          "num": 41,
+          "name": "Firecracker Diana (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "131042",
+          "num": 42,
+          "name": "Firecracker Diana (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "131043",
+          "num": 43,
+          "name": "Firecracker Diana (Catseye)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "131044",
+          "num": 44,
+          "name": "Firecracker Diana (Pearl)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "131045",
+          "num": 45,
+          "name": "Firecracker Diana (Obsidian)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "131046",
+          "num": 46,
+          "name": "Firecracker Diana (Golden Tiger)",
+          "chromas": false,
+          "parentSkin": 37
         },
         {
           "id": "131047",
@@ -91,10 +343,115 @@
           "chromas": true
         },
         {
+          "id": "131048",
+          "num": 48,
+          "name": "Winterblessed Diana (Ruby)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "131049",
+          "num": 49,
+          "name": "Winterblessed Diana (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "131050",
+          "num": 50,
+          "name": "Winterblessed Diana (Emerald)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "131051",
+          "num": 51,
+          "name": "Winterblessed Diana (Turquoise)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "131052",
+          "num": 52,
+          "name": "Winterblessed Diana (Pearl)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "131053",
+          "num": 53,
+          "name": "Winterblessed Diana (Wreathguard)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
           "id": "131054",
           "num": 54,
           "name": "Heavenscale Diana",
           "chromas": true
+        },
+        {
+          "id": "131055",
+          "num": 55,
+          "name": "Heavenscale Diana (Ruby)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "131056",
+          "num": 56,
+          "name": "Heavenscale Diana (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "131057",
+          "num": 57,
+          "name": "Heavenscale Diana (Citrine)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "131058",
+          "num": 58,
+          "name": "Heavenscale Diana (Emerald)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "131059",
+          "num": 59,
+          "name": "Heavenscale Diana (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "131060",
+          "num": 60,
+          "name": "Heavenscale Diana (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "131061",
+          "num": 61,
+          "name": "Heavenscale Diana (Pearl)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "131062",
+          "num": 62,
+          "name": "Heavenscale Diana (Obsidian)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "131063",
+          "num": 63,
+          "name": "Heavenscale Diana (Lustrous)",
+          "chromas": false,
+          "parentSkin": 54
         },
         {
           "id": "131064",
@@ -107,6 +464,69 @@
           "num": 65,
           "name": "Prestige Dark Cosmic Diana",
           "chromas": false
+        },
+        {
+          "id": "131066",
+          "num": 66,
+          "name": "Dark Cosmic Diana (Ruby)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "131067",
+          "num": 67,
+          "name": "Dark Cosmic Diana (Catseye)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "131068",
+          "num": 68,
+          "name": "Dark Cosmic Diana (Sapphire)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "131069",
+          "num": 69,
+          "name": "Dark Cosmic Diana (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "131070",
+          "num": 70,
+          "name": "Dark Cosmic Diana (Emerald)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "131071",
+          "num": 71,
+          "name": "Dark Cosmic Diana (Turquoise)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "131072",
+          "num": 72,
+          "name": "Dark Cosmic Diana (Rainbow)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "131073",
+          "num": 73,
+          "name": "Dark Cosmic Diana (Pearl)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "131074",
+          "num": 74,
+          "name": "Dark Cosmic Diana (Quasar)",
+          "chromas": false,
+          "parentSkin": 64
         }
       ],
       "lore": "Bearing her crescent moonblade, Diana fights as a warrior of the Lunari—a faith all but quashed in the lands around Mount Targon. Clad in shimmering armor the color of winter snow at night, she is a living embodiment of the silver moon's power. Imbued with the essence of an Aspect from beyond Targon's towering summit, Diana is no longer wholly human, and struggles to understand her power and purpose in this world.",
@@ -121,7 +541,10 @@
         "Pale Cascade orbs only last a few seconds. Avoid Diana and engage her after the shield dissipates.",
         "Diana can play very aggressively if she uses Lunar Rush without Moonlight, but you can punish her by slowing or stunning her when she has no way to get back into position."
       ],
-      "tags": ["Fighter", "Assassin"],
+      "tags": [
+        "Fighter",
+        "Assassin"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 7,
@@ -158,30 +581,105 @@
           "description": "Unleashes a bolt of lunar energy in an arc dealing magic damage.<br><br>Afflicts enemies struck with Moonlight, revealing them if they are not stealthed for 3 seconds.",
           "tooltip": "Diana unleashes an arc of lunar energy, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and marking with <keywordMajor>Moonlight</keywordMajor> for {{ moonlightduration }} seconds. <br /><br /><keywordMajor>Moonlight</keywordMajor> reveals enemies that are not <keywordStealth>stealthed</keywordStealth>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage"],
+            "label": [
+              "Cooldown",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 7.5, 7, 6.5, 6],
+          "cooldown": [
+            8,
+            7.5,
+            7,
+            6.5,
+            6
+          ],
           "cooldownBurn": "8/7.5/7/6.5/6",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [1, 1, 1, 1, 1],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [3, 3, 3, 3, 3],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -199,7 +697,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [900, 900, 900, 900, 900],
+          "range": [
+            900,
+            900,
+            900,
+            900,
+            900
+          ],
           "rangeBurn": "900",
           "image": {
             "full": "DianaQ.png",
@@ -232,23 +736,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [15, 13.5, 12, 10.5, 9],
+          "cooldown": [
+            15,
+            13.5,
+            12,
+            10.5,
+            9
+          ],
           "cooldownBurn": "15/13.5/12/10.5/9",
-          "cost": [40, 45, 50, 55, 60],
+          "cost": [
+            40,
+            45,
+            50,
+            55,
+            60
+          ],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [5, 5, 5, 5, 5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [1, 1, 1, 1, 1],
-            [4, 4, 4, 4, 4],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -266,7 +842,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "DianaOrbs.png",
@@ -285,7 +867,11 @@
           "description": "Becomes the living embodiment of the vengeful moon, dashing to an enemy and dealing magic damage.<br><br>Lunar Rush has no cooldown when used to dash to an enemy afflicted with Moonlight. All other enemies will have the Moonlight debuff removed regardless of whether they were the target of Lunar Rush.",
           "tooltip": "Diana becomes as the vengeful moon, dashing to an enemy and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. If the target is afflicted with <keywordMajor>Moonlight</keywordMajor>, this Ability's Cooldown is refreshed.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "@AbilityResourceName@ Cost", "Damage"],
+            "label": [
+              "Cooldown",
+              "@AbilityResourceName@ Cost",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}",
@@ -293,23 +879,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [22, 20, 18, 16, 14],
+          "cooldown": [
+            22,
+            20,
+            18,
+            16,
+            14
+          ],
           "cooldownBurn": "22/20/18/16/14",
-          "cost": [40, 45, 50, 55, 60],
+          "cost": [
+            40,
+            45,
+            50,
+            55,
+            60
+          ],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [4, 4, 4, 0, 0],
-            [40, 60, 80, 100, 120],
-            [50, 75, 100, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              4,
+              4,
+              4,
+              0,
+              0
+            ],
+            [
+              40,
+              60,
+              80,
+              100,
+              120
+            ],
+            [
+              50,
+              75,
+              100,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -327,7 +985,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [825, 825, 825, 825, 825],
+          "range": [
+            825,
+            825,
+            825,
+            825,
+            825
+          ],
           "rangeBurn": "825",
           "image": {
             "full": "DianaTeleport.png",
@@ -346,7 +1010,11 @@
           "description": "Diana reveals and draws in all nearby enemies and slows them.<br><br>If Diana pulls in one or more enemy champions, the moonlight crashes down onto her after a short delay, dealing magic damage in an area around her, increased for each target beyond the first pulled.",
           "tooltip": "Diana <status>Pulls In</status>, <status>Slows</status> by {{ slowtooltip }}%, and reveals nearby enemies for {{ slowduration }} seconds.<br /><br />If Diana hits at least one enemy champion, she calls to the moon, dealing <magicDamage>{{ rexplosiondamage }} magic damage</magicDamage> plus <magicDamage>{{ rmultihitamplification }}</magicDamage> for each champion pulled beyond the first, up to a max of an additional <magicDamage>{{ maxdamage }} damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage", "Slow"],
+            "label": [
+              "Cooldown",
+              "Damage",
+              "Slow"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ damage }} -> {{ damageNL }}",
@@ -354,23 +1022,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [100, 90, 80],
+          "cooldown": [
+            100,
+            90,
+            80
+          ],
           "cooldownBurn": "100/90/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [-0.35, -0.4, -0.45],
-            [2, 2, 2],
-            [0.5, 0.5, 0.5],
-            [3, 3, 3],
-            [4, 4, 4],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              -0.35,
+              -0.4,
+              -0.45
+            ],
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              3,
+              3,
+              3
+            ],
+            [
+              4,
+              4,
+              4
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -388,7 +1104,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [475, 475, 475],
+          "range": [
+            475,
+            475,
+            475
+          ],
           "rangeBurn": "475",
           "image": {
             "full": "DianaR.png",

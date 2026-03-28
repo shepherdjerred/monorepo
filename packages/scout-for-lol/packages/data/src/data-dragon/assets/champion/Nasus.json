@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Nasus": {
       "id": "Nasus",
@@ -61,6 +61,27 @@
           "chromas": false
         },
         {
+          "id": "75007",
+          "num": 7,
+          "name": "Dreadknight Nasus Plague Burn",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "75008",
+          "num": 8,
+          "name": "Dreadknight Nasus Plague Blight",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "75009",
+          "num": 9,
+          "name": "Dreadknight Nasus Plague Frostbite",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
           "id": "75010",
           "num": 10,
           "name": "Worldbreaker Nasus",
@@ -73,10 +94,94 @@
           "chromas": true
         },
         {
+          "id": "75012",
+          "num": 12,
+          "name": "Lunar Guardian Nasus (Ruby)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "75013",
+          "num": 13,
+          "name": "Lunar Guardian Nasus (Meteorite)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "75014",
+          "num": 14,
+          "name": "Lunar Guardian Nasus (Pearl)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "75015",
+          "num": 15,
+          "name": "Lunar Guardian Nasus (Turquoise)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
           "id": "75016",
           "num": 16,
           "name": "Battlecast Nasus",
           "chromas": true
+        },
+        {
+          "id": "75017",
+          "num": 17,
+          "name": "Battlecast Nasus (Ruby)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "75018",
+          "num": 18,
+          "name": "Battlecast Nasus (Catseye)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "75019",
+          "num": 19,
+          "name": "Battlecast Nasus (Emerald)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "75020",
+          "num": 20,
+          "name": "Battlecast Nasus (Sapphire)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "75021",
+          "num": 21,
+          "name": "Battlecast Nasus (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "75022",
+          "num": 22,
+          "name": "Battlecast Nasus (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "75023",
+          "num": 23,
+          "name": "Battlecast Nasus (Pearl)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "75024",
+          "num": 24,
+          "name": "Battlecast Nasus (Obsidian)",
+          "chromas": false,
+          "parentSkin": 16
         },
         {
           "id": "75025",
@@ -85,10 +190,136 @@
           "chromas": true
         },
         {
+          "id": "75026",
+          "num": 26,
+          "name": "Space Groove Nasus (Ruby)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "75027",
+          "num": 27,
+          "name": "Space Groove Nasus (Catseye)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "75028",
+          "num": 28,
+          "name": "Space Groove Nasus (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "75029",
+          "num": 29,
+          "name": "Space Groove Nasus (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "75030",
+          "num": 30,
+          "name": "Space Groove Nasus (Amethyst)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "75031",
+          "num": 31,
+          "name": "Space Groove Nasus (Emerald)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "75032",
+          "num": 32,
+          "name": "Space Groove Nasus (Obsidian)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "75033",
+          "num": 33,
+          "name": "Space Groove Nasus (Pearl)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "75034",
+          "num": 34,
+          "name": "Space Groove Nasus (Disco)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
           "id": "75035",
           "num": 35,
           "name": "Armored Titan Nasus",
           "chromas": true
+        },
+        {
+          "id": "75036",
+          "num": 36,
+          "name": "Armored Titan Nasus (Ruby)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "75037",
+          "num": 37,
+          "name": "Armored Titan Nasus (Catseye)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "75038",
+          "num": 38,
+          "name": "Armored Titan Nasus (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "75039",
+          "num": 39,
+          "name": "Armored Titan Nasus (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "75040",
+          "num": 40,
+          "name": "Armored Titan Nasus (Emerald)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "75041",
+          "num": 41,
+          "name": "Armored Titan Nasus (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "75042",
+          "num": 42,
+          "name": "Armored Titan Nasus (Turquoise)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "75043",
+          "num": 43,
+          "name": "Armored Titan Nasus (Granite)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "75044",
+          "num": 44,
+          "name": "Armored Titan Nasus (Ace)",
+          "chromas": false,
+          "parentSkin": 35
         },
         {
           "id": "75045",
@@ -97,10 +328,122 @@
           "chromas": true
         },
         {
+          "id": "75046",
+          "num": 46,
+          "name": "Nightbringer Nasus (Ruby)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "75047",
+          "num": 47,
+          "name": "Nightbringer Nasus (Citrine)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "75048",
+          "num": 48,
+          "name": "Nightbringer Nasus (Turquoise)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "75049",
+          "num": 49,
+          "name": "Nightbringer Nasus (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "75050",
+          "num": 50,
+          "name": "Nightbringer Nasus (Sapphire)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "75051",
+          "num": 51,
+          "name": "Nightbringer Nasus (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "75052",
+          "num": 52,
+          "name": "Nightbringer Nasus (Emerald)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "75053",
+          "num": 53,
+          "name": "Nightbringer Nasus (Rainbow)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
           "id": "75054",
           "num": 54,
           "name": "Fatemaker Nasus",
           "chromas": true
+        },
+        {
+          "id": "75055",
+          "num": 55,
+          "name": "Fatemaker Nasus (Ruby)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "75056",
+          "num": 56,
+          "name": "Fatemaker Nasus (Catseye)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "75057",
+          "num": 57,
+          "name": "Fatemaker Nasus (Emerald)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "75058",
+          "num": 58,
+          "name": "Fatemaker Nasus (Turquoise)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "75059",
+          "num": 59,
+          "name": "Fatemaker Nasus (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "75060",
+          "num": 60,
+          "name": "Fatemaker Nasus (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "75061",
+          "num": 61,
+          "name": "Fatemaker Nasus (Pearl)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "75062",
+          "num": 62,
+          "name": "Fatemaker Nasus (Obsidian)",
+          "chromas": false,
+          "parentSkin": 54
         }
       ],
       "lore": "Nasus is an imposing, jackal-headed Ascended being from ancient Shurima, a heroic figure regarded as a demigod by the people of the desert. Fiercely intelligent, he was a guardian of knowledge and peerless strategist whose wisdom guided the ancient empire of Shurima to greatness for many centuries. After the fall of the empire, he went into self-imposed exile, becoming little more than a legend. Now that the ancient city of Shurima has risen once more, he has returned, determined to ensure it never falls again.",
@@ -115,7 +458,10 @@
         "Max rank Wither is a very effective counter to Attack Damage characters, so try to avoid getting caught alone by it.",
         "Nasus is prone to being kited. Try not to engage him at full Health."
       ],
-      "tags": ["Fighter", "Tank"],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 7,
@@ -152,30 +498,105 @@
           "description": "Nasus strikes his foe, dealing damage and increasing the power of his future Siphoning Strikes if he slays his target.",
           "tooltip": "Nasus' next Attack deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>. Killing an enemy with this Attack permanently increases its damage by {{ basicstacks }}, increased to {{ bigstacks }} against champions, large minions and large jungle monsters.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Base Damage", "Cooldown"],
+            "label": [
+              "Base Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ bonusdamage }} -> {{ bonusdamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [7.5, 6.5, 5.5, 4.5, 3.5],
+          "cooldown": [
+            7.5,
+            6.5,
+            5.5,
+            4.5,
+            3.5
+          ],
           "cooldownBurn": "7.5/6.5/5.5/4.5/3.5",
-          "cost": [20, 20, 20, 20, 20],
+          "cost": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
           "costBurn": "20",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -193,7 +614,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [255, 255, 255, 255, 255],
+          "range": [
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
           "rangeBurn": "255",
           "image": {
             "full": "NasusQ.png",
@@ -212,30 +639,105 @@
           "description": "Nasus ages an enemy champion, decelerating their Move Speed and Attack Speed over time.",
           "tooltip": "Nasus ages a champion, <status>Slowing</status> them by {{ slowbase }}%, increasing to {{ maxslowtooltiponly }}% over {{ duration }} seconds. Their <attackSpeed>Attack Speed</attackSpeed> is also reduced by {{ attackspeedslowmult*100 }}% of the <status>Slow</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Max Slow", "Cooldown"],
+            "label": [
+              "Max Slow",
+              "Cooldown"
+            ],
             "effect": [
               "{{ maxslowtooltiponly }}% -> {{ maxslowtooltiponlyNL }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [15, 14, 13, 12, 11],
+          "cooldown": [
+            15,
+            14,
+            13,
+            12,
+            11
+          ],
           "cooldownBurn": "15/14/13/12/11",
-          "cost": [80, 80, 80, 80, 80],
+          "cost": [
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
           "costBurn": "80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -253,7 +755,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [700, 700, 700, 700, 700],
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "NasusW.png",
@@ -286,23 +794,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 12, 12, 12, 12],
+          "cooldown": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
           "cooldownBurn": "12",
-          "cost": [60, 70, 80, 90, 100],
+          "cost": [
+            60,
+            70,
+            80,
+            90,
+            100
+          ],
           "costBurn": "60/70/80/90/100",
           "datavalues": {},
           "effect": [
             null,
-            [10, 16, 22, 28, 34],
-            [30, 35, 40, 45, 50],
-            [5, 5, 5, 5, 5],
-            [50, 80, 110, 140, 170],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              10,
+              16,
+              22,
+              28,
+              34
+            ],
+            [
+              30,
+              35,
+              40,
+              45,
+              50
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              50,
+              80,
+              110,
+              140,
+              170
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -320,7 +900,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "NasusE.png",
@@ -353,23 +939,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -387,7 +1021,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400],
+          "range": [
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "NasusR.png",

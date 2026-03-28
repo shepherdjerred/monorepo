@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Thresh": {
       "id": "Thresh",
@@ -61,6 +61,48 @@
           "chromas": true
         },
         {
+          "id": "412007",
+          "num": 7,
+          "name": "High Noon Thresh (Ruby)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "412008",
+          "num": 8,
+          "name": "High Noon Thresh (Obsidian)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "412009",
+          "num": 9,
+          "name": "High Noon Thresh (Sapphire)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "412010",
+          "num": 10,
+          "name": "High Noon Thresh (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "412011",
+          "num": 11,
+          "name": "High Noon Thresh (Pearl)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "412012",
+          "num": 12,
+          "name": "Worlds 2013 Thresh (Golden)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
           "id": "412013",
           "num": 13,
           "name": "Pulsefire Thresh",
@@ -79,10 +121,80 @@
           "chromas": true
         },
         {
+          "id": "412016",
+          "num": 16,
+          "name": "Dark Star Thresh (Antimatter)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
           "id": "412017",
           "num": 17,
           "name": "Spirit Blossom Thresh",
           "chromas": true
+        },
+        {
+          "id": "412018",
+          "num": 18,
+          "name": "FPX Thresh (Elite)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "412019",
+          "num": 19,
+          "name": "Spirit Blossom Thresh (Sapphire)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "412020",
+          "num": 20,
+          "name": "Spirit Blossom Thresh (Ruby)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "412021",
+          "num": 21,
+          "name": "Spirit Blossom Thresh (Catseye)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "412022",
+          "num": 22,
+          "name": "Spirit Blossom Thresh (Emerald)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "412023",
+          "num": 23,
+          "name": "Spirit Blossom Thresh (Pearl)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "412024",
+          "num": 24,
+          "name": "Spirit Blossom Thresh (Obsidian)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "412025",
+          "num": 25,
+          "name": "Spirit Blossom Thresh (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "412026",
+          "num": 26,
+          "name": "Spirit Blossom Thresh (Night Blossom)",
+          "chromas": false,
+          "parentSkin": 17
         },
         {
           "id": "412027",
@@ -97,6 +209,69 @@
           "chromas": true
         },
         {
+          "id": "412029",
+          "num": 29,
+          "name": "Steel Dragon Thresh (Ruby)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "412030",
+          "num": 30,
+          "name": "Steel Dragon Thresh (Pearl)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "412031",
+          "num": 31,
+          "name": "Steel Dragon Thresh (Amethyst)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "412032",
+          "num": 32,
+          "name": "Steel Dragon Thresh (Turquoise)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "412033",
+          "num": 33,
+          "name": "Steel Dragon Thresh (Obsidian)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "412034",
+          "num": 34,
+          "name": "Steel Dragon Thresh (Catseye)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "412035",
+          "num": 35,
+          "name": "Steel Dragon Thresh (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "412036",
+          "num": 36,
+          "name": "Steel Dragon Thresh (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "412037",
+          "num": 37,
+          "name": "Steel Dragon Thresh (Emberclaw)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
           "id": "412038",
           "num": 38,
           "name": "Prestige Pulsefire Thresh (2022)",
@@ -109,16 +284,198 @@
           "chromas": true
         },
         {
+          "id": "412040",
+          "num": 40,
+          "name": "Lunar Emperor Thresh (Ruby)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "412041",
+          "num": 41,
+          "name": "Lunar Emperor Thresh (Granite)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "412042",
+          "num": 42,
+          "name": "Lunar Emperor Thresh (Emerald)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "412043",
+          "num": 43,
+          "name": "Lunar Emperor Thresh (Turquoise)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "412044",
+          "num": 44,
+          "name": "Lunar Emperor Thresh (Pearl)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "412045",
+          "num": 45,
+          "name": "Lunar Emperor Thresh (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "412046",
+          "num": 46,
+          "name": "Lunar Emperor Thresh (Citrine)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "412047",
+          "num": 47,
+          "name": "Lunar Emperor Thresh (Obsidian)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "412048",
+          "num": 48,
+          "name": "Lunar Emperor Thresh (Resplendent)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
           "id": "412049",
           "num": 49,
           "name": "Winterblessed Thresh",
           "chromas": true
         },
         {
+          "id": "412050",
+          "num": 50,
+          "name": "Winterblessed Thresh (Ruby)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "412051",
+          "num": 51,
+          "name": "Winterblessed Thresh (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "412052",
+          "num": 52,
+          "name": "Winterblessed Thresh (Emerald)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "412053",
+          "num": 53,
+          "name": "Winterblessed Thresh (Citrine)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "412054",
+          "num": 54,
+          "name": "Winterblessed Thresh (Turquoise)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "412055",
+          "num": 55,
+          "name": "Winterblessed Thresh (Amethyst)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "412056",
+          "num": 56,
+          "name": "Winterblessed Thresh (Pearl)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "412057",
+          "num": 57,
+          "name": "Winterblessed Thresh (Obsidian)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "412058",
+          "num": 58,
+          "name": "Winterblessed Thresh (Wreathguard)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
           "id": "412059",
           "num": 59,
           "name": "Janitor Thresh",
           "chromas": true
+        },
+        {
+          "id": "412060",
+          "num": 60,
+          "name": "Janitor Thresh (Ruby)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "412061",
+          "num": 61,
+          "name": "Janitor Thresh (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "412062",
+          "num": 62,
+          "name": "Janitor Thresh (Emerald)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "412063",
+          "num": 63,
+          "name": "Janitor Thresh (Citrine)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "412064",
+          "num": 64,
+          "name": "Janitor Thresh (Sapphire)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "412065",
+          "num": 65,
+          "name": "Janitor Thresh (Pearl)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "412066",
+          "num": 66,
+          "name": "Janitor Thresh (Meteorite)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "412067",
+          "num": 67,
+          "name": "Janitor Thresh (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 59
         }
       ],
       "lore": "Sadistic and cunning, Thresh is an ambitious and restless specter of the Shadow Isles. Once the custodian of countless arcane secrets, he was undone by a power greater than life or death, and now sustains himself by tormenting and breaking others with slow, excruciating inventiveness. His victims suffer far beyond their brief mortal coil as Thresh wreaks agony upon their souls, imprisoning them in his unholy lantern to torture for all eternity.",
@@ -133,7 +490,10 @@
         "Intentionally breaking a wall of The Box can allow a vulnerable ally to escape unscathed.",
         "Thresh relies on collecting souls for a portion of his defense and damage. Try punishing him when he moves to collect them."
       ],
-      "tags": ["Support", "Tank"],
+      "tags": [
+        "Support",
+        "Tank"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 5,
@@ -170,30 +530,105 @@
           "description": "Thresh binds an enemy in chains and pulls them toward him. Activating this ability a second time pulls Thresh to the enemy.",
           "tooltip": "Thresh throws out his scythe, <status>Stunning</status> the first unit hit and <status>Pulling</status> them towards Thresh for {{ tauntlength }} seconds. The scythe does <magicDamage>{{ totaldamage }} magic damage</magicDamage> and also grants <keywordStealth>True Sight</keywordStealth> for the duration.<br /><br />Thresh can <recast>Recast</recast> this Ability to pull himself to the enemy.<br /><br />If this Ability hits, its Cooldown is reduced by {{ hitbonuscooldown }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [19, 16.5, 14, 11.5, 9],
+          "cooldown": [
+            19,
+            16.5,
+            14,
+            11.5,
+            9
+          ],
           "cooldownBurn": "19/16.5/14/11.5/9",
-          "cost": [70, 70, 70, 70, 70],
+          "cost": [
+            70,
+            70,
+            70,
+            70,
+            70
+          ],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [100, 100, 100, 100, 100],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [75, 75, 75, 75, 75],
-            [12, 12, 12, 12, 12],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              100,
+              100,
+              100,
+              100,
+              100
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              75,
+              75,
+              75,
+              75,
+              75
+            ],
+            [
+              12,
+              12,
+              12,
+              12,
+              12
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -211,7 +646,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1075, 1075, 1075, 1075, 1075],
+          "range": [
+            1075,
+            1075,
+            1075,
+            1075,
+            1075
+          ],
           "rangeBurn": "1075",
           "image": {
             "full": "ThreshQ.png",
@@ -242,23 +683,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [21, 20, 19, 18, 17],
+          "cooldown": [
+            21,
+            20,
+            19,
+            18,
+            17
+          ],
           "cooldownBurn": "21/20/19/18/17",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [1, 1, 1, 1, 1],
-            [2, 2, 2, 2, 2],
-            [0, 0, 0, 0, 0],
-            [6, 6, 6, 6, 6],
-            [4, 4, 4, 4, 4],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              6,
+              6,
+              6,
+              6,
+              6
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -276,7 +789,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [950, 950, 950, 950, 950],
+          "range": [
+            950,
+            950,
+            950,
+            950,
+            950
+          ],
           "rangeBurn": "950",
           "image": {
             "full": "ThreshW.png",
@@ -311,23 +830,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [13, 12.25, 11.5, 10.75, 10],
+          "cooldown": [
+            13,
+            12.25,
+            11.5,
+            10.75,
+            10
+          ],
           "cooldownBurn": "13/12.25/11.5/10.75/10",
-          "cost": [60, 65, 70, 75, 80],
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [75, 120, 165, 210, 255],
-            [20, 25, 30, 35, 40],
-            [80, 110, 140, 170, 200],
-            [1, 1, 1, 1, 1],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [1.7, 1.7, 1.7, 1.7, 1.7],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              75,
+              120,
+              165,
+              210,
+              255
+            ],
+            [
+              20,
+              25,
+              30,
+              35,
+              40
+            ],
+            [
+              80,
+              110,
+              140,
+              170,
+              200
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              1.7,
+              1.7,
+              1.7,
+              1.7,
+              1.7
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -345,7 +936,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [500, 500, 500, 500, 500],
+          "range": [
+            500,
+            500,
+            500,
+            500,
+            500
+          ],
           "rangeBurn": "500",
           "image": {
             "full": "ThreshE.png",
@@ -364,30 +961,81 @@
           "description": "A prison of walls that slow and deal damage if broken.",
           "tooltip": "Thresh creates a prison of spectral walls, <status>Slowing</status> champions by {{ e3 }}% for {{ e2 }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. Walls break after one collision, and after one is broken, the rest deal no damage and <status>Slow</status> for half duration.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [250, 400, 550],
-            [2, 2, 2],
-            [99, 99, 99],
-            [4, 4, 4],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              250,
+              400,
+              550
+            ],
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              99,
+              99,
+              99
+            ],
+            [
+              4,
+              4,
+              4
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -405,7 +1053,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [450, 450, 450],
+          "range": [
+            450,
+            450,
+            450
+          ],
           "rangeBurn": "450",
           "image": {
             "full": "ThreshRPenta.png",

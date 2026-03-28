@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Yorick": {
       "id": "Yorick",
@@ -49,10 +49,115 @@
           "chromas": true
         },
         {
+          "id": "83005",
+          "num": 5,
+          "name": "Meowrick (Ruby)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "83006",
+          "num": 6,
+          "name": "Meowrick (Catseye)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "83007",
+          "num": 7,
+          "name": "Meowrick (Turquoise)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "83008",
+          "num": 8,
+          "name": "Meowrick (Rainbow)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "83009",
+          "num": 9,
+          "name": "Meowrick (Obsidian)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "83010",
+          "num": 10,
+          "name": "Meowrick (Sandstone)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "83011",
+          "num": 11,
+          "name": "Meowrick (Pearl)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
           "id": "83012",
           "num": 12,
           "name": "Resistance Yorick",
           "chromas": true
+        },
+        {
+          "id": "83013",
+          "num": 13,
+          "name": "Resistance Yorick (Ruby)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "83014",
+          "num": 14,
+          "name": "Resistance Yorick (Catseye)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "83015",
+          "num": 15,
+          "name": "Resistance Yorick (Sapphire)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "83016",
+          "num": 16,
+          "name": "Resistance Yorick (Turquoise)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "83017",
+          "num": 17,
+          "name": "Resistance Yorick (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "83018",
+          "num": 18,
+          "name": "Resistance Yorick (Emerald)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "83019",
+          "num": 19,
+          "name": "Resistance Yorick (Pearl)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "83020",
+          "num": 20,
+          "name": "Resistance Yorick (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 12
         },
         {
           "id": "83021",
@@ -61,10 +166,129 @@
           "chromas": true
         },
         {
+          "id": "83022",
+          "num": 22,
+          "name": "Pentakill III: Lost Chapter Yorick (Ruby)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "83023",
+          "num": 23,
+          "name": "Pentakill III: Lost Chapter Yorick (Citrine)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "83024",
+          "num": 24,
+          "name": "Pentakill III: Lost Chapter Yorick (Emerald)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "83025",
+          "num": 25,
+          "name": "Pentakill III: Lost Chapter Yorick (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "83026",
+          "num": 26,
+          "name": "Pentakill III: Lost Chapter Yorick (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "83027",
+          "num": 27,
+          "name": "Pentakill III: Lost Chapter Yorick (Sapphire)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "83028",
+          "num": 28,
+          "name": "Pentakill III: Lost Chapter Yorick (Pearl)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "83029",
+          "num": 29,
+          "name": "Pentakill III: Lost Chapter Yorick (Obsidian)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
           "id": "83030",
           "num": 30,
           "name": "Spirit Blossom Yorick",
           "chromas": true
+        },
+        {
+          "id": "83031",
+          "num": 31,
+          "name": "Spirit Blossom Yorick (Ruby)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "83032",
+          "num": 32,
+          "name": "Spirit Blossom Yorick (Citrine)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "83033",
+          "num": 33,
+          "name": "Spirit Blossom Yorick (Sapphire)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "83034",
+          "num": 34,
+          "name": "Spirit Blossom Yorick (Pearl)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "83035",
+          "num": 35,
+          "name": "Spirit Blossom Yorick (Emerald)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "83036",
+          "num": 36,
+          "name": "Spirit Blossom Yorick (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "83037",
+          "num": 37,
+          "name": "Spirit Blossom Yorick (Turquoise)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "83038",
+          "num": 38,
+          "name": "Spirit Blossom Yorick (Obsidian)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "83039",
+          "num": 39,
+          "name": "Spirit Blossom Yorick (Night Blossom)",
+          "chromas": false,
+          "parentSkin": 30
         },
         {
           "id": "83040",
@@ -73,10 +297,129 @@
           "chromas": true
         },
         {
+          "id": "83041",
+          "num": 41,
+          "name": "Dark Star Yorick (Ruby)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "83042",
+          "num": 42,
+          "name": "Dark Star Yorick (Turquoise)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "83043",
+          "num": 43,
+          "name": "Dark Star Yorick (Emerald)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "83044",
+          "num": 44,
+          "name": "Dark Star Yorick (Sapphire)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "83045",
+          "num": 45,
+          "name": "Dark Star Yorick (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "83046",
+          "num": 46,
+          "name": "Dark Star Yorick (Pearl)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "83047",
+          "num": 47,
+          "name": "Dark Star Yorick (Citrine)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "83048",
+          "num": 48,
+          "name": "Dark Star Yorick (Obsidian)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "83049",
+          "num": 49,
+          "name": "Dark Star Yorick (Quasar)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
           "id": "83050",
           "num": 50,
           "name": "High Noon Yorick",
           "chromas": true
+        },
+        {
+          "id": "83051",
+          "num": 51,
+          "name": "High Noon Yorick (Ruby)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "83052",
+          "num": 52,
+          "name": "High Noon Yorick (Emerald)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "83053",
+          "num": 53,
+          "name": "High Noon Yorick (Sapphire)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "83054",
+          "num": 54,
+          "name": "High Noon Yorick (Catseye)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "83055",
+          "num": 55,
+          "name": "High Noon Yorick (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "83056",
+          "num": 56,
+          "name": "High Noon Yorick (Turquoise)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "83057",
+          "num": 57,
+          "name": "High Noon Yorick (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "83058",
+          "num": 58,
+          "name": "High Noon Yorick (Pearl)",
+          "chromas": false,
+          "parentSkin": 50
         }
       ],
       "lore": "The last survivor of a long-forgotten religious order, Yorick is both blessed and cursed with power over the dead. Trapped on the Shadow Isles, his only companions are the rotting corpses and shrieking wraiths that he gathers to him. Yorick's monstrous actions belie his noble purpose: to free his home from the curse of the Ruination.",
@@ -91,7 +434,10 @@
         "Try to thin out Yorick's minions before you engage him, Mist Walkers will die from a basic attack or a single target spell.",
         "You can attack Dark Procession to break the wall down."
       ],
-      "tags": ["Fighter", "Tank"],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 6,
@@ -128,7 +474,11 @@
           "description": "Yorick deals bonus damage on his next attack and heals himself. If the target is a champion or large monster or if the target dies, a grave will be dug.",
           "tooltip": "Yorick's next Attack deals an additional <physicalDamage>{{ bonusdamage }} physical damage</physicalDamage> and restores <healing>{{ qheal }} plus {{ missinghealthratio }}% of his missing Health</healing>, reduced by {{ healreduction }}% against non-Champions. If this Attack hits a Champion or large Monster or kills the target, it leaves a grave.<br /><br />When there are 3 or more graves nearby and this Ability has already been used, Yorick can <recast>Recast</recast> to raise <keywordMajor>Mist Walkers</keywordMajor> from all nearby graves.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Bonus Damage:", "Healing", "Cooldown"],
+            "label": [
+              "Bonus Damage:",
+              "Healing",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ missinghealthratio }}% -> {{ missinghealthratioNL }}%",
@@ -136,23 +486,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [6, 5.5, 5, 4.5, 4],
+          "cooldown": [
+            6,
+            5.5,
+            5,
+            4.5,
+            4
+          ],
           "cooldownBurn": "6/5.5/5/4.5/4",
-          "cost": [20, 20, 20, 20, 20],
+          "cost": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
           "costBurn": "20",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -170,7 +592,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [0, 0, 0, 0, 0],
+          "range": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "rangeBurn": "0",
           "image": {
             "full": "YorickQ.png",
@@ -189,30 +617,105 @@
           "description": "Yorick summons a destructible wall at target location that will block enemy movement.",
           "tooltip": "Yorick summons a wall of spirits blocking enemies' path, but not allies'. The wall has <healing>{{ wallhealthtooltip }} Health</healing> and disappears after {{ circleduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Health"],
+            "label": [
+              "Cooldown",
+              "Health"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ wallhealthtooltip }} -> {{ wallhealthtooltipNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [20, 18, 16, 14, 12],
+          "cooldown": [
+            20,
+            18,
+            16,
+            14,
+            12
+          ],
           "cooldownBurn": "20/18/16/14/12",
-          "cost": [70, 70, 70, 70, 70],
+          "cost": [
+            70,
+            70,
+            70,
+            70,
+            70
+          ],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -230,7 +733,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "YorickW.png",
@@ -265,23 +774,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11, 10, 9, 8],
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -299,7 +880,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [700, 700, 700, 700, 700],
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "YorickE.png",
@@ -332,23 +919,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [160, 130, 100],
+          "cooldown": [
+            160,
+            130,
+            100
+          ],
           "cooldownBurn": "160/130/100",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -366,7 +1001,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600],
+          "range": [
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "YorickR.png",

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Sylas": {
       "id": "Sylas",
@@ -31,10 +31,80 @@
           "chromas": true
         },
         {
+          "id": "517002",
+          "num": 2,
+          "name": "Lunar Wraith Sylas (Obsidian)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "517003",
+          "num": 3,
+          "name": "Lunar Wraith Sylas (Ruby)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "517004",
+          "num": 4,
+          "name": "Lunar Wraith Sylas (Catseye)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "517005",
+          "num": 5,
+          "name": "Lunar Wraith Sylas (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "517006",
+          "num": 6,
+          "name": "Lunar Wraith Sylas (Amethyst)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "517007",
+          "num": 7,
+          "name": "Lunar Wraith Sylas (Pearl)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
           "id": "517008",
           "num": 8,
           "name": "Freljord Sylas",
           "chromas": true
+        },
+        {
+          "id": "517009",
+          "num": 9,
+          "name": "Freljord Sylas (Ruby)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "517010",
+          "num": 10,
+          "name": "Freljord Sylas (Turquoise)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "517011",
+          "num": 11,
+          "name": "Freljord Sylas (Amethyst)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "517012",
+          "num": 12,
+          "name": "Freljord Sylas (Pearl)",
+          "chromas": false,
+          "parentSkin": 8
         },
         {
           "id": "517013",
@@ -49,10 +119,136 @@
           "chromas": false
         },
         {
+          "id": "517015",
+          "num": 15,
+          "name": "PROJECT: Sylas (Ruby)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "517016",
+          "num": 16,
+          "name": "PROJECT: Sylas (Catseye)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "517017",
+          "num": 17,
+          "name": "PROJECT: Sylas (Amethyst)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "517018",
+          "num": 18,
+          "name": "PROJECT: Sylas (Sapphire)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "517019",
+          "num": 19,
+          "name": "PROJECT: Sylas (Peridot)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "517020",
+          "num": 20,
+          "name": "PROJECT: Sylas (Turquoise)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "517021",
+          "num": 21,
+          "name": "PROJECT: Sylas (Pearl)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "517022",
+          "num": 22,
+          "name": "PROJECT: Sylas (Citrine)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "517023",
+          "num": 23,
+          "name": "PROJECT: Sylas (Reckoning)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
           "id": "517024",
           "num": 24,
           "name": "Battle Wolf Sylas",
           "chromas": true
+        },
+        {
+          "id": "517025",
+          "num": 25,
+          "name": "Battle Wolf Sylas (Ruby)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "517026",
+          "num": 26,
+          "name": "Battle Wolf Sylas (Citrine)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "517027",
+          "num": 27,
+          "name": "Battle Wolf Sylas (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "517028",
+          "num": 28,
+          "name": "Battle Wolf Sylas (Turquoise)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "517029",
+          "num": 29,
+          "name": "Battle Wolf Sylas (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "517030",
+          "num": 30,
+          "name": "Battle Wolf Sylas (Emerald)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "517031",
+          "num": 31,
+          "name": "Battle Wolf Sylas (Obsidian)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "517032",
+          "num": 32,
+          "name": "Battle Wolf Sylas (Pearl)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "517033",
+          "num": 33,
+          "name": "Battle Wolf Sylas (Nightwire)",
+          "chromas": false,
+          "parentSkin": 24
         },
         {
           "id": "517034",
@@ -61,16 +257,128 @@
           "chromas": true
         },
         {
+          "id": "517035",
+          "num": 35,
+          "name": "Ashen Slayer Sylas (Emberwoken)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
           "id": "517036",
           "num": 36,
           "name": "Winterblessed Sylas",
           "chromas": true
         },
         {
+          "id": "517037",
+          "num": 37,
+          "name": "Winterblessed Sylas (Ruby)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "517038",
+          "num": 38,
+          "name": "Winterblessed Sylas (Citrine)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "517039",
+          "num": 39,
+          "name": "Winterblessed Sylas (Sapphire)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "517040",
+          "num": 40,
+          "name": "Winterblessed Sylas (Peridot)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "517041",
+          "num": 41,
+          "name": "Winterblessed Sylas (Turquoise)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "517042",
+          "num": 42,
+          "name": "Winterblessed Sylas (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "517043",
+          "num": 43,
+          "name": "Winterblessed Sylas (Obsidian)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "517044",
+          "num": 44,
+          "name": "Winterblessed Sylas (Pearl)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "517045",
+          "num": 45,
+          "name": "Winterblessed Sylas (Wreathguard)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
           "id": "517046",
           "num": 46,
           "name": "Dark Star Sylas",
           "chromas": true
+        },
+        {
+          "id": "517047",
+          "num": 47,
+          "name": "Dark Star Sylas (Ruby)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "517048",
+          "num": 48,
+          "name": "Dark Star Sylas (Emerald)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "517049",
+          "num": 49,
+          "name": "Dark Star Sylas (Sapphire)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "517050",
+          "num": 50,
+          "name": "Dark Star Sylas (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "517051",
+          "num": 51,
+          "name": "Dark Star Sylas (Pearl)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "517052",
+          "num": 52,
+          "name": "Dark Star Sylas (Quasar)",
+          "chromas": false,
+          "parentSkin": 46
         },
         {
           "id": "517053",
@@ -90,7 +398,10 @@
         "Sylas's healthbar can be deceptive, watch out for his Kingslayer!",
         "Try to fight Sylas when he isn't able to take your ultimate."
       ],
-      "tags": ["Mage", "Assassin"],
+      "tags": [
+        "Mage",
+        "Assassin"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 3,
@@ -127,7 +438,12 @@
           "description": "Sylas lashes his chains out, intersecting at his targeted location dealing damage to and slowing enemies. <br><br>After a delay, magical energy explodes from the intersection point dealing damage.",
           "tooltip": "Sylas lashes his chains out, dealing <magicDamage>{{ damage }} magic damage</magicDamage> and <status>Slowing</status> by {{ slowamountcalc }} for {{ slowduration }} seconds. The place where the chains intersect explodes, dealing a further <magicDamage>{{ explosiondamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Explosion Damage", "Slow", "Cooldown"],
+            "label": [
+              "Damage",
+              "Explosion Damage",
+              "Slow",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ explosionbasedamage }} -> {{ explosionbasedamageNL }}",
@@ -136,23 +452,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9, 8, 7, 6],
+          "cooldown": [
+            10,
+            9,
+            8,
+            7,
+            6
+          ],
           "cooldownBurn": "10/9/8/7/6",
-          "cost": [55, 55, 55, 55, 55],
+          "cost": [
+            55,
+            55,
+            55,
+            55,
+            55
+          ],
           "costBurn": "55",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -170,7 +558,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [775, 775, 775, 775, 775],
+          "range": [
+            775,
+            775,
+            775,
+            775,
+            775
+          ],
           "rangeBurn": "775",
           "image": {
             "full": "SylasQ.png",
@@ -203,23 +597,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 10.5, 9, 7.5, 6],
+          "cooldown": [
+            12,
+            10.5,
+            9,
+            7.5,
+            6
+          ],
           "cooldownBurn": "12/10.5/9/7.5/6",
-          "cost": [50, 60, 70, 80, 90],
+          "cost": [
+            50,
+            60,
+            70,
+            80,
+            90
+          ],
           "costBurn": "50/60/70/80/90",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -237,7 +703,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400, 400, 400],
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "SylasW.png",
@@ -256,30 +728,105 @@
           "description": "Sylas dashes to a location. Sylas can recast the ability to throw his chains out, pulling himself to an enemy he hits.",
           "tooltip": "Sylas quickly dashes, and prepares a <recast>Recast</recast> for 3.5 seconds.<br /><br /><recast>Recast:</recast> Sylas throws his chains, pulling himself to the first enemy hit, dealing <magicDamage>{{ damage }} magic damage</magicDamage>, and <status>Knocking Up</status> for {{ knockupduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ pulldamage }} -> {{ pulldamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [13, 12, 11, 10, 9],
+          "cooldown": [
+            13,
+            12,
+            11,
+            10,
+            9
+          ],
           "cooldownBurn": "13/12/11/10/9",
-          "cost": [65, 65, 65, 65, 65],
+          "cost": [
+            65,
+            65,
+            65,
+            65,
+            65
+          ],
           "costBurn": "65",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -297,7 +844,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400, 400, 400],
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "SylasE.png",
@@ -316,27 +869,79 @@
           "description": "Sylas steals the enemy's ultimate ability and can cast it freely.",
           "tooltip": "Sylas hijacks an enemy champion, allowing him to cast a copy of their ultimate Ability, based on his Ultimate level and using his stats.<br /><br />Hijacking an enemy places a Cooldown on them for {{ pertargetcooldown }}% (modified by Sylas' Ability Haste) of the enemy's ultimate's Cooldown, with a minimum of {{ minimumenemycooldown }} seconds, during which time Sylas cannot hijack them again.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
+            "label": [
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
-          "cooldown": [80, 55, 30],
+          "cooldown": [
+            80,
+            55,
+            30
+          ],
           "cooldownBurn": "80/55/30",
-          "cost": [75, 75, 75],
+          "cost": [
+            75,
+            75,
+            75
+          ],
           "costBurn": "75",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -354,7 +959,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [950, 950, 950],
+          "range": [
+            950,
+            950,
+            950
+          ],
           "rangeBurn": "950",
           "image": {
             "full": "SylasR.png",

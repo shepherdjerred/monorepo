@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Khazix": {
       "id": "Khazix",
@@ -49,10 +49,227 @@
           "chromas": false
         },
         {
+          "id": "121005",
+          "num": 5,
+          "name": "Mecha Kha'Zix (Pearl)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "121006",
+          "num": 6,
+          "name": "Mecha Kha'Zix (Catseye)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "121007",
+          "num": 7,
+          "name": "Mecha Kha'Zix (Sapphire)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "121008",
+          "num": 8,
+          "name": "Mecha Kha'Zix (Emerald)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "121009",
+          "num": 9,
+          "name": "Mecha Kha'Zix (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "121010",
+          "num": 10,
+          "name": "Mecha Kha'Zix (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
           "id": "121011",
           "num": 11,
           "name": "Worlds 2018 Kha'Zix",
           "chromas": true
+        },
+        {
+          "id": "121012",
+          "num": 12,
+          "name": "Worlds 2018 Kha'Zix (Golden)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "121013",
+          "num": 13,
+          "name": "Worlds 2018 Kha'Zix (Flash Wolves)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "121014",
+          "num": 14,
+          "name": "Worlds 2018 Kha'Zix (KT Rolster)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "121015",
+          "num": 15,
+          "name": "Worlds 2018 Kha'Zix (Fnatic)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "121017",
+          "num": 17,
+          "name": "Worlds 2018 Kha'Zix (Kaos Latin Gamers)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "121018",
+          "num": 18,
+          "name": "Worlds 2018 Kha'Zix (G2 Esports)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "121022",
+          "num": 22,
+          "name": "Worlds 2018 Kha'Zix (Team Vitality)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "121023",
+          "num": 23,
+          "name": "Worlds 2018 Kha'Zix (Ascension Gaming)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "121024",
+          "num": 24,
+          "name": "Worlds 2018 Kha'Zix (Afreeca Freecs)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "121025",
+          "num": 25,
+          "name": "Worlds 2018 Kha'Zix (Gen.G)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "121028",
+          "num": 28,
+          "name": "Worlds 2018 Kha'Zix (KaBuM! e-Sports)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "121030",
+          "num": 30,
+          "name": "Worlds 2018 Kha'Zix (Gambit Esports)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "121031",
+          "num": 31,
+          "name": "Worlds 2018 Kha'Zix (DetonatioN FocusMe)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "121035",
+          "num": 35,
+          "name": "Worlds 2018 Kha'Zix (Infinity eSports)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "121037",
+          "num": 37,
+          "name": "Worlds 2018 Kha'Zix (G-Rex)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "121041",
+          "num": 41,
+          "name": "Worlds 2018 Kha'Zix (MAD Team)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "121042",
+          "num": 42,
+          "name": "Worlds 2018 Kha'Zix (Edward Gaming)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "121043",
+          "num": 43,
+          "name": "Worlds 2018 Kha'Zix (Invictus Gaming)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "121046",
+          "num": 46,
+          "name": "Worlds 2018 Kha'Zix (Royal Never Give Up)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "121047",
+          "num": 47,
+          "name": "Worlds 2018 Kha'Zix (100 Thieves)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "121048",
+          "num": 48,
+          "name": "Worlds 2018 Kha'Zix (Cloud9)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "121051",
+          "num": 51,
+          "name": "Worlds 2018 Kha'Zix (Team Liquid)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "121053",
+          "num": 53,
+          "name": "Worlds 2018 Kha'Zix (Dire Wolves)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "121054",
+          "num": 54,
+          "name": "Worlds 2018 Kha'Zix (BAHÇEŞEHİR SUPERMASSIVE eSports)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "121059",
+          "num": 59,
+          "name": "Worlds 2018 Kha'Zix (Phong Vu Buffalo)",
+          "chromas": false,
+          "parentSkin": 11
         },
         {
           "id": "121060",
@@ -61,16 +278,142 @@
           "chromas": false
         },
         {
+          "id": "121061",
+          "num": 61,
+          "name": "Odyssey Kha'Zix (Ruby)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "121062",
+          "num": 62,
+          "name": "Odyssey Kha'Zix (Citrine)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "121063",
+          "num": 63,
+          "name": "Odyssey Kha'Zix (Merc)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "121064",
+          "num": 64,
+          "name": "Odyssey Kha'Zix (Sapphire)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "121065",
+          "num": 65,
+          "name": "Odyssey Kha'Zix (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "121066",
+          "num": 66,
+          "name": "Odyssey Kha'Zix (Emerald)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "121067",
+          "num": 67,
+          "name": "Odyssey Kha'Zix (Pearl)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "121068",
+          "num": 68,
+          "name": "Odyssey Kha'Zix (Obsidian)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
           "id": "121069",
           "num": 69,
           "name": "Lunar Guardian Kha'Zix",
           "chromas": false
         },
         {
+          "id": "121070",
+          "num": 70,
+          "name": "Lunar Guardian Kha'Zix (Ruby)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "121071",
+          "num": 71,
+          "name": "Lunar Guardian Kha'Zix (Emerald)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "121072",
+          "num": 72,
+          "name": "Lunar Guardian Kha'Zix (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "121073",
+          "num": 73,
+          "name": "Lunar Guardian Kha'Zix (Turquoise)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "121074",
+          "num": 74,
+          "name": "Lunar Guardian Kha'Zix (Amethyst)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "121075",
+          "num": 75,
+          "name": "Lunar Guardian Kha'Zix (Citrine)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "121076",
+          "num": 76,
+          "name": "Lunar Guardian Kha'Zix (Pearl)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "121077",
+          "num": 77,
+          "name": "Lunar Guardian Kha'Zix (Obsidian)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "121078",
+          "num": 78,
+          "name": "Lunar Guardian Kha'Zix (Resplendent)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
           "id": "121079",
           "num": 79,
           "name": "Crystalis Indomitus Kha'Zix",
           "chromas": false
+        },
+        {
+          "id": "121080",
+          "num": 80,
+          "name": "Crystalis Indomitus Kha'Zix (Fractured)",
+          "chromas": false,
+          "parentSkin": 79
         }
       ],
       "lore": "The Void grows, and the Void adapts—in none of its myriad spawn are these truths more apparent than Kha'Zix. Evolution drives the core of this mutating horror, born to survive and to slay the strong. Where it struggles to do so, it grows new, more effective ways to counter and kill its prey. Initially a mindless beast, Kha'Zix's intelligence has developed as much as its form. Now, the creature plans out its hunts, and even utilizes the visceral terror it engenders in its victims.",
@@ -84,7 +427,9 @@
         "Taste Their Fear deals bonus damage to targets that are isolated. Gain an advantage by fighting near allied minions, champions, or turrets.",
         "Leap and Void Assault have long cooldowns. Kha'Zix is very vulnerable when these are not available."
       ],
-      "tags": ["Assassin"],
+      "tags": [
+        "Assassin"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 9,
@@ -121,27 +466,103 @@
           "description": "Deals physical damage to the target. Damage increased on <font color='#FFF673'>Isolated</font> targets. If he chooses to <font color='#00DD33'>Evolve Reaper Claws</font>, this refunds a percent of it's cooldown against <font color='#FFF673'>Isolated</font> targets. Kha'Zix also gains increased range on his basic attacks and Taste Their Fear.",
           "tooltip": "Kha'Zix slashes a nearby enemy, dealing <physicalDamage>{{ spell.khazixq:basedamage }} physical damage</physicalDamage>. This deals <physicalDamage>{{ spell.khazixq:isodamage }} damage</physicalDamage> instead to enemies <keywordMajor>Isolated</keywordMajor> from their allies. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}"]
+            "label": [
+              "Damage"
+            ],
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [4, 4, 4, 4, 4],
+          "cooldown": [
+            4,
+            4,
+            4,
+            4,
+            4
+          ],
           "cooldownBurn": "4",
-          "cost": [20, 20, 20, 20, 20],
+          "cost": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
           "costBurn": "20",
           "datavalues": {},
           "effect": [
             null,
-            [80, 105, 130, 155, 180],
-            [110, 110, 110, 110, 110],
-            [50, 50, 50, 50, 50],
-            [45, 45, 45, 45, 45],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              80,
+              105,
+              130,
+              155,
+              180
+            ],
+            [
+              110,
+              110,
+              110,
+              110,
+              110
+            ],
+            [
+              50,
+              50,
+              50,
+              50,
+              50
+            ],
+            [
+              45,
+              45,
+              45,
+              45,
+              45
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -159,7 +580,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [325, 325, 325, 325, 325],
+          "range": [
+            325,
+            325,
+            325,
+            325,
+            325
+          ],
           "rangeBurn": "325",
           "image": {
             "full": "KhazixQ.png",
@@ -178,7 +605,11 @@
           "description": "Kha'Zix fires exploding spikes that deal physical damage to enemies hit. Kha'Zix is healed if he is also within the explosion radius. If he chooses to <font color='#00DD33'>Evolve Spike Racks</font>, Void Spike now fires three spikes in a cone, slow enemies hit, and reveals enemy champions hit for 2 seconds. <font color='#FFF673'>Isolated</font> targets are slowed for extra.",
           "tooltip": "Kha'Zix fires a spike dealing <physicalDamage>{{ basedamage }} physical damage</physicalDamage> to the first enemy hit in a small area. If Kha'Zix is inside the area, he restores <healing>{{ healamount }} Health</healing>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Healing", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Healing",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ baseheal }} -> {{ basehealNL }}",
@@ -186,23 +617,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 9, 9, 9, 9],
+          "cooldown": [
+            9,
+            9,
+            9,
+            9,
+            9
+          ],
           "cooldownBurn": "9",
-          "cost": [55, 60, 65, 70, 75],
+          "cost": [
+            55,
+            60,
+            65,
+            70,
+            75
+          ],
           "costBurn": "55/60/65/70/75",
           "datavalues": {},
           "effect": [
             null,
-            [75, 105, 135, 165, 195],
-            [55, 75, 95, 115, 135],
-            [40, 40, 40, 40, 40],
-            [2, 2, 2, 2, 2],
-            [0, 0, 0, 0, 0],
-            [2, 2, 2, 2, 2],
-            [60, 60, 60, 60, 60],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              75,
+              105,
+              135,
+              165,
+              195
+            ],
+            [
+              55,
+              75,
+              95,
+              115,
+              135
+            ],
+            [
+              40,
+              40,
+              40,
+              40,
+              40
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              60,
+              60,
+              60,
+              60,
+              60
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -220,7 +723,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1000, 1000, 1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "KhazixW.png",
@@ -239,30 +748,105 @@
           "description": "Kha'Zix leaps to an area, dealing physical damage upon landing. If he chooses to <font color='#00DD33'>Evolve Wings</font>, Leap's range increases by 200 and the cooldown resets on champion kill or assist.",
           "tooltip": "Kha'Zix leaps, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> upon landing.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [20, 18, 16, 14, 12],
+          "cooldown": [
+            20,
+            18,
+            16,
+            14,
+            12
+          ],
           "cooldownBurn": "20/18/16/14/12",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [65, 100, 135, 170, 205],
-            [30, 35, 40, 45, 50],
-            [10, 10, 10, 10, 10],
-            [2.5, 2.5, 2.5, 2.5, 2.5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              65,
+              100,
+              135,
+              170,
+              205
+            ],
+            [
+              30,
+              35,
+              40,
+              45,
+              50
+            ],
+            [
+              10,
+              10,
+              10,
+              10,
+              10
+            ],
+            [
+              2.5,
+              2.5,
+              2.5,
+              2.5,
+              2.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -280,7 +864,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [700, 700, 700, 700, 700],
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "KhazixE.png",
@@ -299,30 +889,81 @@
           "description": "Each rank allows Kha'Zix to evolve one of his abilities, giving it a unique additional effect. When activated, Kha'Zix becomes <font color='#91d7ee'>Invisible</font>, triggering Unseen Threat and increasing Move Speed. If he chooses to <font color='#00DD33'>Evolve Adaptive Cloaking</font>, Void Assault gains increased <font color='#91d7ee'>Invisibility</font> duration, and an additional use.",
           "tooltip": "<spellActive>Active:</spellActive> Kha'Zix becomes <keywordStealth>Invisible</keywordStealth> for {{ stealthduration }} seconds and gains <speed>{{ bonusmovementspeedpercent*100 }}% Move Speed</speed>. Kha'zix may <recast>Recast</recast> this Ability once within {{ recastwindow }} seconds.<br /><br /><spellPassive>Passive:</spellPassive> Leveling up this Ability allows Kha'zix to <evolve>Evolve</evolve> one of his Abilities, granting it additional effects.<li><spellName>Taste Their Fear:</spellName> Gain Ability range, Attack range, and lowers Cooldown by {{ spell.khazixq:effect4amount }}% against <keywordMajor>Isolated</keywordMajor> targets.<li><spellName>Void Spike:</spellName> Fires 3 spikes and <status>Slows</status> by {{ spell.khazixw:effect3amount }}%, increased against <keywordMajor>Isolated</keywordMajor> targets.<li><spellName>Leap:</spellName> Increased range and refreshes Cooldown on champion takedown.<li><spellName>Void Assault:</spellName> <keywordStealth>Invisibility</keywordStealth> duration lasts {{ evolvedstealthduration }} seconds and gains second <recast>Recast</recast>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Evolutions Available", "Cooldown"],
+            "label": [
+              "Evolutions Available",
+              "Cooldown"
+            ],
             "effect": [
               "{{ evolutionsavailable }} -> {{ evolutionsavailableNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [100, 85, 70],
+          "cooldown": [
+            100,
+            85,
+            70
+          ],
           "cooldownBurn": "100/85/70",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -340,7 +981,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "KhazixR.png",

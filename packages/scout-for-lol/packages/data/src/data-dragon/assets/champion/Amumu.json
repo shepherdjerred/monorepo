@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Amumu": {
       "id": "Amumu",
@@ -73,10 +73,101 @@
           "chromas": true
         },
         {
+          "id": "32009",
+          "num": 9,
+          "name": "Surprise Party Amumu (Pearl)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "32010",
+          "num": 10,
+          "name": "Surprise Party Amumu (Citrine)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "32011",
+          "num": 11,
+          "name": "Surprise Party Amumu (Amethyst)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "32012",
+          "num": 12,
+          "name": "Surprise Party Amumu (Sapphire)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "32013",
+          "num": 13,
+          "name": "Surprise Party Amumu (Rainbow)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "32014",
+          "num": 14,
+          "name": "Surprise Party Amumu (Catseye)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "32015",
+          "num": 15,
+          "name": "Surprise Party Amumu (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "32016",
+          "num": 16,
+          "name": "Surprise Party Amumu (Ruby)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
           "id": "32017",
           "num": 17,
           "name": "Infernal Amumu",
           "chromas": true
+        },
+        {
+          "id": "32018",
+          "num": 18,
+          "name": "Infernal Amumu (Ruby)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "32019",
+          "num": 19,
+          "name": "Infernal Amumu (Emerald)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "32020",
+          "num": 20,
+          "name": "Infernal Amumu (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "32021",
+          "num": 21,
+          "name": "Infernal Amumu (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "32022",
+          "num": 22,
+          "name": "Infernal Amumu (Catseye)",
+          "chromas": false,
+          "parentSkin": 17
         },
         {
           "id": "32023",
@@ -91,10 +182,136 @@
           "chromas": true
         },
         {
+          "id": "32025",
+          "num": 25,
+          "name": "Pumpkin Prince  Amumu (Ruby)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "32026",
+          "num": 26,
+          "name": "Pumpkin Prince  Amumu (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "32027",
+          "num": 27,
+          "name": "Pumpkin Prince  Amumu (Catseye)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "32028",
+          "num": 28,
+          "name": "Pumpkin Prince  Amumu (Turquoise)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "32029",
+          "num": 29,
+          "name": "Pumpkin Prince  Amumu (Obsidian)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "32030",
+          "num": 30,
+          "name": "Pumpkin Prince  Amumu (Pearl)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "32031",
+          "num": 31,
+          "name": "Pumpkin Prince  Amumu (Emerald)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "32032",
+          "num": 32,
+          "name": "Pumpkin Prince  Amumu (Sandstone)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "32033",
+          "num": 33,
+          "name": "Pumpkin Prince  Amumu (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
           "id": "32034",
           "num": 34,
           "name": "Porcelain Amumu",
           "chromas": true
+        },
+        {
+          "id": "32035",
+          "num": 35,
+          "name": "Porcelain Amumu (Ruby)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "32036",
+          "num": 36,
+          "name": "Porcelain Amumu (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "32037",
+          "num": 37,
+          "name": "Porcelain Amumu (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "32038",
+          "num": 38,
+          "name": "Porcelain Amumu (Emerald)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "32039",
+          "num": 39,
+          "name": "Porcelain Amumu (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "32040",
+          "num": 40,
+          "name": "Porcelain Amumu (Catseye)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "32041",
+          "num": 41,
+          "name": "Porcelain Amumu (Pearl)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "32042",
+          "num": 42,
+          "name": "Porcelain Amumu (Obsidian)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "32043",
+          "num": 43,
+          "name": "Porcelain Amumu (Golden Tiger)",
+          "chromas": false,
+          "parentSkin": 34
         },
         {
           "id": "32044",
@@ -103,10 +320,122 @@
           "chromas": true
         },
         {
+          "id": "32045",
+          "num": 45,
+          "name": "Heartache Amumu (Ruby)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "32046",
+          "num": 46,
+          "name": "Heartache Amumu (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "32047",
+          "num": 47,
+          "name": "Heartache Amumu (Emerald)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "32048",
+          "num": 48,
+          "name": "Heartache Amumu (Amethyst)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "32049",
+          "num": 49,
+          "name": "Heartache Amumu (Catseye)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "32050",
+          "num": 50,
+          "name": "Heartache Amumu (Turquoise)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "32051",
+          "num": 51,
+          "name": "Heartache Amumu (Pearl)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "32052",
+          "num": 52,
+          "name": "Heartache Amumu (Obsidian)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
           "id": "32053",
           "num": 53,
           "name": "Dumpling Darlings Amumu",
           "chromas": true
+        },
+        {
+          "id": "32054",
+          "num": 54,
+          "name": "Dumpling Darlings Amumu (Ruby)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "32055",
+          "num": 55,
+          "name": "Dumpling Darlings Amumu (Catseye)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "32056",
+          "num": 56,
+          "name": "Dumpling Darlings Amumu (Sapphire)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "32057",
+          "num": 57,
+          "name": "Dumpling Darlings Amumu (Emerald)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "32058",
+          "num": 58,
+          "name": "Dumpling Darlings Amumu (Amethyst)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "32059",
+          "num": 59,
+          "name": "Dumpling Darlings Amumu (Turquoise)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "32060",
+          "num": 60,
+          "name": "Dumpling Darlings Amumu (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "32061",
+          "num": 61,
+          "name": "Dumpling Darlings Amumu (Obsidian)",
+          "chromas": false,
+          "parentSkin": 53
         }
       ],
       "lore": "Legend claims that Amumu is a lonely and melancholy soul from ancient Shurima, roaming the world in search of a friend. Doomed by an ancient curse to remain alone forever, his touch is death, his affection ruin. Those who claim to have seen him describe a living cadaver, small in stature and wrapped in creeping bandages. Amumu has inspired myths, songs, and folklore told and retold for generations—such that it is impossible to separate truth from fiction.",
@@ -121,7 +450,10 @@
         "Erratic movement, or hiding behind creep waves can make it difficult for Amumu to instigate a fight with Bandage Toss.",
         "Amumu's Despair makes purchasing primarily Health items a risky proposition."
       ],
-      "tags": ["Tank", "Support"],
+      "tags": [
+        "Tank",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -158,30 +490,105 @@
           "description": "Amumu tosses a sticky bandage at a target, stunning and damaging the target while he pulls himself to them.",
           "tooltip": "Amumu launches a bandage, pulling himself to the first enemy hit, <status>Stunning</status> them for {{ e2 }} second, and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br />This Ability has 2 charges.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Recharge Time"],
+            "label": [
+              "Damage",
+              "Recharge Time"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [3, 3, 3, 3, 3],
+          "cooldown": [
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
           "cooldownBurn": "3",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [70, 95, 120, 145, 170],
-            [1, 1, 1, 1, 1],
-            [1800, 1800, 1800, 1800, 1800],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              70,
+              95,
+              120,
+              145,
+              170
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              1800,
+              1800,
+              1800,
+              1800,
+              1800
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -199,7 +606,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "2",
-          "range": [1100, 1100, 1100, 1100, 1100],
+          "range": [
+            1100,
+            1100,
+            1100,
+            1100,
+            1100
+          ],
           "rangeBurn": "1100",
           "image": {
             "full": "BandageToss.png",
@@ -218,27 +631,103 @@
           "description": "Overcome by anguish, nearby enemies lose a percentage of their maximum Health each second and have their <font color='#9b0f5f'>Curses</font> refreshed.",
           "tooltip": "<toggle>Toggle:</toggle> Amumu begins crying, dealing <magicDamage>{{ basedamage }} plus {{ totalhealthdamage }}% max Health magic damage</magicDamage> to nearby enemies every second and refreshing <keywordMajor>Curse</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["% Health damage"],
-            "effect": ["{{ healthdamage }}% -> {{ healthdamageNL }}%"]
+            "label": [
+              "% Health damage"
+            ],
+            "effect": [
+              "{{ healthdamage }}% -> {{ healthdamageNL }}%"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [1, 1, 1, 1, 1],
+          "cooldown": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
           "cooldownBurn": "1",
-          "cost": [8, 8, 8, 8, 8],
+          "cost": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
           "costBurn": "8",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -256,7 +745,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }} per Second",
           "maxammo": "-1",
-          "range": [300, 300, 300, 300, 300],
+          "range": [
+            300,
+            300,
+            300,
+            300,
+            300
+          ],
           "rangeBurn": "300",
           "image": {
             "full": "AuraofDespair.png",
@@ -275,7 +770,11 @@
           "description": "Permanently reduces the physical damage Amumu would take. Amumu can unleash his rage, dealing damage to surrounding enemies. Each time Amumu is hit, the cooldown on Tantrum is reduced.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Amumu takes {{ damagereduction }} reduced physical damage. Additionally, when Amumu is hit by an Attack, this Ability's Cooldown is reduced by {{ e3 }} seconds.<br /><br /><spellActive>Active:</spellActive> Amumu throws a tantrum, dealing <magicDamage>{{ tantrumdamage }} magic damage</magicDamage> to nearby enemies.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage Reduced", "Cooldown", "Damage"],
+            "label": [
+              "Damage Reduced",
+              "Cooldown",
+              "Damage"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -283,23 +782,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 8, 7, 6, 5],
+          "cooldown": [
+            9,
+            8,
+            7,
+            6,
+            5
+          ],
           "cooldownBurn": "9/8/7/6/5",
-          "cost": [35, 35, 35, 35, 35],
+          "cost": [
+            35,
+            35,
+            35,
+            35,
+            35
+          ],
           "costBurn": "35",
           "datavalues": {},
           "effect": [
             null,
-            [5, 7, 9, 11, 13],
-            [65, 95, 125, 155, 185],
-            [0.75, 0.75, 0.75, 0.75, 0.75],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0.03, 0.03, 0.03, 0.03, 0.03],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              5,
+              7,
+              9,
+              11,
+              13
+            ],
+            [
+              65,
+              95,
+              125,
+              155,
+              185
+            ],
+            [
+              0.75,
+              0.75,
+              0.75,
+              0.75,
+              0.75
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0.03,
+              0.03,
+              0.03,
+              0.03,
+              0.03
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -317,7 +888,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [350, 350, 350, 350, 350],
+          "range": [
+            350,
+            350,
+            350,
+            350,
+            350
+          ],
           "rangeBurn": "350",
           "image": {
             "full": "Tantrum.png",
@@ -336,7 +913,11 @@
           "description": "Amumu entangles surrounding enemy units in bandages, applying his <keywordMajor>Curse</keywordMajor>, damaging and stunning them.",
           "tooltip": "Amumu flares out his bandages, <status>Stunning</status> for {{ rduration }} seconds, dealing <magicDamage>{{ rcalculateddamage }} magic damage</magicDamage> and applying <keywordMajor>Curse</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["@AbilityResourceName@ Cost", "Cooldown", "Damage"],
+            "label": [
+              "@AbilityResourceName@ Cost",
+              "Cooldown",
+              "Damage"
+            ],
             "effect": [
               "{{ cost }} -> {{ costNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -344,23 +925,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [150, 125, 100],
+          "cooldown": [
+            150,
+            125,
+            100
+          ],
           "cooldownBurn": "150/125/100",
-          "cost": [100, 150, 200],
+          "cost": [
+            100,
+            150,
+            200
+          ],
           "costBurn": "100/150/200",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -378,7 +1007,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [550, 550, 550],
+          "range": [
+            550,
+            550,
+            550
+          ],
           "rangeBurn": "550",
           "image": {
             "full": "CurseoftheSadMummy.png",

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Lissandra": {
       "id": "Lissandra",
@@ -49,16 +49,198 @@
           "chromas": true
         },
         {
+          "id": "127005",
+          "num": 5,
+          "name": "Coven Lissandra (Ruby)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "127006",
+          "num": 6,
+          "name": "Coven Lissandra (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "127007",
+          "num": 7,
+          "name": "Coven Lissandra (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "127008",
+          "num": 8,
+          "name": "Coven Lissandra (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "127009",
+          "num": 9,
+          "name": "Coven Lissandra (Obsidian)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "127010",
+          "num": 10,
+          "name": "Coven Lissandra (Meteorite)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "127011",
+          "num": 11,
+          "name": "Coven Lissandra (Sandstone)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
           "id": "127012",
           "num": 12,
           "name": "Dark Cosmic Lissandra",
           "chromas": true
         },
         {
+          "id": "127013",
+          "num": 13,
+          "name": "Dark Cosmic Lissandra (Ruby)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "127014",
+          "num": 14,
+          "name": "Dark Cosmic Lissandra (Citrine)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "127015",
+          "num": 15,
+          "name": "Dark Cosmic Lissandra (Sapphire)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "127016",
+          "num": 16,
+          "name": "Dark Cosmic Lissandra (Emerald)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "127017",
+          "num": 17,
+          "name": "Dark Cosmic Lissandra (Pearl)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "127018",
+          "num": 18,
+          "name": "Dark Cosmic Lissandra (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "127019",
+          "num": 19,
+          "name": "Dark Cosmic Lissandra (Obsidian)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "127020",
+          "num": 20,
+          "name": "Dark Cosmic Lissandra (Turquoise)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "127021",
+          "num": 21,
+          "name": "Dark Cosmic Lissandra (Rainbow)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "127022",
+          "num": 22,
+          "name": "Coven Lissandra (Dark Ritual)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
           "id": "127023",
           "num": 23,
           "name": "Porcelain Lissandra",
           "chromas": true
+        },
+        {
+          "id": "127024",
+          "num": 24,
+          "name": "Porcelain Lissandra (Ruby)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "127025",
+          "num": 25,
+          "name": "Porcelain Lissandra (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "127026",
+          "num": 26,
+          "name": "Porcelain Lissandra (Emerald)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "127027",
+          "num": 27,
+          "name": "Porcelain Lissandra (Catseye)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "127028",
+          "num": 28,
+          "name": "Porcelain Lissandra (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "127029",
+          "num": 29,
+          "name": "Porcelain Lissandra (Amethyst)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "127030",
+          "num": 30,
+          "name": "Porcelain Lissandra (Pearl)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "127031",
+          "num": 31,
+          "name": "Porcelain Lissandra (Obsidian)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "127032",
+          "num": 32,
+          "name": "Porcelain Lissandra (Golden Tiger)",
+          "chromas": false,
+          "parentSkin": 23
         },
         {
           "id": "127033",
@@ -73,10 +255,122 @@
           "chromas": true
         },
         {
+          "id": "127035",
+          "num": 35,
+          "name": "Space Groove Lissandra (Ruby)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "127036",
+          "num": 36,
+          "name": "Space Groove Lissandra (Catseye)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "127037",
+          "num": 37,
+          "name": "Space Groove Lissandra (Sapphire)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "127038",
+          "num": 38,
+          "name": "Space Groove Lissandra (Emerald)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "127039",
+          "num": 39,
+          "name": "Space Groove Lissandra (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "127040",
+          "num": 40,
+          "name": "Space Groove Lissandra (Obsidian)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "127041",
+          "num": 41,
+          "name": "Space Groove Lissandra (Pearl)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "127042",
+          "num": 42,
+          "name": "Space Groove Lissandra (Rainbow)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
           "id": "127043",
           "num": 43,
           "name": "Flora Fatalis Lissandra",
           "chromas": true
+        },
+        {
+          "id": "127044",
+          "num": 44,
+          "name": "Flora Fatalis Lissandra (Ruby)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "127045",
+          "num": 45,
+          "name": "Flora Fatalis Lissandra (Catseye)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "127046",
+          "num": 46,
+          "name": "Flora Fatalis Lissandra (Emerald)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "127047",
+          "num": 47,
+          "name": "Flora Fatalis Lissandra (Sapphire)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "127048",
+          "num": 48,
+          "name": "Flora Fatalis Lissandra (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "127049",
+          "num": 49,
+          "name": "Flora Fatalis Lissandra (Turquoise)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "127050",
+          "num": 50,
+          "name": "Flora Fatalis Lissandra (Pearl)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "127051",
+          "num": 51,
+          "name": "Flora Fatalis Lissandra (Obsidian)",
+          "chromas": false,
+          "parentSkin": 43
         }
       ],
       "lore": "Lissandra's magic twists the pure power of ice into something dark and terrible. With the force of her black ice, she does more than freeze—she impales and crushes those who oppose her. To the terrified denizens of the north, she is known only as ''The Ice Witch.'' The truth is much more sinister: Lissandra is a corruptor of nature who plots to unleash an ice age on the world.",
@@ -91,7 +385,9 @@
         "Lissandra's Ring of Frost has a long cooldown at early ranks; engage her while it's on cooldown.",
         "Lissandra's Ice Shard only slows the first unit it hits. Approach Lissandra from behind your team's minions to avoid being slowed."
       ],
-      "tags": ["Mage"],
+      "tags": [
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -106,7 +402,7 @@
         "mpperlevel": 30,
         "movespeed": 325,
         "armor": 22,
-        "armorperlevel": 4.9,
+        "armorperlevel": 4.2,
         "spellblock": 30,
         "spellblockperlevel": 1.3,
         "attackrange": 550,
@@ -142,23 +438,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 7, 6, 5, 4],
-          "cooldownBurn": "8/7/6/5/4",
-          "cost": [55, 60, 65, 70, 75],
+          "cooldown": [
+            7,
+            6,
+            5,
+            4,
+            3
+          ],
+          "cooldownBurn": "7/6/5/4/3",
+          "cost": [
+            55,
+            60,
+            65,
+            70,
+            75
+          ],
           "costBurn": "55/60/65/70/75",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [20, 24, 28, 32, 36],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              20,
+              24,
+              28,
+              32,
+              36
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -176,7 +544,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [725, 725, 725, 725, 725],
+          "range": [
+            725,
+            725,
+            725,
+            725,
+            725
+          ],
           "rangeBurn": "725",
           "image": {
             "full": "LissandraQ.png",
@@ -195,7 +569,11 @@
           "description": "Freezes nearby enemies in ice, dealing magic damage and rooting them.",
           "tooltip": "Lissandra creates an ice field, <status>Rooting</status> nearby enemies for {{ e2 }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Root Duration", "Cooldown"],
+            "label": [
+              "Damage",
+              "Root Duration",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ e2 }} -> {{ e2NL }}",
@@ -203,23 +581,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9.5, 9, 8.5, 8],
+          "cooldown": [
+            10,
+            9.5,
+            9,
+            8.5,
+            8
+          ],
           "cooldownBurn": "10/9.5/9/8.5/8",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [70, 105, 140, 175, 210],
-            [1.25, 1.35, 1.45, 1.55, 1.65],
-            [3, 3, 3, 3, 3],
-            [8, 8, 8, 8, 8],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              70,
+              105,
+              140,
+              175,
+              210
+            ],
+            [
+              1.25,
+              1.35,
+              1.45,
+              1.55,
+              1.65
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              8,
+              8,
+              8,
+              8,
+              8
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -237,7 +687,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [450, 450, 450, 450, 450],
+          "range": [
+            450,
+            450,
+            450,
+            450,
+            450
+          ],
           "rangeBurn": "450",
           "image": {
             "full": "LissandraW.png",
@@ -256,7 +712,11 @@
           "description": "Lissandra creates an ice claw that deals magic damage. Reactivating this ability transports Lissandra to the claw's current location.",
           "tooltip": "Lissandra casts forth an ice claw that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>. Lissandra can <recast>Recast</recast> while the claw travels to teleport to its location.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -264,23 +724,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [24, 21, 18, 15, 12],
+          "cooldown": [
+            24,
+            21,
+            18,
+            15,
+            12
+          ],
           "cooldownBurn": "24/21/18/15/12",
-          "cost": [80, 85, 90, 95, 100],
+          "cost": [
+            80,
+            85,
+            90,
+            95,
+            100
+          ],
           "costBurn": "80/85/90/95/100",
           "datavalues": {},
           "effect": [
             null,
-            [70, 105, 140, 175, 210],
-            [14, 13, 12, 11, 10],
-            [20, 20, 20, 20, 20],
-            [1, 1, 1, 1, 1],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              70,
+              105,
+              140,
+              175,
+              210
+            ],
+            [
+              14,
+              13,
+              12,
+              11,
+              10
+            ],
+            [
+              20,
+              20,
+              20,
+              20,
+              20
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -298,7 +830,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1050, 1050, 1050, 1050, 1050],
+          "range": [
+            1050,
+            1050,
+            1050,
+            1050,
+            1050
+          ],
           "rangeBurn": "1050",
           "image": {
             "full": "LissandraE.png",
@@ -317,7 +855,12 @@
           "description": "If cast on an enemy champion, the target is frozen solid, stunning it. If cast on Lissandra, she encases herself in dark ice, healing herself while becoming untargetable and invulnerable. Dark ice then emanates from the target dealing magic damage to enemies and slowing Move Speed.",
           "tooltip": "Lissandra encases herself or an enemy champion in ice. Enemies are <status>Stunned</status> for {{ enemycastduration }} seconds. When self cast, Lissandra enters Stasis for {{ selfcastduration }} seconds and restores <healing>{{ healamount }} Health</healing>, increased by {{ selfcastmissinghpratio }}% for each {{ selfcastmissinghpperabove }}% missing Health.<br /><br />In either case, dark ice eminates from the target, dealing <magicDamage>{{ calculateddamage }} magic damage</magicDamage>. The ice persists for {{ slowduration }} seconds, <status>Slowing</status> enemies by {{ slowamount*-100 }}%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow", "Healing", "Cooldown"],
+            "label": [
+              "Damage",
+              "Slow",
+              "Healing",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ slowamount*-100.000000 }}% -> {{ slowamountnl*-100.000000 }}%",
@@ -326,23 +869,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -360,7 +951,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [550, 550, 550],
+          "range": [
+            550,
+            550,
+            550
+          ],
           "rangeBurn": "550",
           "image": {
             "full": "LissandraR.png",

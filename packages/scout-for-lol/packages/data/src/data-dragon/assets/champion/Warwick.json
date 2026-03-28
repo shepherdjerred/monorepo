@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Warwick": {
       "id": "Warwick",
@@ -85,16 +85,198 @@
           "chromas": true
         },
         {
+          "id": "19011",
+          "num": 11,
+          "name": "Lunar Guardian Warwick (Ruby)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "19012",
+          "num": 12,
+          "name": "Lunar Guardian Warwick (Meteorite)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "19013",
+          "num": 13,
+          "name": "Lunar Guardian Warwick (Pearl)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "19014",
+          "num": 14,
+          "name": "Lunar Guardian Warwick (Turquoise)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "19015",
+          "num": 15,
+          "name": "Lunar Guardian Warwick (Golden)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
           "id": "19016",
           "num": 16,
           "name": "PROJECT: Warwick",
           "chromas": true
         },
         {
+          "id": "19018",
+          "num": 18,
+          "name": "Grey Warwick (Sapphire)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "19023",
+          "num": 23,
+          "name": "Grey Warwick (Meteorite)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "19025",
+          "num": 25,
+          "name": "Grey Warwick (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "19026",
+          "num": 26,
+          "name": "PROJECT: Warwick (Meteorite)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "19027",
+          "num": 27,
+          "name": "PROJECT: Warwick (Obsidian)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "19028",
+          "num": 28,
+          "name": "PROJECT: Warwick (Amethyst)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "19029",
+          "num": 29,
+          "name": "PROJECT: Warwick (Turquoise)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "19030",
+          "num": 30,
+          "name": "PROJECT: Warwick (Ruby)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "19031",
+          "num": 31,
+          "name": "PROJECT: Warwick (Catseye)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "19032",
+          "num": 32,
+          "name": "PROJECT: Warwick (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "19033",
+          "num": 33,
+          "name": "PROJECT: Warwick (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "19034",
+          "num": 34,
+          "name": "PROJECT: Warwick (Reckoning)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
           "id": "19035",
           "num": 35,
           "name": "Old God Warwick",
           "chromas": false
+        },
+        {
+          "id": "19036",
+          "num": 36,
+          "name": "Old God Warwick (Ruby)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "19037",
+          "num": 37,
+          "name": "Old God Warwick (Citrine)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "19038",
+          "num": 38,
+          "name": "Old God Warwick (Emerald)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "19039",
+          "num": 39,
+          "name": "Old God Warwick (Sapphire)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "19040",
+          "num": 40,
+          "name": "Old God Warwick (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "19041",
+          "num": 41,
+          "name": "Old God Warwick (Obsidian)",
+          "chromas": true,
+          "parentSkin": 35
+        },
+        {
+          "id": "19042",
+          "num": 42,
+          "name": "Old God Warwick (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "19043",
+          "num": 43,
+          "name": "Old God Warwick (Pearl)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "19044",
+          "num": 44,
+          "name": "Old God Warwick (Dark Ritual)",
+          "chromas": false,
+          "parentSkin": 35
         },
         {
           "id": "19045",
@@ -109,10 +291,142 @@
           "chromas": false
         },
         {
+          "id": "19047",
+          "num": 47,
+          "name": "Winterblessed Warwick (Ruby)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "19048",
+          "num": 48,
+          "name": "Winterblessed Warwick (Citrine)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "19049",
+          "num": 49,
+          "name": "Winterblessed Warwick (Emerald)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "19050",
+          "num": 50,
+          "name": "Winterblessed Warwick (Sapphire)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "19051",
+          "num": 51,
+          "name": "Winterblessed Warwick (Rose Quartz)",
+          "chromas": true,
+          "parentSkin": 45
+        },
+        {
+          "id": "19052",
+          "num": 52,
+          "name": "Winterblessed Warwick (Turquoise)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "19053",
+          "num": 53,
+          "name": "Winterblessed Warwick (Granite)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "19054",
+          "num": 54,
+          "name": "Winterblessed Warwick (Obsidian)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "19055",
+          "num": 55,
+          "name": "Winterblessed Warwick (Wreathguard)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
           "id": "19056",
           "num": 56,
           "name": "Arcane Vander Warwick",
           "chromas": false
+        },
+        {
+          "id": "19057",
+          "num": 57,
+          "name": "Arcane Vander Warwick (Paragon)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "19058",
+          "num": 58,
+          "name": "Warhound Warwick",
+          "chromas": false
+        },
+        {
+          "id": "19059",
+          "num": 59,
+          "name": "Warhound Warwick (Ruby)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "19060",
+          "num": 60,
+          "name": "Warhound Warwick (Catseye)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "19061",
+          "num": 61,
+          "name": "Warhound Warwick (Emerald)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "19062",
+          "num": 62,
+          "name": "Warhound Warwick (Amethyst)",
+          "chromas": true,
+          "parentSkin": 58
+        },
+        {
+          "id": "19063",
+          "num": 63,
+          "name": "Warhound Warwick (Turquoise)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "19064",
+          "num": 64,
+          "name": "Warhound Warwick (Rose Quartz)",
+          "chromas": true,
+          "parentSkin": 58
+        },
+        {
+          "id": "19065",
+          "num": 65,
+          "name": "Warhound Warwick (Obsidian)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "19066",
+          "num": 66,
+          "name": "Warhound Warwick (Pearl)",
+          "chromas": false,
+          "parentSkin": 58
         }
       ],
       "lore": "Warwick is a monster who hunts the gray alleys of Zaun. Transformed by agonizing experiments, his body is fused with an intricate system of chambers and pumps, machinery filling his veins with alchemical rage. He bursts from the shadows to prey upon those criminals who terrorize the city's depths. Warwick is drawn to blood, driven mad by its scent… and none who spill it can escape him.",
@@ -127,7 +441,10 @@
         "Warwick is empowered versus low health enemies. Manage your health to keep him at bay.",
         "Warwick's ultimate cast range scales with his Move Speed."
       ],
-      "tags": ["Fighter", "Tank"],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 9,
@@ -178,23 +495,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 7.5, 7, 6.5, 6],
+          "cooldown": [
+            8,
+            7.5,
+            7,
+            6.5,
+            6
+          ],
           "cooldownBurn": "8/7.5/7/6.5/6",
-          "cost": [80, 85, 90, 95, 100],
+          "cost": [
+            80,
+            85,
+            90,
+            95,
+            100
+          ],
           "costBurn": "80/85/90/95/100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [100, 150, 200, 250, 300],
-            [25, 37.5, 50, 62.5, 75],
-            [150, 165, 180, 195, 210],
-            [450, 450, 450, 450, 450],
-            [200, 200, 200, 200, 200],
-            [300, 300, 300, 300, 300],
-            [425, 425, 425, 425, 425],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              100,
+              150,
+              200,
+              250,
+              300
+            ],
+            [
+              25,
+              37.5,
+              50,
+              62.5,
+              75
+            ],
+            [
+              150,
+              165,
+              180,
+              195,
+              210
+            ],
+            [
+              450,
+              450,
+              450,
+              450,
+              450
+            ],
+            [
+              200,
+              200,
+              200,
+              200,
+              200
+            ],
+            [
+              300,
+              300,
+              300,
+              300,
+              300
+            ],
+            [
+              425,
+              425,
+              425,
+              425,
+              425
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -212,7 +601,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [365, 365, 365, 365, 365],
+          "range": [
+            365,
+            365,
+            365,
+            365,
+            365
+          ],
           "rangeBurn": "365",
           "image": {
             "full": "WarwickQ.png",
@@ -231,7 +626,11 @@
           "description": "Warwick senses enemies below 50% health, gaining Move Speed toward and attack speed against them. When they fall below 25% health, he frenzies and these bonuses triple.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Warwick can sense champions below 50% Health, gaining <speed>{{ passivemsbonus }}% Move Speed</speed> towards them. Spells and attacks against enemies below 50% Health grant <speed>{{ passiveasbonus }}% Attack Speed</speed>. These effects are increased by 200% against enemies below 25% Health. <br /><br /><spellActive>Active:</spellActive> Warwick can briefly sense all enemies, and gains this Ability's passive effect against the closest champion for 8 seconds, regardless of Health. If no champions are found, this Ability's cooldown is reduced by 30%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Move Speed", "Attack Speed", "Cooldown"],
+            "label": [
+              "Move Speed",
+              "Attack Speed",
+              "Cooldown"
+            ],
             "effect": [
               "{{ passivemsbonus }}% -> {{ passivemsbonusNL }}%",
               "{{ passiveasbonus }}% -> {{ passiveasbonusNL }}%",
@@ -239,23 +638,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [80, 70, 60, 50, 40],
+          "cooldown": [
+            80,
+            70,
+            60,
+            50,
+            40
+          ],
           "cooldownBurn": "80/70/60/50/40",
-          "cost": [55, 55, 55, 55, 55],
+          "cost": [
+            55,
+            55,
+            55,
+            55,
+            55
+          ],
           "costBurn": "55",
           "datavalues": {},
           "effect": [
             null,
-            [35, 42.5, 50, 57.5, 65],
-            [70, 80, 90, 100, 110],
-            [10, 15, 20, 25, 30],
-            [80, 90, 100, 110, 120],
-            [30, 30, 30, 30, 30],
-            [8, 8, 8, 8, 8],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              35,
+              42.5,
+              50,
+              57.5,
+              65
+            ],
+            [
+              70,
+              80,
+              90,
+              100,
+              110
+            ],
+            [
+              10,
+              15,
+              20,
+              25,
+              30
+            ],
+            [
+              80,
+              90,
+              100,
+              110,
+              120
+            ],
+            [
+              30,
+              30,
+              30,
+              30,
+              30
+            ],
+            [
+              8,
+              8,
+              8,
+              8,
+              8
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -273,7 +744,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "2",
-          "range": [4000, 4000, 4000, 4000, 4000],
+          "range": [
+            4000,
+            4000,
+            4000,
+            4000,
+            4000
+          ],
           "rangeBurn": "4000",
           "image": {
             "full": "WarwickW.png",
@@ -292,30 +769,105 @@
           "description": "Warwick gains damage reduction for 2.5 seconds. At the end, or if re-activated, he howls, causing nearby enemies to flee for 1 second.",
           "tooltip": "Warwick gains {{ e1 }}% damage reduction for 2.5 seconds. After it ends, Warwick howls, <status>Fearing</status> nearby enemies for {{ e3 }} second. Warwick can <recast>Recast</recast> to end the Ability early.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage Reduction", "Cooldown"],
+            "label": [
+              "Damage Reduction",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }}% -> {{ e1NL }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [15, 14, 13, 12, 11],
+          "cooldown": [
+            15,
+            14,
+            13,
+            12,
+            11
+          ],
           "cooldownBurn": "15/14/13/12/11",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [35, 40, 45, 50, 55],
-            [2.75, 2.75, 2.75, 2.75, 2.75],
-            [1, 1, 1, 1, 1],
-            [1, 1, 1, 1, 1],
-            [800, 800, 800, 800, 800],
-            [400, 400, 400, 400, 400],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              35,
+              40,
+              45,
+              50,
+              55
+            ],
+            [
+              2.75,
+              2.75,
+              2.75,
+              2.75,
+              2.75
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              800,
+              800,
+              800,
+              800,
+              800
+            ],
+            [
+              400,
+              400,
+              400,
+              400,
+              400
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -333,7 +885,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [375, 375, 375, 375, 375],
+          "range": [
+            375,
+            375,
+            375,
+            375,
+            375
+          ],
           "rangeBurn": "375",
           "image": {
             "full": "WarwickE.png",
@@ -352,30 +910,81 @@
           "description": "Warwick leaps in a direction (scaling with his bonus Move Speed), suppressing the first champion he collides with for 1.5 seconds.",
           "tooltip": "Warwick leaps a huge distance that scales with his <speed>Move Speed</speed>, <status>Suppressing</status> the first champion he collides with while he channels for {{ rduration }} seconds. He attacks that champion 3 times over the duration, dealing <magicDamage>{{ damagecumulative }} magic damage</magicDamage>. Warwick <healing>heals for 100% of all damage dealt</healing> during the channel.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ rbasedamage }} -> {{ rbasedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [110, 90, 70],
+          "cooldown": [
+            110,
+            90,
+            70
+          ],
           "cooldownBurn": "110/90/70",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -393,7 +1002,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "WarwickR.png",

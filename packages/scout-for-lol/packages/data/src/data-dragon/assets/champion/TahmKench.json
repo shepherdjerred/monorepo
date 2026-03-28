@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "TahmKench": {
       "id": "TahmKench",
@@ -43,10 +43,108 @@
           "chromas": true
         },
         {
+          "id": "223004",
+          "num": 4,
+          "name": "Coin Emperor Tahm Kench (Obsidian)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "223005",
+          "num": 5,
+          "name": "Coin Emperor Tahm Kench (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "223006",
+          "num": 6,
+          "name": "Coin Emperor Tahm Kench (Amethyst)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "223007",
+          "num": 7,
+          "name": "Coin Emperor Tahm Kench (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "223008",
+          "num": 8,
+          "name": "Coin Emperor Tahm Kench (Pearl)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "223009",
+          "num": 9,
+          "name": "Coin Emperor Tahm Kench (Ruby)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
           "id": "223011",
           "num": 11,
           "name": "Arcana Tahm Kench",
           "chromas": false
+        },
+        {
+          "id": "223012",
+          "num": 12,
+          "name": "Arcana Tahm Kench (Ruby)",
+          "chromas": true,
+          "parentSkin": 11
+        },
+        {
+          "id": "223013",
+          "num": 13,
+          "name": "Arcana Tahm Kench (Citrine)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "223014",
+          "num": 14,
+          "name": "Arcana Tahm Kench (Amethyst)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "223015",
+          "num": 15,
+          "name": "Arcana Tahm Kench (Sapphire)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "223016",
+          "num": 16,
+          "name": "Arcana Tahm Kench (Emerald)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "223017",
+          "num": 17,
+          "name": "Arcana Tahm Kench (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "223018",
+          "num": 18,
+          "name": "Arcana Tahm Kench (Pearl)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "223019",
+          "num": 19,
+          "name": "Arcana Tahm Kench (Obsidian)",
+          "chromas": false,
+          "parentSkin": 11
         },
         {
           "id": "223020",
@@ -55,10 +153,129 @@
           "chromas": false
         },
         {
+          "id": "223021",
+          "num": 21,
+          "name": "High Noon Tahm Kench (Ruby)",
+          "chromas": true,
+          "parentSkin": 20
+        },
+        {
+          "id": "223022",
+          "num": 22,
+          "name": "High Noon Tahm Kench (Catseye)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "223023",
+          "num": 23,
+          "name": "High Noon Tahm Kench (Amethyst)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "223024",
+          "num": 24,
+          "name": "High Noon Tahm Kench (Sapphire)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "223025",
+          "num": 25,
+          "name": "High Noon Tahm Kench (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "223026",
+          "num": 26,
+          "name": "High Noon Tahm Kench (Emerald)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "223027",
+          "num": 27,
+          "name": "High Noon Tahm Kench (Obsidian)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "223028",
+          "num": 28,
+          "name": "High Noon Tahm Kench (Pearl)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "223029",
+          "num": 29,
+          "name": "High Noon Tahm Kench (Nomad)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
           "id": "223030",
           "num": 30,
           "name": "Shan Hai Scrolls Tahm Kench",
           "chromas": false
+        },
+        {
+          "id": "223031",
+          "num": 31,
+          "name": "Shan Hai Scrolls Tahm Kench (Ruby)",
+          "chromas": true,
+          "parentSkin": 30
+        },
+        {
+          "id": "223032",
+          "num": 32,
+          "name": "Shan Hai Scrolls Tahm Kench (Citrine)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "223033",
+          "num": 33,
+          "name": "Shan Hai Scrolls Tahm Kench (Granite)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "223034",
+          "num": 34,
+          "name": "Shan Hai Scrolls Tahm Kench (Peridot)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "223035",
+          "num": 35,
+          "name": "Shan Hai Scrolls Tahm Kench (Sandstone)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "223036",
+          "num": 36,
+          "name": "Shan Hai Scrolls Tahm Kench (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "223037",
+          "num": 37,
+          "name": "Shan Hai Scrolls Tahm Kench (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "223038",
+          "num": 38,
+          "name": "Shan Hai Scrolls Tahm Kench (Pearl)",
+          "chromas": false,
+          "parentSkin": 30
         }
       ],
       "lore": "Known by many names throughout history, the demon Tahm Kench travels the waterways of Runeterra, feeding his insatiable appetite with the misery of others. Though he may appear singularly charming and proud, he swaggers through the physical realm like a vagabond in search of unsuspecting prey. His lashing tongue can stun even a heavily armored warrior from a dozen paces, and to fall into his rumbling belly is to tumble into an abyss from which there is little hope of return.",
@@ -71,7 +288,10 @@
         "When you see Tahm Kench use the shield from Thick Skin, remember that he just opted out of a good deal of healing. He will also not accumulate new gray health until Thick Skin comes off cooldown. Use this to your advantage!",
         "Watch out for Kench's Abyssal Dive - you can cancel it's channel with immobilizing crowd control effects."
       ],
-      "tags": ["Tank", "Support"],
+      "tags": [
+        "Tank",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 3,
@@ -124,23 +344,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 6.5, 6, 5.5, 5],
+          "cooldown": [
+            7,
+            6.5,
+            6,
+            5.5,
+            5
+          ],
           "cooldownBurn": "7/6.5/6/5.5/5",
-          "cost": [50, 46, 42, 38, 34],
+          "cost": [
+            50,
+            46,
+            42,
+            38,
+            34
+          ],
           "costBurn": "50/46/42/38/34",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -158,7 +450,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [900, 900, 900, 900, 900],
+          "range": [
+            900,
+            900,
+            900,
+            900,
+            900
+          ],
           "rangeBurn": "900",
           "image": {
             "full": "TahmKenchQ.png",
@@ -193,23 +491,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [21, 20, 19, 18, 17],
+          "cooldown": [
+            21,
+            20,
+            19,
+            18,
+            17
+          ],
           "cooldownBurn": "21/20/19/18/17",
-          "cost": [60, 75, 90, 105, 120],
+          "cost": [
+            60,
+            75,
+            90,
+            105,
+            120
+          ],
           "costBurn": "60/75/90/105/120",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -227,7 +597,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1000, 1050, 1100, 1150, 1200],
+          "range": [
+            1000,
+            1050,
+            1100,
+            1150,
+            1200
+          ],
           "rangeBurn": "1000/1050/1100/1150/1200",
           "image": {
             "full": "TahmKenchW.png",
@@ -256,23 +632,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [3, 3, 3, 3, 3],
+          "cooldown": [
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
           "cooldownBurn": "3",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -290,7 +738,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [2400, 2400, 2400, 2400, 2400],
+          "range": [
+            2400,
+            2400,
+            2400,
+            2400,
+            2400
+          ],
           "rangeBurn": "2400",
           "image": {
             "full": "TahmKenchE.png",
@@ -309,7 +763,11 @@
           "description": "Tahm Kench devours a champion for a few seconds, dealing magic damage if they are an enemy, or shielding them if they are an ally.",
           "tooltip": "Tahm Kench devours a champion for a few seconds. He can <recast>Recast</recast> to spit them out.<br /><br /><specialRules>Enemy Champions:</specialRules> Require 3 stacks of <spellName>An Acquired Taste</spellName>. Are devoured for up to {{ enemyduration }} seconds and take <magicDamage>{{ basedamage }} (+{{ percenthpdamage }} of their Max Health) magic damage</magicDamage>. Tahm Kench is <status>Slowed</status> by {{ slowamount*100 }}% and <keywordName>Grounded</keywordName> during this effect.<br /><br /><specialRules>Ally Champions:</specialRules> Are devoured for up to {{ allyduration }} seconds and are granted <shield>{{ totalshield }} Shield</shield> which decays gradually after being spit out. Allies can also choose to exit early. Tahm Kench is <status>Grounded</status> during this effect, but can cast <keywordName>Abyssal Dive</keywordName> and gains <speed>{{ allyspeedamount*100 }}% Move Speed</speed> for {{ allyduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Shield Amount", "Cooldown"],
+            "label": [
+              "Damage",
+              "Shield Amount",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ baseshield }} -> {{ baseshieldNL }}",
@@ -317,23 +775,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [0, 0, 0],
+          "cooldown": [
+            0,
+            0,
+            0
+          ],
           "cooldownBurn": "0",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -351,7 +857,11 @@
           "vars": [],
           "costType": " Mana",
           "maxammo": "-1",
-          "range": [25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "TahmKenchRWrapper.png",

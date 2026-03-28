@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Braum": {
       "id": "Braum",
@@ -43,6 +43,48 @@
           "chromas": false
         },
         {
+          "id": "201004",
+          "num": 4,
+          "name": "Dragonslayer Braum (Amethyst)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "201005",
+          "num": 5,
+          "name": "Dragonslayer Braum (Obsidian)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "201006",
+          "num": 6,
+          "name": "Dragonslayer Braum (Catseye)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "201007",
+          "num": 7,
+          "name": "Dragonslayer Braum (Emerald)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "201008",
+          "num": 8,
+          "name": "Dragonslayer Braum (Sandstone)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "201009",
+          "num": 9,
+          "name": "Dragonslayer Braum (Pearl)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
           "id": "201010",
           "num": 10,
           "name": "Santa Braum",
@@ -55,10 +97,150 @@
           "chromas": true
         },
         {
+          "id": "201012",
+          "num": 12,
+          "name": "Crime City Braum (Ruby)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "201013",
+          "num": 13,
+          "name": "Crime City Braum (Citrine)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "201014",
+          "num": 14,
+          "name": "Crime City Braum (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "201015",
+          "num": 15,
+          "name": "Crime City Braum (Obsidian)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "201016",
+          "num": 16,
+          "name": "Crime City Braum (Emerald)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "201017",
+          "num": 17,
+          "name": "Crime City Braum (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "201018",
+          "num": 18,
+          "name": "Crime City Braum (Pearl)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "201019",
+          "num": 19,
+          "name": "Crime City Braum (Sandstone)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "201020",
+          "num": 20,
+          "name": "Dragonslayer Braum (Fan Pass)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "201021",
+          "num": 21,
+          "name": "Dragonslayer Braum (LEC)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "201022",
+          "num": 22,
+          "name": "Dragonslayer Braum (LCS)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "201023",
+          "num": 23,
+          "name": "Dragonslayer Braum (LPL)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
           "id": "201024",
           "num": 24,
           "name": "Sugar Rush Braum",
           "chromas": true
+        },
+        {
+          "id": "201025",
+          "num": 25,
+          "name": "Sugar Rush Braum (Ruby)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "201026",
+          "num": 26,
+          "name": "Sugar Rush Braum (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "201027",
+          "num": 27,
+          "name": "Sugar Rush Braum (Citrine)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "201028",
+          "num": 28,
+          "name": "Sugar Rush Braum (Catseye)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "201029",
+          "num": 29,
+          "name": "Sugar Rush Braum (Pearl)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "201030",
+          "num": 30,
+          "name": "Sugar Rush Braum (Obsidian)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "201031",
+          "num": 31,
+          "name": "Sugar Rush Braum (Peridot)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "201032",
+          "num": 32,
+          "name": "Sugar Rush Braum (Sweet Tooth)",
+          "chromas": false,
+          "parentSkin": 24
         },
         {
           "id": "201033",
@@ -67,10 +249,122 @@
           "chromas": true
         },
         {
+          "id": "201034",
+          "num": 34,
+          "name": "Pool Party Braum (Ruby)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "201035",
+          "num": 35,
+          "name": "Pool Party Braum (Catseye)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "201036",
+          "num": 36,
+          "name": "Pool Party Braum (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "201037",
+          "num": 37,
+          "name": "Pool Party Braum (Amethyst)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "201038",
+          "num": 38,
+          "name": "Pool Party Braum (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "201039",
+          "num": 39,
+          "name": "Pool Party Braum (Sandstone)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "201040",
+          "num": 40,
+          "name": "Pool Party Braum (Obsidian)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "201041",
+          "num": 41,
+          "name": "Pool Party Braum (Peridot)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
           "id": "201042",
           "num": 42,
           "name": "Grill Master Braum",
           "chromas": true
+        },
+        {
+          "id": "201043",
+          "num": 43,
+          "name": "Grill Master Braum (Ruby)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "201044",
+          "num": 44,
+          "name": "Grill Master Braum (Catseye)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "201045",
+          "num": 45,
+          "name": "Grill Master Braum (Emerald)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "201046",
+          "num": 46,
+          "name": "Grill Master Braum (Sapphire)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "201047",
+          "num": 47,
+          "name": "Grill Master Braum (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "201048",
+          "num": 48,
+          "name": "Grill Master Braum (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "201049",
+          "num": 49,
+          "name": "Grill Master Braum (Pearl)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "201050",
+          "num": 50,
+          "name": "Grill Master Braum (Obsidian)",
+          "chromas": false,
+          "parentSkin": 42
         }
       ],
       "lore": "Blessed with massive biceps and an even bigger heart, Braum is a beloved hero of the Freljord. Every mead hall north of Frostheld toasts his legendary strength, said to have felled a forest of oaks in a single night, and punched an entire mountain into rubble. Bearing an enchanted vault door as his shield, Braum roams the frozen north sporting a mustachioed smile as big as his muscles—a true friend to all those in need.",
@@ -85,7 +379,10 @@
         "Braum's ultimate has a long cast time, use that extra time to dodge. Walking over the frozen ground left behind will slow you, position so that you don't need to cross it.",
         "Unbreakable gives Braum extremely strong directional defense, either wait until it is down or outposition the ability."
       ],
-      "tags": ["Tank", "Support"],
+      "tags": [
+        "Tank",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 3,
@@ -122,7 +419,11 @@
           "description": "Braum propels freezing ice from his shield, slowing and dealing magic damage.<br><br>Applies a stack of <font color='#FFF673'>Concussive Blows</font>.",
           "tooltip": "Braum propels freezing ice from his shield, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first enemy hit and <status>Slowing</status> them by {{ e2 }}% decaying over {{ e5 }} seconds.<br /><br />Applies a stack of <keywordMajor>Concussive Blows</keywordMajor>. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -130,23 +431,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 7.5, 7, 6.5, 6],
+          "cooldown": [
+            8,
+            7.5,
+            7,
+            6.5,
+            6
+          ],
           "cooldownBurn": "8/7.5/7/6.5/6",
-          "cost": [45, 50, 55, 60, 65],
+          "cost": [
+            45,
+            50,
+            55,
+            60,
+            65
+          ],
           "costBurn": "45/50/55/60/65",
           "datavalues": {},
           "effect": [
             null,
-            [75, 120, 165, 210, 255],
-            [70, 70, 70, 70, 70],
-            [30, 30, 30, 30, 30],
-            [0.02, 0.02, 0.02, 0.02, 0.02],
-            [2, 2, 2, 2, 2],
-            [1050, 1050, 1050, 1050, 1050],
-            [4, 4, 4, 4, 4],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              75,
+              120,
+              165,
+              210,
+              255
+            ],
+            [
+              70,
+              70,
+              70,
+              70,
+              70
+            ],
+            [
+              30,
+              30,
+              30,
+              30,
+              30
+            ],
+            [
+              0.02,
+              0.02,
+              0.02,
+              0.02,
+              0.02
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              1050,
+              1050,
+              1050,
+              1050,
+              1050
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -164,7 +537,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1000, 1000, 1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "BraumQ.png",
@@ -183,30 +562,105 @@
           "description": "Braum leaps to a target allied champion or minion. On arrival, Braum and the ally gain Armor and Magic Resist for a few seconds.",
           "tooltip": "Braum leaps to an allied champion or minion. On arrival, Braum grants the target <scaleArmor>{{ grantedallyarmor }} Armor</scaleArmor> and <scaleMR>{{ grantedallymr }} Magic Resist</scaleMR> for {{ e1 }} seconds. Braum grants himself <scaleArmor>{{ grantedbraumarmor }} Armor</scaleArmor> and <scaleMR>{{ grantedbraummr }} Magic Resist</scaleMR> for the same duration.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Base Resists", "Cooldown"],
+            "label": [
+              "Base Resists",
+              "Cooldown"
+            ],
             "effect": [
               "{{ baseresists }} -> {{ baseresistsNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11, 10, 9, 8],
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [3, 3, 3, 3, 3],
-            [750, 750, 750, 750, 750],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [40, 40, 40, 40, 40],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              750,
+              750,
+              750,
+              750,
+              750
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              40,
+              40,
+              40,
+              40,
+              40
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -224,7 +678,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "BraumW.png",
@@ -257,23 +717,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 14, 12, 10, 8],
+          "cooldown": [
+            16,
+            14,
+            12,
+            10,
+            8
+          ],
           "cooldownBurn": "16/14/12/10/8",
-          "cost": [30, 35, 40, 45, 50],
+          "cost": [
+            30,
+            35,
+            40,
+            45,
+            50
+          ],
           "costBurn": "30/35/40/45/50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [3, 3.25, 3.5, 3.75, 4],
-            [35, 40, 45, 50, 55],
-            [10, 10, 10, 10, 10],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              3.25,
+              3.5,
+              3.75,
+              4
+            ],
+            [
+              35,
+              40,
+              45,
+              50,
+              55
+            ],
+            [
+              10,
+              10,
+              10,
+              10,
+              10
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -291,7 +823,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [25000, 25000, 25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "BraumE.png",
@@ -310,7 +848,12 @@
           "description": "Braum slams the ground, knocking up enemies nearby and in a line in front of him. A fissure is left along the line that slows enemies.",
           "tooltip": "Braum slams the ground sending forth a fissure that <status>Knocks Up</status> enemies in its path and nearby Braum, and deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>. The first target hit is <status>Knocked Up</status> for between {{ minknockup }} and {{ maxknockup }} seconds, increasing with distance from Braum. All others hit are <status>Knocked Up</status> for {{ minknockup }} seconds.<br /><br />The fissure also creates a zone for {{ slowzoneduration }} seconds, that <status>Slows</status> by {{ movespeedmod }}%.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Knockup Duration", "Slow", "Cooldown"],
+            "label": [
+              "Damage",
+              "Knockup Duration",
+              "Slow",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ firstknockupduration }} -> {{ firstknockupdurationNL }}",
@@ -319,23 +862,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [130, 115, 100],
+          "cooldown": [
+            130,
+            115,
+            100
+          ],
           "cooldownBurn": "130/115/100",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -353,7 +944,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1250, 1250, 1250],
+          "range": [
+            1250,
+            1250,
+            1250
+          ],
           "rangeBurn": "1250",
           "image": {
             "full": "BraumRWrapper.png",

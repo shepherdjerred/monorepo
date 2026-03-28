@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Singed": {
       "id": "Singed",
@@ -85,10 +85,122 @@
           "chromas": true
         },
         {
+          "id": "27011",
+          "num": 11,
+          "name": "Resistance Singed (Ruby)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "27012",
+          "num": 12,
+          "name": "Resistance Singed (Catseye)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "27013",
+          "num": 13,
+          "name": "Resistance Singed (Emerald)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "27014",
+          "num": 14,
+          "name": "Resistance Singed (Turquoise)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "27015",
+          "num": 15,
+          "name": "Resistance Singed (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "27016",
+          "num": 16,
+          "name": "Resistance Singed (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "27017",
+          "num": 17,
+          "name": "Resistance Singed (Pearl)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "27018",
+          "num": 18,
+          "name": "Resistance Singed (Obsidian)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
           "id": "27019",
           "num": 19,
           "name": "Astronaut Singed",
           "chromas": true
+        },
+        {
+          "id": "27020",
+          "num": 20,
+          "name": "Astronaut Singed (Ruby)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "27021",
+          "num": 21,
+          "name": "Astronaut Singed (Catseye)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "27022",
+          "num": 22,
+          "name": "Astronaut Singed (Sapphire)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "27023",
+          "num": 23,
+          "name": "Astronaut Singed (Emerald)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "27024",
+          "num": 24,
+          "name": "Astronaut Singed (Obsidian)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "27025",
+          "num": 25,
+          "name": "Astronaut Singed (Amethyst)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "27026",
+          "num": 26,
+          "name": "Astronaut Singed (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "27027",
+          "num": 27,
+          "name": "Astronaut Singed (Turquoise)",
+          "chromas": false,
+          "parentSkin": 19
         },
         {
           "id": "27028",
@@ -109,7 +221,10 @@
         "Singed needs to run close to your team to be effective. Try to take advantage of this by using crowd control effects on him while attacking his allies.",
         "Be careful when chasing Singed. He's very difficult to bring down, and can leave his Poison Trail to damage you in your pursuit."
       ],
-      "tags": ["Tank", "Mage"],
+      "tags": [
+        "Tank",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 4,
@@ -146,29 +261,103 @@
           "description": "Leaves a trail of poison behind Singed, dealing damage to enemies caught in the path.",
           "tooltip": "<toggle>Toggle:</toggle> Singed lays a poisonous trail that deals <magicDamage>{{ damagepersecond }} magic damage</magicDamage> per second.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage"],
+            "label": [
+              "Damage"
+            ],
             "effect": [
               "{{ basedamagepersecond }} -> {{ basedamagepersecondNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [0, 0, 0, 0, 0],
+          "cooldown": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "cooldownBurn": "0",
-          "cost": [13, 13, 13, 13, 13],
+          "cost": [
+            13,
+            13,
+            13,
+            13,
+            13
+          ],
           "costBurn": "13",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -186,7 +375,13 @@
           "vars": [],
           "costType": " Mana per Second",
           "maxammo": "-1",
-          "range": [20, 20, 20, 20, 20],
+          "range": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
           "rangeBurn": "20",
           "image": {
             "full": "PoisonTrail.png",
@@ -205,7 +400,11 @@
           "description": "Throws a vial of mega adhesive on the ground, slowing and grounding enemies who walk on it.",
           "tooltip": "Singed hurls a cask of sticky liquid, <status>Grounding</status> and <status>Slowing</status> enemies in the area by {{ slowpercent }}% for {{ wduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Slow", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Slow",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ slowpercent }}% -> {{ slowpercentNL }}%",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -213,23 +412,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [17, 16, 15, 14, 13],
+          "cooldown": [
+            17,
+            16,
+            15,
+            14,
+            13
+          ],
           "cooldownBurn": "17/16/15/14/13",
-          "cost": [60, 70, 80, 90, 100],
+          "cost": [
+            60,
+            70,
+            80,
+            90,
+            100
+          ],
           "costBurn": "60/70/80/90/100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -247,7 +518,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1000, 1000, 1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "MegaAdhesive.png",
@@ -282,23 +559,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9.5, 9, 8.5, 8],
+          "cooldown": [
+            10,
+            9.5,
+            9,
+            8.5,
+            8
+          ],
           "cooldownBurn": "10/9.5/9/8.5/8",
-          "cost": [60, 70, 80, 90, 100],
+          "cost": [
+            60,
+            70,
+            80,
+            90,
+            100
+          ],
           "costBurn": "60/70/80/90/100",
           "datavalues": {},
           "effect": [
             null,
-            [50, 60, 70, 80, 90],
-            [1, 1.25, 1.5, 1.75, 2],
-            [6, 6.5, 7, 7.5, 8],
-            [420, 420, 420, 420, 420],
-            [300, 300, 300, 300, 300],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              50,
+              60,
+              70,
+              80,
+              90
+            ],
+            [
+              1,
+              1.25,
+              1.5,
+              1.75,
+              2
+            ],
+            [
+              6,
+              6.5,
+              7,
+              7.5,
+              8
+            ],
+            [
+              420,
+              420,
+              420,
+              420,
+              420
+            ],
+            [
+              300,
+              300,
+              300,
+              300,
+              300
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -316,7 +665,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [125, 125, 125, 125, 125],
+          "range": [
+            125,
+            125,
+            125,
+            125,
+            125
+          ],
           "rangeBurn": "125",
           "image": {
             "full": "Fling.png",
@@ -335,27 +690,79 @@
           "description": "Singed drinks a potent brew of chemicals, granting him increased combat stats, and making his Poison Trail apply Grievous Wounds.",
           "tooltip": "Singed drinks a potent brew of chemicals, granting him {{ statamount }} <scaleAP>Ability Power</scaleAP>, <scaleArmor>Armor</scaleArmor>, <scaleMR>Magic Resist</scaleMR>, <speed>Move Speed</speed>, <healing>Health Regen</healing>, and <scaleMana>Mana Regen</scaleMana> for {{ duration }} seconds. During this effect, Singed's <spellName>Poison Trail</spellName> also applies {{ grievousamount*100 }}% Grievous Wounds for {{ grievousduration }} second.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Bonus Stats"],
-            "effect": ["{{ statamount }} -> {{ statamountNL }}"]
+            "label": [
+              "Bonus Stats"
+            ],
+            "effect": [
+              "{{ statamount }} -> {{ statamountNL }}"
+            ]
           },
           "maxrank": 3,
-          "cooldown": [100, 100, 100],
+          "cooldown": [
+            100,
+            100,
+            100
+          ],
           "cooldownBurn": "100",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -373,7 +780,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [20, 20, 20],
+          "range": [
+            20,
+            20,
+            20
+          ],
           "rangeBurn": "20",
           "image": {
             "full": "InsanityPotion.png",

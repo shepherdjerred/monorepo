@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Zed": {
       "id": "Zed",
@@ -43,6 +43,48 @@
           "chromas": true
         },
         {
+          "id": "238004",
+          "num": 4,
+          "name": "Shockblade Zed (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "238005",
+          "num": 5,
+          "name": "Shockblade Zed (Catseye)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "238006",
+          "num": 6,
+          "name": "Shockblade Zed (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "238007",
+          "num": 7,
+          "name": "Shockblade Zed (Ruby)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "238008",
+          "num": 8,
+          "name": "Shockblade Zed (Amethyst)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "238009",
+          "num": 9,
+          "name": "Shockblade Zed (Emerald)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
           "id": "238010",
           "num": 10,
           "name": "Worlds 2016 Zed",
@@ -55,16 +97,128 @@
           "chromas": false
         },
         {
+          "id": "238012",
+          "num": 12,
+          "name": "Worlds 2016 Zed (Golden)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
           "id": "238013",
           "num": 13,
           "name": "Galaxy Slayer Zed",
           "chromas": true
         },
         {
+          "id": "238014",
+          "num": 14,
+          "name": "PROJECT: Zed (Reckoning)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
           "id": "238015",
           "num": 15,
           "name": "PsyOps Zed",
           "chromas": true
+        },
+        {
+          "id": "238016",
+          "num": 16,
+          "name": "PsyOps Zed (Obsidian)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "238017",
+          "num": 17,
+          "name": "PsyOps Zed (Ruby)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "238018",
+          "num": 18,
+          "name": "PsyOps Zed (Emerald)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "238019",
+          "num": 19,
+          "name": "PsyOps Zed (Hunter)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "238020",
+          "num": 20,
+          "name": "PsyOps Zed (Sandstone)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "238021",
+          "num": 21,
+          "name": "PsyOps Zed (Sapphire)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "238022",
+          "num": 22,
+          "name": "PsyOps Zed (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "238023",
+          "num": 23,
+          "name": "PsyOps Zed (Turquoise)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "238024",
+          "num": 24,
+          "name": "Galaxy Slayer Zed (Ruby)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "238025",
+          "num": 25,
+          "name": "Galaxy Slayer Zed (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "238026",
+          "num": 26,
+          "name": "Galaxy Slayer Zed (Emerald)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "238027",
+          "num": 27,
+          "name": "Galaxy Slayer Zed (Pearl)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "238028",
+          "num": 28,
+          "name": "Galaxy Slayer Zed (Sapphire)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "238029",
+          "num": 29,
+          "name": "Galaxy Slayer Zed (Merc)",
+          "chromas": false,
+          "parentSkin": 13
         },
         {
           "id": "238030",
@@ -79,10 +233,122 @@
           "chromas": true
         },
         {
+          "id": "238032",
+          "num": 32,
+          "name": "Debonair Zed (Ruby)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "238033",
+          "num": 33,
+          "name": "Debonair Zed (Catseye)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "238034",
+          "num": 34,
+          "name": "Debonair Zed (Emerald)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "238035",
+          "num": 35,
+          "name": "Debonair Zed (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "238036",
+          "num": 36,
+          "name": "Debonair Zed (Obsidian)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "238037",
+          "num": 37,
+          "name": "Debonair Zed (Cerulean Club)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
           "id": "238038",
           "num": 38,
           "name": "Empyrean Zed",
           "chromas": true
+        },
+        {
+          "id": "238039",
+          "num": 39,
+          "name": "Galaxy Slayer Zed (Mythic)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "238040",
+          "num": 40,
+          "name": "Empyrean Zed (Ruby)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "238041",
+          "num": 41,
+          "name": "Empyrean Zed (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "238042",
+          "num": 42,
+          "name": "Empyrean Zed (Catseye)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "238043",
+          "num": 43,
+          "name": "Empyrean Zed (Sapphire)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "238044",
+          "num": 44,
+          "name": "Empyrean Zed (Pearl)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "238045",
+          "num": 45,
+          "name": "Empyrean Zed (Emerald)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "238046",
+          "num": 46,
+          "name": "Empyrean Zed (Amethyst)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "238047",
+          "num": 47,
+          "name": "Empyrean Zed (Turquoise)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "238048",
+          "num": 48,
+          "name": "Empyrean Zed (Neon Flare)",
+          "chromas": false,
+          "parentSkin": 38
         },
         {
           "id": "238049",
@@ -91,10 +357,129 @@
           "chromas": true
         },
         {
+          "id": "238050",
+          "num": 50,
+          "name": "Immortal Journey Zed (Ruby)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "238051",
+          "num": 51,
+          "name": "Immortal Journey Zed (Catseye)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "238052",
+          "num": 52,
+          "name": "Immortal Journey Zed (Emerald)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "238053",
+          "num": 53,
+          "name": "Immortal Journey Zed (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "238054",
+          "num": 54,
+          "name": "Immortal Journey Zed (Sapphire)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "238055",
+          "num": 55,
+          "name": "Immortal Journey Zed (Amethyst)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "238056",
+          "num": 56,
+          "name": "Immortal Journey Zed (Turquoise)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "238057",
+          "num": 57,
+          "name": "Immortal Journey Zed (Pearl)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
           "id": "238058",
           "num": 58,
           "name": "Blood Moon Zed",
           "chromas": true
+        },
+        {
+          "id": "238059",
+          "num": 59,
+          "name": "Blood Moon Zed (Ruby)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "238060",
+          "num": 60,
+          "name": "Blood Moon Zed (Catseye)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "238061",
+          "num": 61,
+          "name": "Blood Moon Zed (Sapphire)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "238062",
+          "num": 62,
+          "name": "Blood Moon Zed (Amethyst)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "238063",
+          "num": 63,
+          "name": "Blood Moon Zed (Emerald)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "238064",
+          "num": 64,
+          "name": "Blood Moon Zed (Turquoise)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "238065",
+          "num": 65,
+          "name": "Blood Moon Zed (Pearl)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "238066",
+          "num": 66,
+          "name": "Blood Moon Zed (Obsidian)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "238067",
+          "num": 67,
+          "name": "SKT T1 Zed (Paragon)",
+          "chromas": false,
+          "parentSkin": 2
         },
         {
           "id": "238068",
@@ -107,6 +492,13 @@
           "num": 69,
           "name": "Prestige Spirit Blossom Zed",
           "chromas": true
+        },
+        {
+          "id": "238070",
+          "num": 70,
+          "name": "Prestige Spirit Blossom Zed (Vivid)",
+          "chromas": false,
+          "parentSkin": 69
         }
       ],
       "lore": "Utterly ruthless and without mercy, Zed is the leader of the Order of Shadow, an organization he created with the intent of militarizing Ionia's magical and martial traditions to drive out Noxian invaders. During the war, desperation led him to unlock the secret shadow form—a malevolent spirit magic as dangerous and corrupting as it is powerful. Zed has mastered all of these forbidden techniques to destroy anything he sees as a threat to his nation, or his new order.",
@@ -121,7 +513,9 @@
         "After Zed uses his Living Shadow, he is at his most vulnerable as his damage, slow, and mobility are both dependent upon it.",
         "Zed's Shadow Slash can only slow you if his shadow hits you with it. "
       ],
-      "tags": ["Assassin"],
+      "tags": [
+        "Assassin"
+      ],
       "partype": "Energy",
       "info": {
         "attack": 9,
@@ -158,30 +552,105 @@
           "description": "Zed and his shadows throw their shurikens.<br><br>Each shuriken deals damage to every enemy hit.",
           "tooltip": "Zed and his <keywordMajor>Shadows</keywordMajor> throw their shurikens, each dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to the first enemy they pass through, and <physicalDamage>{{ passthroughdamage }} physical damage</physicalDamage> to each additional enemy.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [6, 6, 6, 6, 6],
+          "cooldown": [
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
           "cooldownBurn": "6",
-          "cost": [75, 70, 65, 60, 55],
+          "cost": [
+            75,
+            70,
+            65,
+            60,
+            55
+          ],
           "costBurn": "75/70/65/60/55",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -199,7 +668,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [900, 900, 900, 900, 900],
+          "range": [
+            900,
+            900,
+            900,
+            900,
+            900
+          ],
           "rangeBurn": "900",
           "image": {
             "full": "ZedQ.png",
@@ -230,23 +705,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [20, 19, 18, 17, 16],
+          "cooldown": [
+            20,
+            19,
+            18,
+            17,
+            16
+          ],
           "cooldownBurn": "20/19/18/17/16",
-          "cost": [40, 35, 30, 25, 20],
+          "cost": [
+            40,
+            35,
+            30,
+            25,
+            20
+          ],
           "costBurn": "40/35/30/25/20",
           "datavalues": {},
           "effect": [
             null,
-            [5.25, 5.25, 5.25, 5.25, 5.25],
-            [0.2, 0.2, 0.2, 0.2, 0.2],
-            [30, 35, 40, 45, 50],
-            [5.25, 5.25, 5.25, 5.25, 5.25],
-            [5, 5, 5, 5, 5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              5.25,
+              5.25,
+              5.25,
+              5.25,
+              5.25
+            ],
+            [
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2
+            ],
+            [
+              30,
+              35,
+              40,
+              45,
+              50
+            ],
+            [
+              5.25,
+              5.25,
+              5.25,
+              5.25,
+              5.25
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -264,7 +811,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "ZedW.png",
@@ -283,7 +836,11 @@
           "description": "Zed and his Shadows slash, dealing damage to nearby enemies. Enemies hit by a Shadow's slash are slowed.",
           "tooltip": "Zed and his <keywordMajor>Shadows</keywordMajor> slash, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to nearby enemies.<br /><br />Each enemy champion hit by Zed's slash reduces <spellName>Living Shadow</spellName>'s Cooldown by {{ shadowhitcdr }} seconds.<br /><br />Enemies hit by a <keywordMajor>Shadow</keywordMajor>'s slash are <status>Slowed</status> by {{ movespeedmod*-100 }}% for {{ slowduration }} seconds. Enemies hit by multiple slashes take no additional damage but are <status>Slowed</status> by {{ movespeedmodbonus*-100 }}% instead.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow", "Cooldown"],
+            "label": [
+              "Damage",
+              "Slow",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ movespeedmod*-100.000000 }}% -> {{ movespeedmodnl*-100.000000 }}%",
@@ -291,23 +848,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [5, 4.5, 4, 3.5, 3],
+          "cooldown": [
+            5,
+            4.5,
+            4,
+            3.5,
+            3
+          ],
           "cooldownBurn": "5/4.5/4/3.5/3",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -325,7 +954,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [290, 290, 290, 290, 290],
+          "range": [
+            290,
+            290,
+            290,
+            290,
+            290
+          ],
           "rangeBurn": "290",
           "image": {
             "full": "ZedE.png",
@@ -344,30 +979,81 @@
           "description": "Zed becomes untargetable and dashes to an enemy champion, marking them. After 3 seconds the mark triggers, repeating a portion of all the damage Zed dealt to the target while they were marked.",
           "tooltip": "Zed becomes Untargetable and dashes to an enemy champion, marking them. After {{ rdeathmarkduration }} seconds, the mark triggers, dealing <physicalDamage>{{ rcalculateddamage }} physical damage</physicalDamage> and repeating {{ rdamageamp*100 }}% of all damage dealt to the target by Zed while the mark was active.<br /><br />The dash leaves a <keywordMajor>Shadow</keywordMajor> behind for {{ rshadowdurationdisplayed }} seconds. Zed can <recast>Recast</recast> this Ability to switch positions with this <keywordMajor>Shadow</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Mark Detonation Damage", "Cooldown"],
+            "label": [
+              "Mark Detonation Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ rdamageamp*100.000000 }}% -> {{ rdamageampnl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 110, 100],
+          "cooldown": [
+            120,
+            110,
+            100
+          ],
           "cooldownBurn": "120/110/100",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -385,7 +1071,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [625, 625, 625],
+          "range": [
+            625,
+            625,
+            625
+          ],
           "rangeBurn": "625",
           "image": {
             "full": "ZedR.png",

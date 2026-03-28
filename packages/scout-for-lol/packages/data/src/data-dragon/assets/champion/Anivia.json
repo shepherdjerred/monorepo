@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Anivia": {
       "id": "Anivia",
@@ -73,10 +73,129 @@
           "chromas": true
         },
         {
+          "id": "34009",
+          "num": 9,
+          "name": "Papercraft Anivia (Ruby)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "34010",
+          "num": 10,
+          "name": "Papercraft Anivia (Catseye)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "34011",
+          "num": 11,
+          "name": "Papercraft Anivia (Pearl)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "34012",
+          "num": 12,
+          "name": "Papercraft Anivia (Emerald)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "34013",
+          "num": 13,
+          "name": "Papercraft Anivia (Obsidian)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "34014",
+          "num": 14,
+          "name": "Papercraft Anivia (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "34015",
+          "num": 15,
+          "name": "Papercraft Anivia (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "34016",
+          "num": 16,
+          "name": "Papercraft Anivia (Rainbow)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
           "id": "34017",
           "num": 17,
           "name": "Cosmic Flight Anivia",
           "chromas": true
+        },
+        {
+          "id": "34018",
+          "num": 18,
+          "name": "Cosmic Flight Anivia (Ruby)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "34019",
+          "num": 19,
+          "name": "Cosmic Flight Anivia (Citrine)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "34020",
+          "num": 20,
+          "name": "Cosmic Flight Anivia (Emerald)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "34021",
+          "num": 21,
+          "name": "Cosmic Flight Anivia (Turquoise)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "34022",
+          "num": 22,
+          "name": "Cosmic Flight Anivia (Sapphire)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "34023",
+          "num": 23,
+          "name": "Cosmic Flight Anivia (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "34024",
+          "num": 24,
+          "name": "Cosmic Flight Anivia (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "34025",
+          "num": 25,
+          "name": "Cosmic Flight Anivia (Obsidian)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "34026",
+          "num": 26,
+          "name": "Cosmic Flight Anivia (Rainbow)",
+          "chromas": false,
+          "parentSkin": 17
         },
         {
           "id": "34027",
@@ -85,16 +204,191 @@
           "chromas": true
         },
         {
+          "id": "34028",
+          "num": 28,
+          "name": "Divine Phoenix Anivia (Ruby)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "34029",
+          "num": 29,
+          "name": "Divine Phoenix Anivia (Emerald)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "34030",
+          "num": 30,
+          "name": "Divine Phoenix Anivia (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "34031",
+          "num": 31,
+          "name": "Divine Phoenix Anivia (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "34032",
+          "num": 32,
+          "name": "Divine Phoenix Anivia (Citrine)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "34033",
+          "num": 33,
+          "name": "Divine Phoenix Anivia (Amethyst)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "34034",
+          "num": 34,
+          "name": "Divine Phoenix Anivia (Obsidian)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "34035",
+          "num": 35,
+          "name": "Divine Phoenix Anivia (Pearl)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "34036",
+          "num": 36,
+          "name": "Divine Phoenix Anivia (Golden Tiger)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
           "id": "34037",
           "num": 37,
           "name": "Bewitching Batnivia",
           "chromas": true
         },
         {
+          "id": "34038",
+          "num": 38,
+          "name": "Bewitching Batnivia (Ruby)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "34039",
+          "num": 39,
+          "name": "Bewitching Batnivia (Catseye)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "34040",
+          "num": 40,
+          "name": "Bewitching Batnivia (Sapphire)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "34041",
+          "num": 41,
+          "name": "Bewitching Batnivia (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "34042",
+          "num": 42,
+          "name": "Bewitching Batnivia (Emerald)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "34043",
+          "num": 43,
+          "name": "Bewitching Batnivia (Amethyst)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "34044",
+          "num": 44,
+          "name": "Bewitching Batnivia (Turquoise)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "34045",
+          "num": 45,
+          "name": "Bewitching Batnivia (Pearl)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
           "id": "34046",
           "num": 46,
           "name": "Victorious Anivia",
           "chromas": true
+        },
+        {
+          "id": "34047",
+          "num": 47,
+          "name": "Victorious Anivia (Bronze)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "34048",
+          "num": 48,
+          "name": "Victorious Anivia (Silver)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "34049",
+          "num": 49,
+          "name": "Victorious Anivia (Gold)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "34050",
+          "num": 50,
+          "name": "Victorious Anivia (Platinum)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "34051",
+          "num": 51,
+          "name": "Victorious Anivia (Diamond)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "34052",
+          "num": 52,
+          "name": "Victorious Anivia (Master)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "34053",
+          "num": 53,
+          "name": "Victorious Anivia (Grandmaster)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "34054",
+          "num": 54,
+          "name": "Victorious Anivia (Challenger)",
+          "chromas": false,
+          "parentSkin": 46
         }
       ],
       "lore": "Anivia is a benevolent winged spirit who endures endless cycles of life, death, and rebirth to protect the Freljord. A demigod born of unforgiving ice and bitter winds, she wields those elemental powers to thwart any who dare disturb her homeland. Anivia guides and protects the tribes of the harsh north, who revere her as a symbol of hope, and a portent of great change. She fights with every ounce of her being, knowing that through her sacrifice, her memory will endure, and she will be reborn into a new tomorrow.",
@@ -109,7 +403,9 @@
         "If you're playing a ranged champion, stay far enough away from Anivia so you can dodge Flash Frost more easily.",
         "Try to fight Anivia in the lanes. In the jungle she can block pathways with lower ranks of Crystallize."
       ],
-      "tags": ["Mage"],
+      "tags": [
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 1,
@@ -162,23 +458,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 10, 9, 8, 7],
+          "cooldown": [
+            11,
+            10,
+            9,
+            8,
+            7
+          ],
           "cooldownBurn": "11/10/9/8/7",
-          "cost": [80, 85, 90, 95, 100],
+          "cost": [
+            80,
+            85,
+            90,
+            95,
+            100
+          ],
           "costBurn": "80/85/90/95/100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -196,7 +564,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1075, 1075, 1075, 1075, 1075],
+          "range": [
+            1075,
+            1075,
+            1075,
+            1075,
+            1075
+          ],
           "rangeBurn": "1075",
           "image": {
             "full": "FlashFrost.png",
@@ -215,27 +589,103 @@
           "description": "Anivia condenses the moisture in the air into an impassable wall of ice to block all movement. The wall only lasts a short duration before it melts.",
           "tooltip": "Anivia summons a wall of ice {{ e2 }} units wide. The wall lasts for {{ e1 }} seconds before it melts.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Width"],
-            "effect": ["{{ e2 }} -> {{ e2NL }}"]
+            "label": [
+              "Width"
+            ],
+            "effect": [
+              "{{ e2 }} -> {{ e2NL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [17, 17, 17, 17, 17],
+          "cooldown": [
+            17,
+            17,
+            17,
+            17,
+            17
+          ],
           "cooldownBurn": "17",
-          "cost": [70, 70, 70, 70, 70],
+          "cost": [
+            70,
+            70,
+            70,
+            70,
+            70
+          ],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [5, 5, 5, 5, 5],
-            [400, 500, 600, 700, 800],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              400,
+              500,
+              600,
+              700,
+              800
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -253,7 +703,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1000, 1000, 1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "Crystallize.png",
@@ -272,27 +728,103 @@
           "description": "With a flap of her wings, Anivia blasts a freezing gust of wind at her target, dealing damage. If the target was recently hit by Flash Frost or damaged by a fully formed Glacial Storm, the damage they take is doubled.",
           "tooltip": "Anivia blasts an enemy with a freezing wind, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. Against <keywordMajor>Chilled</keywordMajor> enemies, Anivia deals <magicDamage>{{ empowereddamage }} magic damage</magicDamage> instead.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}"]
+            "label": [
+              "Damage"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [4, 4, 4, 4, 4],
+          "cooldown": [
+            4,
+            4,
+            4,
+            4,
+            4
+          ],
           "cooldownBurn": "4",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -310,7 +842,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "Frostbite.png",
@@ -345,23 +883,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [4, 3, 2],
+          "cooldown": [
+            4,
+            3,
+            2
+          ],
           "cooldownBurn": "4/3/2",
-          "cost": [60, 60, 60],
+          "cost": [
+            60,
+            60,
+            60
+          ],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -379,7 +965,11 @@
           "vars": [],
           "costType": " + {{ manacostpersecond }} Mana per second",
           "maxammo": "-1",
-          "range": [750, 750, 750],
+          "range": [
+            750,
+            750,
+            750
+          ],
           "rangeBurn": "750",
           "image": {
             "full": "GlacialStorm.png",

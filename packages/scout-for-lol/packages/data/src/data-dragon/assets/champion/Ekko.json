@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Ekko": {
       "id": "Ekko",
@@ -43,6 +43,55 @@
           "chromas": false
         },
         {
+          "id": "245004",
+          "num": 4,
+          "name": "Sandstorm Ekko (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "245005",
+          "num": 5,
+          "name": "Sandstorm Ekko (Citrine)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "245006",
+          "num": 6,
+          "name": "Sandstorm Ekko (Obsidian)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "245007",
+          "num": 7,
+          "name": "Sandstorm Ekko (Sandstone)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "245008",
+          "num": 8,
+          "name": "Sandstorm Ekko (Pearl)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "245009",
+          "num": 9,
+          "name": "Sandstorm Ekko (Peridot)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "245010",
+          "num": 10,
+          "name": "Sandstorm Ekko (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
           "id": "245011",
           "num": 11,
           "name": "SKT T1 Ekko",
@@ -55,10 +104,108 @@
           "chromas": true
         },
         {
+          "id": "245013",
+          "num": 13,
+          "name": "Trick or Treat Ekko (Ruby)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "245014",
+          "num": 14,
+          "name": "Trick or Treat Ekko (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "245015",
+          "num": 15,
+          "name": "Trick or Treat Ekko (Emerald)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "245016",
+          "num": 16,
+          "name": "Trick or Treat Ekko (Amethyst)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "245017",
+          "num": 17,
+          "name": "Trick or Treat Ekko (Obsidian)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "245018",
+          "num": 18,
+          "name": "Trick or Treat Ekko (Golden)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
           "id": "245019",
           "num": 19,
           "name": "True Damage Ekko",
           "chromas": true
+        },
+        {
+          "id": "245020",
+          "num": 20,
+          "name": "True Damage Ekko (Ruby)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "245021",
+          "num": 21,
+          "name": "True Damage Ekko (Amethyst)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "245022",
+          "num": 22,
+          "name": "True Damage Ekko (Freestyle)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "245023",
+          "num": 23,
+          "name": "True Damage Ekko (Turquoise)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "245024",
+          "num": 24,
+          "name": "True Damage Ekko (Catseye)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "245025",
+          "num": 25,
+          "name": "True Damage Ekko (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "245026",
+          "num": 26,
+          "name": "True Damage Ekko (Pearl)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "245027",
+          "num": 27,
+          "name": "True Damage Ekko (Obsidian)",
+          "chromas": false,
+          "parentSkin": 19
         },
         {
           "id": "245028",
@@ -67,10 +214,115 @@
           "chromas": true
         },
         {
+          "id": "245029",
+          "num": 29,
+          "name": "Pulsefire Ekko (Ruby)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "245030",
+          "num": 30,
+          "name": "Pulsefire Ekko (Citrine)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "245031",
+          "num": 31,
+          "name": "Pulsefire Ekko (Pearl)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "245032",
+          "num": 32,
+          "name": "Pulsefire Ekko (Amethyst)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "245033",
+          "num": 33,
+          "name": "Pulsefire Ekko (Chrono)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "245034",
+          "num": 34,
+          "name": "Pulsefire Ekko (Emerald)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "245035",
+          "num": 35,
+          "name": "Pulsefire Ekko (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
           "id": "245036",
           "num": 36,
           "name": "Arcane Firelight Ekko",
           "chromas": true
+        },
+        {
+          "id": "245037",
+          "num": 37,
+          "name": "Arcane Firelight Ekko (Ruby)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "245038",
+          "num": 38,
+          "name": "Arcane Firelight Ekko (Turquoise)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "245039",
+          "num": 39,
+          "name": "Arcane Firelight Ekko (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "245040",
+          "num": 40,
+          "name": "Arcane Firelight Ekko (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "245041",
+          "num": 41,
+          "name": "Arcane Firelight Ekko (Citrine)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "245042",
+          "num": 42,
+          "name": "Arcane Firelight Ekko (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "245043",
+          "num": 43,
+          "name": "Arcane Firelight Ekko (Obsidian)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "245044",
+          "num": 44,
+          "name": "Arcane Firelight Ekko (Pearl)",
+          "chromas": false,
+          "parentSkin": 36
         },
         {
           "id": "245045",
@@ -85,6 +337,69 @@
           "chromas": false
         },
         {
+          "id": "245047",
+          "num": 47,
+          "name": "Star Guardian Ekko (Ruby)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "245048",
+          "num": 48,
+          "name": "Star Guardian Ekko (Sapphire)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "245049",
+          "num": 49,
+          "name": "Star Guardian Ekko (Emerald)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "245050",
+          "num": 50,
+          "name": "Star Guardian Ekko (Catseye)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "245051",
+          "num": 51,
+          "name": "Star Guardian Ekko (Turquoise)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "245052",
+          "num": 52,
+          "name": "Star Guardian Ekko (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "245053",
+          "num": 53,
+          "name": "Star Guardian Ekko (Pearl)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "245054",
+          "num": 54,
+          "name": "Star Guardian Ekko (Obsidian)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "245055",
+          "num": 55,
+          "name": "Star Guardian Ekko (Brilliant)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
           "id": "245056",
           "num": 56,
           "name": "Breakout True Damage Ekko",
@@ -95,6 +410,13 @@
           "num": 57,
           "name": "Arcane Last Stand Ekko",
           "chromas": true
+        },
+        {
+          "id": "245058",
+          "num": 58,
+          "name": "Arcane Last Stand Ekko (Paragon)",
+          "chromas": false,
+          "parentSkin": 57
         }
       ],
       "lore": "A prodigy from the rough streets of Zaun, Ekko is able to manipulate time to twist any situation to his advantage. He uses his own invention, the Z-Drive, to explore the branching possibilities of reality, crafting the perfect moment to seemingly achieve the impossible the first time, every time. Though Ekko revels in this freedom, when there's a threat to those he cares about, he and the Firelights will do anything to defend them.",
@@ -109,7 +431,10 @@
         "Ekko's stun zone takes 3 seconds to arm. Watch for the image he creates on cast and try to guess where the zone was placed.",
         "The second hit of Timewinder does more damage than the first; try to avoid it."
       ],
-      "tags": ["Assassin", "Mage"],
+      "tags": [
+        "Assassin",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 5,
@@ -162,23 +487,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 8.5, 8, 7.5, 7],
+          "cooldown": [
+            9,
+            8.5,
+            8,
+            7.5,
+            7
+          ],
           "cooldownBurn": "9/8.5/8/7.5/7",
-          "cost": [50, 60, 70, 80, 90],
+          "cost": [
+            50,
+            60,
+            70,
+            80,
+            90
+          ],
           "costBurn": "50/60/70/80/90",
           "datavalues": {},
           "effect": [
             null,
-            [70, 85, 100, 115, 130],
-            [40, 45, 50, 55, 60],
-            [40, 65, 90, 115, 140],
-            [100, 100, 100, 100, 100],
-            [0, 0, 0, 0, 0],
-            [165, 165, 165, 165, 165],
-            [1.75, 1.75, 1.75, 1.75, 1.75],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              70,
+              85,
+              100,
+              115,
+              130
+            ],
+            [
+              40,
+              45,
+              50,
+              55,
+              60
+            ],
+            [
+              40,
+              65,
+              90,
+              115,
+              140
+            ],
+            [
+              100,
+              100,
+              100,
+              100,
+              100
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              165,
+              165,
+              165,
+              165,
+              165
+            ],
+            [
+              1.75,
+              1.75,
+              1.75,
+              1.75,
+              1.75
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -196,7 +593,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1075, 1075, 1075, 1075, 1075],
+          "range": [
+            1075,
+            1075,
+            1075,
+            1075,
+            1075
+          ],
           "rangeBurn": "1075",
           "image": {
             "full": "EkkoQ.png",
@@ -227,23 +630,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [22, 20, 18, 16, 14],
+          "cooldown": [
+            22,
+            20,
+            18,
+            16,
+            14
+          ],
           "cooldownBurn": "22/20/18/16/14",
-          "cost": [30, 35, 40, 45, 50],
+          "cost": [
+            30,
+            35,
+            40,
+            45,
+            50
+          ],
           "costBurn": "30/35/40/45/50",
           "datavalues": {},
           "effect": [
             null,
-            [375, 375, 375, 375, 375],
-            [2.25, 2.25, 2.25, 2.25, 2.25],
-            [3, 3, 3, 3, 3],
-            [100, 120, 140, 160, 180],
-            [150, 150, 150, 150, 150],
-            [15, 15, 15, 15, 15],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [3, 3, 3, 3, 3],
-            [2, 2, 2, 2, 2],
-            [40, 40, 40, 40, 40]
+            [
+              375,
+              375,
+              375,
+              375,
+              375
+            ],
+            [
+              2.25,
+              2.25,
+              2.25,
+              2.25,
+              2.25
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              100,
+              120,
+              140,
+              160,
+              180
+            ],
+            [
+              150,
+              150,
+              150,
+              150,
+              150
+            ],
+            [
+              15,
+              15,
+              15,
+              15,
+              15
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              40,
+              40,
+              40,
+              40,
+              40
+            ]
           ],
           "effectBurn": [
             null,
@@ -261,7 +736,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1600, 1600, 1600, 1600, 1600],
+          "range": [
+            1600,
+            1600,
+            1600,
+            1600,
+            1600
+          ],
           "rangeBurn": "1600",
           "image": {
             "full": "EkkoW.png",
@@ -280,7 +761,11 @@
           "description": "Ekko rolls evasively while charging up his Z-Drive. His next attack deals bonus damage and warps reality, teleporting him to his target.",
           "tooltip": "Ekko dashes and empowers his next Attack to have bonus range, teleport him to his target, and deal an additional <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -288,23 +773,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 8.5, 8, 7.5, 7],
+          "cooldown": [
+            9,
+            8.5,
+            8,
+            7.5,
+            7
+          ],
           "cooldownBurn": "9/8.5/8/7.5/7",
-          "cost": [40, 45, 50, 55, 60],
+          "cost": [
+            40,
+            45,
+            50,
+            55,
+            60
+          ],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [50, 75, 100, 125, 150],
-            [350, 350, 350, 350, 350],
-            [3, 3, 3, 3, 3],
-            [300, 300, 300, 300, 300],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              50,
+              75,
+              100,
+              125,
+              150
+            ],
+            [
+              350,
+              350,
+              350,
+              350,
+              350
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              300,
+              300,
+              300,
+              300,
+              300
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -322,7 +879,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [325, 325, 325, 325, 325],
+          "range": [
+            325,
+            325,
+            325,
+            325,
+            325
+          ],
           "rangeBurn": "325",
           "image": {
             "full": "EkkoE.png",
@@ -341,7 +904,11 @@
           "description": "Ekko shatters his timeline, becoming untargetable and rewinding to a more favorable point in time. He returns to whenever he was a few seconds ago, and heals for a percentage of the damage received in that duration. Enemies near his arrival zone take massive damage.",
           "tooltip": "Ekko turns back time, entering Stasis while teleporting to where he was 4 seconds ago and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to nearby enemies. In addition, Ekko restores <healing>{{ totalbaseheal }} Health</healing>, increased by {{ percenthealampperpercentmissinghealth }}% for each 1% Health he lost in last 4 seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Healing", "Cooldown"],
+            "label": [
+              "Damage",
+              "Healing",
+              "Cooldown"
+            ],
             "effect": [
               "{{ damage }} -> {{ damageNL }}",
               "{{ flatheal }} -> {{ flathealNL }}",
@@ -349,23 +916,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [110, 80, 50],
+          "cooldown": [
+            110,
+            80,
+            50
+          ],
           "cooldownBurn": "110/80/50",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -383,7 +998,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [850, 850, 850],
+          "range": [
+            850,
+            850,
+            850
+          ],
           "rangeBurn": "850",
           "image": {
             "full": "EkkoR.png",

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Leona": {
       "id": "Leona",
@@ -49,6 +49,27 @@
           "chromas": true
         },
         {
+          "id": "89005",
+          "num": 5,
+          "name": "Pool Party Leona Dawn Pink",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "89006",
+          "num": 6,
+          "name": "Pool Party Leona Dawn Azure",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "89007",
+          "num": 7,
+          "name": "Pool Party Leona Dawn Lemon",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
           "id": "89008",
           "num": 8,
           "name": "PROJECT: Leona",
@@ -79,6 +100,62 @@
           "chromas": true
         },
         {
+          "id": "89013",
+          "num": 13,
+          "name": "Mecha Kingdoms Leona (Peacekeeper)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "89014",
+          "num": 14,
+          "name": "Mecha Kingdoms Leona (Obsidian)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "89015",
+          "num": 15,
+          "name": "Mecha Kingdoms Leona (Pearl)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "89016",
+          "num": 16,
+          "name": "Mecha Kingdoms Leona (Ruby)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "89017",
+          "num": 17,
+          "name": "Mecha Kingdoms Leona (Turquoise)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "89018",
+          "num": 18,
+          "name": "Mecha Kingdoms Leona (Sapphire)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "89019",
+          "num": 19,
+          "name": "Mecha Kingdoms Leona (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "89020",
+          "num": 20,
+          "name": "Mecha Kingdoms Leona (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
           "id": "89021",
           "num": 21,
           "name": "Battle Academia Leona",
@@ -97,6 +174,69 @@
           "chromas": false
         },
         {
+          "id": "89024",
+          "num": 24,
+          "name": "Battle Academia Leona (Ruby)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "89025",
+          "num": 25,
+          "name": "Battle Academia Leona (Citrine)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "89026",
+          "num": 26,
+          "name": "Battle Academia Leona (Sapphire)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "89027",
+          "num": 27,
+          "name": "Battle Academia Leona (Turquoise)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "89028",
+          "num": 28,
+          "name": "Battle Academia Leona (Emerald)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "89029",
+          "num": 29,
+          "name": "Battle Academia Leona (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "89030",
+          "num": 30,
+          "name": "Battle Academia Leona (Obsidian)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "89031",
+          "num": 31,
+          "name": "Battle Academia Leona (Pearl)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "89032",
+          "num": 32,
+          "name": "DWG Leona (Elite)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
           "id": "89033",
           "num": 33,
           "name": "Debonair Leona",
@@ -109,10 +249,122 @@
           "chromas": true
         },
         {
+          "id": "89035",
+          "num": 35,
+          "name": "Debonair Leona (Ruby)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "89036",
+          "num": 36,
+          "name": "Debonair Leona (Catseye)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "89037",
+          "num": 37,
+          "name": "Debonair Leona (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "89038",
+          "num": 38,
+          "name": "Debonair Leona (Sapphire)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "89039",
+          "num": 39,
+          "name": "Debonair Leona (Turquoise)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "89040",
+          "num": 40,
+          "name": "Debonair Leona (Emerald)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "89041",
+          "num": 41,
+          "name": "Debonair Leona (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "89042",
+          "num": 42,
+          "name": "Debonair Leona (Obsidian)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "89043",
+          "num": 43,
+          "name": "Debonair Leona (Cerulean Club)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "89044",
+          "num": 44,
+          "name": "High Noon Leona (Ruby)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "89045",
+          "num": 45,
+          "name": "High Noon Leona (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "89046",
+          "num": 46,
+          "name": "High Noon Leona (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "89047",
+          "num": 47,
+          "name": "High Noon Leona (Catseye)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "89048",
+          "num": 48,
+          "name": "High Noon Leona (Nomad)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "89049",
+          "num": 49,
+          "name": "High Noon Leona (Sapphire)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
           "id": "89050",
           "num": 50,
           "name": "Crystalis Motus Leona",
           "chromas": true
+        },
+        {
+          "id": "89051",
+          "num": 51,
+          "name": "Crystalis Motus Leona (Reclaimed)",
+          "chromas": false,
+          "parentSkin": 50
         },
         {
           "id": "89052",
@@ -125,6 +377,76 @@
           "num": 53,
           "name": "Prestige Battle Lion Leona",
           "chromas": false
+        },
+        {
+          "id": "89054",
+          "num": 54,
+          "name": "Battle Lion Leona (Ruby)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "89055",
+          "num": 55,
+          "name": "Battle Lion Leona (Emerald)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "89056",
+          "num": 56,
+          "name": "Battle Lion Leona (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "89057",
+          "num": 57,
+          "name": "Battle Lion Leona (Catseye)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "89058",
+          "num": 58,
+          "name": "Battle Lion Leona (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "89059",
+          "num": 59,
+          "name": "Battle Lion Leona (Turquoise)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "89060",
+          "num": 60,
+          "name": "Battle Lion Leona (Meteorite)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "89061",
+          "num": 61,
+          "name": "Battle Lion Leona (Pearl)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "89062",
+          "num": 62,
+          "name": "Battle Lion Leona (Nightwire)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "89063",
+          "num": 63,
+          "name": "Battle Lion Leona (Override)",
+          "chromas": false,
+          "parentSkin": 52
         }
       ],
       "lore": "Imbued with the fire of the sun, Leona is a holy warrior of the Solari who defends Mount Targon with her Zenith Blade and the Shield of Daybreak. Her skin shimmers with starfire while her eyes burn with the power of the celestial Aspect within her. Armored in gold and bearing a terrible burden of ancient knowledge, Leona brings enlightenment to some, death to others.",
@@ -138,7 +460,10 @@
         "When Leona activates Eclipse, you have three seconds to get away from her before she deals damage.",
         "Only foes in the center of Solar Flare get stunned, so you can often avoid this if you're quick."
       ],
-      "tags": ["Tank", "Support"],
+      "tags": [
+        "Tank",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 4,
@@ -175,27 +500,105 @@
           "description": "Leona uses her shield to perform her next basic attack, dealing bonus magic damage and stunning the target.",
           "tooltip": "Leona's next Attack <status>Stuns</status> for {{ e1 }} seconds and deals an additional <magicDamage>{{ totaldamagetooltip }}</magicDamage> magic damage.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "@AbilityResourceName@ Cost"],
-            "effect": ["{{ e2 }} -> {{ e2NL }}", "{{ cost }} -> {{ costNL }}"]
+            "label": [
+              "Damage",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ e2 }} -> {{ e2NL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [5, 5, 5, 5, 5],
+          "cooldown": [
+            5,
+            5,
+            5,
+            5,
+            5
+          ],
           "cooldownBurn": "5",
-          "cost": [30, 35, 40, 45, 50],
+          "cost": [
+            30,
+            35,
+            40,
+            45,
+            50
+          ],
           "costBurn": "30/35/40/45/50",
           "datavalues": {},
           "effect": [
             null,
-            [1, 1, 1, 1, 1],
-            [10, 35, 60, 85, 110],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              10,
+              35,
+              60,
+              85,
+              110
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -213,7 +616,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [100, 100, 100, 100, 100],
+          "range": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
           "rangeBurn": "100",
           "image": {
             "full": "LeonaShieldOfDaybreak.png",
@@ -246,23 +655,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 13, 12, 11, 10],
+          "cooldown": [
+            14,
+            13,
+            12,
+            11,
+            10
+          ],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [60, 60, 60, 60, 60],
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [55, 85, 115, 145, 175],
-            [20, 27.5, 35, 42.5, 50],
-            [3, 3, 3, 3, 3],
-            [20, 27.5, 35, 42.5, 50],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              55,
+              85,
+              115,
+              145,
+              175
+            ],
+            [
+              20,
+              27.5,
+              35,
+              42.5,
+              50
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              20,
+              27.5,
+              35,
+              42.5,
+              50
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -280,7 +761,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [450, 450, 450, 450, 450],
+          "range": [
+            450,
+            450,
+            450,
+            450,
+            450
+          ],
           "rangeBurn": "450",
           "image": {
             "full": "LeonaSolarBarrier.png",
@@ -299,7 +786,11 @@
           "description": "Leona projects a solar image of her sword, dealing magic damage to all enemies in a line. When the image fades, the last enemy champion struck will be briefly immobilized and Leona will dash to them.",
           "tooltip": "Leona thrusts with a sword of light, dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage>. The last champion struck will be <status>Rooted</status> for {{ e2 }} seconds and Leona will dash to them.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -307,23 +798,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 10.5, 9, 7.5, 6],
+          "cooldown": [
+            12,
+            10.5,
+            9,
+            7.5,
+            6
+          ],
           "cooldownBurn": "12/10.5/9/7.5/6",
-          "cost": [40, 45, 50, 55, 60],
+          "cost": [
+            40,
+            45,
+            50,
+            55,
+            60
+          ],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [50, 90, 130, 170, 210],
-            [0.5, 0.5, 0.5, 0.5, 0.5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              50,
+              90,
+              130,
+              170,
+              210
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -341,7 +904,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [875, 875, 875, 875, 875],
+          "range": [
+            875,
+            875,
+            875,
+            875,
+            875
+          ],
           "rangeBurn": "875",
           "image": {
             "full": "LeonaZenithBlade.png",
@@ -360,30 +929,81 @@
           "description": "Leona calls down a beam of solar energy, dealing damage to enemies in an area. Enemies in the center of the area are stunned, while enemies on the outside are slowed.",
           "tooltip": "Leona calls down a radiant beam of solar energy dealing <magicDamage>{{ explosioncalculateddamage }} magic damage</magicDamage> and <status>Slowing</status> by {{ slowpercent }}% for {{ ccduration }} seconds. Enemies in the center of the flare are <status>Stunned</status> instead of <status>Slowed</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ explosionbasedamage }} -> {{ explosionbasedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [90, 75, 60],
+          "cooldown": [
+            90,
+            75,
+            60
+          ],
           "cooldownBurn": "90/75/60",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [100, 100, 100],
-            [3, 3, 3],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              100,
+              100,
+              100
+            ],
+            [
+              3,
+              3,
+              3
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -401,7 +1021,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1200, 1200, 1200],
+          "range": [
+            1200,
+            1200,
+            1200
+          ],
           "rangeBurn": "1200",
           "image": {
             "full": "LeonaSolarFlare.png",

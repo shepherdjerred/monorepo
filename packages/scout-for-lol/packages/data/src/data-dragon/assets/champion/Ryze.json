@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Ryze": {
       "id": "Ryze",
@@ -91,10 +91,59 @@
           "chromas": true
         },
         {
+          "id": "13012",
+          "num": 12,
+          "name": "Worlds 2019 Ryze (Golden)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
           "id": "13013",
           "num": 13,
           "name": "Guardian of the Sands Ryze",
           "chromas": true
+        },
+        {
+          "id": "13014",
+          "num": 14,
+          "name": "Guardian of the Sands Ryze (Obsidian)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "13015",
+          "num": 15,
+          "name": "Guardian of the Sands Ryze (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "13016",
+          "num": 16,
+          "name": "Guardian of the Sands Ryze (Ruby)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "13017",
+          "num": 17,
+          "name": "Guardian of the Sands Ryze (Emerald)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "13018",
+          "num": 18,
+          "name": "Guardian of the Sands Ryze (Amethyst)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "13019",
+          "num": 19,
+          "name": "Guardian of the Sands Ryze (Citrine)",
+          "chromas": false,
+          "parentSkin": 13
         },
         {
           "id": "13020",
@@ -103,10 +152,129 @@
           "chromas": true
         },
         {
+          "id": "13021",
+          "num": 21,
+          "name": "Arcana Ryze (Ruby)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "13022",
+          "num": 22,
+          "name": "Arcana Ryze (Catseye)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "13023",
+          "num": 23,
+          "name": "Arcana Ryze (Amethyst)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "13024",
+          "num": 24,
+          "name": "Arcana Ryze (Turquoise)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "13025",
+          "num": 25,
+          "name": "Arcana Ryze (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "13026",
+          "num": 26,
+          "name": "Arcana Ryze (Emerald)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "13027",
+          "num": 27,
+          "name": "Arcana Ryze (Obsidian)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "13028",
+          "num": 28,
+          "name": "Arcana Ryze (Pearl)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
           "id": "13029",
           "num": 29,
           "name": "Blood Moon Ryze",
           "chromas": true
+        },
+        {
+          "id": "13030",
+          "num": 30,
+          "name": "SKT T1 Ryze (Paragon)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "13031",
+          "num": 31,
+          "name": "Blood Moon Ryze (Ruby)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "13032",
+          "num": 32,
+          "name": "Blood Moon Ryze (Emerald)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "13033",
+          "num": 33,
+          "name": "Blood Moon Ryze (Sapphire)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "13034",
+          "num": 34,
+          "name": "Blood Moon Ryze (Catseye)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "13035",
+          "num": 35,
+          "name": "Blood Moon Ryze (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "13036",
+          "num": 36,
+          "name": "Blood Moon Ryze (Turquoise)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "13037",
+          "num": 37,
+          "name": "Blood Moon Ryze (Obsidian)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "13038",
+          "num": 38,
+          "name": "Blood Moon Ryze (Pearl)",
+          "chromas": false,
+          "parentSkin": 29
         }
       ],
       "lore": "Widely considered one of the most adept sorcerers on Runeterra, Ryze is an ancient, hard-bitten archmage with an impossibly heavy burden to bear. Armed with immense arcane power and a boundless constitution, he tirelessly hunts for World Runes—fragments of the raw magic that once shaped the world from nothingness. He must retrieve these artifacts before they fall into the wrong hands, for Ryze understands the horrors they could unleash on Runeterra.",
@@ -121,7 +289,9 @@
         "Use Realm Warp's windup time to figure out how to deal with what may be coming out of the portal.",
         "Crowd controlling Ryze during Realm Warp's windup will cancel the portal."
       ],
-      "tags": ["Mage"],
+      "tags": [
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -158,7 +328,11 @@
           "description": "Passively, Ryze's other basic abilities reset the cooldown of Overload and charge a rune. When Ryze casts Overload with 2 runes charged, he gains a brief burst of Move Speed.<br><br>On cast, Ryze throws a charge of pure energy in a line, dealing damage to the first enemy struck. If the target has Flux on it, Overload deals extra damage and bounces to nearby enemies with Flux.",
           "tooltip": "<spellPassive>Passive:</spellPassive> <spellName>Rune Prison</spellName> and <spellName>Spell Flux</spellName> refresh this Ability's Cooldown and charge a rune for {{ runeduration }} seconds (max {{ maximumrunes }} runes).<br /><br /><spellActive>Active:</spellActive> Ryze unleashes a blast, dealing <magicDamage>{{ qdamagecalc }} magic damage</magicDamage> to the first enemy hit. If the target has <keywordMajor>Flux</keywordMajor> on it, it is consumed, causing this Ability to deal {{ spell.ryzer:overloaddamagebonus }}% increased damage and bounces to nearby enemies with <keywordMajor>Flux</keywordMajor>.<br /><br />Ryze also discharges all runes, granting Ryze <speed>{{ movementspeedamount }}% Move Speed</speed> for {{ movementspeedduration }} seconds if {{ maximumrunes }} runes were charged.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Move Speed", "Mana Cost"],
+            "label": [
+              "Damage",
+              "Move Speed",
+              "Mana Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ movementspeedamount }}% -> {{ movementspeedamountNL }}%",
@@ -166,23 +340,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [5, 5, 5, 5, 5],
+          "cooldown": [
+            5,
+            5,
+            5,
+            5,
+            5
+          ],
           "cooldownBurn": "5",
-          "cost": [40, 38, 36, 34, 32],
+          "cost": [
+            40,
+            38,
+            36,
+            34,
+            32
+          ],
           "costBurn": "40/38/36/34/32",
           "datavalues": {},
           "effect": [
             null,
-            [70, 110, 150, 190, 230],
-            [25, 40, 55, 70, 85],
-            [50, 75, 100, 125, 150],
-            [25, 28, 31, 24, 37],
-            [2, 2, 2, 2, 2],
-            [2, 2, 2, 2, 2],
-            [3, 3, 3, 3, 3],
-            [0.015, 0.015, 0.015, 0.015, 0.015],
-            [2, 2, 2, 2, 2],
-            [0, 0, 0, 0, 0]
+            [
+              70,
+              110,
+              150,
+              190,
+              230
+            ],
+            [
+              25,
+              40,
+              55,
+              70,
+              85
+            ],
+            [
+              50,
+              75,
+              100,
+              125,
+              150
+            ],
+            [
+              25,
+              28,
+              31,
+              24,
+              37
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              0.015,
+              0.015,
+              0.015,
+              0.015,
+              0.015
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -200,7 +446,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1000, 1000, 1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "RyzeQWrapper.png",
@@ -219,7 +471,11 @@
           "description": "Ryze traps a target in a cage of runes, damaging them and slowing their movement. If the target has Flux on it, they are instead rooted.",
           "tooltip": "Ryze deals <magicDamage>{{ wdamagecalc }} magic damage</magicDamage> and <status>Slows</status> by {{ slowamount*100 }}% for {{ ccduration }} seconds. If the target has <keywordMajor>Flux</keywordMajor>, it is consumed and this Ability <status>Roots</status> instead of <status>Slowing</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "Mana Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "Mana Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -227,23 +483,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 10.5, 10, 9.5, 9],
+          "cooldown": [
+            11,
+            10.5,
+            10,
+            9.5,
+            9
+          ],
           "cooldownBurn": "11/10.5/10/9.5/9",
-          "cost": [50, 60, 70, 80, 90],
+          "cost": [
+            50,
+            60,
+            70,
+            80,
+            90
+          ],
           "costBurn": "50/60/70/80/90",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -261,7 +589,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [615, 615, 615, 615, 615],
+          "range": [
+            615,
+            615,
+            615,
+            615,
+            615
+          ],
           "rangeBurn": "615",
           "image": {
             "full": "RyzeW.png",
@@ -280,7 +614,11 @@
           "description": "Ryze releases an orb of pure magical power that damages an enemy and debuffs all nearby enemies. Ryze's spells have additional effects against the debuffed enemy.",
           "tooltip": "Ryze fires an orb, dealing <magicDamage>{{ edamagecalc }} magic damage</magicDamage> and applies <keywordMajor>Flux</keywordMajor> for {{ debuffduration }} seconds to the target and nearby enemies. Enemies already afflicted with <keywordMajor>Flux</keywordMajor> will cause it to spread further.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "Mana Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "Mana Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -288,23 +626,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [3.5, 3.25, 3, 2.75, 2.5],
+          "cooldown": [
+            3.5,
+            3.25,
+            3,
+            2.75,
+            2.5
+          ],
           "cooldownBurn": "3.5/3.25/3/2.75/2.5",
-          "cost": [35, 45, 55, 65, 75],
+          "cost": [
+            35,
+            45,
+            55,
+            65,
+            75
+          ],
           "costBurn": "35/45/55/65/75",
           "datavalues": {},
           "effect": [
             null,
-            [80, 90, 100, 110, 120],
-            [40, 50, 60, 70, 80],
-            [100, 100, 100, 100, 100],
-            [0.1, 0.1, 0.1, 0.1, 0.1],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [4, 4, 4, 4, 4],
-            [1, 1, 1, 1, 1],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              80,
+              90,
+              100,
+              110,
+              120
+            ],
+            [
+              40,
+              50,
+              60,
+              70,
+              80
+            ],
+            [
+              100,
+              100,
+              100,
+              100,
+              100
+            ],
+            [
+              0.1,
+              0.1,
+              0.1,
+              0.1,
+              0.1
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -322,7 +732,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [615, 615, 615, 615, 615],
+          "range": [
+            615,
+            615,
+            615,
+            615,
+            615
+          ],
           "rangeBurn": "615",
           "image": {
             "full": "RyzeE.png",
@@ -341,30 +757,81 @@
           "description": "Passively, Overload deals even more damage against targets with Flux.<br><br>On cast, Ryze creates a portal to a nearby location. After a few seconds, allies standing near the portal are teleported to the target location.",
           "tooltip": "<spellPassive>Passive:</spellPassive> <spellName>Overload</spellName> damage bonus against targets with <keywordMajor>Flux</keywordMajor> increased to {{ overloaddamagebonus }}%.<br /><br /><spellActive>Active:</spellActive> Ryze opens a portal to another location. After {{ chargetimetooltip }} seconds, all allies near the portal are teleported to that location.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Overload Damage Increase"],
+            "label": [
+              "Cooldown",
+              "Overload Damage Increase"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ overloaddamagebonus }}% -> {{ overloaddamagebonusNL }}%"
             ]
           },
           "maxrank": 3,
-          "cooldown": [180, 160, 140],
+          "cooldown": [
+            180,
+            160,
+            140
+          ],
           "cooldownBurn": "180/160/140",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [6, 6, 6],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              6,
+              6,
+              6
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -382,7 +849,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [3000, 3000, 3000],
+          "range": [
+            3000,
+            3000,
+            3000
+          ],
           "rangeBurn": "3000",
           "image": {
             "full": "RyzeR.png",

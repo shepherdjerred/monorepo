@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Yasuo": {
       "id": "Yasuo",
@@ -43,6 +43,41 @@
           "chromas": false
         },
         {
+          "id": "157004",
+          "num": 4,
+          "name": "High Noon Yasuo (Sapphire)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "157005",
+          "num": 5,
+          "name": "High Noon Yasuo (Amethyst)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "157006",
+          "num": 6,
+          "name": "High Noon Yasuo (Jasper)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "157007",
+          "num": 7,
+          "name": "High Noon Yasuo (Emerald)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "157008",
+          "num": 8,
+          "name": "High Noon Yasuo (Obsidian)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
           "id": "157009",
           "num": 9,
           "name": "Nightbringer Yasuo",
@@ -53,6 +88,48 @@
           "num": 10,
           "name": "Odyssey Yasuo",
           "chromas": true
+        },
+        {
+          "id": "157011",
+          "num": 11,
+          "name": "Odyssey Yasuo (Ruby)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "157012",
+          "num": 12,
+          "name": "Odyssey Yasuo (Sapphire)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "157013",
+          "num": 13,
+          "name": "Odyssey Yasuo (Pearl)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "157014",
+          "num": 14,
+          "name": "Odyssey Yasuo (Obsidian)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "157015",
+          "num": 15,
+          "name": "Odyssey Yasuo (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "157016",
+          "num": 16,
+          "name": "Odyssey Yasuo (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 10
         },
         {
           "id": "157017",
@@ -67,6 +144,118 @@
           "chromas": true
         },
         {
+          "id": "157019",
+          "num": 19,
+          "name": "Battle Boss Yasuo (Meteorite)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "157020",
+          "num": 20,
+          "name": "Battle Boss Yasuo (Ruby)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "157021",
+          "num": 21,
+          "name": "Battle Boss Yasuo (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "157022",
+          "num": 22,
+          "name": "Battle Boss Yasuo (Amethyst)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "157023",
+          "num": 23,
+          "name": "Battle Boss Yasuo (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "157024",
+          "num": 24,
+          "name": "Battle Boss Yasuo (Catseye)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "157025",
+          "num": 25,
+          "name": "Battle Boss Yasuo (Obsidian)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "157026",
+          "num": 26,
+          "name": "Battle Boss Yasuo (K.O.)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "157027",
+          "num": 27,
+          "name": "True Damage Yasuo (Ruby)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "157028",
+          "num": 28,
+          "name": "True Damage Yasuo (Obsidian)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "157029",
+          "num": 29,
+          "name": "True Damage Yasuo (Catseye)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "157030",
+          "num": 30,
+          "name": "True Damage Yasuo (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "157031",
+          "num": 31,
+          "name": "True Damage Yasuo (Amethyst)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "157032",
+          "num": 32,
+          "name": "True Damage Yasuo (Pearl)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "157033",
+          "num": 33,
+          "name": "True Damage Yasuo (Freestyle)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "157034",
+          "num": 34,
+          "name": "Nightbringer Yasuo (Pariah)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
           "id": "157035",
           "num": 35,
           "name": "Prestige True Damage Yasuo",
@@ -79,10 +268,122 @@
           "chromas": true
         },
         {
+          "id": "157037",
+          "num": 37,
+          "name": "Spirit Blossom Yasuo (Ruby)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "157038",
+          "num": 38,
+          "name": "Spirit Blossom Yasuo (Obsidian)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "157039",
+          "num": 39,
+          "name": "Spirit Blossom Yasuo (Sapphire)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "157040",
+          "num": 40,
+          "name": "Spirit Blossom Yasuo (Pearl)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "157041",
+          "num": 41,
+          "name": "Spirit Blossom Yasuo (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "157042",
+          "num": 42,
+          "name": "Spirit Blossom Yasuo (Emerald)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "157043",
+          "num": 43,
+          "name": "Spirit Blossom Yasuo (Catseye)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "157044",
+          "num": 44,
+          "name": "Spirit Blossom Yasuo (Night Blossom)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
           "id": "157045",
           "num": 45,
           "name": "Sea Dog Yasuo",
           "chromas": true
+        },
+        {
+          "id": "157046",
+          "num": 46,
+          "name": "Sea Dog Yasuo (Ruby)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "157047",
+          "num": 47,
+          "name": "Sea Dog Yasuo (Catseye)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "157048",
+          "num": 48,
+          "name": "Sea Dog Yasuo (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "157049",
+          "num": 49,
+          "name": "Sea Dog Yasuo (Emerald)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "157050",
+          "num": 50,
+          "name": "Sea Dog Yasuo (Amethyst)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "157051",
+          "num": 51,
+          "name": "Sea Dog Yasuo (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "157052",
+          "num": 52,
+          "name": "Sea Dog Yasuo (Obsidian)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "157053",
+          "num": 53,
+          "name": "Sea Dog Yasuo (Pearl)",
+          "chromas": false,
+          "parentSkin": 45
         },
         {
           "id": "157054",
@@ -109,16 +410,205 @@
           "chromas": false
         },
         {
+          "id": "157058",
+          "num": 58,
+          "name": "Inkshadow Yasuo (Ruby)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "157059",
+          "num": 59,
+          "name": "Inkshadow Yasuo (Catseye)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "157060",
+          "num": 60,
+          "name": "Inkshadow Yasuo (Sapphire)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "157061",
+          "num": 61,
+          "name": "Inkshadow Yasuo (Emerald)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "157062",
+          "num": 62,
+          "name": "Inkshadow Yasuo (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "157063",
+          "num": 63,
+          "name": "Inkshadow Yasuo (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "157064",
+          "num": 64,
+          "name": "Inkshadow Yasuo (Turquoise)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "157065",
+          "num": 65,
+          "name": "Inkshadow Yasuo (Obsidian)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "157066",
+          "num": 66,
+          "name": "Inkshadow Yasuo (Inked)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "157067",
+          "num": 67,
+          "name": "Inkshadow Yasuo (DEFY MSI 2023)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
           "id": "157068",
           "num": 68,
           "name": "Foreseen Yasuo",
           "chromas": true
         },
         {
+          "id": "157069",
+          "num": 69,
+          "name": "Foreseen Yasuo (Ruby)",
+          "chromas": false,
+          "parentSkin": 68
+        },
+        {
+          "id": "157070",
+          "num": 70,
+          "name": "Foreseen Yasuo (Catseye)",
+          "chromas": false,
+          "parentSkin": 68
+        },
+        {
+          "id": "157071",
+          "num": 71,
+          "name": "Foreseen Yasuo (Sapphire)",
+          "chromas": false,
+          "parentSkin": 68
+        },
+        {
+          "id": "157072",
+          "num": 72,
+          "name": "Foreseen Yasuo (Emerald)",
+          "chromas": false,
+          "parentSkin": 68
+        },
+        {
+          "id": "157073",
+          "num": 73,
+          "name": "Foreseen Yasuo (Pearl)",
+          "chromas": false,
+          "parentSkin": 68
+        },
+        {
+          "id": "157074",
+          "num": 74,
+          "name": "Foreseen Yasuo (Obsidian)",
+          "chromas": false,
+          "parentSkin": 68
+        },
+        {
+          "id": "157075",
+          "num": 75,
+          "name": "Foreseen Yasuo (Amethyst)",
+          "chromas": false,
+          "parentSkin": 68
+        },
+        {
+          "id": "157076",
+          "num": 76,
+          "name": "Foreseen Yasuo (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 68
+        },
+        {
           "id": "157077",
           "num": 77,
           "name": "Battle Wolf Yasuo",
           "chromas": true
+        },
+        {
+          "id": "157078",
+          "num": 78,
+          "name": "Battle Wolf Yasuo (Ruby)",
+          "chromas": false,
+          "parentSkin": 77
+        },
+        {
+          "id": "157079",
+          "num": 79,
+          "name": "Battle Wolf Yasuo (Catseye)",
+          "chromas": false,
+          "parentSkin": 77
+        },
+        {
+          "id": "157080",
+          "num": 80,
+          "name": "Battle Wolf Yasuo (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 77
+        },
+        {
+          "id": "157081",
+          "num": 81,
+          "name": "Battle Wolf Yasuo (Peridot)",
+          "chromas": false,
+          "parentSkin": 77
+        },
+        {
+          "id": "157082",
+          "num": 82,
+          "name": "Battle Wolf Yasuo (Turquoise)",
+          "chromas": false,
+          "parentSkin": 77
+        },
+        {
+          "id": "157083",
+          "num": 83,
+          "name": "Battle Wolf Yasuo (Amethyst)",
+          "chromas": false,
+          "parentSkin": 77
+        },
+        {
+          "id": "157084",
+          "num": 84,
+          "name": "Battle Wolf Yasuo (Pearl)",
+          "chromas": false,
+          "parentSkin": 77
+        },
+        {
+          "id": "157085",
+          "num": 85,
+          "name": "Battle Wolf Yasuo (Obsidian)",
+          "chromas": false,
+          "parentSkin": 77
+        },
+        {
+          "id": "157086",
+          "num": 86,
+          "name": "Battle Wolf Yasuo (Nightwire)",
+          "chromas": false,
+          "parentSkin": 77
         },
         {
           "id": "157087",
@@ -131,6 +621,62 @@
           "num": 88,
           "name": "Petals of Spring Yasuo",
           "chromas": true
+        },
+        {
+          "id": "157089",
+          "num": 89,
+          "name": "Petals of Spring Yasuo (Ruby)",
+          "chromas": false,
+          "parentSkin": 88
+        },
+        {
+          "id": "157090",
+          "num": 90,
+          "name": "Petals of Spring Yasuo (Catseye)",
+          "chromas": false,
+          "parentSkin": 88
+        },
+        {
+          "id": "157091",
+          "num": 91,
+          "name": "Petals of Spring Yasuo (Sapphire)",
+          "chromas": false,
+          "parentSkin": 88
+        },
+        {
+          "id": "157092",
+          "num": 92,
+          "name": "Petals of Spring Yasuo (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 88
+        },
+        {
+          "id": "157093",
+          "num": 93,
+          "name": "Petals of Spring Yasuo (Amethyst)",
+          "chromas": false,
+          "parentSkin": 88
+        },
+        {
+          "id": "157094",
+          "num": 94,
+          "name": "Petals of Spring Yasuo (Pearl)",
+          "chromas": false,
+          "parentSkin": 88
+        },
+        {
+          "id": "157095",
+          "num": 95,
+          "name": "Petals of Spring Yasuo (Peridot)",
+          "chromas": false,
+          "parentSkin": 88
+        },
+        {
+          "id": "157096",
+          "num": 96,
+          "name": "Petals of Spring Yasuo (Emerald)",
+          "chromas": false,
+          "parentSkin": 88
         }
       ],
       "lore": "An Ionian of deep resolve, Yasuo is an agile swordsman who wields the air itself against his enemies. As a proud young man, he was falsely accused of murdering his master—unable to prove his innocence, he was forced to slay his own brother in self defense. Even after his master's true killer was revealed, Yasuo still could not forgive himself for all he had done, and now wanders his homeland with only the wind to guide his blade.",
@@ -146,7 +692,10 @@
         "Yasuo is at his weakest just after he has launched a whirlwind. Engage at that point.",
         "Yasuo's shield from Resolve lasts only 2 seconds. Dealing damage to him will trigger it. Wait it out, then engage."
       ],
-      "tags": ["Fighter", "Assassin"],
+      "tags": [
+        "Fighter",
+        "Assassin"
+      ],
       "partype": "Flow",
       "info": {
         "attack": 8,
@@ -183,27 +732,103 @@
           "description": "Thrusts forward, damaging all enemies in a line.<br><br>On hit, grants a stack of Gathering Storm for a few seconds. At 2 stacks, Steel Tempest fires a whirlwind that knocks <font color='#6655CC'>Airborne</font>.<br><br>Steel Tempest is treated as a basic attack and scales with all the same things.",
           "tooltip": "Yasuo thrusts, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>. If he hits, he gains a stack for {{ gatheringstormduration }} seconds. While he has 2 stacks, his next use of this Ability fires a whirlwind from range, dealing the same damage and <status>Knocking Up</status> for {{ knockupdurationtooltiponly }} second.<br /><br />If used while dashing, this Ability strikes in a circle rather than a stab.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}"]
+            "label": [
+              "Damage"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [4, 4, 4, 4, 4],
+          "cooldown": [
+            4,
+            4,
+            4,
+            4,
+            4
+          ],
           "cooldownBurn": "4",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -221,7 +846,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [475, 475, 475, 475, 475],
+          "range": [
+            475,
+            475,
+            475,
+            475,
+            475
+          ],
           "rangeBurn": "475",
           "image": {
             "full": "YasuoQ1Wrapper.png",
@@ -240,30 +871,105 @@
           "description": "Creates a moving wall that blocks all enemy projectiles for 4 seconds.",
           "tooltip": "Yasuo creates a drifting wall of wind that blocks all enemy projectiles for 4 seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Width", "Cooldown"],
+            "label": [
+              "Width",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e5 }} -> {{ e5NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [25, 23, 21, 19, 17],
+          "cooldown": [
+            25,
+            23,
+            21,
+            19,
+            17
+          ],
           "cooldownBurn": "25/23/21/19/17",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [15, 20, 25, 30, 35],
-            [60, 90, 120, 150, 180],
-            [3, 6, 9, 12, 15],
-            [300, 350, 400, 450, 500],
-            [320, 390, 460, 530, 600],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              15,
+              20,
+              25,
+              30,
+              35
+            ],
+            [
+              60,
+              90,
+              120,
+              150,
+              180
+            ],
+            [
+              3,
+              6,
+              9,
+              12,
+              15
+            ],
+            [
+              300,
+              350,
+              400,
+              450,
+              500
+            ],
+            [
+              320,
+              390,
+              460,
+              530,
+              600
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -281,7 +987,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [400, 400, 400, 400, 400],
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "YasuoW.png",
@@ -300,7 +1012,11 @@
           "description": "Dashes through target enemy, dealing magic damage. Each cast increases subsequent dash's damage, up to a max amount.<br><br>Cannot be re-cast on the same enemy for a few seconds.<br><br><font color='#99FF99'>If Steel Tempest is cast while dashing, it will strike as a circle.</font>",
           "tooltip": "Yasuo dashes through a target, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. Each use of this Ability grants <magicDamage>{{ bonusdamageperstack }}</magicDamage> bonus damage to subsequent uses for {{ stackduration }} seconds, stacking up to {{ maxstacks }} times.<br /><br />This Ability has a {{ e2 }} second per-target Cooldown.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Per Unit Cooldown", "Cooldown"],
+            "label": [
+              "Damage",
+              "Per Unit Cooldown",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ e2 }} -> {{ e2NL }}",
@@ -308,23 +1024,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [0.5, 0.4, 0.3, 0.2, 0.1],
+          "cooldown": [
+            0.5,
+            0.4,
+            0.3,
+            0.2,
+            0.1
+          ],
           "cooldownBurn": "0.5/0.4/0.3/0.2/0.1",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [10, 9, 8, 7, 6],
-            [0.5, 0.4, 0.3, 0.2, 0.1],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [750, 750, 750, 750, 750],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              10,
+              9,
+              8,
+              7,
+              6
+            ],
+            [
+              0.5,
+              0.4,
+              0.3,
+              0.2,
+              0.1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              750,
+              750,
+              750,
+              750,
+              750
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -342,7 +1130,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [475, 475, 475, 475, 475],
+          "range": [
+            475,
+            475,
+            475,
+            475,
+            475
+          ],
           "rangeBurn": "475",
           "image": {
             "full": "YasuoE.png",
@@ -361,30 +1155,81 @@
           "description": "Blinks to an <factionIonia1>Airborne</factionIonia1> enemy champion, dealing physical damage and holding all <factionIonia1>Airborne</factionIonia1> enemies in the area in the air. Grants maximum Flow but resets all stacks of Gathering Storm.<br><br>For a moderate time afterwards, Yasuo's critical strikes gain significant Bonus Armor Penetration.",
           "tooltip": "Yasuo teleports to an <status>Airborne</status> enemy champion, dealing <physicalDamage>{{ damage }} physical damage</physicalDamage> and holding all nearby <status>Airborne</status> enemies up for an additional {{ rknockupduration }} second. Yasuo also gains maximum <keywordMajor>Flow</keywordMajor>, but loses all <spellName>Steel Tempest</spellName> stacks.<br /><br />Afterwards, Yasuo's critical strikes ignore <scaleArmor>{{ rpercentarmorpen }}% bonus Armor</scaleArmor> for {{ rbuffduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ rbasedamage }} -> {{ rbasedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [70, 50, 30],
+          "cooldown": [
+            70,
+            50,
+            30
+          ],
           "cooldownBurn": "70/50/30",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -402,7 +1247,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [1400, 1400, 1400],
+          "range": [
+            1400,
+            1400,
+            1400
+          ],
           "rangeBurn": "1400",
           "image": {
             "full": "YasuoR.png",

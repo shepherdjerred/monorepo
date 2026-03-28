@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Nautilus": {
       "id": "Nautilus",
@@ -61,10 +61,73 @@
           "chromas": false
         },
         {
+          "id": "111008",
+          "num": 8,
+          "name": "Astronautilus (Chrono)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
           "id": "111009",
           "num": 9,
           "name": "Shan Hai Scrolls Nautilus",
           "chromas": false
+        },
+        {
+          "id": "111010",
+          "num": 10,
+          "name": "Shan Hai Scrolls Nautilus (Ruby)",
+          "chromas": true,
+          "parentSkin": 9
+        },
+        {
+          "id": "111011",
+          "num": 11,
+          "name": "Shan Hai Scrolls Nautilus (Citrine)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "111012",
+          "num": 12,
+          "name": "Shan Hai Scrolls Nautilus (Sapphire)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "111013",
+          "num": 13,
+          "name": "Shan Hai Scrolls Nautilus (Emerald)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "111014",
+          "num": 14,
+          "name": "Shan Hai Scrolls Nautilus (Turquoise)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "111015",
+          "num": 15,
+          "name": "Shan Hai Scrolls Nautilus (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "111016",
+          "num": 16,
+          "name": "Shan Hai Scrolls Nautilus (Pearl)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "111017",
+          "num": 17,
+          "name": "Shan Hai Scrolls Nautilus (Obsidian)",
+          "chromas": false,
+          "parentSkin": 9
         },
         {
           "id": "111018",
@@ -73,10 +136,122 @@
           "chromas": false
         },
         {
+          "id": "111019",
+          "num": 19,
+          "name": "Fright Night Nautilus (Ruby)",
+          "chromas": true,
+          "parentSkin": 18
+        },
+        {
+          "id": "111020",
+          "num": 20,
+          "name": "Fright Night Nautilus (Citrine)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "111021",
+          "num": 21,
+          "name": "Fright Night Nautilus (Turquoise)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "111022",
+          "num": 22,
+          "name": "Fright Night Nautilus (Sapphire)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "111023",
+          "num": 23,
+          "name": "Fright Night Nautilus (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "111024",
+          "num": 24,
+          "name": "Fright Night Nautilus (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "111025",
+          "num": 25,
+          "name": "Fright Night Nautilus (Obsidian)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "111026",
+          "num": 26,
+          "name": "Fright Night Nautilus (Pearl)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
           "id": "111027",
           "num": 27,
           "name": "Cosmic Paladin Nautilus",
           "chromas": false
+        },
+        {
+          "id": "111028",
+          "num": 28,
+          "name": "Cosmic Paladin Nautilus (Ruby)",
+          "chromas": true,
+          "parentSkin": 27
+        },
+        {
+          "id": "111029",
+          "num": 29,
+          "name": "Cosmic Paladin Nautilus (Catseye)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "111030",
+          "num": 30,
+          "name": "Cosmic Paladin Nautilus (Emerald)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "111031",
+          "num": 31,
+          "name": "Cosmic Paladin Nautilus (Turquoise)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "111032",
+          "num": 32,
+          "name": "Cosmic Paladin Nautilus (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "111033",
+          "num": 33,
+          "name": "Cosmic Paladin Nautilus (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "111034",
+          "num": 34,
+          "name": "Cosmic Paladin Nautilus (Pearl)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "111035",
+          "num": 35,
+          "name": "Cosmic Paladin Nautilus (Obsidian)",
+          "chromas": false,
+          "parentSkin": 27
         },
         {
           "id": "111036",
@@ -85,10 +260,73 @@
           "chromas": false
         },
         {
+          "id": "111037",
+          "num": 37,
+          "name": "Crystalis Indomitus Nautilus (Fractured)",
+          "chromas": true,
+          "parentSkin": 36
+        },
+        {
           "id": "111039",
           "num": 39,
           "name": "Petricite Nautilus",
           "chromas": false
+        },
+        {
+          "id": "111040",
+          "num": 40,
+          "name": "Petricite Nautilus (Ruby)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "111041",
+          "num": 41,
+          "name": "Petricite Nautilus (Catseye)",
+          "chromas": true,
+          "parentSkin": 39
+        },
+        {
+          "id": "111042",
+          "num": 42,
+          "name": "Petricite Nautilus (Sapphire)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "111043",
+          "num": 43,
+          "name": "Petricite Nautilus (Emerald)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "111044",
+          "num": 44,
+          "name": "Petricite Nautilus (Turquoise)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "111045",
+          "num": 45,
+          "name": "Petricite Nautilus (Amethyst)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "111046",
+          "num": 46,
+          "name": "Petricite Nautilus (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "111047",
+          "num": 47,
+          "name": "Petricite Nautilus (Obsidian)",
+          "chromas": false,
+          "parentSkin": 39
         }
       ],
       "lore": "A lonely legend as old as the first piers sunk in Bilgewater, the armored goliath known as Nautilus roams the dark waters off the coast of the Blue Flame Isles. Driven by a forgotten betrayal, he strikes without warning, swinging his enormous anchor to save the wretched, and drag the greedy to their doom. It is said he comes for those who forget to pay the “Bilgewater tithe”, pulling them down beneath the waves with him—an iron-clad reminder that none can escape the depths.",
@@ -101,7 +339,10 @@
         "If Nautilus uses Riptide right next to you, hold in place until the ripple effect finishes before running. Running early will run straight into the secondary explosions, causing you to take additional damage and slow.",
         "While Nautilus is shielded, he is capable of dealing large amounts of area of effect damage with his basic attacks - consider taking down the shield if you have time."
       ],
-      "tags": ["Tank", "Support"],
+      "tags": [
+        "Tank",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 4,
@@ -138,30 +379,105 @@
           "description": "Nautilus hurls his anchor forward.  Colliding with an enemy pulls them and Nautilus together, dealing magic damage.  Colliding with terrain pulls Nautilus towards it.",
           "tooltip": "Nautilus hurls his anchor forward. If it hits an enemy, Nautilus drags himself and the target together, dealing <magicDamage>{{ qdamagecalc }} magic damage</magicDamage> and <status>Stunning</status> them briefly. If the anchor hits terrain, Nautilus will drag himself towards it.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage"],
+            "label": [
+              "Cooldown",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 13, 12, 11, 10],
+          "cooldown": [
+            14,
+            13,
+            12,
+            11,
+            10
+          ],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [60, 60, 60, 60, 60],
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [70, 115, 160, 205, 250],
-            [0, 0, 0, 0, 0],
-            [0.5, 0.5, 0.5, 0.5, 0.5],
-            [0.5, 0.5, 0.5, 0.5, 0.5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              70,
+              115,
+              160,
+              205,
+              250
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -179,7 +495,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1150, 1150, 1150, 1150, 1150],
+          "range": [
+            1150,
+            1150,
+            1150,
+            1150,
+            1150
+          ],
           "rangeBurn": "1150",
           "image": {
             "full": "NautilusAnchorDrag.png",
@@ -198,7 +520,11 @@
           "description": "Nautilus gains a temporary Shield.  While it persists, his Attacks deal damage over time to his target and surrounding enemies.",
           "tooltip": "Nautilus gains a <shield>{{ shieldcalc }} Shield</shield> for {{ shieldduration }} seconds. While the <shield>Shield</shield> persists, Nautilus' Attacks deal an additional <magicDamage>{{ dotdamagecalc }} magic damage</magicDamage> over 2 seconds to his target and all surrounding enemies.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Shield Amount", "Magic Damage", "% Max Health"],
+            "label": [
+              "Shield Amount",
+              "Magic Damage",
+              "% Max Health"
+            ],
             "effect": [
               "{{ shieldbase }} -> {{ shieldbaseNL }}",
               "{{ dotdamagebase }} -> {{ dotdamagebaseNL }}",
@@ -206,23 +532,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 12, 12, 12, 12],
+          "cooldown": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
           "cooldownBurn": "12",
-          "cost": [60, 60, 60, 60, 60],
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -240,7 +638,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [350, 350, 350, 350, 350],
+          "range": [
+            350,
+            350,
+            350,
+            350,
+            350
+          ],
           "rangeBurn": "350",
           "image": {
             "full": "NautilusPiercingGaze.png",
@@ -275,23 +679,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 6.5, 6, 5.5, 5],
+          "cooldown": [
+            7,
+            6.5,
+            6,
+            5.5,
+            5
+          ],
           "cooldownBurn": "7/6.5/6/5.5/5",
-          "cost": [50, 60, 70, 80, 90],
+          "cost": [
+            50,
+            60,
+            70,
+            80,
+            90
+          ],
           "costBurn": "50/60/70/80/90",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -309,7 +785,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "NautilusSplashZone.png",
@@ -342,23 +824,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -376,7 +906,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [825, 825, 825],
+          "range": [
+            825,
+            825,
+            825
+          ],
           "rangeBurn": "825",
           "image": {
             "full": "NautilusGrandLine.png",

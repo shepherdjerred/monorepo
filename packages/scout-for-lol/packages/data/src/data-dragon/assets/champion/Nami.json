@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Nami": {
       "id": "Nami",
@@ -43,6 +43,27 @@
           "chromas": false
         },
         {
+          "id": "267004",
+          "num": 4,
+          "name": "Koi Nami Element Sunbeam",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "267005",
+          "num": 5,
+          "name": "Koi Nami Element Smoke",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "267006",
+          "num": 6,
+          "name": "Koi Nami Element Twilight",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
           "id": "267007",
           "num": 7,
           "name": "Deep Sea Nami",
@@ -61,10 +82,101 @@
           "chromas": true
         },
         {
+          "id": "267010",
+          "num": 10,
+          "name": "Program Nami (Ruby)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "267011",
+          "num": 11,
+          "name": "Program Nami (Amethyst)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "267012",
+          "num": 12,
+          "name": "Program Nami (Obsidian)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "267013",
+          "num": 13,
+          "name": "Program Nami (Pearl)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "267014",
+          "num": 14,
+          "name": "Program Nami (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
           "id": "267015",
           "num": 15,
           "name": "Splendid Staff Nami",
           "chromas": true
+        },
+        {
+          "id": "267016",
+          "num": 16,
+          "name": "Splendid Staff Nami (Ruby)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "267017",
+          "num": 17,
+          "name": "Splendid Staff Nami (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "267018",
+          "num": 18,
+          "name": "Splendid Staff Nami (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "267019",
+          "num": 19,
+          "name": "Splendid Staff Nami (Citrine)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "267020",
+          "num": 20,
+          "name": "Splendid Staff Nami (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "267021",
+          "num": 21,
+          "name": "Splendid Staff Nami (Peridot)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "267022",
+          "num": 22,
+          "name": "Splendid Staff Nami (Heavenly Crane)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "267023",
+          "num": 23,
+          "name": "Splendid Staff Nami (Pearl)",
+          "chromas": false,
+          "parentSkin": 15
         },
         {
           "id": "267024",
@@ -73,10 +185,115 @@
           "chromas": true
         },
         {
+          "id": "267025",
+          "num": 25,
+          "name": "Cosmic Destiny Nami (Ruby)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "267026",
+          "num": 26,
+          "name": "Cosmic Destiny Nami (Emerald)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "267027",
+          "num": 27,
+          "name": "Cosmic Destiny Nami (Turquoise)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "267028",
+          "num": 28,
+          "name": "Cosmic Destiny Nami (Amethyst)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "267029",
+          "num": 29,
+          "name": "Cosmic Destiny Nami (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "267030",
+          "num": 30,
+          "name": "Cosmic Destiny Nami (Obsidian)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "267031",
+          "num": 31,
+          "name": "Cosmic Destiny Nami (Rainbow)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
           "id": "267032",
           "num": 32,
           "name": "Bewitching Nami",
           "chromas": true
+        },
+        {
+          "id": "267033",
+          "num": 33,
+          "name": "Bewitching Nami (Ruby)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "267034",
+          "num": 34,
+          "name": "Bewitching Nami (Citrine)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "267035",
+          "num": 35,
+          "name": "Bewitching Nami (Emerald)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "267036",
+          "num": 36,
+          "name": "Bewitching Nami (Sapphire)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "267037",
+          "num": 37,
+          "name": "Bewitching Nami (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "267038",
+          "num": 38,
+          "name": "Bewitching Nami (Obsidian)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "267039",
+          "num": 39,
+          "name": "Bewitching Nami (Pearl)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "267040",
+          "num": 40,
+          "name": "Bewitching Nami (Turquoise)",
+          "chromas": false,
+          "parentSkin": 32
         },
         {
           "id": "267041",
@@ -91,16 +308,170 @@
           "chromas": false
         },
         {
+          "id": "267043",
+          "num": 43,
+          "name": "Space Groove Nami (Ruby)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "267044",
+          "num": 44,
+          "name": "Space Groove Nami (Citrine)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "267045",
+          "num": 45,
+          "name": "Space Groove Nami (Emerald)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "267046",
+          "num": 46,
+          "name": "Space Groove Nami (Sapphire)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "267047",
+          "num": 47,
+          "name": "Space Groove Nami (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "267048",
+          "num": 48,
+          "name": "Space Groove Nami (Obsidian)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "267049",
+          "num": 49,
+          "name": "Space Groove Nami (Pearl)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "267050",
+          "num": 50,
+          "name": "Space Groove Nami (Rainbow)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
           "id": "267051",
           "num": 51,
           "name": "Coven Nami",
           "chromas": true
         },
         {
+          "id": "267052",
+          "num": 52,
+          "name": "Coven Nami (Ruby)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "267053",
+          "num": 53,
+          "name": "Coven Nami (Catseye)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "267054",
+          "num": 54,
+          "name": "Coven Nami (Emerald)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "267055",
+          "num": 55,
+          "name": "Coven Nami (Sapphire)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "267056",
+          "num": 56,
+          "name": "Coven Nami (Pearl)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "267057",
+          "num": 57,
+          "name": "Coven Nami (Profane)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
           "id": "267058",
           "num": 58,
           "name": "Mythmaker Nami",
           "chromas": true
+        },
+        {
+          "id": "267059",
+          "num": 59,
+          "name": "Mythmaker Nami (Ruby)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "267060",
+          "num": 60,
+          "name": "Mythmaker Nami (Turquoise)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "267061",
+          "num": 61,
+          "name": "Mythmaker Nami (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "267062",
+          "num": 62,
+          "name": "Mythmaker Nami (Sapphire)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "267063",
+          "num": 63,
+          "name": "Mythmaker Nami (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "267064",
+          "num": 64,
+          "name": "Mythmaker Nami (Catseye)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "267065",
+          "num": 65,
+          "name": "Mythmaker Nami (Obsidian)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "267066",
+          "num": 66,
+          "name": "Mythmaker Nami (Pearl)",
+          "chromas": false,
+          "parentSkin": 58
         },
         {
           "id": "267068",
@@ -121,7 +492,10 @@
         "Tidal Wave has a very long range but travels slowly, be aware of when it is coming your way as you can move out of its path.",
         "Try to avoid fighting an opponent affected by Tidecaller's Blessing, it lasts a short duration so waiting it out can help you greatly."
       ],
-      "tags": ["Support", "Mage"],
+      "tags": [
+        "Support",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 4,
@@ -158,30 +532,105 @@
           "description": "Sends a bubble to a target area, dealing damage and stunning all enemies on impact.",
           "tooltip": "Nami hurls a bubble, <status>Stunning</status> for {{ e2 }} seconds and dealing <magicDamage>{{ totaldamagett }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11, 10, 9, 8],
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [60, 60, 60, 60, 60],
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [75, 130, 185, 240, 295],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              75,
+              130,
+              185,
+              240,
+              295
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -199,7 +648,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [875, 875, 875, 875, 875],
+          "range": [
+            875,
+            875,
+            875,
+            875,
+            875
+          ],
           "rangeBurn": "875",
           "image": {
             "full": "NamiQ.png",
@@ -218,7 +673,11 @@
           "description": "Unleashes a stream of water that bounces back and forth between allied and enemy champions, healing allies and damaging enemies.",
           "tooltip": "Nami unleashes a stream of water that bounces between allied and enemy champions. Each champion can only be hit once, and it hits up to {{ maxtargets }} targets.<li>Restores <healing>{{ totalheal }} Health</healing> to allies and will bounce to a nearby enemy champion. <li>Deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to enemies and will bounce to a nearby allied champion.<br />The damage and healing value is modified by {{ bouncescaling }} each bounce. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Healing", "Damage", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Healing",
+              "Damage",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ baseheal }} -> {{ basehealNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -226,23 +685,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 10, 10, 10, 10],
+          "cooldown": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
           "cooldownBurn": "10",
-          "cost": [70, 75, 80, 85, 90],
+          "cost": [
+            70,
+            75,
+            80,
+            85,
+            90
+          ],
           "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -260,7 +791,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [725, 725, 725, 725, 725],
+          "range": [
+            725,
+            725,
+            725,
+            725,
+            725
+          ],
           "rangeBurn": "725",
           "image": {
             "full": "NamiW.png",
@@ -279,7 +816,11 @@
           "description": "Empowers an allied champion for a short duration. The ally's basic attacks and spells deal bonus magic damage and slow the target.",
           "tooltip": "Nami empowers an allied champion's next {{ hitcount }} Attacks and Abilities for {{ buffduration }} seconds, causing them to <status>Slow</status> their targets by {{ totalslow }} for {{ slowduration }}s and deal an additional <magicDamage>{{ totaldamage }} magic damage</magicDamage>. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Slow",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ baseslow }}% -> {{ baseslowNL }}%",
@@ -287,23 +828,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 11, 11, 11, 11],
+          "cooldown": [
+            11,
+            11,
+            11,
+            11,
+            11
+          ],
           "cooldownBurn": "11",
-          "cost": [55, 60, 65, 70, 75],
+          "cost": [
+            55,
+            60,
+            65,
+            70,
+            75
+          ],
           "costBurn": "55/60/65/70/75",
           "datavalues": {},
           "effect": [
             null,
-            [20, 30, 40, 50, 60],
-            [15, 20, 25, 30, 35],
-            [1, 1, 1, 1, 1],
-            [3, 3, 3, 3, 3],
-            [6, 6, 6, 6, 6],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              20,
+              30,
+              40,
+              50,
+              60
+            ],
+            [
+              15,
+              20,
+              25,
+              30,
+              35
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              6,
+              6,
+              6,
+              6,
+              6
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -321,7 +934,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "NamiE.png",
@@ -340,30 +959,81 @@
           "description": "Summons a massive Tidal Wave that knocks up, slows, and damages enemies. Allies hit gain double the effect of Surging Tides.",
           "tooltip": "Nami summons a tidal wave, <status>Knocking Up</status> for 0.5 seconds, <status>Slowing</status> by {{ e4 }}%, and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. The duration of the <status>Slow</status> increases based on distance the wave traveled, up to {{ e5 }} seconds.<br /><br />Allies hit by the wave gain double the effect of <spellName>Surging Tides</spellName>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 110, 100],
+          "cooldown": [
+            120,
+            110,
+            100
+          ],
           "cooldownBurn": "120/110/100",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [150, 250, 350],
-            [0.5, 0.5, 0.5],
-            [2, 2, 2],
-            [70, 70, 70],
-            [4, 4, 4],
-            [0.002, 0.002, 0.002],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              150,
+              250,
+              350
+            ],
+            [
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              70,
+              70,
+              70
+            ],
+            [
+              4,
+              4,
+              4
+            ],
+            [
+              0.002,
+              0.002,
+              0.002
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -381,7 +1051,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [2550, 2550, 2550],
+          "range": [
+            2550,
+            2550,
+            2550
+          ],
           "rangeBurn": "2550",
           "image": {
             "full": "NamiR.png",

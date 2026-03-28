@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Varus": {
       "id": "Varus",
@@ -67,10 +67,59 @@
           "chromas": true
         },
         {
+          "id": "110008",
+          "num": 8,
+          "name": "Conqueror Varus (Golden)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
           "id": "110009",
           "num": 9,
           "name": "Infernal Varus",
           "chromas": true
+        },
+        {
+          "id": "110010",
+          "num": 10,
+          "name": "Infernal Varus (Peridot)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "110011",
+          "num": 11,
+          "name": "Infernal Varus (Catseye)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "110012",
+          "num": 12,
+          "name": "Infernal Varus (Ruby)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "110013",
+          "num": 13,
+          "name": "Infernal Varus (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "110014",
+          "num": 14,
+          "name": "Infernal Varus (Pearl)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "110015",
+          "num": 15,
+          "name": "Dark Star Varus (Antimatter)",
+          "chromas": false,
+          "parentSkin": 6
         },
         {
           "id": "110016",
@@ -85,10 +134,185 @@
           "chromas": true
         },
         {
+          "id": "110018",
+          "num": 18,
+          "name": "Cosmic Hunter Varus (Ruby)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "110019",
+          "num": 19,
+          "name": "Cosmic Hunter Varus (Catseye)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "110020",
+          "num": 20,
+          "name": "Cosmic Hunter Varus (Amethyst)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "110021",
+          "num": 21,
+          "name": "Cosmic Hunter Varus (Turquoise)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "110022",
+          "num": 22,
+          "name": "Cosmic Hunter Varus (Pearl)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "110023",
+          "num": 23,
+          "name": "Cosmic Hunter Varus (Emerald)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "110024",
+          "num": 24,
+          "name": "Cosmic Hunter Varus (Obsidian)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "110025",
+          "num": 25,
+          "name": "PROJECT: Varus (Ruby)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "110026",
+          "num": 26,
+          "name": "PROJECT: Varus (Catseye)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "110027",
+          "num": 27,
+          "name": "PROJECT: Varus (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "110028",
+          "num": 28,
+          "name": "PROJECT: Varus (Sapphire)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "110029",
+          "num": 29,
+          "name": "PROJECT: Varus (Amethyst)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "110030",
+          "num": 30,
+          "name": "PROJECT: Varus (Emerald)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "110031",
+          "num": 31,
+          "name": "PROJECT: Varus (Pearl)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "110032",
+          "num": 32,
+          "name": "PROJECT: Varus (Obsidian)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "110033",
+          "num": 33,
+          "name": "PROJECT: Varus (Reckoning)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
           "id": "110034",
           "num": 34,
           "name": "High Noon Varus",
           "chromas": true
+        },
+        {
+          "id": "110035",
+          "num": 35,
+          "name": "High Noon Varus (Ruby)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "110036",
+          "num": 36,
+          "name": "High Noon Varus (Sapphire)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "110037",
+          "num": 37,
+          "name": "High Noon Varus (Emerald)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "110038",
+          "num": 38,
+          "name": "High Noon Varus (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "110039",
+          "num": 39,
+          "name": "High Noon Varus (Catseye)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "110040",
+          "num": 40,
+          "name": "High Noon Varus (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "110041",
+          "num": 41,
+          "name": "High Noon Varus (Pearl)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "110042",
+          "num": 42,
+          "name": "High Noon Varus (Obsidian)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "110043",
+          "num": 43,
+          "name": "High Noon Varus (Nomad)",
+          "chromas": false,
+          "parentSkin": 34
         },
         {
           "id": "110044",
@@ -97,10 +321,108 @@
           "chromas": true
         },
         {
+          "id": "110045",
+          "num": 45,
+          "name": "Snow Moon Varus (Ruby)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "110046",
+          "num": 46,
+          "name": "Snow Moon Varus (Citrine)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "110047",
+          "num": 47,
+          "name": "Snow Moon Varus (Amethyst)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "110048",
+          "num": 48,
+          "name": "Snow Moon Varus (Turquoise)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "110049",
+          "num": 49,
+          "name": "Snow Moon Varus (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "110050",
+          "num": 50,
+          "name": "Snow Moon Varus (Emerald)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "110051",
+          "num": 51,
+          "name": "Snow Moon Varus (Obsidian)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "110052",
+          "num": 52,
+          "name": "Snow Moon Varus (Pearl)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
           "id": "110053",
           "num": 53,
           "name": "Empyrean Varus",
           "chromas": true
+        },
+        {
+          "id": "110054",
+          "num": 54,
+          "name": "Empyrean Varus (Ruby)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "110055",
+          "num": 55,
+          "name": "Empyrean Varus (Emerald)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "110056",
+          "num": 56,
+          "name": "Empyrean Varus (Turquoise)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "110057",
+          "num": 57,
+          "name": "Empyrean Varus (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "110058",
+          "num": 58,
+          "name": "Empyrean Varus (Sapphire)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "110059",
+          "num": 59,
+          "name": "Empyrean Varus (Neon Facade)",
+          "chromas": false,
+          "parentSkin": 53
         },
         {
           "id": "110060",
@@ -109,10 +431,73 @@
           "chromas": true
         },
         {
+          "id": "110061",
+          "num": 61,
+          "name": "Spirit Blossom Varus (Ruby)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "110062",
+          "num": 62,
+          "name": "Spirit Blossom Varus (Catseye)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "110063",
+          "num": 63,
+          "name": "Spirit Blossom Varus (Emerald)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "110064",
+          "num": 64,
+          "name": "Spirit Blossom Varus (Sapphire)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "110065",
+          "num": 65,
+          "name": "Spirit Blossom Varus (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "110066",
+          "num": 66,
+          "name": "Spirit Blossom Varus (Turquoise)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "110067",
+          "num": 67,
+          "name": "Spirit Blossom Varus (Pearl)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "110068",
+          "num": 68,
+          "name": "Spirit Blossom Varus (Obsidian)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
           "id": "110069",
           "num": 69,
           "name": "T1 Varus",
           "chromas": true
+        },
+        {
+          "id": "110070",
+          "num": 70,
+          "name": "T1 Varus (Elite)",
+          "chromas": false,
+          "parentSkin": 69
         }
       ],
       "lore": "One of the ancient darkin, Varus was a deadly killer who loved to torment his foes, driving them almost to insanity before delivering the killing arrow. He was imprisoned at the end of the Great Darkin War, but escaped centuries later in the remade flesh of two Ionian hunters—they had unwittingly released him, cursed to bear the bow containing his bound essence. Varus now seeks out those who trapped him, in order to enact his brutal vengeance, but the mortal souls within still resist him every step of the way.",
@@ -127,7 +512,10 @@
         "When he gets a kill or assist, Varus temporarily gains Attack Speed and is much more dangerous.",
         "You'll get bound in place if a tendril from Varus' ultimate, Chain of Corruption, reaches you. You can cause the tendril to die however by running far enough away from it."
       ],
-      "tags": ["Marksman", "Mage"],
+      "tags": [
+        "Marksman",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 7,
@@ -164,7 +552,11 @@
           "description": "Varus readies and then fires a powerful shot that gains extra range and damage the longer he spends preparing to fire.",
           "tooltip": "<attention>Begin Charging:</attention> Varus draws back his next shot, <status>Slowing</status> himself by {{ e7 }}%. After {{ e5 }} seconds, if not fired, Varus will cancel the Ability and refund {{ e4 }}% of its Mana cost.<br /><br /><attention>Release:</attention> Varus releases the arrow, dealing <physicalDamage>{{ totaldamagemintooltip }} physical damage</physicalDamage>, reduced by {{ e3 }}% per enemy hit (minimum {{ e9 }}%). Damage and <keywordMajor>Blight</keywordMajor> detonation effects are increased by up to {{ maxchargeamp*100 }}% based on charge time (maximum <physicalDamage>{{ totaldamagemax }}</physicalDamage>) .{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Maximum Damage", "Cooldown", "Mana Cost"],
+            "label": [
+              "Maximum Damage",
+              "Cooldown",
+              "Mana Cost"
+            ],
             "effect": [
               "{{ basedamagemax }} -> {{ basedamagemaxNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -172,23 +564,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 15, 14, 13, 12],
+          "cooldown": [
+            16,
+            15,
+            14,
+            13,
+            12
+          ],
           "cooldownBurn": "16/15/14/13/12",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [15, 15, 15, 15, 15],
-            [50, 50, 50, 50, 50],
-            [4, 4, 4, 4, 4],
-            [3, 3, 3, 3, 3],
-            [20, 20, 20, 20, 20],
-            [0, 0, 0, 0, 0],
-            [33, 33, 33, 33, 33],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              15,
+              15,
+              15,
+              15,
+              15
+            ],
+            [
+              50,
+              50,
+              50,
+              50,
+              50
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              20,
+              20,
+              20,
+              20,
+              20
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              33,
+              33,
+              33,
+              33,
+              33
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -206,7 +670,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [925, 925, 925, 925, 925],
+          "range": [
+            925,
+            925,
+            925,
+            925,
+            925
+          ],
           "rangeBurn": "925",
           "image": {
             "full": "VarusQ.png",
@@ -237,23 +707,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [40, 40, 40, 40, 40],
+          "cooldown": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "cooldownBurn": "40",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0.03, 0.035, 0.04, 0.045, 0.05],
-            [6, 6, 6, 6, 6],
-            [3, 3, 3, 3, 3],
-            [120, 120, 120, 120, 120],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0.03,
+              0.035,
+              0.04,
+              0.045,
+              0.05
+            ],
+            [
+              6,
+              6,
+              6,
+              6,
+              6
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              120,
+              120,
+              120,
+              120,
+              120
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -271,7 +813,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [750, 750, 750, 750, 750],
+          "range": [
+            750,
+            750,
+            750,
+            750,
+            750
+          ],
           "rangeBurn": "750",
           "image": {
             "full": "VarusW.png",
@@ -290,7 +838,11 @@
           "description": "Varus fires a hail of arrows that deal physical damage and desecrate the ground. Desecrated ground slows enemies' Move Speed and reduces their self healing and regeneration.",
           "tooltip": "Varus fires a hail of arrows that deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and desecrates the ground for {{ e3 }} seconds, <status>Slowing</status> enemies by {{ slowpercent*-100 }}% and applying {{ grievousamount*100 }}% Grievous Wounds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow", "Cooldown"],
+            "label": [
+              "Damage",
+              "Slow",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ slowpercent*-100.000000 }}% -> {{ slowpercentnl*-100.000000 }}%",
@@ -298,23 +850,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [18, 16, 14, 12, 10],
+          "cooldown": [
+            18,
+            16,
+            14,
+            12,
+            10
+          ],
           "cooldownBurn": "18/16/14/12/10",
-          "cost": [90, 90, 90, 90, 90],
+          "cost": [
+            90,
+            90,
+            90,
+            90,
+            90
+          ],
           "costBurn": "90",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [4, 4, 4, 4, 4],
-            [0, 0, 0, 0, 0],
-            [300, 300, 300, 300, 300],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              300,
+              300,
+              300,
+              300,
+              300
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -332,7 +956,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [925, 925, 925, 925, 925],
+          "range": [
+            925,
+            925,
+            925,
+            925,
+            925
+          ],
           "rangeBurn": "925",
           "image": {
             "full": "VarusE.png",
@@ -351,30 +981,81 @@
           "description": "Varus flings out a damaging tendril of corruption that immobilizes the first enemy champion hit and then spreads towards nearby uninfected champions, immobilizing them too on contact.",
           "tooltip": "Varus flings out a tendril of corruption, <status>Rooting</status> the first champion hit for {{ e2 }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. <status>Rooted</status> enemies gain {{ e4 }} <keywordMajor>Blight</keywordMajor> stacks over the duration.<br /><br />The corruption spreads from its target to uninfected enemy champions. If it reaches them, they take the same damage and <status>Root</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [100, 80, 60],
+          "cooldown": [
+            100,
+            80,
+            60
+          ],
           "cooldownBurn": "100/80/60",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [150, 250, 350],
-            [2, 2, 2],
-            [650, 650, 650],
-            [3, 3, 3],
-            [0.5, 0.5, 0.5],
-            [600, 600, 600],
-            [1.75, 1.75, 1.75],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              150,
+              250,
+              350
+            ],
+            [
+              2,
+              2,
+              2
+            ],
+            [
+              650,
+              650,
+              650
+            ],
+            [
+              3,
+              3,
+              3
+            ],
+            [
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              600,
+              600,
+              600
+            ],
+            [
+              1.75,
+              1.75,
+              1.75
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -392,7 +1073,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1300, 1300, 1300],
+          "range": [
+            1300,
+            1300,
+            1300
+          ],
           "rangeBurn": "1300",
           "image": {
             "full": "VarusR.png",

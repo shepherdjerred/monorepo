@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Twitch": {
       "id": "Twitch",
@@ -73,10 +73,87 @@
           "chromas": true
         },
         {
+          "id": "29009",
+          "num": 9,
+          "name": "Omega Squad Twitch (Pearl)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "29010",
+          "num": 10,
+          "name": "Omega Squad Twitch (Sandstone)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "29011",
+          "num": 11,
+          "name": "Omega Squad Twitch (Obsidian)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
           "id": "29012",
           "num": 12,
           "name": "Ice King Twitch",
           "chromas": true
+        },
+        {
+          "id": "29013",
+          "num": 13,
+          "name": "Ice King Twitch (Ruby)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "29014",
+          "num": 14,
+          "name": "Ice King Twitch (Obsidian)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "29015",
+          "num": 15,
+          "name": "Ice King Twitch (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "29016",
+          "num": 16,
+          "name": "Ice King Twitch (Rainbow)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "29017",
+          "num": 17,
+          "name": "Ice King Twitch (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "29021",
+          "num": 21,
+          "name": "Medieval Twitch (Sapphire)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "29023",
+          "num": 23,
+          "name": "Medieval Twitch (Amethyst)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "29024",
+          "num": 24,
+          "name": "Medieval Twitch (Obsidian)",
+          "chromas": false,
+          "parentSkin": 3
         },
         {
           "id": "29027",
@@ -85,10 +162,122 @@
           "chromas": false
         },
         {
+          "id": "29028",
+          "num": 28,
+          "name": "Twitch Shadowfoot (Ruby)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "29029",
+          "num": 29,
+          "name": "Twitch Shadowfoot (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "29030",
+          "num": 30,
+          "name": "Twitch Shadowfoot (Citrine)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "29031",
+          "num": 31,
+          "name": "Twitch Shadowfoot (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "29032",
+          "num": 32,
+          "name": "Twitch Shadowfoot (Obsidian)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "29033",
+          "num": 33,
+          "name": "Twitch Shadowfoot (Emerald)",
+          "chromas": true,
+          "parentSkin": 27
+        },
+        {
+          "id": "29034",
+          "num": 34,
+          "name": "Twitch Shadowfoot (Amethyst)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "29035",
+          "num": 35,
+          "name": "Twitch Shadowfoot (Pearl)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
           "id": "29036",
           "num": 36,
           "name": "Dragonslayer Twitch",
           "chromas": false
+        },
+        {
+          "id": "29037",
+          "num": 37,
+          "name": "Dragonslayer Twitch (Ruby)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "29038",
+          "num": 38,
+          "name": "Dragonslayer Twitch (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "29039",
+          "num": 39,
+          "name": "Dragonslayer Twitch (Sapphire)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "29040",
+          "num": 40,
+          "name": "Dragonslayer Twitch (Citrine)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "29041",
+          "num": 41,
+          "name": "Dragonslayer Twitch (Emerald)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "29042",
+          "num": 42,
+          "name": "Dragonslayer Twitch (Obsidian)",
+          "chromas": true,
+          "parentSkin": 36
+        },
+        {
+          "id": "29043",
+          "num": 43,
+          "name": "Dragonslayer Twitch (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "29044",
+          "num": 44,
+          "name": "Dragonslayer Twitch (Pearl)",
+          "chromas": false,
+          "parentSkin": 36
         },
         {
           "id": "29045",
@@ -97,10 +286,129 @@
           "chromas": false
         },
         {
+          "id": "29046",
+          "num": 46,
+          "name": "High Noon Twitch (Ruby)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "29047",
+          "num": 47,
+          "name": "High Noon Twitch (Citrine)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "29048",
+          "num": 48,
+          "name": "High Noon Twitch (Turquoise)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "29049",
+          "num": 49,
+          "name": "High Noon Twitch (Sapphire)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "29050",
+          "num": 50,
+          "name": "High Noon Twitch (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "29051",
+          "num": 51,
+          "name": "High Noon Twitch (Rose Quartz)",
+          "chromas": true,
+          "parentSkin": 45
+        },
+        {
+          "id": "29052",
+          "num": 52,
+          "name": "High Noon Twitch (Obsidian)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "29053",
+          "num": 53,
+          "name": "High Noon Twitch (Pearl)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "29054",
+          "num": 54,
+          "name": "High Noon Twitch (Nomad)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
           "id": "29055",
           "num": 55,
           "name": "Cheddar Chief Twitch",
           "chromas": false
+        },
+        {
+          "id": "29056",
+          "num": 56,
+          "name": "Cheddar Chief Twitch (Ruby)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "29057",
+          "num": 57,
+          "name": "Cheddar Chief Twitch (Bleu)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "29058",
+          "num": 58,
+          "name": "Cheddar Chief Twitch (Cheddar)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "29059",
+          "num": 59,
+          "name": "Cheddar Chief Twitch (Berry Cake)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "29060",
+          "num": 60,
+          "name": "Cheddar Chief Twitch (Matcha Cake)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "29061",
+          "num": 61,
+          "name": "Cheddar Chief Twitch (Cheesecake)",
+          "chromas": true,
+          "parentSkin": 55
+        },
+        {
+          "id": "29062",
+          "num": 62,
+          "name": "Cheddar Chief Twitch (Chocolate Pie)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "29063",
+          "num": 63,
+          "name": "Cheddar Chief Twitch (Rainbow Cake)",
+          "chromas": false,
+          "parentSkin": 55
         },
         {
           "id": "29064",
@@ -121,7 +429,10 @@
         "Spell Shields won't block the damage from Deadly Venom, but they will block the effects Twitch can trigger with it.",
         "If you suspect Twitch has left the lane, let your teammates know that Twitch is ''MIA.''"
       ],
-      "tags": ["Marksman", "Assassin"],
+      "tags": [
+        "Marksman",
+        "Assassin"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 9,
@@ -158,30 +469,105 @@
           "description": "Twitch becomes Camouflaged for a short duration and gains Move Speed. When leaving Camouflage, Twitch gains Attack Speed for a short duration.<br><br>When an enemy champion with Deadly Venom dies, Ambush's cooldown is reset.",
           "tooltip": "Twitch <keywordStealth>Camouflages</keywordStealth> and gains <speed>{{ movespeedmod }}% Move Speed</speed> for {{ stealthduration }} seconds. The Move Speed increases to {{ hiddenspeed }}% while near an enemy champion that can't see him. After exiting <keywordStealth>Camouflage</keywordStealth>, Twitch gains <attackSpeed>{{ attackspeedmod*100 }}% Attack Speed</attackSpeed> for {{ attackspeedduration }} seconds.<br /><br />When an enemy champion dies while afflicted with <keywordMajor>Venom</keywordMajor>, this Ability's Cooldown is refreshed.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Camouflage Duration", "Attack Speed"],
+            "label": [
+              "Camouflage Duration",
+              "Attack Speed"
+            ],
             "effect": [
               "{{ stealthduration }} -> {{ stealthdurationNL }}",
               "{{ attackspeedmod*100.000000 }}% -> {{ attackspeedmodnl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 16, 16, 16, 16],
+          "cooldown": [
+            16,
+            16,
+            16,
+            16,
+            16
+          ],
           "cooldownBurn": "16",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [3, 3, 3, 3, 3],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -199,7 +585,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [20, 20, 20, 20, 20],
+          "range": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
           "rangeBurn": "20",
           "image": {
             "full": "TwitchHideInShadows.png",
@@ -218,30 +610,105 @@
           "description": "Twitch hurls a cask of venom that explodes in an area, slowing targets and applying deadly venom to the target.",
           "tooltip": "Twitch hurls a cask that adds a stack of <spellName>Deadly Venom</spellName> to all enemies struck and leaves behind a toxic cloud that persists for {{ duration }} seconds.<br /><br />Enemies that remain within the cloud are <status>Slowed</status> by {{ totalslowamount }}% and receive an additional stack of <spellName>Deadly Venom</spellName> each second.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Move Speed Slow", "Cooldown"],
+            "label": [
+              "Move Speed Slow",
+              "Cooldown"
+            ],
             "effect": [
               "{{ baseslowamount }}% -> {{ baseslowamountNL }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [13, 12, 11, 10, 9],
+          "cooldown": [
+            13,
+            12,
+            11,
+            10,
+            9
+          ],
           "cooldownBurn": "13/12/11/10/9",
-          "cost": [70, 70, 70, 70, 70],
+          "cost": [
+            70,
+            70,
+            70,
+            70,
+            70
+          ],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -259,7 +726,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [950, 950, 950, 950, 950],
+          "range": [
+            950,
+            950,
+            950,
+            950,
+            950
+          ],
           "rangeBurn": "950",
           "image": {
             "full": "TwitchVenomCask.png",
@@ -290,23 +763,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11, 10, 9, 8],
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [50, 60, 70, 80, 90],
+          "cost": [
+            50,
+            60,
+            70,
+            80,
+            90
+          ],
           "costBurn": "50/60/70/80/90",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -324,7 +869,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1200, 1200, 1200, 1200, 1200],
+          "range": [
+            1200,
+            1200,
+            1200,
+            1200,
+            1200
+          ],
           "rangeBurn": "1200",
           "image": {
             "full": "TwitchExpunge.png",
@@ -343,27 +894,79 @@
           "description": "Twitch unleashes the full power of his crossbow, shooting bolts over a great distance that pierce all enemies caught in their path.",
           "tooltip": "Twitch unleashes his crossbow, gaining {{ bonusrange }} Attack Range and <scaleAD>{{ bonusad }} Attack Damage</scaleAD>, and causing his Attacks to become piercing bolts for {{ duration }} seconds. These bolts hit all enemies they pass through, but deal {{ falloffdamage*100 }}% less damage to subsequent targets, down to a minimum of {{ minimumfalloffdamage*100 }}% damage.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Attack Damage"],
-            "effect": ["{{ bonusad }} -> {{ bonusadNL }}"]
+            "label": [
+              "Attack Damage"
+            ],
+            "effect": [
+              "{{ bonusad }} -> {{ bonusadNL }}"
+            ]
           },
           "maxrank": 3,
-          "cooldown": [90, 90, 90],
+          "cooldown": [
+            90,
+            90,
+            90
+          ],
           "cooldownBurn": "90",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -381,7 +984,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1200, 1200, 1200],
+          "range": [
+            1200,
+            1200,
+            1200
+          ],
           "rangeBurn": "1200",
           "image": {
             "full": "TwitchFullAutomatic.png",

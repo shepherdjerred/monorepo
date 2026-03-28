@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Kaisa": {
       "id": "Kaisa",
@@ -31,6 +31,62 @@
           "chromas": true
         },
         {
+          "id": "145002",
+          "num": 2,
+          "name": "Bullet Angel Kai'Sa (Catseye)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "145003",
+          "num": 3,
+          "name": "Bullet Angel Kai'Sa (Ruby)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "145004",
+          "num": 4,
+          "name": "Bullet Angel Kai'Sa (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "145005",
+          "num": 5,
+          "name": "Bullet Angel Kai'Sa (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "145006",
+          "num": 6,
+          "name": "Bullet Angel Kai'Sa (Obsidian)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "145007",
+          "num": 7,
+          "name": "Bullet Angel Kai'Sa (Granite)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "145008",
+          "num": 8,
+          "name": "Bullet Angel Kai'Sa (Amethyst)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "145009",
+          "num": 9,
+          "name": "Bullet Angel Kai'Sa (Pearl)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
           "id": "145014",
           "num": 14,
           "name": "K/DA Kai'Sa",
@@ -55,6 +111,62 @@
           "chromas": false
         },
         {
+          "id": "145018",
+          "num": 18,
+          "name": "Arcade Kai'Sa (K.O.)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "145019",
+          "num": 19,
+          "name": "Arcade Kai'Sa (Ruby)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "145020",
+          "num": 20,
+          "name": "Arcade Kai'Sa (Rose Quartz)",
+          "chromas": true,
+          "parentSkin": 17
+        },
+        {
+          "id": "145021",
+          "num": 21,
+          "name": "Arcade Kai'Sa (Catseye)",
+          "chromas": true,
+          "parentSkin": 17
+        },
+        {
+          "id": "145022",
+          "num": 22,
+          "name": "Arcade Kai'Sa (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "145023",
+          "num": 23,
+          "name": "Arcade Kai'Sa (Obsidian)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "145024",
+          "num": 24,
+          "name": "Arcade Kai'Sa (Amethyst)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "145025",
+          "num": 25,
+          "name": "Arcade Kai'Sa (Emerald)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
           "id": "145026",
           "num": 26,
           "name": "K/DA ALL OUT Kai'Sa",
@@ -67,10 +179,80 @@
           "chromas": false
         },
         {
+          "id": "145028",
+          "num": 28,
+          "name": "K/DA ALL OUT Kai'sa (BADDEST)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
           "id": "145029",
           "num": 29,
           "name": "Lagoon Dragon Kai'Sa",
           "chromas": false
+        },
+        {
+          "id": "145030",
+          "num": 30,
+          "name": "Lagoon Dragon Kai'Sa (Ruby)",
+          "chromas": true,
+          "parentSkin": 29
+        },
+        {
+          "id": "145031",
+          "num": 31,
+          "name": "Lagoon Dragon Kai'Sa (Sapphire)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "145032",
+          "num": 32,
+          "name": "Lagoon Dragon Kai'Sa (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "145033",
+          "num": 33,
+          "name": "Lagoon Dragon Kai'Sa (Citrine)",
+          "chromas": true,
+          "parentSkin": 29
+        },
+        {
+          "id": "145034",
+          "num": 34,
+          "name": "Lagoon Dragon Kai'Sa (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "145035",
+          "num": 35,
+          "name": "Lagoon Dragon Kai'Sa (Pearl)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "145036",
+          "num": 36,
+          "name": "Lagoon Dragon Kai'Sa (Obsidian)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "145037",
+          "num": 37,
+          "name": "Lagoon Dragon Kai'Sa (Emerald)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "145038",
+          "num": 38,
+          "name": "Lagoon Dragon Kai'Sa (Emberclaw)",
+          "chromas": false,
+          "parentSkin": 29
         },
         {
           "id": "145039",
@@ -85,16 +267,198 @@
           "chromas": false
         },
         {
+          "id": "145041",
+          "num": 41,
+          "name": "Star Guardian Kai'Sa (Ruby)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "145042",
+          "num": 42,
+          "name": "Star Guardian Kai'Sa (Catseye)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "145043",
+          "num": 43,
+          "name": "Star Guardian Kai'Sa (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "145044",
+          "num": 44,
+          "name": "Star Guardian Kai'Sa (Emerald)",
+          "chromas": true,
+          "parentSkin": 40
+        },
+        {
+          "id": "145045",
+          "num": 45,
+          "name": "Star Guardian Kai'Sa (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "145046",
+          "num": 46,
+          "name": "Star Guardian Kai'Sa (Brilliant)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "145047",
+          "num": 47,
+          "name": "Bullet Angel Kai'Sa (Maverick)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
           "id": "145048",
           "num": 48,
           "name": "Inkshadow Kai'Sa",
           "chromas": false
         },
         {
+          "id": "145049",
+          "num": 49,
+          "name": "Inkshadow Kai'Sa (Ruby)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "145050",
+          "num": 50,
+          "name": "Inkshadow Kai'Sa (Catseye)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "145051",
+          "num": 51,
+          "name": "Inkshadow Kai'Sa (Jasper)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "145052",
+          "num": 52,
+          "name": "Inkshadow Kai'Sa (Emerald)",
+          "chromas": true,
+          "parentSkin": 48
+        },
+        {
+          "id": "145053",
+          "num": 53,
+          "name": "Inkshadow Kai'Sa (Sapphire)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "145054",
+          "num": 54,
+          "name": "Inkshadow Kai'Sa (Obsidian)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "145055",
+          "num": 55,
+          "name": "Inkshadow Kai'Sa (Amethyst)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "145056",
+          "num": 56,
+          "name": "Inkshadow Kai'Sa (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "145057",
+          "num": 57,
+          "name": "Inkshadow Kai'Sa (Inked)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "145058",
+          "num": 58,
+          "name": "iG Kai'Sa (Tenfold Triumph)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
           "id": "145059",
           "num": 59,
           "name": "Heavenscale Kai'Sa",
           "chromas": false
+        },
+        {
+          "id": "145060",
+          "num": 60,
+          "name": "Heavenscale Kai'Sa (Ruby)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "145061",
+          "num": 61,
+          "name": "Heavenscale Kai'Sa (Catseye)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "145062",
+          "num": 62,
+          "name": "Heavenscale Kai'Sa (Emerald)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "145063",
+          "num": 63,
+          "name": "Heavenscale Kai'Sa (Amethyst)",
+          "chromas": true,
+          "parentSkin": 59
+        },
+        {
+          "id": "145064",
+          "num": 64,
+          "name": "Heavenscale Kai'Sa (Granite)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "145065",
+          "num": 65,
+          "name": "Heavenscale Kai'Sa (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "145066",
+          "num": 66,
+          "name": "Heavenscale Kai'Sa (Sapphire)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "145067",
+          "num": 67,
+          "name": "Heavenscale Kai'Sa (Lustrous)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "145068",
+          "num": 68,
+          "name": "Heavenscale Kai'Sa (Obsidian)",
+          "chromas": false,
+          "parentSkin": 59
         },
         {
           "id": "145069",
@@ -113,6 +477,76 @@
           "num": 71,
           "name": "Immortalized Legend Kai'Sa",
           "chromas": false
+        },
+        {
+          "id": "145072",
+          "num": 72,
+          "name": "Dark Star Kai'Sa (Ruby)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "145073",
+          "num": 73,
+          "name": "Dark Star Kai'Sa (Sapphire)",
+          "chromas": true,
+          "parentSkin": 69
+        },
+        {
+          "id": "145074",
+          "num": 74,
+          "name": "Dark Star Kai'Sa (Catseye)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "145075",
+          "num": 75,
+          "name": "Dark Star Kai'Sa (Emerald)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "145076",
+          "num": 76,
+          "name": "Dark Star Kai'Sa (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "145077",
+          "num": 77,
+          "name": "Dark Star Kai'Sa (Turquoise)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "145078",
+          "num": 78,
+          "name": "Dark Star Kai'Sa (Amethyst)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "145079",
+          "num": 79,
+          "name": "Dark Star Kai'Sa (Pearl)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "145080",
+          "num": 80,
+          "name": "Dark Star Kai'Sa (Quasar)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "145081",
+          "num": 81,
+          "name": "iG Kai'Sa (Elite)",
+          "chromas": false,
+          "parentSkin": 16
         }
       ],
       "lore": "Claimed by the Void when she was only a child, Kai'Sa managed to survive through sheer tenacity and strength of will. Her experiences have made her a deadly hunter and, to some, the harbinger of a future they would rather not live to see. Having entered into an uneasy symbiosis with a living Void carapace, the time will soon come when she must decide whether to forgive those mortals who would call her a monster, and defeat the coming darkness together… or simply to forget, as the Void consumes the world that left her behind.",
@@ -127,7 +561,10 @@
         "Kai'Sa is very vulnerable to getting outranged by mages and long range carries.",
         "Make sure to place wards in your blind spots so you can see Kai'Sa coming."
       ],
-      "tags": ["Marksman", "Mage"],
+      "tags": [
+        "Marksman",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 8,
@@ -164,30 +601,105 @@
           "description": "Kai'Sa shoots a swarm of missiles that seek out nearby targets.<br><br>Living Weapon: Icathian Rain is upgraded to shoot more missiles.",
           "tooltip": "Kai'Sa launches {{ e2 }} missiles that split among nearby enemies, each dealing <physicalDamage>{{ totalindividualmissiledamage }} physical damage</physicalDamage>, up to a maximum of {{ maxdamagedisplay }}. Additional missile hits on champions or monsters deal {{ extrahitreduction*100 }}% damage.<br /><br /><keywordMajor>Evolved</keywordMajor>: Kai'Sa instead fires {{ e7 }} missiles.<br />Current: <physicalDamage>{{ f11.1 }}/{{ e6 }} Bonus Attack Damage</physicalDamage>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage Per Missile"],
+            "label": [
+              "Cooldown",
+              "Damage Per Missile"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9, 8, 7, 6],
+          "cooldown": [
+            10,
+            9,
+            8,
+            7,
+            6
+          ],
           "cooldownBurn": "10/9/8/7/6",
-          "cost": [55, 55, 55, 55, 55],
+          "cost": [
+            55,
+            55,
+            55,
+            55,
+            55
+          ],
           "costBurn": "55",
           "datavalues": {},
           "effect": [
             null,
-            [40, 55, 70, 85, 100],
-            [6, 6, 6, 6, 6],
-            [0.25, 0.25, 0.25, 0.25, 0.25],
-            [2, 2, 2, 2, 2],
-            [0.35, 0.35, 0.35, 0.35, 0.35],
-            [100, 100, 100, 100, 100],
-            [12, 12, 12, 12, 12],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              40,
+              55,
+              70,
+              85,
+              100
+            ],
+            [
+              6,
+              6,
+              6,
+              6,
+              6
+            ],
+            [
+              0.25,
+              0.25,
+              0.25,
+              0.25,
+              0.25
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0.35,
+              0.35,
+              0.35,
+              0.35,
+              0.35
+            ],
+            [
+              100,
+              100,
+              100,
+              100,
+              100
+            ],
+            [
+              12,
+              12,
+              12,
+              12,
+              12
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -205,7 +717,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "KaisaQ.png",
@@ -224,7 +742,11 @@
           "description": "Kai'Sa shoots a long range missile, marking enemies with her passive.<br><br>Living Weapon: Void Seeker is upgraded to apply more passive marks and reduce cooldown on champion hit.",
           "tooltip": "Kai'Sa fires a void blast that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>, applies {{ e4 }} stacks of <keywordMajor>Plasma</keywordMajor>, and grants <keywordStealth>True Sight</keywordStealth> of the first enemy hit for {{ spell.kaisapassive:pduration }} seconds.<br /><br /><keywordMajor>Evolved</keywordMajor>: Kai'Sa instead applies {{ e5 }} stacks of <keywordMajor>Plasma</keywordMajor> and hitting a champion reduces the Cooldown by {{ e3 }}%.<br />Current: <scaleAP>{{ f2.1 }}/{{ e2 }} Ability Power</scaleAP>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage", "Mana Cost"],
+            "label": [
+              "Cooldown",
+              "Damage",
+              "Mana Cost"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ e1 }} -> {{ e1NL }}",
@@ -232,23 +754,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [22, 20, 18, 16, 14],
+          "cooldown": [
+            22,
+            20,
+            18,
+            16,
+            14
+          ],
           "cooldownBurn": "22/20/18/16/14",
-          "cost": [55, 60, 65, 70, 75],
+          "cost": [
+            55,
+            60,
+            65,
+            70,
+            75
+          ],
           "costBurn": "55/60/65/70/75",
           "datavalues": {},
           "effect": [
             null,
-            [30, 55, 80, 105, 130],
-            [100, 100, 100, 100, 100],
-            [75, 75, 75, 75, 75],
-            [2, 2, 2, 2, 2],
-            [3, 3, 3, 3, 3],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              30,
+              55,
+              80,
+              105,
+              130
+            ],
+            [
+              100,
+              100,
+              100,
+              100,
+              100
+            ],
+            [
+              75,
+              75,
+              75,
+              75,
+              75
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -266,7 +860,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [3000, 3000, 3000, 3000, 3000],
+          "range": [
+            3000,
+            3000,
+            3000,
+            3000,
+            3000
+          ],
           "rangeBurn": "3000",
           "image": {
             "full": "KaisaW.png",
@@ -285,7 +885,11 @@
           "description": "Kai'Sa briefly increases her Move Speed, then increases her Attack Speed.<br><br>Living Weapon: Supercharge is upgraded to briefly grant Invisibility.",
           "tooltip": "Kai'Sa supercharges her void energy, gaining <speed>{{ totalmovespeed }} Move Speed</speed> and becoming Ghosted while charging, then gaining <attackSpeed>{{ e5 }}% Attack Speed</attackSpeed> for {{ e2 }} seconds.<br /><br />Attacks reduce this Ability's Cooldown by {{ e4 }} seconds.<br /><br /><keywordMajor>Evolved</keywordMajor>: Kai'Sa also becomes <keywordStealth>Invisible</keywordStealth> for {{ e7 }} seconds.<br />Current: <attackSpeed>{{ f10.1 }}%/{{ e6 }}% Bonus Attack Speed</attackSpeed>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Move Speed", "Attack Speed"],
+            "label": [
+              "Cooldown",
+              "Move Speed",
+              "Attack Speed"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ effect1amount*100.000000 }}% -> {{ effect1amountnl*100.000000 }}%",
@@ -293,23 +897,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 14.5, 13, 11.5, 10],
+          "cooldown": [
+            16,
+            14.5,
+            13,
+            11.5,
+            10
+          ],
           "cooldownBurn": "16/14.5/13/11.5/10",
-          "cost": [30, 30, 30, 30, 30],
+          "cost": [
+            30,
+            30,
+            30,
+            30,
+            30
+          ],
           "costBurn": "30",
           "datavalues": {},
           "effect": [
             null,
-            [0.55, 0.6, 0.65, 0.7, 0.75],
-            [4, 4, 4, 4, 4],
-            [1.2, 1.2, 1.2, 1.2, 1.2],
-            [0.5, 0.5, 0.5, 0.5, 0.5],
-            [40, 50, 60, 70, 80],
-            [100, 100, 100, 100, 100],
-            [0.5, 0.5, 0.5, 0.5, 0.5],
-            [0.6, 0.6, 0.6, 0.6, 0.6],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0.55,
+              0.6,
+              0.65,
+              0.7,
+              0.75
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              1.2,
+              1.2,
+              1.2,
+              1.2,
+              1.2
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              40,
+              50,
+              60,
+              70,
+              80
+            ],
+            [
+              100,
+              100,
+              100,
+              100,
+              100
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              0.6,
+              0.6,
+              0.6,
+              0.6,
+              0.6
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -327,7 +1003,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1, 1, 1, 1, 1],
+          "range": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
           "rangeBurn": "1",
           "image": {
             "full": "KaisaE.png",
@@ -360,23 +1042,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [130, 100, 70],
+          "cooldown": [
+            130,
+            100,
+            70
+          ],
           "cooldownBurn": "130/100/70",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -394,7 +1124,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [2000, 2500, 3000],
+          "range": [
+            2000,
+            2500,
+            3000
+          ],
           "rangeBurn": "2000/2500/3000",
           "image": {
             "full": "KaisaR.png",

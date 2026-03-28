@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Lux": {
       "id": "Lux",
@@ -73,6 +73,41 @@
           "chromas": true
         },
         {
+          "id": "99009",
+          "num": 9,
+          "name": "Lunar Empress Lux (Ruby)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "99010",
+          "num": 10,
+          "name": "Lunar Empress Lux (Peridot)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "99011",
+          "num": 11,
+          "name": "Lunar Empress Lux (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "99012",
+          "num": 12,
+          "name": "Lunar Empress Lux (Amethyst)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "99013",
+          "num": 13,
+          "name": "Lunar Empress Lux (Turquoise)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
           "id": "99014",
           "num": 14,
           "name": "Pajama Guardian Lux",
@@ -109,10 +144,129 @@
           "chromas": true
         },
         {
+          "id": "99020",
+          "num": 20,
+          "name": "Space Groove Lux (Ruby)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "99021",
+          "num": 21,
+          "name": "Space Groove Lux (Sapphire)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "99022",
+          "num": 22,
+          "name": "Space Groove Lux (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "99023",
+          "num": 23,
+          "name": "Space Groove Lux (Citrine)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "99024",
+          "num": 24,
+          "name": "Space Groove Lux (Emerald)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "99025",
+          "num": 25,
+          "name": "Space Groove Lux (Amethyst)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "99026",
+          "num": 26,
+          "name": "Space Groove Lux (Obsidian)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "99027",
+          "num": 27,
+          "name": "Space Groove Lux (Rainbow)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "99028",
+          "num": 28,
+          "name": "Space Groove Lux (Disco)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
           "id": "99029",
           "num": 29,
           "name": "Porcelain Lux",
           "chromas": true
+        },
+        {
+          "id": "99030",
+          "num": 30,
+          "name": "Porcelain Lux (Ruby)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "99031",
+          "num": 31,
+          "name": "Porcelain Lux (Sapphire)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "99032",
+          "num": 32,
+          "name": "Porcelain Lux (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "99033",
+          "num": 33,
+          "name": "Porcelain Lux (Catseye)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "99034",
+          "num": 34,
+          "name": "Porcelain Lux (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "99035",
+          "num": 35,
+          "name": "Porcelain Lux (Obsidian)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "99036",
+          "num": 36,
+          "name": "Porcelain Lux (Emerald)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "99037",
+          "num": 37,
+          "name": "Porcelain Lux (Pearl)",
+          "chromas": false,
+          "parentSkin": 29
         },
         {
           "id": "99038",
@@ -133,10 +287,143 @@
           "chromas": false
         },
         {
+          "id": "99041",
+          "num": 41,
+          "name": "Porcelain Lux (Golden Tiger)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
           "id": "99042",
           "num": 42,
           "name": "Empyrean Lux",
           "chromas": true
+        },
+        {
+          "id": "99043",
+          "num": 43,
+          "name": "Empyrean Lux (Ruby)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "99044",
+          "num": 44,
+          "name": "Empyrean Lux (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "99045",
+          "num": 45,
+          "name": "Empyrean Lux (Catseye)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "99046",
+          "num": 46,
+          "name": "Empyrean Lux (Emerald)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "99047",
+          "num": 47,
+          "name": "Empyrean Lux (Sapphire)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "99048",
+          "num": 48,
+          "name": "Empyrean Lux (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "99049",
+          "num": 49,
+          "name": "Empyrean Lux (Pearl)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "99050",
+          "num": 50,
+          "name": "Empyrean Lux (Obsidian)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "99051",
+          "num": 51,
+          "name": "Empyrean Lux (Neon Flare)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "99052",
+          "num": 52,
+          "name": "Soul Fighter Lux (Ruby)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "99053",
+          "num": 53,
+          "name": "Soul Fighter Lux (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "99054",
+          "num": 54,
+          "name": "Soul Fighter Lux (Turquoise)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "99055",
+          "num": 55,
+          "name": "Soul Fighter Lux (Emerald)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "99056",
+          "num": 56,
+          "name": "Soul Fighter Lux (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "99057",
+          "num": 57,
+          "name": "Soul Fighter Lux (Amethyst)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "99058",
+          "num": 58,
+          "name": "Soul Fighter Lux (Obsidian)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "99059",
+          "num": 59,
+          "name": "Soul Fighter Lux (Citrine)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "99060",
+          "num": 60,
+          "name": "Soul Fighter Lux (Limitless)",
+          "chromas": false,
+          "parentSkin": 38
         },
         {
           "id": "99061",
@@ -145,16 +432,135 @@
           "chromas": true
         },
         {
+          "id": "99062",
+          "num": 62,
+          "name": "Faerie Court Lux (Ruby)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "99063",
+          "num": 63,
+          "name": "Faerie Court Lux (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "99064",
+          "num": 64,
+          "name": "Faerie Court Lux (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "99065",
+          "num": 65,
+          "name": "Faerie Court Lux (Catseye)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "99066",
+          "num": 66,
+          "name": "Faerie Court Lux (Emerald)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "99067",
+          "num": 67,
+          "name": "Faerie Court Lux (Sapphire)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "99068",
+          "num": 68,
+          "name": "Faerie Court Lux (Pearl)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "99069",
+          "num": 69,
+          "name": "Faerie Court Lux (Turquoise)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
           "id": "99070",
           "num": 70,
           "name": "Prestige Spirit Blossom Lux",
           "chromas": true
         },
         {
+          "id": "99071",
+          "num": 71,
+          "name": "Prestige Spirit Blossom Lux (Vivid)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
           "id": "99072",
           "num": 72,
           "name": "Panda Pal Lux",
           "chromas": true
+        },
+        {
+          "id": "99073",
+          "num": 73,
+          "name": "Panda Pal Lux (Ruby)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "99074",
+          "num": 74,
+          "name": "Panda Pal Lux (Turquoise)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "99075",
+          "num": 75,
+          "name": "Panda Pal Lux (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "99076",
+          "num": 76,
+          "name": "Panda Pal Lux (Catseye)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "99077",
+          "num": 77,
+          "name": "Panda Pal Lux (Amethyst)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "99078",
+          "num": 78,
+          "name": "Panda Pal Lux (Sapphire)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "99079",
+          "num": 79,
+          "name": "Panda Pal Lux (Pearl)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "99080",
+          "num": 80,
+          "name": "Panda Pal Lux (Obsidian)",
+          "chromas": false,
+          "parentSkin": 72
         }
       ],
       "lore": "Luxanna Crownguard hails from Demacia, an insular realm where magical abilities are viewed with fear and suspicion. Able to bend light to her will, she grew up dreading discovery and exile, and was forced to keep her power secret, in order to preserve her family's noble status. Nonetheless, Lux's optimism and resilience have led her to embrace her unique talents, and she now covertly wields them in service of her homeland.",
@@ -168,7 +574,10 @@
         "Lux has powerful zone control abilities. Try to spread out and attack from different directions so she cannot lock down a specific area.",
         "When retreating with low health, be prepared to dodge Lux's Final Spark, a red targeting beam fires prior to the main beam, so try to move to the side if possible."
       ],
-      "tags": ["Mage", "Support"],
+      "tags": [
+        "Mage",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -205,27 +614,103 @@
           "description": "Lux releases a sphere of light that binds and deals damage to up to two enemy units.",
           "tooltip": "Lux fires a ball of light, <status>Rooting</status> the first two enemies for {{ e3 }} seconds and dealing <magicDamage>{{ totaldamagett }} magic damage</magicDamage> to each.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}"]
+            "label": [
+              "Damage"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [10, 10, 10, 10, 10],
+          "cooldown": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
           "cooldownBurn": "10",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [2, 2, 2, 2, 2],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -243,7 +728,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1175, 1175, 1175, 1175, 1175],
+          "range": [
+            1175,
+            1175,
+            1175,
+            1175,
+            1175
+          ],
           "rangeBurn": "1175",
           "image": {
             "full": "LuxLightBinding.png",
@@ -274,23 +765,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11.5, 11, 10.5, 10],
+          "cooldown": [
+            12,
+            11.5,
+            11,
+            10.5,
+            10
+          ],
           "cooldownBurn": "12/11.5/11/10.5/10",
-          "cost": [60, 65, 70, 75, 80],
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [2, 4, 6, 8, 10],
-            [0, 0, 0, 0, 0],
-            [2.5, 2.5, 2.5, 2.5, 2.5],
-            [100, 100, 100, 100, 100],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              2,
+              4,
+              6,
+              8,
+              10
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              2.5,
+              2.5,
+              2.5,
+              2.5,
+              2.5
+            ],
+            [
+              100,
+              100,
+              100,
+              100,
+              100
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -308,7 +871,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1150, 1150, 1150, 1150, 1150],
+          "range": [
+            1150,
+            1150,
+            1150,
+            1150,
+            1150
+          ],
           "rangeBurn": "1150",
           "image": {
             "full": "LuxPrismaticWave.png",
@@ -341,23 +910,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9.5, 9, 8.5, 8],
+          "cooldown": [
+            10,
+            9.5,
+            9,
+            8.5,
+            8
+          ],
           "cooldownBurn": "10/9.5/9/8.5/8",
-          "cost": [70, 80, 90, 100, 110],
+          "cost": [
+            70,
+            80,
+            90,
+            100,
+            110
+          ],
           "costBurn": "70/80/90/100/110",
           "datavalues": {},
           "effect": [
             null,
-            [25, 30, 35, 40, 45],
-            [65, 115, 165, 215, 265],
-            [5, 5, 5, 5, 5],
-            [310, 310, 310, 310, 310],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              25,
+              30,
+              35,
+              40,
+              45
+            ],
+            [
+              65,
+              115,
+              165,
+              215,
+              265
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              310,
+              310,
+              310,
+              310,
+              310
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -375,7 +1016,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1100, 1100, 1100, 1100, 1100],
+          "range": [
+            1100,
+            1100,
+            1100,
+            1100,
+            1100
+          ],
           "rangeBurn": "1100",
           "image": {
             "full": "LuxLightStrikeKugel.png",
@@ -394,30 +1041,81 @@
           "description": "After gathering energy, Lux fires a beam of light that deals damage to all targets in the area. In addition, triggers Lux's passive ability and refreshes the Illumination debuff duration.",
           "tooltip": "Lux fires a dazzling ray of light, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to all enemies in a line.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ damage }} -> {{ damageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [60, 50, 40],
+          "cooldown": [
+            60,
+            50,
+            40
+          ],
           "cooldownBurn": "60/50/40",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -435,7 +1133,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [3340, 3340, 3340],
+          "range": [
+            3340,
+            3340,
+            3340
+          ],
           "rangeBurn": "3340",
           "image": {
             "full": "LuxR.png",

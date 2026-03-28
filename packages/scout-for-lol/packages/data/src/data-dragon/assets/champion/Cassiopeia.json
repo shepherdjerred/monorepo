@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Cassiopeia": {
       "id": "Cassiopeia",
@@ -49,6 +49,27 @@
           "chromas": false
         },
         {
+          "id": "69005",
+          "num": 5,
+          "name": "Cassiopeia Curse Day",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
+          "id": "69006",
+          "num": 6,
+          "name": "Cassiopeia Curse Dusk",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
+          "id": "69007",
+          "num": 7,
+          "name": "Cassiopeia Curse Night",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
           "id": "69008",
           "num": 8,
           "name": "Eternum Cassiopeia",
@@ -61,16 +82,191 @@
           "chromas": true
         },
         {
+          "id": "69010",
+          "num": 10,
+          "name": "Spirit Blossom Cassiopeia (Ruby)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "69011",
+          "num": 11,
+          "name": "Spirit Blossom Cassiopeia (Citrine)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "69012",
+          "num": 12,
+          "name": "Spirit Blossom Cassiopeia (Obsidian)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "69013",
+          "num": 13,
+          "name": "Spirit Blossom Cassiopeia (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "69014",
+          "num": 14,
+          "name": "Spirit Blossom Cassiopeia (Sapphire)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "69015",
+          "num": 15,
+          "name": "Spirit Blossom Cassiopeia (Turquoise)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "69016",
+          "num": 16,
+          "name": "Spirit Blossom Cassiopeia (Pearl)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "69017",
+          "num": 17,
+          "name": "Spirit Blossom Cassiopeia (Night Blossom)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
           "id": "69018",
           "num": 18,
           "name": "Coven Cassiopeia",
           "chromas": true
         },
         {
+          "id": "69019",
+          "num": 19,
+          "name": "Coven Cassiopeia (Ruby)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "69020",
+          "num": 20,
+          "name": "Coven Cassiopeia (Catseye)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "69021",
+          "num": 21,
+          "name": "Coven Cassiopeia (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "69022",
+          "num": 22,
+          "name": "Coven Cassiopeia (Emerald)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "69023",
+          "num": 23,
+          "name": "Coven Cassiopeia (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "69024",
+          "num": 24,
+          "name": "Coven Cassiopeia (Sapphire)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "69025",
+          "num": 25,
+          "name": "Coven Cassiopeia (Obsidian)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "69026",
+          "num": 26,
+          "name": "Coven Cassiopeia (Pearl)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "69027",
+          "num": 27,
+          "name": "Coven Cassiopeia (Dark Ritual)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
           "id": "69028",
           "num": 28,
           "name": "Bewitching Cassiopeia",
           "chromas": true
+        },
+        {
+          "id": "69029",
+          "num": 29,
+          "name": "Bewitching Cassiopeia (Ruby)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "69030",
+          "num": 30,
+          "name": "Bewitching Cassiopeia (Sapphire)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "69031",
+          "num": 31,
+          "name": "Bewitching Cassiopeia (Emerald)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "69032",
+          "num": 32,
+          "name": "Bewitching Cassiopeia (Citrine)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "69033",
+          "num": 33,
+          "name": "Bewitching Cassiopeia (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "69034",
+          "num": 34,
+          "name": "Bewitching Cassiopeia (Turquoise)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "69035",
+          "num": 35,
+          "name": "Bewitching Cassiopeia (Pearl)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "69036",
+          "num": 36,
+          "name": "Bewitching Cassiopeia (Obsidian)",
+          "chromas": false,
+          "parentSkin": 28
         },
         {
           "id": "69038",
@@ -89,7 +285,9 @@
         "Be wary of Cassiopeia's damage potential with Twin Fang when she has you poisoned.",
         "Turn away from Cassiopeia when she is casting Petrifying Gaze to get slowed instead of stunned."
       ],
-      "tags": ["Mage"],
+      "tags": [
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -124,9 +322,13 @@
           "id": "CassiopeiaQ",
           "name": "Noxious Blast",
           "description": "Cassiopeia blasts an area with Poison after a brief delay, granting her increased Move Speed if she hits an enemy champion.",
-          "tooltip": "Cassiopeia blasts noxious gas, <keywordMajor>Poisoning</keywordMajor> enemies and dealing <magicDamage>{{ tooltiptotaldamage }} magic damage</magicDamage> over {{ e2 }} seconds. Hitting a champion grants Cassiopeia <speed>{{ e3 }}% Move Speed</speed> decaying over {{ e4 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Cassiopeia blasts noxious gas, <keywordMajor>Poisoning</keywordMajor> enemies and dealing <magicDamage>{{ tooltiptotaldamage }} magic damage</magicDamage> over {{ poisonduration }} seconds. Hitting a champion grants Cassiopeia <speed>{{ champhitmsbonus }}% Move Speed</speed> decaying over {{ champhitmsduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Move Speed", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Move Speed",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ e3 }}% -> {{ e3NL }}%",
@@ -134,23 +336,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [3.5, 3.5, 3.5, 3.5, 3.5],
+          "cooldown": [
+            3.5,
+            3.5,
+            3.5,
+            3.5,
+            3.5
+          ],
           "cooldownBurn": "3.5",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [75, 110, 145, 180, 215],
-            [3, 3, 3, 3, 3],
-            [30, 35, 40, 45, 50],
-            [3, 3, 3, 3, 3],
-            [7, 7, 7, 7, 7],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              75,
+              110,
+              145,
+              180,
+              215
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              30,
+              35,
+              40,
+              45,
+              50
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              7,
+              7,
+              7,
+              7,
+              7
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -168,7 +442,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [850, 850, 850, 850, 850],
+          "range": [
+            850,
+            850,
+            850,
+            850,
+            850
+          ],
           "rangeBurn": "850",
           "image": {
             "full": "CassiopeiaQ.png",
@@ -185,7 +465,7 @@
           "id": "CassiopeiaW",
           "name": "Miasma",
           "description": "Cassiopeia releases several clouds of poison, slowing, grounding, and lightly damaging enemies that pass through them. Grounded enemies cannot use Movement abilities.",
-          "tooltip": "Cassiopeia spews venom, leaving toxic clouds for {{ e4 }} seconds. Enemies in the clouds take <magicDamage>{{ damagepersecond }} magic damage</magicDamage> per second, are <keywordMajor>Poisoned</keywordMajor>, <status>Grounded</status>, and <status>Slowed</status> by {{ e2 }}%.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Cassiopeia spews venom, leaving toxic clouds for {{ cloudduration }} seconds. Enemies in the clouds take <magicDamage>{{ damagepersecond }} magic damage</magicDamage> per second, are <keywordMajor>Poisoned</keywordMajor>, <status>Grounded</status>, and <status>Slowed</status> by {{ slowpercent }}%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -201,23 +481,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [24, 22, 20, 18, 16],
+          "cooldown": [
+            24,
+            22,
+            20,
+            18,
+            16
+          ],
           "cooldownBurn": "24/22/20/18/16",
-          "cost": [70, 75, 80, 85, 90],
+          "cost": [
+            70,
+            75,
+            80,
+            85,
+            90
+          ],
           "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
-            [20, 25, 30, 35, 40],
-            [40, 50, 60, 70, 80],
-            [1, 1, 1, 1, 1],
-            [5, 5, 5, 5, 5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              20,
+              25,
+              30,
+              35,
+              40
+            ],
+            [
+              40,
+              50,
+              60,
+              70,
+              80
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -235,7 +587,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [700, 700, 700, 700, 700],
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "CassiopeiaW.png",
@@ -254,30 +612,105 @@
           "description": "Cassiopeia lets loose an attack that deals increased damage to Poisoned targets and heals her for a percentage of the damage dealt. If the target dies from this attack, Cassiopeia regains Mana.",
           "tooltip": "Cassiopeia launches deadly fangs, dealing <magicDamage>{{ basicdamage }} magic damage</magicDamage>. If the enemy is <keywordMajor>Poisoned</keywordMajor>, they take an additional <magicDamage>{{ bonuspoisoneddamage }} magic damage</magicDamage> and Cassiopeia restores <healing>{{ healcalc }} Health</healing>, reduced to <healing>{{ healcalcminion }} Health</healing> against lane minions and small monsters.<br /><br />If this kills the target, Cassiopeia restores <scaleMana>{{ cost }} Mana</scaleMana>.<br /><br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Bonus Poison Damage", "Healing from Ability Power"],
+            "label": [
+              "Bonus Poison Damage",
+              "Healing from Ability Power"
+            ],
             "effect": [
               "{{ bonusdamage }} -> {{ bonusdamageNL }}",
               "{{ healratio*100.000000 }}% -> {{ healrationl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [0.75, 0.75, 0.75, 0.75, 0.75],
+          "cooldown": [
+            0.75,
+            0.75,
+            0.75,
+            0.75,
+            0.75
+          ],
           "cooldownBurn": "0.75",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -295,7 +728,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [700, 700, 700, 700, 700],
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "CassiopeiaE.png",
@@ -314,30 +753,81 @@
           "description": "Cassiopeia releases a swirl of magical energy from her eyes, stunning any enemies in front of her that are facing her and slowing any others with their back turned.",
           "tooltip": "Cassiopeia unleashes a petrifying gaze, dealing <magicDamage>{{ rdamage }} magic damage</magicDamage> and <status>Stunning</status> enemies facing her for {{ rccduration }} seconds. Enemies facing away are <status>Slowed</status> by {{ rslowpercent }}% decaying over the same duration instead.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ rbasedamage }} -> {{ rbasedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -355,7 +845,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [825, 825, 825],
+          "range": [
+            825,
+            825,
+            825
+          ],
           "rangeBurn": "825",
           "image": {
             "full": "CassiopeiaR.png",

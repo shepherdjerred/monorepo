@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Renekton": {
       "id": "Renekton",
@@ -79,6 +79,55 @@
           "chromas": true
         },
         {
+          "id": "58010",
+          "num": 10,
+          "name": "Renektoy (Catseye)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "58011",
+          "num": 11,
+          "name": "Renektoy (Obsidian)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "58012",
+          "num": 12,
+          "name": "Renektoy (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "58013",
+          "num": 13,
+          "name": "Renektoy (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "58014",
+          "num": 14,
+          "name": "Renektoy (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "58015",
+          "num": 15,
+          "name": "Renektoy (Amethyst)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "58016",
+          "num": 16,
+          "name": "Renektoy (Pearl)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
           "id": "58017",
           "num": 17,
           "name": "Hextech Renekton",
@@ -91,10 +140,101 @@
           "chromas": true
         },
         {
+          "id": "58019",
+          "num": 19,
+          "name": "Blackfrost Renekton (Ruby)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "58020",
+          "num": 20,
+          "name": "Blackfrost Renekton (Pearl)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "58021",
+          "num": 21,
+          "name": "Blackfrost Renekton (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "58022",
+          "num": 22,
+          "name": "Blackfrost Renekton (Obsidian)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "58023",
+          "num": 23,
+          "name": "Blackfrost Renekton (Emerald)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "58024",
+          "num": 24,
+          "name": "Blackfrost Renekton (Citrine)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "58025",
+          "num": 25,
+          "name": "Blackfrost Renekton (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
           "id": "58026",
           "num": 26,
           "name": "PROJECT: Renekton",
           "chromas": true
+        },
+        {
+          "id": "58027",
+          "num": 27,
+          "name": "PROJECT: Renekton (Ruby)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "58028",
+          "num": 28,
+          "name": "PROJECT: Renekton (Sapphire)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "58029",
+          "num": 29,
+          "name": "PROJECT: Renekton (Emerald)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "58030",
+          "num": 30,
+          "name": "PROJECT: Renekton (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "58031",
+          "num": 31,
+          "name": "PROJECT: Renekton (Reckoning)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "58032",
+          "num": 32,
+          "name": "PROJECT: Renekton (Catseye)",
+          "chromas": false,
+          "parentSkin": 26
         },
         {
           "id": "58033",
@@ -103,16 +243,163 @@
           "chromas": true
         },
         {
+          "id": "58034",
+          "num": 34,
+          "name": "Dawnbringer Renekton (Ruby)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "58035",
+          "num": 35,
+          "name": "Dawnbringer Renekton (Citrine)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "58036",
+          "num": 36,
+          "name": "Dawnbringer Renekton (Emerald)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "58037",
+          "num": 37,
+          "name": "Dawnbringer Renekton (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "58038",
+          "num": 38,
+          "name": "Dawnbringer Renekton (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "58039",
+          "num": 39,
+          "name": "Dawnbringer Renekton (Turquoise)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "58040",
+          "num": 40,
+          "name": "Dawnbringer Renekton (Obsidian)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "58041",
+          "num": 41,
+          "name": "Dawnbringer Renekton (Pearl)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
           "id": "58042",
           "num": 42,
           "name": "Worlds 2023 Renekton",
           "chromas": true
         },
         {
+          "id": "58043",
+          "num": 43,
+          "name": "Worlds 2023 Renekton (Ruby)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "58044",
+          "num": 44,
+          "name": "Worlds 2023 Renekton (Catseye)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "58045",
+          "num": 45,
+          "name": "Worlds 2023 Renekton (Peridot)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "58046",
+          "num": 46,
+          "name": "Worlds 2023 Renekton (Unlocked)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "58047",
+          "num": 47,
+          "name": "Worlds 2023 Renekton (Destined)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
           "id": "58048",
           "num": 48,
           "name": "Inkshadow Renekton",
           "chromas": true
+        },
+        {
+          "id": "58049",
+          "num": 49,
+          "name": "Inkshadow Renekton (Ruby)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "58050",
+          "num": 50,
+          "name": "Inkshadow Renekton (Catseye)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "58051",
+          "num": 51,
+          "name": "Inkshadow Renekton (Sapphire)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "58052",
+          "num": 52,
+          "name": "Inkshadow Renekton (Emerald)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "58053",
+          "num": 53,
+          "name": "Inkshadow Renekton (Turquoise)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "58054",
+          "num": 54,
+          "name": "Inkshadow Renekton (Obsidian)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "58055",
+          "num": 55,
+          "name": "Inkshadow Renekton (Pearl)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "58056",
+          "num": 56,
+          "name": "Inkshadow Renekton (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 48
         }
       ],
       "lore": "Renekton is a terrifying, rage-fueled Ascended being from the scorched deserts of Shurima. Once, he was his empire's most esteemed warrior, leading the nation's armies to countless victories. However, after the empire's fall, Renekton was entombed beneath the sands, and slowly, as the world turned and changed, he succumbed to insanity. Now free once more, he is utterly consumed with finding and killing his brother, Nasus, who he blames, in his madness, for the centuries he spent in darkness.",
@@ -126,7 +413,10 @@
         "Pay close attention to Renekton's Fury gauge as that will usually signify when he is about to attack.",
         "Keeping Renekton from being able to fight and gain Fury by continually harassing him will severely reduce the effectiveness of his abilities."
       ],
-      "tags": ["Fighter", "Tank"],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
       "partype": "Fury",
       "info": {
         "attack": 8,
@@ -177,23 +467,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 7, 7, 7, 7],
+          "cooldown": [
+            7,
+            7,
+            7,
+            7,
+            7
+          ],
           "cooldownBurn": "7",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -211,7 +573,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [325, 325, 325, 325, 325],
+          "range": [
+            325,
+            325,
+            325,
+            325,
+            325
+          ],
           "rangeBurn": "325",
           "image": {
             "full": "RenektonCleave.png",
@@ -230,7 +598,11 @@
           "description": "Renekton slashes his target twice, dealing moderate physical damage and stuns them for 0.75 seconds. If Renekton has more than 50 Fury, he slashes his target three times, destroying damage shields on the target, dealing high physical damage, and stunning them for 1.5 seconds.",
           "tooltip": "Renekton's next Attack strikes twice, <status>Stunning</status> for {{ stunduration }} seconds and dealing a total of <physicalDamage>{{ basictotaldamage }} physical damage</physicalDamage>. Hitting a champion generates an additional <keywordMajor>{{ bonusfuryvschamps }} Fury</keywordMajor>.<br /><br /><keywordMajor>Fury Bonus</keywordMajor>: Renekton Attacks 3 times instead, destroying <shield>Shields</shield> before dealing <physicalDamage>{{ emptotaldamage }} physical damage</physicalDamage> and <status>Stunning</status> for {{ enragedstunduration }} seconds. Does not generate any <keywordMajor>Fury</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Empowered Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Empowered Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamageperhit*2.000000 }} -> {{ basedamageperhitnl*2.000000 }}",
               "{{ basedamageperhit*3.000000 }} -> {{ basedamageperhitnl*3.000000 }}",
@@ -238,23 +610,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 14, 12, 10, 8],
+          "cooldown": [
+            16,
+            14,
+            12,
+            10,
+            8
+          ],
           "cooldownBurn": "16/14/12/10/8",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -272,7 +716,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [300, 300, 300, 300, 300],
+          "range": [
+            300,
+            300,
+            300,
+            300,
+            300
+          ],
           "rangeBurn": "300",
           "image": {
             "full": "RenektonPreExecute.png",
@@ -305,23 +755,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 14.5, 13, 11.5, 10],
+          "cooldown": [
+            16,
+            14.5,
+            13,
+            11.5,
+            10
+          ],
           "cooldownBurn": "16/14.5/13/11.5/10",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -339,7 +861,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [450, 450, 450, 450, 450],
+          "range": [
+            450,
+            450,
+            450,
+            450,
+            450
+          ],
           "rangeBurn": "450",
           "image": {
             "full": "RenektonSliceAndDice.png",
@@ -358,7 +886,11 @@
           "description": "Renekton transforms into the Tyrant form, gaining bonus Health and dealing damage to enemies around him. While in this form, Renekton gains Fury periodically.",
           "tooltip": "Renekton surrounds himself with dark energies for {{ buffduration }} seconds, gaining <healing>{{ healthgain }} max Health</healing> and <keywordMajor>{{ furyoncast }} Fury</keywordMajor>. While active, he deals <magicDamage>{{ totaldamagepersecond }} magic damage</magicDamage> and gains <keywordMajor>{{ furypersecond }} Fury</keywordMajor> per second.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Bonus Health", "Damage Per Second", "Cooldown"],
+            "label": [
+              "Bonus Health",
+              "Damage Per Second",
+              "Cooldown"
+            ],
             "effect": [
               "{{ healthgain }} -> {{ healthgainNL }}",
               "{{ auradamagepersecond }} -> {{ auradamagepersecondNL }}",
@@ -366,23 +898,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -400,7 +980,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [20, 20, 20],
+          "range": [
+            20,
+            20,
+            20
+          ],
           "rangeBurn": "20",
           "image": {
             "full": "RenektonReignOfTheTyrant.png",

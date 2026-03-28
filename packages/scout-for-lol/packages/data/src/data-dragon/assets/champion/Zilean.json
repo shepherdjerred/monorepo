@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Zilean": {
       "id": "Zilean",
@@ -61,16 +61,184 @@
           "chromas": true
         },
         {
+          "id": "26007",
+          "num": 7,
+          "name": "Sugar Rush Zilean (Ruby)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "26008",
+          "num": 8,
+          "name": "Sugar Rush Zilean (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "26009",
+          "num": 9,
+          "name": "Sugar Rush Zilean (Peridot)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "26010",
+          "num": 10,
+          "name": "Sugar Rush Zilean (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "26011",
+          "num": 11,
+          "name": "Sugar Rush Zilean (Citrine)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "26012",
+          "num": 12,
+          "name": "Sugar Rush Zilean (Meteorite)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "26013",
+          "num": 13,
+          "name": "Sugar Rush Zilean (Sweet Tooth)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
           "id": "26014",
           "num": 14,
           "name": "Winterblessed Zilean",
           "chromas": true
         },
         {
+          "id": "26015",
+          "num": 15,
+          "name": "Winterblessed Zilean (Ruby)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "26016",
+          "num": 16,
+          "name": "Winterblessed Zilean (Citrine)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "26017",
+          "num": 17,
+          "name": "Winterblessed Zilean (Sapphire)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "26018",
+          "num": 18,
+          "name": "Winterblessed Zilean (Emerald)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "26019",
+          "num": 19,
+          "name": "Winterblessed Zilean (Pearl)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "26020",
+          "num": 20,
+          "name": "Winterblessed Zilean (Obsidian)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "26021",
+          "num": 21,
+          "name": "Winterblessed Zilean (Turquoise)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "26022",
+          "num": 22,
+          "name": "Winterblessed Zilean (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "26023",
+          "num": 23,
+          "name": "Winterblessed Zilean (Wreathguard)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
           "id": "26024",
           "num": 24,
           "name": "Arcana Zilean",
           "chromas": true
+        },
+        {
+          "id": "26025",
+          "num": 25,
+          "name": "Arcana Zilean (Ruby)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "26026",
+          "num": 26,
+          "name": "Arcana Zilean (Catseye)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "26027",
+          "num": 27,
+          "name": "Arcana Zilean (Emerald)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "26028",
+          "num": 28,
+          "name": "Arcana Zilean (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "26029",
+          "num": 29,
+          "name": "Arcana Zilean (Sapphire)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "26030",
+          "num": 30,
+          "name": "Arcana Zilean (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "26031",
+          "num": 31,
+          "name": "Arcana Zilean (Pearl)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "26032",
+          "num": 32,
+          "name": "Arcana Zilean (Obsidian)",
+          "chromas": false,
+          "parentSkin": 24
         }
       ],
       "lore": "Once a powerful Icathian mage, Zilean became obsessed with the passage of time after witnessing his homeland's destruction by the Void. Unable to spare even a minute to grieve the catastrophic loss, he called upon ancient temporal magic to divine all possible outcomes. Having become functionally immortal, Zilean now drifts through the past, present, and future, bending and warping the flow of time around him, always searching for that elusive moment that will turn back the clock and undo Icathia's destruction.",
@@ -84,7 +252,10 @@
         "If you're able to match Zilean's speed, it can sometimes be beneficial to wait until his ultimate has faded before landing the killing blow.",
         "Zilean is fragile if a team focuses on him, but otherwise he's very difficult to kill. Commit to killing him as a team."
       ],
-      "tags": ["Support", "Mage"],
+      "tags": [
+        "Support",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -135,23 +306,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9.5, 9, 8.5, 8],
+          "cooldown": [
+            10,
+            9.5,
+            9,
+            8.5,
+            8
+          ],
           "cooldownBurn": "10/9.5/9/8.5/8",
-          "cost": [60, 65, 70, 75, 80],
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [75, 115, 165, 230, 300],
-            [3, 3, 3, 3, 3],
-            [7, 7, 7, 7, 7],
-            [1.1, 1.2, 1.3, 1.4, 1.5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              75,
+              115,
+              165,
+              230,
+              300
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              7,
+              7,
+              7,
+              7,
+              7
+            ],
+            [
+              1.1,
+              1.2,
+              1.3,
+              1.4,
+              1.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -169,7 +412,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [900, 900, 900, 900, 900],
+          "range": [
+            900,
+            900,
+            900,
+            900,
+            900
+          ],
           "rangeBurn": "900",
           "image": {
             "full": "ZileanQ.png",
@@ -188,27 +437,103 @@
           "description": "Zilean can prepare himself for future confrontations, reducing the cooldowns of his other basic abilities.",
           "tooltip": "Zilean turns time, reducing his other basic Ability Cooldowns by {{ e2 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
+            "label": [
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [14, 12, 10, 8, 6],
+          "cooldown": [
+            14,
+            12,
+            10,
+            8,
+            6
+          ],
           "cooldownBurn": "14/12/10/8/6",
-          "cost": [35, 35, 35, 35, 35],
+          "cost": [
+            35,
+            35,
+            35,
+            35,
+            35
+          ],
           "costBurn": "35",
           "datavalues": {},
           "effect": [
             null,
-            [20, 30, 40, 50, 60],
-            [10, 10, 10, 10, 10],
-            [35, 35, 35, 35, 35],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              20,
+              30,
+              40,
+              50,
+              60
+            ],
+            [
+              10,
+              10,
+              10,
+              10,
+              10
+            ],
+            [
+              35,
+              35,
+              35,
+              35,
+              35
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -226,7 +551,13 @@
           "vars": [],
           "costType": " Mana",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "ZileanW.png",
@@ -245,27 +576,105 @@
           "description": "Zilean bends time around any unit, decreasing an enemy's Move Speed or increasing an ally's Move Speed for a short time.",
           "tooltip": "Zilean <status>Slows</status> an enemy champion by {{ e2 }}% or grants an allied champion <speed>{{ e2 }}% Move Speed</speed> for {{ e1 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Slow", "Move Speed"],
-            "effect": ["{{ e2 }}% -> {{ e2NL }}%", "{{ e2 }}% -> {{ e2NL }}%"]
+            "label": [
+              "Slow",
+              "Move Speed"
+            ],
+            "effect": [
+              "{{ e2 }}% -> {{ e2NL }}%",
+              "{{ e2 }}% -> {{ e2NL }}%"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [15, 15, 15, 15, 15],
+          "cooldown": [
+            15,
+            15,
+            15,
+            15,
+            15
+          ],
           "cooldownBurn": "15",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [2.5, 2.5, 2.5, 2.5, 2.5],
-            [40, 55, 70, 85, 99],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [8, 8, 8, 8, 8],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              2.5,
+              2.5,
+              2.5,
+              2.5,
+              2.5
+            ],
+            [
+              40,
+              55,
+              70,
+              85,
+              99
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              8,
+              8,
+              8,
+              8,
+              8
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -283,7 +692,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [550, 550, 550, 550, 550],
+          "range": [
+            550,
+            550,
+            550,
+            550,
+            550
+          ],
           "rangeBurn": "550",
           "image": {
             "full": "TimeWarp.png",
@@ -302,7 +717,11 @@
           "description": "Zilean places a protective time rune on an allied champion, teleporting the champion back in time if they take lethal damage.",
           "tooltip": "Zilean grants a protective time rune to an allied champion for {{ rduration }} seconds. If the target would die, the rune rewinds their timeline, putting them into Stasis for {{ revivestateduration }} seconds, then reviving them and restoring <healing>{{ rtotalheal }} Health</healing>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "@AbilityResourceName@ Cost", "Healing"],
+            "label": [
+              "Cooldown",
+              "@AbilityResourceName@ Cost",
+              "Healing"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}",
@@ -310,23 +729,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 90, 60],
+          "cooldown": [
+            120,
+            90,
+            60
+          ],
           "cooldownBurn": "120/90/60",
-          "cost": [125, 150, 175],
+          "cost": [
+            125,
+            150,
+            175
+          ],
           "costBurn": "125/150/175",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -344,7 +811,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [900, 900, 900],
+          "range": [
+            900,
+            900,
+            900
+          ],
           "rangeBurn": "900",
           "image": {
             "full": "ChronoShift.png",

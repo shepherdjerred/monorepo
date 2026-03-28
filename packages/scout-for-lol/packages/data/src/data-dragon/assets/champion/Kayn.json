@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Kayn": {
       "id": "Kayn",
@@ -37,6 +37,41 @@
           "chromas": true
         },
         {
+          "id": "141003",
+          "num": 3,
+          "name": "Odyssey Kayn (Ruby)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "141004",
+          "num": 4,
+          "name": "Odyssey Kayn (Pearl)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "141005",
+          "num": 5,
+          "name": "Odyssey Kayn (Emerald)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "141006",
+          "num": 6,
+          "name": "Odyssey Kayn (Merc)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "141007",
+          "num": 7,
+          "name": "Odyssey Kayn (Sapphire)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
           "id": "141008",
           "num": 8,
           "name": "Nightbringer Kayn",
@@ -49,10 +84,73 @@
           "chromas": false
         },
         {
+          "id": "141010",
+          "num": 10,
+          "name": "Nightbringer Kayn (Ruby)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "141011",
+          "num": 11,
+          "name": "Nightbringer Kayn (Catseye)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "141012",
+          "num": 12,
+          "name": "Nightbringer Kayn (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "141013",
+          "num": 13,
+          "name": "Nightbringer Kayn (Sapphire)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "141014",
+          "num": 14,
+          "name": "Nightbringer Kayn (Deathbringer)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
           "id": "141015",
           "num": 15,
           "name": "Snow Moon Kayn",
           "chromas": true
+        },
+        {
+          "id": "141016",
+          "num": 16,
+          "name": "Snow Moon Kayn (Ruby)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "141017",
+          "num": 17,
+          "name": "Snow Moon Kayn (Obsidian)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "141018",
+          "num": 18,
+          "name": "Snow Moon Kayn (Amethyst)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "141019",
+          "num": 19,
+          "name": "Snow Moon Kayn (Meteorite)",
+          "chromas": false,
+          "parentSkin": 15
         },
         {
           "id": "141020",
@@ -61,10 +159,73 @@
           "chromas": true
         },
         {
+          "id": "141021",
+          "num": 21,
+          "name": "HEARTSTEEL Kayn (Ruby)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "141022",
+          "num": 22,
+          "name": "HEARTSTEEL Kayn (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "141023",
+          "num": 23,
+          "name": "HEARTSTEEL Kayn (Pearl)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "141024",
+          "num": 24,
+          "name": "HEARTSTEEL Kayn (Citrine)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "141025",
+          "num": 25,
+          "name": "HEARTSTEEL Kayn (Rockstar)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
           "id": "141026",
           "num": 26,
           "name": "Battle Academia Kayn",
           "chromas": true
+        },
+        {
+          "id": "141027",
+          "num": 27,
+          "name": "Battle Academia Kayn (Ruby)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "141028",
+          "num": 28,
+          "name": "Battle Academia Kayn (Catseye)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "141029",
+          "num": 29,
+          "name": "Battle Academia Kayn (Sapphire)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "141030",
+          "num": 30,
+          "name": "Battle Academia Kayn (Emerald)",
+          "chromas": false,
+          "parentSkin": 26
         }
       ],
       "lore": "A peerless practitioner of lethal shadow magic, Shieda Kayn battles to achieve his true destiny—to one day lead the Order of Shadow into a new era of Ionian supremacy. He wields the sentient darkin weapon Rhaast, undeterred by its creeping corruption of his body and mind. There are only two possible outcomes: either Kayn bends the weapon to his will... or the malevolent blade consumes him completely, paving the way for the destruction of all Runeterra.",
@@ -78,7 +239,10 @@
         "When Kayn is in terrain near you, you will get a visual warning on the edge of the terrain he's in.",
         "Damage Kayn while he's in Shadow Step to shorten its duration, or apply hard crowd control (stun, charm, knockup, etc) to end Shadow Step immediately."
       ],
-      "tags": ["Fighter", "Assassin"],
+      "tags": [
+        "Fighter",
+        "Assassin"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 10,
@@ -115,30 +279,105 @@
           "description": "Kayn dashes, then slashes. Both deal damage.",
           "tooltip": "Kayn dashes then spins his scythe, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to enemies he passes through, then deals the damage again to nearby enemies.<br /><br /><keywordMajor>Darkin Slayer:</keywordMajor> Instead deal <physicalDamage>{{ darkinflatdamage }} plus {{ darkinpercentdamage }} max Health physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Base Damage"],
+            "label": [
+              "Cooldown",
+              "Base Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ e1 }} -> {{ e1NL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 6.5, 6, 5.5, 5],
+          "cooldown": [
+            7,
+            6.5,
+            6,
+            5.5,
+            5
+          ],
           "cooldownBurn": "7/6.5/6/5.5/5",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [75, 105, 135, 165, 195],
-            [0.65, 0.65, 0.65, 0.65, 0.65],
-            [5, 5, 5, 5, 5],
-            [3.5, 3.5, 3.5, 3.5, 3.5],
-            [200, 250, 300, 350, 400],
-            [40, 40, 40, 40, 40],
-            [300, 300, 300, 300, 300],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              75,
+              105,
+              135,
+              165,
+              195
+            ],
+            [
+              0.65,
+              0.65,
+              0.65,
+              0.65,
+              0.65
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              3.5,
+              3.5,
+              3.5,
+              3.5,
+              3.5
+            ],
+            [
+              200,
+              250,
+              300,
+              350,
+              400
+            ],
+            [
+              40,
+              40,
+              40,
+              40,
+              40
+            ],
+            [
+              300,
+              300,
+              300,
+              300,
+              300
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -156,7 +395,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [350, 350, 350, 350, 350],
+          "range": [
+            350,
+            350,
+            350,
+            350,
+            350
+          ],
           "rangeBurn": "350",
           "image": {
             "full": "KaynQ.png",
@@ -175,7 +420,11 @@
           "description": "Kayn damages and slows targets in a line.",
           "tooltip": "Kayn swipes his scythe upward, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>Slowing</status> enemies hit by {{ e3 }}%, decaying over {{ e5 }} seconds.<br /><br /><keywordMajor>Shadow Assassin:</keywordMajor> Kayn can move while using this Ability and increases its range.<br /><br /><keywordMajor>Darkin Slayer:</keywordMajor> Additionally <status>Knocks Up</status> enemies hit for {{ e2 }} second.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -183,23 +432,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [13, 12, 11, 10, 9],
+          "cooldown": [
+            13,
+            12,
+            11,
+            10,
+            9
+          ],
           "cooldownBurn": "13/12/11/10/9",
-          "cost": [40, 45, 50, 55, 60],
+          "cost": [
+            40,
+            45,
+            50,
+            55,
+            60
+          ],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [85, 130, 175, 220, 265],
-            [1, 1, 1, 1, 1],
-            [90, 90, 90, 90, 90],
-            [160, 160, 160, 160, 160],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [900, 900, 900, 900, 900],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              85,
+              130,
+              175,
+              220,
+              265
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              90,
+              90,
+              90,
+              90,
+              90
+            ],
+            [
+              160,
+              160,
+              160,
+              160,
+              160
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              900,
+              900,
+              900,
+              900,
+              900
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -217,7 +538,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [700, 700, 700, 700, 700],
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "KaynW.png",
@@ -236,7 +563,11 @@
           "description": "Kayn can walk through terrain.",
           "tooltip": "Kayn gains <speed>{{ e1 }}% Move Speed</speed>, becomes Ghosted, and can move through Terrain for {{ e2 }} seconds. When he first enters terrain, he restores <healing>{{ totalhealing }} Health</healing>.<br /><br />Being <status>Immobilized</status> and spending more than {{ e3 }} consecutive seconds outside of Terrain ends this Ability early.<br /><br /><keywordMajor>Shadow Assassin:</keywordMajor> Gain <speed>{{ e5 }}% Move Speed</speed>, <status>Slow</status> immunity, and reduce the Cooldown to {{ assassincdreduction }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Duration", "Healing"],
+            "label": [
+              "Cooldown",
+              "Duration",
+              "Healing"
+            ],
             "effect": [
               "{{ f15 }} -> {{ f16 }}",
               "{{ e2 }} -> {{ e2NL }}",
@@ -244,23 +575,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [21, 19, 17, 15, 13],
+          "cooldown": [
+            21,
+            19,
+            17,
+            15,
+            13
+          ],
           "cooldownBurn": "21/19/17/15/13",
-          "cost": [90, 90, 90, 90, 90],
+          "cost": [
+            90,
+            90,
+            90,
+            90,
+            90
+          ],
           "costBurn": "90",
           "datavalues": {},
           "effect": [
             null,
-            [40, 40, 40, 40, 40],
-            [7, 7.5, 8, 8.5, 9],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [1250, 1250, 1250, 1250, 1250],
-            [70, 70, 70, 70, 70],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [90, 100, 110, 120, 130],
-            [0.45, 0.45, 0.45, 0.45, 0.45],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              40,
+              40,
+              40,
+              40,
+              40
+            ],
+            [
+              7,
+              7.5,
+              8,
+              8.5,
+              9
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              1250,
+              1250,
+              1250,
+              1250,
+              1250
+            ],
+            [
+              70,
+              70,
+              70,
+              70,
+              70
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              90,
+              100,
+              110,
+              120,
+              130
+            ],
+            [
+              0.45,
+              0.45,
+              0.45,
+              0.45,
+              0.45
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -278,7 +681,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400, 400, 400],
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "KaynE.png",
@@ -297,7 +706,11 @@
           "description": "Kayn hides in an enemy's body, dealing massive damage when he bursts out.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Champions damaged by Kayn are marked for 3.15 seconds.<br /><br />Kayn infests a marked enemy, becoming Untargetable. After {{ infestduration }} seconds or after <recast>Recasting</recast>, Kayn bursts out, dealing <physicalDamage>{{ damage }} physical damage</physicalDamage> to the enemy.<br /><br /><keywordMajor>Shadow Assassin:</keywordMajor> Increases this Ability's range, the distance Kayn exits, and refreshes <spellName>The Darkin Scythe's</spellName> Cooldown on exit.<br /><br /><keywordMajor>Darkin Slayer:</keywordMajor> Instead deals <physicalDamage>{{ slayerdamage }} max Health physical damage</physicalDamage> and restores <healing>{{ healvalue }} Health</healing> ({{ slayerhealpercent*100 }}% damage amount).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -305,23 +718,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0.5, 0.5, 0.5],
-            [0, 0, 0],
-            [2.5, 2.5, 2.5],
-            [300, 300, 300],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [750, 750, 750],
-            [550, 550, 550]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2.5,
+              2.5,
+              2.5
+            ],
+            [
+              300,
+              300,
+              300
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              750,
+              750,
+              750
+            ],
+            [
+              550,
+              550,
+              550
+            ]
           ],
           "effectBurn": [
             null,
@@ -339,7 +800,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [550, 550, 550],
+          "range": [
+            550,
+            550,
+            550
+          ],
           "rangeBurn": "550",
           "image": {
             "full": "KaynR.png",

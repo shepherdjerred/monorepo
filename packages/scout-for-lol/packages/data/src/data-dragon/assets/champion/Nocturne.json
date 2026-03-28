@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Nocturne": {
       "id": "Nocturne",
@@ -67,6 +67,62 @@
           "chromas": true
         },
         {
+          "id": "56008",
+          "num": 8,
+          "name": "Old God Nocturne (Ruby)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "56009",
+          "num": 9,
+          "name": "Old God Nocturne (Catseye)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "56010",
+          "num": 10,
+          "name": "Old God Nocturne (Sapphire)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "56011",
+          "num": 11,
+          "name": "Old God Nocturne (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "56012",
+          "num": 12,
+          "name": "Old God Nocturne (Pearl)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "56013",
+          "num": 13,
+          "name": "Old God Nocturne (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "56014",
+          "num": 14,
+          "name": "Old God Nocturne (Obsidian)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "56015",
+          "num": 15,
+          "name": "Old God Nocturne (Emerald)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
           "id": "56016",
           "num": 16,
           "name": "Hextech Nocturne",
@@ -79,10 +135,129 @@
           "chromas": true
         },
         {
+          "id": "56018",
+          "num": 18,
+          "name": "Broken Covenant Nocturne (Ruby)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "56019",
+          "num": 19,
+          "name": "Broken Covenant Nocturne (Obsidian)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "56020",
+          "num": 20,
+          "name": "Broken Covenant Nocturne (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "56021",
+          "num": 21,
+          "name": "Broken Covenant Nocturne (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "56022",
+          "num": 22,
+          "name": "Broken Covenant Nocturne (Emerald)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "56023",
+          "num": 23,
+          "name": "Broken Covenant Nocturne (Sapphire)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "56024",
+          "num": 24,
+          "name": "Broken Covenant Nocturne (Pearl)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "56025",
+          "num": 25,
+          "name": "Broken Covenant Nocturne (Citrine)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
           "id": "56026",
           "num": 26,
           "name": "Empyrean Nocturne",
           "chromas": true
+        },
+        {
+          "id": "56027",
+          "num": 27,
+          "name": "Empyrean Nocturne (Ruby)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "56028",
+          "num": 28,
+          "name": "Empyrean Nocturne (Catseye)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "56029",
+          "num": 29,
+          "name": "Empyrean Nocturne (Emerald)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "56030",
+          "num": 30,
+          "name": "Empyrean Nocturne (Turquoise)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "56031",
+          "num": 31,
+          "name": "Empyrean Nocturne (Sapphire)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "56032",
+          "num": 32,
+          "name": "Empyrean Nocturne (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "56033",
+          "num": 33,
+          "name": "Empyrean Nocturne (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "56034",
+          "num": 34,
+          "name": "Empyrean Nocturne (Pearl)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "56035",
+          "num": 35,
+          "name": "Empyrean Nocturne (Neon Facade)",
+          "chromas": false,
+          "parentSkin": 26
         }
       ],
       "lore": "A demonic amalgamation drawn from the nightmares that haunt every sentient mind, the thing known as Nocturne has become a primordial force of pure evil. It is liquidly chaotic in aspect, a faceless shadow with cold eyes and armed with wicked-looking blades. After freeing itself from the spirit realm, Nocturne descended upon the waking world, to feed upon the kind of terror that can only thrive in true darkness.",
@@ -96,7 +271,10 @@
         "Stay close to your allies when Paranoia is cast - there is strength in numbers!",
         "Nocturne's Unspeakable Horror is broken with range, so try to save your movement abilities for when he casts it."
       ],
-      "tags": ["Fighter", "Assassin"],
+      "tags": [
+        "Fighter",
+        "Assassin"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 9,
@@ -147,23 +325,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 8, 8, 8, 8],
+          "cooldown": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
           "cooldownBurn": "8",
-          "cost": [60, 65, 70, 75, 80],
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [15, 20, 25, 30, 35],
-            [65, 110, 155, 200, 245],
-            [5, 5, 5, 5, 5],
-            [15, 25, 35, 45, 55],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              15,
+              20,
+              25,
+              30,
+              35
+            ],
+            [
+              65,
+              110,
+              155,
+              200,
+              245
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              15,
+              25,
+              35,
+              45,
+              55
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -181,7 +431,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1125, 1125, 1125, 1125, 1125],
+          "range": [
+            1125,
+            1125,
+            1125,
+            1125,
+            1125
+          ],
           "rangeBurn": "1125",
           "image": {
             "full": "NocturneDuskbringer.png",
@@ -200,30 +456,105 @@
           "description": "Nocturne empowers his blades, passively gaining Attack Speed. Activating Shroud of Darkness allows Nocturne to fade into the shadows, creating a magical barrier which blocks a single enemy ability and doubles his passive Attack Speed if successful.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Nocturne gains <attackSpeed>{{ e1 }}% Attack Speed</attackSpeed>.<br /><br /><spellActive>Active:</spellActive> Nocturne creates a shadow barrier for 1.5 seconds that blocks the next enemy Ability. If an Ability is blocked, this Ability's passive effect is increased to <attackSpeed>{{ e1 }}% Attack Speed</attackSpeed> for {{ e4 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Bonus Attack Speed", "Cooldown"],
+            "label": [
+              "Bonus Attack Speed",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }}% -> {{ e1NL }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [20, 18, 16, 14, 12],
+          "cooldown": [
+            20,
+            18,
+            16,
+            14,
+            12
+          ],
           "cooldownBurn": "20/18/16/14/12",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [60, 70, 80, 90, 100],
-            [0.3, 0.05, 0.05, 0.05, 0.05],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [5, 5, 5, 5, 5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              60,
+              70,
+              80,
+              90,
+              100
+            ],
+            [
+              0.3,
+              0.05,
+              0.05,
+              0.05,
+              0.05
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -241,7 +572,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [20, 20, 20, 20, 20],
+          "range": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
           "rangeBurn": "20",
           "image": {
             "full": "NocturneShroudofDarkness.png",
@@ -274,23 +611,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [15, 14, 13, 12, 11],
+          "cooldown": [
+            15,
+            14,
+            13,
+            12,
+            11
+          ],
           "cooldownBurn": "15/14/13/12/11",
-          "cost": [60, 65, 70, 75, 80],
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [80, 125, 170, 215, 260],
-            [1.25, 1.5, 1.75, 2, 2.25],
-            [2, 2, 2, 2, 2],
-            [465, 465, 465, 465, 465],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              80,
+              125,
+              170,
+              215,
+              260
+            ],
+            [
+              1.25,
+              1.5,
+              1.75,
+              2,
+              2.25
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              465,
+              465,
+              465,
+              465,
+              465
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -308,7 +717,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [425, 425, 425, 425, 425],
+          "range": [
+            425,
+            425,
+            425,
+            425,
+            425
+          ],
           "rangeBurn": "425",
           "image": {
             "full": "NocturneUnspeakableHorror.png",
@@ -327,7 +742,11 @@
           "description": "Nocturne reduces the sight radius of all enemy champions and removes their ally vision in the process. He can then launch himself at a nearby enemy champion.",
           "tooltip": "Nocturne darkens the map, reducing the sight radius of all enemy champions and removing their vision of allies for {{ paranoiaduration }} seconds. Nocturne can <recast>Recast</recast> this Ability during the duration to launch himself at an enemy champion dealing <physicalDamage>{{ damage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Range", "Cooldown"],
+            "label": [
+              "Damage",
+              "Range",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ castrange }} -> {{ castrangeNL }}",
@@ -335,23 +754,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [140, 115, 90],
+          "cooldown": [
+            140,
+            115,
+            90
+          ],
           "cooldownBurn": "140/115/90",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -369,7 +836,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [2500, 3250, 4000],
+          "range": [
+            2500,
+            3250,
+            4000
+          ],
           "rangeBurn": "2500/3250/4000",
           "image": {
             "full": "NocturneParanoia.png",

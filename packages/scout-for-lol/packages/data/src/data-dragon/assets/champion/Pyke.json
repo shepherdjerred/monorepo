@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Pyke": {
       "id": "Pyke",
@@ -31,10 +31,101 @@
           "chromas": true
         },
         {
+          "id": "555002",
+          "num": 2,
+          "name": "Sand Wraith Pyke (Catseye)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "555003",
+          "num": 3,
+          "name": "Sand Wraith Pyke (Obsidian)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "555004",
+          "num": 4,
+          "name": "Sand Wraith Pyke (Sapphire)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "555005",
+          "num": 5,
+          "name": "Sand Wraith Pyke (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "555006",
+          "num": 6,
+          "name": "Sand Wraith Pyke (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "555007",
+          "num": 7,
+          "name": "Sand Wraith Pyke (Turquoise)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "555008",
+          "num": 8,
+          "name": "Sand Wraith Pyke (Pearl)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
           "id": "555009",
           "num": 9,
           "name": "Blood Moon Pyke",
           "chromas": true
+        },
+        {
+          "id": "555010",
+          "num": 10,
+          "name": "Blood Moon Pyke (Ruby)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "555011",
+          "num": 11,
+          "name": "Blood Moon Pyke (Citrine)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "555012",
+          "num": 12,
+          "name": "Blood Moon Pyke (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "555013",
+          "num": 13,
+          "name": "Blood Moon Pyke (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "555014",
+          "num": 14,
+          "name": "Blood Moon Pyke (Obsidian)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "555015",
+          "num": 15,
+          "name": "Blood Moon Pyke (Pearl)",
+          "chromas": false,
+          "parentSkin": 9
         },
         {
           "id": "555016",
@@ -43,16 +134,191 @@
           "chromas": true
         },
         {
+          "id": "555017",
+          "num": 17,
+          "name": "PROJECT: Pyke (Obsidian)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "555018",
+          "num": 18,
+          "name": "PROJECT: Pyke (Ruby)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "555019",
+          "num": 19,
+          "name": "PROJECT: Pyke (Turquoise)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "555020",
+          "num": 20,
+          "name": "PROJECT: Pyke (Pearl)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "555021",
+          "num": 21,
+          "name": "PROJECT: Pyke (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "555022",
+          "num": 22,
+          "name": "PROJECT: Pyke (Amethyst)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "555023",
+          "num": 23,
+          "name": "PROJECT: Pyke (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "555024",
+          "num": 24,
+          "name": "PROJECT: Pyke (Reckoning)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
           "id": "555025",
           "num": 25,
           "name": "PsyOps Pyke",
           "chromas": true
         },
         {
+          "id": "555026",
+          "num": 26,
+          "name": "PsyOps Pyke (Ruby)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "555027",
+          "num": 27,
+          "name": "PsyOps Pyke (Sandstone)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "555028",
+          "num": 28,
+          "name": "PsyOps Pyke (Sapphire)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "555029",
+          "num": 29,
+          "name": "PsyOps Pyke (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "555030",
+          "num": 30,
+          "name": "PsyOps Pyke (Emerald)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "555031",
+          "num": 31,
+          "name": "PsyOps Pyke (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "555032",
+          "num": 32,
+          "name": "PsyOps Pyke (Hunter)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "555033",
+          "num": 33,
+          "name": "PsyOps Pyke (Obsidian)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
           "id": "555034",
           "num": 34,
           "name": "Sentinel Pyke",
           "chromas": true
+        },
+        {
+          "id": "555035",
+          "num": 35,
+          "name": "Sentinel Pyke (Ruby)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "555036",
+          "num": 36,
+          "name": "Sentinel Pyke (Citrine)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "555037",
+          "num": 37,
+          "name": "Sentinel Pyke (Emerald)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "555038",
+          "num": 38,
+          "name": "Sentinel Pyke (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "555039",
+          "num": 39,
+          "name": "Sentinel Pyke (Sapphire)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "555040",
+          "num": 40,
+          "name": "Sentinel Pyke (Pearl)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "555041",
+          "num": 41,
+          "name": "Sentinel Pyke (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "555042",
+          "num": 42,
+          "name": "Sentinel Pyke (Turquoise)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "555043",
+          "num": 43,
+          "name": "Sentinel Pyke (Resolute)",
+          "chromas": false,
+          "parentSkin": 34
         },
         {
           "id": "555044",
@@ -67,6 +333,55 @@
           "chromas": true
         },
         {
+          "id": "555046",
+          "num": 46,
+          "name": "Ashen Knight Pyke (Emberwoken)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "555047",
+          "num": 47,
+          "name": "Empyrean Pyke (Ruby)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "555048",
+          "num": 48,
+          "name": "Empyrean Pyke (Emerald)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "555049",
+          "num": 49,
+          "name": "Empyrean Pyke (Pearl)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "555050",
+          "num": 50,
+          "name": "Empyrean Pyke (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "555051",
+          "num": 51,
+          "name": "Empyrean Pyke (Turquoise)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "555052",
+          "num": 52,
+          "name": "Empyrean Pyke (Neon Flare)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
           "id": "555053",
           "num": 53,
           "name": "Soul Fighter Pyke",
@@ -79,10 +394,136 @@
           "chromas": false
         },
         {
+          "id": "555055",
+          "num": 55,
+          "name": "Soul Fighter Pyke (Ruby)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "555056",
+          "num": 56,
+          "name": "Soul Fighter Pyke (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "555057",
+          "num": 57,
+          "name": "Soul Fighter Pyke (Citrine)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "555058",
+          "num": 58,
+          "name": "Soul Fighter Pyke (Turquoise)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "555059",
+          "num": 59,
+          "name": "Soul Fighter Pyke (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "555060",
+          "num": 60,
+          "name": "Soul Fighter Pyke (Emerald)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "555061",
+          "num": 61,
+          "name": "Soul Fighter Pyke (Pearl)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "555062",
+          "num": 62,
+          "name": "Soul Fighter Pyke (Obsidian)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "555063",
+          "num": 63,
+          "name": "Soul Fighter Pyke (Limitless)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
           "id": "555064",
           "num": 64,
           "name": "Fright Night Pyke",
           "chromas": true
+        },
+        {
+          "id": "555065",
+          "num": 65,
+          "name": "Fright Night Pyke (Ruby)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "555066",
+          "num": 66,
+          "name": "Fright Night Pyke (Catseye)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "555067",
+          "num": 67,
+          "name": "Fright Night Pyke (Emerald)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "555068",
+          "num": 68,
+          "name": "Fright Night Pyke (Turquoise)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "555069",
+          "num": 69,
+          "name": "Fright Night Pyke (Sapphire)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "555070",
+          "num": 70,
+          "name": "Fright Night Pyke (Amethyst)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "555071",
+          "num": 71,
+          "name": "Fright Night Pyke (Pearl)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "555072",
+          "num": 72,
+          "name": "Fright Night Pyke (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "555073",
+          "num": 73,
+          "name": "Fright Night Pyke (Ghoulish)",
+          "chromas": false,
+          "parentSkin": 64
         },
         {
           "id": "555074",
@@ -95,6 +536,69 @@
           "num": 75,
           "name": "T1 Pyke",
           "chromas": true
+        },
+        {
+          "id": "555076",
+          "num": 76,
+          "name": "Inkshadow Pyke (Ruby)",
+          "chromas": false,
+          "parentSkin": 74
+        },
+        {
+          "id": "555077",
+          "num": 77,
+          "name": "Inkshadow Pyke (Emerald)",
+          "chromas": false,
+          "parentSkin": 74
+        },
+        {
+          "id": "555078",
+          "num": 78,
+          "name": "Inkshadow Pyke (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 74
+        },
+        {
+          "id": "555079",
+          "num": 79,
+          "name": "Inkshadow Pyke (Sapphire)",
+          "chromas": false,
+          "parentSkin": 74
+        },
+        {
+          "id": "555080",
+          "num": 80,
+          "name": "Inkshadow Pyke (Obsidian)",
+          "chromas": false,
+          "parentSkin": 74
+        },
+        {
+          "id": "555081",
+          "num": 81,
+          "name": "Inkshadow Pyke (Pearl)",
+          "chromas": false,
+          "parentSkin": 74
+        },
+        {
+          "id": "555082",
+          "num": 82,
+          "name": "Inkshadow Pyke (Citrine)",
+          "chromas": false,
+          "parentSkin": 74
+        },
+        {
+          "id": "555083",
+          "num": 83,
+          "name": "Inkshadow Pyke (Turquoise)",
+          "chromas": false,
+          "parentSkin": 74
+        },
+        {
+          "id": "555084",
+          "num": 84,
+          "name": "T1 Pyke (Elite)",
+          "chromas": false,
+          "parentSkin": 75
         }
       ],
       "lore": "A renowned harpooner from the slaughter docks of Bilgewater, Pyke should have met his death in the belly of a gigantic jaull-fish… and yet, he returned. Now, stalking the dank alleys and backways of his former hometown, he uses his new supernatural gifts to bring a swift and gruesome end to those who make their fortune by exploiting others—and a city that prides itself on hunting monsters now finds a monster hunting them.",
@@ -110,7 +614,10 @@
         "When Pyke is hidden nearby in his Ghostwater Dive, sharks will circle underneath your feet.",
         "Try not to stand near low health allies. If Pyke executes them using Death From Below, you might be next on the list."
       ],
-      "tags": ["Support", "Assassin"],
+      "tags": [
+        "Support",
+        "Assassin"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 9,
@@ -124,7 +631,7 @@
         "mp": 415,
         "mpperlevel": 50,
         "movespeed": 330,
-        "armor": 43,
+        "armor": 37,
         "armorperlevel": 4.7,
         "spellblock": 32,
         "spellblockperlevel": 2.05,
@@ -147,7 +654,11 @@
           "description": "Pyke either stabs an enemy in front of him or pulls an enemy towards him.",
           "tooltip": "<tap>Tap:</tap> Pyke stabs, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to the first enemy hit, preferring champions. They are then <status>Slowed</status> by {{ slowamount*100 }}% for {{ slowduration }} second.<br /><br /><hold>Hold: </hold>Pyke throws his harpoon, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to the first enemy hit and <status>Pulling</status> them towards him. They are then <status>Slowed</status> by {{ slowamount*100 }}% for {{ slowduration }} second.<br /><br />If Pyke successfully hits an enemy champion or the channel does not complete successfully, {{ manarefund*100 }}% of the Mana cost is refunded.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -155,23 +666,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9.5, 9, 8.5, 8],
+          "cooldown": [
+            10,
+            9.5,
+            9,
+            8.5,
+            8
+          ],
           "cooldownBurn": "10/9.5/9/8.5/8",
-          "cost": [70, 75, 80, 85, 90],
+          "cost": [
+            70,
+            75,
+            80,
+            85,
+            90
+          ],
           "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -189,7 +772,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400, 400, 400],
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "PykeQ.png",
@@ -208,27 +797,103 @@
           "description": "Pyke enters Camouflage and gains significant Move Speed that decays over time.",
           "tooltip": "Pyke gains <keywordStealth>Camouflage</keywordStealth> and <speed>{{ movespeed }}% Move Speed</speed> decaying over {{ e0 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
+            "label": [
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [14, 13, 12, 11, 10],
+          "cooldown": [
+            14,
+            13,
+            12,
+            11,
+            10
+          ],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [65, 65, 65, 65, 65],
+          "cost": [
+            65,
+            65,
+            65,
+            65,
+            65
+          ],
           "costBurn": "65",
           "datavalues": {},
           "effect": [
             null,
-            [45, 45, 45, 45, 45],
-            [0, 0, 0, 0, 0],
-            [0.3, 0.3, 0.3, 0.3, 0.3],
-            [0.03, 0.03, 0.03, 0.03, 0.03],
-            [80, 80, 80, 80, 80],
-            [0.55, 0.55, 0.55, 0.55, 0.55],
-            [8, 8, 8, 8, 8],
-            [0.01, 0.01, 0.01, 0.01, 0.01],
-            [1.15, 1.15, 1.15, 1.15, 1.15],
-            [5, 5, 5, 5, 5]
+            [
+              45,
+              45,
+              45,
+              45,
+              45
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0.3,
+              0.3,
+              0.3,
+              0.3,
+              0.3
+            ],
+            [
+              0.03,
+              0.03,
+              0.03,
+              0.03,
+              0.03
+            ],
+            [
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            [
+              0.55,
+              0.55,
+              0.55,
+              0.55,
+              0.55
+            ],
+            [
+              8,
+              8,
+              8,
+              8,
+              8
+            ],
+            [
+              0.01,
+              0.01,
+              0.01,
+              0.01,
+              0.01
+            ],
+            [
+              1.15,
+              1.15,
+              1.15,
+              1.15,
+              1.15
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ]
           ],
           "effectBurn": [
             null,
@@ -246,7 +911,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "PykeW.png",
@@ -265,30 +936,105 @@
           "description": "Pyke dashes and leaves behind a phantom that will return to him, stunning enemy champions along its path.",
           "tooltip": "Pyke dashes, leaving a drowned phantom behind him that returns to him shortly. The phantom <status>Stuns</status> for {{ stunduration }} seconds and deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to champions.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [15, 14, 13, 12, 11],
+          "cooldown": [
+            15,
+            14,
+            13,
+            12,
+            11
+          ],
           "cooldownBurn": "15/14/13/12/11",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [100, 150, 200, 250, 300],
-            [1.25, 1.25, 1.25, 1.25, 1.25],
-            [550, 550, 550, 550, 550],
-            [1, 1, 1, 1, 1],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              100,
+              150,
+              200,
+              250,
+              300
+            ],
+            [
+              1.25,
+              1.25,
+              1.25,
+              1.25,
+              1.25
+            ],
+            [
+              550,
+              550,
+              550,
+              550,
+              550
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -306,7 +1052,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [550, 550, 550, 550, 550],
+          "range": [
+            550,
+            550,
+            550,
+            550,
+            550
+          ],
           "rangeBurn": "550",
           "image": {
             "full": "PykeE.png",
@@ -325,27 +1077,79 @@
           "description": "Pyke blinks to and executes low health enemies, allowing him to cast this spell again and granting additional gold to an ally who assists.",
           "tooltip": "Pyke strikes all enemy champions in an X, teleporting to and <danger>executing</danger> targets below <scaleAD>{{ rdamage }}</scaleAD> Health. Champions above the threshold and non-champions instead take physical damage equal to {{ reduceddamage*100 }}% of that amount (<physicalDamage>{{ reduceddamagefinal }}</physicalDamage>). <br /><br />When an enemy champion dies inside the X, Pyke can <recast>Recast</recast> this Ability for free within {{ rrecastduration }} seconds. If he executed that champion, the last assisting ally will also get kill gold. If he did not, he will still get kill gold as if he did.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
+            "label": [
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
-          "cooldown": [100, 85, 70],
+          "cooldown": [
+            100,
+            85,
+            70
+          ],
           "cooldownBurn": "100/85/70",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -363,7 +1167,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [750, 750, 750],
+          "range": [
+            750,
+            750,
+            750
+          ],
           "rangeBurn": "750",
           "image": {
             "full": "PykeR.png",

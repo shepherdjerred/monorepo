@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Corki": {
       "id": "Corki",
@@ -73,10 +73,122 @@
           "chromas": true
         },
         {
+          "id": "42009",
+          "num": 9,
+          "name": "Arcade Corki (Pearl)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "42010",
+          "num": 10,
+          "name": "Arcade Corki (Ruby)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "42011",
+          "num": 11,
+          "name": "Arcade Corki (Turquoise)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "42012",
+          "num": 12,
+          "name": "Arcade Corki (Citrine)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "42013",
+          "num": 13,
+          "name": "Arcade Corki (Sapphire)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "42014",
+          "num": 14,
+          "name": "Arcade Corki (Obsidian)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "42015",
+          "num": 15,
+          "name": "Arcade Corki (Catseye)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "42016",
+          "num": 16,
+          "name": "Arcade Corki (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "42017",
+          "num": 17,
+          "name": "Dragonwing Corki (Golden)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
           "id": "42018",
           "num": 18,
           "name": "Corgi Corki",
           "chromas": true
+        },
+        {
+          "id": "42019",
+          "num": 19,
+          "name": "Corgi Corki (Obsidian)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "42020",
+          "num": 20,
+          "name": "Corgi Corki (Pearl)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "42021",
+          "num": 21,
+          "name": "Corgi Corki (Ruby)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "42022",
+          "num": 22,
+          "name": "Corgi Corki (Amethyst)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "42023",
+          "num": 23,
+          "name": "Corgi Corki (Rainbow)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "42024",
+          "num": 24,
+          "name": "Corgi Corki (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "42025",
+          "num": 25,
+          "name": "Corgi Corki (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 18
         },
         {
           "id": "42026",
@@ -85,10 +197,129 @@
           "chromas": true
         },
         {
+          "id": "42027",
+          "num": 27,
+          "name": "Astronaut Corki (Ruby)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "42028",
+          "num": 28,
+          "name": "Astronaut Corki (Sapphire)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "42029",
+          "num": 29,
+          "name": "Astronaut Corki (Catseye)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "42030",
+          "num": 30,
+          "name": "Astronaut Corki (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "42031",
+          "num": 31,
+          "name": "Astronaut Corki (Emerald)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "42032",
+          "num": 32,
+          "name": "Astronaut Corki (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "42033",
+          "num": 33,
+          "name": "Astronaut Corki (Turquoise)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "42034",
+          "num": 34,
+          "name": "Astronaut Corki (Citrine)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "42035",
+          "num": 35,
+          "name": "Dragonwing Corki (Meteorite)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
           "id": "42036",
           "num": 36,
           "name": "Brick Toy Corki",
           "chromas": true
+        },
+        {
+          "id": "42037",
+          "num": 37,
+          "name": "Brick Toy Corki (Ruby)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "42038",
+          "num": 38,
+          "name": "Brick Toy Corki (Emerald)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "42039",
+          "num": 39,
+          "name": "Brick Toy Corki (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "42040",
+          "num": 40,
+          "name": "Brick Toy Corki (Sapphire)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "42041",
+          "num": 41,
+          "name": "Brick Toy Corki (Turquoise)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "42042",
+          "num": 42,
+          "name": "Brick Toy Corki (Amethyst)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "42043",
+          "num": 43,
+          "name": "Brick Toy Corki (Pearl)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "42044",
+          "num": 44,
+          "name": "Brick Toy Corki (Obsidian)",
+          "chromas": false,
+          "parentSkin": 36
         }
       ],
       "lore": "The yordle pilot Corki loves two things above all others: flying, and his glamorous mustache... though not necessarily in that order. After leaving Bandle City, he settled in Piltover and fell in love with the wondrous machines he found there. He dedicated himself to the development of flying contraptions, leading an aerial defense force of seasoned veterans known as the Screaming Yipsnakes. Calm under fire, Corki patrols the skies around his adopted home, and has never encountered a problem that a good missile barrage couldn't solve.",
@@ -102,7 +333,10 @@
         "Watch out for Corki's Missile Barrage. They deal splash damage, so you can get hit even when hiding behind minions.",
         "Corki is vulnerable after he uses his Valkyrie or Special Delivery, so try switching focus to him if he uses them to enter a fight."
       ],
-      "tags": ["Marksman", "Mage"],
+      "tags": [
+        "Marksman",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 8,
@@ -139,7 +373,11 @@
           "description": "Corki fires a flash bomb at a target location, dealing magic damage to enemies in the area. This attack additionally reveals units in the area for a duration.",
           "tooltip": "Corki lobs a bomb, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. The area and champions hit are revealed for {{ revealduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -147,23 +385,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 8.5, 8, 7.5, 7],
+          "cooldown": [
+            9,
+            8.5,
+            8,
+            7.5,
+            7
+          ],
           "cooldownBurn": "9/8.5/8/7.5/7",
-          "cost": [60, 65, 70, 75, 80],
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -181,7 +491,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [825, 825, 825, 825, 825],
+          "range": [
+            825,
+            825,
+            825,
+            825,
+            825
+          ],
           "rangeBurn": "825",
           "image": {
             "full": "PhosphorusBomb.png",
@@ -212,23 +528,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [20, 18, 16, 14, 12],
+          "cooldown": [
+            20,
+            18,
+            16,
+            14,
+            12
+          ],
           "cooldownBurn": "20/18/16/14/12",
-          "cost": [80, 85, 90, 95, 100],
+          "cost": [
+            80,
+            85,
+            90,
+            95,
+            100
+          ],
           "costBurn": "80/85/90/95/100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -246,7 +634,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "CarpetBomb.png",
@@ -277,23 +671,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 12, 12, 12, 12],
+          "cooldown": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
           "cooldownBurn": "12",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -311,7 +777,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "GGun.png",
@@ -330,27 +802,79 @@
           "description": "Corki fires a missile toward his target location that explodes on impact, dealing damage to enemies in an area. Corki stores missiles over time, up to a maximum. Every 3rd missile fired will be a Big One, dealing extra damage.",
           "tooltip": "Corki fires a missile that explodes on the first enemy hit, dealing <physicalDamage>{{ rsmallmissiledamage }} physical damage</physicalDamage> to surrounding enemies. Every third missile instead deals <physicalDamage>{{ rbigmissiledamage }} physical damage</physicalDamage>.<br /><br />This Ability has up to {{ maxammotooltip }} charges. Basic attacks against champions reduce the time between charges by <attention>{{ attackrefund }}</attention> seconds on hit.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}"]
+            "label": [
+              "Damage"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
           },
           "maxrank": 3,
-          "cooldown": [2, 2, 2],
+          "cooldown": [
+            2,
+            2,
+            2
+          ],
           "cooldownBurn": "2",
-          "cost": [35, 35, 35],
+          "cost": [
+            35,
+            35,
+            35
+          ],
           "costBurn": "35",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -368,7 +892,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "4",
-          "range": [1225, 1225, 1225],
+          "range": [
+            1225,
+            1225,
+            1225
+          ],
           "rangeBurn": "1225",
           "image": {
             "full": "MissileBarrage.png",

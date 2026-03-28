@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Garen": {
       "id": "Garen",
@@ -61,6 +61,27 @@
           "chromas": false
         },
         {
+          "id": "86007",
+          "num": 7,
+          "name": "Garen Noble Garnet",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
+          "id": "86008",
+          "num": 8,
+          "name": "Garen Noble Plum",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
+          "id": "86009",
+          "num": 9,
+          "name": "Garen Noble Ivory",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
           "id": "86010",
           "num": 10,
           "name": "Rogue Admiral Garen",
@@ -73,6 +94,13 @@
           "chromas": true
         },
         {
+          "id": "86012",
+          "num": 12,
+          "name": "Warring Kingdoms Garen (Golden)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
           "id": "86013",
           "num": 13,
           "name": "God-King Garen",
@@ -83,6 +111,55 @@
           "num": 14,
           "name": "Demacia Vice Garen",
           "chromas": true
+        },
+        {
+          "id": "86015",
+          "num": 15,
+          "name": "Demacia Vice Garen (Ruby)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "86016",
+          "num": 16,
+          "name": "Demacia Vice Garen (Pearl)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "86017",
+          "num": 17,
+          "name": "Demacia Vice Garen (Obsidian)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "86018",
+          "num": 18,
+          "name": "Demacia Vice Garen (Sapphire)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "86019",
+          "num": 19,
+          "name": "Demacia Vice Garen (Catseye)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "86020",
+          "num": 20,
+          "name": "Demacia Vice Garen (Amethyst)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "86021",
+          "num": 21,
+          "name": "Demacia Vice Garen (Neon Noir)",
+          "chromas": false,
+          "parentSkin": 14
         },
         {
           "id": "86022",
@@ -103,10 +180,129 @@
           "chromas": true
         },
         {
+          "id": "86025",
+          "num": 25,
+          "name": "Battle Academia Garen (Ruby)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "86026",
+          "num": 26,
+          "name": "Battle Academia Garen (Sapphire)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "86027",
+          "num": 27,
+          "name": "Battle Academia Garen (Citrine)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "86028",
+          "num": 28,
+          "name": "Battle Academia Garen (Turquoise)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "86029",
+          "num": 29,
+          "name": "Battle Academia Garen (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "86030",
+          "num": 30,
+          "name": "Battle Academia Garen (Pearl)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "86031",
+          "num": 31,
+          "name": "Battle Academia Garen (Emerald)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "86032",
+          "num": 32,
+          "name": "Battle Academia Garen (Sandstone)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
           "id": "86033",
           "num": 33,
           "name": "Mythmaker Garen",
           "chromas": true
+        },
+        {
+          "id": "86034",
+          "num": 34,
+          "name": "Mythmaker Garen (Ruby)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "86035",
+          "num": 35,
+          "name": "Mythmaker Garen (Catseye)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "86036",
+          "num": 36,
+          "name": "Mythmaker Garen (Emerald)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "86037",
+          "num": 37,
+          "name": "Mythmaker Garen (Amethyst)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "86038",
+          "num": 38,
+          "name": "Mythmaker Garen (Turquoise)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "86039",
+          "num": 39,
+          "name": "Mythmaker Garen (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "86040",
+          "num": 40,
+          "name": "Mythmaker Garen (Sapphire)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "86041",
+          "num": 41,
+          "name": "Mythmaker Garen (Pearl)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "86042",
+          "num": 42,
+          "name": "Mythmaker Garen (Gilded)",
+          "chromas": false,
+          "parentSkin": 33
         },
         {
           "id": "86044",
@@ -115,10 +311,73 @@
           "chromas": false
         },
         {
+          "id": "86045",
+          "num": 45,
+          "name": "Mythmaker Garen (Paragon)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
           "id": "86046",
           "num": 46,
           "name": "Visions of the Fallen Garen",
           "chromas": false
+        },
+        {
+          "id": "86047",
+          "num": 47,
+          "name": "Visions of the Fallen Garen (Ruby)",
+          "chromas": true,
+          "parentSkin": 46
+        },
+        {
+          "id": "86048",
+          "num": 48,
+          "name": "Visions of the Fallen Garen (Emerald)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "86049",
+          "num": 49,
+          "name": "Visions of the Fallen Garen (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "86050",
+          "num": 50,
+          "name": "Visions of the Fallen Garen (Sapphire)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "86051",
+          "num": 51,
+          "name": "Visions of the Fallen Garen (Pearl)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "86052",
+          "num": 52,
+          "name": "Visions of the Fallen Garen (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "86053",
+          "num": 53,
+          "name": "Visions of the Fallen Garen (Obsidian)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "86054",
+          "num": 54,
+          "name": "Visions of the Fallen Garen (Citrine)",
+          "chromas": false,
+          "parentSkin": 46
         }
       ],
       "lore": "A proud and noble warrior, Garen fights as one of the Dauntless Vanguard. He is popular among his fellows, and respected well enough by his enemies—not least as a scion of the prestigious Crownguard family, entrusted with defending Demacia and its ideals. Clad in magic-resistant armor and bearing a mighty broadsword, Garen stands ready to confront mages and sorcerers on the field of battle, in a veritable whirlwind of righteous steel.",
@@ -134,7 +393,10 @@
         "Be careful about attacking Garen in brush. It often will lead to taking full damage from Judgment.",
         "Judgment deals maximum damage when only hitting a single target. If getting out of its radius isn't possible, move through allied minions to reduce damage taken."
       ],
-      "tags": ["Fighter", "Tank"],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
       "partype": "None",
       "info": {
         "attack": 7,
@@ -171,30 +433,105 @@
           "description": "Garen gains a burst of Move Speed, breaking free of all slows affecting him. His next attack strikes a vital area of his foe, dealing bonus damage and silencing them.",
           "tooltip": "Garen removes all <status>Slowing</status> effects on him and gains <speed>{{ movementspeedamount*100 }}% Move Speed</speed> for {{ movementspeedduration }} second(s).<br /><br />His next Attack <status>Silences</status> for {{ silenceduration }} seconds and does <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Move Speed Duration"],
+            "label": [
+              "Damage",
+              "Move Speed Duration"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ movementspeedduration }} -> {{ movementspeeddurationNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 8, 8, 8, 8],
+          "cooldown": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
           "cooldownBurn": "8",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -212,7 +549,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [300, 300, 300, 300, 300],
+          "range": [
+            300,
+            300,
+            300,
+            300,
+            300
+          ],
           "rangeBurn": "300",
           "image": {
             "full": "GarenQ.png",
@@ -231,7 +574,11 @@
           "description": "Garen passively increases his Armor and Magic Resist by killing enemies. He may also activate this ability to give him a shield and tenacity for a brief moment followed by a lesser amount of damage reduction for a longer duration.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Garen has <scaleArmor>{{ resistsfortooltip }} bonus Armor</scaleArmor> and <scaleMR>{{ resistsfortooltip }} bonus Magic Resist</scaleMR>. Killing units permanently grants <attention>{{ resistgainonkilltooltip }} resists</attention>, up to a max of <attention>{{ resistmax }}</attention>.<br /><br /><spellActive>Active:</spellActive> Garen steels his courage for {{ drduration }} seconds, reducing incoming damage by {{ drpercent*100 }}%. He also gains <shield>{{ totalshield }} Shield</shield> and <slow>{{ upfronttenacity*100 }}% Tenacity</slow> for {{ upfrontduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Shield Amount", "Damage Reduction", "Cooldown"],
+            "label": [
+              "Shield Amount",
+              "Damage Reduction",
+              "Cooldown"
+            ],
             "effect": [
               "{{ baseshield }} -> {{ baseshieldNL }}",
               "{{ drpercent*100.000000 }}% -> {{ drpercentnl*100.000000 }}%",
@@ -239,23 +586,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [22, 19.5, 17, 14.5, 12],
+          "cooldown": [
+            22,
+            19.5,
+            17,
+            14.5,
+            12
+          ],
           "cooldownBurn": "22/19.5/17/14.5/12",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -273,7 +692,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [0, 0, 0, 0, 0],
+          "range": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "rangeBurn": "0",
           "image": {
             "full": "GarenW.png",
@@ -304,23 +729,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 8.25, 7.5, 6.75, 6],
+          "cooldown": [
+            9,
+            8.25,
+            7.5,
+            6.75,
+            6
+          ],
           "cooldownBurn": "9/8.25/7.5/6.75/6",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -338,7 +835,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [325, 325, 325, 325, 325],
+          "range": [
+            325,
+            325,
+            325,
+            325,
+            325
+          ],
           "rangeBurn": "325",
           "image": {
             "full": "GarenE.png",
@@ -357,7 +860,11 @@
           "description": "Garen calls upon the might of Demacia to attempt to execute an enemy champion.",
           "tooltip": "Garen calls upon the might of Demacia to slay his enemy, dealing <trueDamage>{{ basedamage }} plus {{ executedamage*100 }}% missing Health true damage</trueDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage", "Percent Missing Health Damage"],
+            "label": [
+              "Cooldown",
+              "Damage",
+              "Percent Missing Health Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -365,23 +872,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -399,7 +954,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [400, 400, 400],
+          "range": [
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "GarenR.png",

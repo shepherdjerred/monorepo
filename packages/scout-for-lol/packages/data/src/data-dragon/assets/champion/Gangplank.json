@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Gangplank": {
       "id": "Gangplank",
@@ -73,10 +73,87 @@
           "chromas": true
         },
         {
+          "id": "41009",
+          "num": 9,
+          "name": "Dreadnova Gangplank (Ruby)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "41010",
+          "num": 10,
+          "name": "Dreadnova Gangplank (Pearl)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "41011",
+          "num": 11,
+          "name": "Dreadnova Gangplank (Sapphire)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "41012",
+          "num": 12,
+          "name": "Dreadnova Gangplank (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "41013",
+          "num": 13,
+          "name": "Dreadnova Gangplank (Obsidian)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
           "id": "41014",
           "num": 14,
           "name": "Pool Party Gangplank",
           "chromas": true
+        },
+        {
+          "id": "41015",
+          "num": 15,
+          "name": "Pool Party Gangplank (Obsidian)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "41016",
+          "num": 16,
+          "name": "Pool Party Gangplank (Amethyst)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "41017",
+          "num": 17,
+          "name": "Pool Party Gangplank (Ruby)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "41018",
+          "num": 18,
+          "name": "Pool Party Gangplank (Citrine)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "41019",
+          "num": 19,
+          "name": "Pool Party Gangplank (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "41020",
+          "num": 20,
+          "name": "Pool Party Gangplank (Pearl)",
+          "chromas": false,
+          "parentSkin": 14
         },
         {
           "id": "41021",
@@ -85,16 +162,142 @@
           "chromas": true
         },
         {
+          "id": "41022",
+          "num": 22,
+          "name": "FPX Gangplank (Elite)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
           "id": "41023",
           "num": 23,
           "name": "Gangplank the Betrayer",
           "chromas": true
         },
         {
+          "id": "41024",
+          "num": 24,
+          "name": "Gangplank the Betrayer (Ruby)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "41025",
+          "num": 25,
+          "name": "Gangplank the Betrayer (Catseye)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "41026",
+          "num": 26,
+          "name": "Gangplank the Betrayer (Emerald)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "41027",
+          "num": 27,
+          "name": "Gangplank the Betrayer (Turquoise)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "41028",
+          "num": 28,
+          "name": "Gangplank the Betrayer (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "41029",
+          "num": 29,
+          "name": "Gangplank the Betrayer (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "41030",
+          "num": 30,
+          "name": "Gangplank the Betrayer (Pearl)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "41031",
+          "num": 31,
+          "name": "Gangplank the Betrayer (Obsidian)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "41032",
+          "num": 32,
+          "name": "Dreadnova Gangplank (Rogue)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
           "id": "41033",
           "num": 33,
           "name": "PROJECT: Gangplank",
           "chromas": true
+        },
+        {
+          "id": "41034",
+          "num": 34,
+          "name": "PROJECT: Gangplank (Ruby)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "41035",
+          "num": 35,
+          "name": "PROJECT: Gangplank (Citrine)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "41036",
+          "num": 36,
+          "name": "PROJECT: Gangplank (Peridot)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "41037",
+          "num": 37,
+          "name": "PROJECT: Gangplank (Sapphire)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "41038",
+          "num": 38,
+          "name": "PROJECT: Gangplank (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "41039",
+          "num": 39,
+          "name": "PROJECT: Gangplank (Turquoise)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "41040",
+          "num": 40,
+          "name": "PROJECT: Gangplank (Amethyst)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "41041",
+          "num": 41,
+          "name": "PROJECT: Gangplank (Pearl)",
+          "chromas": false,
+          "parentSkin": 33
         }
       ],
       "lore": "As unpredictable as he is brutal, the dethroned reaver king Gangplank is feared far and wide. Once, he ruled the port city of Bilgewater, and while his reign is over, there are those who believe this has only made him more dangerous. Gangplank would see Bilgewater bathed in blood once more before letting someone else take it—and now with pistol, cutlass, and barrels of gunpowder, he is determined to reclaim what he has lost.",
@@ -108,7 +311,9 @@
         "Parrrley deals a high amount of physical damage. Items that grant Armor can help if an enemy Gangplank is doing well.",
         "Once Gangplank reaches level 6, watch out for his global-range ultimate, Cannon Barrage!"
       ],
-      "tags": ["Fighter"],
+      "tags": [
+        "Fighter"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 7,
@@ -159,23 +364,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [4.5, 4.5, 4.5, 4.5, 4.5],
+          "cooldown": [
+            4.5,
+            4.5,
+            4.5,
+            4.5,
+            4.5
+          ],
           "cooldownBurn": "4.5",
-          "cost": [50, 45, 40, 35, 30],
+          "cost": [
+            50,
+            45,
+            40,
+            35,
+            30
+          ],
           "costBurn": "50/45/40/35/30",
           "datavalues": {},
           "effect": [
             null,
-            [10, 40, 70, 100, 130],
-            [3, 4, 5, 6, 7],
-            [0, 0, 0, 0, 0],
-            [500, 500, 500, 500, 500],
-            [4, 5, 6, 7, 8],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              10,
+              40,
+              70,
+              100,
+              130
+            ],
+            [
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              500,
+              500,
+              500,
+              500,
+              500
+            ],
+            [
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -193,7 +470,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [625, 625, 625, 625, 625],
+          "range": [
+            625,
+            625,
+            625,
+            625,
+            625
+          ],
           "rangeBurn": "625",
           "image": {
             "full": "GangplankQWrapper.png",
@@ -212,7 +495,11 @@
           "description": "Eats citrus to cure crowd control effects and restore Health.",
           "tooltip": "Gangplank consumes a large amount of citrus fruit, removing all <status>Disabling</status> effects and restoring <healing>{{ basehealth }} plus {{ e2 }}% missing Health</healing>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Healing", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Healing",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -220,23 +507,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [22, 20, 18, 16, 14],
+          "cooldown": [
+            22,
+            20,
+            18,
+            16,
+            14
+          ],
           "cooldownBurn": "22/20/18/16/14",
-          "cost": [60, 70, 80, 90, 100],
+          "cost": [
+            60,
+            70,
+            80,
+            90,
+            100
+          ],
           "costBurn": "60/70/80/90/100",
           "datavalues": {},
           "effect": [
             null,
-            [45, 70, 95, 120, 145],
-            [13, 13, 13, 13, 13],
-            [0.25, 0.25, 0.25, 0.25, 0.25],
-            [200, 200, 200, 200, 200],
-            [30, 40, 50, 60, 70],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              45,
+              70,
+              95,
+              120,
+              145
+            ],
+            [
+              13,
+              13,
+              13,
+              13,
+              13
+            ],
+            [
+              0.25,
+              0.25,
+              0.25,
+              0.25,
+              0.25
+            ],
+            [
+              200,
+              200,
+              200,
+              200,
+              200
+            ],
+            [
+              30,
+              40,
+              50,
+              60,
+              70
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -254,7 +613,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400, 400, 400],
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "GangplankW.png",
@@ -287,23 +652,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [0, 0, 0, 0, 0],
+          "cooldown": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "cooldownBurn": "0",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [3, 3, 4, 4, 5],
-            [2, 2, 2, 2, 2],
-            [75, 95, 115, 135, 155],
-            [40, 50, 60, 70, 80],
-            [25, 25, 25, 25, 25],
-            [2, 2, 2, 2, 2],
-            [10, 10, 10, 10, 10],
-            [100, 100, 100, 100, 100],
-            [0.5, 0.5, 0.5, 0.5, 0.5],
-            [40, 40, 40, 40, 40]
+            [
+              3,
+              3,
+              4,
+              4,
+              5
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              75,
+              95,
+              115,
+              135,
+              155
+            ],
+            [
+              40,
+              50,
+              60,
+              70,
+              80
+            ],
+            [
+              25,
+              25,
+              25,
+              25,
+              25
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              10,
+              10,
+              10,
+              10,
+              10
+            ],
+            [
+              100,
+              100,
+              100,
+              100,
+              100
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              40,
+              40,
+              40,
+              40,
+              40
+            ]
           ],
           "effectBurn": [
             null,
@@ -321,7 +758,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "3",
-          "range": [1000, 1000, 1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "GangplankE.png",
@@ -340,30 +783,81 @@
           "description": "Gangplank signals his ship to bombard an area, slowing and damaging enemies.",
           "tooltip": "Gangplank signals his ship to fire {{ totalwavestooltip }} waves of cannonballs anywhere on the map over {{ zoneduration }} seconds. Each wave <status>Slows</status> by {{ slowpercent }}% for {{ slowduration }} seconds and deals <magicDamage>{{ onewavedamage }} magic damage</magicDamage>. Maximum damage: {{ totaldamagetooltip }}<br /><br />This Ability can be upgraded in the shop via <spellName>Parrrley</spellName>.<br /><br /><spellName>Fire at Will</spellName>: Fires 6 additional waves of cannonballs.<br /><spellName>Death's Daughter</spellName>: Fires a Mega-Cannonball that deals <trueDamage>{{ deathsdaughterdamage }} true damage</trueDamage> and <status>Slows</status> by {{ deathsdaughterslow }}% for {{ deathsdaughterslowduration }} second.<br /><spellName>Raise Morale</spellName>: Allies inside Cannon Barrage gain <speed>{{ raisemoralehaste }}% Move Speed</speed> for {{ raisemoralehasteduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage Per Wave", "Cooldown"],
+            "label": [
+              "Damage Per Wave",
+              "Cooldown"
+            ],
             "effect": [
               "{{ damageperwave }} -> {{ damageperwaveNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [160, 140, 120],
+          "cooldown": [
+            160,
+            140,
+            120
+          ],
           "cooldownBurn": "160/140/120",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [1.5, 0.5, 0.5],
-            [0, 0, 0],
-            [300, 300, 300],
-            [75, 75, 75],
-            [1, 1, 1],
-            [40, 40, 40]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1.5,
+              0.5,
+              0.5
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              300,
+              300,
+              300
+            ],
+            [
+              75,
+              75,
+              75
+            ],
+            [
+              1,
+              1,
+              1
+            ],
+            [
+              40,
+              40,
+              40
+            ]
           ],
           "effectBurn": [
             null,
@@ -381,7 +875,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [30000, 30000, 30000],
+          "range": [
+            30000,
+            30000,
+            30000
+          ],
           "rangeBurn": "30000",
           "image": {
             "full": "GangplankR.png",

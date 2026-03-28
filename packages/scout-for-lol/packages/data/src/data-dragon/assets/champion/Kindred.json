@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Kindred": {
       "id": "Kindred",
@@ -43,10 +43,129 @@
           "chromas": true
         },
         {
+          "id": "203004",
+          "num": 4,
+          "name": "Spirit Blossom Kindred (Ruby)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "203005",
+          "num": 5,
+          "name": "Spirit Blossom Kindred (Catseye)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "203006",
+          "num": 6,
+          "name": "Spirit Blossom Kindred (Peridot)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "203007",
+          "num": 7,
+          "name": "Spirit Blossom Kindred (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "203008",
+          "num": 8,
+          "name": "Spirit Blossom Kindred (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "203009",
+          "num": 9,
+          "name": "Spirit Blossom Kindred (Obsidian)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "203010",
+          "num": 10,
+          "name": "Spirit Blossom Kindred (Sapphire)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "203011",
+          "num": 11,
+          "name": "Spirit Blossom Kindred (Night Blossom)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
           "id": "203012",
           "num": 12,
           "name": "Porcelain Kindred",
           "chromas": true
+        },
+        {
+          "id": "203013",
+          "num": 13,
+          "name": "Porcelain Kindred (Ruby)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "203014",
+          "num": 14,
+          "name": "Porcelain Kindred (Sapphire)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "203015",
+          "num": 15,
+          "name": "Porcelain Kindred (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "203016",
+          "num": 16,
+          "name": "Porcelain Kindred (Catseye)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "203017",
+          "num": 17,
+          "name": "Porcelain Kindred (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "203018",
+          "num": 18,
+          "name": "Porcelain Kindred (Emerald)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "203019",
+          "num": 19,
+          "name": "Porcelain Kindred (Obsidian)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "203020",
+          "num": 20,
+          "name": "Porcelain Kindred (Pearl)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "203021",
+          "num": 21,
+          "name": "Porcelain Kindred (Golden Tiger)",
+          "chromas": false,
+          "parentSkin": 12
         },
         {
           "id": "203022",
@@ -61,6 +180,69 @@
           "chromas": true
         },
         {
+          "id": "203024",
+          "num": 24,
+          "name": "Woof and Lamb Kindred (Ruby)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "203025",
+          "num": 25,
+          "name": "Woof and Lamb Kindred (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "203026",
+          "num": 26,
+          "name": "Woof and Lamb Kindred (Sapphire)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "203027",
+          "num": 27,
+          "name": "Woof and Lamb Kindred (Citrine)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "203028",
+          "num": 28,
+          "name": "Woof and Lamb Kindred (Turquoise)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "203029",
+          "num": 29,
+          "name": "Woof and Lamb Kindred (Catseye)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "203030",
+          "num": 30,
+          "name": "Woof and Lamb Kindred (Obsidian)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "203031",
+          "num": 31,
+          "name": "Woof and Lamb Kindred (Granite)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "203032",
+          "num": 32,
+          "name": "DRX Kindred (Elite)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
           "id": "203033",
           "num": 33,
           "name": "Prestige Porcelain Kindred",
@@ -71,6 +253,62 @@
           "num": 34,
           "name": "Chosen of the Wolf Kindred",
           "chromas": true
+        },
+        {
+          "id": "203035",
+          "num": 35,
+          "name": "Chosen of the Wolf Kindred (Ruby)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "203036",
+          "num": 36,
+          "name": "Chosen of the Wolf Kindred (Catseye)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "203037",
+          "num": 37,
+          "name": "Chosen of the Wolf Kindred (Emerald)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "203038",
+          "num": 38,
+          "name": "Chosen of the Wolf Kindred (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "203039",
+          "num": 39,
+          "name": "Chosen of the Wolf Kindred (Turquoise)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "203040",
+          "num": 40,
+          "name": "Chosen of the Wolf Kindred (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "203041",
+          "num": 41,
+          "name": "Chosen of the Wolf Kindred (Obsidian)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "203042",
+          "num": 42,
+          "name": "Chosen of the Wolf Kindred (Pearl)",
+          "chromas": false,
+          "parentSkin": 34
         }
       ],
       "lore": "Separate, but never parted, Kindred represents the twin essences of death. Lamb's bow offers a swift release from the mortal realm for those who accept their fate. Wolf hunts down those who run from their end, delivering violent finality within his crushing jaws. Though interpretations of Kindred's nature vary across Runeterra, every mortal must choose the true face of their death.",
@@ -85,7 +323,9 @@
         "Clear the Hunts Wolf activates on jungle camps to slow down Kindred's damage output.",
         "When Kindred uses Lamb's Respite get inside, it stops all champions from dying."
       ],
-      "tags": ["Marksman"],
+      "tags": [
+        "Marksman"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 8,
@@ -122,27 +362,105 @@
           "description": "Kindred tumbles and shoots up to three arrows at nearby targets.",
           "tooltip": "Kindred vaults, firing an arrow at up to 3 enemies, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and gaining <attackSpeed>{{ totalqattackspeed }} Attack Speed</attackSpeed> for {{ e8 }} seconds.<br /><br />While inside of <spellName>Wolf's Frenzy</spellName>, this Ability's Cooldown is reduced to {{ e4 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown in Wolf's Frenzy"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ e4 }} -> {{ e4NL }}"]
+            "label": [
+              "Damage",
+              "Cooldown in Wolf's Frenzy"
+            ],
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ e4 }} -> {{ e4NL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [9, 9, 9, 9, 9],
+          "cooldown": [
+            9,
+            9,
+            9,
+            9,
+            9
+          ],
           "cooldownBurn": "9",
-          "cost": [35, 35, 35, 35, 35],
+          "cost": [
+            35,
+            35,
+            35,
+            35,
+            35
+          ],
           "costBurn": "35",
           "datavalues": {},
           "effect": [
             null,
-            [40, 65, 90, 115, 140],
-            [0, 0, 0, 0, 0],
-            [500, 500, 500, 500, 500],
-            [4, 3.5, 3, 2.5, 2],
-            [100, 100, 100, 100, 100],
-            [12, 12, 12, 12, 12],
-            [0.35, 0.35, 0.35, 0.35, 0.35],
-            [4, 4, 4, 4, 4],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              40,
+              65,
+              90,
+              115,
+              140
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              500,
+              500,
+              500,
+              500,
+              500
+            ],
+            [
+              4,
+              3.5,
+              3,
+              2.5,
+              2
+            ],
+            [
+              100,
+              100,
+              100,
+              100,
+              100
+            ],
+            [
+              12,
+              12,
+              12,
+              12,
+              12
+            ],
+            [
+              0.35,
+              0.35,
+              0.35,
+              0.35,
+              0.35
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -160,7 +478,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [340, 340, 340, 340, 340],
+          "range": [
+            340,
+            340,
+            340,
+            340,
+            340
+          ],
           "rangeBurn": "340",
           "image": {
             "full": "KindredQ.png",
@@ -179,30 +503,105 @@
           "description": "Wolf enrages and attacks enemies around him.  Lamb passively gains stacks by moving and attacking. When fully charged, Lamb's next attack restores health.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Kindred gains stacks as they move and attack. At 100 stacks, Kindred's next Attack restores up to <healing>{{ attackheal }} Health</healing> based on their missing Health.<br /><br /><spellActive>Active:</spellActive> Kindred claims a territory, ordering Wolf to bite at the last enemy Lamb Attacked. Wolf's bites deal <magicDamage>{{ basewolfdamage }}</magicDamage> plus <magicDamage>{{ percentwolfdamage }} current Health magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e5 }} -> {{ e5NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [18, 17, 16, 15, 14],
+          "cooldown": [
+            18,
+            17,
+            16,
+            15,
+            14
+          ],
           "cooldownBurn": "18/17/16/15/14",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [40, 45, 50, 55, 60],
-            [1, 1, 1, 1, 1],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [8.5, 8.5, 8.5, 8.5, 8.5],
-            [25, 30, 35, 40, 45],
-            [800, 800, 800, 800, 800],
-            [0.5, 0.5, 0.5, 0.5, 0.5],
-            [0.5, 0.5, 0.5, 0.5, 0.5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              40,
+              45,
+              50,
+              55,
+              60
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              8.5,
+              8.5,
+              8.5,
+              8.5,
+              8.5
+            ],
+            [
+              25,
+              30,
+              35,
+              40,
+              45
+            ],
+            [
+              800,
+              800,
+              800,
+              800,
+              800
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -220,7 +619,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [560, 560, 560, 560, 560],
+          "range": [
+            560,
+            560,
+            560,
+            560,
+            560
+          ],
           "rangeBurn": "560",
           "image": {
             "full": "KindredW.png",
@@ -239,30 +644,105 @@
           "description": "Lamb fires a carefully placed shot, slowing the target. If Lamb attacks the target two more times, her third attack instead directs Wolf to pounce on the enemy, savaging them for massive damage.",
           "tooltip": "Kindred weakens an enemy, <status>Slowing</status> them by {{ totalslow }}% for {{ slowduration }} second.<br /><br />Kindred's third Attack against the target within {{ totalduration }} seconds of each other directs Wolf to pounce on the enemy, dealing an additional <physicalDamage>{{ basebitedamage }}</physicalDamage> plus <physicalDamage>{{ percentbitedamage }} missing Health physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 12.5, 11, 9.5, 8],
+          "cooldown": [
+            14,
+            12.5,
+            11,
+            9.5,
+            8
+          ],
           "cooldownBurn": "14/12.5/11/9.5/8",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -280,7 +760,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [500, 500, 500, 500, 500],
+          "range": [
+            500,
+            500,
+            500,
+            500,
+            500
+          ],
           "rangeBurn": "500",
           "image": {
             "full": "KindredEWrapper.png",
@@ -299,30 +785,81 @@
           "description": "Lamb grants all living things inside a zone a respite from death. Until the effect ends, nothing can die. At the end, units are healed.",
           "tooltip": "Kindred blesses the ground for {{ e2 }} seconds, allowing no unit, ally, enemy, or neutral to die while inside. Upon reaching 10% Health, units can't be damaged or healed while still inside the zone.<br /><br />When the blessing ends, all units inside heal for <healing>{{ e1 }} Health</healing>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Healing", "Cooldown"],
+            "label": [
+              "Healing",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [160, 140, 120],
+          "cooldown": [
+            160,
+            140,
+            120
+          ],
           "cooldownBurn": "160/140/120",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [225, 300, 375],
-            [4, 4, 4],
-            [530, 530, 530],
-            [400, 400, 400],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              225,
+              300,
+              375
+            ],
+            [
+              4,
+              4,
+              4
+            ],
+            [
+              530,
+              530,
+              530
+            ],
+            [
+              400,
+              400,
+              400
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -340,7 +877,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [500, 500, 500],
+          "range": [
+            500,
+            500,
+            500
+          ],
           "rangeBurn": "500",
           "image": {
             "full": "KindredR.png",

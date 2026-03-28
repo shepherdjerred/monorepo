@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Yuumi": {
       "id": "Yuumi",
@@ -31,10 +31,122 @@
           "chromas": true
         },
         {
+          "id": "350002",
+          "num": 2,
+          "name": "Battle Principal Yuumi (Ruby)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "350003",
+          "num": 3,
+          "name": "Battle Principal Yuumi (Citrine)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "350004",
+          "num": 4,
+          "name": "Battle Principal Yuumi (Granite)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "350005",
+          "num": 5,
+          "name": "Battle Principal Yuumi (Sapphire)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "350006",
+          "num": 6,
+          "name": "Battle Principal Yuumi (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "350007",
+          "num": 7,
+          "name": "Battle Principal Yuumi (Pearl)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "350008",
+          "num": 8,
+          "name": "Battle Principal Yuumi (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "350009",
+          "num": 9,
+          "name": "Battle Principal Yuumi (Obsidian)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "350010",
+          "num": 10,
+          "name": "Battle Principal Yuumi (Formal)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
           "id": "350011",
           "num": 11,
           "name": "Heartseeker Yuumi",
           "chromas": true
+        },
+        {
+          "id": "350012",
+          "num": 12,
+          "name": "Heartseeker Yuumi (Ruby)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "350013",
+          "num": 13,
+          "name": "Heartseeker Yuumi (Citrine)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "350014",
+          "num": 14,
+          "name": "Heartseeker Yuumi (Catseye)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "350015",
+          "num": 15,
+          "name": "Heartseeker Yuumi (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "350016",
+          "num": 16,
+          "name": "Heartseeker Yuumi (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "350017",
+          "num": 17,
+          "name": "Heartseeker Yuumi (Pearl)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "350018",
+          "num": 18,
+          "name": "Heartseeker Yuumi (Granite)",
+          "chromas": false,
+          "parentSkin": 11
         },
         {
           "id": "350019",
@@ -43,10 +155,122 @@
           "chromas": true
         },
         {
+          "id": "350020",
+          "num": 20,
+          "name": "Yuubee (Ruby)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "350021",
+          "num": 21,
+          "name": "Yuubee (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "350022",
+          "num": 22,
+          "name": "Yuubee (Emerald)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "350023",
+          "num": 23,
+          "name": "Yuubee (Sapphire)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "350024",
+          "num": 24,
+          "name": "Yuubee (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "350025",
+          "num": 25,
+          "name": "Yuubee (Pearl)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "350026",
+          "num": 26,
+          "name": "Yuubee (Obsidian)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "350027",
+          "num": 27,
+          "name": "Yuubee (Rainbow)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
           "id": "350028",
           "num": 28,
           "name": "Bewitching Yuumi",
           "chromas": true
+        },
+        {
+          "id": "350029",
+          "num": 29,
+          "name": "Bewitching Yuumi (Ruby)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "350030",
+          "num": 30,
+          "name": "Bewitching Yuumi (Sandstone)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "350031",
+          "num": 31,
+          "name": "Bewitching Yuumi (Emerald)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "350032",
+          "num": 32,
+          "name": "Bewitching Yuumi (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "350033",
+          "num": 33,
+          "name": "Bewitching Yuumi (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "350034",
+          "num": 34,
+          "name": "Bewitching Yuumi (Pearl)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "350035",
+          "num": 35,
+          "name": "Bewitching Yuumi (Obsidian)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "350036",
+          "num": 36,
+          "name": "Bewitching Yuumi (Citrine)",
+          "chromas": false,
+          "parentSkin": 28
         },
         {
           "id": "350037",
@@ -55,10 +279,80 @@
           "chromas": true
         },
         {
+          "id": "350038",
+          "num": 38,
+          "name": "EDG Yuumi (Elite)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
           "id": "350039",
           "num": 39,
           "name": "Shiba Yuumi",
           "chromas": true
+        },
+        {
+          "id": "350040",
+          "num": 40,
+          "name": "Shiba Yuumi (Ruby)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "350041",
+          "num": 41,
+          "name": "Shiba Yuumi (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "350042",
+          "num": 42,
+          "name": "Shiba Yuumi (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "350043",
+          "num": 43,
+          "name": "Shiba Yuumi (Turquoise)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "350044",
+          "num": 44,
+          "name": "Shiba Yuumi (Amethyst)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "350045",
+          "num": 45,
+          "name": "Shiba Yuumi (Emerald)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "350046",
+          "num": 46,
+          "name": "Shiba Yuumi (Obsidian)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "350047",
+          "num": 47,
+          "name": "Shiba Yuumi (Pearl)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "350048",
+          "num": 48,
+          "name": "EDG Yuumi (Tenfold Triumph)",
+          "chromas": false,
+          "parentSkin": 37
         },
         {
           "id": "350049",
@@ -73,23 +367,208 @@
           "chromas": false
         },
         {
+          "id": "350051",
+          "num": 51,
+          "name": "Cyber Cat Yuumi (Ruby)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "350052",
+          "num": 52,
+          "name": "Cyber Cat Yuumi (Emerald)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "350053",
+          "num": 53,
+          "name": "Cyber Cat Yuumi (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "350054",
+          "num": 54,
+          "name": "Cyber Cat Yuumi (Catseye)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "350055",
+          "num": 55,
+          "name": "Cyber Cat Yuumi (Amethyst)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "350056",
+          "num": 56,
+          "name": "Cyber Cat Yuumi (Meteorite)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "350057",
+          "num": 57,
+          "name": "Cyber Cat Yuumi (Pearl)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "350058",
+          "num": 58,
+          "name": "Cyber Cat Yuumi (Turquoise)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "350059",
+          "num": 59,
+          "name": "Cyber Cat Yuumi (Nightwire)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "350060",
+          "num": 60,
+          "name": "Cyber Cat Yuumi (Override)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
           "id": "350061",
           "num": 61,
           "name": "Nightbringer Yuumi",
           "chromas": true
         },
         {
+          "id": "350062",
+          "num": 62,
+          "name": "Nightbringer Yuumi (Ruby)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "350063",
+          "num": 63,
+          "name": "Nightbringer Yuumi (Catseye)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "350064",
+          "num": 64,
+          "name": "Nightbringer Yuumi (Emerald)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "350065",
+          "num": 65,
+          "name": "Nightbringer Yuumi (Sapphire)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "350066",
+          "num": 66,
+          "name": "Nightbringer Yuumi (Turquoise)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "350067",
+          "num": 67,
+          "name": "Nightbringer Yuumi (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "350068",
+          "num": 68,
+          "name": "Nightbringer Yuumi (Pearl)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "350069",
+          "num": 69,
+          "name": "Nightbringer Yuumi (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
           "id": "350070",
           "num": 70,
           "name": "Firecracker Yuumi",
           "chromas": true
+        },
+        {
+          "id": "350071",
+          "num": 71,
+          "name": "Firecracker Yuumi (Ruby)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "350072",
+          "num": 72,
+          "name": "Firecracker Yuumi (Catseye)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "350073",
+          "num": 73,
+          "name": "Firecracker Yuumi (Emerald)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "350074",
+          "num": 74,
+          "name": "Firecracker Yuumi (Sapphire)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "350075",
+          "num": 75,
+          "name": "Firecracker Yuumi (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "350076",
+          "num": 76,
+          "name": "Firecracker Yuumi (Obsidian)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "350077",
+          "num": 77,
+          "name": "Firecracker Yuumi (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "350078",
+          "num": 78,
+          "name": "Firecracker Yuumi (Pearl)",
+          "chromas": false,
+          "parentSkin": 70
         }
       ],
       "lore": "A magical cat from Bandle City, Yuumi was once the familiar of a yordle enchantress, Norra. When her master mysteriously disappeared, Yuumi became the Keeper of Norra's sentient Book of Thresholds, traveling through portals in its pages to search for her. Yearning for affection, Yuumi seeks friendly companions to partner with on her journey, protecting them with luminous shields and fierce resolve. While Book strives to keep her on task, Yuumi is often drawn to worldly comforts, such as naps and fish. In the end, however, she always returns to her quest to find her friend.",
       "blurb": "A magical cat from Bandle City, Yuumi was once the familiar of a yordle enchantress, Norra. When her master mysteriously disappeared, Yuumi became the Keeper of Norra's sentient Book of Thresholds, traveling through portals in its pages to search for...",
       "allytips": [],
       "enemytips": [],
-      "tags": ["Support", "Mage"],
+      "tags": [
+        "Support",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 5,
@@ -142,23 +621,107 @@
             ]
           },
           "maxrank": 6,
-          "cooldown": [6.5, 6.5, 6.5, 6.5, 6.5, 6.5],
+          "cooldown": [
+            6.5,
+            6.5,
+            6.5,
+            6.5,
+            6.5,
+            6.5
+          ],
           "cooldownBurn": "6.5",
-          "cost": [50, 55, 60, 65, 70, 75],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70,
+            75
+          ],
           "costBurn": "50/55/60/65/70/75",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -176,7 +739,14 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [25000, 25000, 25000, 25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000,
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "YuumiQ.png",
@@ -195,30 +765,105 @@
           "description": "Yuumi dashes to a target ally, becoming untargetable from everything except turrets. While on her Best Friend, she gains Heal & Shield Power and grants her Ally On-Hit healing.",
           "tooltip": "<spellPassive>Passive:</spellPassive> While on her <keywordMajor>Best Friend</keywordMajor>, Yuumi gains an additional <keywordMajor>{{ healandshieldpower*100 }}% Heal & Shield Power</keywordMajor> and her ally also restores <healing>{{ healthonhit }} health</healing> <OnHit>On-Hit %i:OnHit%</OnHit>.<br /><br /><spellActive>Active:</spellActive> Yuumi dashes to an ally champion and <keywordMajor>Attaches</keywordMajor> to them. While Yuumi is <keywordMajor>Attached</keywordMajor>, she follows her partner's movement and is Untargetable except from towers.<br /><br /><status>Immobilizing</status> effects on Yuumi place this Ability on a {{ ccattachlockout }} second Cooldown.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["On-Hit Healing", "Bonus Heal & Shield Power"],
+            "label": [
+              "On-Hit Healing",
+              "Bonus Heal & Shield Power"
+            ],
             "effect": [
               "{{ basehealthonhit }} -> {{ basehealthonhitNL }}",
               "{{ healandshieldpower*100.000000 }}% -> {{ healandshieldpowernl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [0, 0, 0, 0, 0],
+          "cooldown": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "cooldownBurn": "0",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -236,7 +881,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [25000, 25000, 25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "YuumiW.png",
@@ -269,23 +920,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 10, 10, 10, 10],
+          "cooldown": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
           "cooldownBurn": "10",
-          "cost": [80, 90, 100, 110, 120],
+          "cost": [
+            80,
+            90,
+            100,
+            110,
+            120
+          ],
           "costBurn": "80/90/100/110/120",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -303,7 +1026,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "0",
-          "range": [25000, 25000, 25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "YuumiE.png",
@@ -334,23 +1063,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 110, 100],
+          "cooldown": [
+            120,
+            110,
+            100
+          ],
           "cooldownBurn": "120/110/100",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -368,7 +1145,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1100, 1100, 1100],
+          "range": [
+            1100,
+            1100,
+            1100
+          ],
           "rangeBurn": "1100",
           "image": {
             "full": "YuumiR.png",

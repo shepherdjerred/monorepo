@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Morgana": {
       "id": "Morgana",
@@ -61,6 +61,27 @@
           "chromas": false
         },
         {
+          "id": "25007",
+          "num": 7,
+          "name": "Morgana Haunt Toxic",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
+          "id": "25008",
+          "num": 8,
+          "name": "Morgana Haunt Pale",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
+          "id": "25009",
+          "num": 9,
+          "name": "Morgana Haunt Ebony",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
           "id": "25010",
           "num": 10,
           "name": "Lunar Wraith Morgana",
@@ -73,10 +94,101 @@
           "chromas": true
         },
         {
+          "id": "25012",
+          "num": 12,
+          "name": "Blackthorn Morgana (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "25013",
+          "num": 13,
+          "name": "Blackthorn Morgana (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "25014",
+          "num": 14,
+          "name": "Blackthorn Morgana (Citrine)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "25015",
+          "num": 15,
+          "name": "Blackthorn Morgana (Pearl)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "25016",
+          "num": 16,
+          "name": "Blackthorn Morgana (Obsidian)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
           "id": "25017",
           "num": 17,
           "name": "Majestic Empress Morgana",
           "chromas": true
+        },
+        {
+          "id": "25018",
+          "num": 18,
+          "name": "Majestic Empress Morgana (Ruby)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "25019",
+          "num": 19,
+          "name": "Majestic Empress Morgana (Catseye)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "25020",
+          "num": 20,
+          "name": "Majestic Empress Morgana (Sapphire)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "25021",
+          "num": 21,
+          "name": "Majestic Empress Morgana (Turquoise)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "25022",
+          "num": 22,
+          "name": "Majestic Empress Morgana (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "25023",
+          "num": 23,
+          "name": "Majestic Empress Morgana (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "25024",
+          "num": 24,
+          "name": "Majestic Empress Morgana (Heavenly Crane)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "25025",
+          "num": 25,
+          "name": "Majestic Empress Morgana (Meteorite)",
+          "chromas": false,
+          "parentSkin": 17
         },
         {
           "id": "25026",
@@ -85,10 +197,101 @@
           "chromas": true
         },
         {
+          "id": "25027",
+          "num": 27,
+          "name": "Coven Morgana (Ruby)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "25028",
+          "num": 28,
+          "name": "Coven Morgana (Pearl)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "25029",
+          "num": 29,
+          "name": "Coven Morgana (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "25030",
+          "num": 30,
+          "name": "Coven Morgana (Obsidian)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "25031",
+          "num": 31,
+          "name": "Bewitching Morgana (Ruby)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "25032",
+          "num": 32,
+          "name": "Bewitching Morgana (Citrine)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "25033",
+          "num": 33,
+          "name": "Bewitching Morgana (Turquoise)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "25034",
+          "num": 34,
+          "name": "Bewitching Morgana (Sapphire)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "25035",
+          "num": 35,
+          "name": "Bewitching Morgana (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "25036",
+          "num": 36,
+          "name": "Bewitching Morgana (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "25037",
+          "num": 37,
+          "name": "Bewitching Morgana (Pearl)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "25038",
+          "num": 38,
+          "name": "Bewitching Morgana (Meteorite)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
           "id": "25039",
           "num": 39,
           "name": "Dawnbringer Morgana",
           "chromas": true
+        },
+        {
+          "id": "25040",
+          "num": 40,
+          "name": "Coven Morgana (Dark Ritual)",
+          "chromas": false,
+          "parentSkin": 26
         },
         {
           "id": "25041",
@@ -97,10 +300,129 @@
           "chromas": false
         },
         {
+          "id": "25042",
+          "num": 42,
+          "name": "Dawnbringer Morgana (Ruby)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "25043",
+          "num": 43,
+          "name": "Dawnbringer Morgana (Catseye)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "25044",
+          "num": 44,
+          "name": "Dawnbringer Morgana (Emerald)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "25045",
+          "num": 45,
+          "name": "Dawnbringer Morgana (Amethyst)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "25046",
+          "num": 46,
+          "name": "Dawnbringer Morgana (Obsidian)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "25047",
+          "num": 47,
+          "name": "Dawnbringer Morgana (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "25048",
+          "num": 48,
+          "name": "Dawnbringer Morgana (Pearl)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "25049",
+          "num": 49,
+          "name": "Dawnbringer Morgana (Lifebringer)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
           "id": "25050",
           "num": 50,
           "name": "Star Nemesis Morgana",
           "chromas": true
+        },
+        {
+          "id": "25051",
+          "num": 51,
+          "name": "Star Nemesis Morgana (Ruby)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "25052",
+          "num": 52,
+          "name": "Star Nemesis Morgana (Catseye)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "25053",
+          "num": 53,
+          "name": "Star Nemesis Morgana (Peridot)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "25054",
+          "num": 54,
+          "name": "Star Nemesis Morgana (Turquoise)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "25055",
+          "num": 55,
+          "name": "Star Nemesis Morgana (Sapphire)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "25056",
+          "num": 56,
+          "name": "Star Nemesis Morgana (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "25057",
+          "num": 57,
+          "name": "Star Nemesis Morgana (Emerald)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "25058",
+          "num": 58,
+          "name": "Star Nemesis Morgana (Amethyst)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "25059",
+          "num": 59,
+          "name": "Star Nemesis Morgana (Wicked)",
+          "chromas": false,
+          "parentSkin": 50
         },
         {
           "id": "25060",
@@ -109,10 +431,129 @@
           "chromas": true
         },
         {
+          "id": "25061",
+          "num": 61,
+          "name": "Snow Moon Morgana (Ruby)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "25062",
+          "num": 62,
+          "name": "Snow Moon Morgana (Turquoise)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "25063",
+          "num": 63,
+          "name": "Snow Moon Morgana (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "25064",
+          "num": 64,
+          "name": "Snow Moon Morgana (Emerald)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "25065",
+          "num": 65,
+          "name": "Snow Moon Morgana (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "25066",
+          "num": 66,
+          "name": "Snow Moon Morgana (Citrine)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "25067",
+          "num": 67,
+          "name": "Snow Moon Morgana (Rainbow)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "25068",
+          "num": 68,
+          "name": "Snow Moon Morgana (Obsidian)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
           "id": "25070",
           "num": 70,
           "name": "Porcelain Morgana",
           "chromas": false
+        },
+        {
+          "id": "25071",
+          "num": 71,
+          "name": "Porcelain Morgana (Ruby)",
+          "chromas": true,
+          "parentSkin": 70
+        },
+        {
+          "id": "25072",
+          "num": 72,
+          "name": "Porcelain Morgana (Emerald)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "25073",
+          "num": 73,
+          "name": "Porcelain Morgana (Turquoise)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "25074",
+          "num": 74,
+          "name": "Porcelain Morgana (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "25075",
+          "num": 75,
+          "name": "Porcelain Morgana (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "25076",
+          "num": 76,
+          "name": "Porcelain Morgana (Obsidian)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "25077",
+          "num": 77,
+          "name": "Porcelain Morgana (Pearl)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "25078",
+          "num": 78,
+          "name": "Porcelain Morgana (Catseye)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "25079",
+          "num": 79,
+          "name": "Porcelain Morgana (Opulent)",
+          "chromas": false,
+          "parentSkin": 70
         },
         {
           "id": "25080",
@@ -125,6 +566,13 @@
           "num": 81,
           "name": "Prestige Veiled Lady Morgana",
           "chromas": false
+        },
+        {
+          "id": "25082",
+          "num": 82,
+          "name": "Prestige Veiled Lady Morgana (Vivid)",
+          "chromas": true,
+          "parentSkin": 81
         }
       ],
       "lore": "Conflicted between her celestial and mortal natures, Morgana bound her wings to embrace humanity, and inflicts her pain and bitterness upon the dishonest and the corrupt. She rejects laws and traditions she believes are unjust, and fights for truth from the shadows of Demacia—even as others seek to repress it—by casting shields and chains of dark fire. More than anything else, Morgana truly believes that even the banished and outcast may one day rise again.",
@@ -139,7 +587,10 @@
         "Morgana often needs to land Dark Binding to setup her other attacks. Use your minions as shields against Dark Binding.",
         "Black Shield makes Morgana immune to disabling effects, but can be broken with magic damage."
       ],
-      "tags": ["Support", "Mage"],
+      "tags": [
+        "Support",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 1,
@@ -176,7 +627,11 @@
           "description": "Morgana binds an enemy in place with dark magic, forcing them to feel the pain they've caused and dealing magic damage. ",
           "tooltip": "Morgana hurls a blast of starfire that <status>Roots</status> the first enemy hit for {{ rootduration }} seconds and deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Root Duration", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Root Duration",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ damage }} -> {{ damageNL }}",
               "{{ rootduration }} -> {{ rootdurationNL }}",
@@ -184,23 +639,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 10, 10, 10, 10],
+          "cooldown": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
           "cooldownBurn": "10",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -218,7 +745,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1250, 1250, 1250, 1250, 1250],
+          "range": [
+            1250,
+            1250,
+            1250,
+            1250,
+            1250
+          ],
           "rangeBurn": "1250",
           "image": {
             "full": "MorganaQ.png",
@@ -237,30 +770,105 @@
           "description": "Morgana casts a cursed shadow on an area, damaging enemies who dare stand in her dark circle. They receive magic damage over time, which increases the lower health they are.",
           "tooltip": "Morgana ignites the ground for {{ wduration }} seconds, dealing <magicDamage>{{ totalmindamage }} magic damage</magicDamage> per second, increased by up to <magicDamage>{{ totalmaxdamage }}</magicDamage> based on the targets' missing Health.<br /><br />This Ability's Cooldown is reduced by {{ cdrefundpercent*100 }}% every time Morgana is healed by <spellName>Soul Siphon</spellName>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage Per Second", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage Per Second",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 12, 12, 12, 12],
+          "cooldown": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
           "cooldownBurn": "12",
-          "cost": [70, 80, 90, 100, 110],
+          "cost": [
+            70,
+            80,
+            90,
+            100,
+            110
+          ],
           "costBurn": "70/80/90/100/110",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -278,7 +886,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [900, 900, 900, 900, 900],
+          "range": [
+            900,
+            900,
+            900,
+            900,
+            900
+          ],
           "rangeBurn": "900",
           "image": {
             "full": "MorganaW.png",
@@ -297,30 +911,105 @@
           "description": "Morgana anoints an ally with a protective barrier of starfire, which absorbs magical damage and disabling effects until it is broken.",
           "tooltip": "Morgana grants an ally champion <shield>{{ totalshieldstrength }} Magic Shield</shield> for {{ shieldduration }} seconds. The shield prevents <status>Disabling</status> and <status>Immobilizing</status> effects until it breaks.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Shield Amount", "Cooldown"],
+            "label": [
+              "Shield Amount",
+              "Cooldown"
+            ],
             "effect": [
               "{{ shieldstrength }} -> {{ shieldstrengthNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [26, 23.5, 21, 18.5, 16],
+          "cooldown": [
+            26,
+            23.5,
+            21,
+            18.5,
+            16
+          ],
           "cooldownBurn": "26/23.5/21/18.5/16",
-          "cost": [80, 80, 80, 80, 80],
+          "cost": [
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
           "costBurn": "80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -338,7 +1027,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "MorganaE.png",
@@ -357,7 +1052,12 @@
           "description": "Morgana unleashes the full force of her Celestial power as she unbinds her wings and hovers above the ground. She lashes chains of dark pain onto nearby enemy champions, gaining Move Speed. The chains slow and deal initial damage and, after a delay, stun those who are unable to break them.",
           "tooltip": "Morgana chains herself to nearby enemy Champions, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slowing</status> them by {{ slowpercent }}%. After {{ chainduration }} seconds, enemies unable to break the chains take an additional <magicDamage>{{ totaldamage }} magic damage</magicDamage> and are <status>Stunned</status> for {{ stunduration }} seconds.<br /><br />While casting this Ability, Morgana gains <speed>{{ hastepercent }}% Move Speed</speed>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Move Speed", "Stun Duration:", "Cooldown"],
+            "label": [
+              "Damage",
+              "Move Speed",
+              "Stun Duration:",
+              "Cooldown"
+            ],
             "effect": [
               "{{ damage }} -> {{ damageNL }}",
               "{{ hastepercent }}% -> {{ hastepercentNL }}%",
@@ -366,23 +1066,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 110, 100],
+          "cooldown": [
+            120,
+            110,
+            100
+          ],
           "cooldownBurn": "120/110/100",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -400,7 +1148,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [625, 625, 625],
+          "range": [
+            625,
+            625,
+            625
+          ],
           "rangeBurn": "625",
           "image": {
             "full": "MorganaR.png",

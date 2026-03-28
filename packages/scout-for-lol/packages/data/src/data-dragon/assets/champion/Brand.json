@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Brand": {
       "id": "Brand",
@@ -73,6 +73,90 @@
           "chromas": true
         },
         {
+          "id": "63009",
+          "num": 9,
+          "name": "Arclight Brand (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "63010",
+          "num": 10,
+          "name": "Arclight Brand (Ruby)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "63011",
+          "num": 11,
+          "name": "Arclight Brand (Obsidian)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "63012",
+          "num": 12,
+          "name": "Arclight Brand (Pearl)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "63013",
+          "num": 13,
+          "name": "Eternal Dragon Brand (Ruby)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "63014",
+          "num": 14,
+          "name": "Eternal Dragon Brand (Catseye)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "63015",
+          "num": 15,
+          "name": "Eternal Dragon Brand (Sapphire)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "63016",
+          "num": 16,
+          "name": "Eternal Dragon Brand (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "63017",
+          "num": 17,
+          "name": "Eternal Dragon Brand (Jadeclaw)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "63018",
+          "num": 18,
+          "name": "Eternal Dragon Brand (Amethyst)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "63019",
+          "num": 19,
+          "name": "Eternal Dragon Brand (Obsidian)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "63020",
+          "num": 20,
+          "name": "Eternal Dragon Brand (Pearl)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
           "id": "63021",
           "num": 21,
           "name": "Debonair Brand",
@@ -85,16 +169,212 @@
           "chromas": false
         },
         {
+          "id": "63023",
+          "num": 23,
+          "name": "Eternal Dragon Brand (Emberclaw)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "63024",
+          "num": 24,
+          "name": "Debonair Brand (Ruby)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "63025",
+          "num": 25,
+          "name": "Debonair Brand (Catseye)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "63026",
+          "num": 26,
+          "name": "Debonair Brand (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "63027",
+          "num": 27,
+          "name": "Debonair Brand (Emerald)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "63028",
+          "num": 28,
+          "name": "Debonair Brand (Amethyst)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "63029",
+          "num": 29,
+          "name": "Debonair Brand (Sapphire)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "63030",
+          "num": 30,
+          "name": "Debonair Brand (Obsidian)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "63031",
+          "num": 31,
+          "name": "Debonair Brand (Turquoise)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "63032",
+          "num": 32,
+          "name": "Debonair Brand (Cerulean Club)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
           "id": "63033",
           "num": 33,
           "name": "Street Demons Brand",
           "chromas": true
         },
         {
+          "id": "63034",
+          "num": 34,
+          "name": "Street Demons Brand (Ruby)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "63035",
+          "num": 35,
+          "name": "Street Demons Brand (Obsidian)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "63036",
+          "num": 36,
+          "name": "Street Demons Brand (Pearl)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "63037",
+          "num": 37,
+          "name": "Street Demons Brand (Catseye)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "63038",
+          "num": 38,
+          "name": "Street Demons Brand (Emerald)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "63039",
+          "num": 39,
+          "name": "Street Demons Brand (Sapphire)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "63040",
+          "num": 40,
+          "name": "Street Demons Brand (Amethyst)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "63041",
+          "num": 41,
+          "name": "Street Demons Brand (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
           "id": "63042",
           "num": 42,
           "name": "Empyrean Brand",
           "chromas": true
+        },
+        {
+          "id": "63043",
+          "num": 43,
+          "name": "Empyrean Brand (Ruby)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "63044",
+          "num": 44,
+          "name": "Empyrean Brand (Catseye)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "63045",
+          "num": 45,
+          "name": "Empyrean Brand (Sapphire)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "63046",
+          "num": 46,
+          "name": "Empyrean Brand (Emerald)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "63047",
+          "num": 47,
+          "name": "Empyrean Brand (Turquoise)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "63048",
+          "num": 48,
+          "name": "Empyrean Brand (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "63049",
+          "num": 49,
+          "name": "Empyrean Brand (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "63050",
+          "num": 50,
+          "name": "Empyrean Brand (Pearl)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "63051",
+          "num": 51,
+          "name": "Empyrean Brand (Neon Facade)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "63052",
+          "num": 52,
+          "name": "Zombie Brand (Doom)",
+          "chromas": false,
+          "parentSkin": 4
         }
       ],
       "lore": "Once a tribesman of the icy Freljord named Kegan Rodhe, the creature known as Brand is a lesson in the temptation of greater power. Seeking one of the legendary World Runes, Kegan betrayed his companions and seized it for himself—and, in an instant, the man was no more. His soul burned away, his body a vessel of living flame, Brand now roams Valoran in search of other Runes, swearing revenge for wrongs he could never possibly have suffered in a dozen mortal lifetimes.",
@@ -109,7 +389,10 @@
         "Try to move away from allies when you see Pyroclasm being cast. The initial missile speed is slow, which should give your team time to react.",
         "Brand's passive allows him to excel against teams that cluster together. Be sure to split up against him."
       ],
-      "tags": ["Mage", "Support"],
+      "tags": [
+        "Mage",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -146,30 +429,105 @@
           "description": "Brand launches a ball of fire forward that deals magic damage. If the target is ablaze, Sear will stun the target.",
           "tooltip": "Brand launches a fireball that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first enemy hit.<br /><br />If the target is <keywordMajor>Ablaze</keywordMajor>, they will be <status>Stunned</status> for {{ stunduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 7.5, 7, 6.5, 6],
+          "cooldown": [
+            8,
+            7.5,
+            7,
+            6.5,
+            6
+          ],
           "cooldownBurn": "8/7.5/7/6.5/6",
-          "cost": [70, 70, 70, 70, 70],
+          "cost": [
+            70,
+            70,
+            70,
+            70,
+            70
+          ],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [70, 100, 130, 160, 190],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              70,
+              100,
+              130,
+              160,
+              190
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -187,7 +545,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1050, 1050, 1050, 1050, 1050],
+          "range": [
+            1050,
+            1050,
+            1050,
+            1050,
+            1050
+          ],
           "rangeBurn": "1050",
           "image": {
             "full": "BrandQ.png",
@@ -206,7 +570,11 @@
           "description": "After a short delay, Brand creates a Pillar of Flame at a target area, dealing magic damage to enemy units within the area. Units that are ablaze take an additional 25% damage.",
           "tooltip": "Brand creates a pillar of pure fire, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br />Units that are <keywordMajor>Ablaze</keywordMajor> take <magicDamage>{{ empowereddamage }} damage</magicDamage> instead.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -214,23 +582,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9.5, 9, 8.5, 8],
+          "cooldown": [
+            10,
+            9.5,
+            9,
+            8.5,
+            8
+          ],
           "cooldownBurn": "10/9.5/9/8.5/8",
-          "cost": [60, 70, 80, 90, 100],
+          "cost": [
+            60,
+            70,
+            80,
+            90,
+            100
+          ],
           "costBurn": "60/70/80/90/100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [20, 40, 60, 80, 100],
-            [0.25, 0.25, 0.25, 0.25, 0.25],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              20,
+              40,
+              60,
+              80,
+              100
+            ],
+            [
+              0.25,
+              0.25,
+              0.25,
+              0.25,
+              0.25
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -248,7 +688,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [900, 900, 900, 900, 900],
+          "range": [
+            900,
+            900,
+            900,
+            900,
+            900
+          ],
           "rangeBurn": "900",
           "image": {
             "full": "BrandW.png",
@@ -267,7 +713,11 @@
           "description": "Brand conjures a powerful blast at his target that spreads to nearby enemies, dealing magic damage. If the target is ablaze, Conflagration's spread is doubled.",
           "tooltip": "Brand conjures a powerful blast at his target, dealing <magicDamage>{{ edamagecalc }} magic damage</magicDamage> to surrounding units.<br /><br />If the target is <keywordMajor>Ablaze</keywordMajor>, the spread range is doubled.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -275,23 +725,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [13, 12, 11, 10, 9],
+          "cooldown": [
+            13,
+            12,
+            11,
+            10,
+            9
+          ],
           "cooldownBurn": "13/12/11/10/9",
-          "cost": [70, 75, 80, 85, 90],
+          "cost": [
+            70,
+            75,
+            80,
+            85,
+            90
+          ],
           "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [375, 375, 375, 375, 375],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              375,
+              375,
+              375,
+              375,
+              375
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -309,7 +831,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [625, 625, 625, 625, 625],
+          "range": [
+            625,
+            625,
+            625,
+            625,
+            625
+          ],
           "rangeBurn": "625",
           "image": {
             "full": "BrandE.png",
@@ -328,7 +856,11 @@
           "description": "Brand unleashes a devastating torrent of fire that bounces up to 5 times off of Brand and nearby enemies, dealing magic damage to enemies each time bounce. Bounces prioritize stacking Blaze to max on Champions. If a target is ablaze, Pyroclasm will briefly slow them.",
           "tooltip": "Brand unleashes a devastating torrent of fire that can bounce to Brand or another enemy up to 5 times, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to enemies each bounce. Bounces prioritize stacking <keywordMajor>Blaze</keywordMajor> to max on champions.<br /><br />If the target is <keywordMajor>Ablaze</keywordMajor>, they are briefly <status>Slowed</status> by {{ slowamount }}%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage per Bounce", "Slow", "Cooldown"],
+            "label": [
+              "Damage per Bounce",
+              "Slow",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ slowamount }}% -> {{ slowamountNL }}%",
@@ -336,23 +868,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [100, 90, 80],
+          "cooldown": [
+            100,
+            90,
+            80
+          ],
           "cooldownBurn": "100/90/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -370,7 +950,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [750, 750, 750],
+          "range": [
+            750,
+            750,
+            750
+          ],
           "rangeBurn": "750",
           "image": {
             "full": "BrandR.png",

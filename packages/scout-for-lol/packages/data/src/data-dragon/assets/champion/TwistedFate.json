@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "TwistedFate": {
       "id": "TwistedFate",
@@ -91,10 +91,80 @@
           "chromas": true
         },
         {
+          "id": "4012",
+          "num": 12,
+          "name": "Pulsefire Twisted Fate (Chrono)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
           "id": "4013",
           "num": 13,
           "name": "Odyssey Twisted Fate",
           "chromas": true
+        },
+        {
+          "id": "4014",
+          "num": 14,
+          "name": "Odyssey Twisted Fate (Ruby)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "4015",
+          "num": 15,
+          "name": "Odyssey Twisted Fate (Merc)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "4016",
+          "num": 16,
+          "name": "Odyssey Twisted Fate (Catseye)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "4017",
+          "num": 17,
+          "name": "Odyssey Twisted Fate (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "4018",
+          "num": 18,
+          "name": "Odyssey Twisted Fate (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "4019",
+          "num": 19,
+          "name": "Odyssey Twisted Fate (Turquoise)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "4020",
+          "num": 20,
+          "name": "Odyssey Twisted Fate (Emerald)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "4021",
+          "num": 21,
+          "name": "Odyssey Twisted Fate (Pearl)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "4022",
+          "num": 22,
+          "name": "Odyssey Twisted Fate (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 13
         },
         {
           "id": "4023",
@@ -103,10 +173,80 @@
           "chromas": true
         },
         {
+          "id": "4024",
+          "num": 24,
+          "name": "DWG Twisted Fate (Elite)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
           "id": "4025",
           "num": 25,
           "name": "Crime City Nightmare Twisted Fate",
           "chromas": true
+        },
+        {
+          "id": "4026",
+          "num": 26,
+          "name": "Crime City Nightmare Twisted Fate (Ruby)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "4027",
+          "num": 27,
+          "name": "Crime City Nightmare Twisted Fate (Emerald)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "4028",
+          "num": 28,
+          "name": "Crime City Nightmare Twisted Fate (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "4029",
+          "num": 29,
+          "name": "Crime City Nightmare Twisted Fate (Sapphire)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "4030",
+          "num": 30,
+          "name": "Crime City Nightmare Twisted Fate (Catseye)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "4031",
+          "num": 31,
+          "name": "Crime City Nightmare Twisted Fate (Amethyst)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "4032",
+          "num": 32,
+          "name": "Crime City Nightmare Twisted Fate (Pearl)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "4033",
+          "num": 33,
+          "name": "Crime City Nightmare Twisted Fate (Obsidian)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "4034",
+          "num": 34,
+          "name": "Crime City Nightmare Twisted Fate (Underground)",
+          "chromas": false,
+          "parentSkin": 25
         },
         {
           "id": "4036",
@@ -115,10 +255,129 @@
           "chromas": false
         },
         {
+          "id": "4037",
+          "num": 37,
+          "name": "Space Groove Twisted Fate (Ruby)",
+          "chromas": true,
+          "parentSkin": 36
+        },
+        {
+          "id": "4038",
+          "num": 38,
+          "name": "Space Groove Twisted Fate (Emerald)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "4039",
+          "num": 39,
+          "name": "Space Groove Twisted Fate (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "4040",
+          "num": 40,
+          "name": "Space Groove Twisted Fate (Catseye)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "4041",
+          "num": 41,
+          "name": "Space Groove Twisted Fate (Turquoise)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "4042",
+          "num": 42,
+          "name": "Space Groove Twisted Fate (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "4043",
+          "num": 43,
+          "name": "Space Groove Twisted Fate (Obsidian)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "4044",
+          "num": 44,
+          "name": "Space Groove Twisted Fate (Rainbow)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
           "id": "4045",
           "num": 45,
           "name": "Victorious Twisted Fate",
           "chromas": false
+        },
+        {
+          "id": "4046",
+          "num": 46,
+          "name": "Victorious Twisted Fate (Bronze)",
+          "chromas": true,
+          "parentSkin": 45
+        },
+        {
+          "id": "4047",
+          "num": 47,
+          "name": "Victorious Twisted Fate (Silver)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "4048",
+          "num": 48,
+          "name": "Victorious Twisted Fate (Gold)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "4049",
+          "num": 49,
+          "name": "Victorious Twisted Fate (Platinum)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "4050",
+          "num": 50,
+          "name": "Victorious Twisted Fate (Emerald)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "4051",
+          "num": 51,
+          "name": "Victorious Twisted Fate (Diamond)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "4052",
+          "num": 52,
+          "name": "Victorious Twisted Fate (Master)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "4053",
+          "num": 53,
+          "name": "Victorious Twisted Fate (Grandmaster)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "4054",
+          "num": 54,
+          "name": "Victorious Twisted Fate (Challenger)",
+          "chromas": false,
+          "parentSkin": 45
         }
       ],
       "lore": "Twisted Fate is an infamous cardsharp and swindler who has gambled and charmed his way across much of the known world, earning the enmity and admiration of the rich and foolish alike. He rarely takes things seriously, greeting each day with a mocking smile and an insouciant swagger. In every possible way, Twisted Fate always has an ace up his sleeve.",
@@ -132,7 +391,10 @@
         "Focus on dodging Wild Cards early when your champion doesn't have the hit points to afford getting hit.",
         "If you have low Health, use Destiny as an indicator to run to safety. It will give you a head start in escaping any possible ganks."
       ],
-      "tags": ["Mage", "Marksman"],
+      "tags": [
+        "Mage",
+        "Marksman"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 6,
@@ -169,7 +431,11 @@
           "description": "Twisted Fate throws three cards, dealing damage to each enemy unit they pass through.",
           "tooltip": "Twisted Fate throws three cards that deal <magicDamage>{{ totaldamage }} magic damage</magicDamage> each.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -177,23 +443,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [6, 5.75, 5.5, 5.25, 5],
+          "cooldown": [
+            6,
+            5.75,
+            5.5,
+            5.25,
+            5
+          ],
           "cooldownBurn": "6/5.75/5.5/5.25/5",
-          "cost": [60, 70, 80, 90, 100],
+          "cost": [
+            60,
+            70,
+            80,
+            90,
+            100
+          ],
           "costBurn": "60/70/80/90/100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -211,7 +549,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [10000, 10000, 10000, 10000, 10000],
+          "range": [
+            10000,
+            10000,
+            10000,
+            10000,
+            10000
+          ],
           "rangeBurn": "10000",
           "image": {
             "full": "WildCards.png",
@@ -250,23 +594,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [6, 6, 6, 6, 6],
+          "cooldown": [
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
           "cooldownBurn": "6",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [40, 60, 80, 100, 120],
-            [30, 35, 40, 45, 50],
-            [1, 1.25, 1.5, 1.75, 2],
-            [30, 45, 60, 75, 90],
-            [15, 22.5, 30, 37.5, 45],
-            [70, 90, 110, 130, 150],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              40,
+              60,
+              80,
+              100,
+              120
+            ],
+            [
+              30,
+              35,
+              40,
+              45,
+              50
+            ],
+            [
+              1,
+              1.25,
+              1.5,
+              1.75,
+              2
+            ],
+            [
+              30,
+              45,
+              60,
+              75,
+              90
+            ],
+            [
+              15,
+              22.5,
+              30,
+              37.5,
+              45
+            ],
+            [
+              70,
+              90,
+              110,
+              130,
+              150
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -284,7 +700,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [200, 200, 200, 200, 200],
+          "range": [
+            200,
+            200,
+            200,
+            200,
+            200
+          ],
           "rangeBurn": "200",
           "image": {
             "full": "PickACard.png",
@@ -303,30 +725,105 @@
           "description": "Every 4 attacks, Twisted Fate deals bonus damage. In addition, his Attack Speed is increased.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Twisted Fate gains <attackSpeed>{{ attackspeedbonus }}% Attack Speed</attackSpeed> and every 4th Attack deals an additional <magicDamage>{{ bonusdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Bonus Damage:", "Attack Speed"],
+            "label": [
+              "Bonus Damage:",
+              "Attack Speed"
+            ],
             "effect": [
               "{{ damage }} -> {{ damageNL }}",
               "{{ attackspeedbonus }}% -> {{ attackspeedbonusNL }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [0, 0, 0, 0, 0],
+          "cooldown": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "cooldownBurn": "0",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [4, 4, 4, 4, 4],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -344,7 +841,13 @@
           "vars": [],
           "costType": "Passive",
           "maxammo": "-1",
-          "range": [0, 0, 0, 0, 0],
+          "range": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "rangeBurn": "0",
           "image": {
             "full": "CardmasterStack.png",
@@ -363,30 +866,81 @@
           "description": "Twisted Fate predicts the fortunes of his foes, revealing all enemy champions and enabling the use of Gate, which teleports Twisted Fate to any target location in 1.5 seconds.",
           "tooltip": "Twisted Fate focuses on his cards, granting <keywordStealth>True Sight</keywordStealth> of all enemy champions on the map for {{ e1 }} seconds and allowing him to <recast>Recast</recast>.<br /><br /><recast>Recast</recast>: Twisted Fate teleports up to {{ e4 }} units away.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Duration", "Cooldown"],
+            "label": [
+              "Duration",
+              "Cooldown"
+            ],
             "effect": [
               "{{ recastduration }} -> {{ recastdurationNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [170, 140, 110],
+          "cooldown": [
+            170,
+            140,
+            110
+          ],
           "cooldownBurn": "170/140/110",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [6, 8, 10],
-            [0, 0, 0],
-            [0, 0, 0],
-            [5500, 5500, 5500],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              6,
+              8,
+              10
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              5500,
+              5500,
+              5500
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -404,7 +958,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [5500, 5500, 5500],
+          "range": [
+            5500,
+            5500,
+            5500
+          ],
           "rangeBurn": "5500",
           "image": {
             "full": "Destiny.png",

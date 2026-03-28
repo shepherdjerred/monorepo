@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Swain": {
       "id": "Swain",
@@ -49,6 +49,48 @@
           "chromas": true
         },
         {
+          "id": "50005",
+          "num": 5,
+          "name": "Dragon Master Swain (Pearl)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "50006",
+          "num": 6,
+          "name": "Dragon Master Swain (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "50007",
+          "num": 7,
+          "name": "Dragon Master Swain (Ruby)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "50008",
+          "num": 8,
+          "name": "Dragon Master Swain (Emerald)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "50009",
+          "num": 9,
+          "name": "Dragon Master Swain (Sapphire)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "50010",
+          "num": 10,
+          "name": "Dragon Master Swain (Obsidian)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
           "id": "50011",
           "num": 11,
           "name": "Hextech Swain",
@@ -61,10 +103,136 @@
           "chromas": true
         },
         {
+          "id": "50013",
+          "num": 13,
+          "name": "Crystal Rose Swain (Ruby)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "50014",
+          "num": 14,
+          "name": "Crystal Rose Swain (Sapphire)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "50015",
+          "num": 15,
+          "name": "Crystal Rose Swain (Peridot)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "50016",
+          "num": 16,
+          "name": "Crystal Rose Swain (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "50017",
+          "num": 17,
+          "name": "Crystal Rose Swain (Catseye)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "50018",
+          "num": 18,
+          "name": "Crystal Rose Swain (Amethyst)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "50019",
+          "num": 19,
+          "name": "Crystal Rose Swain (Obsidian)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "50020",
+          "num": 20,
+          "name": "Crystal Rose Swain (Pearl)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
           "id": "50021",
           "num": 21,
           "name": "Winterblessed Swain",
           "chromas": true
+        },
+        {
+          "id": "50022",
+          "num": 22,
+          "name": "Crystal Rose Swain (Tiffany & Co.)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "50023",
+          "num": 23,
+          "name": "Winterblessed Swain (Ruby)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "50024",
+          "num": 24,
+          "name": "Winterblessed Swain (Catseye)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "50025",
+          "num": 25,
+          "name": "Winterblessed Swain (Sapphire)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "50026",
+          "num": 26,
+          "name": "Winterblessed Swain (Emerald)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "50027",
+          "num": 27,
+          "name": "Winterblessed Swain (Pearl)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "50028",
+          "num": 28,
+          "name": "Winterblessed Swain (Obsidian)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "50029",
+          "num": 29,
+          "name": "Winterblessed Swain (Turquoise)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "50030",
+          "num": 30,
+          "name": "Winterblessed Swain (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "50031",
+          "num": 31,
+          "name": "Winterblessed Swain (Wreathguard)",
+          "chromas": false,
+          "parentSkin": 21
         },
         {
           "id": "50032",
@@ -77,6 +245,62 @@
           "num": 33,
           "name": "Prestige Chosen of the Wolf Swain",
           "chromas": false
+        },
+        {
+          "id": "50034",
+          "num": 34,
+          "name": "Chosen of the Wolf Swain (Ruby)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "50035",
+          "num": 35,
+          "name": "Chosen of the Wolf Swain (Catseye)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "50036",
+          "num": 36,
+          "name": "Chosen of the Wolf Swain (Sapphire)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "50037",
+          "num": 37,
+          "name": "Chosen of the Wolf Swain (Emerald)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "50038",
+          "num": 38,
+          "name": "Chosen of the Wolf Swain (Turquoise)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "50039",
+          "num": 39,
+          "name": "Chosen of the Wolf Swain (Amethyst)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "50040",
+          "num": 40,
+          "name": "Chosen of the Wolf Swain (Obsidian)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "50041",
+          "num": 41,
+          "name": "Chosen of the Wolf Swain (Pearl)",
+          "chromas": false,
+          "parentSkin": 32
         }
       ],
       "lore": "Jericho Swain is the visionary ruler of Noxus, an expansionist nation that reveres only strength. Though he was cast down and crippled in the Ionian wars, his left arm severed, he seized control of the empire with ruthless determination… and a new, demonic hand. Now, Swain commands from the front lines, marching against a coming darkness that only he can see—in glimpses gathered by shadowy ravens from the corpses all around him. In a swirl of sacrifice and secrets, the greatest secret of all is that the true enemy lies within.",
@@ -92,7 +316,10 @@
         "High mobility counters all of Swain's basic abilities: Death's Hand does more damage the closer he is, Vision of Empire has a very long delay and Nevermove must start returning back to him to be dangerous.",
         "Buying an item with Grievous Wounds will make Swain much easier to kill during his Demonic Ascension."
       ],
-      "tags": ["Mage", "Support"],
+      "tags": [
+        "Mage",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -129,7 +356,11 @@
           "description": "Swain unleashes several bolts of eldritch power that pierce through enemies. Enemies hit take more damage for each bolt they are struck by.",
           "tooltip": "Swain unleashes 5 eldritch bolts, dealing <magicDamage>{{ initialdamage }} magic damage</magicDamage> plus <magicDamage>{{ extraboltdamage }} magic damage</magicDamage> per bolt past the first (max <magicDamage>{{ maxdamage }} magic damage</magicDamage>).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Bolt Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Bolt Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -137,23 +368,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 6, 5, 4, 3],
+          "cooldown": [
+            7,
+            6,
+            5,
+            4,
+            3
+          ],
           "cooldownBurn": "7/6/5/4/3",
-          "cost": [40, 45, 50, 55, 60],
+          "cost": [
+            40,
+            45,
+            50,
+            55,
+            60
+          ],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -171,7 +474,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [750, 750, 750, 750, 750],
+          "range": [
+            750,
+            750,
+            750,
+            750,
+            750
+          ],
           "rangeBurn": "750",
           "image": {
             "full": "SwainQ.png",
@@ -204,23 +513,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [22, 21, 20, 19, 18],
+          "cooldown": [
+            22,
+            21,
+            20,
+            19,
+            18
+          ],
           "cooldownBurn": "22/21/20/19/18",
-          "cost": [60, 65, 70, 75, 80],
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -238,7 +619,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [5500, 6000, 6500, 7000, 7500],
+          "range": [
+            5500,
+            6000,
+            6500,
+            7000,
+            7500
+          ],
           "rangeBurn": "5500/6000/6500/7000/7500",
           "image": {
             "full": "SwainW.png",
@@ -257,7 +644,11 @@
           "description": "Swain launches a wave of demonic power forward. It then returns to Swain and roots enemies it hits. Swain can then choose to pull all rooted champions closer. This ability has a shorter cooldown during Demonic Ascension.",
           "tooltip": "Swain launches a wave of demonic power that returns, detonating on the first enemy hit to deal <magicDamage>{{ secondarydamage }} magic damage</magicDamage> and <status>Root</status> enemies in the area for {{ rootduration }} seconds.<br /><br /><status>Rooting</status> a champion allows Swain to reactivate this ability to pull all champions <status>Rooted</status> by <spellName>Nevermove</spellName> toward him, gaining a <span class=\"size18 colorFF3F3F\">Soul Fragment</span> for each.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ e2damage }} -> {{ e2damageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -265,23 +656,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11.5, 11, 10.5, 10],
+          "cooldown": [
+            12,
+            11.5,
+            11,
+            10.5,
+            10
+          ],
           "cooldownBurn": "12/11.5/11/10.5/10",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -299,7 +762,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [850, 850, 850, 850, 850],
+          "range": [
+            850,
+            850,
+            850,
+            850,
+            850
+          ],
           "rangeBurn": "850",
           "image": {
             "full": "SwainE.png",
@@ -318,7 +787,11 @@
           "description": "Swain transforms into a demon and drains health from nearby enemy champions, minions, and neutral monsters. Swain can cast Demonflare to decimate and slow nearby enemies with a nova of soulfire. This form is indefinite as long as Swain drains enemy champions.",
           "tooltip": "Swain frees the demon, which deals <magicDamage>{{ damagecalc }} magic damage</magicDamage> and drains <healing>{{ healingcalc }} Health</healing> per second from nearby enemies. His Demonic Energy depletes over time but can be recharged indefinitely by draining enemy Champions and is fully restored on Champion takedowns.<br /><br />After {{ demonflarecastdelay }} seconds and every {{ demonflarecooldowntooltip }} seconds thereafter, Swain can cast <spellName>Demonflare</spellName> while transformed, which deals <magicDamage>{{ demonflaredamagetotal }} magic damage</magicDamage> and <status>Slows</status> enemies by {{ demonflareslowamount*100 }}%, decaying over {{ demonflareslowduration }}s.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Drain Damage", "Drain Heal", "Demonflare Damage"],
+            "label": [
+              "Drain Damage",
+              "Drain Heal",
+              "Demonflare Damage"
+            ],
             "effect": [
               "{{ damagepersecond }} -> {{ damagepersecondNL }}",
               "{{ healpersecond }} -> {{ healpersecondNL }}",
@@ -326,23 +799,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 120, 120],
+          "cooldown": [
+            120,
+            120,
+            120
+          ],
           "cooldownBurn": "120",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -360,7 +881,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650],
+          "range": [
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "SwainR.png",

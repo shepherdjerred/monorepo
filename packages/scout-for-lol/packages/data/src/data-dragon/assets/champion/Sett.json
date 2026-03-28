@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Sett": {
       "id": "Sett",
@@ -31,6 +31,48 @@
           "chromas": true
         },
         {
+          "id": "875002",
+          "num": 2,
+          "name": "Mecha Kingdoms Sett (Amethyst)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "875003",
+          "num": 3,
+          "name": "Mecha Kingdoms Sett (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "875004",
+          "num": 4,
+          "name": "Mecha Kingdoms Sett (Ruby)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "875005",
+          "num": 5,
+          "name": "Mecha Kingdoms Sett (Turquoise)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "875006",
+          "num": 6,
+          "name": "Mecha Kingdoms Sett (Pearl)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "875007",
+          "num": 7,
+          "name": "Mecha Kingdoms Sett (Peacekeeper)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
           "id": "875008",
           "num": 8,
           "name": "Obsidian Dragon Sett",
@@ -49,10 +91,192 @@
           "chromas": true
         },
         {
+          "id": "875011",
+          "num": 11,
+          "name": "Pool Party Sett (Ruby)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "875012",
+          "num": 12,
+          "name": "Pool Party Sett (Catseye)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "875013",
+          "num": 13,
+          "name": "Pool Party Sett (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "875014",
+          "num": 14,
+          "name": "Pool Party Sett (Amethyst)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "875015",
+          "num": 15,
+          "name": "Pool Party Sett (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "875016",
+          "num": 16,
+          "name": "Pool Party Sett (Pearl)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "875017",
+          "num": 17,
+          "name": "Pool Party Sett (Obsidian)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "875018",
+          "num": 18,
+          "name": "Pool Party Sett (Emerald)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
           "id": "875019",
           "num": 19,
           "name": "Firecracker Sett",
           "chromas": true
+        },
+        {
+          "id": "875020",
+          "num": 20,
+          "name": "Obsidian Dragon Sett (Emberclaw)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "875021",
+          "num": 21,
+          "name": "Obsidian Dragon Sett (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "875022",
+          "num": 22,
+          "name": "Obsidian Dragon Sett (Emerald)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "875023",
+          "num": 23,
+          "name": "Obsidian Dragon Sett (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "875024",
+          "num": 24,
+          "name": "Obsidian Dragon Sett (Amethyst)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "875025",
+          "num": 25,
+          "name": "Obsidian Dragon Sett (Citrine)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "875026",
+          "num": 26,
+          "name": "Obsidian Dragon Sett (Ruby)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "875027",
+          "num": 27,
+          "name": "Obsidian Dragon Sett (Pearl)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "875028",
+          "num": 28,
+          "name": "Obsidian Dragon Sett (Catseye)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "875029",
+          "num": 29,
+          "name": "Firecracker Sett (Ruby)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "875030",
+          "num": 30,
+          "name": "Firecracker Sett (Catseye)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "875031",
+          "num": 31,
+          "name": "Firecracker Sett (Emerald)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "875032",
+          "num": 32,
+          "name": "Firecracker Sett (Amethyst)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "875033",
+          "num": 33,
+          "name": "Firecracker Sett (Turquoise)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "875034",
+          "num": 34,
+          "name": "Firecracker Sett (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "875035",
+          "num": 35,
+          "name": "Firecracker Sett (Obsidian)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "875036",
+          "num": 36,
+          "name": "Firecracker Sett (Pearl)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "875037",
+          "num": 37,
+          "name": "Firecracker Sett (Golden Tiger)",
+          "chromas": false,
+          "parentSkin": 19
         },
         {
           "id": "875038",
@@ -61,16 +285,191 @@
           "chromas": true
         },
         {
+          "id": "875039",
+          "num": 39,
+          "name": "Spirit Blossom Sett (Ruby)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "875040",
+          "num": 40,
+          "name": "Spirit Blossom Sett (Sapphire)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "875041",
+          "num": 41,
+          "name": "Spirit Blossom Sett (Emerald)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "875042",
+          "num": 42,
+          "name": "Spirit Blossom Sett (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "875043",
+          "num": 43,
+          "name": "Spirit Blossom Sett (Catseye)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "875044",
+          "num": 44,
+          "name": "Spirit Blossom Sett (Night Blossom)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
           "id": "875045",
           "num": 45,
           "name": "Soul Fighter Sett",
           "chromas": true
         },
         {
+          "id": "875046",
+          "num": 46,
+          "name": "Soul Fighter Sett (Ruby)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "875047",
+          "num": 47,
+          "name": "Soul Fighter Sett (Citrine)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "875048",
+          "num": 48,
+          "name": "Soul Fighter Sett (Obsidian)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "875049",
+          "num": 49,
+          "name": "Soul Fighter Sett (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "875050",
+          "num": 50,
+          "name": "Soul Fighter Sett (Emerald)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "875051",
+          "num": 51,
+          "name": "Soul Fighter Sett (Turquoise)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "875052",
+          "num": 52,
+          "name": "Soul Fighter Sett (Amethyst)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "875053",
+          "num": 53,
+          "name": "Soul Fighter Sett (Meteorite)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "875054",
+          "num": 54,
+          "name": "Soul Fighter Sett (Limitless)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "875055",
+          "num": 55,
+          "name": "Obsidian Dragon Sett (Tenfold Triumph)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
           "id": "875056",
           "num": 56,
           "name": "HEARTSTEEL Sett",
           "chromas": true
+        },
+        {
+          "id": "875057",
+          "num": 57,
+          "name": "HEARTSTEEL Sett (Ruby)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "875058",
+          "num": 58,
+          "name": "HEARTSTEEL Sett (Catseye)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "875059",
+          "num": 59,
+          "name": "HEARTSTEEL Sett (Emerald)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "875060",
+          "num": 60,
+          "name": "HEARTSTEEL Sett (Sapphire)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "875061",
+          "num": 61,
+          "name": "HEARTSTEEL Sett (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "875062",
+          "num": 62,
+          "name": "HEARTSTEEL Sett (Pearl)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "875063",
+          "num": 63,
+          "name": "HEARTSTEEL Sett (Amethyst)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "875064",
+          "num": 64,
+          "name": "HEARTSTEEL Sett (Citrine)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "875065",
+          "num": 65,
+          "name": "HEARTSTEEL Sett (Rockstar)",
+          "chromas": false,
+          "parentSkin": 56
         },
         {
           "id": "875066",
@@ -83,13 +482,72 @@
           "num": 67,
           "name": "Spirit Blossom Springs Sett",
           "chromas": true
+        },
+        {
+          "id": "875068",
+          "num": 68,
+          "name": "Spirit Blossom Springs Sett (Ruby)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "875069",
+          "num": 69,
+          "name": "Spirit Blossom Springs Sett (Sapphire)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "875070",
+          "num": 70,
+          "name": "Spirit Blossom Springs Sett (Emerald)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "875071",
+          "num": 71,
+          "name": "Spirit Blossom Springs Sett (Turquoise)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "875072",
+          "num": 72,
+          "name": "Spirit Blossom Springs Sett (Citrine)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "875073",
+          "num": 73,
+          "name": "Spirit Blossom Springs Sett (Obsidian)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "875074",
+          "num": 74,
+          "name": "Spirit Blossom Springs Sett (Pearl)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "875075",
+          "num": 75,
+          "name": "Spirit Blossom Springs Sett (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 67
         }
       ],
       "lore": "A leader of Ionia's growing criminal underworld, Sett rose to prominence in the wake of the war with Noxus. Though he began as a humble challenger in the fighting pits of Navori, he quickly gained notoriety for his savage strength, and his ability to take seemingly endless amounts of punishment. Now, having climbed through the ranks of local combatants, Sett has muscled to the top, reigning over the pits he once fought in.",
       "blurb": "A leader of Ionia's growing criminal underworld, Sett rose to prominence in the wake of the war with Noxus. Though he began as a humble challenger in the fighting pits of Navori, he quickly gained notoriety for his savage strength, and his ability to...",
       "allytips": [],
       "enemytips": [],
-      "tags": ["Fighter", "Tank"],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
       "partype": "Grit",
       "info": {
         "attack": 8,
@@ -126,7 +584,11 @@
           "description": "Sett's next two attacks deal additional damage based off of the target's max health. Sett also gains Move Speed while moving towards enemy champions.",
           "tooltip": "Sett itches for a fight, gaining <speed>{{ msamount*100 }}% Move Speed</speed> towards enemy champions for {{ msduration }} seconds.<br /><br />Additionally Sett's next two Attacks deal an additional <physicalDamage>{{ basedamage }} plus {{ maxhealthdamagecalc }} max Health physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Base Damage", "% Max Health Per 100 AD"],
+            "label": [
+              "Cooldown",
+              "Base Damage",
+              "% Max Health Per 100 AD"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -134,23 +596,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 8, 7, 6, 5],
+          "cooldown": [
+            9,
+            8,
+            7,
+            6,
+            5
+          ],
           "cooldownBurn": "9/8/7/6/5",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -168,7 +702,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [0, 0, 0, 0, 0],
+          "range": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "rangeBurn": "0",
           "image": {
             "full": "SettQ.png",
@@ -187,30 +727,105 @@
           "description": "Sett passively stores damage he takes as Grit. On cast, Sett expends all stored Grit to gain a shield and punch an area, dealing true damage in the center and physical damage on the sides.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Sett stores {{ damagestored*100 }}% of damage taken as <keywordMajor>Grit</keywordMajor>, up to <keywordMajor>{{ maxgrit }}</keywordMajor>. <keywordMajor>Grit</keywordMajor> decays quickly {{ adrenalinestoragewindow }} seconds after the damage was taken.<br /><br /><spellActive>Active:</spellActive> Sett consumes all <keywordMajor>Grit</keywordMajor>, gaining a <shield>{{ shieldconversion*100 }}% Grit consumed Shield</shield> decaying over {{ shieldmaxduration }} seconds. Sett then delivers a massive punch, dealing <trueDamage>{{ damagecalc }} plus {{ damageconversion }} Grit consumed true damage</trueDamage> to enemies in the center (max <trueDamage>{{ f1 }} damage</trueDamage>). Enemies not in the center instead take <physicalDamage>physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Base Damage"],
+            "label": [
+              "Cooldown",
+              "Base Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [18, 16.5, 15, 13.5, 12],
+          "cooldown": [
+            18,
+            16.5,
+            15,
+            13.5,
+            12
+          ],
           "cooldownBurn": "18/16.5/15/13.5/12",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -228,7 +843,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [25000, 25000, 25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "SettW.png",
@@ -247,30 +868,105 @@
           "description": "Sett pulls in all enemies on opposite sides of him, dealing damage and stunning them. If enemies were only on one side, they are slowed instead of stunned.",
           "tooltip": "Sett smashes enemies on either side of him into each other, dealing <physicalDamage>{{ damagecalc }} physical damage</physicalDamage> and <status>Slowing</status> them by {{ slowamount*100 }}% for {{ slowduration }} seconds. If Sett grabbed at least one enemy on each side, all enemies are <status>Stunned</status> for {{ stunduration }} second.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Base Damage"],
+            "label": [
+              "Cooldown",
+              "Base Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 14.5, 13, 11.5, 10],
+          "cooldown": [
+            16,
+            14.5,
+            13,
+            11.5,
+            10
+          ],
           "cooldownBurn": "16/14.5/13/11.5/10",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -288,7 +984,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [490, 490, 490, 490, 490],
+          "range": [
+            490,
+            490,
+            490,
+            490,
+            490
+          ],
           "rangeBurn": "490",
           "image": {
             "full": "SettE.png",
@@ -307,7 +1009,11 @@
           "description": "Sett carries an enemy champion through the air and slams them into the ground, dealing damage and slowing all enemies near where they land.",
           "tooltip": "Sett grabs an enemy champion and <status>Suppresses</status> them as he carries them forward, then slams them into the ground, dealing <physicalDamage>{{ damagecalc }} plus {{ maxhealthdamage*100 }}% of the grabbed enemy's bonus Health physical damage</physicalDamage> to surrounding enemies and <status>Slowing</status> them by {{ slowamount*100 }}% for {{ slowduration }} second. Enemies take less damage the further they are from where Sett lands.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Bonus Health Damage", "Base Damage"],
+            "label": [
+              "Cooldown",
+              "Bonus Health Damage",
+              "Base Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ maxhealthdamage*100.000000 }}% -> {{ maxhealthdamagenl*100.000000 }}%",
@@ -315,23 +1021,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -349,7 +1103,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [400, 400, 400],
+          "range": [
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "SettR.png",

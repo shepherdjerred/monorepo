@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Maokai": {
       "id": "Maokai",
@@ -67,10 +67,115 @@
           "chromas": false
         },
         {
+          "id": "57008",
+          "num": 8,
+          "name": "Meowkai (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "57009",
+          "num": 9,
+          "name": "Meowkai (Pearl)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "57010",
+          "num": 10,
+          "name": "Meowkai (Citrine)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "57011",
+          "num": 11,
+          "name": "Meowkai (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "57012",
+          "num": 12,
+          "name": "Meowkai (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "57013",
+          "num": 13,
+          "name": "Meowkai (Hearts)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "57014",
+          "num": 14,
+          "name": "Meowkai (Peridot)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "57015",
+          "num": 15,
+          "name": "Meowkai (Amethyst)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
           "id": "57016",
           "num": 16,
           "name": "Worldbreaker Maokai",
           "chromas": true
+        },
+        {
+          "id": "57017",
+          "num": 17,
+          "name": "Worldbreaker Maokai (Ruby)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "57018",
+          "num": 18,
+          "name": "Worldbreaker Maokai (Citrine)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "57019",
+          "num": 19,
+          "name": "Worldbreaker Maokai (Emerald)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "57020",
+          "num": 20,
+          "name": "Worldbreaker Maokai (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "57021",
+          "num": 21,
+          "name": "Worldbreaker Maokai (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "57022",
+          "num": 22,
+          "name": "Worldbreaker Maokai (Pearl)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "57023",
+          "num": 23,
+          "name": "Worldbreaker Maokai (Sapphire)",
+          "chromas": false,
+          "parentSkin": 16
         },
         {
           "id": "57024",
@@ -79,10 +184,73 @@
           "chromas": true
         },
         {
+          "id": "57025",
+          "num": 25,
+          "name": "Astronaut Maokai (Ruby)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "57026",
+          "num": 26,
+          "name": "Astronaut Maokai (Sapphire)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "57027",
+          "num": 27,
+          "name": "Astronaut Maokai (Emerald)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "57028",
+          "num": 28,
+          "name": "Astronaut Maokai (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "57029",
+          "num": 29,
+          "name": "Astronaut Maokai (Catseye)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "57030",
+          "num": 30,
+          "name": "Astronaut Maokai (Turquoise)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "57031",
+          "num": 31,
+          "name": "Astronaut Maokai (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "57032",
+          "num": 32,
+          "name": "Astronaut Maokai (Citrine)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
           "id": "57033",
           "num": 33,
           "name": "DRX Maokai",
           "chromas": true
+        },
+        {
+          "id": "57034",
+          "num": 34,
+          "name": "DRX Maokai (Elite)",
+          "chromas": false,
+          "parentSkin": 33
         },
         {
           "id": "57035",
@@ -103,7 +271,10 @@
         "The cooldown on Maokai's self healing is heavily gated on how many time you hit him with spells. Careful about wasting abilities on him.",
         "Maokai will avoid taking damage while he's using Twisted Advance, so don't waste your spells."
       ],
-      "tags": ["Tank", "Support"],
+      "tags": [
+        "Tank",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 3,
@@ -140,7 +311,12 @@
           "description": "Maokai knocks back nearby enemies with a shockwave, dealing magic damage and slowing them.",
           "tooltip": "Maokai smashes his fist into the ground, dealing <magicDamage>{{ totaldamage }} plus {{ basepercenthealth*100 }}% max Health magic damage</magicDamage> and briefly <status>Slowing</status>. Nearby enemies are also <status>Knocked Back</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Max Health %", "Monster Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Max Health %",
+              "Monster Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ basepercenthealth*100.000000 }}% -> {{ basepercenthealthnl*100.000000 }}%",
@@ -149,23 +325,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 6.5, 6, 5.5, 5],
+          "cooldown": [
+            7,
+            6.5,
+            6,
+            5.5,
+            5
+          ],
           "cooldownBurn": "7/6.5/6/5.5/5",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -183,7 +431,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "MaokaiQ.png",
@@ -202,7 +456,11 @@
           "description": "Maokai contorts into a mass of moving roots, becoming untargetable and dashing to the target. Upon arrival, he roots the target.",
           "tooltip": "Maokai transforms into a moving mass of roots, becoming Untargetable and dashing to an enemy. Upon arrival, he <status>Roots</status> the enemy for {{ e2 }} second(s) and deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Root Duration", "Cooldown"],
+            "label": [
+              "Damage",
+              "Root Duration",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ e2 }} -> {{ e2NL }}",
@@ -210,23 +468,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 13, 12, 11, 10],
+          "cooldown": [
+            14,
+            13,
+            12,
+            11,
+            10
+          ],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [60, 60, 60, 60, 60],
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [60, 85, 110, 135, 160],
-            [1, 1.1, 1.2, 1.3, 1.4],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [1300, 1300, 1300, 1300, 1300],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              60,
+              85,
+              110,
+              135,
+              160
+            ],
+            [
+              1,
+              1.1,
+              1.2,
+              1.3,
+              1.4
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              1300,
+              1300,
+              1300,
+              1300,
+              1300
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -244,7 +574,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [525, 525, 525, 525, 525],
+          "range": [
+            525,
+            525,
+            525,
+            525,
+            525
+          ],
           "rangeBurn": "525",
           "image": {
             "full": "MaokaiW.png",
@@ -277,23 +613,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [18, 17, 16, 15, 14],
+          "cooldown": [
+            18,
+            17,
+            16,
+            15,
+            14
+          ],
           "cooldownBurn": "18/17/16/15/14",
-          "cost": [60, 65, 70, 75, 80],
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -311,7 +719,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1100, 1100, 1100, 1100, 1100],
+          "range": [
+            1100,
+            1100,
+            1100,
+            1100,
+            1100
+          ],
           "rangeBurn": "1100",
           "image": {
             "full": "MaokaiE.png",
@@ -330,7 +744,11 @@
           "description": "Maokai summons a colossal wall of brambles and thorns that slowly advances forwards, damaging and rooting any enemies in the path.",
           "tooltip": "Maokai summons a colossal wave of brambles and thorns, <status>Rooting</status> enemies for {{ minrootduration }} to {{ maxrootduration }} seconds, increasing with distance travelled, and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. Hitting a champion gives Maokai <speed>{{ movehaste*100 }}% Move Speed</speed>, decaying over {{ hasteduration }} seconds. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Move Speed", "Cooldown"],
+            "label": [
+              "Damage",
+              "Move Speed",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ movehaste*100.000000 }}% -> {{ movehastenl*100.000000 }}%",
@@ -338,23 +756,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [130, 110, 90],
+          "cooldown": [
+            130,
+            110,
+            90
+          ],
           "cooldownBurn": "130/110/90",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0.6, 0.6, 0.6],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0.6,
+              0.6,
+              0.6
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -372,7 +838,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [3000, 3000, 3000],
+          "range": [
+            3000,
+            3000,
+            3000
+          ],
           "rangeBurn": "3000",
           "image": {
             "full": "MaokaiR.png",

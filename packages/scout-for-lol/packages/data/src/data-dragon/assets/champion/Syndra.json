@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Syndra": {
       "id": "Syndra",
@@ -67,10 +67,122 @@
           "chromas": true
         },
         {
+          "id": "134008",
+          "num": 8,
+          "name": "Pool Party Syndra (Ruby)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "134009",
+          "num": 9,
+          "name": "Pool Party Syndra (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "134010",
+          "num": 10,
+          "name": "Pool Party Syndra (Catseye)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "134011",
+          "num": 11,
+          "name": "Pool Party Syndra (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "134012",
+          "num": 12,
+          "name": "Pool Party Syndra (Emerald)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "134013",
+          "num": 13,
+          "name": "Pool Party Syndra (Pearl)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "134014",
+          "num": 14,
+          "name": "Pool Party Syndra (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "134015",
+          "num": 15,
+          "name": "Pool Party Syndra (Rainbow)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
           "id": "134016",
           "num": 16,
           "name": "Withered Rose Syndra",
           "chromas": true
+        },
+        {
+          "id": "134017",
+          "num": 17,
+          "name": "Withered Rose Syndra (Ruby)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "134018",
+          "num": 18,
+          "name": "Withered Rose Syndra (Citrine)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "134019",
+          "num": 19,
+          "name": "Withered Rose Syndra (Emerald)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "134020",
+          "num": 20,
+          "name": "Withered Rose Syndra (Turquoise)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "134021",
+          "num": 21,
+          "name": "Withered Rose Syndra (Sapphire)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "134022",
+          "num": 22,
+          "name": "Withered Rose Syndra (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "134023",
+          "num": 23,
+          "name": "Withered Rose Syndra (Obsidian)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "134024",
+          "num": 24,
+          "name": "Withered Rose Syndra (Pearl)",
+          "chromas": false,
+          "parentSkin": 16
         },
         {
           "id": "134025",
@@ -79,10 +191,129 @@
           "chromas": true
         },
         {
+          "id": "134026",
+          "num": 26,
+          "name": "Bewitching Syndra (Ruby)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "134027",
+          "num": 27,
+          "name": "Bewitching Syndra (Citrine)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "134028",
+          "num": 28,
+          "name": "Bewitching Syndra (Emerald)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "134029",
+          "num": 29,
+          "name": "Bewitching Syndra (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "134030",
+          "num": 30,
+          "name": "Bewitching Syndra (Turquoise)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "134031",
+          "num": 31,
+          "name": "Bewitching Syndra (Sapphire)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "134032",
+          "num": 32,
+          "name": "Bewitching Syndra (Pearl)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "134033",
+          "num": 33,
+          "name": "Bewitching Syndra (Obsidian)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
           "id": "134034",
           "num": 34,
           "name": "Prestige Star Guardian Syndra",
           "chromas": false
+        },
+        {
+          "id": "134035",
+          "num": 35,
+          "name": "Star Guardian Syndra (Ruby)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "134036",
+          "num": 36,
+          "name": "Star Guardian Syndra (Catseye)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "134037",
+          "num": 37,
+          "name": "Star Guardian Syndra (Emerald)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "134038",
+          "num": 38,
+          "name": "Star Guardian Syndra (Sapphire)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "134039",
+          "num": 39,
+          "name": "Star Guardian Syndra (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "134040",
+          "num": 40,
+          "name": "Star Guardian Syndra (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "134041",
+          "num": 41,
+          "name": "Star Guardian Syndra (Pearl)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "134042",
+          "num": 42,
+          "name": "Star Guardian Syndra (Obsidian)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "134043",
+          "num": 43,
+          "name": "Star Guardian Syndra (Brilliant)",
+          "chromas": false,
+          "parentSkin": 6
         },
         {
           "id": "134044",
@@ -91,16 +322,205 @@
           "chromas": true
         },
         {
+          "id": "134045",
+          "num": 45,
+          "name": "Spirit Blossom Syndra (Ruby)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "134046",
+          "num": 46,
+          "name": "Spirit Blossom Syndra (Turquoise)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "134047",
+          "num": 47,
+          "name": "Spirit Blossom Syndra (Catseye)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "134048",
+          "num": 48,
+          "name": "Spirit Blossom Syndra (Sapphire)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "134049",
+          "num": 49,
+          "name": "Spirit Blossom Syndra (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "134050",
+          "num": 50,
+          "name": "Spirit Blossom Syndra (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "134051",
+          "num": 51,
+          "name": "Spirit Blossom Syndra (Pearl)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "134052",
+          "num": 52,
+          "name": "Spirit Blossom Syndra (Obsidian)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "134053",
+          "num": 53,
+          "name": "Spirit Blossom Syndra (Night Blossom)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
           "id": "134054",
           "num": 54,
           "name": "Coven Syndra",
           "chromas": true
         },
         {
+          "id": "134055",
+          "num": 55,
+          "name": "Coven Syndra (Ruby)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "134056",
+          "num": 56,
+          "name": "Coven Syndra (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "134057",
+          "num": 57,
+          "name": "Coven Syndra (Catseye)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "134058",
+          "num": 58,
+          "name": "Coven Syndra (Emerald)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "134059",
+          "num": 59,
+          "name": "Coven Syndra (Meteorite)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "134060",
+          "num": 60,
+          "name": "Coven Syndra (Pearl)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "134061",
+          "num": 61,
+          "name": "Coven Syndra (Amethyst)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "134062",
+          "num": 62,
+          "name": "Coven Syndra (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "134063",
+          "num": 63,
+          "name": "Coven Syndra (Profane)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "134064",
+          "num": 64,
+          "name": "SKT T1 Syndra (Paragon)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
           "id": "134065",
           "num": 65,
           "name": "Dumpling Darlings Syndra",
           "chromas": true
+        },
+        {
+          "id": "134066",
+          "num": 66,
+          "name": "Dumpling Darlings Syndra (Ruby)",
+          "chromas": false,
+          "parentSkin": 65
+        },
+        {
+          "id": "134067",
+          "num": 67,
+          "name": "Dumpling Darlings Syndra (Sapphire)",
+          "chromas": false,
+          "parentSkin": 65
+        },
+        {
+          "id": "134068",
+          "num": 68,
+          "name": "Dumpling Darlings Syndra (Catseye)",
+          "chromas": false,
+          "parentSkin": 65
+        },
+        {
+          "id": "134069",
+          "num": 69,
+          "name": "Dumpling Darlings Syndra (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 65
+        },
+        {
+          "id": "134070",
+          "num": 70,
+          "name": "Dumpling Darlings Syndra (Emerald)",
+          "chromas": false,
+          "parentSkin": 65
+        },
+        {
+          "id": "134071",
+          "num": 71,
+          "name": "Dumpling Darlings Syndra (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 65
+        },
+        {
+          "id": "134072",
+          "num": 72,
+          "name": "Dumpling Darlings Syndra (Obsidian)",
+          "chromas": false,
+          "parentSkin": 65
+        },
+        {
+          "id": "134073",
+          "num": 73,
+          "name": "Dumpling Darlings Syndra (Pearl)",
+          "chromas": false,
+          "parentSkin": 65
         }
       ],
       "lore": "Syndra is a fearsome Ionian mage with incredible power at her command. As a child, she disturbed the village elders with her reckless and wild magic. She was sent away to be taught greater control, but eventually discovered her supposed mentor was restraining her abilities. Forming her feelings of betrayal and hurt into dark spheres of energy, Syndra has sworn to destroy all who would try to control her.",
@@ -115,7 +535,9 @@
         "Attack Syndra after she's used Scatter the Weak, it has a long cooldown so she'll be vulnerable.",
         "At max rank Syndra's spells gain bonus effects and change in appearance."
       ],
-      "tags": ["Mage"],
+      "tags": [
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -152,30 +574,105 @@
           "description": "Syndra conjures a Dark Sphere dealing magic damage. The sphere remains and can be manipulated by her other powers.",
           "tooltip": "Syndra conjures a <keywordMajor>Dark Sphere</keywordMajor>, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. The <keywordMajor>Dark Sphere</keywordMajor> remains for {{ sphereduration }} seconds and can be manipulated by Syndra's other Abilities.<br /><br /><evolve>{{ spell.syndrapassive:q1upgradethreshold }} Splinters of Wrath</evolve>: Syndra can store {{ upgrade1maxammo }} charges of <keywordMajor>Dark Sphere</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["@AbilityResourceName@ Cost", "Damage"],
+            "label": [
+              "@AbilityResourceName@ Cost",
+              "Damage"
+            ],
             "effect": [
               "{{ cost }} -> {{ costNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 7, 7, 7, 7],
+          "cooldown": [
+            7,
+            7,
+            7,
+            7,
+            7
+          ],
           "cooldownBurn": "7",
-          "cost": [40, 45, 50, 55, 60],
+          "cost": [
+            40,
+            45,
+            50,
+            55,
+            60
+          ],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -193,7 +690,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "SyndraQ.png",
@@ -212,7 +715,11 @@
           "description": "Syndra picks up and throws a Dark Sphere or enemy minion dealing magic damage and slowing the Move Speed of enemies.",
           "tooltip": "Syndra grabs a <keywordMajor>Dark Sphere</keywordMajor>, enemy minion, or non-epic monster. She drags it with her and can <recast>Recast</recast> for up to 5 seconds.<br /><br /><recast>Recast</recast>: Syndra hurls the object, dealing <magicDamage>{{ throwdamage }} magic damage</magicDamage> and <status>Slowing</status> by {{ totalslowamount }}% for {{ f2 }} seconds.<br /><br /><evolve>{{ spell.syndrapassive:wupgradethreshold }} Splinters of Wrath</evolve>: This Ability deals an additional <trueDamage>{{ tooltiponlypassivebonuspercent }} true damage</trueDamage>.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "@AbilityResourceName@ Cost", "Damage"],
+            "label": [
+              "Cooldown",
+              "@AbilityResourceName@ Cost",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}",
@@ -220,23 +727,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11, 10, 9, 8],
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [60, 70, 80, 90, 100],
+          "cost": [
+            60,
+            70,
+            80,
+            90,
+            100
+          ],
           "costBurn": "60/70/80/90/100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -254,7 +833,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [925, 925, 925, 925, 925],
+          "range": [
+            925,
+            925,
+            925,
+            925,
+            925
+          ],
           "rangeBurn": "925",
           "image": {
             "full": "SyndraW.png",
@@ -273,27 +858,103 @@
           "description": "Syndra knocks enemies and Dark Spheres back dealing magic damage. Enemies hit by Dark Spheres become stunned.",
           "tooltip": "Syndra projects a wave of force, <status>Knocking Back</status> enemies and <keywordMajor>Dark Spheres</keywordMajor> and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br /><keywordMajor>Dark Spheres</keywordMajor> that are pushed <status>Stun</status> enemies for {{ stunduration }} seconds and deal <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br /><evolve>{{ spell.syndrapassive:eupgradethreshold }} Splinters of Wrath</evolve>: This Ability's width is increased and <status>Slows</status> enemies by <status>{{ upgradedslowamount*100 }}%</status> for {{ upgradedslowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}"]
+            "label": [
+              "Damage"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [15, 15, 15, 15, 15],
+          "cooldown": [
+            15,
+            15,
+            15,
+            15,
+            15
+          ],
           "cooldownBurn": "15",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -311,7 +972,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "SyndraE.png",
@@ -330,7 +997,11 @@
           "description": "Syndra bombards an enemy Champion with all of her Dark Spheres.",
           "tooltip": "<spellPassive>Passive</spellPassive>: <spellName>Dark Sphere</spellName> gains an additional {{ qhasteperrank }} Ability Haste for each rank of <spellName>Unleashed Power</spellName>.<br /><br />Syndra draws on her full cataclysmic power, launching the 3 <keywordMajor>Dark Spheres</keywordMajor> orbiting her plus up to 4 more nearby at an enemy champion. Each <keywordMajor>Dark Sphere</keywordMajor> deals <magicDamage>{{ damagecalc }} magic damage</magicDamage> (max <magicDamage>{{ maxdamagecalc }} magic damage</magicDamage>).<br /><br /><evolve>{{ spell.syndrapassive:rupgradethreshold }} Splinters of Wrath</evolve>: This Ability <danger>executes</danger> enemies below {{ upgradeexecutethreshold*100 }}% Health.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "Dark Sphere Ability Haste"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "Dark Sphere Ability Haste"
+            ],
             "effect": [
               "{{ damagepersphere }} -> {{ damagepersphereNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -338,23 +1009,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -372,7 +1091,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [675, 675, 675],
+          "range": [
+            675,
+            675,
+            675
+          ],
           "rangeBurn": "675",
           "image": {
             "full": "SyndraR.png",

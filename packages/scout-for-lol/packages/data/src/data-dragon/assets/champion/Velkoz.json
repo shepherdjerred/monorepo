@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Velkoz": {
       "id": "Velkoz",
@@ -49,16 +49,170 @@
           "chromas": true
         },
         {
+          "id": "161005",
+          "num": 5,
+          "name": "Infernal Vel'Koz (Ruby)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "161006",
+          "num": 6,
+          "name": "Infernal Vel'Koz (Catseye)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "161007",
+          "num": 7,
+          "name": "Infernal Vel'Koz (Emerald)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "161008",
+          "num": 8,
+          "name": "Infernal Vel'Koz (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "161009",
+          "num": 9,
+          "name": "Infernal Vel'Koz (Rainbow)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "161010",
+          "num": 10,
+          "name": "Infernal Vel'Koz (Amethyst)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
           "id": "161011",
           "num": 11,
           "name": "Blackfrost Vel'Koz",
           "chromas": true
         },
         {
+          "id": "161012",
+          "num": 12,
+          "name": "Blackfrost Vel'Koz (Ruby)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "161013",
+          "num": 13,
+          "name": "Blackfrost Vel'Koz (Amethyst)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "161014",
+          "num": 14,
+          "name": "Blackfrost Vel'Koz (Emerald)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "161015",
+          "num": 15,
+          "name": "Blackfrost Vel'Koz (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "161016",
+          "num": 16,
+          "name": "Blackfrost Vel'Koz (Turquoise)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "161017",
+          "num": 17,
+          "name": "Blackfrost Vel'Koz (Pearl)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "161018",
+          "num": 18,
+          "name": "Blackfrost Vel'Koz (Obsidian)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "161019",
+          "num": 19,
+          "name": "Blackfrost Vel'Koz (Citrine)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
           "id": "161020",
           "num": 20,
           "name": "Bee'Koz",
           "chromas": true
+        },
+        {
+          "id": "161021",
+          "num": 21,
+          "name": "Bee'Koz (Ruby)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "161022",
+          "num": 22,
+          "name": "Bee'Koz (Emerald)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "161023",
+          "num": 23,
+          "name": "Bee'Koz (Amethyst)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "161024",
+          "num": 24,
+          "name": "Bee'Koz (Pearl)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "161025",
+          "num": 25,
+          "name": "Bee'Koz (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "161026",
+          "num": 26,
+          "name": "Bee'Koz (Sapphire)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "161027",
+          "num": 27,
+          "name": "Bee'Koz (Obsidian)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "161028",
+          "num": 28,
+          "name": "Bee'Koz (Turquoise)",
+          "chromas": false,
+          "parentSkin": 20
         }
       ],
       "lore": "It is unclear if Vel'Koz was the first Void-spawn to emerge on Runeterra, but there has certainly never been another to match his level of cruel, calculating sentience. While his kin devour or defile everything around them, he seeks instead to scrutinize and study the physical realm—and the strange, warlike beings that dwell there—for any weakness the Void might exploit. But Vel'Koz is far from a passive observer, striking back at threats with deadly plasma, or by disrupting the very fabric of the world itself.",
@@ -73,7 +227,10 @@
         "Vel'Koz has fairly low mobility and is vulnerable to ganks.",
         "Life Form Disintegration Ray can be interrupted by stuns, silences and knockups."
       ],
-      "tags": ["Mage", "Support"],
+      "tags": [
+        "Mage",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -122,23 +279,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 7, 7, 7, 7],
+          "cooldown": [
+            7,
+            7,
+            7,
+            7,
+            7
+          ],
           "cooldownBurn": "7",
-          "cost": [40, 45, 50, 55, 60],
+          "cost": [
+            40,
+            45,
+            50,
+            55,
+            60
+          ],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -156,7 +385,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1050, 1050, 1050, 1050, 1050],
+          "range": [
+            1050,
+            1050,
+            1050,
+            1050,
+            1050
+          ],
           "rangeBurn": "1050",
           "image": {
             "full": "VelkozQ.png",
@@ -189,23 +424,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [1.5, 1.5, 1.5, 1.5, 1.5],
+          "cooldown": [
+            1.5,
+            1.5,
+            1.5,
+            1.5,
+            1.5
+          ],
           "cooldownBurn": "1.5",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [30, 50, 70, 90, 110],
-            [45, 75, 105, 135, 165],
-            [100, 100, 100, 100, 100],
-            [0, 0, 0, 0, 0],
-            [0.25, 0.25, 0.25, 0.25, 0.25],
-            [0.5, 0.5, 0.5, 0.5, 0.5],
-            [88, 88, 88, 88, 88],
-            [500, 500, 500, 500, 500],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              30,
+              50,
+              70,
+              90,
+              110
+            ],
+            [
+              45,
+              75,
+              105,
+              135,
+              165
+            ],
+            [
+              100,
+              100,
+              100,
+              100,
+              100
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0.25,
+              0.25,
+              0.25,
+              0.25,
+              0.25
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              88,
+              88,
+              88,
+              88,
+              88
+            ],
+            [
+              500,
+              500,
+              500,
+              500,
+              500
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -223,7 +530,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "2",
-          "range": [1050, 1050, 1050, 1050, 1050],
+          "range": [
+            1050,
+            1050,
+            1050,
+            1050,
+            1050
+          ],
           "rangeBurn": "1050",
           "image": {
             "full": "VelkozW.png",
@@ -242,7 +555,11 @@
           "description": "Vel'Koz causes an area to explode, knocking up enemies, and knocking close enemies slightly away.",
           "tooltip": "Vel'Koz disrupts a nearby area, causing it to explode, <status>Knocking Up</status> for {{ stunduration }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. Enemies close to Vel'Koz will be <status>Knocked Back</status> instead of <status>Knocked Up</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -250,23 +567,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11.5, 11, 10.5, 10],
+          "cooldown": [
+            12,
+            11.5,
+            11,
+            10.5,
+            10
+          ],
           "cooldownBurn": "12/11.5/11/10.5/10",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -284,7 +673,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [810, 810, 810, 810, 810],
+          "range": [
+            810,
+            810,
+            810,
+            810,
+            810
+          ],
           "rangeBurn": "810",
           "image": {
             "full": "VelkozE.png",
@@ -303,30 +698,81 @@
           "description": "Vel'Koz unleashes a channelled beam that follows the cursor for 2.5 seconds that deals magic damage. Organic Deconstruction Researches enemy champions causing them to take true damage instead.",
           "tooltip": "Vel'Koz channels a ray of energy that follows the cursor, dealing a total of <magicDamage>{{ totaldamage }} magic damage</magicDamage> over 2.5 seconds and <status>Slowing</status> by {{ e3 }}%. Deals <trueDamage>true damage</trueDamage> instead to enemies recently damaged by <spellName>Organic Deconstruction</spellName>.<br /><br />Enemies gain stacks of <keywordMajor>Deconstruction</keywordMajor> periodically while in the beam.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Total Damage", "Cooldown"],
+            "label": [
+              "Total Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [100, 90, 80],
+          "cooldown": [
+            100,
+            90,
+            80
+          ],
           "cooldownBurn": "100/90/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [450, 700, 925],
-            [7, 7, 7],
-            [20, 20, 20],
-            [40, 40, 40],
-            [175, 175, 175],
-            [7, 7, 7],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              450,
+              700,
+              925
+            ],
+            [
+              7,
+              7,
+              7
+            ],
+            [
+              20,
+              20,
+              20
+            ],
+            [
+              40,
+              40,
+              40
+            ],
+            [
+              175,
+              175,
+              175
+            ],
+            [
+              7,
+              7,
+              7
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -344,7 +790,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1575, 1575, 1575],
+          "range": [
+            1575,
+            1575,
+            1575
+          ],
           "rangeBurn": "1575",
           "image": {
             "full": "VelkozR.png",

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Caitlyn": {
       "id": "Caitlyn",
@@ -61,6 +61,27 @@
           "chromas": false
         },
         {
+          "id": "51007",
+          "num": 7,
+          "name": "Caitlyn Rebel Pink",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
+          "id": "51008",
+          "num": 8,
+          "name": "Caitlyn Rebel Green",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
+          "id": "51009",
+          "num": 9,
+          "name": "Caitlyn Rebel Blue",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
           "id": "51010",
           "num": 10,
           "name": "Lunar Wraith Caitlyn",
@@ -73,10 +94,52 @@
           "chromas": true
         },
         {
+          "id": "51012",
+          "num": 12,
+          "name": "Lunar Wraith Caitlyn (Golden)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
           "id": "51013",
           "num": 13,
           "name": "Pool Party Caitlyn",
           "chromas": true
+        },
+        {
+          "id": "51014",
+          "num": 14,
+          "name": "Pool Party Caitlyn (Ruby)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "51015",
+          "num": 15,
+          "name": "Pool Party Caitlyn (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "51016",
+          "num": 16,
+          "name": "Pool Party Caitlyn (Catseye)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "51017",
+          "num": 17,
+          "name": "Pool Party Caitlyn (Obsidian)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "51018",
+          "num": 18,
+          "name": "Pool Party Caitlyn (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 13
         },
         {
           "id": "51019",
@@ -91,10 +154,52 @@
           "chromas": false
         },
         {
+          "id": "51021",
+          "num": 21,
+          "name": "Pulsefire Caitlyn (Chrono)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
           "id": "51022",
           "num": 22,
           "name": "Battle Academia Caitlyn",
           "chromas": true
+        },
+        {
+          "id": "51023",
+          "num": 23,
+          "name": "Battle Academia Caitlyn (Ruby)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "51024",
+          "num": 24,
+          "name": "Battle Academia Caitlyn (Sapphire)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "51025",
+          "num": 25,
+          "name": "Battle Academia Caitlyn (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "51026",
+          "num": 26,
+          "name": "Battle Academia Caitlyn (Obsidian)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "51027",
+          "num": 27,
+          "name": "Battle Academia Caitlyn (Pearl)",
+          "chromas": false,
+          "parentSkin": 22
         },
         {
           "id": "51028",
@@ -115,16 +220,135 @@
           "chromas": true
         },
         {
+          "id": "51031",
+          "num": 31,
+          "name": "Snow Moon Caitlyn (Ruby)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "51032",
+          "num": 32,
+          "name": "Snow Moon Caitlyn (Sapphire)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "51033",
+          "num": 33,
+          "name": "Snow Moon Caitlyn (Catseye)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "51034",
+          "num": 34,
+          "name": "Snow Moon Caitlyn (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "51035",
+          "num": 35,
+          "name": "Snow Moon Caitlyn (Emerald)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "51036",
+          "num": 36,
+          "name": "Snow Moon Caitlyn (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "51037",
+          "num": 37,
+          "name": "Snow Moon Caitlyn (Turquoise)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "51038",
+          "num": 38,
+          "name": "Snow Moon Caitlyn (Pearl)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
           "id": "51039",
           "num": 39,
           "name": "Heartthrob Caitlyn",
           "chromas": true
         },
         {
+          "id": "51040",
+          "num": 40,
+          "name": "Heartthrob Caitlyn (Ruby)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "51041",
+          "num": 41,
+          "name": "Heartthrob Caitlyn (Turquoise)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "51042",
+          "num": 42,
+          "name": "Heartthrob Caitlyn (Sapphire)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "51043",
+          "num": 43,
+          "name": "Heartthrob Caitlyn (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "51044",
+          "num": 44,
+          "name": "Heartthrob Caitlyn (Peridot)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "51045",
+          "num": 45,
+          "name": "Heartthrob Caitlyn (Sandstone)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "51046",
+          "num": 46,
+          "name": "Heartthrob Caitlyn (Amethyst)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "51047",
+          "num": 47,
+          "name": "Heartthrob Caitlyn (Obsidian)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
           "id": "51048",
           "num": 48,
           "name": "DRX Caitlyn",
           "chromas": true
+        },
+        {
+          "id": "51049",
+          "num": 49,
+          "name": "DRX Caitlyn (Elite)",
+          "chromas": false,
+          "parentSkin": 48
         },
         {
           "id": "51050",
@@ -139,10 +363,80 @@
           "chromas": true
         },
         {
+          "id": "51052",
+          "num": 52,
+          "name": "Arcane Commander Caitlyn (Paragon)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "51053",
+          "num": 53,
+          "name": "Prestige Arcane Commander Caitlyn (Stellar)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
           "id": "51054",
           "num": 54,
           "name": "Firecracker Caitlyn",
           "chromas": true
+        },
+        {
+          "id": "51055",
+          "num": 55,
+          "name": "Firecracker Caitlyn (Ruby)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "51056",
+          "num": 56,
+          "name": "Firecracker Caitlyn (Catseye)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "51057",
+          "num": 57,
+          "name": "Firecracker Caitlyn (Emerald)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "51058",
+          "num": 58,
+          "name": "Firecracker Caitlyn (Sapphire)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "51059",
+          "num": 59,
+          "name": "Firecracker Caitlyn (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "51060",
+          "num": 60,
+          "name": "Firecracker Caitlyn (Amethyst)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "51061",
+          "num": 61,
+          "name": "Firecracker Caitlyn (Obsidian)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "51062",
+          "num": 62,
+          "name": "Firecracker Caitlyn (Pearl)",
+          "chromas": false,
+          "parentSkin": 54
         }
       ],
       "lore": "Renowned as its finest peacekeeper, Caitlyn Kiramman is also Piltover's best shot at ridding the city of its elusive criminal elements. She is often paired with Vi, acting as a cool counterpoint to her partner's more impetuous nature. Even though she carries a one-of-a-kind hextech rifle, Caitlyn's most powerful weapon is her superior intellect, allowing her to lay elaborate traps for any lawbreakers foolish enough to operate in the City of Progress.",
@@ -156,7 +450,9 @@
         "Keep behind allied minions if Caitlyn is harassing you with Piltover Peacemaker (it deals less damage with each subsequent target).",
         "You can intercept Ace in the Hole's missile from hitting an ally if you stand in its path."
       ],
-      "tags": ["Marksman"],
+      "tags": [
+        "Marksman"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 8,
@@ -207,23 +503,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9, 8, 7, 6],
+          "cooldown": [
+            10,
+            9,
+            8,
+            7,
+            6
+          ],
           "cooldownBurn": "10/9/8/7/6",
-          "cost": [55, 60, 65, 70, 75],
+          "cost": [
+            55,
+            60,
+            65,
+            70,
+            75
+          ],
           "costBurn": "55/60/65/70/75",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [50, 50, 50, 50, 50],
-            [1, 1, 1, 1, 1],
-            [1.3, 1.45, 1.6, 1.75, 1.9],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              50,
+              50,
+              50,
+              50,
+              50
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              1.3,
+              1.45,
+              1.6,
+              1.75,
+              1.9
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -241,7 +609,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1250, 1250, 1250, 1250, 1250],
+          "range": [
+            1250,
+            1250,
+            1250,
+            1250,
+            1250
+          ],
           "rangeBurn": "1250",
           "image": {
             "full": "CaitlynQ.png",
@@ -274,23 +648,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [0.5, 0.5, 0.5, 0.5, 0.5],
+          "cooldown": [
+            0.5,
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
           "cooldownBurn": "0.5",
-          "cost": [20, 20, 20, 20, 20],
+          "cost": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
           "costBurn": "20",
           "datavalues": {},
           "effect": [
             null,
-            [2, 2, 2, 2, 2],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [30, 30, 30, 30, 30],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              30,
+              30,
+              30,
+              30,
+              30
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -308,7 +754,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "2",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "CaitlynW.png",
@@ -327,30 +779,105 @@
           "description": "Caitlyn fires a heavy net to slow her target. The recoil knocks Caitlyn back.",
           "tooltip": "Caitlyn fires a net, pushing her backwards. The net <status>Slows</status> the first target hit by {{ e3 }}% for {{ e2 }} second and deals <magicDamage>{{ netdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 14, 12, 10, 8],
+          "cooldown": [
+            16,
+            14,
+            12,
+            10,
+            8
+          ],
           "cooldownBurn": "16/14/12/10/8",
-          "cost": [75, 75, 75, 75, 75],
+          "cost": [
+            75,
+            75,
+            75,
+            75,
+            75
+          ],
           "costBurn": "75",
           "datavalues": {},
           "effect": [
             null,
-            [80, 130, 180, 230, 280],
-            [1, 1, 1, 1, 1],
-            [50, 50, 50, 50, 50],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              80,
+              130,
+              180,
+              230,
+              280
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              50,
+              50,
+              50,
+              50,
+              50
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -368,7 +895,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [750, 750, 750, 750, 750],
+          "range": [
+            750,
+            750,
+            750,
+            750,
+            750
+          ],
           "rangeBurn": "750",
           "image": {
             "full": "CaitlynE.png",
@@ -387,27 +920,79 @@
           "description": "Caitlyn takes time to line up the perfect shot, dealing massive damage to a single target at a huge range. Enemy champions can intercept the bullet for their ally.",
           "tooltip": "Caitlyn takes a moment to channel and line up the perfect shot, then she fires, dealing <physicalDamage>{{ rtotaldamage }} physical damage</physicalDamage>, but other enemy champions can intercept it. This Ability grants <keywordStealth>True Sight</keywordStealth> of the target during the channel.<br /><br /><rules>Damage scales with Caitlyn's Critical Strike chance and Critical Strike Damage.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage"],
-            "effect": ["{{ rbasedamage }} -> {{ rbasedamageNL }}"]
+            "label": [
+              "Damage"
+            ],
+            "effect": [
+              "{{ rbasedamage }} -> {{ rbasedamageNL }}"
+            ]
           },
           "maxrank": 3,
-          "cooldown": [90, 90, 90],
+          "cooldown": [
+            90,
+            90,
+            90
+          ],
           "cooldownBurn": "90",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -425,7 +1010,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [3500, 3500, 3500],
+          "range": [
+            3500,
+            3500,
+            3500
+          ],
           "rangeBurn": "3500",
           "image": {
             "full": "CaitlynR.png",

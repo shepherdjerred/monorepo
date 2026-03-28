@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Draven": {
       "id": "Draven",
@@ -61,6 +61,41 @@
           "chromas": false
         },
         {
+          "id": "119007",
+          "num": 7,
+          "name": "Primetime Draven (Pearl)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "119008",
+          "num": 8,
+          "name": "Primetime Draven (Catseye)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "119009",
+          "num": 9,
+          "name": "Primetime Draven (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "119010",
+          "num": 10,
+          "name": "Primetime Draven (Sapphire)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "119011",
+          "num": 11,
+          "name": "Primetime Draven (Obsidian)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
           "id": "119012",
           "num": 12,
           "name": "Santa Draven",
@@ -73,10 +108,108 @@
           "chromas": true
         },
         {
+          "id": "119014",
+          "num": 14,
+          "name": "Mecha Kingdoms Draven (Ruby)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "119015",
+          "num": 15,
+          "name": "Mecha Kingdoms Draven (Peacekeeper)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "119016",
+          "num": 16,
+          "name": "Mecha Kingdoms Draven (Emerald)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "119017",
+          "num": 17,
+          "name": "Mecha Kingdoms Draven (Obsidian)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "119018",
+          "num": 18,
+          "name": "Mecha Kingdoms Draven (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "119019",
+          "num": 19,
+          "name": "Mecha Kingdoms Draven (Amethyst)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
           "id": "119020",
           "num": 20,
           "name": "Ruined Draven",
           "chromas": true
+        },
+        {
+          "id": "119021",
+          "num": 21,
+          "name": "Ruined Draven (Ruby)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "119022",
+          "num": 22,
+          "name": "Ruined Draven (Citrine)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "119023",
+          "num": 23,
+          "name": "Ruined Draven (Amethyst)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "119024",
+          "num": 24,
+          "name": "Ruined Draven (Sapphire)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "119025",
+          "num": 25,
+          "name": "Ruined Draven (Emerald)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "119026",
+          "num": 26,
+          "name": "Ruined Draven (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "119027",
+          "num": 27,
+          "name": "Ruined Draven (Pearl)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "119028",
+          "num": 28,
+          "name": "Ruined Draven (Cursed)",
+          "chromas": false,
+          "parentSkin": 20
         },
         {
           "id": "119029",
@@ -85,10 +218,129 @@
           "chromas": true
         },
         {
+          "id": "119030",
+          "num": 30,
+          "name": "Debonair Draven (Ruby)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "119031",
+          "num": 31,
+          "name": "Debonair Draven (Catseye)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "119032",
+          "num": 32,
+          "name": "Debonair Draven (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "119033",
+          "num": 33,
+          "name": "Debonair Draven (Emerald)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "119034",
+          "num": 34,
+          "name": "Debonair Draven (Sapphire)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "119035",
+          "num": 35,
+          "name": "Debonair Draven (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "119036",
+          "num": 36,
+          "name": "Debonair Draven (Turquoise)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "119037",
+          "num": 37,
+          "name": "Debonair Draven (Obsidian)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "119038",
+          "num": 38,
+          "name": "Debonair Draven (Cerulean Club)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
           "id": "119039",
           "num": 39,
           "name": "Fright Night Draven",
           "chromas": true
+        },
+        {
+          "id": "119040",
+          "num": 40,
+          "name": "Fright Night Draven (Ruby)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "119041",
+          "num": 41,
+          "name": "Fright Night Draven (Catseye)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "119042",
+          "num": 42,
+          "name": "Fright Night Draven (Sapphire)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "119043",
+          "num": 43,
+          "name": "Fright Night Draven (Emerald)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "119044",
+          "num": 44,
+          "name": "Fright Night Draven (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "119045",
+          "num": 45,
+          "name": "Fright Night Draven (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "119046",
+          "num": 46,
+          "name": "Fright Night Draven (Obsidian)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "119047",
+          "num": 47,
+          "name": "Fright Night Draven (Pearl)",
+          "chromas": false,
+          "parentSkin": 39
         },
         {
           "id": "119048",
@@ -97,16 +349,205 @@
           "chromas": true
         },
         {
+          "id": "119049",
+          "num": 49,
+          "name": "La Ilusión Draven (Ruby)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "119050",
+          "num": 50,
+          "name": "La Ilusión Draven (Citrine)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "119051",
+          "num": 51,
+          "name": "La Ilusión Draven (Emerald)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "119052",
+          "num": 52,
+          "name": "La Ilusión Draven (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "119053",
+          "num": 53,
+          "name": "La Ilusión Draven (Turquoise)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "119054",
+          "num": 54,
+          "name": "La Ilusión Draven (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "119055",
+          "num": 55,
+          "name": "La Ilusión Draven (Sapphire)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "119056",
+          "num": 56,
+          "name": "La Ilusión Draven (Pearl)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "119057",
+          "num": 57,
+          "name": "La Ilusión Draven (Vivida)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
           "id": "119058",
           "num": 58,
           "name": "Grand Reckoning Draven",
           "chromas": true
         },
         {
+          "id": "119059",
+          "num": 59,
+          "name": "Grand Reckoning Draven (Ruby)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "119060",
+          "num": 60,
+          "name": "Grand Reckoning Draven (Catseye)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "119061",
+          "num": 61,
+          "name": "Grand Reckoning Draven (Emerald)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "119062",
+          "num": 62,
+          "name": "Grand Reckoning Draven (Turquoise)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "119063",
+          "num": 63,
+          "name": "Grand Reckoning Draven (Sapphire)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "119064",
+          "num": 64,
+          "name": "Grand Reckoning Draven (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "119065",
+          "num": 65,
+          "name": "Grand Reckoning Draven (Pearl)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "119066",
+          "num": 66,
+          "name": "Grand Reckoning Draven (Obsidian)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "119067",
+          "num": 67,
+          "name": "Grand Reckoning Draven (Paragon)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
           "id": "119068",
           "num": 68,
           "name": "Victorious Draven",
           "chromas": true
+        },
+        {
+          "id": "119069",
+          "num": 69,
+          "name": "Victorious Draven (Bronze)",
+          "chromas": false,
+          "parentSkin": 68
+        },
+        {
+          "id": "119070",
+          "num": 70,
+          "name": "Victorious Draven (Silver)",
+          "chromas": false,
+          "parentSkin": 68
+        },
+        {
+          "id": "119071",
+          "num": 71,
+          "name": "Victorious Draven (Gold)",
+          "chromas": false,
+          "parentSkin": 68
+        },
+        {
+          "id": "119072",
+          "num": 72,
+          "name": "Victorious Draven (Platinum)",
+          "chromas": false,
+          "parentSkin": 68
+        },
+        {
+          "id": "119073",
+          "num": 73,
+          "name": "Victorious Draven (Emerald)",
+          "chromas": false,
+          "parentSkin": 68
+        },
+        {
+          "id": "119074",
+          "num": 74,
+          "name": "Victorious Draven (Diamond)",
+          "chromas": false,
+          "parentSkin": 68
+        },
+        {
+          "id": "119075",
+          "num": 75,
+          "name": "Victorious Draven (Master)",
+          "chromas": false,
+          "parentSkin": 68
+        },
+        {
+          "id": "119076",
+          "num": 76,
+          "name": "Victorious Draven (Grandmaster)",
+          "chromas": false,
+          "parentSkin": 68
+        },
+        {
+          "id": "119077",
+          "num": 77,
+          "name": "Victorious Draven (Challenger)",
+          "chromas": false,
+          "parentSkin": 68
         }
       ],
       "lore": "In Noxus, warriors known as Reckoners face one another in arenas where blood is spilled and strength tested—but none has ever been as celebrated as Draven. A former soldier, he found that the crowds uniquely appreciated his flair for the dramatic, and his unparalleled skill with his spinning axes. Addicted to the spectacle of his own brash perfection, Draven has sworn to defeat whomever he must to ensure that his name is chanted throughout the empire forever more.",
@@ -119,7 +560,9 @@
         "Launch skillshots toward the landing position of Draven's Spinning Axes.",
         "Disrupt Draven with the goal of making him drop his axes. If you do, his power drops dramatically."
       ],
-      "tags": ["Marksman"],
+      "tags": [
+        "Marksman"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 9,
@@ -156,7 +599,11 @@
           "description": "Draven's next attack will deal bonus physical damage. This axe will ricochet off the target high up into the air. If Draven catches it, he automatically readies another Spinning Axe. Draven can have two Spinning Axes at once.",
           "tooltip": "Draven readies a <keywordMajor>Spinning Axe</keywordMajor>, causing his next Attack to deal an additional <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and ricochet into the air. If Draven catches it, he readies another <keywordMajor>Spinning Axe</keywordMajor>.<br /><br />Draven can hold two <keywordMajor>Spinning Axes</keywordMajor> at once.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Bonus AD Percentage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Bonus AD Percentage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ adscaling }}% -> {{ adscalingNL }}%",
@@ -164,23 +611,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11, 10, 9, 8],
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [45, 45, 45, 45, 45],
+          "cost": [
+            45,
+            45,
+            45,
+            45,
+            45
+          ],
           "costBurn": "45",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [75, 75, 75, 75, 75],
-            [0, 0, 0, 0, 0],
-            [5.75, 5.75, 5.75, 5.75, 5.75],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              75,
+              75,
+              75,
+              75,
+              75
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              5.75,
+              5.75,
+              5.75,
+              5.75,
+              5.75
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -198,7 +717,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [300, 300, 300, 300, 300],
+          "range": [
+            300,
+            300,
+            300,
+            300,
+            300
+          ],
           "rangeBurn": "300",
           "image": {
             "full": "DravenSpinning.png",
@@ -229,23 +754,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 12, 12, 12, 12],
+          "cooldown": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
           "cooldownBurn": "12",
-          "cost": [40, 35, 30, 25, 20],
+          "cost": [
+            40,
+            35,
+            30,
+            25,
+            20
+          ],
           "costBurn": "40/35/30/25/20",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [50, 55, 60, 65, 70],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [20, 25, 30, 35, 40],
-            [3, 3, 3, 3, 3],
-            [-0.062, -0.069, -0.075, -0.081, -0.087],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              50,
+              55,
+              60,
+              65,
+              70
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              20,
+              25,
+              30,
+              35,
+              40
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              -0.062,
+              -0.069,
+              -0.075,
+              -0.081,
+              -0.087
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -263,7 +860,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1000, 1000, 1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "DravenFury.png",
@@ -282,7 +885,11 @@
           "description": "Draven throws his axes, dealing physical damage to targets hit and knocking them aside. Targets hit are slowed.",
           "tooltip": "Draven chucks a sideways axe that deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>, <status>Knocks Back</status>, and <status>Slows</status> by {{ e2 }}% for {{ e3 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow", "Cooldown"],
+            "label": [
+              "Damage",
+              "Slow",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ e2 }}% -> {{ e2NL }}%",
@@ -290,23 +897,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [18, 17, 16, 15, 14],
+          "cooldown": [
+            18,
+            17,
+            16,
+            15,
+            14
+          ],
           "cooldownBurn": "18/17/16/15/14",
-          "cost": [70, 70, 70, 70, 70],
+          "cost": [
+            70,
+            70,
+            70,
+            70,
+            70
+          ],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [75, 110, 145, 180, 215],
-            [20, 25, 30, 35, 40],
-            [2, 2, 2, 2, 2],
-            [0.5, 0.5, 0.5, 0.5, 0.5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              75,
+              110,
+              145,
+              180,
+              215
+            ],
+            [
+              20,
+              25,
+              30,
+              35,
+              40
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -324,7 +1003,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1050, 1050, 1050, 1050, 1050],
+          "range": [
+            1050,
+            1050,
+            1050,
+            1050,
+            1050
+          ],
           "rangeBurn": "1050",
           "image": {
             "full": "DravenDoubleShot.png",
@@ -343,7 +1028,11 @@
           "description": "Draven hurls two massive axes to deal physical damage to each unit struck. Whirling Death slowly reverses direction and returns to Draven after striking an enemy champion. Draven may also activate this ability while the axes are in flight to cause it to return early. Deals less damage for each unit hit and resets when the axes reverse direction. Executes enemies who have less health than Draven's number of Adoration stacks.",
           "tooltip": "Draven hurls two massive axes that deal <physicalDamage>{{ rcalculateddamage }} physical damage</physicalDamage>. Upon hitting a champion or <recast>Recasting</recast>, they reverse direction and return to Draven. The axes deal {{ rdamagereductionperhit*100 }}% less damage for each enemy hit, down to a minimum of {{ rmindamagepercent }}%.<br /><br />If <keywordMajor>Whirling Death</keywordMajor> would leave an enemy champion with less health than {{ rpassivestackscoefficient*100 }}% of Draven's current <keywordMajor>League of Draven</keywordMajor> stacks ({{ rpassivetruedamage }}), he will execute them.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "Bonus AD Ratio"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "Bonus AD Ratio"
+            ],
             "effect": [
               "{{ rbasedamage }} -> {{ rbasedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -351,23 +1040,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [100, 90, 80],
+          "cooldown": [
+            100,
+            90,
+            80
+          ],
           "cooldownBurn": "100/90/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -385,7 +1122,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [20000, 20000, 20000],
+          "range": [
+            20000,
+            20000,
+            20000
+          ],
           "rangeBurn": "20000",
           "image": {
             "full": "DravenRCast.png",

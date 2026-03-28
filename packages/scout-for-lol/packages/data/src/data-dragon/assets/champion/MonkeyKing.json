@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "MonkeyKing": {
       "id": "MonkeyKing",
@@ -67,16 +67,198 @@
           "chromas": true
         },
         {
+          "id": "62008",
+          "num": 8,
+          "name": "Battle Academia Wukong (Ruby)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "62009",
+          "num": 9,
+          "name": "Battle Academia Wukong (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "62010",
+          "num": 10,
+          "name": "Battle Academia Wukong (Catseye)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "62011",
+          "num": 11,
+          "name": "Battle Academia Wukong (Sapphire)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "62012",
+          "num": 12,
+          "name": "Battle Academia Wukong (Emerald)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "62013",
+          "num": 13,
+          "name": "Battle Academia Wukong (Pearl)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "62014",
+          "num": 14,
+          "name": "Battle Academia Wukong (Meteorite)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "62015",
+          "num": 15,
+          "name": "Battle Academia Wukong (Obsidian)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
           "id": "62016",
           "num": 16,
           "name": "Elderwood Wukong",
           "chromas": true
         },
         {
+          "id": "62017",
+          "num": 17,
+          "name": "Elderwood Wukong (Ruby)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "62018",
+          "num": 18,
+          "name": "Elderwood Wukong (Citrine)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "62019",
+          "num": 19,
+          "name": "Elderwood Wukong (Emerald)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "62020",
+          "num": 20,
+          "name": "Elderwood Wukong (Turquoise)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "62021",
+          "num": 21,
+          "name": "Elderwood Wukong (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "62022",
+          "num": 22,
+          "name": "Elderwood Wukong (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "62023",
+          "num": 23,
+          "name": "Elderwood Wukong (Amethyst)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "62024",
+          "num": 24,
+          "name": "Elderwood Wukong (Pearl)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "62025",
+          "num": 25,
+          "name": "Jade Dragon Wukong (Meteorite)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
           "id": "62026",
           "num": 26,
           "name": "Mecha Kingdoms Wukong",
           "chromas": true
+        },
+        {
+          "id": "62027",
+          "num": 27,
+          "name": "Underworld Wukong (Doom)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "62029",
+          "num": 29,
+          "name": "Mecha Kingdoms Wukong (Ruby)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "62030",
+          "num": 30,
+          "name": "Mecha Kingdoms Wukong (Emerald)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "62031",
+          "num": 31,
+          "name": "Mecha Kingdoms Wukong (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "62032",
+          "num": 32,
+          "name": "Mecha Kingdoms Wukong (Sapphire)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "62033",
+          "num": 33,
+          "name": "Mecha Kingdoms Wukong (Amethyst)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "62034",
+          "num": 34,
+          "name": "Mecha Kingdoms Wukong (Pearl)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "62035",
+          "num": 35,
+          "name": "Mecha Kingdoms Wukong (Obsidian)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "62036",
+          "num": 36,
+          "name": "Mecha Kingdoms Wukong (Catseye)",
+          "chromas": false,
+          "parentSkin": 26
         }
       ],
       "lore": "Wukong is a vastayan trickster who uses his strength, agility, and intelligence to confuse his opponents and gain the upper hand. After finding a lifelong friend in the warrior known as Master Yi, Wukong became the last student of the ancient martial art known as Wuju. Armed with an enchanted staff, Wukong seeks to prevent Ionia from falling to ruin.",
@@ -89,7 +271,10 @@
         "Wukong will often use Decoy after Nimbus Strike. Try delaying your abilities by a short amount of time to ensure that you're hitting the real Wukong.",
         "Wukong becomes tougher to kill when surrounded by his enemies. Try to isolate him to gain an advantage."
       ],
-      "tags": ["Fighter", "Tank"],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 8,
@@ -126,7 +311,12 @@
           "description": "Wukong's next attack gains attack range, deals bonus damage, and reduces the target's armor for a few seconds.",
           "tooltip": "Wukong and his <keywordMajor>Clone's</keywordMajor> next Attack gains {{ attackrangebonus }} range, deals an additional <physicalDamage>{{ bonusdamagett }} physical damage</physicalDamage>, and removes <scaleArmor>{{ armorshredpercent*100 }}% Armor</scaleArmor> for {{ shredduration }} seconds.<br /><br />This Ability's cooldown is reduced by {{ cooldowndecrease }} seconds every time Wukong or his <keywordMajor>Clone</keywordMajor> hit an enemy with an Attack or Ability.<br /><br /><rules>This Ability triggers spell effects upon dealing damage.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Armor Reduction %", "Range", "Cooldown"],
+            "label": [
+              "Damage",
+              "Armor Reduction %",
+              "Range",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ armorshredpercent*100.000000 }}% -> {{ armorshredpercentnl*100.000000 }}%",
@@ -135,23 +325,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 7.5, 7, 6.5, 6],
+          "cooldown": [
+            8,
+            7.5,
+            7,
+            6.5,
+            6
+          ],
           "cooldownBurn": "8/7.5/7/6.5/6",
-          "cost": [20, 20, 20, 20, 20],
+          "cost": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
           "costBurn": "20",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -169,7 +431,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [250, 275, 300, 325, 350],
+          "range": [
+            250,
+            275,
+            300,
+            325,
+            350
+          ],
           "rangeBurn": "250/275/300/325/350",
           "image": {
             "full": "MonkeyKingDoubleAttack.png",
@@ -200,23 +468,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [22, 21, 20, 19, 18],
+          "cooldown": [
+            22,
+            21,
+            20,
+            19,
+            18
+          ],
           "cooldownBurn": "22/21/20/19/18",
-          "cost": [60, 55, 50, 45, 40],
+          "cost": [
+            60,
+            55,
+            50,
+            45,
+            40
+          ],
           "costBurn": "60/55/50/45/40",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -234,7 +574,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [275, 275, 275, 275, 275],
+          "range": [
+            275,
+            275,
+            275,
+            275,
+            275
+          ],
           "rangeBurn": "275",
           "image": {
             "full": "MonkeyKingDecoy.png",
@@ -267,23 +613,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9.25, 8.5, 7.75, 7],
+          "cooldown": [
+            10,
+            9.25,
+            8.5,
+            7.75,
+            7
+          ],
           "cooldownBurn": "10/9.25/8.5/7.75/7",
-          "cost": [30, 35, 40, 45, 50],
+          "cost": [
+            30,
+            35,
+            40,
+            45,
+            50
+          ],
           "costBurn": "30/35/40/45/50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -301,7 +719,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "MonkeyKingNimbus.png",
@@ -320,30 +744,81 @@
           "description": "Wukong's extends his staff and spins it around repeatedly, gaining Move Speed.<br><br>Enemies struck take damage and are knocked up.",
           "tooltip": "Wukong gains <speed>{{ movespeed*100 }}% Move Speed</speed> and spins his staff, <status>Knocking Up</status> nearby enemies for {{ knockupduration }} seconds and take <physicalDamage>{{ totaldamagett }} plus {{ percenthpdamagett }} max Health physical damage</physicalDamage> over {{ spinduration }} seconds.<br /><br />This Ability can be cast a second time within {{ recastwindow }} seconds before going on cooldown.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Maximum Health Damage", "Cooldown"],
+            "label": [
+              "Maximum Health Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basepercentmaxhpdmgpersec*200.000000 }}% -> {{ basepercentmaxhpdmgpersecnl*200.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [130, 110, 90],
+          "cooldown": [
+            130,
+            110,
+            90
+          ],
           "cooldownBurn": "130/110/90",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -361,7 +836,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [315, 315, 315],
+          "range": [
+            315,
+            315,
+            315
+          ],
           "rangeBurn": "315",
           "image": {
             "full": "MonkeyKingSpinToWin.png",

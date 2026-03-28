@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Akali": {
       "id": "Akali",
@@ -79,6 +79,27 @@
           "chromas": false
         },
         {
+          "id": "84010",
+          "num": 10,
+          "name": "Headhunter Akali (Ruby)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "84011",
+          "num": 11,
+          "name": "Headhunter Akali (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "84012",
+          "num": 12,
+          "name": "Headhunter Akali (Pearl)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
           "id": "84013",
           "num": 13,
           "name": "Prestige K/DA Akali",
@@ -97,16 +118,303 @@
           "chromas": true
         },
         {
+          "id": "84016",
+          "num": 16,
+          "name": "PROJECT: Akali (Ruby)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "84017",
+          "num": 17,
+          "name": "PROJECT: Akali (Turquoise)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "84018",
+          "num": 18,
+          "name": "PROJECT: Akali (Catseye)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "84019",
+          "num": 19,
+          "name": "PROJECT: Akali (Sapphire)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "84020",
+          "num": 20,
+          "name": "PROJECT: Akali (Amethyst)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "84021",
+          "num": 21,
+          "name": "PROJECT: Akali (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "84022",
+          "num": 22,
+          "name": "PROJECT: Akali (Obsidian)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "84023",
+          "num": 23,
+          "name": "PROJECT: Akali (Pearl)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "84024",
+          "num": 24,
+          "name": "PROJECT: Akali (Reckoning)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "84025",
+          "num": 25,
+          "name": "True Damage Akali (Ruby)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "84026",
+          "num": 26,
+          "name": "True Damage Akali (Catseye)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "84027",
+          "num": 27,
+          "name": "True Damage Akali (Emerald)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "84028",
+          "num": 28,
+          "name": "True Damage Akali (Sapphire)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "84029",
+          "num": 29,
+          "name": "True Damage Akali (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "84030",
+          "num": 30,
+          "name": "True Damage Akali (Pearl)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "84031",
+          "num": 31,
+          "name": "True Damage Akali (Freestyle)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
           "id": "84032",
           "num": 32,
           "name": "K/DA ALL OUT Akali",
           "chromas": true
         },
         {
+          "id": "84033",
+          "num": 33,
+          "name": "Nurse Akali (Citrine)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "84034",
+          "num": 34,
+          "name": "Nurse Akali (Ruby)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "84035",
+          "num": 35,
+          "name": "Nurse Akali (Emerald)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "84036",
+          "num": 36,
+          "name": "Nurse Akali (Amethyst)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "84037",
+          "num": 37,
+          "name": "Nurse Akali (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "84038",
+          "num": 38,
+          "name": "Nurse Akali (Obsidian)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "84039",
+          "num": 39,
+          "name": "Nurse Akali (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "84040",
+          "num": 40,
+          "name": "Nurse Akali (Rainbow)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "84041",
+          "num": 41,
+          "name": "K/DA ALL OUT Akali (Ruby)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "84042",
+          "num": 42,
+          "name": "K/DA ALL OUT Akali (Catseye)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "84043",
+          "num": 43,
+          "name": "K/DA ALL OUT Akali (Peridot)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "84044",
+          "num": 44,
+          "name": "K/DA ALL OUT Akali (Sapphire)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "84045",
+          "num": 45,
+          "name": "K/DA ALL OUT Akali (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "84046",
+          "num": 46,
+          "name": "K/DA ALL OUT Akali (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "84047",
+          "num": 47,
+          "name": "K/DA ALL OUT Akali (BADDEST)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "84048",
+          "num": 48,
+          "name": "K/DA ALL OUT Akali (Pearl)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
           "id": "84050",
           "num": 50,
           "name": "Crime City Nightmare Akali",
           "chromas": false
+        },
+        {
+          "id": "84051",
+          "num": 51,
+          "name": "Crime City Nightmare Akali (Ruby)",
+          "chromas": true,
+          "parentSkin": 50
+        },
+        {
+          "id": "84052",
+          "num": 52,
+          "name": "Crime City Nightmare Akali (Emerald)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "84053",
+          "num": 53,
+          "name": "Crime City Nightmare Akali (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "84054",
+          "num": 54,
+          "name": "Crime City Nightmare Akali (Sapphire)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "84055",
+          "num": 55,
+          "name": "Crime City Nightmare Akali (Catseye)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "84056",
+          "num": 56,
+          "name": "Crime City Nightmare Akali (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "84057",
+          "num": 57,
+          "name": "Crime City Nightmare Akali (Pearl)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "84058",
+          "num": 58,
+          "name": "Crime City Nightmare Akali (Obsidian)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "84059",
+          "num": 59,
+          "name": "Crime City Nightmare Akali (Underground)",
+          "chromas": false,
+          "parentSkin": 50
         },
         {
           "id": "84060",
@@ -121,10 +429,59 @@
           "chromas": false
         },
         {
+          "id": "84062",
+          "num": 62,
+          "name": "Star Guardian Akali (Ruby)",
+          "chromas": true,
+          "parentSkin": 61
+        },
+        {
+          "id": "84063",
+          "num": 63,
+          "name": "Star Guardian Akali (Catseye)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "84064",
+          "num": 64,
+          "name": "Star Guardian Akali (Turquoise)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "84065",
+          "num": 65,
+          "name": "Star Guardian Akali (Emerald)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "84066",
+          "num": 66,
+          "name": "Star Guardian Akali (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "84067",
+          "num": 67,
+          "name": "Star Guardian Akali (Brilliant)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
           "id": "84068",
           "num": 68,
           "name": "DRX Akali",
           "chromas": false
+        },
+        {
+          "id": "84069",
+          "num": 69,
+          "name": "DRX Akali (Elite)",
+          "chromas": true,
+          "parentSkin": 68
         },
         {
           "id": "84070",
@@ -139,16 +496,212 @@
           "chromas": true
         },
         {
+          "id": "84072",
+          "num": 72,
+          "name": "Coven Akali (Ruby)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "84073",
+          "num": 73,
+          "name": "Coven Akali (Catseye)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "84074",
+          "num": 74,
+          "name": "Coven Akali (Sapphire)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "84075",
+          "num": 75,
+          "name": "Coven Akali (Emerald)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "84076",
+          "num": 76,
+          "name": "Coven Akali (Amethyst)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "84077",
+          "num": 77,
+          "name": "Coven Akali (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "84078",
+          "num": 78,
+          "name": "Coven Akali (Turquoise)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "84079",
+          "num": 79,
+          "name": "Coven Akali (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "84080",
+          "num": 80,
+          "name": "Coven Akali (Destined)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "84081",
+          "num": 81,
+          "name": "Coven Akali (Profane)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
           "id": "84082",
           "num": 82,
           "name": "Empyrean Akali",
           "chromas": false
         },
         {
+          "id": "84083",
+          "num": 83,
+          "name": "Empyrean Akali (Ruby)",
+          "chromas": true,
+          "parentSkin": 82
+        },
+        {
+          "id": "84084",
+          "num": 84,
+          "name": "Empyrean Akali (Catseye)",
+          "chromas": false,
+          "parentSkin": 82
+        },
+        {
+          "id": "84085",
+          "num": 85,
+          "name": "Empyrean Akali (Amethyst)",
+          "chromas": false,
+          "parentSkin": 82
+        },
+        {
+          "id": "84086",
+          "num": 86,
+          "name": "Empyrean Akali (Sapphire)",
+          "chromas": false,
+          "parentSkin": 82
+        },
+        {
+          "id": "84087",
+          "num": 87,
+          "name": "Empyrean Akali (Turquoise)",
+          "chromas": false,
+          "parentSkin": 82
+        },
+        {
+          "id": "84088",
+          "num": 88,
+          "name": "Empyrean Akali (Emerald)",
+          "chromas": false,
+          "parentSkin": 82
+        },
+        {
+          "id": "84089",
+          "num": 89,
+          "name": "Empyrean Akali (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 82
+        },
+        {
+          "id": "84090",
+          "num": 90,
+          "name": "Empyrean Akali (Pearl)",
+          "chromas": false,
+          "parentSkin": 82
+        },
+        {
+          "id": "84091",
+          "num": 91,
+          "name": "Empyrean Akali (Neon Facade)",
+          "chromas": false,
+          "parentSkin": 82
+        },
+        {
           "id": "84092",
           "num": 92,
           "name": "Spirit Blossom Akali",
           "chromas": false
+        },
+        {
+          "id": "84093",
+          "num": 93,
+          "name": "Spirit Blossom Akali (Ruby)",
+          "chromas": true,
+          "parentSkin": 92
+        },
+        {
+          "id": "84094",
+          "num": 94,
+          "name": "Spirit Blossom Akali (Citrine)",
+          "chromas": false,
+          "parentSkin": 92
+        },
+        {
+          "id": "84095",
+          "num": 95,
+          "name": "Spirit Blossom Akali (Emerald)",
+          "chromas": false,
+          "parentSkin": 92
+        },
+        {
+          "id": "84096",
+          "num": 96,
+          "name": "Spirit Blossom Akali (Turquoise)",
+          "chromas": false,
+          "parentSkin": 92
+        },
+        {
+          "id": "84097",
+          "num": 97,
+          "name": "Spirit Blossom Akali (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 92
+        },
+        {
+          "id": "84098",
+          "num": 98,
+          "name": "Spirit Blossom Akali (Pearl)",
+          "chromas": false,
+          "parentSkin": 92
+        },
+        {
+          "id": "84099",
+          "num": 99,
+          "name": "Spirit Blossom Akali (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 92
+        },
+        {
+          "id": "84100",
+          "num": 100,
+          "name": "Spirit Blossom Akali (Obsidian)",
+          "chromas": false,
+          "parentSkin": 92
+        },
+        {
+          "id": "84101",
+          "num": 101,
+          "name": "Spirit Blossom Akali (Paragon)",
+          "chromas": false,
+          "parentSkin": 92
         }
       ],
       "lore": "Abandoning the Kinkou Order and her title of the Fist of Shadow, Akali now strikes alone, ready to be the deadly weapon her people need. Though she holds onto all she learned from her master Shen, she has pledged to defend Ionia from its enemies, one kill at a time. Akali may strike in silence, but her message will be heard loud and clear: fear the assassin with no master.",
@@ -162,7 +715,9 @@
         "Akali's Five Point Strike is powerful when used at maximum range and energy. Engage on her when she has low energy to maximize your chance of winning trades.",
         "Return to base if your Health is low and Akali has her ultimate available."
       ],
-      "tags": ["Assassin"],
+      "tags": [
+        "Assassin"
+      ],
       "partype": "Energy",
       "info": {
         "attack": 5,
@@ -199,30 +754,105 @@
           "description": "Akali throws out five kunai, dealing damage based on her bonus Attack Damage and Ability Power and slowing.",
           "tooltip": "Akali slings kunai in an arc, dealing <magicDamage>{{ damage }} magic damage</magicDamage> and <status>Slowing</status> enemies at the tip by {{ slowpercentage*100 }}% for {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["@AbilityResourceName@ Cost", "Damage"],
+            "label": [
+              "@AbilityResourceName@ Cost",
+              "Damage"
+            ],
             "effect": [
               "{{ cost }} -> {{ costNL }}",
               "{{ basedamagenamed }} -> {{ basedamagenamedNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [1.5, 1.5, 1.5, 1.5, 1.5],
+          "cooldown": [
+            1.5,
+            1.5,
+            1.5,
+            1.5,
+            1.5
+          ],
           "cooldownBurn": "1.5",
-          "cost": [110, 100, 90, 80, 70],
+          "cost": [
+            110,
+            100,
+            90,
+            80,
+            70
+          ],
           "costBurn": "110/100/90/80/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -240,7 +870,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [550, 550, 550, 550, 550],
+          "range": [
+            550,
+            550,
+            550,
+            550,
+            550
+          ],
           "rangeBurn": "550",
           "image": {
             "full": "AkaliQ.png",
@@ -259,7 +895,11 @@
           "description": "Akali drops a cover of smoke and briefly gains Move Speed. While inside the shroud, Akali becomes invisible and unable to be selected by enemy spells and attacks. Attacking or using abilities will briefly reveal her.  ",
           "tooltip": "Akali drops a smoke bomb, unleashing a spreading cover of smoke lasting {{ baseduration }} seconds and granting herself <speed>{{ movementspeed }}% Move Speed</speed> decaying over {{ movementspeedduration }} seconds.<br /><br />Akali increases her max Energy by {{ energyrestore }} while the shroud is active. <br /><br />While inside the smoke, Akali is <keywordStealth>Invisible</keywordStealth>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Move Speed", "Duration", "Cooldown"],
+            "label": [
+              "Move Speed",
+              "Duration",
+              "Cooldown"
+            ],
             "effect": [
               "{{ movementspeed }}% -> {{ movementspeedNL }}%",
               "{{ baseduration }} -> {{ basedurationNL }}",
@@ -267,23 +907,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [20, 19, 18, 17, 16],
+          "cooldown": [
+            20,
+            19,
+            18,
+            17,
+            16
+          ],
           "cooldownBurn": "20/19/18/17/16",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [140, 140, 140, 140, 140],
-            [4, 4, 4, 4, 4],
-            [0, 0, 0, 0, 0],
-            [250, 250, 250, 250, 250],
-            [60, 65, 70, 75, 80],
-            [0.3, 0.35, 0.4, 0.45, 0.5],
-            [1, 1, 1, 1, 1],
-            [0, 0, 0, 0, 0],
-            [5, 5.5, 6, 6.5, 7],
-            [0, 0, 0, 0, 0]
+            [
+              140,
+              140,
+              140,
+              140,
+              140
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              250,
+              250,
+              250,
+              250,
+              250
+            ],
+            [
+              60,
+              65,
+              70,
+              75,
+              80
+            ],
+            [
+              0.3,
+              0.35,
+              0.4,
+              0.45,
+              0.5
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              5,
+              5.5,
+              6,
+              6.5,
+              7
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -301,7 +1013,13 @@
           "vars": [],
           "costType": " Energy",
           "maxammo": "-1",
-          "range": [350, 350, 350, 350, 350],
+          "range": [
+            350,
+            350,
+            350,
+            350,
+            350
+          ],
           "rangeBurn": "350",
           "image": {
             "full": "AkaliW.png",
@@ -320,30 +1038,105 @@
           "description": "Flip backward and fire a shuriken forward, dealing magic damage. The first enemy or smoke cloud hit is marked. Re-cast to dash to the marked target, dealing additional damage.",
           "tooltip": "Akali flips backwards as she throws a shuriken, dealing <magicDamage>{{ e1damage }} magic damage</magicDamage> and marking the first enemy or smoke cloud hit. Akali can <recast>Recast</recast> this once to dash to the marked target, dealing <magicDamage>{{ e2damagecalc }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Base Damage"],
+            "label": [
+              "Cooldown",
+              "Base Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 14.5, 13, 11.5, 10],
+          "cooldown": [
+            16,
+            14.5,
+            13,
+            11.5,
+            10
+          ],
           "cooldownBurn": "16/14.5/13/11.5/10",
-          "cost": [30, 30, 30, 30, 30],
+          "cost": [
+            30,
+            30,
+            30,
+            30,
+            30
+          ],
           "costBurn": "30",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -361,7 +1154,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [825, 825, 825, 825, 825],
+          "range": [
+            825,
+            825,
+            825,
+            825,
+            825
+          ],
           "rangeBurn": "825",
           "image": {
             "full": "AkaliE.png",
@@ -394,23 +1193,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 90, 60],
+          "cooldown": [
+            120,
+            90,
+            60
+          ],
           "cooldownBurn": "120/90/60",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [1, 1, 1],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -428,7 +1275,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [675, 675, 675],
+          "range": [
+            675,
+            675,
+            675
+          ],
           "rangeBurn": "675",
           "image": {
             "full": "AkaliR.png",

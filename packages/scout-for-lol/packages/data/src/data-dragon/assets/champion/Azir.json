@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Azir": {
       "id": "Azir",
@@ -55,16 +55,156 @@
           "chromas": true
         },
         {
+          "id": "268006",
+          "num": 6,
+          "name": "Elderwood Azir (Ruby)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "268007",
+          "num": 7,
+          "name": "Elderwood Azir (Sapphire)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "268008",
+          "num": 8,
+          "name": "Elderwood Azir (Turquoise)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "268009",
+          "num": 9,
+          "name": "Elderwood Azir (Catseye)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "268010",
+          "num": 10,
+          "name": "Elderwood Azir (Emerald)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "268011",
+          "num": 11,
+          "name": "Elderwood Azir (Pearl)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "268012",
+          "num": 12,
+          "name": "Elderwood Azir (Emberwood)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "268013",
+          "num": 13,
+          "name": "Elderwood Azir (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
           "id": "268014",
           "num": 14,
           "name": "Worlds 2022 Azir",
           "chromas": true
         },
         {
+          "id": "268015",
+          "num": 15,
+          "name": "Worlds 2022 Azir (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "268016",
+          "num": 16,
+          "name": "Worlds 2022 Azir (Turquoise)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "268017",
+          "num": 17,
+          "name": "Worlds 2022 Azir (Obsidian)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "268018",
+          "num": 18,
+          "name": "Worlds 2022 Azir (One & Only)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
           "id": "268019",
           "num": 19,
           "name": "Attorney Azir",
           "chromas": true
+        },
+        {
+          "id": "268020",
+          "num": 20,
+          "name": "Attorney Azir (Ruby)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "268021",
+          "num": 21,
+          "name": "Attorney Azir (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "268022",
+          "num": 22,
+          "name": "Attorney Azir (Citrine)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "268023",
+          "num": 23,
+          "name": "Attorney Azir (Emerald)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "268024",
+          "num": 24,
+          "name": "Attorney Azir (Jasper)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "268025",
+          "num": 25,
+          "name": "Attorney Azir (Pearl)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "268026",
+          "num": 26,
+          "name": "Attorney Azir (Sapphire)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "268027",
+          "num": 27,
+          "name": "Attorney Azir (Obsidian)",
+          "chromas": false,
+          "parentSkin": 19
         }
       ],
       "lore": "Azir was a mortal emperor of Shurima in a far distant age, a proud man who stood at the cusp of immortality. His hubris saw him betrayed and murdered at the moment of his greatest triumph, but now, millennia later, he has been reborn as an Ascended being of immense power. With his buried city risen from the sand, Azir seeks to restore Shurima to its former glory.",
@@ -80,7 +220,10 @@
         "Azir has immense damage over a prolonged amount of time but lacks the upfront burst of other mages. Try to burst him out before he can turn a confrontation around.",
         "Try to think of Sand Soldiers as fire. Don't stand in the fire."
       ],
-      "tags": ["Mage", "Marksman"],
+      "tags": [
+        "Mage",
+        "Marksman"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 6,
@@ -117,41 +260,119 @@
           "description": "Azir sends all Sand Soldiers towards a location. Sand Soldiers deal magic damage to enemies they pass through and apply a slow for 1 second.",
           "tooltip": "Azir orders all <keywordMajor>Sand Soldiers</keywordMajor> to an area, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to enemies they pass through and <status>Slowing</status> them by {{ e2 }}% for 1 second.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Total AP Ratio",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ apratio*100.000000 }}% -> {{ aprationl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 12, 10, 8, 6],
+          "cooldown": [
+            14,
+            12,
+            10,
+            8,
+            6
+          ],
           "cooldownBurn": "14/12/10/8/6",
-          "cost": [70, 80, 90, 100, 110],
+          "cost": [
+            70,
+            80,
+            90,
+            100,
+            110
+          ],
           "costBurn": "70/80/90/100/110",
           "datavalues": {},
           "effect": [
             null,
-            [60, 80, 100, 120, 140],
-            [25, 25, 25, 25, 25],
-            [0, 0, 0, 0, 0],
-            [70, 70, 70, 70, 70],
-            [1600, 1600, 1600, 1600, 1600],
-            [200, 200, 200, 200, 200],
-            [325, 325, 325, 325, 325],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              25,
+              25,
+              25,
+              25,
+              25
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              70,
+              70,
+              70,
+              70,
+              70
+            ],
+            [
+              1600,
+              1600,
+              1600,
+              1600,
+              1600
+            ],
+            [
+              200,
+              200,
+              200,
+              200,
+              200
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
-            "60/80/100/120/140",
+            "0",
             "25",
             "0",
             "70",
             "1600",
             "200",
-            "325",
+            "0",
             "0",
             "0",
             "0"
@@ -159,7 +380,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [740, 740, 740, 740, 740],
+          "range": [
+            740,
+            740,
+            740,
+            740,
+            740
+          ],
           "rangeBurn": "740",
           "image": {
             "full": "AzirQWrapper.png",
@@ -192,23 +419,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [1.5, 1.5, 1.5, 1.5, 1.5],
+          "cooldown": [
+            1.5,
+            1.5,
+            1.5,
+            1.5,
+            1.5
+          ],
           "cooldownBurn": "1.5",
-          "cost": [40, 35, 30, 25, 20],
+          "cost": [
+            40,
+            35,
+            30,
+            25,
+            20
+          ],
           "costBurn": "40/35/30/25/20",
           "datavalues": {},
           "effect": [
             null,
-            [10, 10, 10, 10, 10],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [3, 3, 3, 3, 3],
-            [0, 0, 0, 0, 0],
-            [5, 5, 5, 5, 5],
-            [25, 25, 25, 25, 25],
-            [0.5, 0.5, 0.5, 0.5, 0.5]
+            [
+              10,
+              10,
+              10,
+              10,
+              10
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              25,
+              25,
+              25,
+              25,
+              25
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ]
           ],
           "effectBurn": [
             null,
@@ -226,7 +525,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "2",
-          "range": [525, 525, 525, 525, 525],
+          "range": [
+            525,
+            525,
+            525,
+            525,
+            525
+          ],
           "rangeBurn": "525",
           "image": {
             "full": "AzirW.png",
@@ -245,7 +550,11 @@
           "description": "Azir shields himself briefly and dashes to one of his Sand Soldiers, damaging enemies. If he hits an enemy champion, he instantly readies a new Sand Soldier for deployment and halts his dash.",
           "tooltip": "Azir grants himself <shield>{{ totalshield }} Shield</shield> for {{ e6 }} seconds and dashes to one of his <keywordMajor>Sand Soldiers</keywordMajor>, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to enemies he passes through.<br /><br />If Azir hits an enemy champion, he stops and gains a <keywordMajor>Sand Soldier</keywordMajor> charge.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Shield Amount", "Damage", "Cooldown"],
+            "label": [
+              "Shield Amount",
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ baseshield }} -> {{ baseshieldNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -253,23 +562,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [22, 20.5, 19, 17.5, 16],
+          "cooldown": [
+            22,
+            20.5,
+            19,
+            17.5,
+            16
+          ],
           "cooldownBurn": "22/20.5/19/17.5/16",
-          "cost": [60, 60, 60, 60, 60],
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [1700, 1700, 1700, 1700, 1700],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0.3, 0.5, 0.7, 0.9, 1.1],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [1100, 1100, 1100, 1100, 1100],
-            [0, 0, 0, 0, 0],
-            [5, 5, 5, 5, 5],
-            [25, 25, 25, 25, 25]
+            [
+              1700,
+              1700,
+              1700,
+              1700,
+              1700
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0.3,
+              0.5,
+              0.7,
+              0.9,
+              1.1
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              1100,
+              1100,
+              1100,
+              1100,
+              1100
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              25,
+              25,
+              25,
+              25,
+              25
+            ]
           ],
           "effectBurn": [
             null,
@@ -287,7 +668,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1100, 1100, 1100, 1100, 1100],
+          "range": [
+            1100,
+            1100,
+            1100,
+            1100,
+            1100
+          ],
           "rangeBurn": "1100",
           "image": {
             "full": "AzirEWrapper.png",
@@ -306,7 +693,11 @@
           "description": "Azir summons a wall of soldiers which charge forward, knocking back and damaging enemies.",
           "tooltip": "Azir summons a wall of armored soldiers that charges forward, <status>Knocking Back</status> enemies and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. The soldiers remain, blocking enemy paths for {{ e4 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Number of Soldiers", "Cooldown"],
+            "label": [
+              "Damage",
+              "Number of Soldiers",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ numberofsoldiers }} -> {{ numberofsoldiersNL }}",
@@ -314,23 +705,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 105, 90],
+          "cooldown": [
+            120,
+            105,
+            90
+          ],
           "cooldownBurn": "120/105/90",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [200, 400, 600],
-            [0, 0, 0],
-            [6, 7, 8],
-            [5, 5, 5],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              200,
+              400,
+              600
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              6,
+              7,
+              8
+            ],
+            [
+              5,
+              5,
+              5
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -348,7 +787,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [250, 250, 250],
+          "range": [
+            250,
+            250,
+            250
+          ],
           "rangeBurn": "250",
           "image": {
             "full": "AzirR.png",

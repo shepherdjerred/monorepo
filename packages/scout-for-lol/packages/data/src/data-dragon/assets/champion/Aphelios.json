@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Aphelios": {
       "id": "Aphelios",
@@ -31,10 +31,108 @@
           "chromas": true
         },
         {
+          "id": "523002",
+          "num": 2,
+          "name": "Nightbringer Aphelios (Turquoise)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "523003",
+          "num": 3,
+          "name": "Nightbringer Aphelios (Pariah)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "523004",
+          "num": 4,
+          "name": "Nightbringer Aphelios (Ruby)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "523005",
+          "num": 5,
+          "name": "Nightbringer Aphelios (Sapphire)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "523006",
+          "num": 6,
+          "name": "Nightbringer Aphelios (Obsidian)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "523007",
+          "num": 7,
+          "name": "Nightbringer Aphelios (Pearl)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "523008",
+          "num": 8,
+          "name": "Nightbringer Aphelios (Emerald)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
           "id": "523009",
           "num": 9,
           "name": "Lunar Beast Aphelios",
           "chromas": true
+        },
+        {
+          "id": "523010",
+          "num": 10,
+          "name": "Lunar Beast Aphelios (Ruby)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "523011",
+          "num": 11,
+          "name": "Lunar Beast Aphelios (Citrine)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "523012",
+          "num": 12,
+          "name": "Lunar Beast Aphelios (Vitality)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "523013",
+          "num": 13,
+          "name": "Lunar Beast Aphelios (Sapphire)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "523014",
+          "num": 14,
+          "name": "Lunar Beast Aphelios (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "523015",
+          "num": 15,
+          "name": "Lunar Beast Aphelios (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "523016",
+          "num": 16,
+          "name": "Lunar Beast Aphelios (Obsidian)",
+          "chromas": false,
+          "parentSkin": 9
         },
         {
           "id": "523018",
@@ -43,16 +141,149 @@
           "chromas": false
         },
         {
+          "id": "523019",
+          "num": 19,
+          "name": "EDG Aphelios (Elite)",
+          "chromas": true,
+          "parentSkin": 18
+        },
+        {
           "id": "523020",
           "num": 20,
           "name": "Spirit Blossom Aphelios",
           "chromas": false
         },
         {
+          "id": "523021",
+          "num": 21,
+          "name": "Spirit Blossom Aphelios (Ruby)",
+          "chromas": true,
+          "parentSkin": 20
+        },
+        {
+          "id": "523022",
+          "num": 22,
+          "name": "Spirit Blossom Aphelios (Turquoise)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "523023",
+          "num": 23,
+          "name": "Spirit Blossom Aphelios (Catseye)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "523024",
+          "num": 24,
+          "name": "Spirit Blossom Aphelios (Emerald)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "523025",
+          "num": 25,
+          "name": "Spirit Blossom Aphelios (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "523026",
+          "num": 26,
+          "name": "Spirit Blossom Aphelios (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "523027",
+          "num": 27,
+          "name": "Spirit Blossom Aphelios (Citrine)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "523028",
+          "num": 28,
+          "name": "Spirit Blossom Aphelios (Pearl)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "523029",
+          "num": 29,
+          "name": "Spirit Blossom Aphelios (Night Blossom)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
           "id": "523030",
           "num": 30,
           "name": "HEARTSTEEL Aphelios",
           "chromas": false
+        },
+        {
+          "id": "523031",
+          "num": 31,
+          "name": "HEARTSTEEL Aphelios (Ruby)",
+          "chromas": true,
+          "parentSkin": 30
+        },
+        {
+          "id": "523032",
+          "num": 32,
+          "name": "HEARTSTEEL Aphelios (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "523033",
+          "num": 33,
+          "name": "HEARTSTEEL Aphelios (Emerald)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "523034",
+          "num": 34,
+          "name": "HEARTSTEEL Aphelios (Turquoise)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "523035",
+          "num": 35,
+          "name": "HEARTSTEEL Aphelios (Sapphire)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "523036",
+          "num": 36,
+          "name": "HEARTSTEEL Aphelios (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "523037",
+          "num": 37,
+          "name": "HEARTSTEEL Aphelios (Pearl)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "523038",
+          "num": 38,
+          "name": "HEARTSTEEL Aphelios (Citrine)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "523039",
+          "num": 39,
+          "name": "HEARTSTEEL Aphelios (Rockstar)",
+          "chromas": false,
+          "parentSkin": 30
         },
         {
           "id": "523040",
@@ -69,7 +300,9 @@
       "enemytips": [
         "Each of Aphelios' weapons have different weaknesses, try to exploit the ones that work best for your champion. Watch out for the purple Gravity gun, it can root you."
       ],
-      "tags": ["Marksman"],
+      "tags": [
+        "Marksman"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 6,
@@ -110,23 +343,107 @@
             "effect": []
           },
           "maxrank": 6,
-          "cooldown": [9, 9, 9, 9, 9, 9],
+          "cooldown": [
+            9,
+            9,
+            9,
+            9,
+            9,
+            9
+          ],
           "cooldownBurn": "9",
-          "cost": [60, 60, 60, 60, 60, 60],
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -144,7 +461,14 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1450, 1450, 1450, 1450, 1450, 1450],
+          "range": [
+            1450,
+            1450,
+            1450,
+            1450,
+            1450,
+            1450
+          ],
           "rangeBurn": "1450",
           "image": {
             "full": "ApheliosQ_ClientTooltipWrapper.png",
@@ -167,23 +491,107 @@
             "effect": []
           },
           "maxrank": 6,
-          "cooldown": [0.8, 0.8, 0.8, 0.8, 0.8, 0.8],
+          "cooldown": [
+            0.8,
+            0.8,
+            0.8,
+            0.8,
+            0.8,
+            0.8
+          ],
           "cooldownBurn": "0.8",
-          "cost": [0, 0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -201,7 +609,14 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [250, 250, 250, 250, 250, 250],
+          "range": [
+            250,
+            250,
+            250,
+            250,
+            250,
+            250
+          ],
           "rangeBurn": "250",
           "image": {
             "full": "ApheliosW.png",
@@ -224,23 +639,107 @@
             "effect": []
           },
           "maxrank": 6,
-          "cooldown": [0, 0, 0, 0, 0, 0],
+          "cooldown": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "cooldownBurn": "0",
-          "cost": [0, 0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -258,7 +757,14 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1000, 1000, 1000, 1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "ApheliosE_ClientTooltipWrapper.png",
@@ -291,23 +797,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 110, 100],
+          "cooldown": [
+            120,
+            110,
+            100
+          ],
           "cooldownBurn": "120/110/100",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -325,7 +879,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1300, 1300, 1300],
+          "range": [
+            1300,
+            1300,
+            1300
+          ],
           "rangeBurn": "1300",
           "image": {
             "full": "ApheliosR.png",

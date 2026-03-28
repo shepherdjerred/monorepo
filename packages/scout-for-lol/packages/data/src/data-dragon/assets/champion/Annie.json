@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Annie": {
       "id": "Annie",
@@ -103,10 +103,115 @@
           "chromas": true
         },
         {
+          "id": "1014",
+          "num": 14,
+          "name": "Lunar Beast Annie (Ruby)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "1015",
+          "num": 15,
+          "name": "Lunar Beast Annie (Vitality)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "1016",
+          "num": 16,
+          "name": "Lunar Beast Annie (Citrine)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "1017",
+          "num": 17,
+          "name": "Lunar Beast Annie (Amethyst)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "1018",
+          "num": 18,
+          "name": "Lunar Beast Annie (Sapphire)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "1019",
+          "num": 19,
+          "name": "Lunar Beast Annie (Obsidian)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "1020",
+          "num": 20,
+          "name": "Lunar Beast Annie (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
           "id": "1022",
           "num": 22,
           "name": "Cafe Cuties Annie",
           "chromas": false
+        },
+        {
+          "id": "1023",
+          "num": 23,
+          "name": "Cafe Cuties Annie (Ruby)",
+          "chromas": true,
+          "parentSkin": 22
+        },
+        {
+          "id": "1024",
+          "num": 24,
+          "name": "Cafe Cuties Annie (Catseye)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "1025",
+          "num": 25,
+          "name": "Cafe Cuties Annie (Emerald)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "1026",
+          "num": 26,
+          "name": "Cafe Cuties Annie (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "1027",
+          "num": 27,
+          "name": "Cafe Cuties Annie (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "1028",
+          "num": 28,
+          "name": "Cafe Cuties Annie (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "1029",
+          "num": 29,
+          "name": "Cafe Cuties Annie (Pearl)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "1030",
+          "num": 30,
+          "name": "Cafe Cuties Annie (Obsidian)",
+          "chromas": false,
+          "parentSkin": 22
         },
         {
           "id": "1031",
@@ -115,16 +220,191 @@
           "chromas": false
         },
         {
+          "id": "1032",
+          "num": 32,
+          "name": "Fright Night Annie (Ruby)",
+          "chromas": true,
+          "parentSkin": 31
+        },
+        {
+          "id": "1033",
+          "num": 33,
+          "name": "Fright Night Annie (Catseye)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "1034",
+          "num": 34,
+          "name": "Fright Night Annie (Emerald)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "1035",
+          "num": 35,
+          "name": "Fright Night Annie (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "1036",
+          "num": 36,
+          "name": "Fright Night Annie (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "1037",
+          "num": 37,
+          "name": "Fright Night Annie (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "1038",
+          "num": 38,
+          "name": "Fright Night Annie (Pearl)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "1039",
+          "num": 39,
+          "name": "Fright Night Annie (Obsidian)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
           "id": "1040",
           "num": 40,
           "name": "Winterblessed Annie",
           "chromas": false
         },
         {
+          "id": "1041",
+          "num": 41,
+          "name": "Winterblessed Annie (Ruby)",
+          "chromas": true,
+          "parentSkin": 40
+        },
+        {
+          "id": "1042",
+          "num": 42,
+          "name": "Winterblessed Annie (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "1043",
+          "num": 43,
+          "name": "Winterblessed Annie (Catseye)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "1044",
+          "num": 44,
+          "name": "Winterblessed Annie (Emerald)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "1045",
+          "num": 45,
+          "name": "Winterblessed Annie (Sapphire)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "1046",
+          "num": 46,
+          "name": "Winterblessed Annie (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "1047",
+          "num": 47,
+          "name": "Winterblessed Annie (Rainbow)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "1048",
+          "num": 48,
+          "name": "Winterblessed Annie (Obsidian)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "1049",
+          "num": 49,
+          "name": "Winterblessed Annie (Wreathguard)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
           "id": "1050",
           "num": 50,
           "name": "Battle Princess Annie",
           "chromas": false
+        },
+        {
+          "id": "1051",
+          "num": 51,
+          "name": "Battle Princess Annie (Ruby)",
+          "chromas": true,
+          "parentSkin": 50
+        },
+        {
+          "id": "1052",
+          "num": 52,
+          "name": "Battle Princess Annie (Citrine)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "1053",
+          "num": 53,
+          "name": "Battle Princess Annie (Turquoise)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "1054",
+          "num": 54,
+          "name": "Battle Princess Annie (Sapphire)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "1055",
+          "num": 55,
+          "name": "Battle Princess Annie (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "1056",
+          "num": 56,
+          "name": "Battle Princess Annie (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "1057",
+          "num": 57,
+          "name": "Battle Princess Annie (Pearl)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "1058",
+          "num": 58,
+          "name": "Battle Princess Annie (Obsidian)",
+          "chromas": false,
+          "parentSkin": 50
         }
       ],
       "lore": "Dangerous, yet disarmingly precocious, Annie is a child mage with immense pyromantic power. Even in the shadows of the mountains north of Noxus, she is a magical outlier. Her natural affinity for fire manifested early in life through unpredictable, emotional outbursts, though she eventually learned to control these “playful tricks.” Her favorite includes the summoning of her beloved teddy bear, Tibbers, as a fiery protector. Lost in the perpetual innocence of childhood, Annie wanders the dark forests, always looking for someone to play with.",
@@ -139,7 +419,10 @@
         "Summoner Smite can be used to help take down Tibbers.",
         "Keep an eye out for a white, swirling power around Annie. It means she's ready to unleash her stun."
       ],
-      "tags": ["Mage", "Support"],
+      "tags": [
+        "Mage",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -176,30 +459,105 @@
           "description": "Annie hurls a Mana infused fireball, dealing damage and refunding the Mana cost if it destroys the target.",
           "tooltip": "Annie hurls a fireball, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. If the target dies, Annie refunds the Mana cost and reduces the Cooldown by 50%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [4, 4, 4, 4, 4],
+          "cooldown": [
+            4,
+            4,
+            4,
+            4,
+            4
+          ],
           "cooldownBurn": "4",
-          "cost": [60, 65, 70, 75, 80],
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -217,7 +575,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [625, 625, 625, 625, 625],
+          "range": [
+            625,
+            625,
+            625,
+            625,
+            625
+          ],
           "rangeBurn": "625",
           "image": {
             "full": "AnnieQ.png",
@@ -236,30 +600,105 @@
           "description": "Annie casts a blazing cone of fire, dealing damage to all enemies in the area.",
           "tooltip": "Annie projects a wave of fire, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 7, 7, 7, 7],
+          "cooldown": [
+            7,
+            7,
+            7,
+            7,
+            7
+          ],
           "cooldownBurn": "7",
-          "cost": [70, 75, 80, 85, 90],
+          "cost": [
+            70,
+            75,
+            80,
+            85,
+            90
+          ],
           "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -277,7 +716,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "AnnieW.png",
@@ -308,23 +753,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 10, 10, 10, 10],
+          "cooldown": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
           "cooldownBurn": "10",
-          "cost": [60, 65, 70, 75, 80],
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -342,7 +859,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "AnnieE.png",
@@ -379,23 +902,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [130, 115, 100],
+          "cooldown": [
+            130,
+            115,
+            100
+          ],
           "cooldownBurn": "130/115/100",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -413,7 +984,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600],
+          "range": [
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "AnnieR.png",

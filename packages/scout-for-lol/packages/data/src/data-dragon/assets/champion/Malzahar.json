@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Malzahar": {
       "id": "Malzahar",
@@ -67,10 +67,73 @@
           "chromas": false
         },
         {
+          "id": "90008",
+          "num": 8,
+          "name": "Snow Day Malzahar (Golden)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
           "id": "90009",
           "num": 9,
           "name": "Worldbreaker Malzahar",
           "chromas": true
+        },
+        {
+          "id": "90010",
+          "num": 10,
+          "name": "Worldbreaker Malzahar (Ruby)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "90011",
+          "num": 11,
+          "name": "Worldbreaker Malzahar (Obsidian)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "90012",
+          "num": 12,
+          "name": "Worldbreaker Malzahar (Citrine)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "90013",
+          "num": 13,
+          "name": "Worldbreaker Malzahar (Sandstone)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "90014",
+          "num": 14,
+          "name": "Worldbreaker Malzahar (Turquoise)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "90015",
+          "num": 15,
+          "name": "Worldbreaker Malzahar (Amethyst)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "90016",
+          "num": 16,
+          "name": "Worldbreaker Malzahar (Emerald)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "90017",
+          "num": 17,
+          "name": "Worldbreaker Malzahar (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 9
         },
         {
           "id": "90018",
@@ -79,10 +142,136 @@
           "chromas": true
         },
         {
+          "id": "90019",
+          "num": 19,
+          "name": "Beezahar (Ruby)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "90020",
+          "num": 20,
+          "name": "Beezahar (Emerald)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "90021",
+          "num": 21,
+          "name": "Beezahar (Sapphire)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "90022",
+          "num": 22,
+          "name": "Beezahar (Amethyst)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "90023",
+          "num": 23,
+          "name": "Beezahar (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "90024",
+          "num": 24,
+          "name": "Beezahar (Obsidian)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "90025",
+          "num": 25,
+          "name": "Beezahar (Sandstone)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "90026",
+          "num": 26,
+          "name": "Beezahar (Rainbow)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "90027",
+          "num": 27,
+          "name": "Beezahar (Citrine)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
           "id": "90028",
           "num": 28,
           "name": "Debonair Malzahar",
           "chromas": true
+        },
+        {
+          "id": "90029",
+          "num": 29,
+          "name": "Debonair Malzahar (Ruby)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "90030",
+          "num": 30,
+          "name": "Debonair Malzahar (Citrine)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "90031",
+          "num": 31,
+          "name": "Debonair Malzahar (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "90032",
+          "num": 32,
+          "name": "Debonair Malzahar (Emerald)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "90033",
+          "num": 33,
+          "name": "Debonair Malzahar (Sapphire)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "90034",
+          "num": 34,
+          "name": "Debonair Malzahar (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "90035",
+          "num": 35,
+          "name": "Debonair Malzahar (Turquoise)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "90036",
+          "num": 36,
+          "name": "Debonair Malzahar (Obsidian)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "90037",
+          "num": 37,
+          "name": "Debonair Malzahar (Cerulean Club)",
+          "chromas": false,
+          "parentSkin": 28
         },
         {
           "id": "90038",
@@ -97,10 +286,129 @@
           "chromas": true
         },
         {
+          "id": "90040",
+          "num": 40,
+          "name": "Empyrean Malzahar (Ruby)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "90041",
+          "num": 41,
+          "name": "Empyrean Malzahar (Turquoise)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "90042",
+          "num": 42,
+          "name": "Empyrean Malzahar (Sapphire)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "90043",
+          "num": 43,
+          "name": "Empyrean Malzahar (Emerald)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "90044",
+          "num": 44,
+          "name": "Empyrean Malzahar (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "90045",
+          "num": 45,
+          "name": "Empyrean Malzahar (Catseye)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "90046",
+          "num": 46,
+          "name": "Empyrean Malzahar (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "90047",
+          "num": 47,
+          "name": "Empyrean Malzahar (Pearl)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "90048",
+          "num": 48,
+          "name": "Empyrean Malzahar (Neon Facade)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
           "id": "90049",
           "num": 49,
           "name": "Fatebreaker Malzahar",
           "chromas": true
+        },
+        {
+          "id": "90050",
+          "num": 50,
+          "name": "Fatebreaker Malzahar (Ruby)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "90051",
+          "num": 51,
+          "name": "Fatebreaker Malzahar (Catseye)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "90052",
+          "num": 52,
+          "name": "Fatebreaker Malzahar (Emerald)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "90053",
+          "num": 53,
+          "name": "Fatebreaker Malzahar (Sapphire)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "90054",
+          "num": 54,
+          "name": "Fatebreaker Malzahar (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "90055",
+          "num": 55,
+          "name": "Fatebreaker Malzahar (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "90056",
+          "num": 56,
+          "name": "Fatebreaker Malzahar (Pearl)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "90057",
+          "num": 57,
+          "name": "Fatebreaker Malzahar (Obsidian)",
+          "chromas": false,
+          "parentSkin": 49
         }
       ],
       "lore": "A zealous seer dedicated to the unification of all life, Malzahar truly believes the newly emergent Void to be the path to Runeterra's salvation. In the desert wastes of Shurima, he followed the voices that whispered in his mind, all the way to ancient Icathia. Amidst the ruins of that land, he gazed into the dark heart of the Void itself, and was gifted new power and purpose. Malzahar now sees himself as a shepherd, empowered to bring others into the fold… or to release the voidling creatures that dwell beneath.",
@@ -115,7 +423,9 @@
         "Avoid minion waves that have been affected by Malefic Visions. You never know when they may die and pass the Visions onto you.",
         "Malzahar is especially dangerous when he has built up his Void Swarm."
       ],
-      "tags": ["Mage"],
+      "tags": [
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -164,23 +474,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [6, 6, 6, 6, 6],
+          "cooldown": [
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
           "cooldownBurn": "6",
-          "cost": [60, 65, 70, 75, 80],
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [70, 105, 140, 175, 210],
-            [1, 1.25, 1.5, 1.75, 2],
-            [0.4, 0.4, 0.4, 0.4, 0.4],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              70,
+              105,
+              140,
+              175,
+              210
+            ],
+            [
+              1,
+              1.25,
+              1.5,
+              1.75,
+              2
+            ],
+            [
+              0.4,
+              0.4,
+              0.4,
+              0.4,
+              0.4
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -198,7 +580,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [900, 900, 900, 900, 900],
+          "range": [
+            900,
+            900,
+            900,
+            900,
+            900
+          ],
           "rangeBurn": "900",
           "image": {
             "full": "MalzaharQ.png",
@@ -229,23 +617,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 8, 8, 8, 8],
+          "cooldown": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
           "cooldownBurn": "8",
-          "cost": [40, 45, 50, 55, 60],
+          "cost": [
+            40,
+            45,
+            50,
+            55,
+            60
+          ],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [25000, 25000, 25000, 25000, 25000],
-            [2, 2, 2, 2, 2],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              25000,
+              25000,
+              25000,
+              25000,
+              25000
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -263,7 +723,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "0",
-          "range": [150, 150, 150, 150, 150],
+          "range": [
+            150,
+            150,
+            150,
+            150,
+            150
+          ],
           "rangeBurn": "150",
           "image": {
             "full": "MalzaharW.png",
@@ -282,7 +748,11 @@
           "description": "Malzahar infects his target's mind with cruel visions of their demise, dealing damage over time. Using Malzahar's other spells on the target will refresh the visions.<br><br>If the target dies while afflicted by the visions, they pass on to a nearby enemy unit and Malzahar gains Mana. Malzahar's Voidlings are attracted to affected units.",
           "tooltip": "Malzahar inflicts terrible visions, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> over {{ duration }} seconds. Applying <spellName>Call of the Void</spellName> or <spellName>Nether Grasp</spellName> to the victim during this time refreshes the visions.<br /><br />If the victim dies, Malzahar gains <scaleMana>{{ manarestore }} Mana</scaleMana> and the visions spread to the nearest enemy.<br /><br /><rules>Malefic Visions executes minions below {{ minionexecutethreshold }} Health.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -290,23 +760,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 10, 9, 8, 7],
+          "cooldown": [
+            11,
+            10,
+            9,
+            8,
+            7
+          ],
           "cooldownBurn": "11/10/9/8/7",
-          "cost": [60, 70, 80, 90, 100],
+          "cost": [
+            60,
+            70,
+            80,
+            90,
+            100
+          ],
           "costBurn": "60/70/80/90/100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [8, 8, 8, 8, 8],
-            [2, 2, 2, 2, 2],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              8,
+              8,
+              8,
+              8,
+              8
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -324,7 +866,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "MalzaharE.png",
@@ -355,23 +903,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [140, 110, 80],
+          "cooldown": [
+            140,
+            110,
+            80
+          ],
           "cooldownBurn": "140/110/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [5, 5, 5],
-            [2.5, 2.5, 2.5],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              5,
+              5,
+              5
+            ],
+            [
+              2.5,
+              2.5,
+              2.5
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -389,7 +985,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [700, 700, 700],
+          "range": [
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "MalzaharR.png",

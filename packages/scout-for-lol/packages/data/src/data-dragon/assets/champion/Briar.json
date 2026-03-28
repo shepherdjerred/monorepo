@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Briar": {
       "id": "Briar",
@@ -31,23 +31,201 @@
           "chromas": true
         },
         {
+          "id": "233002",
+          "num": 2,
+          "name": "Street Demons Briar (Ruby)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "233003",
+          "num": 3,
+          "name": "Street Demons Briar (Emerald)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "233004",
+          "num": 4,
+          "name": "Street Demons Briar (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "233005",
+          "num": 5,
+          "name": "Street Demons Briar (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "233006",
+          "num": 6,
+          "name": "Street Demons Briar (Turquoise)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "233007",
+          "num": 7,
+          "name": "Street Demons Briar (Sapphire)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "233008",
+          "num": 8,
+          "name": "Street Demons Briar (Obsidian)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "233009",
+          "num": 9,
+          "name": "Street Demons Briar (Pearl)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
           "id": "233010",
           "num": 10,
           "name": "Primordian Briar",
           "chromas": true
         },
         {
+          "id": "233011",
+          "num": 11,
+          "name": "Primordian Briar (Ruby)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "233012",
+          "num": 12,
+          "name": "Primordian Briar (Catseye)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "233013",
+          "num": 13,
+          "name": "Primordian Briar (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "233014",
+          "num": 14,
+          "name": "Primordian Briar (Peridot)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "233015",
+          "num": 15,
+          "name": "Primordian Briar (Amethyst)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "233016",
+          "num": 16,
+          "name": "Primordian Briar (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "233017",
+          "num": 17,
+          "name": "Primordian Briar (Obsidian)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "233018",
+          "num": 18,
+          "name": "Primordian Briar (Pearl)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "233019",
+          "num": 19,
+          "name": "Primordian Briar (Abyssal)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
           "id": "233020",
           "num": 20,
           "name": "Battle Academia Briar",
           "chromas": true
+        },
+        {
+          "id": "233021",
+          "num": 21,
+          "name": "Battle Academia Briar (Ruby)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "233022",
+          "num": 22,
+          "name": "Battle Academia Briar (Catseye)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "233023",
+          "num": 23,
+          "name": "Battle Academia Briar (Emerald)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "233024",
+          "num": 24,
+          "name": "Battle Academia Briar (Sapphire)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "233025",
+          "num": 25,
+          "name": "Battle Academia Briar (Turquoise)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "233026",
+          "num": 26,
+          "name": "Battle Academia Briar (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "233027",
+          "num": 27,
+          "name": "Battle Academia Briar (Obsidian)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "233028",
+          "num": 28,
+          "name": "Battle Academia Briar (Pearl)",
+          "chromas": false,
+          "parentSkin": 20
         }
       ],
       "lore": "A failed experiment by the Black Rose, Briar's uncontrollable bloodlust required a special pillory to focus her frenzied mind. After years of confinement, this living weapon broke free from her restraints and unleashed herself into the world. Now she's controlled by no one—following only her hunger for knowledge and blood—and relishes the opportunities to let loose, even if reining back the frenzy isn't easy.",
       "blurb": "A failed experiment by the Black Rose, Briar's uncontrollable bloodlust required a special pillory to focus her frenzied mind. After years of confinement, this living weapon broke free from her restraints and unleashed herself into the world. Now she's...",
       "allytips": [],
       "enemytips": [],
-      "tags": ["Fighter", "Assassin"],
+      "tags": [
+        "Fighter",
+        "Assassin"
+      ],
       "partype": "Fury",
       "info": {
         "attack": 9,
@@ -84,7 +262,11 @@
           "description": "Briar leaps to a unit and hits enemies with The Heel Wheel (of Pain), stunning them and breaking their Armor.",
           "tooltip": "Briar leaps to a target, <status>Stunning</status> it for {{ stunduration }} seconds, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and reducing {{ shredpercent*100 }}% <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> for {{ shredduration }} seconds.<br /><br /><rules>Briar will stop prioritizing champions if she casts this Ability on a minion or monster during <keywordMajor>Blood Frenzy</keywordMajor>.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Armor and Magic Resist Shred", "Cooldown"],
+            "label": [
+              "Damage",
+              "Armor and Magic Resist Shred",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ shredpercent*100.000000 }}% -> {{ shredpercentnl*100.000000 }}%",
@@ -92,23 +274,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [13, 12, 11, 10, 9],
+          "cooldown": [
+            13,
+            12,
+            11,
+            10,
+            9
+          ],
           "cooldownBurn": "13/12/11/10/9",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -126,7 +380,13 @@
           "vars": [],
           "costType": "% of current Health",
           "maxammo": "-1",
-          "range": [475, 475, 475, 475, 475],
+          "range": [
+            475,
+            475,
+            475,
+            475,
+            475
+          ],
           "rangeBurn": "475",
           "image": {
             "full": "BriarQ.png",
@@ -163,23 +423,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 13, 12, 11, 10],
+          "cooldown": [
+            14,
+            13,
+            12,
+            11,
+            10
+          ],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -197,7 +529,13 @@
           "vars": [],
           "costType": "% of current Health",
           "maxammo": "-1",
-          "range": [350, 350, 350, 350, 350],
+          "range": [
+            350,
+            350,
+            350,
+            350,
+            350
+          ],
           "rangeBurn": "350",
           "image": {
             "full": "BriarW.png",
@@ -216,7 +554,11 @@
           "description": "Briar refocuses her mind, removing Blood Frenzy and channeling energy into a powerful scream that damages and slows enemies. While charging, she takes reduced damage and heals for a portion of her max Health. A fully charged scream knocks foes back, dealing additional damage and stunning those who collide with a wall.",
           "tooltip": "<charge>Begin Charging:</charge> Briar removes <keywordMajor>Blood Frenzy</keywordMajor> and gathers energy, gaining {{ drpercent }}% damage reduction and restoring <healing>{{ percentmaxhpheal }} Health</healing> over 1 second.<br /><br /><release>Release:</release> Briar unleashes a scream that deals up to <magicDamage>{{ damage }} magic damage</magicDamage> based on time charged, and <status>Slows</status> by {{ slowpercent*100 }}% for {{ slowduration }} seconds. When fully charged, the scream <status>Knocks Back</status> enemies, dealing <magicDamage>{{ wallhitdamage }} magic damage</magicDamage> to those who hit a wall and <status>Stunning</status> them for {{ wallstunduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Additional Damage", "Heal Ratio"],
+            "label": [
+              "Damage",
+              "Additional Damage",
+              "Heal Ratio"
+            ],
             "effect": [
               "{{ maxbasedamage }} -> {{ maxbasedamageNL }}",
               "{{ wallhitbasedamage }} -> {{ wallhitbasedamageNL }}",
@@ -224,23 +566,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 16, 16, 16, 16],
+          "cooldown": [
+            16,
+            16,
+            16,
+            16,
+            16
+          ],
           "cooldownBurn": "16",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -258,7 +672,13 @@
           "vars": [],
           "costType": "% of current Health",
           "maxammo": "-1",
-          "range": [400, 400, 400, 400, 400],
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "BriarE.png",
@@ -277,7 +697,12 @@
           "description": "Briar kicks her pillory's hemolith gemstone, marking the first champion it hits as her prey. She then beelines straight to them, fearing other surrounding enemies upon arriving at her target, and enters a state of complete hemomania. She will pursue her prey until death, gaining the benefits of Blood Frenzy as well as additional Armor, Magic Resistance, Life Steal, and Move Speed.",
           "tooltip": "Briar kicks her pillory's hemolith gemstone and flies to the location of the first champion it hits, marking them as her prey. On landing, she deals <magicDamage>{{ damage }} magic damage</magicDamage> to everything nearby and causes enemies who are not her prey to <status>Flee</status> for {{ fearduration }} seconds. She then enters an empowered <keywordMajor>Blood Frenzy</keywordMajor> and will pursue her prey until death. During this time, she gains {{ totalresists }} <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR>, {{ lifestealpercent*100 }}% Lifesteal, and an additional <speed>{{ extramovespeedpercent*100 }}% Move Speed</speed>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Life Steal", "Move Speed", "Cooldown"],
+            "label": [
+              "Damage",
+              "Life Steal",
+              "Move Speed",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ lifestealpercent*100.000000 }}% -> {{ lifestealpercentnl*100.000000 }}%",
@@ -286,23 +711,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -320,7 +793,11 @@
           "vars": [],
           "costType": "% of current Health",
           "maxammo": "-1",
-          "range": [12000, 12000, 12000],
+          "range": [
+            12000,
+            12000,
+            12000
+          ],
           "rangeBurn": "12000",
           "image": {
             "full": "BriarR.png",

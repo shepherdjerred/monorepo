@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "LeeSin": {
       "id": "LeeSin",
@@ -61,6 +61,27 @@
           "chromas": false
         },
         {
+          "id": "64007",
+          "num": 7,
+          "name": "Dragon Fist Lee Sin Duel Black",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "64008",
+          "num": 8,
+          "name": "Dragon Fist Lee Sin Duel Blue",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "64009",
+          "num": 9,
+          "name": "Dragon Fist Lee Sin Duel Yellow",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
           "id": "64010",
           "num": 10,
           "name": "Knockout Lee Sin",
@@ -77,6 +98,97 @@
           "num": 12,
           "name": "Playmaker Lee Sin",
           "chromas": true
+        },
+        {
+          "id": "64013",
+          "num": 13,
+          "name": "Playmaker Lee Sin (Pearl)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "64014",
+          "num": 14,
+          "name": "Playmaker Lee Sin (Citrine)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "64015",
+          "num": 15,
+          "name": "Playmaker Lee Sin (Emerald)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "64016",
+          "num": 16,
+          "name": "Playmaker Lee Sin (Sapphire)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "64017",
+          "num": 17,
+          "name": "Playmaker Lee Sin (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "64018",
+          "num": 18,
+          "name": "Playmaker Lee Sin (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "64019",
+          "num": 19,
+          "name": "Playmaker Lee Sin (Obsidian)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "64020",
+          "num": 20,
+          "name": "Playmaker Lee Sin (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "64021",
+          "num": 21,
+          "name": "Dragon Fist Lee Sin (Ruby)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "64022",
+          "num": 22,
+          "name": "Dragon Fist Lee Sin (Emerald)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "64023",
+          "num": 23,
+          "name": "Dragon Fist Lee Sin (Pearl)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "64024",
+          "num": 24,
+          "name": "Dragon Fist Lee Sin (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "64025",
+          "num": 25,
+          "name": "Dragon Fist Lee Sin (Sapphire)",
+          "chromas": false,
+          "parentSkin": 3
         },
         {
           "id": "64027",
@@ -97,10 +209,66 @@
           "chromas": false
         },
         {
+          "id": "64030",
+          "num": 30,
+          "name": "FPX Lee Sin (Elite)",
+          "chromas": true,
+          "parentSkin": 29
+        },
+        {
           "id": "64031",
           "num": 31,
           "name": "Storm Dragon Lee Sin",
           "chromas": false
+        },
+        {
+          "id": "64032",
+          "num": 32,
+          "name": "Storm Dragon Lee Sin (Ruby)",
+          "chromas": true,
+          "parentSkin": 31
+        },
+        {
+          "id": "64033",
+          "num": 33,
+          "name": "Storm Dragon Lee Sin (Jadeclaw)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "64034",
+          "num": 34,
+          "name": "Storm Dragon Lee Sin (Sapphire)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "64035",
+          "num": 35,
+          "name": "Storm Dragon Lee Sin (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "64036",
+          "num": 36,
+          "name": "Storm Dragon Lee Sin (Obsidian)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "64037",
+          "num": 37,
+          "name": "Storm Dragon Lee Sin (Pearl)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "64038",
+          "num": 38,
+          "name": "Storm Dragon Lee Sin (Emberclaw)",
+          "chromas": false,
+          "parentSkin": 31
         },
         {
           "id": "64039",
@@ -115,6 +283,69 @@
           "chromas": false
         },
         {
+          "id": "64042",
+          "num": 42,
+          "name": "Zenith Games Lee Sin (Ruby)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "64043",
+          "num": 43,
+          "name": "Zenith Games Lee Sin (Catseye)",
+          "chromas": true,
+          "parentSkin": 41
+        },
+        {
+          "id": "64044",
+          "num": 44,
+          "name": "Zenith Games Lee Sin (Emerald)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "64045",
+          "num": 45,
+          "name": "Zenith Games Lee Sin (Sapphire)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "64046",
+          "num": 46,
+          "name": "Zenith Games Lee Sin (Turquoise)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "64047",
+          "num": 47,
+          "name": "Zenith Games Lee Sin (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "64048",
+          "num": 48,
+          "name": "Zenith Games Lee Sin (Pearl)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "64049",
+          "num": 49,
+          "name": "Zenith Games Lee Sin (Obsidian)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "64050",
+          "num": 50,
+          "name": "Storm Dragon Lee Sin Mythic Chroma",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
           "id": "64051",
           "num": 51,
           "name": "Heavenscale Lee Sin",
@@ -127,16 +358,198 @@
           "chromas": false
         },
         {
+          "id": "64053",
+          "num": 53,
+          "name": "Dragon Fist Lee Sin (Meteorite)",
+          "chromas": true,
+          "parentSkin": 3
+        },
+        {
+          "id": "64054",
+          "num": 54,
+          "name": "Heavenscale Lee Sin (Ruby)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "64055",
+          "num": 55,
+          "name": "Heavenscale Lee Sin (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "64056",
+          "num": 56,
+          "name": "Heavenscale Lee Sin (Citrine)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "64057",
+          "num": 57,
+          "name": "Heavenscale Lee Sin (Emerald)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "64058",
+          "num": 58,
+          "name": "Heavenscale Lee Sin (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "64059",
+          "num": 59,
+          "name": "Heavenscale Lee Sin (Lustrous)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "64060",
+          "num": 60,
+          "name": "Muay Thai Lee Sin (Ruby)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "64061",
+          "num": 61,
+          "name": "Muay Thai Lee Sin (Catseye)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "64062",
+          "num": 62,
+          "name": "Muay Thai Lee Sin (Emerald)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "64063",
+          "num": 63,
+          "name": "Muay Thai Lee Sin (Turquoise)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "64064",
+          "num": 64,
+          "name": "Muay Thai Lee Sin (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "64065",
+          "num": 65,
+          "name": "Muay Thai Lee Sin (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "64066",
+          "num": 66,
+          "name": "Muay Thai Lee Sin (Obsidian)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "64067",
+          "num": 67,
+          "name": "Muay Thai Lee Sin (Pearl)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
           "id": "64068",
           "num": 68,
           "name": "T1 Lee Sin",
           "chromas": false
         },
         {
+          "id": "64069",
+          "num": 69,
+          "name": "T1 Lee Sin (Elite)",
+          "chromas": false,
+          "parentSkin": 68
+        },
+        {
+          "id": "64070",
+          "num": 70,
+          "name": "Dragon Fist Lee Sin (Royal)",
+          "chromas": true,
+          "parentSkin": 3
+        },
+        {
+          "id": "64071",
+          "num": 71,
+          "name": "Dragon Fist Lee Sin (Jade)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
           "id": "64072",
           "num": 72,
           "name": "Inkshadow Lee Sin",
           "chromas": false
+        },
+        {
+          "id": "64073",
+          "num": 73,
+          "name": "Inkshadow Lee Sin (Ruby)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "64074",
+          "num": 74,
+          "name": "Inkshadow Lee Sin (Emerald)",
+          "chromas": true,
+          "parentSkin": 72
+        },
+        {
+          "id": "64075",
+          "num": 75,
+          "name": "Inkshadow Lee Sin (Sapphire)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "64076",
+          "num": 76,
+          "name": "Inkshadow Lee Sin (Catseye)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "64077",
+          "num": 77,
+          "name": "Inkshadow Lee Sin (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "64078",
+          "num": 78,
+          "name": "Inkshadow Lee Sin (Pearl)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "64079",
+          "num": 79,
+          "name": "Inkshadow Lee Sin (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "64080",
+          "num": 80,
+          "name": "Inkshadow Lee Sin (Turquoise)",
+          "chromas": false,
+          "parentSkin": 72
         }
       ],
       "lore": "A master of Ionia's ancient martial arts, Lee Sin is a principled fighter who channels the essence of the dragon spirit to face any challenge. Though he lost his sight many years ago, the warrior-monk has devoted his life to protecting his homeland against any who would dare upset its sacred balance. Enemies who underestimate his meditative demeanor will endure his fabled burning fists and blazing roundhouse kicks.",
@@ -151,7 +564,10 @@
         "Lee Sin has powerful tools to combat physical damage in Iron Will and Cripple but he is still vulnerable to magic damage.",
         "Lee Sin relies heavily on following up with his abilities. Use disables to prevent him from chaining together his abilities and attacks."
       ],
-      "tags": ["Fighter", "Assassin"],
+      "tags": [
+        "Fighter",
+        "Assassin"
+      ],
       "partype": "Energy",
       "info": {
         "attack": 8,
@@ -202,23 +618,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9, 8, 7, 6],
+          "cooldown": [
+            10,
+            9,
+            8,
+            7,
+            6
+          ],
           "cooldownBurn": "10/9/8/7/6",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -236,7 +724,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1100, 1100, 1100, 1100, 1100],
+          "range": [
+            1100,
+            1100,
+            1100,
+            1100,
+            1100
+          ],
           "rangeBurn": "1100",
           "image": {
             "full": "LeeSinQOne.png",
@@ -255,30 +749,105 @@
           "description": "Safeguard: Lee Sin rushes to target ally, shielding himself from damage. If the ally is a champion, they are also shielded. After using Safeguard, Lee Sin can cast Iron Will.<br>Iron Will: Lee Sin's intense training allows him to thrive in battle. Lee Sin gains Omnivamp.",
           "tooltip": "Lee Sin dashes to an ally or ward. If the target is a champion, Lee Sin grants them and himself <shield>{{ shieldamount }} Shield</shield> for {{ shieldduration }} seconds and reduces this Ability's Cooldown by {{ w1cooldownrecovered*100 }}%. Lee Sin may <recast>Recast</recast> for the next {{ w1reactivatetime }} seconds.<br /><br /><recast>Recast:</recast> Lee Sin gains {{ lifestealandspellvamp }}% Omnivamp for {{ lifestealandspellvamptime }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Safeguard Shield Absorption", "Iron Will Omnivamp %"],
+            "label": [
+              "Safeguard Shield Absorption",
+              "Iron Will Omnivamp %"
+            ],
             "effect": [
               "{{ shieldvalue }} -> {{ shieldvalueNL }}",
               "{{ lifestealandspellvamp }}% -> {{ lifestealandspellvampNL }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 12, 12, 12, 12],
+          "cooldown": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
           "cooldownBurn": "12",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -296,7 +865,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [700, 700, 700, 700, 700],
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "LeeSinWOne.png",
@@ -315,30 +890,105 @@
           "description": "Tempest: Lee Sin smashes the ground, sending out a shockwave that deals magic damage and reveals enemy units hit. If Tempest hits an enemy, Lee Sin can cast cripple.<br>Cripple: Lee Sin cripples nearby enemies damaged by Tempest, reducing their Move Speed. Move Speed recovers gradually over the duration.",
           "tooltip": "Lee Sin smashes the ground, sending out a shockwave that deals <magicDamage>{{ initialdamage }} magic damage</magicDamage> and reveals them for {{ slowduration }} seconds. If this hits an enemy, Lee Sin can <recast>Recast</recast> for the next {{ reactivatetime }} seconds.<br /><br /><recast>Recast:</recast> Lee Sin <status>Slows</status> nearby enemies struck by the shockwave by {{ slowamount }}% decaying over {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Tempest Damage", "Cripple Slow"],
+            "label": [
+              "Tempest Damage",
+              "Cripple Slow"
+            ],
             "effect": [
               "{{ e1damage }} -> {{ e1damageNL }}",
               "{{ slowamount }}% -> {{ slowamountNL }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 8, 8, 8, 8],
+          "cooldown": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
           "cooldownBurn": "8",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -356,7 +1006,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [450, 450, 450, 450, 450],
+          "range": [
+            450,
+            450,
+            450,
+            450,
+            450
+          ],
           "rangeBurn": "450",
           "image": {
             "full": "LeeSinEOne.png",
@@ -375,7 +1031,11 @@
           "description": "Lee Sin performs a powerful roundhouse kick launching his target back, dealing physical damage to the target and any enemies they collide with. Enemies the target collides with are knocked into the air for a short duration. This technique was taught to him by Jesse Perring, although Lee Sin does not kick players off the map.",
           "tooltip": "Lee Sin performs a powerful roundhouse kick <status>Knocking Back</status> an enemy champion and dealing <physicalDamage>{{ damage }} physical damage</physicalDamage>.<br /><br />Enemies the target collides with are briefly <status>Knocked Up</status> and take <physicalDamage>{{ damage }} plus {{ percenthpcarrythrough }}% of the kicked enemy's bonus Health as physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Bonus Health Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Bonus Health Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ percenthpcarrythrough }}% -> {{ percenthpcarrythroughNL }}%",
@@ -383,23 +1043,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [110, 85, 60],
+          "cooldown": [
+            110,
+            85,
+            60
+          ],
           "cooldownBurn": "110/85/60",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -417,7 +1125,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [375, 375, 375],
+          "range": [
+            375,
+            375,
+            375
+          ],
           "rangeBurn": "375",
           "image": {
             "full": "LeeSinR.png",

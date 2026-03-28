@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Kassadin": {
       "id": "Kassadin",
@@ -61,6 +61,48 @@
           "chromas": true
         },
         {
+          "id": "38008",
+          "num": 8,
+          "name": "Count Kassadin (Ruby)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "38009",
+          "num": 9,
+          "name": "Count Kassadin (Citrine)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "38010",
+          "num": 10,
+          "name": "Count Kassadin (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "38011",
+          "num": 11,
+          "name": "Count Kassadin (Emerald)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "38012",
+          "num": 12,
+          "name": "Count Kassadin (Obsidian)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "38013",
+          "num": 13,
+          "name": "Count Kassadin (Pearl)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
           "id": "38014",
           "num": 14,
           "name": "Hextech Kassadin",
@@ -73,10 +115,122 @@
           "chromas": false
         },
         {
+          "id": "38016",
+          "num": 16,
+          "name": "Shockblade Kassadin (Ruby)",
+          "chromas": true,
+          "parentSkin": 15
+        },
+        {
+          "id": "38017",
+          "num": 17,
+          "name": "Shockblade Kassadin (Catseye)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "38018",
+          "num": 18,
+          "name": "Shockblade Kassadin (Emerald)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "38019",
+          "num": 19,
+          "name": "Shockblade Kassadin (Amethyst)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "38020",
+          "num": 20,
+          "name": "Shockblade Kassadin (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "38021",
+          "num": 21,
+          "name": "Shockblade Kassadin (Turquoise)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "38022",
+          "num": 22,
+          "name": "Shockblade Kassadin (Obsidian)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "38023",
+          "num": 23,
+          "name": "Shockblade Kassadin (Pearl)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
           "id": "38024",
           "num": 24,
           "name": "Dragonmancer Kassadin",
           "chromas": false
+        },
+        {
+          "id": "38025",
+          "num": 25,
+          "name": "Dragonmancer Kassadin (Ruby)",
+          "chromas": true,
+          "parentSkin": 24
+        },
+        {
+          "id": "38026",
+          "num": 26,
+          "name": "Dragonmancer Kassadin (Citrine)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "38027",
+          "num": 27,
+          "name": "Dragonmancer Kassadin (Emerald)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "38028",
+          "num": 28,
+          "name": "Dragonmancer Kassadin (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "38029",
+          "num": 29,
+          "name": "Dragonmancer Kassadin (Sapphire)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "38030",
+          "num": 30,
+          "name": "Dragonmancer Kassadin (Amethyst)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "38031",
+          "num": 31,
+          "name": "Dragonmancer Kassadin (Pearl)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "38032",
+          "num": 32,
+          "name": "Dragonmancer Kassadin (Obsidian)",
+          "chromas": false,
+          "parentSkin": 24
         }
       ],
       "lore": "Cutting a burning swath through the darkest places of the world, Kassadin knows his days are numbered. A widely traveled Shuriman guide and adventurer, he had chosen to raise a family among the peaceful southern tribes—until the day his village was consumed by the Void. He vowed vengeance, combining a number of arcane artifacts and forbidden technologies for the struggle ahead. Finally, Kassadin set out for the wastelands of Icathia, ready to face any monstrous Void-construct in his search for their self-proclaimed prophet, Malzahar.",
@@ -91,7 +245,10 @@
         "Each time Kassadin consecutively uses Riftwalk, he pays more and more mana. Keep this in mind as you chase him.",
         "It takes 6 spell casts for Kassadin's slow, Force Pulse, to become castable. If he levels up that ability, judiciously use your own skills while laning against him."
       ],
-      "tags": ["Assassin", "Mage"],
+      "tags": [
+        "Assassin",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 3,
@@ -142,23 +299,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9.5, 9, 8.5, 8],
+          "cooldown": [
+            10,
+            9.5,
+            9,
+            8.5,
+            8
+          ],
           "cooldownBurn": "10/9.5/9/8.5/8",
-          "cost": [60, 65, 70, 75, 80],
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [65, 95, 125, 155, 185],
-            [0, 0, 0, 0, 0],
-            [80, 110, 140, 170, 200],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              65,
+              95,
+              125,
+              155,
+              185
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              80,
+              110,
+              140,
+              170,
+              200
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -176,7 +405,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "NullLance.png",
@@ -207,23 +442,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 7, 7, 7, 7],
+          "cooldown": [
+            7,
+            7,
+            7,
+            7,
+            7
+          ],
           "cooldownBurn": "7",
-          "cost": [1, 1, 1, 1, 1],
+          "cost": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
           "costBurn": "1",
           "datavalues": {},
           "effect": [
             null,
-            [4, 4.5, 5, 5.5, 6],
-            [20, 20, 20, 20, 20],
-            [50, 75, 100, 125, 150],
-            [20, 22.5, 25, 27.5, 30],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              4,
+              4.5,
+              5,
+              5.5,
+              6
+            ],
+            [
+              20,
+              20,
+              20,
+              20,
+              20
+            ],
+            [
+              50,
+              75,
+              100,
+              125,
+              150
+            ],
+            [
+              20,
+              22.5,
+              25,
+              27.5,
+              30
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -241,7 +548,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1, 1, 1, 1, 1],
+          "range": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
           "rangeBurn": "1",
           "image": {
             "full": "NetherBlade.png",
@@ -274,23 +587,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [21, 20, 19, 18, 17],
+          "cooldown": [
+            21,
+            20,
+            19,
+            18,
+            17
+          ],
           "cooldownBurn": "21/20/19/18/17",
-          "cost": [60, 65, 70, 75, 80],
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [50, 55, 60, 65, 70],
-            [1, 1, 1, 1, 1],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              50,
+              55,
+              60,
+              65,
+              70
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -308,7 +693,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400, 400, 400],
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "ForcePulse.png",
@@ -327,7 +718,11 @@
           "description": "Kassadin teleports to a nearby location dealing damage to nearby enemy units. Multiple Riftwalks in a short period of time cost additional Mana but also deal additional damage.",
           "tooltip": "Kassadin teleports to a nearby location, dealing <magicDamage>{{ basedamage }} magic damage</magicDamage>.<br /><br />Each subsequent use of this Ability within the next {{ rstackduration }} seconds doubles the Mana cost and deals an additional <magicDamage>{{ bonusdamage }} magic damage</magicDamage>. The cost and damage increases can stack up to {{ maxstacks }} times.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Damage Per Stack", "Cooldown"],
+            "label": [
+              "Damage",
+              "Damage Per Stack",
+              "Cooldown"
+            ],
             "effect": [
               "{{ rbasedamage }} -> {{ rbasedamageNL }}",
               "{{ stackdamage }} -> {{ stackdamageNL }}",
@@ -335,23 +730,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [5, 3.5, 2],
+          "cooldown": [
+            5,
+            3.5,
+            2
+          ],
           "cooldownBurn": "5/3.5/2",
-          "cost": [40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -369,7 +812,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [500, 500, 500],
+          "range": [
+            500,
+            500,
+            500
+          ],
           "rangeBurn": "500",
           "image": {
             "full": "RiftWalk.png",

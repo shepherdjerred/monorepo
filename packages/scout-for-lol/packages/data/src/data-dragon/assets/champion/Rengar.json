@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Rengar": {
       "id": "Rengar",
@@ -43,10 +43,80 @@
           "chromas": false
         },
         {
+          "id": "107004",
+          "num": 4,
+          "name": "Headhunter Rengar (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "107005",
+          "num": 5,
+          "name": "Headhunter Rengar (Ruby)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "107006",
+          "num": 6,
+          "name": "Headhunter Rengar (Emerald)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "107007",
+          "num": 7,
+          "name": "Headhunter Rengar (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
           "id": "107008",
           "num": 8,
           "name": "Mecha Rengar",
           "chromas": true
+        },
+        {
+          "id": "107009",
+          "num": 9,
+          "name": "Mecha Rengar (Ruby)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "107010",
+          "num": 10,
+          "name": "Mecha Rengar (Obsidian)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "107011",
+          "num": 11,
+          "name": "Mecha Rengar (Pearl)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "107012",
+          "num": 12,
+          "name": "Mecha Rengar (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "107013",
+          "num": 13,
+          "name": "Mecha Rengar (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "107014",
+          "num": 14,
+          "name": "Mecha Rengar (Citrine)",
+          "chromas": false,
+          "parentSkin": 8
         },
         {
           "id": "107015",
@@ -55,10 +125,101 @@
           "chromas": true
         },
         {
+          "id": "107016",
+          "num": 16,
+          "name": "Pretty Kitty Rengar (Ruby)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "107017",
+          "num": 17,
+          "name": "Pretty Kitty Rengar (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "107018",
+          "num": 18,
+          "name": "Pretty Kitty Rengar (Citrine)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "107019",
+          "num": 19,
+          "name": "Pretty Kitty Rengar (Pearl)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "107020",
+          "num": 20,
+          "name": "Pretty Kitty Rengar (Emerald)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "107021",
+          "num": 21,
+          "name": "Pretty Kitty Rengar (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "107022",
+          "num": 22,
+          "name": "Pretty Kitty Rengar (Obsidian)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
           "id": "107023",
           "num": 23,
           "name": "Guardian of the Sands Rengar",
           "chromas": true
+        },
+        {
+          "id": "107024",
+          "num": 24,
+          "name": "Guardian of the Sands Rengar (Obsidian)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "107025",
+          "num": 25,
+          "name": "Guardian of the Sands Rengar (Sapphire)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "107026",
+          "num": 26,
+          "name": "Guardian of the Sands Rengar (Ruby)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "107027",
+          "num": 27,
+          "name": "Guardian of the Sands Rengar (Emerald)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "107028",
+          "num": 28,
+          "name": "Guardian of the Sands Rengar (Amethyst)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "107029",
+          "num": 29,
+          "name": "Guardian of the Sands Rengar (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 23
         },
         {
           "id": "107030",
@@ -67,10 +228,129 @@
           "chromas": true
         },
         {
+          "id": "107031",
+          "num": 31,
+          "name": "Sentinel Rengar (Ruby)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "107032",
+          "num": 32,
+          "name": "Sentinel Rengar (Citrine)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "107033",
+          "num": 33,
+          "name": "Sentinel Rengar (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "107034",
+          "num": 34,
+          "name": "Sentinel Rengar (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "107035",
+          "num": 35,
+          "name": "Sentinel Rengar (Sapphire)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "107036",
+          "num": 36,
+          "name": "Sentinel Rengar (Pearl)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "107037",
+          "num": 37,
+          "name": "Sentinel Rengar (Emerald)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "107038",
+          "num": 38,
+          "name": "Sentinel Rengar (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "107039",
+          "num": 39,
+          "name": "Sentinel Rengar (Resolute)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
           "id": "107040",
           "num": 40,
           "name": "Street Demons Rengar",
           "chromas": true
+        },
+        {
+          "id": "107041",
+          "num": 41,
+          "name": "Street Demons Rengar (Ruby)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "107042",
+          "num": 42,
+          "name": "Street Demons Rengar (Emerald)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "107043",
+          "num": 43,
+          "name": "Street Demons Rengar (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "107044",
+          "num": 44,
+          "name": "Street Demons Rengar (Amethyst)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "107045",
+          "num": 45,
+          "name": "Street Demons Rengar (Pearl)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "107046",
+          "num": 46,
+          "name": "Street Demons Rengar (Turquoise)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "107047",
+          "num": 47,
+          "name": "Street Demons Rengar (Obsidian)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "107048",
+          "num": 48,
+          "name": "Street Demons Rengar (Sapphire)",
+          "chromas": false,
+          "parentSkin": 40
         }
       ],
       "lore": "Rengar is a ferocious vastayan trophy hunter who lives for the thrill of tracking down and killing dangerous creatures. He scours the world for the most fearsome beasts he can find, especially seeking any trace of Kha'Zix, the void creature who scratched out his eye. Rengar stalks his prey neither for food nor glory, but for the sheer beauty of the pursuit.",
@@ -85,7 +365,10 @@
         "Rengar's passive enables him to leap out of brush, so avoid fighting him when near bushes.",
         "Rengar puts an indicator over the nearest enemy champion when he is camouflaged during his ultimate."
       ],
-      "tags": ["Assassin", "Fighter"],
+      "tags": [
+        "Assassin",
+        "Fighter"
+      ],
       "partype": "Ferocity",
       "info": {
         "attack": 7,
@@ -122,31 +405,105 @@
           "description": "Rengar's next Attack brutally stabs his target for bonus damage.<br><br>Ferocity effect: deals increased damage and grants Attack Speed.",
           "tooltip": "Rengar's next 2 Attacks gain <attackSpeed>{{ asbonus }}% Attack Speed</attackSpeed>. The first Attack deals <physicalDamage>{{ qtotaldamage }} physical damage</physicalDamage>.<br /><br /><keywordMajor>Max Ferocity:</keywordMajor> The first Attack deals <physicalDamage>{{ empoweredqtotaldamage }} physical damage</physicalDamage> and grants Rengar <attackSpeed>{{ empoweredqas }} Attack Speed</attackSpeed> for {{ asduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Bonus AD Ratio", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ baseadratio*100.000000 }}% -> {{ baseadrationl*100.000000 }}%",
               "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [0.25, 0.25, 0.25, 0.25, 0.25],
+          "cooldown": [
+            0.25,
+            0.25,
+            0.25,
+            0.25,
+            0.25
+          ],
           "cooldownBurn": "0.25",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -164,7 +521,13 @@
           "vars": [],
           "costType": "Generates 1 Ferocity",
           "maxammo": "1",
-          "range": [450, 450, 450, 450, 450],
+          "range": [
+            450,
+            450,
+            450,
+            450,
+            450
+          ],
           "rangeBurn": "450",
           "image": {
             "full": "RengarQ.png",
@@ -183,30 +546,105 @@
           "description": "Rengar lets out a battle roar, damaging enemies and healing for some of the recent damage he has taken.<br><br>Ferocity effect: additionally breaks crowd control effects.",
           "tooltip": "Rengar roars, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to nearby enemies and restoring <healing>{{ damagepercentagehealed }}%</healing> of the damage taken in the last {{ healingwindow }} seconds as Health.<br /><br /><keywordMajor>Max Ferocity:</keywordMajor> Deals <magicDamage>{{ totaldamageempowered }} magic damage</magicDamage> and additionally cleanses Rengar of crowd control.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [0.25, 0.25, 0.25, 0.25, 0.25],
+          "cooldown": [
+            0.25,
+            0.25,
+            0.25,
+            0.25,
+            0.25
+          ],
           "cooldownBurn": "0.25",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -224,7 +662,13 @@
           "vars": [],
           "costType": "Generates 1 Ferocity",
           "maxammo": "1",
-          "range": [450, 450, 450, 450, 450],
+          "range": [
+            450,
+            450,
+            450,
+            450,
+            450
+          ],
           "rangeBurn": "450",
           "image": {
             "full": "RengarW.png",
@@ -243,30 +687,105 @@
           "description": "Rengar throws a bola, slowing the first target hit for a short duration.<br><br>Ferocity effect: roots the target.",
           "tooltip": "Rengar throws a bola, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to the first enemy hit, revealing and <status>Slowing</status> them by {{ slowamount }}% for {{ ccduration }} seconds.<br /><br /><keywordMajor>Max Ferocity:</keywordMajor> Deals <physicalDamage>{{ totalempowereddamage }} physical damage</physicalDamage> and <status>Roots</status> for {{ ccduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow"],
+            "label": [
+              "Damage",
+              "Slow"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ slowamount }}% -> {{ slowamountNL }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [0.25, 0.25, 0.25, 0.25, 0.25],
+          "cooldown": [
+            0.25,
+            0.25,
+            0.25,
+            0.25,
+            0.25
+          ],
           "cooldownBurn": "0.25",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -284,7 +803,13 @@
           "vars": [],
           "costType": "Generates 1 Ferocity",
           "maxammo": "1",
-          "range": [1000, 1000, 1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "RengarE.png",
@@ -319,23 +844,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [100, 90, 80],
+          "cooldown": [
+            100,
+            90,
+            80
+          ],
           "cooldownBurn": "100/90/80",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -353,7 +926,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [2500, 3000, 3500],
+          "range": [
+            2500,
+            3000,
+            3500
+          ],
           "rangeBurn": "2500/3000/3500",
           "image": {
             "full": "RengarR.png",

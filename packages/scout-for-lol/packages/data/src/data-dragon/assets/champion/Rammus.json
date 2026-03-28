@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Rammus": {
       "id": "Rammus",
@@ -73,6 +73,55 @@
           "chromas": true
         },
         {
+          "id": "33009",
+          "num": 9,
+          "name": "Sweeper Rammus (Ruby)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "33010",
+          "num": 10,
+          "name": "Sweeper Rammus (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "33011",
+          "num": 11,
+          "name": "Sweeper Rammus (Emerald)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "33012",
+          "num": 12,
+          "name": "Sweeper Rammus (Sapphire)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "33013",
+          "num": 13,
+          "name": "Sweeper Rammus (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "33014",
+          "num": 14,
+          "name": "Sweeper Rammus (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "33015",
+          "num": 15,
+          "name": "Sweeper Rammus (Obsidian)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
           "id": "33016",
           "num": 16,
           "name": "Hextech Rammus",
@@ -85,10 +134,122 @@
           "chromas": true
         },
         {
+          "id": "33018",
+          "num": 18,
+          "name": "Astronaut Rammus (Ruby)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "33019",
+          "num": 19,
+          "name": "Astronaut Rammus (Citrine)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "33020",
+          "num": 20,
+          "name": "Astronaut Rammus (Catseye)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "33021",
+          "num": 21,
+          "name": "Astronaut Rammus (Turquoise)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "33022",
+          "num": 22,
+          "name": "Astronaut Rammus (Sapphire)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "33023",
+          "num": 23,
+          "name": "Astronaut Rammus (Emerald)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "33024",
+          "num": 24,
+          "name": "Astronaut Rammus (Amethyst)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "33025",
+          "num": 25,
+          "name": "Astronaut Rammus (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
           "id": "33026",
           "num": 26,
           "name": "Durian Defender Rammus",
           "chromas": true
+        },
+        {
+          "id": "33027",
+          "num": 27,
+          "name": "Durian Defender Rammus (Ruby)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "33028",
+          "num": 28,
+          "name": "Durian Defender Rammus (Citrine)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "33029",
+          "num": 29,
+          "name": "Durian Defender Rammus (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "33030",
+          "num": 30,
+          "name": "Durian Defender Rammus (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "33031",
+          "num": 31,
+          "name": "Durian Defender Rammus (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "33032",
+          "num": 32,
+          "name": "Durian Defender Rammus (Obsidian)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "33033",
+          "num": 33,
+          "name": "Durian Defender Rammus (Jasper)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "33034",
+          "num": 34,
+          "name": "Durian Defender Rammus (Pearl)",
+          "chromas": false,
+          "parentSkin": 26
         }
       ],
       "lore": "Idolized by many, dismissed by some, mystifying to all, the curious being Rammus is an enigma. Protected by a spiked shell, he inspires increasingly disparate theories on his origin wherever he goes—from demigod, to sacred oracle, to a mere beast transformed by magic. Whatever the truth may be, Rammus keeps his own counsel and stops for no one as he roams the Shuriman desert.",
@@ -102,7 +263,9 @@
         "Pay particular attention to when his Defensive Ball Curl is off. Rammus has much lower stats than a normal tank when he's out of the stance.",
         "Rammus often stacks high Armor, leaving him especially vulnerable to caster damage while not in Defensive Ball Curl."
       ],
-      "tags": ["Tank"],
+      "tags": [
+        "Tank"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 4,
@@ -139,7 +302,11 @@
           "description": "Rammus accelerates in a ball towards his enemies, dealing damage and slowing targets affected by the impact.",
           "tooltip": "Rammus curls into a ball, gaining <speed>{{ minimummovespeed }} Move Speed</speed>, accelerating up to <speed>{{ maximummovespeed }} Move Speed</speed> over {{ rollduration }} seconds. Rammus stops after colliding with an enemy, dealing <magicDamage>{{ powerballdamage }} magic damage</magicDamage>, <status>Knocking Back</status>, and <status>Slowing</status> nearby enemies by {{ slowpercent }}% for {{ slowduration }} second.<br /><br /><recast>Recast</recast>: Rammus ends this Ability early.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow", "Cooldown"],
+            "label": [
+              "Damage",
+              "Slow",
+              "Cooldown"
+            ],
             "effect": [
               "{{ qbasedamage }} -> {{ qbasedamageNL }}",
               "{{ slowpercent }}% -> {{ slowpercentNL }}%",
@@ -147,23 +314,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 10.5, 9, 7.5, 6],
+          "cooldown": [
+            12,
+            10.5,
+            9,
+            7.5,
+            6
+          ],
           "cooldownBurn": "12/10.5/9/7.5/6",
-          "cost": [60, 60, 60, 60, 60],
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [1000, 1000, 1000, 1000, 1000]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              1000,
+              1000,
+              1000,
+              1000,
+              1000
+            ]
           ],
           "effectBurn": [
             null,
@@ -181,7 +420,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [300, 300, 300, 300, 300],
+          "range": [
+            300,
+            300,
+            300,
+            300,
+            300
+          ],
           "rangeBurn": "300",
           "image": {
             "full": "PowerBall.png",
@@ -214,23 +459,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 7, 7, 7, 7],
+          "cooldown": [
+            7,
+            7,
+            7,
+            7,
+            7
+          ],
           "cooldownBurn": "7",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -248,7 +565,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [300, 300, 300, 300, 300],
+          "range": [
+            300,
+            300,
+            300,
+            300,
+            300
+          ],
           "rangeBurn": "300",
           "image": {
             "full": "DefensiveBallCurl.png",
@@ -267,30 +590,105 @@
           "description": "Rammus taunts an enemy champion or monster into a reckless assault against him.",
           "tooltip": "Rammus <status>Taunts</status> an enemy champion or monster for {{ duration }} seconds. Monsters are dealt <magicDamage>{{ monsterdamagecalc }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Duration", "Monster Damage"],
+            "label": [
+              "Duration",
+              "Monster Damage"
+            ],
             "effect": [
               "{{ duration }} -> {{ durationNL }}",
               "{{ monsterdamage }} -> {{ monsterdamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 12, 12, 12, 12],
+          "cooldown": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
           "cooldownBurn": "12",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -308,7 +706,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [325, 325, 325, 325, 325],
+          "range": [
+            325,
+            325,
+            325,
+            325,
+            325
+          ],
           "rangeBurn": "325",
           "image": {
             "full": "PuncturingTaunt.png",
@@ -327,7 +731,11 @@
           "description": "Rammus hops into the air and slams down at a target area, dealing magic damage and slowing enemies. If cast while Rammus is in Powerball, Rammus knocks up enemies near the center as well.",
           "tooltip": "Rammus hops into the air and slams down in an area, dealing <magicDamage>{{ initialdamagecalc }} magic damage</magicDamage> and <status>Slowing</status> by {{ slowamount*100 }}% for {{ slowduration }} seconds. If used during <spellName>Powerball</spellName>, enemies in the center take an additional <magicDamage>{{ spell.powerball:powerballdamage }} magic damage</magicDamage> and are <status>Knocked Up</status> for {{ knockupduration }} seconds.<br /><br />Rammus then creates {{ numberofpulses }} aftershocks in the area over {{ buffduration }} seconds, repeating the <status>Slow</status>.<br /><br />The range of this Ability is increased by Rammus's <speed>Move Speed</speed>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow", "Cooldown"],
+            "label": [
+              "Damage",
+              "Slow",
+              "Cooldown"
+            ],
             "effect": [
               "{{ initialdamage }} -> {{ initialdamageNL }}",
               "{{ slowamount*100.000000 }}% -> {{ slowamountnl*100.000000 }}%",
@@ -335,23 +743,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 105, 90],
+          "cooldown": [
+            120,
+            105,
+            90
+          ],
           "cooldownBurn": "120/105/90",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -369,7 +825,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "Tremors2.png",

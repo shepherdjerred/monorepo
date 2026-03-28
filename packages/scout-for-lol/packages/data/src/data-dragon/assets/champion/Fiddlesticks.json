@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Fiddlesticks": {
       "id": "Fiddlesticks",
@@ -79,10 +79,192 @@
           "chromas": true
         },
         {
+          "id": "9010",
+          "num": 10,
+          "name": "Praetorian Fiddlesticks (Ruby)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "9011",
+          "num": 11,
+          "name": "Praetorian Fiddlesticks (Obsidian)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "9012",
+          "num": 12,
+          "name": "Praetorian Fiddlesticks (Citrine)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "9013",
+          "num": 13,
+          "name": "Praetorian Fiddlesticks (Pearl)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "9014",
+          "num": 14,
+          "name": "Praetorian Fiddlesticks (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "9015",
+          "num": 15,
+          "name": "Praetorian Fiddlesticks (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "9016",
+          "num": 16,
+          "name": "Surprise Party Fiddlesticks (Ruby)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "9017",
+          "num": 17,
+          "name": "Surprise Party Fiddlesticks (Peridot)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "9018",
+          "num": 18,
+          "name": "Surprise Party Fiddlesticks (Amethyst)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "9019",
+          "num": 19,
+          "name": "Bandito Fiddlesticks (Ruby)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "9020",
+          "num": 20,
+          "name": "Bandito Fiddlesticks (Obsidian)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "9021",
+          "num": 21,
+          "name": "Bandito Fiddlesticks (Pearl)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "9022",
+          "num": 22,
+          "name": "Bandito Fiddlesticks (Sapphire)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "9023",
+          "num": 23,
+          "name": "Bandito Fiddlesticks (Citrine)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "9024",
+          "num": 24,
+          "name": "Bandito Fiddlesticks (Peridot)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "9025",
+          "num": 25,
+          "name": "Bandito Fiddlesticks (Turquoise)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "9026",
+          "num": 26,
+          "name": "Bandito Fiddlesticks (Amethyst)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
           "id": "9027",
           "num": 27,
           "name": "Star Nemesis Fiddlesticks",
           "chromas": true
+        },
+        {
+          "id": "9028",
+          "num": 28,
+          "name": "Star Nemesis Fiddlesticks (Ruby)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "9029",
+          "num": 29,
+          "name": "Star Nemesis Fiddlesticks (Citrine)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "9030",
+          "num": 30,
+          "name": "Star Nemesis Fiddlesticks (Peridot)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "9031",
+          "num": 31,
+          "name": "Star Nemesis Fiddlesticks (Sapphire)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "9032",
+          "num": 32,
+          "name": "Star Nemesis Fiddlesticks (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "9033",
+          "num": 33,
+          "name": "Star Nemesis Fiddlesticks (Turquoise)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "9034",
+          "num": 34,
+          "name": "Star Nemesis Fiddlesticks (Obsidian)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "9035",
+          "num": 35,
+          "name": "Star Nemesis Fiddlesticks (Sandstone)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "9036",
+          "num": 36,
+          "name": "Star Nemesis Fiddlesticks (Wicked)",
+          "chromas": false,
+          "parentSkin": 27
         },
         {
           "id": "9037",
@@ -91,17 +273,132 @@
           "chromas": true
         },
         {
+          "id": "9038",
+          "num": 38,
+          "name": "Blood Moon Fiddlesticks (Ruby)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "9039",
+          "num": 39,
+          "name": "Blood Moon Fiddlesticks (Citrine)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "9040",
+          "num": 40,
+          "name": "Blood Moon Fiddlesticks (Emerald)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "9041",
+          "num": 41,
+          "name": "Blood Moon Fiddlesticks (Amethyst)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "9042",
+          "num": 42,
+          "name": "Blood Moon Fiddlesticks (Sapphire)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "9043",
+          "num": 43,
+          "name": "Blood Moon Fiddlesticks (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "9044",
+          "num": 44,
+          "name": "Blood Moon Fiddlesticks (Pearl)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "9045",
+          "num": 45,
+          "name": "Blood Moon Fiddlesticks (Obsidian)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
           "id": "9046",
           "num": 46,
           "name": "Flora Fatalis Fiddlesticks",
           "chromas": true
+        },
+        {
+          "id": "9047",
+          "num": 47,
+          "name": "Flora Fatalis Fiddlesticks (Ruby)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "9048",
+          "num": 48,
+          "name": "Flora Fatalis Fiddlesticks (Sapphire)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "9049",
+          "num": 49,
+          "name": "Flora Fatalis Fiddlesticks (Emerald)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "9050",
+          "num": 50,
+          "name": "Flora Fatalis Fiddlesticks (Turquoise)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "9051",
+          "num": 51,
+          "name": "Flora Fatalis Fiddlesticks (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "9052",
+          "num": 52,
+          "name": "Flora Fatalis Fiddlesticks (Catseye)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "9053",
+          "num": 53,
+          "name": "Flora Fatalis Fiddlesticks (Obsidian)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "9054",
+          "num": 54,
+          "name": "Flora Fatalis Fiddlesticks (Pearl)",
+          "chromas": false,
+          "parentSkin": 46
         }
       ],
       "lore": "Something has awoken in Runeterra. Something ancient. Something terrible. The ageless horror known as Fiddlesticks stalks the edges of mortal society, drawn to areas thick with paranoia where it feeds upon terrorized victims. Wielding a jagged scythe, the haggard, makeshift creature reaps fear itself, shattering the minds of those unlucky enough to survive in its wake. Beware the sounding of the crow, or the whispering of the shape that appears <i>almost</i> human… Fiddlesticks has returned.",
       "blurb": "Something has awoken in Runeterra. Something ancient. Something terrible. The ageless horror known as Fiddlesticks stalks the edges of mortal society, drawn to areas thick with paranoia where it feeds upon terrorized victims. Wielding a jagged scythe...",
       "allytips": [],
       "enemytips": [],
-      "tags": ["Mage", "Support"],
+      "tags": [
+        "Mage",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -138,7 +435,11 @@
           "description": "Fiddlesticks damaging enemies with spells while unseen or targeting an enemy with Terrify's activation strikes a target unit with fear, causing it to flee in terror for a duration.",
           "tooltip": "<spellPassive>Passive:</spellPassive> While unseen and out of combat or impersonating an <keywordMajor>Effigy</keywordMajor>, damaging an enemy with an ability <status>Fears</status> them for {{ fearduration }} second(s).<br /><br /><spellActive>Active:</spellActive> <status>Fear</status> an enemy for {{ fearduration }} second(s) and deal <magicDamage>{{ totalpercenthealthdamage }} current Health magic damage</magicDamage>. If the target has recently been <status>Feared</status> by Fiddlesticks, instead deal <magicDamage>{{ totalpercenthealthdamagefeared }} current Health magic damage</magicDamage>.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Duration", "Cooldown", "Current Health %"],
+            "label": [
+              "Duration",
+              "Cooldown",
+              "Current Health %"
+            ],
             "effect": [
               "{{ fearduration }} -> {{ feardurationNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -146,23 +447,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [15, 14.5, 14, 13.5, 13],
+          "cooldown": [
+            15,
+            14.5,
+            14,
+            13.5,
+            13
+          ],
           "cooldownBurn": "15/14.5/14/13.5/13",
-          "cost": [65, 65, 65, 65, 65],
+          "cost": [
+            65,
+            65,
+            65,
+            65,
+            65
+          ],
           "costBurn": "65",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -180,7 +553,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [575, 575, 575, 575, 575],
+          "range": [
+            575,
+            575,
+            575,
+            575,
+            575
+          ],
           "rangeBurn": "575",
           "image": {
             "full": "FiddleSticksQ.png",
@@ -213,23 +592,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9.5, 9, 8.5, 8],
+          "cooldown": [
+            10,
+            9.5,
+            9,
+            8.5,
+            8
+          ],
           "cooldownBurn": "10/9.5/9/8.5/8",
-          "cost": [60, 65, 70, 75, 80],
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -247,7 +698,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "FiddleSticksW.png",
@@ -280,23 +737,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9, 8, 7, 6],
+          "cooldown": [
+            10,
+            9,
+            8,
+            7,
+            6
+          ],
           "cooldownBurn": "10/9/8/7/6",
-          "cost": [40, 45, 50, 55, 60],
+          "cost": [
+            40,
+            45,
+            50,
+            55,
+            60
+          ],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -314,7 +843,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [850, 850, 850, 850, 850],
+          "range": [
+            850,
+            850,
+            850,
+            850,
+            850
+          ],
           "rangeBurn": "850",
           "image": {
             "full": "FiddleSticksE.png",
@@ -333,30 +868,81 @@
           "description": "A murder of crows flock wildly around Fiddlesticks, dealing damage per second to all enemy units in the area.",
           "tooltip": "Fiddlesticks channels for {{ channeltime }} seconds, then teleports and unleashes a murder of crows, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> over {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage Per Second", "Cooldown"],
+            "label": [
+              "Damage Per Second",
+              "Cooldown"
+            ],
             "effect": [
               "{{ damagepersecond }} -> {{ damagepersecondNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [140, 110, 80],
+          "cooldown": [
+            140,
+            110,
+            80
+          ],
           "cooldownBurn": "140/110/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [125, 225, 325],
-            [5, 5, 5],
-            [1.5, 1.5, 1.5],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              125,
+              225,
+              325
+            ],
+            [
+              5,
+              5,
+              5
+            ],
+            [
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -374,7 +960,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800],
+          "range": [
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "FiddleSticksR.png",

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Zeri": {
       "id": "Zeri",
@@ -31,16 +31,184 @@
           "chromas": true
         },
         {
+          "id": "221002",
+          "num": 2,
+          "name": "Withered Rose Zeri (Ruby)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "221003",
+          "num": 3,
+          "name": "Withered Rose Zeri (Citrine)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "221004",
+          "num": 4,
+          "name": "Withered Rose Zeri (Peridot)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "221005",
+          "num": 5,
+          "name": "Withered Rose Zeri (Sapphire)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "221006",
+          "num": 6,
+          "name": "Withered Rose Zeri (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "221007",
+          "num": 7,
+          "name": "Withered Rose Zeri (Obsidian)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "221008",
+          "num": 8,
+          "name": "Withered Rose Zeri (Pearl)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "221009",
+          "num": 9,
+          "name": "Withered Rose Zeri (Turquoise)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
           "id": "221010",
           "num": 10,
           "name": "Ocean Song Zeri",
           "chromas": true
         },
         {
+          "id": "221011",
+          "num": 11,
+          "name": "Ocean Song Zeri (Ruby)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "221012",
+          "num": 12,
+          "name": "Ocean Song Zeri (Sapphire)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "221013",
+          "num": 13,
+          "name": "Ocean Song Zeri (Emerald)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "221014",
+          "num": 14,
+          "name": "Ocean Song Zeri (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "221015",
+          "num": 15,
+          "name": "Ocean Song Zeri (Catseye)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "221016",
+          "num": 16,
+          "name": "Ocean Song Zeri (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "221017",
+          "num": 17,
+          "name": "Ocean Song Zeri (Pearl)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "221018",
+          "num": 18,
+          "name": "Ocean Song Zeri (Obsidian)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
           "id": "221019",
           "num": 19,
           "name": "Immortal Journey Zeri",
           "chromas": true
+        },
+        {
+          "id": "221020",
+          "num": 20,
+          "name": "Immortal Journey Zeri (Ruby)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "221021",
+          "num": 21,
+          "name": "Immortal Journey Zeri (Catseye)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "221022",
+          "num": 22,
+          "name": "Immortal Journey Zeri (Emerald)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "221023",
+          "num": 23,
+          "name": "Immortal Journey Zeri (Sapphire)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "221024",
+          "num": 24,
+          "name": "Immortal Journey Zeri (Turquoise)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "221025",
+          "num": 25,
+          "name": "Immortal Journey Zeri (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "221026",
+          "num": 26,
+          "name": "Immortal Journey Zeri (Pearl)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "221027",
+          "num": 27,
+          "name": "Immortal Journey Zeri (Obsidian)",
+          "chromas": false,
+          "parentSkin": 19
         },
         {
           "id": "221028",
@@ -55,17 +223,131 @@
           "chromas": false
         },
         {
+          "id": "221030",
+          "num": 30,
+          "name": "Fright Night Zeri (Ruby)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "221031",
+          "num": 31,
+          "name": "Fright Night Zeri (Catseye)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "221032",
+          "num": 32,
+          "name": "Fright Night Zeri (Emerald)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "221033",
+          "num": 33,
+          "name": "Fright Night Zeri (Turquoise)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "221034",
+          "num": 34,
+          "name": "Fright Night Zeri (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "221035",
+          "num": 35,
+          "name": "Fright Night Zeri (Meteorite)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "221036",
+          "num": 36,
+          "name": "Fright Night Zeri (Amethyst)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "221037",
+          "num": 37,
+          "name": "Fright Night Zeri (Obsidian)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "221038",
+          "num": 38,
+          "name": "Fright Night Zeri (Nightshade)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "221039",
+          "num": 39,
+          "name": "Fright Night Zeri (Ghoulish)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
           "id": "221040",
           "num": 40,
           "name": "Winter Wonder Zeri",
           "chromas": true
+        },
+        {
+          "id": "221041",
+          "num": 41,
+          "name": "Winter Wonder Zeri (Ruby)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "221042",
+          "num": 42,
+          "name": "Winter Wonder Zeri (Turquoise)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "221043",
+          "num": 43,
+          "name": "Winter Wonder Zeri (Amethyst)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "221044",
+          "num": 44,
+          "name": "Winter Wonder Zeri (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "221045",
+          "num": 45,
+          "name": "Winter Wonder Zeri (Obsidian)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "221046",
+          "num": 46,
+          "name": "Winter Wonder Zeri (Pearl)",
+          "chromas": false,
+          "parentSkin": 40
         }
       ],
       "lore": "A headstrong, spirited young woman from Zaun's working-class, Zeri channels her electric magic to charge herself and her custom-crafted gun. Her volatile power mirrors her emotions, its sparks reflecting her lightning-fast approach to life. Deeply compassionate toward others, Zeri carries the love of her family and her home into every fight. Though her eagerness to help can sometimes backfire, Zeri believes one truth to be certain: stand up for your community, and it will stand up with you.",
       "blurb": "A headstrong, spirited young woman from Zaun's working-class, Zeri channels her electric magic to charge herself and her custom-crafted gun. Her volatile power mirrors her emotions, its sparks reflecting her lightning-fast approach to life. Deeply...",
       "allytips": [],
       "enemytips": [],
-      "tags": ["Marksman"],
+      "tags": [
+        "Marksman"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 8,
@@ -102,30 +384,105 @@
           "description": "Burst Fire shoots a burst of 7 rounds that deal attack damage to the first enemy hit. This Ability is treated as an Attack.",
           "tooltip": "Zeri fires a burst of {{ numberofmissiles }} rounds that deals <physicalDamage>{{ activedamagethatcancrit }} physical damage</physicalDamage> to the first enemy hit. This Ability is treated as an Attack. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Total AD Ratio"],
+            "label": [
+              "Damage",
+              "Total AD Ratio"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ activeadratio*100.000000 }}% -> {{ activeadrationl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [0, 0, 0, 0, 0],
+          "cooldown": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "cooldownBurn": "0",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -143,7 +500,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [700, 700, 700, 700, 700],
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "ZeriQ.png",
@@ -176,23 +539,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11, 10, 9, 8],
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [50, 60, 70, 80, 90],
+          "cost": [
+            50,
+            60,
+            70,
+            80,
+            90
+          ],
           "costBurn": "50/60/70/80/90",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -210,7 +645,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1150, 1150, 1150, 1150, 1150],
+          "range": [
+            1150,
+            1150,
+            1150,
+            1150,
+            1150
+          ],
           "rangeBurn": "1150",
           "image": {
             "full": "ZeriW.png",
@@ -243,23 +684,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [22, 21, 20, 19, 18],
+          "cooldown": [
+            22,
+            21,
+            20,
+            19,
+            18
+          ],
           "cooldownBurn": "22/21/20/19/18",
-          "cost": [90, 85, 80, 75, 70],
+          "cost": [
+            90,
+            85,
+            80,
+            75,
+            70
+          ],
           "costBurn": "90/85/80/75/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -277,7 +790,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [25000, 25000, 25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "ZeriE.png",
@@ -296,30 +815,81 @@
           "description": "Zeri discharges a nova of electricity and overcharges herself, gaining increased damage and stacking Move Speed that refreshes and gets stronger every time she hits an enemy champion. While overcharged, Burst fire becomes a faster triple shot that chains lightning between enemies.",
           "tooltip": "Zeri discharges a nova of electricity, dealing <magicDamage>{{ totalactivedamage }} magic damage</magicDamage> to nearby enemies. If she hits an enemy champion, Zeri gains <attackSpeed>{{ baseaspercent*100 }}% Attack Speed</attackSpeed> and <speed>{{ basebonusms*100 }}% Move Speed</speed> for {{ rduration }} seconds. Hitting an enemy champion with an Attack or Ability extends this ability's duration and adds a stack of Overcharge for {{ maxhyperchargeduration }} seconds. Critical strikes add 2 additional stacks. Each stack grants <speed>{{ mspercent*100 }}% Move Speed</speed>.<br /><br />During this time, <spellName>Burst Fire</spellName> becomes a faster triple shot that chains <physicalDamage>{{ chainphysicaldamage }} physical damage</physicalDamage> to nearby enemies.<br /><br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ activedamage }} -> {{ activedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [80, 75, 70],
+          "cooldown": [
+            80,
+            75,
+            70
+          ],
           "cooldownBurn": "80/75/70",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -337,7 +907,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800],
+          "range": [
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "ZeriR.png",

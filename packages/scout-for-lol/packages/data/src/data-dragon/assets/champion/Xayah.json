@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Xayah": {
       "id": "Xayah",
@@ -49,10 +49,87 @@
           "chromas": true
         },
         {
+          "id": "498005",
+          "num": 5,
+          "name": "Star Guardian Xayah (Turquoise)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "498006",
+          "num": 6,
+          "name": "Star Guardian Xayah (Ruby)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "498007",
+          "num": 7,
+          "name": "Star Guardian Xayah (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
           "id": "498008",
           "num": 8,
           "name": "Elderwood Xayah",
           "chromas": true
+        },
+        {
+          "id": "498009",
+          "num": 9,
+          "name": "Elderwood Xayah (Emerald)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "498010",
+          "num": 10,
+          "name": "Elderwood Xayah (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "498011",
+          "num": 11,
+          "name": "Elderwood Xayah (Pearl)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "498012",
+          "num": 12,
+          "name": "Elderwood Xayah (Catseye)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "498013",
+          "num": 13,
+          "name": "Elderwood Xayah (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "498014",
+          "num": 14,
+          "name": "Elderwood Xayah (Sapphire)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "498015",
+          "num": 15,
+          "name": "Elderwood Xayah (Emberwood)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "498016",
+          "num": 16,
+          "name": "Elderwood Xayah (Ruby)",
+          "chromas": false,
+          "parentSkin": 8
         },
         {
           "id": "498017",
@@ -61,16 +138,135 @@
           "chromas": true
         },
         {
+          "id": "498018",
+          "num": 18,
+          "name": "Brave Phoenix Xayah (Ruby)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "498019",
+          "num": 19,
+          "name": "Brave Phoenix Xayah (Emerald)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "498020",
+          "num": 20,
+          "name": "Brave Phoenix Xayah (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "498021",
+          "num": 21,
+          "name": "Brave Phoenix Xayah (Sapphire)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "498022",
+          "num": 22,
+          "name": "Brave Phoenix Xayah (Catseye)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "498023",
+          "num": 23,
+          "name": "Brave Phoenix Xayah (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "498024",
+          "num": 24,
+          "name": "Brave Phoenix Xayah (Obsidian)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "498025",
+          "num": 25,
+          "name": "Brave Phoenix Xayah (Pearl)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
           "id": "498026",
           "num": 26,
           "name": "Prestige Brave Phoenix Xayah",
           "chromas": false
         },
         {
+          "id": "498027",
+          "num": 27,
+          "name": "Brave Phoenix Xayah (Golden Tiger)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
           "id": "498028",
           "num": 28,
           "name": "Arcana Xayah",
           "chromas": true
+        },
+        {
+          "id": "498029",
+          "num": 29,
+          "name": "Arcana Xayah (Ruby)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "498030",
+          "num": 30,
+          "name": "Arcana Xayah (Catseye)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "498031",
+          "num": 31,
+          "name": "Arcana Xayah (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "498032",
+          "num": 32,
+          "name": "Arcana Xayah (Turquoise)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "498033",
+          "num": 33,
+          "name": "Arcana Xayah (Sapphire)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "498034",
+          "num": 34,
+          "name": "Arcana Xayah (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "498035",
+          "num": 35,
+          "name": "Arcana Xayah (Obsidian)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "498036",
+          "num": 36,
+          "name": "Arcana Xayah (Pearl)",
+          "chromas": false,
+          "parentSkin": 28
         },
         {
           "id": "498037",
@@ -85,16 +281,184 @@
           "chromas": false
         },
         {
+          "id": "498039",
+          "num": 39,
+          "name": "Broken Covenant Xayah (Ruby)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "498040",
+          "num": 40,
+          "name": "Broken Covenant Xayah (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "498041",
+          "num": 41,
+          "name": "Broken Covenant Xayah (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "498042",
+          "num": 42,
+          "name": "Broken Covenant Xayah (Sapphire)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "498043",
+          "num": 43,
+          "name": "Broken Covenant Xayah (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "498044",
+          "num": 44,
+          "name": "Broken Covenant Xayah (Peridot)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "498045",
+          "num": 45,
+          "name": "Broken Covenant Xayah (Citrine)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "498046",
+          "num": 46,
+          "name": "Broken Covenant Xayah (Pearl)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
           "id": "498047",
           "num": 47,
           "name": "Battle Bat Xayah",
           "chromas": true
         },
         {
+          "id": "498048",
+          "num": 48,
+          "name": "Battle Bat Xayah (Ruby)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "498049",
+          "num": 49,
+          "name": "Battle Bat Xayah (Emerald)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "498050",
+          "num": 50,
+          "name": "Battle Bat Xayah (Turquoise)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "498051",
+          "num": 51,
+          "name": "Battle Bat Xayah (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "498052",
+          "num": 52,
+          "name": "Battle Bat Xayah (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "498053",
+          "num": 53,
+          "name": "Battle Bat Xayah (Obsidian)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "498054",
+          "num": 54,
+          "name": "Battle Bat Xayah (Pearl)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "498055",
+          "num": 55,
+          "name": "Battle Bat Xayah (Rainbow)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "498056",
+          "num": 56,
+          "name": "Battle Bat Xayah (Nightwire)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
           "id": "498057",
           "num": 57,
           "name": "Battle Academia Xayah",
           "chromas": true
+        },
+        {
+          "id": "498058",
+          "num": 58,
+          "name": "Battle Academia Xayah (Ruby)",
+          "chromas": false,
+          "parentSkin": 57
+        },
+        {
+          "id": "498059",
+          "num": 59,
+          "name": "Battle Academia Xayah (Catseye)",
+          "chromas": false,
+          "parentSkin": 57
+        },
+        {
+          "id": "498060",
+          "num": 60,
+          "name": "Battle Academia Xayah (Sapphire)",
+          "chromas": false,
+          "parentSkin": 57
+        },
+        {
+          "id": "498061",
+          "num": 61,
+          "name": "Battle Academia Xayah (Emerald)",
+          "chromas": false,
+          "parentSkin": 57
+        },
+        {
+          "id": "498062",
+          "num": 62,
+          "name": "Battle Academia Xayah (Rebelguard)",
+          "chromas": false,
+          "parentSkin": 57
+        },
+        {
+          "id": "498063",
+          "num": 63,
+          "name": "Battle Academia Xayah (Pearl)",
+          "chromas": false,
+          "parentSkin": 57
+        },
+        {
+          "id": "498065",
+          "num": 65,
+          "name": "SSG Xayah (Elite)",
+          "chromas": false,
+          "parentSkin": 3
         }
       ],
       "lore": "Deadly and precise, Xayah is a vastayan revolutionary waging a personal war to save her people. She uses her speed, guile, and razor-sharp feather blades to cut down anyone who stands in her way. Xayah fights alongside her partner and lover, Rakan, to protect their dwindling tribe, and restore their race to her vision of its former glory.",
@@ -108,7 +472,9 @@
         "Long fights in the same area with Xayah will allow her to drop a lot of Feathers. Try to stay on the move!",
         "Make sure you are ready when you go for the kill. Untargetability from Featherstorm can quickly turn an ambush in Xayah's favor."
       ],
-      "tags": ["Marksman"],
+      "tags": [
+        "Marksman"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 10,
@@ -145,30 +511,105 @@
           "description": "Xayah throws two damaging daggers that also drop Feathers she can recall.",
           "tooltip": "Xayah throws two daggers, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> each and leaving two <keywordMajor>Feathers</keywordMajor>. Targets hit after the first take <physicalDamage>{{ multihitdamage }} damage</physicalDamage> from each dagger.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9.5, 9, 8.5, 8],
+          "cooldown": [
+            10,
+            9.5,
+            9,
+            8.5,
+            8
+          ],
           "cooldownBurn": "10/9.5/9/8.5/8",
-          "cost": [35, 35, 35, 35, 35],
+          "cost": [
+            35,
+            35,
+            35,
+            35,
+            35
+          ],
           "costBurn": "35",
           "datavalues": {},
           "effect": [
             null,
-            [45, 60, 75, 90, 105],
-            [0.5, 0.5, 0.5, 0.5, 0.5],
-            [0.334, 0.334, 0.334, 0.334, 0.334],
-            [0.584, 0.584, 0.584, 0.584, 0.584],
-            [3500, 3500, 3500, 3500, 3500],
-            [3500, 3500, 3500, 3500, 3500],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              45,
+              60,
+              75,
+              90,
+              105
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              0.334,
+              0.334,
+              0.334,
+              0.334,
+              0.334
+            ],
+            [
+              0.584,
+              0.584,
+              0.584,
+              0.584,
+              0.584
+            ],
+            [
+              3500,
+              3500,
+              3500,
+              3500,
+              3500
+            ],
+            [
+              3500,
+              3500,
+              3500,
+              3500,
+              3500
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -186,7 +627,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400, 400, 400],
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "XayahQ.png",
@@ -205,7 +652,11 @@
           "description": "Xayah creates a storm of blades that increase her Attack Speed and damage while also granting her Move Speed if she attacks a champion.",
           "tooltip": "Xayah creates a storm of blades for {{ e2 }} seconds that grants her <attackSpeed>{{ e1 }}% Attack Speed</attackSpeed> and cause her Attacks to fire a secondary blade that deals {{ bonusdamagepercent }}% damage.<br /><br />When the secondary blade hits a champion, she grants herself <speed>{{ e3 }}% Move Speed</speed> for {{ e4 }} seconds.<br /><br />If Rakan is nearby he will also gain the effects of this Ability, except he gains <speed>Move Speed</speed> when <i>Xayah</i> strikes a target.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Attack Speed", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Attack Speed",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ e1 }}% -> {{ e1NL }}%",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -213,23 +664,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [18, 17, 16, 15, 14],
+          "cooldown": [
+            18,
+            17,
+            16,
+            15,
+            14
+          ],
           "cooldownBurn": "18/17/16/15/14",
-          "cost": [60, 55, 50, 45, 40],
+          "cost": [
+            60,
+            55,
+            50,
+            45,
+            40
+          ],
           "costBurn": "60/55/50/45/40",
           "datavalues": {},
           "effect": [
             null,
-            [35, 40, 45, 50, 55],
-            [4, 4, 4, 4, 4],
-            [30, 30, 30, 30, 30],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [20, 20, 20, 20, 20],
-            [1000, 1000, 1000, 1000, 1000],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              35,
+              40,
+              45,
+              50,
+              55
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              30,
+              30,
+              30,
+              30,
+              30
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              20,
+              20,
+              20,
+              20,
+              20
+            ],
+            [
+              1000,
+              1000,
+              1000,
+              1000,
+              1000
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -247,7 +770,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1000, 1000, 1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "XayahW.png",
@@ -266,30 +795,105 @@
           "description": "Xayah calls back all her dropped Feathers dealing damage and rooting enemies.",
           "tooltip": "Xayah calls all <keywordMajor>Feathers</keywordMajor> back to her, dealing <physicalDamage>{{ featherdamage }} physical damage</physicalDamage> each. If {{ featherthreshold }} or more <keywordMajor>Feathers</keywordMajor> hit an enemy, they are <status>Rooted</status> for {{ rootduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11, 10, 9, 8],
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [20, 20, 20, 20, 20],
+          "cost": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
           "costBurn": "20",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -307,7 +911,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [2000, 2000, 2000, 2000, 2000],
+          "range": [
+            2000,
+            2000,
+            2000,
+            2000,
+            2000
+          ],
           "rangeBurn": "2000",
           "image": {
             "full": "XayahE.png",
@@ -326,30 +936,81 @@
           "description": "Xayah leaps into the air becoming untargetable and throwing out a fan of daggers, dropping Feathers she can recall.",
           "tooltip": "Xayah leaps into the air becoming Untargetable and Ghosted for 1.5 seconds before raining down daggers that deal <physicalDamage>{{ damage }} physical damage</physicalDamage> and leave behind a line of <keywordMajor>Feathers</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ rbasedamage }} -> {{ rbasedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [140, 120, 100],
+          "cooldown": [
+            140,
+            120,
+            100
+          ],
           "cooldownBurn": "140/120/100",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -367,7 +1028,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [450, 450, 450],
+          "range": [
+            450,
+            450,
+            450
+          ],
           "rangeBurn": "450",
           "image": {
             "full": "XayahR.png",

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Belveth": {
       "id": "Belveth",
@@ -31,23 +31,200 @@
           "chromas": true
         },
         {
+          "id": "200002",
+          "num": 2,
+          "name": "Battle Boss Bel'Veth (Ruby)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "200003",
+          "num": 3,
+          "name": "Battle Boss Bel'Veth (Catseye)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "200004",
+          "num": 4,
+          "name": "Battle Boss Bel'Veth (Emerald)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "200005",
+          "num": 5,
+          "name": "Battle Boss Bel'Veth (Sapphire)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "200006",
+          "num": 6,
+          "name": "Battle Boss Bel'Veth (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "200007",
+          "num": 7,
+          "name": "Battle Boss Bel'Veth (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "200008",
+          "num": 8,
+          "name": "Battle Boss Bel'Veth (Rainbow)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "200009",
+          "num": 9,
+          "name": "Battle Boss Bel'Veth (Obsidian)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
           "id": "200010",
           "num": 10,
           "name": "Cosmic Matriarch Bel'Veth",
           "chromas": true
         },
         {
+          "id": "200011",
+          "num": 11,
+          "name": "Cosmic Matriarch Bel'Veth (Ruby)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "200012",
+          "num": 12,
+          "name": "Cosmic Matriarch Bel'Veth (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "200013",
+          "num": 13,
+          "name": "Cosmic Matriarch Bel'Veth (Catseye)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "200014",
+          "num": 14,
+          "name": "Cosmic Matriarch Bel'Veth (Emerald)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "200015",
+          "num": 15,
+          "name": "Cosmic Matriarch Bel'Veth (Turquoise)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "200016",
+          "num": 16,
+          "name": "Cosmic Matriarch Bel'Veth (Pearl)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "200017",
+          "num": 17,
+          "name": "Cosmic Matriarch Bel'Veth (Obsidian)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "200018",
+          "num": 18,
+          "name": "Cosmic Matriarch Bel'Veth (Amethyst)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
           "id": "200019",
           "num": 19,
           "name": "Primordian Bel'Veth",
           "chromas": true
+        },
+        {
+          "id": "200020",
+          "num": 20,
+          "name": "Primordian Bel'Veth (Ruby)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "200021",
+          "num": 21,
+          "name": "Primordian Bel'Veth (Sapphire)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "200022",
+          "num": 22,
+          "name": "Primordian Bel'Veth (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "200023",
+          "num": 23,
+          "name": "Primordian Bel'Veth (Emerald)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "200024",
+          "num": 24,
+          "name": "Primordian Bel'Veth (Citrine)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "200025",
+          "num": 25,
+          "name": "Primordian Bel'Veth (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "200026",
+          "num": 26,
+          "name": "Primordian Bel'Veth (Pearl)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "200027",
+          "num": 27,
+          "name": "Primordian Bel'Veth (Obsidian)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "200028",
+          "num": 28,
+          "name": "Primordian Bel'Veth (Abyssal)",
+          "chromas": false,
+          "parentSkin": 19
         }
       ],
       "lore": "A nightmarish empress created from the raw material of an entire devoured city, Bel'Veth is the end of Runeterra itself... and the beginning of a monstrous reality of her own design. Driven by epochs of repurposed history, knowledge, and memories from the world above, she voraciously feeds an ever-expanding need for new experiences and emotions, consuming all that crosses her path. Yet her wants could never be sated by only one world as she turns her hungry eyes toward the Void's old masters...",
       "blurb": "A nightmarish empress created from the raw material of an entire devoured city, Bel'Veth is the end of Runeterra itself... and the beginning of a monstrous reality of her own design. Driven by epochs of repurposed history, knowledge, and memories from...",
       "allytips": [],
       "enemytips": [],
-      "tags": ["Fighter"],
+      "tags": [
+        "Fighter"
+      ],
       "partype": "",
       "info": {
         "attack": 4,
@@ -98,23 +275,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [1, 1, 1, 1, 1],
+          "cooldown": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
           "cooldownBurn": "1",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -132,7 +381,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [450, 450, 450, 450, 450],
+          "range": [
+            450,
+            450,
+            450,
+            450,
+            450
+          ],
           "rangeBurn": "450",
           "image": {
             "full": "BelvethQ.png",
@@ -151,7 +406,11 @@
           "description": "Bel'Veth slams her tail to the ground, damaging, knocking up, and slowing her enemies.",
           "tooltip": "Bel'Veth slams her tail, dealing <magicDamage>{{ damage }} magic damage</magicDamage>, <status>Knocking Up</status> foes for {{ duration }} seconds, and <status>Slowing</status> them by {{ slowpercent*100 }}% for {{ slowduration }} seconds. If a champion is hit, this refreshes the Cooldown of <spellName>Void Surge</spellName> in that direction.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow Duration", "Cooldown"],
+            "label": [
+              "Damage",
+              "Slow Duration",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ slowduration }} -> {{ slowdurationNL }}",
@@ -159,23 +418,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11, 10, 9, 8],
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -193,7 +524,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [715, 715, 715, 715, 715],
+          "range": [
+            715,
+            715,
+            715,
+            715,
+            715
+          ],
           "rangeBurn": "715",
           "image": {
             "full": "BelvethW.png",
@@ -212,7 +549,11 @@
           "description": "Bel'Veth roots herself in place, channeling a storm of slashes around her that targets the lowest-health enemy and grants her lifesteal and damage reduction.",
           "tooltip": "Bel'Veth channels and slashes around herself, gaining {{ drpercent*100 }}% Damage Reduction, {{ totallifesteal }} Life Steal, and Attacking {{ f2.0 }} times over {{ totalduration }} seconds with the number of Attacks increasing based on her <attackSpeed>Attack Speed</attackSpeed>. Each Attack strikes the lowest-health enemy, dealing <physicalDamage>{{ damageperstrike }}</physicalDamage> to <physicalDamage>{{ maxdamageperstriketooltip }} physical damage</physicalDamage> based on the target's missing Health.<br /><br />Using another Ability or <recast>Recasting</recast> ends this Ability early.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Damage Reduction", "Cooldown"],
+            "label": [
+              "Damage",
+              "Damage Reduction",
+              "Cooldown"
+            ],
             "effect": [
               "{{ damageperhit }} -> {{ damageperhitNL }}",
               "{{ drpercent*100.000000 }}% -> {{ drpercentnl*100.000000 }}%",
@@ -220,23 +561,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [20, 19, 18, 17, 16],
+          "cooldown": [
+            20,
+            19,
+            18,
+            17,
+            16
+          ],
           "cooldownBurn": "20/19/18/17/16",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -254,7 +667,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [500, 500, 500, 500, 500],
+          "range": [
+            500,
+            500,
+            500,
+            500,
+            500
+          ],
           "rangeBurn": "500",
           "image": {
             "full": "BelvethE.png",
@@ -291,23 +710,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [1, 1, 1],
+          "cooldown": [
+            1,
+            1,
+            1
+          ],
           "cooldownBurn": "1",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -325,7 +792,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [450, 450, 450],
+          "range": [
+            450,
+            450,
+            450
+          ],
           "rangeBurn": "450",
           "image": {
             "full": "BelvethR.png",

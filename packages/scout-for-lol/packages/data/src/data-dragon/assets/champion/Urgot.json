@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Urgot": {
       "id": "Urgot",
@@ -43,10 +43,80 @@
           "chromas": true
         },
         {
+          "id": "6004",
+          "num": 4,
+          "name": "Battlecast Urgot (Ruby)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "6005",
+          "num": 5,
+          "name": "Battlecast Urgot (Sapphire)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "6006",
+          "num": 6,
+          "name": "Battlecast Urgot (Pearl)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "6007",
+          "num": 7,
+          "name": "Battlecast Urgot (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "6008",
+          "num": 8,
+          "name": "Battlecast Urgot (Obsidian)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
           "id": "6009",
           "num": 9,
           "name": "High Noon Urgot",
           "chromas": true
+        },
+        {
+          "id": "6010",
+          "num": 10,
+          "name": "High Noon Urgot (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "6011",
+          "num": 11,
+          "name": "High Noon Urgot (Turquoise)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "6012",
+          "num": 12,
+          "name": "High Noon Urgot (Ruby)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "6013",
+          "num": 13,
+          "name": "High Noon Urgot (Pearl)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "6014",
+          "num": 14,
+          "name": "High Noon Urgot (Sapphire)",
+          "chromas": false,
+          "parentSkin": 9
         },
         {
           "id": "6015",
@@ -55,16 +125,177 @@
           "chromas": true
         },
         {
+          "id": "6016",
+          "num": 16,
+          "name": "Pajama Guardian Cosplay Urgot (Ruby)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "6017",
+          "num": 17,
+          "name": "Pajama Guardian Cosplay Urgot (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "6018",
+          "num": 18,
+          "name": "Pajama Guardian Cosplay Urgot (Emerald)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "6019",
+          "num": 19,
+          "name": "Pajama Guardian Cosplay Urgot (Catseye)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "6020",
+          "num": 20,
+          "name": "Pajama Guardian Cosplay Urgot (Pearl)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "6021",
+          "num": 21,
+          "name": "Pajama Guardian Cosplay Urgot (Amethyst)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "6022",
+          "num": 22,
+          "name": "Pajama Guardian Cosplay Urgot (Obsidian)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
           "id": "6023",
           "num": 23,
           "name": "Fright Night Urgot",
           "chromas": true
         },
         {
+          "id": "6024",
+          "num": 24,
+          "name": "Fright Night Urgot (Ruby)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "6025",
+          "num": 25,
+          "name": "Fright Night Urgot (Catseye)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "6026",
+          "num": 26,
+          "name": "Fright Night Urgot (Emerald)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "6027",
+          "num": 27,
+          "name": "Fright Night Urgot (Sapphire)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "6028",
+          "num": 28,
+          "name": "Fright Night Urgot (Citrine)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "6029",
+          "num": 29,
+          "name": "Fright Night Urgot (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "6030",
+          "num": 30,
+          "name": "Fright Night Urgot (Amethyst)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "6031",
+          "num": 31,
+          "name": "Fright Night Urgot (Turquoise)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
           "id": "6032",
           "num": 32,
           "name": "Urgot the Clogfather",
           "chromas": true
+        },
+        {
+          "id": "6033",
+          "num": 33,
+          "name": "Urgot the Clogfather (Ruby)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "6034",
+          "num": 34,
+          "name": "Urgot the Clogfather (Turquoise)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "6035",
+          "num": 35,
+          "name": "Urgot the Clogfather (Catseye)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "6036",
+          "num": 36,
+          "name": "Urgot the Clogfather (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "6037",
+          "num": 37,
+          "name": "Urgot the Clogfather (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "6038",
+          "num": 38,
+          "name": "Urgot the Clogfather (Pearl)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "6039",
+          "num": 39,
+          "name": "Urgot the Clogfather (Meteorite)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "6040",
+          "num": 40,
+          "name": "Urgot the Clogfather (Obsidian)",
+          "chromas": false,
+          "parentSkin": 32
         }
       ],
       "lore": "Once a powerful Noxian headsman, Urgot was betrayed by the empire for which he had killed so many. Bound in iron chains, he was forced to learn the true meaning of strength in the Dredge—a prison mine deep beneath Zaun. Emerging in a disaster that spread chaos throughout the city, he now casts an imposing shadow over its criminal underworld. Raising his victims on the very chains that once enslaved him, he will purge his new home of the unworthy, making it a crucible of pain.",
@@ -79,7 +310,10 @@
         "Urgot can deal and absorb tremendous amounts of damage with Purge, but slows himself while firing.",
         "If you are struck by Fear Beyond Death, do your best to avoid falling below the execution threshold (25% of your Maximum Health) until the effect times out."
       ],
-      "tags": ["Fighter", "Tank"],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 8,
@@ -116,7 +350,11 @@
           "description": "Fires an explosive charge at the target location, dealing physical damage and slowing enemies caught in the explosion.",
           "tooltip": "Urgot fires an explosive charge, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>Slowing</status> by {{ slowamount*100 }}% for {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage", "Slow"],
+            "label": [
+              "Cooldown",
+              "Damage",
+              "Slow"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -124,23 +362,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9.5, 9, 8.5, 8],
+          "cooldown": [
+            10,
+            9.5,
+            9,
+            8.5,
+            8
+          ],
           "cooldownBurn": "10/9.5/9/8.5/8",
-          "cost": [70, 70, 70, 70, 70],
+          "cost": [
+            70,
+            70,
+            70,
+            70,
+            70
+          ],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -158,7 +468,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "UrgotQ.png",
@@ -189,23 +505,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 9, 6, 3, 0],
+          "cooldown": [
+            12,
+            9,
+            6,
+            3,
+            0
+          ],
           "cooldownBurn": "12/9/6/3/0",
-          "cost": [40, 30, 20, 10, 0],
+          "cost": [
+            40,
+            30,
+            20,
+            10,
+            0
+          ],
           "costBurn": "40/30/20/10/0",
           "datavalues": {},
           "effect": [
             null,
-            [30, 60, 90, 120, 150],
-            [40, 40, 40, 40, 40],
-            [4, 4, 4, 4, 25000],
-            [0, 0, 0, 0, 0],
-            [125, 125, 125, 125, 125],
-            [0.5, 0.5, 0.5, 0.5, 0.5],
-            [20, 23.5, 27, 30.5, 34],
-            [3, 3, 3, 3, 3],
-            [12, 12, 12, 12, 12],
-            [50, 50, 50, 50, 50]
+            [
+              30,
+              60,
+              90,
+              120,
+              150
+            ],
+            [
+              40,
+              40,
+              40,
+              40,
+              40
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              25000
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              125,
+              125,
+              125,
+              125,
+              125
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              20,
+              23.5,
+              27,
+              30.5,
+              34
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              12,
+              12,
+              12,
+              12,
+              12
+            ],
+            [
+              50,
+              50,
+              50,
+              50,
+              50
+            ]
           ],
           "effectBurn": [
             null,
@@ -223,7 +611,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [490, 490, 490, 490, 490],
+          "range": [
+            490,
+            490,
+            490,
+            490,
+            490
+          ],
           "rangeBurn": "490",
           "image": {
             "full": "UrgotW.png",
@@ -256,23 +650,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 15.5, 15, 14.5, 14],
+          "cooldown": [
+            16,
+            15.5,
+            15,
+            14.5,
+            14
+          ],
           "cooldownBurn": "16/15.5/15/14.5/14",
-          "cost": [60, 70, 80, 90, 100],
+          "cost": [
+            60,
+            70,
+            80,
+            90,
+            100
+          ],
           "costBurn": "60/70/80/90/100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -290,7 +756,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [475, 475, 475, 475, 475],
+          "range": [
+            475,
+            475,
+            475,
+            475,
+            475
+          ],
           "rangeBurn": "475",
           "image": {
             "full": "UrgotE.png",
@@ -309,30 +781,81 @@
           "description": "Urgot fires a chem-drill that impales the first enemy champion hit. If that champion falls below a health threshold, Urgot judges them weak and can execute them.",
           "tooltip": "Urgot fires a chem-drill, impaling the first champion hit, dealing <physicalDamage>{{ rcalculateddamage }} physical damage</physicalDamage> and <status>Slowing</status> for {{ rslowduration }} seconds by 1% per 1% missing Health, up to {{ rmovespeedmod }}%.<br /><br />If the impaled victim falls below {{ rhealththreshold }}% Health, Urgot can <recast>Recast</recast> this Ability, <status>Suppressing</status> the victim and dragging them to himself. On reaching Urgot, they are killed and nearby enemies are <status>Feared</status> for {{ rfearduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ rbasedamage }} -> {{ rbasedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [100, 85, 70],
+          "cooldown": [
+            100,
+            85,
+            70
+          ],
           "cooldownBurn": "100/85/70",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -350,7 +873,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [2500, 2500, 2500],
+          "range": [
+            2500,
+            2500,
+            2500
+          ],
           "rangeBurn": "2500",
           "image": {
             "full": "UrgotR.png",

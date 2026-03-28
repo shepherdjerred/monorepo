@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Zyra": {
       "id": "Zyra",
@@ -67,10 +67,199 @@
           "chromas": true
         },
         {
+          "id": "143008",
+          "num": 8,
+          "name": "Crystal Rose Zyra (Ruby)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "143009",
+          "num": 9,
+          "name": "Crystal Rose Zyra (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "143010",
+          "num": 10,
+          "name": "Crystal Rose Zyra (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "143011",
+          "num": 11,
+          "name": "Crystal Rose Zyra (Peridot)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "143012",
+          "num": 12,
+          "name": "Crystal Rose Zyra (Amethyst)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "143013",
+          "num": 13,
+          "name": "Crystal Rose Zyra (Obsidian)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "143014",
+          "num": 14,
+          "name": "Crystal Rose Zyra (Pearl)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "143015",
+          "num": 15,
+          "name": "Crystal Rose Zyra (Citrine)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
           "id": "143016",
           "num": 16,
           "name": "Crime City Nightmare Zyra",
           "chromas": true
+        },
+        {
+          "id": "143017",
+          "num": 17,
+          "name": "Coven Zyra (Ruby)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "143018",
+          "num": 18,
+          "name": "Coven Zyra (Catseye)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "143019",
+          "num": 19,
+          "name": "Coven Zyra (Emerald)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "143020",
+          "num": 20,
+          "name": "Coven Zyra (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "143021",
+          "num": 21,
+          "name": "Coven Zyra (Sapphire)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "143022",
+          "num": 22,
+          "name": "Coven Zyra (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "143023",
+          "num": 23,
+          "name": "Coven Zyra (Pearl)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "143024",
+          "num": 24,
+          "name": "Coven Zyra (Obsidian)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "143025",
+          "num": 25,
+          "name": "Coven Zyra (Dark Ritual)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "143026",
+          "num": 26,
+          "name": "Crime City Nightmare Zyra (Ruby)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "143027",
+          "num": 27,
+          "name": "Crime City Nightmare Zyra (Peridot)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "143028",
+          "num": 28,
+          "name": "Crime City Nightmare Zyra (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "143029",
+          "num": 29,
+          "name": "Crime City Nightmare Zyra (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "143030",
+          "num": 30,
+          "name": "Crime City Nightmare Zyra (Catseye)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "143031",
+          "num": 31,
+          "name": "Crime City Nightmare Zyra (Amethyst)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "143032",
+          "num": 32,
+          "name": "Crime City Nightmare Zyra (Pearl)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "143033",
+          "num": 33,
+          "name": "Crime City Nightmare Zyra (Emerald)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "143034",
+          "num": 34,
+          "name": "Crime City Nightmare Zyra (Underground)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "143035",
+          "num": 35,
+          "name": "Crystal Rose Zyra (Tiffany & Co.)",
+          "chromas": false,
+          "parentSkin": 7
         },
         {
           "id": "143036",
@@ -79,10 +268,129 @@
           "chromas": true
         },
         {
+          "id": "143037",
+          "num": 37,
+          "name": "Mythmaker Zyra (Ruby)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "143038",
+          "num": 38,
+          "name": "Mythmaker Zyra (Citrine)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "143039",
+          "num": 39,
+          "name": "Mythmaker Zyra (Sapphire)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "143040",
+          "num": 40,
+          "name": "Mythmaker Zyra (Emerald)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "143041",
+          "num": 41,
+          "name": "Mythmaker Zyra (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "143042",
+          "num": 42,
+          "name": "Mythmaker Zyra (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "143043",
+          "num": 43,
+          "name": "Mythmaker Zyra (Pearl)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "143044",
+          "num": 44,
+          "name": "Mythmaker Zyra (Turquoise)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "143045",
+          "num": 45,
+          "name": "Mythmaker Zyra (Gilded)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
           "id": "143046",
           "num": 46,
           "name": "Street Demons Zyra",
           "chromas": true
+        },
+        {
+          "id": "143047",
+          "num": 47,
+          "name": "Street Demons Zyra (Ruby)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "143048",
+          "num": 48,
+          "name": "Street Demons Zyra (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "143049",
+          "num": 49,
+          "name": "Street Demons Zyra (Catseye)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "143050",
+          "num": 50,
+          "name": "Street Demons Zyra (Emerald)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "143051",
+          "num": 51,
+          "name": "Street Demons Zyra (Turquoise)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "143052",
+          "num": 52,
+          "name": "Street Demons Zyra (Pearl)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "143053",
+          "num": 53,
+          "name": "Street Demons Zyra (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "143054",
+          "num": 54,
+          "name": "Street Demons Zyra (Sapphire)",
+          "chromas": false,
+          "parentSkin": 46
         },
         {
           "id": "143055",
@@ -91,10 +399,129 @@
           "chromas": true
         },
         {
+          "id": "143056",
+          "num": 56,
+          "name": "Blood Moon Zyra (Ruby)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "143057",
+          "num": 57,
+          "name": "Blood Moon Zyra (Emerald)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "143058",
+          "num": 58,
+          "name": "Blood Moon Zyra (Citrine)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "143059",
+          "num": 59,
+          "name": "Blood Moon Zyra (Sapphire)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "143060",
+          "num": 60,
+          "name": "Blood Moon Zyra (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "143061",
+          "num": 61,
+          "name": "Blood Moon Zyra (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "143062",
+          "num": 62,
+          "name": "Blood Moon Zyra (Turquoise)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "143063",
+          "num": 63,
+          "name": "Blood Moon Zyra (Pearl)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
           "id": "143064",
           "num": 64,
           "name": "Spirit Blossom Zyra",
           "chromas": true
+        },
+        {
+          "id": "143065",
+          "num": 65,
+          "name": "Mythmaker Zyra (Paragon)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "143066",
+          "num": 66,
+          "name": "Spirit Blossom Zyra (Ruby)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "143067",
+          "num": 67,
+          "name": "Spirit Blossom Zyra (Catseye)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "143068",
+          "num": 68,
+          "name": "Spirit Blossom Zyra (Emerald)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "143069",
+          "num": 69,
+          "name": "Spirit Blossom Zyra (Turquoise)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "143070",
+          "num": 70,
+          "name": "Spirit Blossom Zyra (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "143071",
+          "num": 71,
+          "name": "Spirit Blossom Zyra (Sapphire)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "143072",
+          "num": 72,
+          "name": "Spirit Blossom Zyra (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "143073",
+          "num": 73,
+          "name": "Spirit Blossom Zyra (Obsidian)",
+          "chromas": false,
+          "parentSkin": 64
         }
       ],
       "lore": "Born in an ancient, sorcerous catastrophe, Zyra is the wrath of nature given form—an alluring hybrid of plant and human, kindling new life with every step. She views the many mortals of Valoran as little more than prey for her seeded progeny, and thinks nothing of slaying them with flurries of deadly spines. Though her true purpose has not been revealed, Zyra wanders the world, indulging her most primal urges to colonize, and strangle all other life from it.",
@@ -111,7 +538,10 @@
         "Moving the fight to a different area will deprive Zyra of accumulated seeds.",
         "Seeds placed by Zyra's W are larger, a different color, and grant a small amount of vision to her team."
       ],
-      "tags": ["Mage", "Support"],
+      "tags": [
+        "Mage",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 4,
@@ -148,30 +578,105 @@
           "description": "Thick vines spread through the ground and explode into spines, dealing magic damage to enemies within the area. If cast near a seed, Deadly Spines grows a Thorn Spitter plant, which fires at enemies from afar.",
           "tooltip": "Zyra causes thick vines to spread and explode into spines, dealing <magicDamage>{{ initialdamage }} magic damage</magicDamage>.<br /><br />If this Ability is cast near a <keywordMajor>Seed</keywordMajor>, the <keywordMajor>Seed</keywordMajor> grows into a Thorn Spitter that deals <magicDamage>{{ spell.zyrap:plantdamage }} magic damage</magicDamage> and lasts {{ spell.zyrap:plantduration }} seconds. Thorn Spitters have 575 range.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage"],
+            "label": [
+              "Cooldown",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ e1 }} -> {{ e1NL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 6.5, 6, 5.5, 5],
+          "cooldown": [
+            7,
+            6.5,
+            6,
+            5.5,
+            5
+          ],
           "cooldownBurn": "7/6.5/6/5.5/5",
-          "cost": [55, 55, 55, 55, 55],
+          "cost": [
+            55,
+            55,
+            55,
+            55,
+            55
+          ],
           "costBurn": "55",
           "datavalues": {},
           "effect": [
             null,
-            [60, 100, 140, 180, 220],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              60,
+              100,
+              140,
+              180,
+              220
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -189,7 +694,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "ZyraQ.png",
@@ -208,27 +719,103 @@
           "description": "Zyra plants a seed, lasting up to 60 seconds. Deadly Spines and Grasping Roots cast near seeds will turn them into plants who fight for Zyra. Zyra can store multiple seeds at once, and killing enemies reduces Rampant Growth's recharge time.",
           "tooltip": "Zyra plants a <keywordMajor>Seed</keywordMajor> that lasts {{ e6 }} seconds. These <keywordMajor>Seeds</keywordMajor> grant <keywordStealth>True Sight</keywordStealth> of enemy champions that step on them for {{ e3 }} seconds, but are still destroyed.<br /><br />This Ability has 2 charges with a {{ ammorechargetime }} second recharge time. Killing an enemy minion or monster reduces the recharge time by {{ e1 }}%. Champion takedowns reduce the recharge time by {{ e2 }}% instead.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Seed Recharge Rate"],
-            "effect": ["{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"]
+            "label": [
+              "Seed Recharge Rate"
+            ],
+            "effect": [
+              "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [0, 0, 0, 0, 0],
+          "cooldown": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "cooldownBurn": "0",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [35, 35, 35, 35, 35],
-            [100, 100, 100, 100, 100],
-            [2, 2, 2, 2, 2],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [60, 60, 60, 60, 60],
-            [0, 0, 0, 0, 0],
-            [10, 20, 30, 40, 50],
-            [0.4, 0.8, 1.2, 1.6, 2],
-            [0, 0, 0, 0, 0]
+            [
+              35,
+              35,
+              35,
+              35,
+              35
+            ],
+            [
+              100,
+              100,
+              100,
+              100,
+              100
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              60,
+              60,
+              60,
+              60,
+              60
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              10,
+              20,
+              30,
+              40,
+              50
+            ],
+            [
+              0.4,
+              0.8,
+              1.2,
+              1.6,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -246,7 +833,13 @@
           "vars": [],
           "costType": "1 Seed",
           "maxammo": "2",
-          "range": [850, 850, 850, 850, 850],
+          "range": [
+            850,
+            850,
+            850,
+            850,
+            850
+          ],
           "rangeBurn": "850",
           "image": {
             "full": "ZyraW.png",
@@ -265,7 +858,11 @@
           "description": "Zyra sends forth vines through the ground to ensnare her target, dealing damage and rooting enemies they come across. If cast near a seed, Grasping Roots grows a Vine Lasher, whose short range attacks reduce enemy Move Speed.",
           "tooltip": "Zyra sends vines forward, <status>Rooting</status> for {{ e5 }} second(s) and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. <br /><br />If this Ability passes near a <keywordMajor>Seed</keywordMajor>, the <keywordMajor>Seed</keywordMajor> grows into a Vine Lasher that deals <magicDamage>{{ spell.zyrap:plantdamage }} magic damage</magicDamage> and lasts {{ spell.zyrap:plantduration }} seconds. Vine Lashers have 400 range, and their Attacks <status>Slow</status> by {{ e2 }}% for {{ e3 }} seconds. The <status>Slow</status> from multiple Vine Lashers stacks up to {{ maxslowstacks }} times.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["@AbilityResourceName@ Cost", "Damage", "Root Duration"],
+            "label": [
+              "@AbilityResourceName@ Cost",
+              "Damage",
+              "Root Duration"
+            ],
             "effect": [
               "{{ cost }} -> {{ costNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -273,23 +870,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 11, 11, 11, 11],
+          "cooldown": [
+            11,
+            11,
+            11,
+            11,
+            11
+          ],
           "cooldownBurn": "11",
-          "cost": [70, 75, 80, 85, 90],
+          "cost": [
+            70,
+            75,
+            80,
+            85,
+            90
+          ],
           "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
-            [60, 95, 130, 165, 200],
-            [30, 30, 30, 30, 30],
-            [2, 2, 2, 2, 2],
-            [4, 4, 4, 0, 0],
-            [1, 1.25, 1.5, 1.75, 2],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              60,
+              95,
+              130,
+              165,
+              200
+            ],
+            [
+              30,
+              30,
+              30,
+              30,
+              30
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              4,
+              4,
+              4,
+              0,
+              0
+            ],
+            [
+              1,
+              1.25,
+              1.5,
+              1.75,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -307,7 +976,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1100, 1100, 1100, 1100, 1100],
+          "range": [
+            1100,
+            1100,
+            1100,
+            1100,
+            1100
+          ],
           "rangeBurn": "1100",
           "image": {
             "full": "ZyraE.png",
@@ -326,30 +1001,81 @@
           "description": "Zyra summons a twisted thicket at her target location, dealing damage to enemies as it expands and knocking them airborne as it contracts. Plants within the thicket are enraged.",
           "tooltip": "Zyra summons the fury of nature, growing a twisted thicket that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>. After 2 seconds, the vines snap upwards, <status>Knocking Up</status> for {{ e1 }} second.<br /><br />Zyra's plants within the thicket become enraged, resetting their duration, gaining <healing>{{ e2 }}% Health</healing> and Attacking for {{ plantdamagebonus }}% bonus damage.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage"],
+            "label": [
+              "Cooldown",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ e3 }} -> {{ e3NL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [110, 100, 90],
+          "cooldown": [
+            110,
+            100,
+            90
+          ],
           "cooldownBurn": "110/100/90",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [1, 1, 1],
-            [50, 50, 50],
-            [200, 300, 400],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [150, 150, 150],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              1,
+              1,
+              1
+            ],
+            [
+              50,
+              50,
+              50
+            ],
+            [
+              200,
+              300,
+              400
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              150,
+              150,
+              150
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -367,7 +1093,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [700, 700, 700],
+          "range": [
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "ZyraR.png",

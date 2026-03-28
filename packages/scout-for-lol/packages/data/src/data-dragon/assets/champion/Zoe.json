@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Zoe": {
       "id": "Zoe",
@@ -37,10 +37,108 @@
           "chromas": true
         },
         {
+          "id": "142003",
+          "num": 3,
+          "name": "Pool Party Zoe (Ruby)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "142004",
+          "num": 4,
+          "name": "Pool Party Zoe (Emerald)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "142005",
+          "num": 5,
+          "name": "Pool Party Zoe (Sapphire)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "142006",
+          "num": 6,
+          "name": "Pool Party Zoe (Amethyst)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "142007",
+          "num": 7,
+          "name": "Pool Party Zoe (Rainbow)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "142008",
+          "num": 8,
+          "name": "Pool Party Zoe (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
           "id": "142009",
           "num": 9,
           "name": "Star Guardian Zoe",
           "chromas": true
+        },
+        {
+          "id": "142010",
+          "num": 10,
+          "name": "Star Guardian Zoe (Jasper)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "142011",
+          "num": 11,
+          "name": "Star Guardian Zoe (Amethyst)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "142012",
+          "num": 12,
+          "name": "Star Guardian Zoe (Pearl)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "142013",
+          "num": 13,
+          "name": "Star Guardian Zoe (Citrine)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "142014",
+          "num": 14,
+          "name": "Star Guardian Zoe (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "142015",
+          "num": 15,
+          "name": "Star Guardian Zoe (Ruby)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "142016",
+          "num": 16,
+          "name": "Star Guardian Zoe (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "142017",
+          "num": 17,
+          "name": "Star Guardian Zoe (Emerald)",
+          "chromas": false,
+          "parentSkin": 9
         },
         {
           "id": "142018",
@@ -61,10 +159,87 @@
           "chromas": true
         },
         {
+          "id": "142021",
+          "num": 21,
+          "name": "EDG Zoe (Elite)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
           "id": "142022",
           "num": 22,
           "name": "Winterblessed Zoe",
           "chromas": true
+        },
+        {
+          "id": "142023",
+          "num": 23,
+          "name": "Winterblessed Zoe (Ruby)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "142024",
+          "num": 24,
+          "name": "Winterblessed Zoe (Catseye)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "142025",
+          "num": 25,
+          "name": "Winterblessed Zoe (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "142026",
+          "num": 26,
+          "name": "Winterblessed Zoe (Peridot)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "142027",
+          "num": 27,
+          "name": "Winterblessed Zoe (Emerald)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "142028",
+          "num": 28,
+          "name": "Winterblessed Zoe (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "142029",
+          "num": 29,
+          "name": "Winterblessed Zoe (Sapphire)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "142030",
+          "num": 30,
+          "name": "Winterblessed Zoe (Rainbow)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "142031",
+          "num": 31,
+          "name": "Winterblessed Zoe (Wreathguard)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "142032",
+          "num": 32,
+          "name": "EDG Zoe (Tenfold Triumph)",
+          "chromas": false,
+          "parentSkin": 20
         },
         {
           "id": "142033",
@@ -73,10 +248,80 @@
           "chromas": true
         },
         {
+          "id": "142034",
+          "num": 34,
+          "name": "Dark Star Zoe (Ruby)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "142035",
+          "num": 35,
+          "name": "Dark Star Zoe (Catseye)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "142036",
+          "num": 36,
+          "name": "Dark Star Zoe (Sapphire)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "142037",
+          "num": 37,
+          "name": "Dark Star Zoe (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "142038",
+          "num": 38,
+          "name": "Dark Star Zoe (Pearl)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "142039",
+          "num": 39,
+          "name": "Dark Star Zoe (Emerald)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "142040",
+          "num": 40,
+          "name": "Dark Star Zoe (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "142041",
+          "num": 41,
+          "name": "Dark Star Zoe (Turquoise)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "142042",
+          "num": 42,
+          "name": "Dark Star Zoe (Quasar)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
           "id": "142043",
           "num": 43,
           "name": "Prestige Eternal Aspect Zoe",
           "chromas": true
+        },
+        {
+          "id": "142044",
+          "num": 44,
+          "name": "Prestige Eternal Aspect Zoe (Vivid)",
+          "chromas": false,
+          "parentSkin": 43
         }
       ],
       "lore": "As the embodiment of mischief, imagination, and change, Zoe acts as the cosmic messenger of Targon, heralding major events that reshape worlds. Her mere presence warps the arcane mathematics governing realities, sometimes causing cataclysms without conscious effort or malice. This perhaps explains the breezy nonchalance with which Zoe approaches her duties, giving her plenty of time to focus on playing games, tricking mortals, or otherwise amusing herself. An encounter with Zoe can be joyous and life affirming, but it is always more than it appears and often extremely dangerous.",
@@ -91,7 +336,9 @@
         "Zoe must return to her starting point after casting Portal Jump, making her vulnerable to a counterattack.",
         "Sleepy Trouble Bubble travels further over walls. Stop Zoe from hiding in fog of war to prevent her from setting the spell up."
       ],
-      "tags": ["Mage"],
+      "tags": [
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 1,
@@ -128,7 +375,11 @@
           "description": "Zoe fires a missile that she can redirect in flight. Deals more damage the longer it flies in a straight line.",
           "tooltip": "Zoe fires a star that deals increasing damage the further it travels to the first enemy hit and surrounding enemies -- between <magicDamage>{{ totaldamagetooltip }} to {{ maxdamagetooltip }} magic damage</magicDamage>.<br /><br />Zoe can <recast>Recast</recast> this Ability to redirect the missile to a new position near Zoe.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Base Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Base Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -136,23 +387,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8.5, 8, 7.5, 7, 6.5],
+          "cooldown": [
+            8.5,
+            8,
+            7.5,
+            7,
+            6.5
+          ],
           "cooldownBurn": "8.5/8/7.5/7/6.5",
-          "cost": [40, 45, 50, 55, 60],
+          "cost": [
+            40,
+            45,
+            50,
+            55,
+            60
+          ],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -170,7 +493,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "ZoeQ.png",
@@ -189,7 +518,11 @@
           "description": "Zoe can pick up the remnants of enemy summoner spell and active item casts and cast them once herself. Whenever she casts a summoner spell, she gains 3 missiles that fire at the nearest target.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Enemies drop spell shards when casting a Summoner Spell or using an Active Item. Specific minions also drop a spell shard when Zoe or a nearby ally kills them. Zoe can pick up this shard to cast that ability once.<br /><br /><spellPassive>Passive:</spellPassive> When Zoe casts this Ability or any Summoner Spell, she gains <speed>{{ e9 }}% Move Speed</speed> for {{ e0 }} seconds and tosses 3 missiles at the target she Attacked most recently. These missiles deal <magicDamage>{{ missiledamagetooltip }} magic damage</magicDamage> each.<br /><br /><spellActive>Active:</spellActive> Cast the Ability from a spell shard Zoe has picked up.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Total Damage", "Move Speed", "Speed Duration"],
+            "label": [
+              "Total Damage",
+              "Move Speed",
+              "Speed Duration"
+            ],
             "effect": [
               "{{ totalbasedamage*3.000000 }} -> {{ totalbasedamagenl*3.000000 }}",
               "{{ movespeedmod*100.000000 }}% -> {{ movespeedmodnl*100.000000 }}%",
@@ -197,23 +530,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [0.25, 0.25, 0.25, 0.25, 0.25],
+          "cooldown": [
+            0.25,
+            0.25,
+            0.25,
+            0.25,
+            0.25
+          ],
           "cooldownBurn": "0.25",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [3000, 4500, 6000, 0, 0],
-            [0.1, 0.1, 0.1, 0.1, 0.1],
-            [2500, 2500, 2500, 2500, 2500],
-            [60, 60, 60, 60, 60],
-            [20, 50, 80, 110, 140],
-            [0.2, 0.2, 0.2, 0.2, 0.2],
-            [0, 0, 0, 0, 0],
-            [30, 40, 50, 60, 70],
-            [2, 2.25, 2.5, 2.75, 3]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              3000,
+              4500,
+              6000,
+              0,
+              0
+            ],
+            [
+              0.1,
+              0.1,
+              0.1,
+              0.1,
+              0.1
+            ],
+            [
+              2500,
+              2500,
+              2500,
+              2500,
+              2500
+            ],
+            [
+              60,
+              60,
+              60,
+              60,
+              60
+            ],
+            [
+              20,
+              50,
+              80,
+              110,
+              140
+            ],
+            [
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              30,
+              40,
+              50,
+              60,
+              70
+            ],
+            [
+              2,
+              2.25,
+              2.5,
+              2.75,
+              3
+            ]
           ],
           "effectBurn": [
             null,
@@ -231,7 +636,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [3000, 4500, 6000, 3000, 3000],
+          "range": [
+            3000,
+            4500,
+            6000,
+            3000,
+            3000
+          ],
           "rangeBurn": "3000/4500/6000/3000/3000",
           "image": {
             "full": "ZoeW.png",
@@ -250,7 +661,11 @@
           "description": "Causes the target to become drowsy, then fall asleep. While asleep, the target's Magic Resist is reduced. The first source of damage that breaks the sleep is doubled, up to a cap.",
           "tooltip": "Zoe dropkicks a bubble that deals <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage>, lingering as a trap if it hits nothing. The bubble's range is extended when flying over terrain.<br /><br />After a delay, the victim falls <status>Asleep</status> and have their <scaleMR>Magic Resist</scaleMR> reduced by {{ percentpen*100 }}% for 2 seconds. Attacks and Ability hits wake them up but deal double damage, up to <trueDamage>{{ breakdamagetooltip }} true damage</trueDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Bonus Damage Cap", "Cooldown"],
+            "label": [
+              "Damage",
+              "Bonus Damage Cap",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -258,23 +673,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 15, 14, 13, 12],
+          "cooldown": [
+            16,
+            15,
+            14,
+            13,
+            12
+          ],
           "cooldownBurn": "16/15/14/13/12",
-          "cost": [80, 80, 80, 80, 80],
+          "cost": [
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
           "costBurn": "80",
           "datavalues": {},
           "effect": [
             null,
-            [70, 110, 150, 190, 230],
-            [0.1, 0.15, 0.2, 0.25, 0.3],
-            [5, 15, 25, 35, 45],
-            [5, 5, 5, 5, 5],
-            [0.1, 0.15, 0.2, 0.25, 0.3],
-            [70, 110, 150, 190, 230],
-            [0.45, 0.45, 0.45, 0.45, 0.45],
-            [1.4, 1.4, 1.4, 1.4, 1.4],
-            [2.25, 2.25, 2.25, 2.25, 2.25],
-            [1, 1, 1, 1, 1]
+            [
+              70,
+              110,
+              150,
+              190,
+              230
+            ],
+            [
+              0.1,
+              0.15,
+              0.2,
+              0.25,
+              0.3
+            ],
+            [
+              5,
+              15,
+              25,
+              35,
+              45
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              0.1,
+              0.15,
+              0.2,
+              0.25,
+              0.3
+            ],
+            [
+              70,
+              110,
+              150,
+              190,
+              230
+            ],
+            [
+              0.45,
+              0.45,
+              0.45,
+              0.45,
+              0.45
+            ],
+            [
+              1.4,
+              1.4,
+              1.4,
+              1.4,
+              1.4
+            ],
+            [
+              2.25,
+              2.25,
+              2.25,
+              2.25,
+              2.25
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ]
           ],
           "effectBurn": [
             null,
@@ -292,7 +779,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "ZoeE.png",
@@ -311,27 +804,79 @@
           "description": "Blink to a nearby position for 1 second. Then blink back.",
           "tooltip": "Zoe teleports to a nearby position for 1 second. Afterwards, she teleports back. Zoe can use Abilities and Attack, but can't move during this time.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
+            "label": [
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
-          "cooldown": [11, 8, 5],
+          "cooldown": [
+            11,
+            8,
+            5
+          ],
           "cooldownBurn": "11/8/5",
-          "cost": [40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [-0.3, -0.4, -0.5],
-            [1.5, 2, 2.5],
-            [4, 4, 4],
-            [0.5, 0.5, 0.5],
-            [3, 3, 3],
-            [100, 200, 300],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              -0.3,
+              -0.4,
+              -0.5
+            ],
+            [
+              1.5,
+              2,
+              2.5
+            ],
+            [
+              4,
+              4,
+              4
+            ],
+            [
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              3,
+              3,
+              3
+            ],
+            [
+              100,
+              200,
+              300
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -349,7 +894,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [575, 575, 575],
+          "range": [
+            575,
+            575,
+            575
+          ],
           "rangeBurn": "575",
           "image": {
             "full": "ZoeR.png",

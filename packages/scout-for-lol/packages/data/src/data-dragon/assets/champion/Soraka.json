@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Soraka": {
       "id": "Soraka",
@@ -79,6 +79,41 @@
           "chromas": true
         },
         {
+          "id": "16010",
+          "num": 10,
+          "name": "Winter Wonder Soraka (Ruby)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "16011",
+          "num": 11,
+          "name": "Winter Wonder Soraka (Pearl)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "16012",
+          "num": 12,
+          "name": "Winter Wonder Soraka (Obsidian)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "16013",
+          "num": 13,
+          "name": "Winter Wonder Soraka (Amethyst)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "16014",
+          "num": 14,
+          "name": "Winter Wonder Soraka (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
           "id": "16015",
           "num": 15,
           "name": "Dawnbringer Soraka",
@@ -103,10 +138,129 @@
           "chromas": true
         },
         {
+          "id": "16019",
+          "num": 19,
+          "name": "Cafe Cuties Soraka (Ruby)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "16020",
+          "num": 20,
+          "name": "Cafe Cuties Soraka (Catseye)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "16021",
+          "num": 21,
+          "name": "Cafe Cuties Soraka (Peridot)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "16022",
+          "num": 22,
+          "name": "Cafe Cuties Soraka (Sapphire)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "16023",
+          "num": 23,
+          "name": "Cafe Cuties Soraka (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "16024",
+          "num": 24,
+          "name": "Cafe Cuties Soraka (Obsidian)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "16025",
+          "num": 25,
+          "name": "Cafe Cuties Soraka (Pearl)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "16026",
+          "num": 26,
+          "name": "Cafe Cuties Soraka (Turquoise)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
           "id": "16027",
           "num": 27,
           "name": "Spirit Blossom Soraka",
           "chromas": true
+        },
+        {
+          "id": "16028",
+          "num": 28,
+          "name": "Spirit Blossom Soraka (Ruby)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "16029",
+          "num": 29,
+          "name": "Spirit Blossom Soraka (Turquoise)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "16030",
+          "num": 30,
+          "name": "Spirit Blossom Soraka (Citrine)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "16031",
+          "num": 31,
+          "name": "Spirit Blossom Soraka (Sapphire)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "16032",
+          "num": 32,
+          "name": "Spirit Blossom Soraka (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "16033",
+          "num": 33,
+          "name": "Spirit Blossom Soraka (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "16034",
+          "num": 34,
+          "name": "Spirit Blossom Soraka (Pearl)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "16035",
+          "num": 35,
+          "name": "Spirit Blossom Soraka (Obsidian)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "16036",
+          "num": 36,
+          "name": "Spirit Blossom Soraka (Night Blossom)",
+          "chromas": false,
+          "parentSkin": 27
         },
         {
           "id": "16037",
@@ -115,16 +269,177 @@
           "chromas": true
         },
         {
+          "id": "16038",
+          "num": 38,
+          "name": "Immortal Journey Soraka (Ruby)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "16039",
+          "num": 39,
+          "name": "Immortal Journey Soraka (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "16040",
+          "num": 40,
+          "name": "Immortal Journey Soraka (Turquoise)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "16041",
+          "num": 41,
+          "name": "Immortal Journey Soraka (Pearl)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "16042",
+          "num": 42,
+          "name": "Immortal Journey Soraka (Obsidian)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "16043",
+          "num": 43,
+          "name": "Immortal Journey Soraka (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
           "id": "16044",
           "num": 44,
           "name": "Faerie Court Soraka",
           "chromas": true
         },
         {
+          "id": "16045",
+          "num": 45,
+          "name": "Faerie Court Soraka (Ruby)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "16046",
+          "num": 46,
+          "name": "Faerie Court Soraka (Catseye)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "16047",
+          "num": 47,
+          "name": "Faerie Court Soraka (Pearl)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "16048",
+          "num": 48,
+          "name": "Faerie Court Soraka (Emerald)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "16049",
+          "num": 49,
+          "name": "Faerie Court Soraka (Turquoise)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "16050",
+          "num": 50,
+          "name": "Faerie Court Soraka (Obsidian)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "16051",
+          "num": 51,
+          "name": "Faerie Court Soraka (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "16052",
+          "num": 52,
+          "name": "Faerie Court Soraka (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
           "id": "16053",
           "num": 53,
           "name": "Flora Fatalis Soraka",
           "chromas": true
+        },
+        {
+          "id": "16054",
+          "num": 54,
+          "name": "Flora Fatalis Soraka (Ruby)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "16055",
+          "num": 55,
+          "name": "Flora Fatalis Soraka (Sapphire)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "16056",
+          "num": 56,
+          "name": "Flora Fatalis Soraka (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "16057",
+          "num": 57,
+          "name": "Flora Fatalis Soraka (Catseye)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "16058",
+          "num": 58,
+          "name": "Flora Fatalis Soraka (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "16059",
+          "num": 59,
+          "name": "Flora Fatalis Soraka (Emerald)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "16060",
+          "num": 60,
+          "name": "Flora Fatalis Soraka (Obsidian)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "16061",
+          "num": 61,
+          "name": "Flora Fatalis Soraka (Pearl)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "16062",
+          "num": 62,
+          "name": "Reaper Soraka (Doom)",
+          "chromas": false,
+          "parentSkin": 4
         }
       ],
       "lore": "A wanderer from the celestial dimensions beyond Mount Targon, Soraka gave up her immortality to protect the mortal races from their own more violent instincts. She endeavors to spread the virtues of compassion and mercy to everyone she meets—even healing those who would wish harm upon her. And, for all Soraka has seen of this world's struggles, she still believes the people of Runeterra have yet to reach their full potential.",
@@ -139,7 +454,10 @@
         "Take advantage of Soraka's long cooldown on Equinox if she uses it to harass.",
         "It's easier to focus Soraka than the ally she is healing."
       ],
-      "tags": ["Support", "Mage"],
+      "tags": [
+        "Support",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -192,23 +510,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 7, 6, 5, 4],
+          "cooldown": [
+            8,
+            7,
+            6,
+            5,
+            4
+          ],
           "cooldownBurn": "8/7/6/5/4",
-          "cost": [45, 50, 55, 60, 65],
+          "cost": [
+            45,
+            50,
+            55,
+            60,
+            65
+          ],
           "costBurn": "45/50/55/60/65",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -226,7 +616,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [810, 810, 810, 810, 810],
+          "range": [
+            810,
+            810,
+            810,
+            810,
+            810
+          ],
           "rangeBurn": "810",
           "image": {
             "full": "SorakaQ.png",
@@ -259,23 +655,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [6, 5, 4, 3, 2],
+          "cooldown": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
           "cooldownBurn": "6/5/4/3/2",
-          "cost": [40, 45, 50, 55, 60],
+          "cost": [
+            40,
+            45,
+            50,
+            55,
+            60
+          ],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -293,7 +761,13 @@
           "vars": [],
           "costType": "% Max Health, {{ cost }} Mana",
           "maxammo": "-1",
-          "range": [550, 550, 550, 550, 550],
+          "range": [
+            550,
+            550,
+            550,
+            550,
+            550
+          ],
           "rangeBurn": "550",
           "image": {
             "full": "SorakaW.png",
@@ -326,23 +800,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [20, 19, 18, 17, 16],
+          "cooldown": [
+            20,
+            19,
+            18,
+            17,
+            16
+          ],
           "cooldownBurn": "20/19/18/17/16",
-          "cost": [70, 75, 80, 85, 90],
+          "cost": [
+            70,
+            75,
+            80,
+            85,
+            90
+          ],
           "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -360,7 +906,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [925, 925, 925, 925, 925],
+          "range": [
+            925,
+            925,
+            925,
+            925,
+            925
+          ],
           "rangeBurn": "925",
           "image": {
             "full": "SorakaE.png",
@@ -379,30 +931,81 @@
           "description": "Soraka fills her allies with hope, instantly restoring health to herself and all allied champions.",
           "tooltip": "Soraka calls upon divine powers, restoring <healing>{{ healingcalc }} Health</healing> to all allied champions, regardless of distance. Healing is increased to <healing>{{ ampedhealing }}</healing> on targets below 40% Health.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Healing", "Cooldown"],
+            "label": [
+              "Healing",
+              "Cooldown"
+            ],
             "effect": [
               "{{ baseheal }} -> {{ basehealNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [150, 135, 120],
+          "cooldown": [
+            150,
+            135,
+            120
+          ],
           "cooldownBurn": "150/135/120",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -420,7 +1023,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "SorakaR.png",

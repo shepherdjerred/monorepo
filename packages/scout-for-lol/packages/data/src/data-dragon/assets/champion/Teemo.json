@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Teemo": {
       "id": "Teemo",
@@ -73,10 +73,66 @@
           "chromas": true
         },
         {
+          "id": "17009",
+          "num": 9,
+          "name": "Cottontail Teemo (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "17010",
+          "num": 10,
+          "name": "Cottontail Teemo (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "17011",
+          "num": 11,
+          "name": "Cottontail Teemo (Speckled)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "17012",
+          "num": 12,
+          "name": "Cottontail Teemo (Turquoise)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "17013",
+          "num": 13,
+          "name": "Cottontail Teemo (Amethyst)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
           "id": "17014",
           "num": 14,
           "name": "Little Devil Teemo",
           "chromas": true
+        },
+        {
+          "id": "17015",
+          "num": 15,
+          "name": "Omega Squad Teemo (Pearl)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "17016",
+          "num": 16,
+          "name": "Omega Squad Teemo (Sandstone)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "17017",
+          "num": 17,
+          "name": "Omega Squad Teemo (Obsidian)",
+          "chromas": false,
+          "parentSkin": 8
         },
         {
           "id": "17018",
@@ -85,10 +141,59 @@
           "chromas": true
         },
         {
+          "id": "17019",
+          "num": 19,
+          "name": "Beemo (Ruby)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "17020",
+          "num": 20,
+          "name": "Beemo (Peridot)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "17021",
+          "num": 21,
+          "name": "Beemo (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "17022",
+          "num": 22,
+          "name": "Beemo (Amethyst)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "17023",
+          "num": 23,
+          "name": "Beemo (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "17024",
+          "num": 24,
+          "name": "Beemo (Obsidian)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
           "id": "17025",
           "num": 25,
           "name": "Spirit Blossom Teemo",
           "chromas": false
+        },
+        {
+          "id": "17026",
+          "num": 26,
+          "name": "Astronaut Teemo (Chrono)",
+          "chromas": false,
+          "parentSkin": 4
         },
         {
           "id": "17027",
@@ -97,10 +202,136 @@
           "chromas": false
         },
         {
+          "id": "17028",
+          "num": 28,
+          "name": "Little Devil Teemo (Catseye)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "17029",
+          "num": 29,
+          "name": "Little Devil Teemo (Ruby)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "17030",
+          "num": 30,
+          "name": "Little Devil Teemo (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "17031",
+          "num": 31,
+          "name": "Little Devil Teemo (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "17032",
+          "num": 32,
+          "name": "Little Devil Teemo (Emerald)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "17033",
+          "num": 33,
+          "name": "Little Devil Teemo (Amethyst)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "17034",
+          "num": 34,
+          "name": "Little Devil Teemo (Pearl)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "17035",
+          "num": 35,
+          "name": "Little Devil Teemo (Obsidian)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "17036",
+          "num": 36,
+          "name": "Little Devil Teemo (Turquoise)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
           "id": "17037",
           "num": 37,
           "name": "Firecracker Teemo",
           "chromas": true
+        },
+        {
+          "id": "17038",
+          "num": 38,
+          "name": "Firecracker Teemo (Ruby)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "17039",
+          "num": 39,
+          "name": "Firecracker Teemo (Emerald)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "17040",
+          "num": 40,
+          "name": "Firecracker Teemo (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "17041",
+          "num": 41,
+          "name": "Firecracker Teemo (Sapphire)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "17042",
+          "num": 42,
+          "name": "Firecracker Teemo (Citrine)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "17043",
+          "num": 43,
+          "name": "Firecracker Teemo (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "17044",
+          "num": 44,
+          "name": "Firecracker Teemo (Obsidian)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "17045",
+          "num": 45,
+          "name": "Firecracker Teemo (Pearl)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "17046",
+          "num": 46,
+          "name": "Firecracker Teemo (Golden Tiger)",
+          "chromas": false,
+          "parentSkin": 37
         },
         {
           "id": "17047",
@@ -109,10 +340,108 @@
           "chromas": true
         },
         {
+          "id": "17048",
+          "num": 48,
+          "name": "Space Groove Teemo (Ruby)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "17049",
+          "num": 49,
+          "name": "Space Groove Teemo (Catseye)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "17050",
+          "num": 50,
+          "name": "Space Groove Teemo (Obsidian)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "17051",
+          "num": 51,
+          "name": "Space Groove Teemo (Peridot)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "17052",
+          "num": 52,
+          "name": "Space Groove Teemo (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "17053",
+          "num": 53,
+          "name": "Space Groove Teemo (Rainbow)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
           "id": "17054",
           "num": 54,
           "name": "Spirit Blossom Springs Teemo",
           "chromas": true
+        },
+        {
+          "id": "17055",
+          "num": 55,
+          "name": "Spirit Blossom Springs Teemo (Ruby)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "17056",
+          "num": 56,
+          "name": "Spirit Blossom Springs Teemo (Catseye)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "17057",
+          "num": 57,
+          "name": "Spirit Blossom Springs Teemo (Emerald)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "17058",
+          "num": 58,
+          "name": "Spirit Blossom Springs Teemo (Turquoise)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "17059",
+          "num": 59,
+          "name": "Spirit Blossom Springs Teemo (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "17060",
+          "num": 60,
+          "name": "Spirit Blossom Springs Teemo (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "17061",
+          "num": 61,
+          "name": "Spirit Blossom Springs Teemo (Pearl)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "17062",
+          "num": 62,
+          "name": "Spirit Blossom Springs Teemo (Obsidian)",
+          "chromas": false,
+          "parentSkin": 54
         }
       ],
       "lore": "Undeterred by even the most dangerous and threatening of obstacles, Teemo scouts the world with boundless enthusiasm and a cheerful spirit. A yordle with an unwavering sense of morality, he takes pride in following the Bandle Scout's Code, sometimes with such eagerness that he is unaware of the broader consequences of his actions. Though some say the existence of the Scouts is questionable, one thing is for certain: Teemo's conviction is nothing to be trifled with.",
@@ -125,7 +454,10 @@
         "Teemo's Toxic Shot punishes players who get hit and back out, so stay at a safe range until you're ready to commit.",
         "It can be valuable to use Oracle's Lens(Trinket) to destroy mushrooms around key locations."
       ],
-      "tags": ["Marksman", "Mage"],
+      "tags": [
+        "Marksman",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 5,
@@ -162,7 +494,11 @@
           "description": "Obscures an enemy's vision with a powerful venom, dealing damage to the target unit and blinding it for the duration.",
           "tooltip": "Teemo fires a dart, <status>Blinding</status> the target for {{ blindduration }} seconds and dealing <magicDamage>{{ calculateddamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["@AbilityResourceName@ Cost", "Duration", "Damage"],
+            "label": [
+              "@AbilityResourceName@ Cost",
+              "Duration",
+              "Damage"
+            ],
             "effect": [
               "{{ cost }} -> {{ costNL }}",
               "{{ blindduration }} -> {{ blinddurationNL }}",
@@ -170,23 +506,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 7, 7, 7, 7],
+          "cooldown": [
+            7,
+            7,
+            7,
+            7,
+            7
+          ],
           "cooldownBurn": "7",
-          "cost": [70, 75, 80, 85, 90],
+          "cost": [
+            70,
+            75,
+            80,
+            85,
+            90
+          ],
           "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -204,7 +612,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [680, 680, 680, 680, 680],
+          "range": [
+            680,
+            680,
+            680,
+            680,
+            680
+          ],
           "rangeBurn": "680",
           "image": {
             "full": "TeemoQ.png",
@@ -223,30 +637,105 @@
           "description": "Teemo scampers around, passively increasing his Move Speed until he is struck by an enemy champion or turret. Teemo can sprint to gain bonus Move Speed that isn't stopped by being struck for a short time.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Teemo gains <speed>{{ passivemovespeedbonus*100 }}% Move Speed</speed> while he hasn't been damaged by a champion or turret in the last {{ passivecooldownondamagetaken }} seconds.<br /><br /><spellActive>Active:</spellActive> Teemo sprints, gaining <speed>{{ activemovespeedbonus*100 }}% Move Speed</speed> that is not lost when struck for {{ activemovespeedbuffduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Passive Move Speed", "Active Move Speed"],
+            "label": [
+              "Passive Move Speed",
+              "Active Move Speed"
+            ],
             "effect": [
               "{{ passivemovespeedbonus*100.000000 }}% -> {{ passivemovespeedbonusnl*100.000000 }}%",
               "{{ activemovespeedbonus*100.000000 }}% -> {{ activemovespeedbonusnl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 14, 14, 14, 14],
+          "cooldown": [
+            14,
+            14,
+            14,
+            14,
+            14
+          ],
           "cooldownBurn": "14",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -264,7 +753,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [20, 20, 20, 20, 20],
+          "range": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
           "rangeBurn": "20",
           "image": {
             "full": "TeemoW.png",
@@ -283,30 +778,105 @@
           "description": "Each of Teemo's attacks will poison the target, dealing damage on impact and each second after for 4 seconds.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Teemo's Attacks apply poison, dealing an additional <magicDamage>{{ impactcalculateddamage }} magic damage</magicDamage> plus <magicDamage>{{ totaldotdamage }} magic damage</magicDamage> over {{ poisonduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Impact Damage", "Damage Per Second"],
+            "label": [
+              "Impact Damage",
+              "Damage Per Second"
+            ],
             "effect": [
               "{{ impactbasedamage }} -> {{ impactbasedamageNL }}",
               "{{ tickbasedamage }} -> {{ tickbasedamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [0, 0, 0, 0, 0],
+          "cooldown": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "cooldownBurn": "0",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -324,7 +894,13 @@
           "vars": [],
           "costType": "Passive",
           "maxammo": "-1",
-          "range": [680, 680, 680, 680, 680],
+          "range": [
+            680,
+            680,
+            680,
+            680,
+            680
+          ],
           "rangeBurn": "680",
           "image": {
             "full": "TeemoE.png",
@@ -361,23 +937,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [0.25, 0.25, 0.25],
+          "cooldown": [
+            0.25,
+            0.25,
+            0.25
+          ],
           "cooldownBurn": "0.25",
-          "cost": [75, 55, 35],
+          "cost": [
+            75,
+            55,
+            35
+          ],
           "costBurn": "75/55/35",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -395,7 +1019,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "3",
-          "range": [600, 750, 900],
+          "range": [
+            600,
+            750,
+            900
+          ],
           "rangeBurn": "600/750/900",
           "image": {
             "full": "TeemoR.png",

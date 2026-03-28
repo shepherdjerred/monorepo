@@ -3,7 +3,10 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import {
   IntOrString,
   KubeJob,
+  KubeRole,
+  KubeRoleBinding,
   KubeService,
+  KubeServiceAccount,
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
@@ -111,6 +114,110 @@ zfs get sync,logbias,atime "$DATASET"`,
     },
   });
 
+  // RBAC for the docker-config-builder Job to create secrets in the dagger namespace.
+  new KubeServiceAccount(chart, "docker-config-builder-sa", {
+    metadata: { name: "docker-config-builder", namespace: "dagger" },
+  });
+
+  new KubeRole(chart, "docker-config-builder-role", {
+    metadata: { name: "docker-config-builder", namespace: "dagger" },
+    rules: [
+      {
+        apiGroups: [""],
+        resources: ["secrets"],
+        verbs: ["get", "create", "update", "patch"],
+      },
+    ],
+  });
+
+  new KubeRoleBinding(chart, "docker-config-builder-rb", {
+    metadata: { name: "docker-config-builder", namespace: "dagger" },
+    roleRef: {
+      apiGroup: "rbac.authorization.k8s.io",
+      kind: "Role",
+      name: "docker-config-builder",
+    },
+    subjects: [
+      { kind: "ServiceAccount", name: "docker-config-builder", namespace: "dagger" },
+    ],
+  });
+
+  // One-shot Job: reads username+credential from 1Password-synced secret,
+  // constructs a Docker config.json, and writes it to a new secret that
+  // the Dagger engine mounts for authenticated Docker Hub pulls.
+  new KubeJob(chart, "docker-config-builder", {
+    metadata: {
+      name: "docker-config-builder",
+      namespace: "dagger",
+      annotations: {
+        "ignore-check.kube-linter.io/run-as-non-root":
+          "Minimal alpine container, no privilege needed beyond K8s API access",
+      },
+    },
+    spec: {
+      backoffLimit: 3,
+      ttlSecondsAfterFinished: 86_400,
+      template: {
+        spec: {
+          serviceAccountName: "docker-config-builder",
+          restartPolicy: "OnFailure",
+          containers: [
+            {
+              name: "builder",
+              image: `docker.io/alpine:${versions["library/alpine"]}`,
+              command: ["/bin/sh", "-c"],
+              args: [
+                `set -e
+apk add --no-cache curl
+USER=$(cat /secret/username)
+CRED=$(cat /secret/credential)
+AUTH=$(echo -n "$USER:$CRED" | base64)
+CONFIG=$(printf '{"auths":{"https://index.docker.io/v1/":{"auth":"%s"}}}' "$AUTH")
+CONFIG_B64=$(echo -n "$CONFIG" | base64 | tr -d '\\n')
+
+TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+CA=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+API=https://kubernetes.default.svc/api/v1/namespaces/dagger/secrets
+
+# Try to create; if it exists, patch it
+STATUS=$(curl -s -o /dev/null -w "%{http_code}" --cacert "$CA" -H "Authorization: Bearer $TOKEN" "$API/docker-hub-config")
+if [ "$STATUS" = "200" ]; then
+  echo "Secret exists, patching..."
+  curl -sf --cacert "$CA" -H "Authorization: Bearer $TOKEN" \\
+    -H "Content-Type: application/strategic-merge-patch+json" \\
+    -X PATCH "$API/docker-hub-config" \\
+    -d "{\\"data\\":{\\"config.json\\":\\"$CONFIG_B64\\"}}"
+else
+  echo "Creating secret..."
+  curl -sf --cacert "$CA" -H "Authorization: Bearer $TOKEN" \\
+    -H "Content-Type: application/json" \\
+    -X POST "$API" \\
+    -d "{\\"apiVersion\\":\\"v1\\",\\"kind\\":\\"Secret\\",\\"metadata\\":{\\"name\\":\\"docker-hub-config\\",\\"namespace\\":\\"dagger\\"},\\"data\\":{\\"config.json\\":\\"$CONFIG_B64\\"}}"
+fi
+echo "Done."`,
+              ],
+              resources: {
+                requests: {
+                  cpu: Quantity.fromString("50m"),
+                  memory: Quantity.fromString("32Mi"),
+                },
+              },
+              volumeMounts: [
+                { name: "docker-hub-secret", mountPath: "/secret", readOnly: true },
+              ],
+            },
+          ],
+          volumes: [
+            {
+              name: "docker-hub-secret",
+              secret: { secretName: "docker-hub-credentials" },
+            },
+          ],
+        },
+      },
+    },
+  });
+
   // ClusterIP Service so CI pods can reach the engine via TCP.
   // The Helm chart does not create a Service; we manage one ourselves.
   new KubeService(chart, "dagger-engine-service", {
@@ -173,12 +280,10 @@ zfs get sync,logbias,atime "$DATASET"`,
               volumes: [
                 {
                   name: "docker-config",
-                  emptyDir: {},
-                },
-                {
-                  name: "docker-hub-secret",
                   secret: {
-                    secretName: "docker-hub-credentials",
+                    secretName: "docker-hub-config",
+                    optional: true,
+                    items: [{ key: "config.json", path: "config.json" }],
                   },
                 },
               ],
@@ -187,20 +292,6 @@ zfs get sync,logbias,atime "$DATASET"`,
                   name: "docker-config",
                   mountPath: "/root/.docker",
                   readOnly: true,
-                },
-              ],
-              initContainers: [
-                {
-                  name: "docker-config-init",
-                  image: `docker.io/alpine:${versions["library/alpine"]}`,
-                  command: ["/bin/sh", "-c"],
-                  args: [
-                    `USER=$(cat /secret/username) && CRED=$(cat /secret/credential) && AUTH=$(echo -n "$USER:$CRED" | base64) && printf '{"auths":{"https://index.docker.io/v1/":{"auth":"%s"}}}' "$AUTH" > /docker-config/config.json`,
-                  ],
-                  volumeMounts: [
-                    { name: "docker-hub-secret", mountPath: "/secret", readOnly: true },
-                    { name: "docker-config", mountPath: "/docker-config" },
-                  ],
                 },
               ],
               statefulSet: {

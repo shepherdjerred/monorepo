@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Leblanc": {
       "id": "Leblanc",
@@ -55,10 +55,94 @@
           "chromas": false
         },
         {
+          "id": "7006",
+          "num": 6,
+          "name": "Prestigious LeBlanc (Amethyst)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "7007",
+          "num": 7,
+          "name": "Prestigious LeBlanc (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "7008",
+          "num": 8,
+          "name": "Prestigious LeBlanc (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "7009",
+          "num": 9,
+          "name": "Prestigious LeBlanc (Catseye)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "7010",
+          "num": 10,
+          "name": "Prestigious LeBlanc (Pearl)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "7011",
+          "num": 11,
+          "name": "Prestigious LeBlanc (Turquoise)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
           "id": "7012",
           "num": 12,
           "name": "Program LeBlanc",
           "chromas": true
+        },
+        {
+          "id": "7013",
+          "num": 13,
+          "name": "Program LeBlanc (Ruby)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "7014",
+          "num": 14,
+          "name": "Program LeBlanc (Sapphire)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "7015",
+          "num": 15,
+          "name": "Program LeBlanc (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "7016",
+          "num": 16,
+          "name": "Program LeBlanc (Obsidian)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "7017",
+          "num": 17,
+          "name": "Program LeBlanc (Rainbow)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "7018",
+          "num": 18,
+          "name": "Program LeBlanc (Emerald)",
+          "chromas": false,
+          "parentSkin": 12
         },
         {
           "id": "7019",
@@ -73,10 +157,87 @@
           "chromas": true
         },
         {
+          "id": "7021",
+          "num": 21,
+          "name": "Coven LeBlanc (Amethyst)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "7022",
+          "num": 22,
+          "name": "Coven LeBlanc (Obsidian)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "7023",
+          "num": 23,
+          "name": "Coven LeBlanc (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "7024",
+          "num": 24,
+          "name": "Coven LeBlanc (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "7025",
+          "num": 25,
+          "name": "Coven LeBlanc (Pearl)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "7026",
+          "num": 26,
+          "name": "Coven LeBlanc (Ruby)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "7027",
+          "num": 27,
+          "name": "Coven LeBlanc (Emerald)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "7028",
+          "num": 28,
+          "name": "Coven LeBlanc (Sapphire)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
           "id": "7029",
           "num": 29,
           "name": "Worlds 2020 LeBlanc",
           "chromas": true
+        },
+        {
+          "id": "7030",
+          "num": 30,
+          "name": "Worlds 2020 LeBlanc (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "7031",
+          "num": 31,
+          "name": "Worlds 2020 LeBlanc (Ruby)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "7032",
+          "num": 32,
+          "name": "Worlds 2020 LeBlanc (Turquoise)",
+          "chromas": false,
+          "parentSkin": 29
         },
         {
           "id": "7033",
@@ -85,10 +246,80 @@
           "chromas": false
         },
         {
+          "id": "7034",
+          "num": 34,
+          "name": "Coven LeBlanc (Dark Ritual)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
           "id": "7035",
           "num": 35,
           "name": "Debonair LeBlanc",
           "chromas": true
+        },
+        {
+          "id": "7036",
+          "num": 36,
+          "name": "Debonair LeBlanc (Ruby)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "7037",
+          "num": 37,
+          "name": "Debonair LeBlanc (Sapphire)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "7038",
+          "num": 38,
+          "name": "Debonair LeBlanc (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "7039",
+          "num": 39,
+          "name": "Debonair LeBlanc (Catseye)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "7040",
+          "num": 40,
+          "name": "Debonair LeBlanc (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "7041",
+          "num": 41,
+          "name": "Debonair LeBlanc (Obsidian)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "7042",
+          "num": 42,
+          "name": "Debonair LeBlanc (Pearl)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "7043",
+          "num": 43,
+          "name": "Debonair LeBlanc (Emerald)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "7044",
+          "num": 44,
+          "name": "Debonair LeBlanc (Cerulean Club)",
+          "chromas": false,
+          "parentSkin": 35
         },
         {
           "id": "7045",
@@ -97,10 +328,94 @@
           "chromas": true
         },
         {
+          "id": "7046",
+          "num": 46,
+          "name": "Bewitching LeBlanc (Ruby)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "7047",
+          "num": 47,
+          "name": "Bewitching LeBlanc (Catseye)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "7048",
+          "num": 48,
+          "name": "Bewitching LeBlanc (Emerald)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "7049",
+          "num": 49,
+          "name": "Bewitching LeBlanc (Turquoise)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "7050",
+          "num": 50,
+          "name": "Bewitching LeBlanc (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "7051",
+          "num": 51,
+          "name": "Bewitching LeBlanc (Sapphire)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "7052",
+          "num": 52,
+          "name": "Bewitching LeBlanc (Obsidian)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "7053",
+          "num": 53,
+          "name": "Bewitching LeBlanc (Pearl)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "7054",
+          "num": 54,
+          "name": "iG LeBlanc (Tenfold Triumph)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
           "id": "7055",
           "num": 55,
           "name": "Risen Legend LeBlanc",
           "chromas": true
+        },
+        {
+          "id": "7056",
+          "num": 56,
+          "name": "Risen Legend LeBlanc (Mythclimber)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "7057",
+          "num": 57,
+          "name": "Risen Legend LeBlanc (Paragon)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "7058",
+          "num": 58,
+          "name": "iG LeBlanc (Elite)",
+          "chromas": false,
+          "parentSkin": 19
         }
       ],
       "lore": "Mysterious even to other members of the Black Rose cabal, LeBlanc is but one of many names for a pale woman who has manipulated people and events since the earliest days of Noxus. Using her magic to mirror herself, the sorceress can appear to anyone, anywhere, and even be in many places at once. Always plotting just out of sight, LeBlanc's true motives are as inscrutable as her shifting identity.",
@@ -116,7 +431,10 @@
         "Attacking LeBlanc first avoids most of her tricks, especially if she's recently used her dash, Distortion.",
         "Stunning or silencing LeBlanc will prevent her from activating the return part of Distortion."
       ],
-      "tags": ["Assassin", "Mage"],
+      "tags": [
+        "Assassin",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 1,
@@ -153,30 +471,105 @@
           "description": "LeBlanc projects a sigil, dealing damage and marking the target for 3.5 seconds. Damaging the marked target with an ability detonates the sigil, dealing additional damage. If either part kills the target, Leblanc refunds the Mana cost and part of this spell's remaining Cooldown.",
           "tooltip": "LeBlanc projects a sigil to an enemy, dealing <magicDamage>{{ damage }} magic damage</magicDamage> and marking them for {{ markduration }} seconds.<br /><br />Damaging the marked enemy with an Ability detonates the sigil, dealing <magicDamage>{{ markdamage }} magic damage</magicDamage>.<br /><br />If either part kills the target, Leblanc refunds {{ manarefund*100 }}% of the Mana cost and {{ cooldownrefund*100 }}% of this spell's remaining Cooldown.<br /><br /><rules>The initial sigil deals an additional {{ bonusminiondamage }} damage to minions. </rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Sigil Damage", "Detonation Damage"],
+            "label": [
+              "Sigil Damage",
+              "Detonation Damage"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ basemarkdamage }} -> {{ basemarkdamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [6, 6, 6, 6, 6],
+          "cooldown": [
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
           "cooldownBurn": "6",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -194,7 +587,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [700, 700, 700, 700, 700],
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "LeblancQ.png",
@@ -213,7 +612,11 @@
           "description": "LeBlanc dashes to a location, dealing damage to enemies near her destination. For the next 4 seconds, activate Distortion again to return LeBlanc to her starting location.",
           "tooltip": "LeBlanc dashes then deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to nearby enemies. For {{ e3 }} seconds after dashing, LeBlanc can <recast>Recast</recast>.<br /><br /><recast>Recast:</recast> LeBlanc returns to her starting location.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -221,23 +624,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [15, 13.75, 12.5, 11.25, 10],
+          "cooldown": [
+            15,
+            13.75,
+            12.5,
+            11.25,
+            10
+          ],
           "cooldownBurn": "15/13.75/12.5/11.25/10",
-          "cost": [60, 70, 80, 90, 100],
+          "cost": [
+            60,
+            70,
+            80,
+            90,
+            100
+          ],
           "costBurn": "60/70/80/90/100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [2, 2, 2, 2, 2],
-            [4, 4, 4, 4, 4],
-            [600, 600, 600, 600, 600],
-            [0.2, 0.2, 0.2, 0.2, 0.2],
-            [0.2, 0.2, 0.2, 0.2, 0.2],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              600,
+              600,
+              600,
+              600,
+              600
+            ],
+            [
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2
+            ],
+            [
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -255,7 +730,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "LeblancW.png",
@@ -274,7 +755,11 @@
           "description": "LeBlanc launches a chain that shackles the first enemy hit. If the target remains shackled for 1.5 seconds, LeBlanc roots them and deals additional damage.",
           "tooltip": "LeBlanc launches a chain that shackles the first enemy hit, dealing <magicDamage>{{ initialdamage }} magic damage</magicDamage> and granting <keywordStealth>True Sight</keywordStealth>.<br /><br />If they remain shackled for {{ e3 }} seconds, LeBlanc <status>Roots</status> them for {{ e4 }} seconds and deals an additional <magicDamage>{{ delayeddamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Chain Damage", "Root Damage", "Cooldown"],
+            "label": [
+              "Chain Damage",
+              "Root Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ baseinitialdamage }} -> {{ baseinitialdamageNL }}",
               "{{ basedelayeddamage }} -> {{ basedelayeddamageNL }}",
@@ -282,23 +767,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 13.25, 12.5, 11.75, 11],
+          "cooldown": [
+            14,
+            13.25,
+            12.5,
+            11.75,
+            11
+          ],
           "cooldownBurn": "14/13.25/12.5/11.75/11",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [865, 865, 865, 865, 865],
-            [14, 13.25, 12.5, 11.75, 11],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              865,
+              865,
+              865,
+              865,
+              865
+            ],
+            [
+              14,
+              13.25,
+              12.5,
+              11.75,
+              11
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -316,7 +873,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [925, 925, 925, 925, 925],
+          "range": [
+            925,
+            925,
+            925,
+            925,
+            925
+          ],
           "rangeBurn": "925",
           "image": {
             "full": "LeblancE.png",
@@ -349,23 +912,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [45, 35, 25],
+          "cooldown": [
+            45,
+            35,
+            25
+          ],
           "cooldownBurn": "45/35/25",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -383,7 +994,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "2",
-          "range": [25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "LeblancR.png",

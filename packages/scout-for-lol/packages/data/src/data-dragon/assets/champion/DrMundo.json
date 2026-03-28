@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "DrMundo": {
       "id": "DrMundo",
@@ -85,10 +85,136 @@
           "chromas": true
         },
         {
+          "id": "36011",
+          "num": 11,
+          "name": "Frozen Prince Mundo (Ruby)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "36012",
+          "num": 12,
+          "name": "Frozen Prince Mundo (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "36013",
+          "num": 13,
+          "name": "Frozen Prince Mundo (Obsidian)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "36014",
+          "num": 14,
+          "name": "Frozen Prince Mundo (Pearl)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "36015",
+          "num": 15,
+          "name": "Frozen Prince Mundo (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "36016",
+          "num": 16,
+          "name": "Corporate Mundo (Ruby)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "36017",
+          "num": 17,
+          "name": "Corporate Mundo (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "36018",
+          "num": 18,
+          "name": "Corporate Mundo (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "36019",
+          "num": 19,
+          "name": "Corporate Mundo (Pearl)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "36020",
+          "num": 20,
+          "name": "Corporate Mundo (Obsidian)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
           "id": "36021",
           "num": 21,
           "name": "Street Demons Dr. Mundo",
           "chromas": true
+        },
+        {
+          "id": "36022",
+          "num": 22,
+          "name": "Street Demons Dr. Mundo (Ruby)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "36023",
+          "num": 23,
+          "name": "Street Demons Dr. Mundo (Sandstone)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "36024",
+          "num": 24,
+          "name": "Street Demons Dr. Mundo (Emerald)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "36025",
+          "num": 25,
+          "name": "Street Demons Dr. Mundo (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "36026",
+          "num": 26,
+          "name": "Street Demons Dr. Mundo (Obsidian)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "36027",
+          "num": 27,
+          "name": "Street Demons Dr. Mundo (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "36028",
+          "num": 28,
+          "name": "Street Demons Dr. Mundo (Turquoise)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "36029",
+          "num": 29,
+          "name": "Street Demons Dr. Mundo (Citrine)",
+          "chromas": false,
+          "parentSkin": 21
         }
       ],
       "lore": "Utterly mad, tragically homicidal, and horrifyingly purple, Dr. Mundo is what keeps many of Zaun's citizens indoors on particularly dark nights. Now a self-proclaimed physician, he was once a patient of Zaun's most infamous asylum. After \"curing\" the entire staff, Dr. Mundo established his practice in the empty wards that once treated him and began mimicking the highly unethical procedures he had so often experienced himself. With a full cabinet of medicines and zero medical knowledge, he now makes himself more monstrous with each injection and terrifies the hapless \"patients\" who wander near his office.",
@@ -102,7 +228,10 @@
         "Try to coordinate high-damage abilities with your allies right after Dr. Mundo uses his ultimate, but if you're unable to kill him quickly with burst he will heal through the damage.",
         "Try casting Ignite when Dr. Mundo uses Sadism to negate a large portion of its healing."
       ],
-      "tags": ["Tank", "Fighter"],
+      "tags": [
+        "Tank",
+        "Fighter"
+      ],
       "partype": "None",
       "info": {
         "attack": 5,
@@ -153,23 +282,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [4, 4, 4, 4, 4],
+          "cooldown": [
+            4,
+            4,
+            4,
+            4,
+            4
+          ],
           "cooldownBurn": "4",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -187,7 +388,13 @@
           "vars": [],
           "costType": " Health",
           "maxammo": "-1",
-          "range": [975, 975, 975, 975, 975],
+          "range": [
+            975,
+            975,
+            975,
+            975,
+            975
+          ],
           "rangeBurn": "975",
           "image": {
             "full": "DrMundoQ.png",
@@ -206,7 +413,11 @@
           "description": "Dr. Mundo electrocutes himself, dealing persistent damage to nearby enemies and storing a portion of damage he takes. At the end of the duration or on Recast, Dr. Mundo deals a burst of damage to nearby enemies. If the burst hit an enemy, he heals a percentage of the stored damage.",
           "tooltip": "Dr. Mundo charges up a defibrilator, dealing <magicDamage>{{ damagepertick*4 }} magic damage</magicDamage> each second for up to {{ duration }} seconds to nearby enemies. Additionally he stores {{ grayhealthstorageinitial }} of damage taken for the first {{ grayhealthinitialduration }} seconds and {{ grayhealthstorage*100 }}% for the remaining duration as gray health and can <recast>Recast</recast>.<br /><br /><recast>Recast:</recast> Detonate the defibrilator, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to nearby enemies. If this hits at least one champion, Dr. Mundo restores <healing>{{ grayhealthbigmod*100 }}% of gray health</healing>, otherwise he instead restores <healing>{{ grayhealthsmallmod*100 }}% of gray health</healing>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage per Tick", "Recast Damage", "Cooldown"],
+            "label": [
+              "Damage per Tick",
+              "Recast Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ damagepertick }} -> {{ damagepertickNL }}",
               "{{ recastbasedamage }} -> {{ recastbasedamageNL }}",
@@ -214,23 +425,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [17, 16.5, 16, 15.5, 15],
+          "cooldown": [
+            17,
+            16.5,
+            16,
+            15.5,
+            15
+          ],
           "cooldownBurn": "17/16.5/16/15.5/15",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -248,7 +531,13 @@
           "vars": [],
           "costType": "% Current Health",
           "maxammo": "-1",
-          "range": [325, 325, 325, 325, 325],
+          "range": [
+            325,
+            325,
+            325,
+            325,
+            325
+          ],
           "rangeBurn": "325",
           "image": {
             "full": "DrMundoW.png",
@@ -281,23 +570,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 8.25, 7.5, 6.75, 6],
+          "cooldown": [
+            9,
+            8.25,
+            7.5,
+            6.75,
+            6
+          ],
           "cooldownBurn": "9/8.25/7.5/6.75/6",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -315,7 +676,13 @@
           "vars": [],
           "costType": " Health",
           "maxammo": "-1",
-          "range": [0, 0, 0, 0, 0],
+          "range": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "rangeBurn": "0",
           "image": {
             "full": "DrMundoE.png",
@@ -334,7 +701,11 @@
           "description": "Dr. Mundo pumps himself with chemicals, instantly healing a percent of his missing Health. He then gains Move Speed and regenerates a portion of his maximum Health over a long duration.",
           "tooltip": "Dr. Mundo pumps himself with chemicals, gaining <healing>{{ missinghealthheal*100 }}% of his missing Health as max Health</healing>, <speed>{{ speedboostamount*100 }}% Move Speed</speed>, and regenerating <healing>{{ maxhealthhot*100 }}% max Health</healing> over {{ duration }} seconds.<br /><br />At Rank 3, both healing effects are increased by an additional {{ bonuspernearbychampion*100 }}% per nearby enemy champion.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Bonus Health", "Move Speed", "Max Health %"],
+            "label": [
+              "Bonus Health",
+              "Move Speed",
+              "Max Health %"
+            ],
             "effect": [
               "{{ missinghealthheal*100.000000 }}% -> {{ missinghealthhealnl*100.000000 }}%",
               "{{ speedboostamount*100.000000 }}% -> {{ speedboostamountnl*100.000000 }}%",
@@ -342,23 +713,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 120, 120],
+          "cooldown": [
+            120,
+            120,
+            120
+          ],
           "cooldownBurn": "120",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -376,7 +795,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [20, 20, 20],
+          "range": [
+            20,
+            20,
+            20
+          ],
           "rangeBurn": "20",
           "image": {
             "full": "DrMundoR.png",

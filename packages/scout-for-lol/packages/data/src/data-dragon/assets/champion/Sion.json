@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Sion": {
       "id": "Sion",
@@ -55,10 +55,115 @@
           "chromas": true
         },
         {
+          "id": "14006",
+          "num": 6,
+          "name": "Mecha Zero Sion (Ruby)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "14007",
+          "num": 7,
+          "name": "Mecha Zero Sion (Pearl)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "14008",
+          "num": 8,
+          "name": "Mecha Zero Sion (Sapphire)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "14009",
+          "num": 9,
+          "name": "Mecha Zero Sion (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "14010",
+          "num": 10,
+          "name": "Mecha Zero Sion (Catseye)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "14011",
+          "num": 11,
+          "name": "Mecha Zero Sion (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "14012",
+          "num": 12,
+          "name": "Mecha Zero Sion (Obsidian)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "14013",
+          "num": 13,
+          "name": "Mecha Zero Sion (Meteorite)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
           "id": "14014",
           "num": 14,
           "name": "Worldbreaker Sion",
           "chromas": true
+        },
+        {
+          "id": "14015",
+          "num": 15,
+          "name": "Worldbreaker Sion (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "14016",
+          "num": 16,
+          "name": "Worldbreaker Sion (Pearl)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "14017",
+          "num": 17,
+          "name": "Worldbreaker Sion (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "14018",
+          "num": 18,
+          "name": "Worldbreaker Sion (Ruby)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "14019",
+          "num": 19,
+          "name": "Worldbreaker Sion (Citrine)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "14020",
+          "num": 20,
+          "name": "Worldbreaker Sion (Amethyst)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "14021",
+          "num": 21,
+          "name": "Worldbreaker Sion (Obsidian)",
+          "chromas": false,
+          "parentSkin": 14
         },
         {
           "id": "14022",
@@ -67,16 +172,184 @@
           "chromas": true
         },
         {
+          "id": "14023",
+          "num": 23,
+          "name": "Blackfrost Sion (Ruby)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "14024",
+          "num": 24,
+          "name": "Blackfrost Sion (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "14025",
+          "num": 25,
+          "name": "Blackfrost Sion (Emerald)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "14026",
+          "num": 26,
+          "name": "Blackfrost Sion (Amethyst)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "14027",
+          "num": 27,
+          "name": "Blackfrost Sion (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "14028",
+          "num": 28,
+          "name": "Blackfrost Sion (Obsidian)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "14029",
+          "num": 29,
+          "name": "Blackfrost Sion (Pearl)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
           "id": "14030",
           "num": 30,
           "name": "High Noon Sion",
           "chromas": true
         },
         {
+          "id": "14031",
+          "num": 31,
+          "name": "High Noon Sion (Ruby)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "14032",
+          "num": 32,
+          "name": "High Noon Sion (Citrine)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "14033",
+          "num": 33,
+          "name": "High Noon Sion (Emerald)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "14034",
+          "num": 34,
+          "name": "High Noon Sion (Turquoise)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "14035",
+          "num": 35,
+          "name": "High Noon Sion (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "14036",
+          "num": 36,
+          "name": "High Noon Sion (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "14037",
+          "num": 37,
+          "name": "High Noon Sion (Pearl)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "14038",
+          "num": 38,
+          "name": "High Noon Sion (Obsidian)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "14039",
+          "num": 39,
+          "name": "High Noon Sion (Nomad)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
           "id": "14040",
           "num": 40,
           "name": "Cosmic Paladin Sion",
           "chromas": true
+        },
+        {
+          "id": "14041",
+          "num": 41,
+          "name": "Cosmic Paladin Sion (Ruby)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "14042",
+          "num": 42,
+          "name": "Cosmic Paladin Sion (Turquoise)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "14043",
+          "num": 43,
+          "name": "Cosmic Paladin Sion (Catseye)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "14044",
+          "num": 44,
+          "name": "Cosmic Paladin Sion (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "14045",
+          "num": 45,
+          "name": "Cosmic Paladin Sion (Emerald)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "14046",
+          "num": 46,
+          "name": "Cosmic Paladin Sion (Obsidian)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "14047",
+          "num": 47,
+          "name": "Cosmic Paladin Sion (Pearl)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "14048",
+          "num": 48,
+          "name": "Cosmic Paladin Sion (Amethyst)",
+          "chromas": false,
+          "parentSkin": 40
         },
         {
           "id": "14049",
@@ -96,7 +369,10 @@
         "Even if Sion still hits a Decimating Smash, making him release the charge earlier reduces its impact.",
         "Use the time after Sion has died to reposition and prepare for his return."
       ],
-      "tags": ["Tank", "Fighter"],
+      "tags": [
+        "Tank",
+        "Fighter"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 5,
@@ -149,23 +425,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9, 8, 7, 6],
+          "cooldown": [
+            10,
+            9,
+            8,
+            7,
+            6
+          ],
           "cooldownBurn": "10/9/8/7/6",
-          "cost": [45, 45, 45, 45, 45],
+          "cost": [
+            45,
+            45,
+            45,
+            45,
+            45
+          ],
           "costBurn": "45",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [2.5, 2.5, 2.5, 2.5, 2.5],
-            [0, 0, 0, 0, 0],
-            [7.5, 7.5, 7.5, 7.5, 7.5],
-            [60, 60, 60, 60, 60],
-            [150, 150, 150, 150, 150],
-            [-0.8, -0.8, -0.8, -0.8, -0.8]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              2.5,
+              2.5,
+              2.5,
+              2.5,
+              2.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              7.5,
+              7.5,
+              7.5,
+              7.5,
+              7.5
+            ],
+            [
+              60,
+              60,
+              60,
+              60,
+              60
+            ],
+            [
+              150,
+              150,
+              150,
+              150,
+              150
+            ],
+            [
+              -0.8,
+              -0.8,
+              -0.8,
+              -0.8,
+              -0.8
+            ]
           ],
           "effectBurn": [
             null,
@@ -183,7 +531,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [10000, 10000, 10000, 10000, 10000],
+          "range": [
+            10000,
+            10000,
+            10000,
+            10000,
+            10000
+          ],
           "rangeBurn": "10000",
           "image": {
             "full": "SionQ.png",
@@ -218,23 +572,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [15, 14, 13, 12, 11],
+          "cooldown": [
+            15,
+            14,
+            13,
+            12,
+            11
+          ],
           "cooldownBurn": "15/14/13/12/11",
-          "cost": [65, 70, 75, 80, 85],
+          "cost": [
+            65,
+            70,
+            75,
+            80,
+            85
+          ],
           "costBurn": "65/70/75/80/85",
           "datavalues": {},
           "effect": [
             null,
-            [60, 75, 90, 105, 120],
-            [40, 65, 90, 115, 140],
-            [8, 10, 12, 14, 16],
-            [14, 14, 14, 14, 14],
-            [4, 4, 4, 4, 4],
-            [15, 15, 15, 15, 15],
-            [3, 3, 3, 3, 3],
-            [15, 15, 15, 15, 15],
-            [6, 6, 6, 6, 6],
-            [0, 0, 0, 0, 0]
+            [
+              60,
+              75,
+              90,
+              105,
+              120
+            ],
+            [
+              40,
+              65,
+              90,
+              115,
+              140
+            ],
+            [
+              8,
+              10,
+              12,
+              14,
+              16
+            ],
+            [
+              14,
+              14,
+              14,
+              14,
+              14
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              15,
+              15,
+              15,
+              15,
+              15
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              15,
+              15,
+              15,
+              15,
+              15
+            ],
+            [
+              6,
+              6,
+              6,
+              6,
+              6
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -252,7 +678,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [500, 500, 500, 500, 500],
+          "range": [
+            500,
+            500,
+            500,
+            500,
+            500
+          ],
           "rangeBurn": "500",
           "image": {
             "full": "SionW.png",
@@ -285,23 +717,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11, 10, 9, 8],
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [35, 40, 45, 50, 55],
+          "cost": [
+            35,
+            40,
+            45,
+            50,
+            55
+          ],
           "costBurn": "35/40/45/50/55",
           "datavalues": {},
           "effect": [
             null,
-            [65, 100, 135, 170, 205],
-            [40, 45, 50, 55, 60],
-            [5, 5, 5, 5, 5],
-            [40, 45, 50, 55, 60],
-            [25, 25, 25, 25, 25],
-            [30, 30, 30, 30, 30],
-            [4, 4, 4, 4, 4],
-            [2.5, 2.5, 2.5, 2.5, 2.5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              65,
+              100,
+              135,
+              170,
+              205
+            ],
+            [
+              40,
+              45,
+              50,
+              55,
+              60
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              40,
+              45,
+              50,
+              55,
+              60
+            ],
+            [
+              25,
+              25,
+              25,
+              25,
+              25
+            ],
+            [
+              30,
+              30,
+              30,
+              30,
+              30
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              2.5,
+              2.5,
+              2.5,
+              2.5,
+              2.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -319,7 +823,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "SionE.png",
@@ -338,7 +848,12 @@
           "description": "Sion charges in a direction, ramping up speed over time. He can steer his charge slightly with the mouse cursor location. When he collides with an enemy he deals damage and knocks them up based on the distance he has charged.",
           "tooltip": "Sion charges Unstoppably in a direction for 8 seconds, turning towards the mouse cursor. Sion stops on colliding with an enemy champion or wall or on <recast>Recasting</recast> this Ability.  <br /><br />At the end of the charge, Sion deals between <physicalDamage>{{ mindamagetotal }} and {{ maxdamagetotal }} physical damage</physicalDamage> based on distance travelled. Enemies close to Sion are <status>Stunned</status> for between {{ minstunduration }} and {{ maxstunduration }} seconds based on distance travelled. Enemies in a larger area are <status>Slowed</status> by {{ slowamount }}% for 3 seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Minimum Damage", "Maximum Damage", "Slow", "Cooldown"],
+            "label": [
+              "Minimum Damage",
+              "Maximum Damage",
+              "Slow",
+              "Cooldown"
+            ],
             "effect": [
               "{{ mindamage }} -> {{ mindamageNL }}",
               "{{ maxdamage }} -> {{ maxdamageNL }}",
@@ -347,23 +862,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [140, 100, 60],
+          "cooldown": [
+            140,
+            100,
+            60
+          ],
           "cooldownBurn": "140/100/60",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -381,7 +944,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [7500, 7500, 7500],
+          "range": [
+            7500,
+            7500,
+            7500
+          ],
           "rangeBurn": "7500",
           "image": {
             "full": "SionR.png",

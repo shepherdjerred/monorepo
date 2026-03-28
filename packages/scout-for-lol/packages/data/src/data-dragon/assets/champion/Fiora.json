@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Fiora": {
       "id": "Fiora",
@@ -55,6 +55,118 @@
           "chromas": true
         },
         {
+          "id": "114006",
+          "num": 6,
+          "name": "Headmistress Fiora (Jasper)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "114007",
+          "num": 7,
+          "name": "Headmistress Fiora (Amethyst)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "114008",
+          "num": 8,
+          "name": "Headmistress Fiora (Sandstone)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "114009",
+          "num": 9,
+          "name": "Headmistress Fiora (Ruby)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "114010",
+          "num": 10,
+          "name": "Headmistress Fiora (Sapphire)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "114011",
+          "num": 11,
+          "name": "Headmistress Fiora (Pearl)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "114012",
+          "num": 12,
+          "name": "Headmistress Fiora (Catseye)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "114013",
+          "num": 13,
+          "name": "Headmistress Fiora (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "114014",
+          "num": 14,
+          "name": "Pool Party Fiora (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "114015",
+          "num": 15,
+          "name": "Pool Party Fiora (Turquoise)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "114016",
+          "num": 16,
+          "name": "Pool Party Fiora (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "114017",
+          "num": 17,
+          "name": "Pool Party Fiora (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "114018",
+          "num": 18,
+          "name": "Pool Party Fiora (Citrine)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "114019",
+          "num": 19,
+          "name": "Pool Party Fiora (Pearl)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "114020",
+          "num": 20,
+          "name": "Pool Party Fiora (Rainbow)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "114021",
+          "num": 21,
+          "name": "Pool Party Fiora (Sapphire)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
           "id": "114022",
           "num": 22,
           "name": "Soaring Sword Fiora",
@@ -67,16 +179,128 @@
           "chromas": true
         },
         {
+          "id": "114024",
+          "num": 24,
+          "name": "Heartpiercer Fiora (Ruby)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "114025",
+          "num": 25,
+          "name": "Heartpiercer Fiora (Citrine)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "114026",
+          "num": 26,
+          "name": "Heartpiercer Fiora (Amethyst)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "114027",
+          "num": 27,
+          "name": "Heartpiercer Fiora (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "114028",
+          "num": 28,
+          "name": "Heartpiercer Fiora (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "114029",
+          "num": 29,
+          "name": "Heartpiercer Fiora (Obsidian)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "114030",
+          "num": 30,
+          "name": "Heartpiercer Fiora (Pearl)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
           "id": "114031",
           "num": 31,
           "name": "iG Fiora",
           "chromas": true
         },
         {
+          "id": "114040",
+          "num": 40,
+          "name": "PROJECT: Fiora (Reckoning)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
           "id": "114041",
           "num": 41,
           "name": "Pulsefire Fiora",
           "chromas": false
+        },
+        {
+          "id": "114042",
+          "num": 42,
+          "name": "Pulsefire Fiora (Ruby)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "114043",
+          "num": 43,
+          "name": "Pulsefire Fiora (Citrine)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "114044",
+          "num": 44,
+          "name": "Pulsefire Fiora (Turquoise)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "114045",
+          "num": 45,
+          "name": "Pulsefire Fiora (Sapphire)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "114046",
+          "num": 46,
+          "name": "Pulsefire Fiora (Amethyst)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "114047",
+          "num": 47,
+          "name": "Pulsefire Fiora (Pearl)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "114048",
+          "num": 48,
+          "name": "Pulsefire Fiora (Obsidian)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "114049",
+          "num": 49,
+          "name": "Pulsefire Fiora (Chrono)",
+          "chromas": true,
+          "parentSkin": 41
         },
         {
           "id": "114050",
@@ -91,10 +315,115 @@
           "chromas": false
         },
         {
+          "id": "114052",
+          "num": 52,
+          "name": "Lunar Beast Fiora (Ruby)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "114053",
+          "num": 53,
+          "name": "Lunar Beast Fiora (Catseye)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "114054",
+          "num": 54,
+          "name": "Lunar Beast Fiora (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "114055",
+          "num": 55,
+          "name": "Lunar Beast Fiora (Sapphire)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "114056",
+          "num": 56,
+          "name": "Lunar Beast Fiora (Vitality)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "114057",
+          "num": 57,
+          "name": "Lunar Beast Fiora (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "114058",
+          "num": 58,
+          "name": "Lunar Beast Fiora (Obsidian)",
+          "chromas": true,
+          "parentSkin": 50
+        },
+        {
           "id": "114060",
           "num": 60,
           "name": "Bewitching Fiora",
           "chromas": false
+        },
+        {
+          "id": "114061",
+          "num": 61,
+          "name": "Bewitching Fiora (Ruby)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "114062",
+          "num": 62,
+          "name": "Bewitching Fiora (Citrine)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "114063",
+          "num": 63,
+          "name": "Bewitching Fiora (Emerald)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "114064",
+          "num": 64,
+          "name": "Bewitching Fiora (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "114065",
+          "num": 65,
+          "name": "Bewitching Fiora (Turquoise)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "114066",
+          "num": 66,
+          "name": "Bewitching Fiora (Sapphire)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "114067",
+          "num": 67,
+          "name": "Bewitching Fiora (Pearl)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "114068",
+          "num": 68,
+          "name": "Bewitching Fiora (Obsidian)",
+          "chromas": false,
+          "parentSkin": 60
         },
         {
           "id": "114069",
@@ -103,10 +432,136 @@
           "chromas": true
         },
         {
+          "id": "114070",
+          "num": 70,
+          "name": "Faerie Court Fiora (Ruby)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "114071",
+          "num": 71,
+          "name": "Faerie Court Fiora (Catseye)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "114072",
+          "num": 72,
+          "name": "Faerie Court Fiora (Sapphire)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "114073",
+          "num": 73,
+          "name": "Faerie Court Fiora (Emerald)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "114074",
+          "num": 74,
+          "name": "Faerie Court Fiora (Turquoise)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "114075",
+          "num": 75,
+          "name": "Faerie Court Fiora (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "114076",
+          "num": 76,
+          "name": "Faerie Court Fiora (Obsidian)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "114077",
+          "num": 77,
+          "name": "Faerie Court Fiora (Peridot)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "114078",
+          "num": 78,
+          "name": "Faerie Court Fiora (Winsome)",
+          "chromas": true,
+          "parentSkin": 69
+        },
+        {
+          "id": "114079",
+          "num": 79,
+          "name": "iG Fiora (Tenfold Triumph)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
           "id": "114080",
           "num": 80,
           "name": "Dragonmancer Fiora",
           "chromas": false
+        },
+        {
+          "id": "114081",
+          "num": 81,
+          "name": "Dragonmancer Fiora (Ruby)",
+          "chromas": false,
+          "parentSkin": 80
+        },
+        {
+          "id": "114082",
+          "num": 82,
+          "name": "Dragonmancer Fiora (Citrine)",
+          "chromas": false,
+          "parentSkin": 80
+        },
+        {
+          "id": "114083",
+          "num": 83,
+          "name": "Dragonmancer Fiora (Emerald)",
+          "chromas": false,
+          "parentSkin": 80
+        },
+        {
+          "id": "114084",
+          "num": 84,
+          "name": "Dragonmancer Fiora (Sapphire)",
+          "chromas": false,
+          "parentSkin": 80
+        },
+        {
+          "id": "114085",
+          "num": 85,
+          "name": "Dragonmancer Fiora (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 80
+        },
+        {
+          "id": "114086",
+          "num": 86,
+          "name": "Dragonmancer Fiora (Obsidian)",
+          "chromas": false,
+          "parentSkin": 80
+        },
+        {
+          "id": "114087",
+          "num": 87,
+          "name": "Dragonmancer Fiora (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 80
+        },
+        {
+          "id": "114088",
+          "num": 88,
+          "name": "Dragonmancer Fiora (Pearl)",
+          "chromas": false,
+          "parentSkin": 80
         },
         {
           "id": "114089",
@@ -115,10 +570,136 @@
           "chromas": true
         },
         {
+          "id": "114090",
+          "num": 90,
+          "name": "Battle Queen Fiora (Ruby)",
+          "chromas": false,
+          "parentSkin": 89
+        },
+        {
+          "id": "114091",
+          "num": 91,
+          "name": "Battle Queen Fiora (Catseye)",
+          "chromas": false,
+          "parentSkin": 89
+        },
+        {
+          "id": "114092",
+          "num": 92,
+          "name": "Battle Queen Fiora (Emerald)",
+          "chromas": false,
+          "parentSkin": 89
+        },
+        {
+          "id": "114093",
+          "num": 93,
+          "name": "Battle Queen Fiora (Sapphire)",
+          "chromas": false,
+          "parentSkin": 89
+        },
+        {
+          "id": "114094",
+          "num": 94,
+          "name": "Battle Queen Fiora (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 89
+        },
+        {
+          "id": "114095",
+          "num": 95,
+          "name": "Battle Queen Fiora (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 89
+        },
+        {
+          "id": "114096",
+          "num": 96,
+          "name": "Battle Queen Fiora (Pearl)",
+          "chromas": false,
+          "parentSkin": 89
+        },
+        {
+          "id": "114097",
+          "num": 97,
+          "name": "Battle Queen Fiora (Obsidian)",
+          "chromas": false,
+          "parentSkin": 89
+        },
+        {
           "id": "114098",
           "num": 98,
           "name": "Victorious Fiora",
           "chromas": true
+        },
+        {
+          "id": "114099",
+          "num": 99,
+          "name": "Victorious Fiora (Bronze)",
+          "chromas": false,
+          "parentSkin": 98
+        },
+        {
+          "id": "114100",
+          "num": 100,
+          "name": "Victorious Fiora (Silver)",
+          "chromas": false,
+          "parentSkin": 98
+        },
+        {
+          "id": "114101",
+          "num": 101,
+          "name": "Victorious Fiora (Gold)",
+          "chromas": false,
+          "parentSkin": 98
+        },
+        {
+          "id": "114102",
+          "num": 102,
+          "name": "Victorious Fiora (Platinum)",
+          "chromas": false,
+          "parentSkin": 98
+        },
+        {
+          "id": "114103",
+          "num": 103,
+          "name": "Victorious Fiora (Emerald)",
+          "chromas": false,
+          "parentSkin": 98
+        },
+        {
+          "id": "114104",
+          "num": 104,
+          "name": "Victorious Fiora (Diamond)",
+          "chromas": false,
+          "parentSkin": 98
+        },
+        {
+          "id": "114105",
+          "num": 105,
+          "name": "Victorious Fiora (Master)",
+          "chromas": false,
+          "parentSkin": 98
+        },
+        {
+          "id": "114106",
+          "num": 106,
+          "name": "Victorious Fiora (Grandmaster)",
+          "chromas": false,
+          "parentSkin": 98
+        },
+        {
+          "id": "114107",
+          "num": 107,
+          "name": "Victorious Fiora (Challenger)",
+          "chromas": true,
+          "parentSkin": 98
+        },
+        {
+          "id": "114108",
+          "num": 108,
+          "name": "iG Fiora (Elite)",
+          "chromas": false,
+          "parentSkin": 31
         }
       ],
       "lore": "The most feared duelist in all Valoran, Fiora is as renowned for her brusque manner and cunning mind as she is for the speed of her bluesteel rapier. Born to House Laurent in the kingdom of Demacia, Fiora took control of the family from her father in the wake of a scandal that nearly destroyed them. House Laurent's reputation was sundered, but Fiora bends her every effort to restore her family's honor and return them to their rightful place among the great and good of Demacia.",
@@ -131,7 +712,10 @@
         "Duelist's Dance shows you where Fiora will try to attack from, so be ready to punish her when she tries.",
         "Be careful when casting immobilizing disables on Fiora. If her Riposte is available, she can turn their power against you."
       ],
-      "tags": ["Fighter", "Assassin"],
+      "tags": [
+        "Fighter",
+        "Assassin"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 10,
@@ -168,7 +752,11 @@
           "description": "Fiora lunges in a direction and stabs a nearby enemy, dealing physical damage and applying on-hit effects.",
           "tooltip": "Fiora lunges in a direction and stabs the closest enemy, ward, or structure, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>. The strike will prioritize <keywordMajor>Vitals</keywordMajor> and enemies it will kill.<br /><br />If Fiora strikes an enemy, this Ability's Cooldown is reduced by {{ cdrefundpercent*100 }}%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Bonus AD Ratio", "Cooldown"],
+            "label": [
+              "Damage",
+              "Bonus AD Ratio",
+              "Cooldown"
+            ],
             "effect": [
               "{{ damage }} -> {{ damageNL }}",
               "{{ badratio*100.000000 }}% -> {{ badrationl*100.000000 }}%",
@@ -176,23 +764,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [13, 11.25, 9.5, 7.75, 6],
+          "cooldown": [
+            13,
+            11.25,
+            9.5,
+            7.75,
+            6
+          ],
           "cooldownBurn": "13/11.25/9.5/7.75/6",
-          "cost": [20, 20, 20, 20, 20],
+          "cost": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
           "costBurn": "20",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -210,7 +870,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400, 400, 400],
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "FioraQ.png",
@@ -229,30 +895,105 @@
           "description": "Fiora parries all incoming damage and disables for a short time, then stabs in a direction. This stab slows the first enemy champion hit, or stuns them if Fiora blocked an immobilizing effect with this ability.",
           "tooltip": "Fiora parries all incoming damage, disables, and negative effects for {{ parryduration }} seconds, then stabs. The stab deals <magicDamage>{{ stabdamage }} magic damage</magicDamage> to the first champion hit and <status>Slows</status> <speed>Move Speed</speed> by {{ msslowpercent*-100 }}%<attackSpeed> and Attack Speed by {{ attackslowpercent*-100 }}% </attackSpeed> for {{ ccduration }} seconds. If Fiora parries an <status>Immobilizing</status> effect, the stabbed enemy is <status>Stunned</status> rather than <status>Slowed</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [24, 22, 20, 18, 16],
+          "cooldown": [
+            24,
+            22,
+            20,
+            18,
+            16
+          ],
           "cooldownBurn": "24/22/20/18/16",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -270,7 +1011,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [750, 750, 750, 750, 750],
+          "range": [
+            750,
+            750,
+            750,
+            750,
+            750
+          ],
           "rangeBurn": "750",
           "image": {
             "full": "FioraW.png",
@@ -289,7 +1036,11 @@
           "description": "Fiora has increased attack speed for the next two attacks. The first attack slows the target, and the second attack will critically strike.",
           "tooltip": "Fiora gains <attackSpeed>{{ aspercent*100 }}% Attack Speed</attackSpeed> for her next two Attacks. The first Attack <status>Slows</status> by {{ slowpercent*-100 }}% for {{ slowduration }} second. The second Attack always critically strikes for <physicalDamage>{{ attacktwopercenttad*100 }}% damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Critical Strike Damage", "Cooldown", "Attack Speed"],
+            "label": [
+              "Critical Strike Damage",
+              "Cooldown",
+              "Attack Speed"
+            ],
             "effect": [
               "{{ attacktwopercenttad*100.000000 }}% -> {{ attacktwopercenttadnl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -297,23 +1048,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 10, 9, 8, 7],
+          "cooldown": [
+            11,
+            10,
+            9,
+            8,
+            7
+          ],
           "cooldownBurn": "11/10/9/8/7",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -331,7 +1154,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [425, 425, 425, 425, 425],
+          "range": [
+            425,
+            425,
+            425,
+            425,
+            425
+          ],
           "rangeBurn": "425",
           "image": {
             "full": "FioraE.png",
@@ -350,7 +1179,11 @@
           "description": "Fiora reveals all four Vitals on an enemy champion and gains Move Speed while near them. If Fiora hits all four Vitals or if the target dies after she has hit at least one, Fiora and her allies in the area are healed over the next few seconds.",
           "tooltip": "<spellPassive>Passive:</spellPassive> <spellName>Duelist's Dance</spellName> <speed>Move Speed</speed> bonus is increased to {{ percentms*100 }}%.<br /><br /><spellActive>Active:</spellActive> Fiora reveals all four <keywordMajor>Vitals</keywordMajor> on a champion for a max of <trueDamage>{{ spell.fiorapassive:rdamagetotal }} max Health true damage</trueDamage> and gains <spellName>Duelist's Dance's</spellName> <speed>Move Speed</speed> bonus while near the target.<br /><br />If Fiora strikes all four <keywordMajor>Vitals</keywordMajor> within {{ markduration }} seconds or if the target dies after she has hit at least one, Fiora restores <healing>{{ healpersecondcalc }} Health per second</healing> to surrounding allied champions for {{ healduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Duelist Move Speed", "Heal Per Second"],
+            "label": [
+              "Cooldown",
+              "Duelist Move Speed",
+              "Heal Per Second"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ percentms*100.000000 }}% -> {{ percentmsnl*100.000000 }}%",
@@ -358,23 +1191,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [110, 90, 70],
+          "cooldown": [
+            110,
+            90,
+            70
+          ],
           "cooldownBurn": "110/90/70",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -392,7 +1273,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [500, 500, 500],
+          "range": [
+            500,
+            500,
+            500
+          ],
           "rangeBurn": "500",
           "image": {
             "full": "FioraR.png",

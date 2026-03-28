@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Ezreal": {
       "id": "Ezreal",
@@ -79,6 +79,62 @@
           "chromas": false
         },
         {
+          "id": "81010",
+          "num": 10,
+          "name": "Debonair Ezreal (Meteorite)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "81011",
+          "num": 11,
+          "name": "Debonair Ezreal (Pearl)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "81012",
+          "num": 12,
+          "name": "Debonair Ezreal (Sandstone)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "81013",
+          "num": 13,
+          "name": "Debonair Ezreal (Obsidian)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "81014",
+          "num": 14,
+          "name": "Debonair Ezreal (Striped)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "81015",
+          "num": 15,
+          "name": "Debonair Ezreal (Ruby)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "81016",
+          "num": 16,
+          "name": "Debonair Ezreal (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "81017",
+          "num": 17,
+          "name": "Debonair Ezreal (Amethyst)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
           "id": "81018",
           "num": 18,
           "name": "Star Guardian Ezreal",
@@ -121,10 +177,122 @@
           "chromas": false
         },
         {
+          "id": "81026",
+          "num": 26,
+          "name": "Porcelain Protector Ezreal (Ruby)",
+          "chromas": true,
+          "parentSkin": 25
+        },
+        {
+          "id": "81027",
+          "num": 27,
+          "name": "Porcelain Protector Ezreal (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "81028",
+          "num": 28,
+          "name": "Porcelain Protector Ezreal (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "81029",
+          "num": 29,
+          "name": "Porcelain Protector Ezreal (Golden Tiger)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "81030",
+          "num": 30,
+          "name": "Porcelain Protector Ezreal (Pearl)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "81031",
+          "num": 31,
+          "name": "Porcelain Protector Ezreal (Catseye)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "81032",
+          "num": 32,
+          "name": "Battle Academia Ezreal (Mythic)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
           "id": "81033",
           "num": 33,
           "name": "Faerie Court Ezreal",
           "chromas": false
+        },
+        {
+          "id": "81034",
+          "num": 34,
+          "name": "Faerie Court Ezreal (Ruby)",
+          "chromas": true,
+          "parentSkin": 33
+        },
+        {
+          "id": "81035",
+          "num": 35,
+          "name": "Faerie Court Ezreal (Catseye)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "81036",
+          "num": 36,
+          "name": "Faerie Court Ezreal (Obsidian)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "81037",
+          "num": 37,
+          "name": "Faerie Court Ezreal (Emerald)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "81038",
+          "num": 38,
+          "name": "Faerie Court Ezreal (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "81039",
+          "num": 39,
+          "name": "Faerie Court Ezreal (Sapphire)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "81040",
+          "num": 40,
+          "name": "Faerie Court Ezreal (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "81041",
+          "num": 41,
+          "name": "Faerie Court Ezreal (Turquoise)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "81042",
+          "num": 42,
+          "name": "Faerie Court Ezreal (Winsome)",
+          "chromas": false,
+          "parentSkin": 33
         },
         {
           "id": "81043",
@@ -139,16 +307,219 @@
           "chromas": true
         },
         {
+          "id": "81045",
+          "num": 45,
+          "name": "HEARTSTEEL Ezreal (Ruby)",
+          "chromas": true,
+          "parentSkin": 43
+        },
+        {
+          "id": "81046",
+          "num": 46,
+          "name": "HEARTSTEEL Ezreal (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "81047",
+          "num": 47,
+          "name": "HEARTSTEEL Ezreal (Sapphire)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "81048",
+          "num": 48,
+          "name": "HEARTSTEEL Ezreal (Emerald)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "81049",
+          "num": 49,
+          "name": "HEARTSTEEL Ezreal (Catseye)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "81050",
+          "num": 50,
+          "name": "HEARTSTEEL Ezreal (Pearl)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "81051",
+          "num": 51,
+          "name": "HEARTSTEEL Ezreal (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "81052",
+          "num": 52,
+          "name": "HEARTSTEEL Ezreal (Citrine)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "81053",
+          "num": 53,
+          "name": "HEARTSTEEL Ezreal (Rockstar)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
           "id": "81054",
           "num": 54,
           "name": "Prestige Heavenscale Ezreal",
           "chromas": false
         },
         {
+          "id": "81055",
+          "num": 55,
+          "name": "Heavenscale Ezreal (Ruby)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "81056",
+          "num": 56,
+          "name": "Heavenscale Ezreal (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "81057",
+          "num": 57,
+          "name": "Heavenscale Ezreal (Catseye)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "81058",
+          "num": 58,
+          "name": "Heavenscale Ezreal (Sapphire)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "81059",
+          "num": 59,
+          "name": "Heavenscale Ezreal (Emerald)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "81060",
+          "num": 60,
+          "name": "Heavenscale Ezreal (Amethyst)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "81061",
+          "num": 61,
+          "name": "Heavenscale Ezreal (Auspicious)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "81062",
+          "num": 62,
+          "name": "Heavenscale Ezreal (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "81063",
+          "num": 63,
+          "name": "Heavenscale Ezreal (Lustrous)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "81064",
+          "num": 64,
+          "name": "Heavenscale Ezreal (Obsidian)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
           "id": "81065",
           "num": 65,
           "name": "Masque of the Black Rose Ezreal",
           "chromas": false
+        },
+        {
+          "id": "81066",
+          "num": 66,
+          "name": "Masque of the Black Rose Ezreal (Ruby)",
+          "chromas": true,
+          "parentSkin": 65
+        },
+        {
+          "id": "81067",
+          "num": 67,
+          "name": "Masque of the Black Rose Ezreal (Emerald)",
+          "chromas": false,
+          "parentSkin": 65
+        },
+        {
+          "id": "81068",
+          "num": 68,
+          "name": "Masque of the Black Rose Ezreal (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 65
+        },
+        {
+          "id": "81069",
+          "num": 69,
+          "name": "Masque of the Black Rose Ezreal (Sapphire)",
+          "chromas": false,
+          "parentSkin": 65
+        },
+        {
+          "id": "81070",
+          "num": 70,
+          "name": "Masque of the Black Rose Ezreal (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 65
+        },
+        {
+          "id": "81071",
+          "num": 71,
+          "name": "Masque of the Black Rose Ezreal (Citrine)",
+          "chromas": false,
+          "parentSkin": 65
+        },
+        {
+          "id": "81072",
+          "num": 72,
+          "name": "Masque of the Black Rose Ezreal (Turquoise)",
+          "chromas": false,
+          "parentSkin": 65
+        },
+        {
+          "id": "81073",
+          "num": 73,
+          "name": "Masque of the Black Rose Ezreal (Pearl)",
+          "chromas": false,
+          "parentSkin": 65
+        },
+        {
+          "id": "81074",
+          "num": 74,
+          "name": "Frosted Ezreal (Paragon)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "81075",
+          "num": 75,
+          "name": "SSG Ezreal (Elite)",
+          "chromas": false,
+          "parentSkin": 19
         }
       ],
       "lore": "A dashing adventurer, unknowingly gifted in the magical arts, Ezreal raids long-lost catacombs, tangles with ancient curses, and overcomes seemingly impossible odds with ease. His courage and bravado knowing no bounds, he prefers to improvise his way out of any situation, relying partially on his wits, but mostly on his mystical Shuriman gauntlet, which he uses to unleash devastating arcane blasts. One thing is for sure—whenever Ezreal is around, trouble isn't too far behind. Or ahead. Probably everywhere.",
@@ -163,7 +534,10 @@
         "Ezreal is completely skill shot based, so make sure to keep minions in between you.",
         "Mystic Shot applies on-hit effects including the Crest of Cinders."
       ],
-      "tags": ["Marksman", "Mage"],
+      "tags": [
+        "Marksman",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 7,
@@ -200,7 +574,11 @@
           "description": "Ezreal fires a damaging bolt of energy which reduces all of his cooldowns slightly if it strikes an enemy unit.",
           "tooltip": "Ezreal fires a bolt of energy, dealing <physicalDamage>{{ damage }} physical damage</physicalDamage> to the first enemy hit and reducing his Ability Cooldowns by {{ cdrefund }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "@AbilityResourceName@ Cost", "Damage"],
+            "label": [
+              "Cooldown",
+              "@AbilityResourceName@ Cost",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}",
@@ -208,23 +586,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [5.5, 5.25, 5, 4.75, 4.5],
+          "cooldown": [
+            5.5,
+            5.25,
+            5,
+            4.75,
+            4.5
+          ],
           "cooldownBurn": "5.5/5.25/5/4.75/4.5",
-          "cost": [28, 31, 34, 37, 40],
+          "cost": [
+            28,
+            31,
+            34,
+            37,
+            40
+          ],
           "costBurn": "28/31/34/37/40",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -242,7 +692,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1150, 1150, 1150, 1150, 1150],
+          "range": [
+            1150,
+            1150,
+            1150,
+            1150,
+            1150
+          ],
           "rangeBurn": "1150",
           "image": {
             "full": "EzrealQ.png",
@@ -261,30 +717,105 @@
           "description": "Ezreal fires an orb that sticks to the first champion or objective hit. If Ezreal hits an enemy with the orb, it detonates and deals damage.",
           "tooltip": "Ezreal fires a magical orb that sticks to the first champion, structure, or epic jungle monster hit for {{ detonationtimeout }} seconds. If Ezreal hits that target with an Attack or Ability, it detonates, dealing <magicDamage>{{ damage }} magic damage</magicDamage>. Detonating with an Ability refunds the Mana cost of that Ability plus <scaleMana>{{ manareturn }} Mana</scaleMana>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Total AP Ratio"],
+            "label": [
+              "Damage",
+              "Total AP Ratio"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ apratio*100.000000 }}% -> {{ aprationl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 8, 8, 8, 8],
+          "cooldown": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
           "cooldownBurn": "8",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -302,7 +833,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1150, 1150, 1150, 1150, 1150],
+          "range": [
+            1150,
+            1150,
+            1150,
+            1150,
+            1150
+          ],
           "rangeBurn": "1150",
           "image": {
             "full": "EzrealW.png",
@@ -321,30 +858,105 @@
           "description": "Ezreal teleports to a target nearby location and fires a homing bolt which strikes the nearest enemy unit. Prioritizes enemies stuck with Essence Flux.",
           "tooltip": "Ezreal teleports then fires a bolt at the nearest enemy, dealing <magicDamage>{{ damage }} magic damage</magicDamage>. The bolt prioritizes enemies affected by <spellName>Essence Flux</spellName>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage"],
+            "label": [
+              "Cooldown",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ e1 }} -> {{ e1NL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [26, 23, 20, 17, 14],
+          "cooldown": [
+            26,
+            23,
+            20,
+            17,
+            14
+          ],
           "cooldownBurn": "26/23/20/17/14",
-          "cost": [70, 70, 70, 70, 70],
+          "cost": [
+            70,
+            70,
+            70,
+            70,
+            70
+          ],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [80, 130, 180, 230, 280],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              80,
+              130,
+              180,
+              230,
+              280
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -362,7 +974,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [475, 475, 475, 475, 475],
+          "range": [
+            475,
+            475,
+            475,
+            475,
+            475
+          ],
           "rangeBurn": "475",
           "image": {
             "full": "EzrealE.png",
@@ -381,30 +999,81 @@
           "description": "Ezreal winds up before firing a powerful barrage of energy that deals massive damage to each unit it passes through (damage is reduced for minions and non-epic monsters).",
           "tooltip": "Ezreal fires a massive energy arc that deals <magicDamage>{{ damage }} magic damage</magicDamage>. The arc deals {{ damagereductionwaveclear.0*100 }}% damage to minions and non-epic jungle monsters.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 105, 90],
+          "cooldown": [
+            120,
+            105,
+            90
+          ],
           "cooldownBurn": "120/105/90",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -422,7 +1091,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "EzrealR.png",

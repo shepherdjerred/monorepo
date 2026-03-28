@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Ahri": {
       "id": "Ahri",
@@ -67,6 +67,48 @@
           "chromas": true
         },
         {
+          "id": "103008",
+          "num": 8,
+          "name": "Popstar Ahri (Amethyst)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "103009",
+          "num": 9,
+          "name": "Popstar Ahri (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "103010",
+          "num": 10,
+          "name": "Popstar Ahri (Citrine)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "103011",
+          "num": 11,
+          "name": "Popstar Ahri (Ruby)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "103012",
+          "num": 12,
+          "name": "Popstar Ahri (Pearl)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "103013",
+          "num": 13,
+          "name": "Popstar Ahri (Catseye)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
           "id": "103014",
           "num": 14,
           "name": "Star Guardian Ahri",
@@ -91,6 +133,69 @@
           "chromas": true
         },
         {
+          "id": "103018",
+          "num": 18,
+          "name": "Challenger Ahri (Golden)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "103019",
+          "num": 19,
+          "name": "Elderwood Ahri (Ruby)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "103020",
+          "num": 20,
+          "name": "Elderwood Ahri (Peridot)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "103021",
+          "num": 21,
+          "name": "Elderwood Ahri (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "103022",
+          "num": 22,
+          "name": "Elderwood Ahri (Citrine)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "103023",
+          "num": 23,
+          "name": "Elderwood Ahri (Catseye)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "103024",
+          "num": 24,
+          "name": "Elderwood Ahri (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "103025",
+          "num": 25,
+          "name": "Elderwood Ahri (Amethyst)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "103026",
+          "num": 26,
+          "name": "Elderwood Ahri (Obsidian)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
           "id": "103027",
           "num": 27,
           "name": "Spirit Blossom Ahri",
@@ -103,10 +208,255 @@
           "chromas": true
         },
         {
+          "id": "103029",
+          "num": 29,
+          "name": "Spirit Blossom Ahri (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "103030",
+          "num": 30,
+          "name": "Spirit Blossom Ahri (Pearl)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "103031",
+          "num": 31,
+          "name": "Spirit Blossom Ahri (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "103032",
+          "num": 32,
+          "name": "Spirit Blossom Ahri (Obsidian)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "103033",
+          "num": 33,
+          "name": "Spirit Blossom Ahri (Night Blossom)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "103034",
+          "num": 34,
+          "name": "K/DA ALL OUT Ahri (Ruby)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "103035",
+          "num": 35,
+          "name": "K/DA ALL OUT Ahri (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "103036",
+          "num": 36,
+          "name": "K/DA ALL OUT Ahri (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "103037",
+          "num": 37,
+          "name": "K/DA ALL OUT Ahri (Emerald)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "103038",
+          "num": 38,
+          "name": "K/DA ALL OUT Ahri (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "103039",
+          "num": 39,
+          "name": "K/DA ALL OUT Ahri (Pearl)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "103040",
+          "num": 40,
+          "name": "K/DA ALL OUT Ahri (Sapphire)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "103041",
+          "num": 41,
+          "name": "K/DA ALL OUT Ahri (BADDEST)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
           "id": "103042",
           "num": 42,
           "name": "Coven Ahri",
           "chromas": true
+        },
+        {
+          "id": "103043",
+          "num": 43,
+          "name": "Coven Ahri (Ruby)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "103044",
+          "num": 44,
+          "name": "Coven Ahri (Emerald)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "103045",
+          "num": 45,
+          "name": "Coven Ahri (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "103046",
+          "num": 46,
+          "name": "Coven Ahri (Sapphire)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "103047",
+          "num": 47,
+          "name": "Coven Ahri (Catseye)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "103048",
+          "num": 48,
+          "name": "Coven Ahri (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "103049",
+          "num": 49,
+          "name": "Coven Ahri (Obsidian)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "103050",
+          "num": 50,
+          "name": "Coven Ahri (Pearl)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "103051",
+          "num": 51,
+          "name": "Coven Ahri (Dark Ritual)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "103052",
+          "num": 52,
+          "name": "Dynasty Ahri (Ahri-versary)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "103053",
+          "num": 53,
+          "name": "Midnight Ahri (Ahri-versary)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "103054",
+          "num": 54,
+          "name": "Foxfire Ahri (Ahri-versary)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "103055",
+          "num": 55,
+          "name": "Popstar Ahri (Ahri-versary)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "103056",
+          "num": 56,
+          "name": "Challenger Ahri (Ahri-versary)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "103057",
+          "num": 57,
+          "name": "Academy Ahri (Ahri-versary)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "103058",
+          "num": 58,
+          "name": "Arcade Ahri (Ahri-versary)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "103059",
+          "num": 59,
+          "name": "Star Guardian Ahri (Ahri-versary)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "103060",
+          "num": 60,
+          "name": "K/DA Ahri (Ahri-versary)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "103061",
+          "num": 61,
+          "name": "Elderwood Ahri (Ahri-versary)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "103062",
+          "num": 62,
+          "name": "Spirit Blossom Ahri (Ahri-versary)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "103063",
+          "num": 63,
+          "name": "K/DA ALL OUT Ahri (Ahri-versary)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "103064",
+          "num": 64,
+          "name": "Coven Ahri (Ahri-versary)",
+          "chromas": false,
+          "parentSkin": 42
         },
         {
           "id": "103065",
@@ -121,10 +471,129 @@
           "chromas": true
         },
         {
+          "id": "103067",
+          "num": 67,
+          "name": "Arcana Ahri (Ruby)",
+          "chromas": false,
+          "parentSkin": 66
+        },
+        {
+          "id": "103068",
+          "num": 68,
+          "name": "Arcana Ahri (Catseye)",
+          "chromas": false,
+          "parentSkin": 66
+        },
+        {
+          "id": "103069",
+          "num": 69,
+          "name": "Arcana Ahri (Emerald)",
+          "chromas": false,
+          "parentSkin": 66
+        },
+        {
+          "id": "103070",
+          "num": 70,
+          "name": "Arcana Ahri (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 66
+        },
+        {
+          "id": "103071",
+          "num": 71,
+          "name": "Arcana Ahri (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 66
+        },
+        {
+          "id": "103072",
+          "num": 72,
+          "name": "Arcana Ahri (Sapphire)",
+          "chromas": false,
+          "parentSkin": 66
+        },
+        {
+          "id": "103073",
+          "num": 73,
+          "name": "Arcana Ahri (Turquoise)",
+          "chromas": false,
+          "parentSkin": 66
+        },
+        {
+          "id": "103074",
+          "num": 74,
+          "name": "Arcana Ahri (Obsidian)",
+          "chromas": false,
+          "parentSkin": 66
+        },
+        {
+          "id": "103075",
+          "num": 75,
+          "name": "Foxfire Ahri (Emerald)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
           "id": "103076",
           "num": 76,
           "name": "Snow Moon Ahri",
           "chromas": true
+        },
+        {
+          "id": "103077",
+          "num": 77,
+          "name": "Snow Moon Ahri (Ruby)",
+          "chromas": false,
+          "parentSkin": 76
+        },
+        {
+          "id": "103078",
+          "num": 78,
+          "name": "Snow Moon Ahri (Citrine)",
+          "chromas": false,
+          "parentSkin": 76
+        },
+        {
+          "id": "103079",
+          "num": 79,
+          "name": "Snow Moon Ahri (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 76
+        },
+        {
+          "id": "103080",
+          "num": 80,
+          "name": "Snow Moon Ahri (Jasper)",
+          "chromas": false,
+          "parentSkin": 76
+        },
+        {
+          "id": "103081",
+          "num": 81,
+          "name": "Snow Moon Ahri (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 76
+        },
+        {
+          "id": "103082",
+          "num": 82,
+          "name": "Snow Moon Ahri (Emerald)",
+          "chromas": false,
+          "parentSkin": 76
+        },
+        {
+          "id": "103083",
+          "num": 83,
+          "name": "Snow Moon Ahri (Sapphire)",
+          "chromas": false,
+          "parentSkin": 76
+        },
+        {
+          "id": "103084",
+          "num": 84,
+          "name": "Snow Moon Ahri (Turquoise)",
+          "chromas": false,
+          "parentSkin": 76
         },
         {
           "id": "103085",
@@ -149,6 +618,48 @@
           "num": 89,
           "name": "After Hours Spirit Blossom Springs Ahri",
           "chromas": true
+        },
+        {
+          "id": "103090",
+          "num": 90,
+          "name": "Spirit Blossom Springs Ahri (Ruby)",
+          "chromas": false,
+          "parentSkin": 88
+        },
+        {
+          "id": "103091",
+          "num": 91,
+          "name": "Spirit Blossom Springs Ahri (Turquoise)",
+          "chromas": false,
+          "parentSkin": 88
+        },
+        {
+          "id": "103092",
+          "num": 92,
+          "name": "Spirit Blossom Springs Ahri (Catseye)",
+          "chromas": false,
+          "parentSkin": 88
+        },
+        {
+          "id": "103093",
+          "num": 93,
+          "name": "Spirit Blossom Springs Ahri (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 88
+        },
+        {
+          "id": "103094",
+          "num": 94,
+          "name": "Spirit Blossom Springs Ahri (Sapphire)",
+          "chromas": false,
+          "parentSkin": 88
+        },
+        {
+          "id": "103095",
+          "num": 95,
+          "name": "Spirit Blossom Springs Ahri (Pearl)",
+          "chromas": false,
+          "parentSkin": 88
         }
       ],
       "lore": "Innately connected to the magic of the spirit realm, Ahri is a fox-like vastaya who can manipulate her prey's emotions and consume their essence—receiving flashes of their memory and insight from each soul she consumes. Once a powerful yet wayward predator, Ahri is now traveling the world in search of remnants of her ancestors while also trying to replace her stolen memories with ones of her own making.",
@@ -162,7 +673,10 @@
         "Ahri's survivability is dramatically reduced when her Ultimate, Spirit Rush, is down.",
         "Stay behind minions to make Charm difficult to land, this will reduce Ahri's damage potential significantly."
       ],
-      "tags": ["Mage", "Assassin"],
+      "tags": [
+        "Mage",
+        "Assassin"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 3,
@@ -199,30 +713,105 @@
           "description": "Ahri sends out and pulls back her orb, dealing magic damage on the way out and true damage on the way back. ",
           "tooltip": "Ahri throws then pulls back her orb, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> on the way out and <trueDamage>{{ totaldamage }} true damage</trueDamage> on the way back.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["@AbilityResourceName@ Cost", "Damage"],
+            "label": [
+              "@AbilityResourceName@ Cost",
+              "Damage"
+            ],
             "effect": [
               "{{ cost }} -> {{ costNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 7, 7, 7, 7],
+          "cooldown": [
+            7,
+            7,
+            7,
+            7,
+            7
+          ],
           "cooldownBurn": "7",
-          "cost": [55, 65, 75, 85, 95],
+          "cost": [
+            55,
+            65,
+            75,
+            85,
+            95
+          ],
           "costBurn": "55/65/75/85/95",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -240,7 +829,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [970, 970, 970, 970, 970],
+          "range": [
+            970,
+            970,
+            970,
+            970,
+            970
+          ],
           "rangeBurn": "970",
           "image": {
             "full": "AhriQ.png",
@@ -259,30 +854,105 @@
           "description": "Ahri gains a brief burst of Move Speed and releases three fox-fires, that lock onto and attack nearby enemies.",
           "tooltip": "Ahri releases 3 fox-fires that seek nearby enemies and deal <magicDamage>{{ singlefiredamage }} magic damage</magicDamage>, reduced to <magicDamage>{{ multifiredamage }} damage</magicDamage> beyond the first. She also gains <speed>{{ movementspeed*100 }}% Move Speed</speed> decaying over {{ movementspeedduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 8, 7, 6, 5],
+          "cooldown": [
+            9,
+            8,
+            7,
+            6,
+            5
+          ],
           "cooldownBurn": "9/8/7/6/5",
-          "cost": [30, 30, 30, 30, 30],
+          "cost": [
+            30,
+            30,
+            30,
+            30,
+            30
+          ],
           "costBurn": "30",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -300,7 +970,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [700, 700, 700, 700, 700],
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "AhriW.png",
@@ -319,30 +995,105 @@
           "description": "Ahri blows a kiss that damages and charms an enemy it encounters, instantly stopping movement abilities and causing them to walk harmlessly towards her.",
           "tooltip": "Ahri blows a kiss that <status>Charms</status> the first enemy hit for {{ charmduration }} seconds and deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Duration"],
+            "label": [
+              "Damage",
+              "Duration"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ charmduration }} -> {{ charmdurationNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 12, 12, 12, 12],
+          "cooldown": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
           "cooldownBurn": "12",
-          "cost": [60, 60, 60, 60, 60],
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -360,7 +1111,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [975, 975, 975, 975, 975],
+          "range": [
+            975,
+            975,
+            975,
+            975,
+            975
+          ],
           "rangeBurn": "975",
           "image": {
             "full": "AhriE.png",
@@ -379,30 +1136,81 @@
           "description": "Ahri dashes forward and fires essence bolts, damaging nearby enemies. Spirit Rush can be cast up to three times before going on cooldown, and gains additional recasts when taking down enemy champions.",
           "tooltip": "Ahri nimbly dashes, firing {{ rmaxtargetspercast }} essence bolts at nearby enemies, prioritizing champions. These bolts deal <magicDamage>{{ rcalculateddamage }} magic damage</magicDamage> each. <spellName>Spirit Rush</spellName> can be <recast>Recast</recast> up to 2 more times within {{ rrecastwindow }} seconds.<br /><br />Consuming a champion's Essence with <spellName>Essence Theft</spellName> during this period extends the recast window by up to {{ pdurationextension }} seconds and grants an additional recast of <spellName>Spirit Rush</spellName> (up to {{ rmaxcasts }} stored).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ rbasedamage }} -> {{ rbasedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [140, 120, 100],
+          "cooldown": [
+            140,
+            120,
+            100
+          ],
           "cooldownBurn": "140/120/100",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -420,7 +1228,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [450, 450, 450],
+          "range": [
+            450,
+            450,
+            450
+          ],
           "rangeBurn": "450",
           "image": {
             "full": "AhriR.png",

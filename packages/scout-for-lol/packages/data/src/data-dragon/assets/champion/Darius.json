@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Darius": {
       "id": "Darius",
@@ -49,10 +49,66 @@
           "chromas": true
         },
         {
+          "id": "122005",
+          "num": 5,
+          "name": "Darius Forge Black Iron",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
+          "id": "122006",
+          "num": 6,
+          "name": "Darius Forge Bronze",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
+          "id": "122007",
+          "num": 7,
+          "name": "Darius Forge Copper",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
           "id": "122008",
           "num": 8,
           "name": "Academy Darius",
           "chromas": false
+        },
+        {
+          "id": "122009",
+          "num": 9,
+          "name": "Dunkmaster Darius (Amethyst)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "122010",
+          "num": 10,
+          "name": "Dunkmaster Darius (Catseye)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "122011",
+          "num": 11,
+          "name": "Dunkmaster Darius (Emerald)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "122012",
+          "num": 12,
+          "name": "Dunkmaster Darius (Citrine)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "122013",
+          "num": 13,
+          "name": "Dunkmaster Darius (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 4
         },
         {
           "id": "122014",
@@ -73,10 +129,108 @@
           "chromas": true
         },
         {
+          "id": "122017",
+          "num": 17,
+          "name": "High Noon Darius (Ruby)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "122018",
+          "num": 18,
+          "name": "High Noon Darius (Obsidian)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "122019",
+          "num": 19,
+          "name": "High Noon Darius (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "122020",
+          "num": 20,
+          "name": "High Noon Darius (Emerald)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "122021",
+          "num": 21,
+          "name": "High Noon Darius (Sapphire)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "122022",
+          "num": 22,
+          "name": "High Noon Darius (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "122023",
+          "num": 23,
+          "name": "High Noon Darius (Nomad)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
           "id": "122024",
           "num": 24,
           "name": "Lunar Beast Darius",
           "chromas": true
+        },
+        {
+          "id": "122025",
+          "num": 25,
+          "name": "Lunar Beast Darius (Ruby)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "122026",
+          "num": 26,
+          "name": "Lunar Beast Darius (Catseye)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "122027",
+          "num": 27,
+          "name": "Lunar Beast Darius (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "122028",
+          "num": 28,
+          "name": "Lunar Beast Darius (Sapphire)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "122029",
+          "num": 29,
+          "name": "Lunar Beast Darius (Vitality)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "122030",
+          "num": 30,
+          "name": "Lunar Beast Darius (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "122031",
+          "num": 31,
+          "name": "Lunar Beast Darius (Obsidian)",
+          "chromas": false,
+          "parentSkin": 24
         },
         {
           "id": "122033",
@@ -85,16 +239,212 @@
           "chromas": false
         },
         {
+          "id": "122034",
+          "num": 34,
+          "name": "Crime City Nightmare Darius (Ruby)",
+          "chromas": true,
+          "parentSkin": 33
+        },
+        {
+          "id": "122035",
+          "num": 35,
+          "name": "Crime City Nightmare Darius (Emerald)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "122036",
+          "num": 36,
+          "name": "Crime City Nightmare Darius (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "122037",
+          "num": 37,
+          "name": "Crime City Nightmare Darius (Sapphire)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "122038",
+          "num": 38,
+          "name": "Crime City Nightmare Darius (Catseye)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "122039",
+          "num": 39,
+          "name": "Crime City Nightmare Darius (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "122040",
+          "num": 40,
+          "name": "Crime City Nightmare Darius (Pearl)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "122041",
+          "num": 41,
+          "name": "Crime City Nightmare Darius (Obsidian)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "122042",
+          "num": 42,
+          "name": "Crime City Nightmare Darius (Underground)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
           "id": "122043",
           "num": 43,
           "name": "Spirit Blossom Darius",
           "chromas": false
         },
         {
+          "id": "122044",
+          "num": 44,
+          "name": "Spirit Blossom Darius (Ruby)",
+          "chromas": true,
+          "parentSkin": 43
+        },
+        {
+          "id": "122045",
+          "num": 45,
+          "name": "Spirit Blossom Darius (Turquoise)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "122046",
+          "num": 46,
+          "name": "Spirit Blossom Darius (Catseye)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "122047",
+          "num": 47,
+          "name": "Spirit Blossom Darius (Emerald)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "122048",
+          "num": 48,
+          "name": "Spirit Blossom Darius (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "122049",
+          "num": 49,
+          "name": "Spirit Blossom Darius (Sapphire)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "122050",
+          "num": 50,
+          "name": "Spirit Blossom Darius (Obsidian)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "122051",
+          "num": 51,
+          "name": "Spirit Blossom Darius (Pearl)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "122052",
+          "num": 52,
+          "name": "Spirit Blossom Darius (Night Blossom)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "122053",
+          "num": 53,
+          "name": "Dunkmaster Darius Mythic Chroma",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
           "id": "122054",
           "num": 54,
           "name": "Porcelain Darius",
           "chromas": false
+        },
+        {
+          "id": "122055",
+          "num": 55,
+          "name": "Porcelain Darius (Ruby)",
+          "chromas": true,
+          "parentSkin": 54
+        },
+        {
+          "id": "122056",
+          "num": 56,
+          "name": "Porcelain Darius (Emerald)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "122057",
+          "num": 57,
+          "name": "Porcelain Darius (Turquoise)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "122058",
+          "num": 58,
+          "name": "Porcelain Darius (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "122059",
+          "num": 59,
+          "name": "Porcelain Darius (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "122060",
+          "num": 60,
+          "name": "Porcelain Darius (Obsidian)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "122061",
+          "num": 61,
+          "name": "Porcelain Darius (Pearl)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "122062",
+          "num": 62,
+          "name": "Porcelain Darius (Catseye)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "122063",
+          "num": 63,
+          "name": "Porcelain Darius (Opulent)",
+          "chromas": false,
+          "parentSkin": 54
         },
         {
           "id": "122064",
@@ -109,10 +459,59 @@
           "chromas": false
         },
         {
+          "id": "122066",
+          "num": 66,
+          "name": "Prestige Triumphant General Darius (Vivid)",
+          "chromas": true,
+          "parentSkin": 65
+        },
+        {
           "id": "122067",
           "num": 67,
           "name": "Mecha Kingdoms Darius",
           "chromas": false
+        },
+        {
+          "id": "122068",
+          "num": 68,
+          "name": "Mecha Kingdoms Darius (Ruby)",
+          "chromas": true,
+          "parentSkin": 67
+        },
+        {
+          "id": "122069",
+          "num": 69,
+          "name": "Mecha Kingdoms Darius (Pearl)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "122070",
+          "num": 70,
+          "name": "Mecha Kingdoms Darius (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "122071",
+          "num": 71,
+          "name": "Mecha Kingdoms Darius (Emerald)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "122072",
+          "num": 72,
+          "name": "Mecha Kingdoms Darius (Amethyst)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "122073",
+          "num": 73,
+          "name": "Mecha Kingdoms Darius (Obsidian)",
+          "chromas": false,
+          "parentSkin": 67
         }
       ],
       "lore": "There is no greater symbol of Noxian might than Darius, the nation's most feared and battle-hardened commander. Rising from humble origins to become the Hand of Noxus, he cleaves through the empire's enemies—many of them Noxians themselves. Knowing that he never doubts his cause is just, and never hesitates once his axe is raised, those who stand against the leader of the Trifarian Legion can expect no mercy.",
@@ -126,7 +525,10 @@
         "When Darius's axe grab is on cooldown, he is vulnerable to harassment attacks.",
         "Darius's ability to escape from fights is limited. If you have an advantage against him, press your lead."
       ],
-      "tags": ["Fighter", "Tank"],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 9,
@@ -177,23 +579,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 8, 7, 6, 5],
+          "cooldown": [
+            9,
+            8,
+            7,
+            6,
+            5
+          ],
           "cooldownBurn": "9/8/7/6/5",
-          "cost": [25, 30, 35, 40, 45],
+          "cost": [
+            25,
+            30,
+            35,
+            40,
+            45
+          ],
           "costBurn": "25/30/35/40/45",
           "datavalues": {},
           "effect": [
             null,
-            [100, 110, 120, 130, 140],
-            [50, 80, 110, 140, 170],
-            [99, 99, 99, 99, 99],
-            [0.1, 0.1, 0.1, 0.1, 0.1],
-            [17, 17, 17, 17, 17],
-            [35, 35, 35, 35, 35],
-            [51, 51, 51, 51, 51],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              100,
+              110,
+              120,
+              130,
+              140
+            ],
+            [
+              50,
+              80,
+              110,
+              140,
+              170
+            ],
+            [
+              99,
+              99,
+              99,
+              99,
+              99
+            ],
+            [
+              0.1,
+              0.1,
+              0.1,
+              0.1,
+              0.1
+            ],
+            [
+              17,
+              17,
+              17,
+              17,
+              17
+            ],
+            [
+              35,
+              35,
+              35,
+              35,
+              35
+            ],
+            [
+              51,
+              51,
+              51,
+              51,
+              51
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -211,7 +685,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1, 1, 1, 1, 1],
+          "range": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
           "rangeBurn": "1",
           "image": {
             "full": "DariusCleave.png",
@@ -230,29 +710,103 @@
           "description": "Darius's next attack strikes an enemy's crucial artery. As they bleed out, their Move Speed is slowed.",
           "tooltip": "Darius' next Attack deals <physicalDamage>{{ empoweredattackdamage }} physical damage</physicalDamage> and <status>Slows</status> by {{ e2 }}% for {{ e5 }} second.<br /><br />This Ability refunds its Mana cost and reduces its Cooldown by {{ e3 }}% if it kills the target.<br /><br /><rules>This Ability triggers spell effects upon dealing damage.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Total AD Ratio"],
+            "label": [
+              "Total AD Ratio"
+            ],
             "effect": [
               "{{ effect4amount*100.000000 }} -> {{ effect4amountnl*100.000000 }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [5, 5, 5, 5, 5],
+          "cooldown": [
+            5,
+            5,
+            5,
+            5,
+            5
+          ],
           "cooldownBurn": "5",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [90, 90, 90, 90, 90],
-            [50, 50, 50, 50, 50],
-            [1.4, 1.45, 1.5, 1.55, 1.6],
-            [1, 1, 1, 1, 1],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              90,
+              90,
+              90,
+              90,
+              90
+            ],
+            [
+              50,
+              50,
+              50,
+              50,
+              50
+            ],
+            [
+              1.4,
+              1.45,
+              1.5,
+              1.55,
+              1.6
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -270,7 +824,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [300, 300, 300, 300, 300],
+          "range": [
+            300,
+            300,
+            300,
+            300,
+            300
+          ],
           "rangeBurn": "300",
           "image": {
             "full": "DariusNoxianTacticsONH.png",
@@ -301,23 +861,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [26, 23.5, 21, 18.5, 16],
+          "cooldown": [
+            26,
+            23.5,
+            21,
+            18.5,
+            16
+          ],
           "cooldownBurn": "26/23.5/21/18.5/16",
-          "cost": [70, 60, 50, 40, 30],
+          "cost": [
+            70,
+            60,
+            50,
+            40,
+            30
+          ],
           "costBurn": "70/60/50/40/30",
           "datavalues": {},
           "effect": [
             null,
-            [20, 25, 30, 35, 40],
-            [40, 40, 40, 40, 40],
-            [1, 1, 1, 1, 1],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              20,
+              25,
+              30,
+              35,
+              40
+            ],
+            [
+              40,
+              40,
+              40,
+              40,
+              40
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -335,7 +967,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [535, 535, 535, 535, 535],
+          "range": [
+            535,
+            535,
+            535,
+            535,
+            535
+          ],
           "rangeBurn": "535",
           "image": {
             "full": "DariusAxeGrabCone.png",
@@ -354,30 +992,81 @@
           "description": "Darius leaps to an enemy champion and strikes a lethal blow, dealing true damage. This damage is increased for each stack of Hemorrhage on the target. If Noxian Guillotine is a killing blow, its cooldown is refreshed for a brief duration.",
           "tooltip": "Darius leaps to an enemy and strikes a lethal blow, dealing <trueDamage>{{ damage }} true damage</trueDamage>. For each <keywordMajor>Hemorrhage</keywordMajor> on the target, this Ability deals an additional {{ rdamagepercentperhemostack*100 }}% damage, up to a max of <trueDamage>{{ maximumdamage }} damage</trueDamage>.<br /><br />If this kills the target, Darius may <recast>Recast</recast> this Ability once within {{ rrecastduration }} seconds. At rank 3, this Ability has no Mana cost and kills refresh the Cooldown completely.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ rbasedamage }} -> {{ rbasedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [100, 100, 0],
+          "cost": [
+            100,
+            100,
+            0
+          ],
           "costBurn": "100/100/0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -395,7 +1084,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [460, 460, 460],
+          "range": [
+            460,
+            460,
+            460
+          ],
           "rangeBurn": "460",
           "image": {
             "full": "DariusExecute.png",

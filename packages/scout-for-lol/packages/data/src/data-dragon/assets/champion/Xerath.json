@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Xerath": {
       "id": "Xerath",
@@ -55,10 +55,108 @@
           "chromas": true
         },
         {
+          "id": "101006",
+          "num": 6,
+          "name": "Dark Star Xerath (Antimatter)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "101007",
+          "num": 7,
+          "name": "Dark Star Xerath (Sapphire)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "101008",
+          "num": 8,
+          "name": "Dark Star Xerath (Emerald)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "101009",
+          "num": 9,
+          "name": "Dark Star Xerath (Pearl)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "101010",
+          "num": 10,
+          "name": "Dark Star Xerath (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "101011",
+          "num": 11,
+          "name": "Dark Star Xerath (Ruby)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
           "id": "101012",
           "num": 12,
           "name": "Arcana Xerath",
           "chromas": true
+        },
+        {
+          "id": "101013",
+          "num": 13,
+          "name": "Arcana Xerath (Ruby)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "101014",
+          "num": 14,
+          "name": "Arcana Xerath (Citrine)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "101015",
+          "num": 15,
+          "name": "Arcana Xerath (Amethyst)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "101016",
+          "num": 16,
+          "name": "Arcana Xerath (Sapphire)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "101017",
+          "num": 17,
+          "name": "Arcana Xerath (Emerald)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "101018",
+          "num": 18,
+          "name": "Arcana Xerath (Pearl)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "101019",
+          "num": 19,
+          "name": "Arcana Xerath (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "101020",
+          "num": 20,
+          "name": "Arcana Xerath (Obsidian)",
+          "chromas": false,
+          "parentSkin": 12
         },
         {
           "id": "101021",
@@ -67,10 +165,73 @@
           "chromas": true
         },
         {
+          "id": "101022",
+          "num": 22,
+          "name": "Astronaut Xerath (Ruby)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "101023",
+          "num": 23,
+          "name": "Astronaut Xerath (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "101024",
+          "num": 24,
+          "name": "Astronaut Xerath (Catseye)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "101025",
+          "num": 25,
+          "name": "Astronaut Xerath (Turquoise)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "101026",
+          "num": 26,
+          "name": "Astronaut Xerath (Sapphire)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "101027",
+          "num": 27,
+          "name": "Astronaut Xerath (Obsidian)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "101028",
+          "num": 28,
+          "name": "Astronaut Xerath (Amethyst)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "101029",
+          "num": 29,
+          "name": "Astronaut Xerath (Sandstone)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
           "id": "101030",
           "num": 30,
           "name": "Crystalis Indomitus Xerath",
           "chromas": true
+        },
+        {
+          "id": "101031",
+          "num": 31,
+          "name": "Crystalis Indomitus Xerath (Fractured)",
+          "chromas": false,
+          "parentSkin": 30
         },
         {
           "id": "101032",
@@ -91,7 +252,10 @@
         "Xerath takes a long time to engage Rite of the Arcane. Watch for his spellcast animation and start dodging.",
         "Banshee's Veil will make it much harder for Xerath to land Shocking Orb on you."
       ],
-      "tags": ["Mage", "Support"],
+      "tags": [
+        "Mage",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 1,
@@ -128,7 +292,11 @@
           "description": "Fires a long-range beam of energy, dealing magic damage to all targets hit.",
           "tooltip": "<charge>Begin Charging:</charge> Xerath begins charging an arcane beam, <status>Slowing</status> himself gradually up to 50%. <br /><br /><release>Release:</release> Xerath fires the beam, dealing <magicDamage>{{ tooltiptotaldamage }} magic damage</magicDamage>. The range increases with time charged.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}",
@@ -136,23 +304,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 8, 7, 6, 5],
+          "cooldown": [
+            9,
+            8,
+            7,
+            6,
+            5
+          ],
           "cooldownBurn": "9/8/7/6/5",
-          "cost": [80, 90, 100, 110, 120],
+          "cost": [
+            80,
+            90,
+            100,
+            110,
+            120
+          ],
           "costBurn": "80/90/100/110/120",
           "datavalues": {},
           "effect": [
             null,
-            [75, 115, 155, 195, 235],
-            [4, 4, 4, 4, 4],
-            [0.5, 0.5, 0.5, 0.5, 0.5],
-            [145, 145, 145, 145, 145],
-            [0.5, 0.5, 0.5, 0.5, 0.5],
-            [-0.2, -0.2, -0.2, -0.2, -0.2],
-            [0.1, 0.1, 0.1, 0.1, 0.1],
-            [0.5, 0.5, 0.5, 0.5, 0.5],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [0, 0, 0, 0, 0]
+            [
+              75,
+              115,
+              155,
+              195,
+              235
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              145,
+              145,
+              145,
+              145,
+              145
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              -0.2,
+              -0.2,
+              -0.2,
+              -0.2,
+              -0.2
+            ],
+            [
+              0.1,
+              0.1,
+              0.1,
+              0.1,
+              0.1
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -170,7 +410,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "0",
-          "range": [750, 750, 750, 750, 750],
+          "range": [
+            750,
+            750,
+            750,
+            750,
+            750
+          ],
           "rangeBurn": "750",
           "image": {
             "full": "XerathArcanopulseChargeUp.png",
@@ -203,23 +449,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 13, 12, 11, 10],
+          "cooldown": [
+            14,
+            13,
+            12,
+            11,
+            10
+          ],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [80, 90, 100, 110, 120],
+          "cost": [
+            80,
+            90,
+            100,
+            110,
+            120
+          ],
           "costBurn": "80/90/100/110/120",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -237,7 +555,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "0",
-          "range": [1000, 1000, 1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "XerathArcaneBarrage2.png",
@@ -256,7 +580,11 @@
           "description": "Deals magic damage to an enemy and stuns them.",
           "tooltip": "Xerath fires an orb of raw magic, <status>Stunning</status> the first enemy hit for up to {{ maxstunduration }} seconds based on distance travelled, and dealing <magicDamage>{{ tooltiptotaldamage }} magic damage</magicDamage>. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -264,23 +592,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [13, 12.5, 12, 11.5, 11],
+          "cooldown": [
+            13,
+            12.5,
+            12,
+            11.5,
+            11
+          ],
           "cooldownBurn": "13/12.5/12/11.5/11",
-          "cost": [60, 65, 70, 75, 80],
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [70, 100, 130, 160, 190],
-            [2.25, 2.25, 2.25, 2.25, 2.25],
-            [0.17, 0.17, 0.17, 0.17, 0.17],
-            [1125, 1125, 1125, 1125, 1125],
-            [0.75, 0.75, 0.75, 0.75, 0.75],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0.5, 0.5, 0.5, 0.5, 0.5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              70,
+              100,
+              130,
+              160,
+              190
+            ],
+            [
+              2.25,
+              2.25,
+              2.25,
+              2.25,
+              2.25
+            ],
+            [
+              0.17,
+              0.17,
+              0.17,
+              0.17,
+              0.17
+            ],
+            [
+              1125,
+              1125,
+              1125,
+              1125,
+              1125
+            ],
+            [
+              0.75,
+              0.75,
+              0.75,
+              0.75,
+              0.75
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -298,7 +698,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "0",
-          "range": [1050, 1050, 1050, 1050, 1050],
+          "range": [
+            1050,
+            1050,
+            1050,
+            1050,
+            1050
+          ],
           "rangeBurn": "1050",
           "image": {
             "full": "XerathMageSpear.png",
@@ -331,23 +737,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [130, 115, 100],
+          "cooldown": [
+            130,
+            115,
+            100
+          ],
           "cooldownBurn": "130/115/100",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [10, 10, 10],
-            [4, 5, 6],
-            [170, 220, 270],
-            [200, 200, 200],
-            [5000, 5000, 5000],
-            [0.6, 0.6, 0.6],
-            [0.5, 0.5, 0.5],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              10,
+              10,
+              10
+            ],
+            [
+              4,
+              5,
+              6
+            ],
+            [
+              170,
+              220,
+              270
+            ],
+            [
+              200,
+              200,
+              200
+            ],
+            [
+              5000,
+              5000,
+              5000
+            ],
+            [
+              0.6,
+              0.6,
+              0.6
+            ],
+            [
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -365,7 +819,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [5000, 5000, 5000],
+          "range": [
+            5000,
+            5000,
+            5000
+          ],
           "rangeBurn": "5000",
           "image": {
             "full": "XerathLocusOfPower2.png",

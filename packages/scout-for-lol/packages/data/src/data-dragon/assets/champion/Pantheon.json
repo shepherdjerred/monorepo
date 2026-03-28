@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Pantheon": {
       "id": "Pantheon",
@@ -73,10 +73,115 @@
           "chromas": false
         },
         {
+          "id": "80009",
+          "num": 9,
+          "name": "Dragonslayer Pantheon (Pearl)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "80010",
+          "num": 10,
+          "name": "Dragonslayer Pantheon (Amethyst)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "80011",
+          "num": 11,
+          "name": "Dragonslayer Pantheon (Sandstone)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "80012",
+          "num": 12,
+          "name": "Dragonslayer Pantheon (Obsidian)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "80013",
+          "num": 13,
+          "name": "Dragonslayer Pantheon (Catseye)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "80014",
+          "num": 14,
+          "name": "Dragonslayer Pantheon (Emerald)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "80015",
+          "num": 15,
+          "name": "Dragonslayer Pantheon (Ruby)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
           "id": "80016",
           "num": 16,
           "name": "Pulsefire Pantheon",
           "chromas": true
+        },
+        {
+          "id": "80017",
+          "num": 17,
+          "name": "Pulsefire Pantheon (Ruby)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "80018",
+          "num": 18,
+          "name": "Pulsefire Pantheon (Citrine)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "80019",
+          "num": 19,
+          "name": "Pulsefire Pantheon (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "80020",
+          "num": 20,
+          "name": "Pulsefire Pantheon (Pearl)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "80021",
+          "num": 21,
+          "name": "Pulsefire Pantheon (Amethyst)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "80022",
+          "num": 22,
+          "name": "Pulsefire Pantheon (Chrono)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "80023",
+          "num": 23,
+          "name": "Pulsefire Pantheon (Obsidian)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "80024",
+          "num": 24,
+          "name": "Pulsefire Pantheon (Emerald)",
+          "chromas": false,
+          "parentSkin": 16
         },
         {
           "id": "80025",
@@ -91,16 +196,142 @@
           "chromas": false
         },
         {
+          "id": "80027",
+          "num": 27,
+          "name": "Ruined Pantheon (Ruby)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "80028",
+          "num": 28,
+          "name": "Ruined Pantheon (Citrine)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "80029",
+          "num": 29,
+          "name": "Ruined Pantheon (Amethyst)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "80030",
+          "num": 30,
+          "name": "Ruined Pantheon (Sapphire)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "80031",
+          "num": 31,
+          "name": "Ruined Pantheon (Emerald)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "80032",
+          "num": 32,
+          "name": "Ruined Pantheon (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "80033",
+          "num": 33,
+          "name": "Ruined Pantheon (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "80034",
+          "num": 34,
+          "name": "Ruined Pantheon (Pearl)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "80035",
+          "num": 35,
+          "name": "Ruined Pantheon (Cursed)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
           "id": "80036",
           "num": 36,
           "name": "Ashen Conqueror Pantheon",
           "chromas": true
         },
         {
+          "id": "80037",
+          "num": 37,
+          "name": "Ashen Conqueror Pantheon (Emberwoken)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
           "id": "80038",
           "num": 38,
           "name": "Chosen of the Wolf Pantheon",
           "chromas": true
+        },
+        {
+          "id": "80039",
+          "num": 39,
+          "name": "Chosen of the Wolf Pantheon (Ruby)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "80040",
+          "num": 40,
+          "name": "Chosen of the Wolf Pantheon (Emerald)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "80041",
+          "num": 41,
+          "name": "Chosen of the Wolf Pantheon (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "80042",
+          "num": 42,
+          "name": "Chosen of the Wolf Pantheon (Sapphire)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "80043",
+          "num": 43,
+          "name": "Chosen of the Wolf Pantheon (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "80044",
+          "num": 44,
+          "name": "Chosen of the Wolf Pantheon (Obsidian)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "80045",
+          "num": 45,
+          "name": "Chosen of the Wolf Pantheon (Turquoise)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "80046",
+          "num": 46,
+          "name": "Chosen of the Wolf Pantheon (Citrine)",
+          "chromas": false,
+          "parentSkin": 38
         }
       ],
       "lore": "Once an unwilling host to the Aspect of War, Atreus survived when the celestial power within him was slain, refusing to succumb to a blow that tore stars from the heavens. In time, he learned to embrace the power of his own mortality, and the stubborn resilience that goes along with it. Atreus now opposes the divine as Pantheon reborn, his unbreakable will fueling the fallen Aspect's weapons on the field of battle.",
@@ -115,7 +346,10 @@
         "Be careful near Pantheon if your health is low - a thrown Comet Spear executes low health enemies.",
         "Grand Starfall gives several seconds of warning before Pantheon arrives. Use this time to get out of the way or to form a plan to deal with him."
       ],
-      "tags": ["Fighter", "Assassin"],
+      "tags": [
+        "Fighter",
+        "Assassin"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 9,
@@ -152,7 +386,11 @@
           "description": "Pantheon either thrusts his spear or throws his spear in the chosen direction.",
           "tooltip": "<span class=\"colorFF8C00\">Tap:</span> Pantheon thrusts his spear, dealing <physicalDamage>{{ tapdamagecalc }} physical damage</physicalDamage> to enemies hit. Refunds {{ tapcooldownrefund*100 }}% of this Ability's Cooldown.<br /><br /><span class=\"colorFF8C00\">Hold:</span> Pantheon hurls his spear, dealing <physicalDamage>{{ holddamagecalc }} physical damage</physicalDamage> to the first enemy hit and {{ damagefalloff*100 }}% less to further targets. <br /><br />This Ability is enhanced against enemies below {{ crithealththreshold*100 }}% Health to deal <physicalDamage>{{ executedamagecalcmodified }} physical damage</physicalDamage> instead.<br /><br /><span class=\"colorEDDA74\">Mortal Will Bonus:</span> Deals an additional <physicalDamage>{{ empowereddamagecalc }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Base Damage", "Execute Base Damage", "Cooldown"],
+            "label": [
+              "Base Damage",
+              "Execute Base Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ tapdamage }} -> {{ tapdamageNL }}",
               "{{ executebasedamage }} -> {{ executebasedamageNL }}",
@@ -160,23 +398,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 10.25, 9.5, 8.75, 8],
+          "cooldown": [
+            11,
+            10.25,
+            9.5,
+            8.75,
+            8
+          ],
           "cooldownBurn": "11/10.25/9.5/8.75/8",
-          "cost": [25, 25, 25, 25, 25],
+          "cost": [
+            25,
+            25,
+            25,
+            25,
+            25
+          ],
           "costBurn": "25",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -194,7 +504,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [575, 575, 575, 575, 575],
+          "range": [
+            575,
+            575,
+            575,
+            575,
+            575
+          ],
           "rangeBurn": "575",
           "image": {
             "full": "PantheonQ.png",
@@ -213,30 +529,105 @@
           "description": "Pantheon dashes to a target, damaging and stunning them.",
           "tooltip": "Pantheon leaps on his target, <status>Stunning</status> for {{ stunduration }} second and dealing <physicalDamage>{{ maxhealthdamagecalc }} max Health physical damage</physicalDamage>.<br /><br /><keywordMajor>Mortal Will Bonus:</keywordMajor> Pantheon's next Attack strikes {{ empowerednumhits }} times, dealing a total of <physicalDamage>{{ empowereddamagemultcalcmodified }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Max Health %", "Cooldown"],
+            "label": [
+              "Max Health %",
+              "Cooldown"
+            ],
             "effect": [
               "{{ maxhealthdamage*100.000000 }}% -> {{ maxhealthdamagenl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [13, 12, 11, 10, 9],
+          "cooldown": [
+            13,
+            12,
+            11,
+            10,
+            9
+          ],
           "cooldownBurn": "13/12/11/10/9",
-          "cost": [55, 55, 55, 55, 55],
+          "cost": [
+            55,
+            55,
+            55,
+            55,
+            55
+          ],
           "costBurn": "55",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -254,7 +645,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "PantheonW.png",
@@ -273,30 +670,105 @@
           "description": "Pantheon sets his shield, becoming invulnerable to damage from the front and striking repeatedly with his spear.",
           "tooltip": "Pantheon braces his shield and engages enemies in a chosen direction for {{ shieldduration }} seconds, becoming immune to non-tower damage from that direction and dealing <physicalDamage>{{ damagecalc }} physical damage</physicalDamage> over the duration. After channeling Pantheon slams with his shield, dealing <physicalDamage>{{ shielddamagecalc }} physical damage</physicalDamage>.<br /><br /><span class=\"colorEDDA74\">Mortal Will Bonus:</span> When Pantheon slams his shield he gains <scaleArmor>{{ resistscalc }} Armor</scaleArmor> and <scaleMR>{{ resistscalc }} Magic Resist</scaleMR> for {{ resistsduration }} seconds, and <speed>{{ speedamount*100 }}% Move Speed</speed> for {{ speedduration }} seconds. <br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Shield Slam Damage"],
+            "label": [
+              "Cooldown",
+              "Shield Slam Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ shieldbasedamage }} -> {{ shieldbasedamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [22, 21, 20, 19, 18],
+          "cooldown": [
+            22,
+            21,
+            20,
+            19,
+            18
+          ],
           "cooldownBurn": "22/21/20/19/18",
-          "cost": [80, 80, 80, 80, 80],
+          "cost": [
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
           "costBurn": "80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -314,7 +786,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400, 400, 400],
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "PantheonE.png",
@@ -333,7 +811,11 @@
           "description": "Pantheon composes himself and then leaps into the air, landing at a chosen location as a comet.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Pantheon gains {{ armorpenetration*100 }}% Armor Penetration.<br /><br /><spellActive>Active:</spellActive> Pantheon gathers his strength to leap high into the air. He throws his spear from above which in a small area deals <physicalDamage>{{ spell.pantheonq:holddamagecalc }} physical damage</physicalDamage> and <status>Slows</status> by {{ spearslow*100 }}% for {{ spearslowduration }} seconds. <br /><br />Pantheon then crashes down as a meteor at the target area. Deals up to <magicDamage>{{ damagecalc }} magic damage</magicDamage> to enemies in a line (decreased by up to {{ edgedamagereduction*100 }}% at the edges of the area).<br /><br />This Ability instantly readies <span class=\"colorEDDA74\">Mortal Will</span>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "Armor Penetration"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "Armor Penetration"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -341,23 +823,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [180, 165, 150],
+          "cooldown": [
+            180,
+            165,
+            150
+          ],
           "cooldownBurn": "180/165/150",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -375,7 +905,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [5500, 5500, 5500],
+          "range": [
+            5500,
+            5500,
+            5500
+          ],
           "rangeBurn": "5500",
           "image": {
             "full": "PantheonR.png",

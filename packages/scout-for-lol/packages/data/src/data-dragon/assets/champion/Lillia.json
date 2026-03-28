@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Lillia": {
       "id": "Lillia",
@@ -31,10 +31,122 @@
           "chromas": true
         },
         {
+          "id": "876002",
+          "num": 2,
+          "name": "Spirit Blossom Lillia (Ruby)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "876003",
+          "num": 3,
+          "name": "Spirit Blossom Lillia (Obsidian)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "876004",
+          "num": 4,
+          "name": "Spirit Blossom Lillia (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "876005",
+          "num": 5,
+          "name": "Spirit Blossom Lillia (Citrine)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "876006",
+          "num": 6,
+          "name": "Spirit Blossom Lillia (Turquoise)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "876007",
+          "num": 7,
+          "name": "Spirit Blossom Lillia (Amethyst)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "876008",
+          "num": 8,
+          "name": "Spirit Blossom Lillia (Sapphire)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "876009",
+          "num": 9,
+          "name": "Spirit Blossom Lillia (Night Blossom)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
           "id": "876010",
           "num": 10,
           "name": "Nightbringer Lillia",
           "chromas": true
+        },
+        {
+          "id": "876011",
+          "num": 11,
+          "name": "Nightbringer Lillia (Ruby)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "876012",
+          "num": 12,
+          "name": "Nightbringer Lillia (Emerald)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "876013",
+          "num": 13,
+          "name": "Nightbringer Lillia (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "876014",
+          "num": 14,
+          "name": "Nightbringer Lillia (Sapphire)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "876015",
+          "num": 15,
+          "name": "Nightbringer Lillia (Catseye)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "876016",
+          "num": 16,
+          "name": "Nightbringer Lillia (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "876017",
+          "num": 17,
+          "name": "Nightbringer Lillia (Pearl)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "876018",
+          "num": 18,
+          "name": "Nightbringer Lillia (Deathbringer)",
+          "chromas": false,
+          "parentSkin": 10
         },
         {
           "id": "876019",
@@ -43,10 +155,122 @@
           "chromas": true
         },
         {
+          "id": "876020",
+          "num": 20,
+          "name": "Shan Hai Scrolls Lillia (Ruby)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "876021",
+          "num": 21,
+          "name": "Shan Hai Scrolls Lillia (Emerald)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "876022",
+          "num": 22,
+          "name": "Shan Hai Scrolls Lillia (Meteorite)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "876023",
+          "num": 23,
+          "name": "Shan Hai Scrolls Lillia (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "876024",
+          "num": 24,
+          "name": "Shan Hai Scrolls Lillia (Pearl)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "876025",
+          "num": 25,
+          "name": "Shan Hai Scrolls Lillia (Amethyst)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "876026",
+          "num": 26,
+          "name": "Shan Hai Scrolls Lillia (Obsidian)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "876027",
+          "num": 27,
+          "name": "Shan Hai Scrolls Lillia (Citrine)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
           "id": "876028",
           "num": 28,
           "name": "Faerie Court Lillia",
           "chromas": true
+        },
+        {
+          "id": "876029",
+          "num": 29,
+          "name": "Faerie Court Lillia (Ruby)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "876030",
+          "num": 30,
+          "name": "Faerie Court Lillia (Catseye)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "876031",
+          "num": 31,
+          "name": "Faerie Court Lillia (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "876032",
+          "num": 32,
+          "name": "Faerie Court Lillia (Emerald)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "876033",
+          "num": 33,
+          "name": "Faerie Court Lillia (Pearl)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "876034",
+          "num": 34,
+          "name": "Faerie Court Lillia (Obsidian)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "876035",
+          "num": 35,
+          "name": "Faerie Court Lillia (Sapphire)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "876036",
+          "num": 36,
+          "name": "Faerie Court Lillia (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 28
         },
         {
           "id": "876037",
@@ -55,17 +279,118 @@
           "chromas": true
         },
         {
+          "id": "876038",
+          "num": 38,
+          "name": "Bowling League Lillia (Ruby)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "876039",
+          "num": 39,
+          "name": "Bowling League Lillia (Catseye)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "876040",
+          "num": 40,
+          "name": "Bowling League Lillia (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "876041",
+          "num": 41,
+          "name": "Bowling League Lillia (Emerald)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "876042",
+          "num": 42,
+          "name": "Bowling League Lillia (Pearl)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "876043",
+          "num": 43,
+          "name": "Bowling League Lillia (Obsidian)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "876044",
+          "num": 44,
+          "name": "Bowling League Lillia (Sapphire)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "876045",
+          "num": 45,
+          "name": "Bowling League Lillia (Amethyst)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
           "id": "876046",
           "num": 46,
           "name": "Petals of Spring Lillia",
           "chromas": true
+        },
+        {
+          "id": "876047",
+          "num": 47,
+          "name": "Petals of Spring Lillia (Ruby)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "876048",
+          "num": 48,
+          "name": "Petals of Spring Lillia (Citrine)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "876049",
+          "num": 49,
+          "name": "Petals of Spring Lillia (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "876050",
+          "num": 50,
+          "name": "Petals of Spring Lillia (Pearl)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "876051",
+          "num": 51,
+          "name": "Petals of Spring Lillia (Peridot)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "876052",
+          "num": 52,
+          "name": "Petals of Spring Lillia (Emerald)",
+          "chromas": false,
+          "parentSkin": 46
         }
       ],
       "lore": "Intensely shy, the fae fawn Lillia skittishly wanders Ionia's forests. Hiding just out of sight of mortals—whose mysterious natures have long captivated, but intimidated, her—Lillia hopes to discover why their dreams no longer reach the ancient Dreaming Tree. She now travels Ionia with a magical branch in hand, in an effort to find people's unrealized dreams. Only then can Lillia herself bloom and help others untangle their fears to find the sparkle within. Eep!",
       "blurb": "Intensely shy, the fae fawn Lillia skittishly wanders Ionia's forests. Hiding just out of sight of mortals—whose mysterious natures have long captivated, but intimidated, her—Lillia hopes to discover why their dreams no longer reach the ancient Dreaming...",
       "allytips": [],
       "enemytips": [],
-      "tags": ["Fighter", "Mage"],
+      "tags": [
+        "Fighter",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 0,
@@ -102,7 +427,12 @@
           "description": "Passively, Lillia gains stacking Move Speed when hitting enemies with spells. She can activate this to deal magic damage to nearby enemies, dealing extra true damage on the edge.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Lillia's Ability hits grant <speed>{{ prancespeed }} Move Speed</speed> for {{ pranceduration }} seconds, stacking up to {{ prancemaxstacks }} times.<br /><br /><spellActive>Active:</spellActive> Lillia whirls her censer, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>, plus an additional <trueDamage>{{ bonustruedamage }} true damage</trueDamage> at the outer edge.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Move Speed", "Magic Damage", "True Damage"],
+            "label": [
+              "Cooldown",
+              "Move Speed",
+              "Magic Damage",
+              "True Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ prancebonusperstack*100.000000 }}% -> {{ prancebonusperstacknl*100.000000 }}%",
@@ -111,23 +441,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [6, 5.5, 5, 4.5, 4],
+          "cooldown": [
+            6,
+            5.5,
+            5,
+            4.5,
+            4
+          ],
           "cooldownBurn": "6/5.5/5/4.5/4",
-          "cost": [65, 65, 65, 65, 65],
+          "cost": [
+            65,
+            65,
+            65,
+            65,
+            65
+          ],
           "costBurn": "65",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -145,7 +547,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [450, 450, 450, 450, 450],
+          "range": [
+            450,
+            450,
+            450,
+            450,
+            450
+          ],
           "rangeBurn": "450",
           "image": {
             "full": "LilliaQ.png",
@@ -164,30 +572,105 @@
           "description": "Lillia deals damage in a nearby area, dealing heavy damage in the center.",
           "tooltip": "Lillia winds up a huge strike, dealing <magicDamage>{{ flatdamage }} magic damage</magicDamage>. Enemies in the center take <magicDamage>{{ flatdamagesweetspot }} damage</magicDamage> instead.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ flatdamagebase }} -> {{ flatdamagebaseNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 13, 12, 11, 10],
+          "cooldown": [
+            14,
+            13,
+            12,
+            11,
+            10
+          ],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -205,7 +688,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [500, 500, 500, 500, 500],
+          "range": [
+            500,
+            500,
+            500,
+            500,
+            500
+          ],
           "rangeBurn": "500",
           "image": {
             "full": "LilliaW.png",
@@ -224,30 +713,105 @@
           "description": "Lillia hurls a seed that damages and slows those it lands on. If it doesn't hit anything, it will continue rolling until it hits a wall or target.",
           "tooltip": "Lillia lobs a swirlseed overhead, dealing <magicDamage>{{ impactdamagetotal }} magic damage</magicDamage> where it lands and revealing and <status>Slowing</status> them by {{ slowamount*100 }}% for {{ slowduration }} seconds. If no enemies are hit, the seed rolls until it hits an enemy or collides with terrain.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ impactdamage }} -> {{ impactdamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 12, 12, 12, 12],
+          "cooldown": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
           "cooldownBurn": "12",
-          "cost": [70, 70, 70, 70, 70],
+          "cost": [
+            70,
+            70,
+            70,
+            70,
+            70
+          ],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -265,7 +829,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [700, 700, 700, 700, 700],
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "LilliaE.png",
@@ -284,30 +854,81 @@
           "description": "Lillia causes all enemies with Dream Dust on them to become Drowsy before falling asleep. Those enemies will take extra damage on being forcibly woken up.",
           "tooltip": "Lillia causes all enemy champions with <keywordMajor>Dream Dust</keywordMajor> to become <status>Drowsy</status> for {{ drowsyduration }} seconds. Afterward, they fall <status>Asleep</status> for {{ sleepduration }} seconds.<br /><br />When awakened by damage, they take an additional <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Break Damage"],
+            "label": [
+              "Cooldown",
+              "Break Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ breakdamagebase }} -> {{ breakdamagebaseNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [150, 130, 110],
+          "cooldown": [
+            150,
+            130,
+            110
+          ],
           "cooldownBurn": "150/130/110",
-          "cost": [50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -325,7 +946,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1600, 1600, 1600],
+          "range": [
+            1600,
+            1600,
+            1600
+          ],
           "rangeBurn": "1600",
           "image": {
             "full": "LilliaR.png",

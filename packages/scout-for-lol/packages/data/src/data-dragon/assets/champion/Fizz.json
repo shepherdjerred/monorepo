@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Fizz": {
       "id": "Fizz",
@@ -49,6 +49,27 @@
           "chromas": false
         },
         {
+          "id": "105005",
+          "num": 5,
+          "name": "Fizz Scorch Orange",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
+          "id": "105006",
+          "num": 6,
+          "name": "Fizz Scorch Black",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
+          "id": "105007",
+          "num": 7,
+          "name": "Fizz Scorch Red",
+          "chromas": false,
+          "parentSkin": 0
+        },
+        {
           "id": "105008",
           "num": 8,
           "name": "Cottontail Fizz",
@@ -65,6 +86,27 @@
           "num": 10,
           "name": "Omega Squad Fizz",
           "chromas": true
+        },
+        {
+          "id": "105011",
+          "num": 11,
+          "name": "Omega Squad Fizz (Pearl)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "105012",
+          "num": 12,
+          "name": "Omega Squad Fizz (Obsidian)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "105013",
+          "num": 13,
+          "name": "Omega Squad Fizz (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 10
         },
         {
           "id": "105014",
@@ -85,6 +127,62 @@
           "chromas": true
         },
         {
+          "id": "105017",
+          "num": 17,
+          "name": "Little Devil Fizz (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "105018",
+          "num": 18,
+          "name": "Little Devil Fizz (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "105019",
+          "num": 19,
+          "name": "Little Devil Fizz (Pearl)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "105020",
+          "num": 20,
+          "name": "Little Devil Fizz (Obsidian)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "105021",
+          "num": 21,
+          "name": "Little Devil Fizz (Ruby)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "105022",
+          "num": 22,
+          "name": "Little Devil Fizz (Emerald)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "105023",
+          "num": 23,
+          "name": "Little Devil Fizz (Citrine)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "105024",
+          "num": 24,
+          "name": "Little Devil Fizz (Sapphire)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
           "id": "105025",
           "num": 25,
           "name": "Prestige Fuzz Fizz (2022)",
@@ -97,10 +195,122 @@
           "chromas": true
         },
         {
+          "id": "105027",
+          "num": 27,
+          "name": "Astronaut Fizz (Ruby)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "105028",
+          "num": 28,
+          "name": "Astronaut Fizz (Catseye)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "105029",
+          "num": 29,
+          "name": "Astronaut Fizz (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "105030",
+          "num": 30,
+          "name": "Astronaut Fizz (Emerald)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "105031",
+          "num": 31,
+          "name": "Astronaut Fizz (Obsidian)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "105032",
+          "num": 32,
+          "name": "Astronaut Fizz (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "105033",
+          "num": 33,
+          "name": "Astronaut Fizz (Turquoise)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "105034",
+          "num": 34,
+          "name": "Astronaut Fizz (Amethyst)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
           "id": "105035",
           "num": 35,
           "name": "Rain Shepherd Fizz",
           "chromas": true
+        },
+        {
+          "id": "105036",
+          "num": 36,
+          "name": "Rain Shepherd Fizz (Ruby)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "105037",
+          "num": 37,
+          "name": "Rain Shepherd Fizz (Citrine)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "105038",
+          "num": 38,
+          "name": "Rain Shepherd Fizz (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "105039",
+          "num": 39,
+          "name": "Rain Shepherd Fizz (Emerald)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "105040",
+          "num": 40,
+          "name": "Rain Shepherd Fizz (Amethyst)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "105041",
+          "num": 41,
+          "name": "Rain Shepherd Fizz (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "105042",
+          "num": 42,
+          "name": "Rain Shepherd Fizz (Meteorite)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "105043",
+          "num": 43,
+          "name": "Rain Shepherd Fizz (Turquoise)",
+          "chromas": false,
+          "parentSkin": 35
         }
       ],
       "lore": "Fizz is an amphibious yordle, who dwells among the reefs surrounding Bilgewater. He often retrieves and returns the tithes cast into the sea by superstitious captains, but even the saltiest of sailors know better than to cross him—for many are the tales of those who have underestimated this slippery character. Often mistaken for some manner of capricious ocean spirit, he seems able to command the beasts of the deep, and delights in confounding his allies and enemies alike.",
@@ -114,7 +324,10 @@
         "Fizz's attacks becomes more deadly for a few seconds after he uses his empowered attack - keep him away while his trident is glowing!",
         "Fizz is a slippery target when his abilities are not on cooldown - bait him into using them early and follow up with crowd control or hard-hitting attacks!"
       ],
-      "tags": ["Assassin", "Fighter"],
+      "tags": [
+        "Assassin",
+        "Fighter"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 6,
@@ -151,30 +364,105 @@
           "description": "Fizz dashes through his target, dealing magic damage and applying on hit effects.",
           "tooltip": "Fizz dashes through an enemy, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> plus <magicDamage>{{ qdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 7.5, 7, 6.5, 6],
+          "cooldown": [
+            8,
+            7.5,
+            7,
+            6.5,
+            6
+          ],
           "cooldownBurn": "8/7.5/7/6.5/6",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [10, 25, 40, 55, 70],
-            [0, 0, 0, 0, 0],
-            [650, 750, 850, 950, 1050],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [600, 600, 600, 600, 600],
-            [1, 1, 1, 1, 1],
-            [0.35, 0.35, 0.35, 0.35, 0.35],
-            [40, 40, 40, 40, 40],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              10,
+              25,
+              40,
+              55,
+              70
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              650,
+              750,
+              850,
+              950,
+              1050
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              600,
+              600,
+              600,
+              600,
+              600
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0.35,
+              0.35,
+              0.35,
+              0.35,
+              0.35
+            ],
+            [
+              40,
+              40,
+              40,
+              40,
+              40
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -192,7 +480,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [550, 550, 550, 550, 550],
+          "range": [
+            550,
+            550,
+            550,
+            550,
+            550
+          ],
           "rangeBurn": "550",
           "image": {
             "full": "FizzQ.png",
@@ -229,23 +523,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 6, 5, 4, 3],
+          "cooldown": [
+            7,
+            6,
+            5,
+            4,
+            3
+          ],
           "cooldownBurn": "7/6/5/4/3",
-          "cost": [30, 40, 50, 60, 70],
+          "cost": [
+            30,
+            40,
+            50,
+            60,
+            70
+          ],
           "costBurn": "30/40/50/60/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -263,7 +629,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "FizzW.png",
@@ -296,23 +668,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 14, 12, 10, 8],
+          "cooldown": [
+            16,
+            14,
+            12,
+            10,
+            8
+          ],
           "cooldownBurn": "16/14/12/10/8",
-          "cost": [75, 80, 85, 90, 95],
+          "cost": [
+            75,
+            80,
+            85,
+            90,
+            95
+          ],
           "costBurn": "75/80/85/90/95",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -330,7 +774,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400, 400, 400],
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "FizzE.png",
@@ -363,23 +813,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -397,7 +895,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1300, 1300, 1300],
+          "range": [
+            1300,
+            1300,
+            1300
+          ],
           "rangeBurn": "1300",
           "image": {
             "full": "FizzR.png",

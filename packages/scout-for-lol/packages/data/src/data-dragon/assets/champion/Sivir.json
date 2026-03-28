@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Sivir": {
       "id": "Sivir",
@@ -85,10 +85,101 @@
           "chromas": true
         },
         {
+          "id": "15011",
+          "num": 11,
+          "name": "Pizza Delivery Sivir (Catseye)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "15012",
+          "num": 12,
+          "name": "Pizza Delivery Sivir (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "15013",
+          "num": 13,
+          "name": "Pizza Delivery Sivir (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "15014",
+          "num": 14,
+          "name": "Pizza Delivery Sivir (Amethyst)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
+          "id": "15015",
+          "num": 15,
+          "name": "Pizza Delivery Sivir (Obsidian)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
           "id": "15016",
           "num": 16,
           "name": "Blood Moon Sivir",
           "chromas": true
+        },
+        {
+          "id": "15017",
+          "num": 17,
+          "name": "Snowstorm Sivir (Golden)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "15018",
+          "num": 18,
+          "name": "Blood Moon Sivir (Emerald)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "15019",
+          "num": 19,
+          "name": "Blood Moon Sivir (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "15020",
+          "num": 20,
+          "name": "Blood Moon Sivir (Sapphire)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "15021",
+          "num": 21,
+          "name": "Blood Moon Sivir (Citrine)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "15022",
+          "num": 22,
+          "name": "Blood Moon Sivir (Turquoise)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "15023",
+          "num": 23,
+          "name": "Blood Moon Sivir (Ruby)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "15024",
+          "num": 24,
+          "name": "Blood Moon Sivir (Obsidian)",
+          "chromas": false,
+          "parentSkin": 16
         },
         {
           "id": "15025",
@@ -97,16 +188,170 @@
           "chromas": true
         },
         {
+          "id": "15026",
+          "num": 26,
+          "name": "Odyssey Sivir (Merc)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "15027",
+          "num": 27,
+          "name": "Odyssey Sivir (Ruby)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "15028",
+          "num": 28,
+          "name": "Odyssey Sivir (Catseye)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "15029",
+          "num": 29,
+          "name": "Odyssey Sivir (Emerald)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "15030",
+          "num": 30,
+          "name": "Odyssey Sivir (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "15031",
+          "num": 31,
+          "name": "Odyssey Sivir (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "15032",
+          "num": 32,
+          "name": "Odyssey Sivir (Sapphire)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "15033",
+          "num": 33,
+          "name": "Odyssey Sivir (Rainbow)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
           "id": "15034",
           "num": 34,
           "name": "Cafe Cuties Sivir",
           "chromas": true
         },
         {
+          "id": "15035",
+          "num": 35,
+          "name": "Cafe Cuties Sivir (Ruby)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "15036",
+          "num": 36,
+          "name": "Cafe Cuties Sivir (Catseye)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "15037",
+          "num": 37,
+          "name": "Cafe Cuties Sivir (Turquoise)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "15038",
+          "num": 38,
+          "name": "Cafe Cuties Sivir (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "15039",
+          "num": 39,
+          "name": "Cafe Cuties Sivir (Emerald)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "15040",
+          "num": 40,
+          "name": "Cafe Cuties Sivir (Sapphire)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "15041",
+          "num": 41,
+          "name": "Cafe Cuties Sivir (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
+          "id": "15042",
+          "num": 42,
+          "name": "Cafe Cuties Sivir (Obsidian)",
+          "chromas": false,
+          "parentSkin": 34
+        },
+        {
           "id": "15043",
           "num": 43,
           "name": "Solar Eclipse Sivir",
           "chromas": true
+        },
+        {
+          "id": "15044",
+          "num": 44,
+          "name": "Solar Eclipse Sivir (Ruby)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "15045",
+          "num": 45,
+          "name": "Solar Eclipse Sivir (Catseye)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "15046",
+          "num": 46,
+          "name": "Solar Eclipse Sivir (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "15047",
+          "num": 47,
+          "name": "Solar Eclipse Sivir (Pearl)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "15048",
+          "num": 48,
+          "name": "Solar Eclipse Sivir (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "15049",
+          "num": 49,
+          "name": "Solar Eclipse Sivir (Obsidian)",
+          "chromas": false,
+          "parentSkin": 43
         },
         {
           "id": "15050",
@@ -121,16 +366,142 @@
           "chromas": false
         },
         {
+          "id": "15052",
+          "num": 52,
+          "name": "Mythmaker Sivir (Ruby)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "15053",
+          "num": 53,
+          "name": "Mythmaker Sivir (Citrine)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "15054",
+          "num": 54,
+          "name": "Mythmaker Sivir (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "15055",
+          "num": 55,
+          "name": "Mythmaker Sivir (Sapphire)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "15056",
+          "num": 56,
+          "name": "Mythmaker Sivir (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "15057",
+          "num": 57,
+          "name": "Mythmaker Sivir (Emerald)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "15058",
+          "num": 58,
+          "name": "Mythmaker Sivir (Obsidian)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "15059",
+          "num": 59,
+          "name": "Mythmaker Sivir (Pearl)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "15060",
+          "num": 60,
+          "name": "Mythmaker Sivir (Gilded)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
           "id": "15061",
           "num": 61,
           "name": "Primal Ambush Sivir",
           "chromas": true
         },
         {
+          "id": "15062",
+          "num": 62,
+          "name": "Primal Ambush Sivir (Ruby)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "15063",
+          "num": 63,
+          "name": "Primal Ambush Sivir (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "15064",
+          "num": 64,
+          "name": "Primal Ambush Sivir (Turquoise)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "15065",
+          "num": 65,
+          "name": "Primal Ambush Sivir (Sapphire)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "15066",
+          "num": 66,
+          "name": "Primal Ambush Sivir (Emerald)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "15067",
+          "num": 67,
+          "name": "Primal Ambush Sivir (Citrine)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "15068",
+          "num": 68,
+          "name": "Primal Ambush Sivir (Amethyst)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "15069",
+          "num": 69,
+          "name": "Primal Ambush Sivir (Obsidian)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
           "id": "15070",
           "num": 70,
           "name": "Ann-Sivir-sary",
           "chromas": false
+        },
+        {
+          "id": "15071",
+          "num": 71,
+          "name": "Mythmaker Sivir (Paragon)",
+          "chromas": false,
+          "parentSkin": 50
         }
       ],
       "lore": "Sivir is a renowned fortune hunter and mercenary captain who plies her trade in the deserts of Shurima. Armed with her legendary jeweled crossblade, she has fought and won countless battles for those who can afford her exorbitant price. Known for her fearless resolve and endless ambition, she prides herself on recovering buried treasures from the perilous tombs of Shurima—for a generous bounty. With ancient forces stirring the very bones of Shurima, Sivir finds herself torn between conflicting destinies.",
@@ -145,7 +516,9 @@
         "Sivir is a powerful pushing champion, so leaving her unattended in a lane for too long will often result in your turrets being destroyed.",
         "When laning against Sivir, it is possible to throw off the timing of her Spell Shield by faking an advance, then backing off."
       ],
-      "tags": ["Marksman"],
+      "tags": [
+        "Marksman"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 9,
@@ -182,7 +555,11 @@
           "description": "Sivir hurls her crossblade like a boomerang, dealing damage each way.",
           "tooltip": "Sivir hurls her crossblade like a boomerang, dealing <physicalDamage>{{ totaldamage }}</physicalDamage> to all enemies it cuts through. Hitting non-champions reduces the damage to subsequent targets, down to a minimum of {{ falloffminimum*100 }}%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "Mana Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "Mana Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -190,23 +567,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9.5, 9, 8.5, 8],
+          "cooldown": [
+            10,
+            9.5,
+            9,
+            8.5,
+            8
+          ],
           "cooldownBurn": "10/9.5/9/8.5/8",
-          "cost": [55, 60, 65, 70, 75],
+          "cost": [
+            55,
+            60,
+            65,
+            70,
+            75
+          ],
           "costBurn": "55/60/65/70/75",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -224,7 +673,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1200, 1200, 1200, 1200, 1200],
+          "range": [
+            1200,
+            1200,
+            1200,
+            1200,
+            1200
+          ],
           "rangeBurn": "1200",
           "image": {
             "full": "SivirQ.png",
@@ -243,30 +698,105 @@
           "description": "Sivir's next few basic attacks gain additional attack speed and bounce to nearby targets, dealing reduced damage while bouncing.",
           "tooltip": "For the next {{ buffduration }} seconds, Sivir gains <attackSpeed>{{ ricochetattackspeed*100 }}% Attack Speed</attackSpeed> and her auto attacks are empowered to bounce to additional surrounding enemies dealing <physicalDamage>{{ bouncedamage }} physical damage</physicalDamage> each bounce for up to {{ maxbounces }} bounces.<br /><br />These bounces critically strike if the attack generating them does.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Attack Speed", "Total AD Ratio"],
+            "label": [
+              "Attack Speed",
+              "Total AD Ratio"
+            ],
             "effect": [
               "{{ ricochetattackspeed*100.000000 }}% -> {{ ricochetattackspeednl*100.000000 }}%",
               "{{ bounceadratio*100.000000 }}% -> {{ bounceadrationl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 12, 12, 12, 12],
+          "cooldown": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
           "cooldownBurn": "12",
-          "cost": [60, 60, 60, 60, 60],
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -284,7 +814,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [20, 20, 20, 20, 20],
+          "range": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
           "rangeBurn": "20",
           "image": {
             "full": "SivirW.png",
@@ -303,30 +839,105 @@
           "description": "Creates a magical barrier that blocks a single enemy ability cast on Sivir. She receives health and a burst of movement speed if a spell is blocked.",
           "tooltip": "Sivir creates a magical barrier for {{ e1 }} seconds that blocks the next incoming enemy Ability. If an ability is blocked, Sivir restores <healing>{{ totalheal }} health</healing> and triggers Fleet of Foot.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Total AD Ratio", "Cooldown"],
+            "label": [
+              "Total AD Ratio",
+              "Cooldown"
+            ],
             "effect": [
               "{{ healratio*100.000000 }}% -> {{ healrationl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [24, 22.5, 21, 19.5, 18],
+          "cooldown": [
+            24,
+            22.5,
+            21,
+            19.5,
+            18
+          ],
           "cooldownBurn": "24/22.5/21/19.5/18",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [55, 55, 55, 55, 55],
-            [60, 60, 60, 60, 60],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              55,
+              55,
+              55,
+              55,
+              55
+            ],
+            [
+              60,
+              60,
+              60,
+              60,
+              60
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -344,7 +955,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [20, 20, 20, 20, 20],
+          "range": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
           "rangeBurn": "20",
           "image": {
             "full": "SivirE.png",
@@ -363,7 +980,11 @@
           "description": "Sivir leads her allies in battle, granting them a surge of Move Speed for a period of time. In addition, Sivir's attacks reduce her spell cooldowns.",
           "tooltip": "Sivir rallies her nearby allies, granting them <speed>{{ maxms*100 }}% Move Speed</speed> for {{ ultduration }} seconds.<br /><br />Sivir's attacks against champions while On The Hunt reduce the cooldown of her basic abilities by 0.5 seconds.<br /><br />Takedowns on recently damaged enemies refreshes the duration of the hunt.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Max Move Speed", "Duration"],
+            "label": [
+              "Cooldown",
+              "Max Move Speed",
+              "Duration"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ maxms*100.000000 }}% -> {{ maxmsnl*100.000000 }}%",
@@ -371,23 +992,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -405,7 +1074,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "SivirR.png",

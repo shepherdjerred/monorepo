@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Nidalee": {
       "id": "Nidalee",
@@ -79,10 +79,59 @@
           "chromas": false
         },
         {
+          "id": "76010",
+          "num": 10,
+          "name": "Challenger Nidalee (Golden)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
           "id": "76011",
           "num": 11,
           "name": "Dawnbringer Nidalee",
           "chromas": true
+        },
+        {
+          "id": "76012",
+          "num": 12,
+          "name": "Dawnbringer Nidalee (Ruby)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "76013",
+          "num": 13,
+          "name": "Dawnbringer Nidalee (Amethyst)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "76014",
+          "num": 14,
+          "name": "Dawnbringer Nidalee (Peridot)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "76015",
+          "num": 15,
+          "name": "Dawnbringer Nidalee (Paragon)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "76016",
+          "num": 16,
+          "name": "Dawnbringer Nidalee (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "76017",
+          "num": 17,
+          "name": "Dawnbringer Nidalee (Pearl)",
+          "chromas": false,
+          "parentSkin": 11
         },
         {
           "id": "76018",
@@ -91,10 +140,73 @@
           "chromas": true
         },
         {
+          "id": "76019",
+          "num": 19,
+          "name": "Cosmic Huntress Nidalee (Ruby)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "76020",
+          "num": 20,
+          "name": "Cosmic Huntress Nidalee (Citrine)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "76021",
+          "num": 21,
+          "name": "Cosmic Huntress Nidalee (Emerald)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "76022",
+          "num": 22,
+          "name": "Cosmic Huntress Nidalee (Turquoise)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "76023",
+          "num": 23,
+          "name": "Cosmic Huntress Nidalee  (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "76024",
+          "num": 24,
+          "name": "Cosmic Huntress Nidalee (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "76025",
+          "num": 25,
+          "name": "Cosmic Huntress Nidalee (Obsidian)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "76026",
+          "num": 26,
+          "name": "Cosmic Huntress Nidalee (Pearl)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
           "id": "76027",
           "num": 27,
           "name": "DWG Nidalee",
           "chromas": true
+        },
+        {
+          "id": "76028",
+          "num": 28,
+          "name": "DWG Nidalee (Elite)",
+          "chromas": false,
+          "parentSkin": 27
         },
         {
           "id": "76029",
@@ -103,10 +215,122 @@
           "chromas": true
         },
         {
+          "id": "76030",
+          "num": 30,
+          "name": "Ocean Song Nidalee (Ruby)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "76031",
+          "num": 31,
+          "name": "Ocean Song Nidalee (Catseye)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "76032",
+          "num": 32,
+          "name": "Ocean Song Nidalee (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "76033",
+          "num": 33,
+          "name": "Ocean Song Nidalee (Sapphire)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "76034",
+          "num": 34,
+          "name": "Ocean Song Nidalee (Emerald)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "76035",
+          "num": 35,
+          "name": "Ocean Song Nidalee (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "76036",
+          "num": 36,
+          "name": "Ocean Song Nidalee (Pearl)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "76037",
+          "num": 37,
+          "name": "Ocean Song Nidalee (Obsidian)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
           "id": "76039",
           "num": 39,
           "name": "Kittalee",
           "chromas": false
+        },
+        {
+          "id": "76040",
+          "num": 40,
+          "name": "Kittalee (Ruby)",
+          "chromas": true,
+          "parentSkin": 39
+        },
+        {
+          "id": "76041",
+          "num": 41,
+          "name": "Kittalee (Citrine)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "76042",
+          "num": 42,
+          "name": "Kittalee (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "76043",
+          "num": 43,
+          "name": "Kittalee (Peridot)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "76044",
+          "num": 44,
+          "name": "Kittalee (Obsidian)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "76045",
+          "num": 45,
+          "name": "Kittalee (Amethyst)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "76046",
+          "num": 46,
+          "name": "Kittalee (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "76047",
+          "num": 47,
+          "name": "Kittalee (Pearl)",
+          "chromas": false,
+          "parentSkin": 39
         },
         {
           "id": "76048",
@@ -115,10 +339,136 @@
           "chromas": false
         },
         {
+          "id": "76049",
+          "num": 49,
+          "name": "La Ilusión Nidalee (Ruby)",
+          "chromas": true,
+          "parentSkin": 48
+        },
+        {
+          "id": "76050",
+          "num": 50,
+          "name": "La Ilusión Nidalee (Citrine)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "76051",
+          "num": 51,
+          "name": "La Ilusión Nidalee (Emerald)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "76052",
+          "num": 52,
+          "name": "La Ilusión Nidalee (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "76053",
+          "num": 53,
+          "name": "La Ilusión Nidalee (Turquoise)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "76054",
+          "num": 54,
+          "name": "La Ilusión Nidalee (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "76055",
+          "num": 55,
+          "name": "La Ilusión Nidalee (Sapphire)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "76056",
+          "num": 56,
+          "name": "La Ilusión Nidalee (Pearl)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "76057",
+          "num": 57,
+          "name": "La Ilusión Nidalee (Vivida)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
           "id": "76058",
           "num": 58,
           "name": "Spirit Blossom Nidalee",
           "chromas": false
+        },
+        {
+          "id": "76059",
+          "num": 59,
+          "name": "Spirit Blossom Nidalee (Ruby)",
+          "chromas": true,
+          "parentSkin": 58
+        },
+        {
+          "id": "76060",
+          "num": 60,
+          "name": "Spirit Blossom Nidalee (Turquoise)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "76061",
+          "num": 61,
+          "name": "Spirit Blossom Nidalee (Catseye)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "76062",
+          "num": 62,
+          "name": "Spirit Blossom Nidalee (Amethyst)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "76063",
+          "num": 63,
+          "name": "Spirit Blossom Nidalee (Emerald)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "76064",
+          "num": 64,
+          "name": "Spirit Blossom Nidalee (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "76065",
+          "num": 65,
+          "name": "Spirit Blossom Nidalee (Obsidian)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "76066",
+          "num": 66,
+          "name": "Spirit Blossom Nidalee (Pearl)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "76067",
+          "num": 67,
+          "name": "Spirit Blossom Nidalee (Paragon)",
+          "chromas": false,
+          "parentSkin": 58
         }
       ],
       "lore": "Raised in the deepest jungle, Nidalee is a master tracker who can shapeshift into a ferocious cougar at will. Neither wholly woman nor beast, she viciously defends her territory from any and all trespassers, with carefully placed traps and deft spear throws. She cripples her quarry before pouncing on them in feline form—the lucky few who survive tell tales of a wild woman with razor-sharp instincts, and even sharper claws...",
@@ -133,7 +483,10 @@
         "Nidalee's Javelin Toss deals more damage the farther she is. If she is far away, it's imperative to dodge it.",
         "Nidalee's Takedown deals extreme damage to Hunted targets, but she has to get close to use it. Save your crowd control or defensive abilities for when she goes in for the kill."
       ],
-      "tags": ["Assassin", "Mage"],
+      "tags": [
+        "Assassin",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 5,
@@ -182,23 +535,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [6, 6, 6, 6, 6],
+          "cooldown": [
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
           "cooldownBurn": "6",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [70, 90, 110, 130, 150],
-            [227.5, 292.5, 357.5, 422.5, 487.5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0.4, 0.4, 0.4, 0.4, 0.4],
-            [1.2, 1.2, 1.2, 1.2, 1.2],
-            [525, 525, 525, 525, 525],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              70,
+              90,
+              110,
+              130,
+              150
+            ],
+            [
+              227.5,
+              292.5,
+              357.5,
+              422.5,
+              487.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0.4,
+              0.4,
+              0.4,
+              0.4,
+              0.4
+            ],
+            [
+              1.2,
+              1.2,
+              1.2,
+              1.2,
+              1.2
+            ],
+            [
+              525,
+              525,
+              525,
+              525,
+              525
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -216,7 +641,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1500, 1500, 1500, 1500, 1500],
+          "range": [
+            1500,
+            1500,
+            1500,
+            1500,
+            1500
+          ],
           "rangeBurn": "1500",
           "image": {
             "full": "JavelinToss.png",
@@ -235,7 +666,11 @@
           "description": "In human form, Nidalee lays a trap for unwary opponents that, when sprung, damages and reveals its target. As a cougar, she jumps in a direction, dealing damage in an area where she lands.",
           "tooltip": "<keywordMajor>Human Form:</keywordMajor> Nidalee places an invisible trap for 2 minutes. When an enemy walks over it, they are dealt <magicDamage>{{ damagepersecond }} magic damage</magicDamage> per second for {{ e3 }} seconds.<br /><br />{{ maxtraps }} traps may be active at once.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Trap Damage", "Trap Cooldown", "Trap Mana Cost"],
+            "label": [
+              "Trap Damage",
+              "Trap Cooldown",
+              "Trap Mana Cost"
+            ],
             "effect": [
               "{{ e7 }} -> {{ e7NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -243,23 +678,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [13, 12, 11, 10, 9],
+          "cooldown": [
+            13,
+            12,
+            11,
+            10,
+            9
+          ],
           "cooldownBurn": "13/12/11/10/9",
-          "cost": [30, 35, 40, 45, 50],
+          "cost": [
+            30,
+            35,
+            40,
+            45,
+            50
+          ],
           "costBurn": "30/35/40/45/50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [4, 4, 4, 4, 4],
-            [13, 12, 11, 10, 9],
-            [10, 20, 30, 40, 50],
-            [120, 120, 120, 120, 120],
-            [40, 80, 120, 160, 200],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              13,
+              12,
+              11,
+              10,
+              9
+            ],
+            [
+              10,
+              20,
+              30,
+              40,
+              50
+            ],
+            [
+              120,
+              120,
+              120,
+              120,
+              120
+            ],
+            [
+              40,
+              80,
+              120,
+              160,
+              200
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -277,7 +784,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "0",
-          "range": [900, 900, 900, 900, 900],
+          "range": [
+            900,
+            900,
+            900,
+            900,
+            900
+          ],
           "rangeBurn": "900",
           "image": {
             "full": "Bushwhack.png",
@@ -308,23 +821,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 12, 12, 12, 12],
+          "cooldown": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
           "cooldownBurn": "12",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -342,7 +927,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [900, 900, 900, 900, 900],
+          "range": [
+            900,
+            900,
+            900,
+            900,
+            900
+          ],
           "rangeBurn": "900",
           "image": {
             "full": "PrimalSurge.png",
@@ -377,23 +968,83 @@
             ]
           },
           "maxrank": 4,
-          "cooldown": [3, 3, 3, 3],
+          "cooldown": [
+            3,
+            3,
+            3,
+            3
+          ],
           "cooldownBurn": "3",
-          "cost": [0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [6, 6, 6, 6],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              6,
+              6,
+              6,
+              6
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -411,7 +1062,12 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [20, 20, 20, 20],
+          "range": [
+            20,
+            20,
+            20,
+            20
+          ],
           "rangeBurn": "20",
           "image": {
             "full": "AspectOfTheCougar.png",

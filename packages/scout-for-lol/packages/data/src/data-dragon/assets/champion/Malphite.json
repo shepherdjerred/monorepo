@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Malphite": {
       "id": "Malphite",
@@ -67,10 +67,108 @@
           "chromas": false
         },
         {
+          "id": "54008",
+          "num": 8,
+          "name": "Mecha Malphite (Catseye)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "54009",
+          "num": 9,
+          "name": "Mecha Malphite (Emerald)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "54010",
+          "num": 10,
+          "name": "Mecha Malphite (Obsidian)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "54011",
+          "num": 11,
+          "name": "Mecha Malphite (Sandstone)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "54012",
+          "num": 12,
+          "name": "Mecha Malphite (Pearl)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "54013",
+          "num": 13,
+          "name": "Mecha Malphite (Sapphire)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "54014",
+          "num": 14,
+          "name": "Mecha Malphite (Granite)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "54015",
+          "num": 15,
+          "name": "Mecha Malphite (Citrine)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
           "id": "54016",
           "num": 16,
           "name": "Odyssey Malphite",
           "chromas": true
+        },
+        {
+          "id": "54017",
+          "num": 17,
+          "name": "Odyssey Malphite (Ruby)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "54018",
+          "num": 18,
+          "name": "Odyssey Malphite (Emerald)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "54019",
+          "num": 19,
+          "name": "Odyssey Malphite (Pearl)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "54020",
+          "num": 20,
+          "name": "Odyssey Malphite (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "54021",
+          "num": 21,
+          "name": "Odyssey Malphite (Sapphire)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "54022",
+          "num": 22,
+          "name": "Odyssey Malphite (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 16
         },
         {
           "id": "54023",
@@ -91,10 +189,80 @@
           "chromas": true
         },
         {
+          "id": "54026",
+          "num": 26,
+          "name": "FPX Malphite (Elite)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
           "id": "54027",
           "num": 27,
           "name": "Old God Malphite",
           "chromas": true
+        },
+        {
+          "id": "54028",
+          "num": 28,
+          "name": "Old God Malphite (Ruby)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "54029",
+          "num": 29,
+          "name": "Old God Malphite (Catseye)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "54030",
+          "num": 30,
+          "name": "Old God Malphite (Emerald)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "54031",
+          "num": 31,
+          "name": "Old God Malphite (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "54032",
+          "num": 32,
+          "name": "Old God Malphite (Sapphire)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "54033",
+          "num": 33,
+          "name": "Old God Malphite (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "54034",
+          "num": 34,
+          "name": "Old God Malphite (Pearl)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "54035",
+          "num": 35,
+          "name": "Old God Malphite (Obsidian)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "54036",
+          "num": 36,
+          "name": "Old God Malphite (Dark Ritual)",
+          "chromas": false,
+          "parentSkin": 27
         },
         {
           "id": "54037",
@@ -103,10 +271,136 @@
           "chromas": true
         },
         {
+          "id": "54038",
+          "num": 38,
+          "name": "Lunar Guardian Malphite (Ruby)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "54039",
+          "num": 39,
+          "name": "Lunar Guardian Malphite (Emerald)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "54040",
+          "num": 40,
+          "name": "Lunar Guardian Malphite (Sapphire)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "54041",
+          "num": 41,
+          "name": "Lunar Guardian Malphite (Turquoise)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "54042",
+          "num": 42,
+          "name": "Lunar Guardian Malphite (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "54043",
+          "num": 43,
+          "name": "Lunar Guardian Malphite (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "54044",
+          "num": 44,
+          "name": "Lunar Guardian Malphite (Pearl)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "54045",
+          "num": 45,
+          "name": "Lunar Guardian Malphite (Obsidian)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "54046",
+          "num": 46,
+          "name": "Lunar Guardian Malphite (Resplendent)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "54047",
+          "num": 47,
+          "name": "FPX Malphite (Tenfold Triumph)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
           "id": "54048",
           "num": 48,
           "name": "Pool Party Malphite",
           "chromas": true
+        },
+        {
+          "id": "54049",
+          "num": 49,
+          "name": "Pool Party Malphite (Ruby)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "54050",
+          "num": 50,
+          "name": "Pool Party Malphite (Catseye)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "54051",
+          "num": 51,
+          "name": "Pool Party Malphite (Sapphire)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "54052",
+          "num": 52,
+          "name": "Pool Party Malphite (Emerald)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "54053",
+          "num": 53,
+          "name": "Pool Party Malphite (Meteorite)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "54054",
+          "num": 54,
+          "name": "Pool Party Malphite (Obsidian)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "54055",
+          "num": 55,
+          "name": "Pool Party Malphite (Pearl)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "54056",
+          "num": 56,
+          "name": "Pool Party Malphite (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 48
         }
       ],
       "lore": "A massive creature of living stone, Malphite struggles to impose blessed order on a chaotic world. Birthed as a servitor-shard to an otherworldly obelisk known as the Monolith, he used his tremendous elemental strength to maintain and protect his progenitor, but ultimately failed. The only survivor of the destruction that followed, Malphite now endures Runeterra's soft folk and their fluid temperaments, while struggling to find a new role worthy of the last of his kind.",
@@ -119,7 +413,10 @@
         "If you're a physical damage character stay behind your allies when fighting Malphite. Ground Slam can significantly reduce your damage output.",
         "Malphite is one of a couple tanks who are capable of jungling. Watch out if he gets Smite."
       ],
-      "tags": ["Tank", "Mage"],
+      "tags": [
+        "Tank",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 5,
@@ -156,7 +453,11 @@
           "description": "Malphite sends a shard of the earth through the ground at his foe, dealing damage upon impact and stealing Move Speed for 3 seconds.",
           "tooltip": "Malphite launches a shard of earth at an enemy, dealing <magicDamage>{{ qdamagecalc }} magic damage</magicDamage> and <status>Slowing</status> them by {{ e2 }}% for {{ slowduration }} seconds. Malphite also steals the amount <status>Slowed</status>, gaining it as <speed>Move Speed</speed> for {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["@AbilityResourceName@ Cost", "Damage", "Slow"],
+            "label": [
+              "@AbilityResourceName@ Cost",
+              "Damage",
+              "Slow"
+            ],
             "effect": [
               "{{ cost }} -> {{ costNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -164,23 +465,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 8, 8, 8, 8],
+          "cooldown": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
           "cooldownBurn": "8",
-          "cost": [70, 75, 80, 85, 90],
+          "cost": [
+            70,
+            75,
+            80,
+            85,
+            90
+          ],
           "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
-            [70, 120, 170, 220, 270],
-            [20, 25, 30, 35, 40],
-            [3, 3, 3, 3, 3],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              70,
+              120,
+              170,
+              220,
+              270
+            ],
+            [
+              20,
+              25,
+              30,
+              35,
+              40
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -198,7 +571,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [625, 625, 625, 625, 625],
+          "range": [
+            625,
+            625,
+            625,
+            625,
+            625
+          ],
           "rangeBurn": "625",
           "image": {
             "full": "SeismicShard.png",
@@ -233,23 +612,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9.5, 9, 8.5, 8],
+          "cooldown": [
+            10,
+            9.5,
+            9,
+            8.5,
+            8
+          ],
           "cooldownBurn": "10/9.5/9/8.5/8",
-          "cost": [30, 35, 40, 45, 50],
+          "cost": [
+            30,
+            35,
+            40,
+            45,
+            50
+          ],
           "costBurn": "30/35/40/45/50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -267,7 +718,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400, 400, 400],
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "Obduracy.png",
@@ -298,23 +755,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 7, 7, 7, 7],
+          "cooldown": [
+            7,
+            7,
+            7,
+            7,
+            7
+          ],
           "cooldownBurn": "7",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -332,7 +861,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400, 400, 400],
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "Landslide.png",
@@ -351,30 +886,81 @@
           "description": "Malphite launches himself to a location at high speed, damaging enemies and knocking them into the air.",
           "tooltip": "Malphite charges with the force of a landslide, dashing Unstoppably. At the end of the dash, Malphite <status>Knocks Up</status> for {{ knockupduration }} seconds and deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage"],
+            "label": [
+              "Cooldown",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ e2 }} -> {{ e2NL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [130, 115, 100],
+          "cooldown": [
+            130,
+            115,
+            100
+          ],
           "cooldownBurn": "130/115/100",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [1.5, 1.75, 2],
-            [200, 300, 400],
-            [1.5, 1.5, 1.5],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              1.5,
+              1.75,
+              2
+            ],
+            [
+              200,
+              300,
+              400
+            ],
+            [
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -392,7 +978,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "UFSlash.png",

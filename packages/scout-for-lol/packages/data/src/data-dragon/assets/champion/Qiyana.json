@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Qiyana": {
       "id": "Qiyana",
@@ -37,6 +37,55 @@
           "chromas": false
         },
         {
+          "id": "246003",
+          "num": 3,
+          "name": "Battle Boss Qiyana (Ruby)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "246004",
+          "num": 4,
+          "name": "Battle Boss Qiyana (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "246005",
+          "num": 5,
+          "name": "Battle Boss Qiyana (Catseye)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "246006",
+          "num": 6,
+          "name": "Battle Boss Qiyana (Sapphire)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "246007",
+          "num": 7,
+          "name": "Battle Boss Qiyana (Turquoise)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "246008",
+          "num": 8,
+          "name": "Battle Boss Qiyana (K.O.)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "246009",
+          "num": 9,
+          "name": "Battle Boss Qiyana (Obsidian)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
           "id": "246010",
           "num": 10,
           "name": "Prestige True Damage Qiyana",
@@ -47,6 +96,62 @@
           "num": 11,
           "name": "Battle Queen Qiyana",
           "chromas": true
+        },
+        {
+          "id": "246012",
+          "num": 12,
+          "name": "Battle Queen Qiyana (Ruby)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "246013",
+          "num": 13,
+          "name": "Battle Queen Qiyana (Catseye)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "246014",
+          "num": 14,
+          "name": "Battle Queen Qiyana (Coronation)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "246015",
+          "num": 15,
+          "name": "Battle Queen Qiyana (Sapphire)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "246016",
+          "num": 16,
+          "name": "Battle Queen Qiyana (Turquoise)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "246017",
+          "num": 17,
+          "name": "Battle Queen Qiyana (Emerald)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "246018",
+          "num": 18,
+          "name": "Battle Queen Qiyana (Pearl)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "246019",
+          "num": 19,
+          "name": "Battle Queen Qiyana (Obsidian)",
+          "chromas": false,
+          "parentSkin": 11
         },
         {
           "id": "246020",
@@ -61,16 +166,198 @@
           "chromas": false
         },
         {
+          "id": "246022",
+          "num": 22,
+          "name": "Shockblade Qiyana (Ruby)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "246023",
+          "num": 23,
+          "name": "Shockblade Qiyana (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "246024",
+          "num": 24,
+          "name": "Shockblade Qiyana (Catseye)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "246025",
+          "num": 25,
+          "name": "Shockblade Qiyana (Emerald)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "246026",
+          "num": 26,
+          "name": "Shockblade Qiyana (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "246027",
+          "num": 27,
+          "name": "Shockblade Qiyana (Amethyst)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "246028",
+          "num": 28,
+          "name": "Shockblade Qiyana (Pearl)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "246029",
+          "num": 29,
+          "name": "Shockblade Qiyana (Obsidian)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
           "id": "246030",
           "num": 30,
           "name": "Lunar Empress Qiyana",
           "chromas": true
         },
         {
+          "id": "246031",
+          "num": 31,
+          "name": "Lunar Empress Qiyana (Ruby)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "246032",
+          "num": 32,
+          "name": "Lunar Empress Qiyana (Catseye)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "246033",
+          "num": 33,
+          "name": "Lunar Empress Qiyana (Emerald)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "246034",
+          "num": 34,
+          "name": "Lunar Empress Qiyana (Turquoise)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "246035",
+          "num": 35,
+          "name": "Lunar Empress Qiyana (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "246036",
+          "num": 36,
+          "name": "Lunar Empress Qiyana (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "246037",
+          "num": 37,
+          "name": "Lunar Empress Qiyana (Obsidian)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "246038",
+          "num": 38,
+          "name": "Lunar Empress Qiyana (Pearl)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "246039",
+          "num": 39,
+          "name": "Lunar Empress Qiyana (Resplendent)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
           "id": "246040",
           "num": 40,
           "name": "La Ilusión Qiyana",
           "chromas": true
+        },
+        {
+          "id": "246041",
+          "num": 41,
+          "name": "La Ilusión Qiyana (Ruby)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "246042",
+          "num": 42,
+          "name": "La Ilusión Qiyana (Catseye)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "246043",
+          "num": 43,
+          "name": "La Ilusión Qiyana (Emerald)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "246044",
+          "num": 44,
+          "name": "La Ilusión Qiyana (Amethyst)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "246045",
+          "num": 45,
+          "name": "La Ilusión Qiyana (Sapphire)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "246046",
+          "num": 46,
+          "name": "La Ilusión Qiyana (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "246047",
+          "num": 47,
+          "name": "La Ilusión Qiyana (Turquoise)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "246048",
+          "num": 48,
+          "name": "La Ilusión Qiyana (Pearl)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "246049",
+          "num": 49,
+          "name": "La Ilusión Qiyana (Vivida)",
+          "chromas": false,
+          "parentSkin": 40
         },
         {
           "id": "246050",
@@ -83,7 +370,9 @@
       "blurb": "In the jungle city of Ixaocan, Qiyana plots her own ruthless path to the high seat of the Yun Tal. Last in line to succeed her parents, she faces those who stand in her way with brash confidence and unprecedented mastery over elemental magic. With the...",
       "allytips": [],
       "enemytips": [],
-      "tags": ["Assassin"],
+      "tags": [
+        "Assassin"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 0,
@@ -120,27 +409,103 @@
           "description": "Qiyana swings her weapon, dealing damage with a bonus effect based on her element.",
           "tooltip": "If Qiyana does not have an <keywordMajor>Enchantment</keywordMajor>, she slashes, dealing <physicalDamage>{{ vanilladamage }} physical damage</physicalDamage> to enemies in a small area. If she does, this Ability gains extra range and an additional effect based on the type of <keywordMajor>Enchantment</keywordMajor>:<li><keywordMajor>Ice Enchantment</keywordMajor>: Briefly <status>Roots</status>, then <status>Slows</status> by {{ slowpotency*-100 }}% for {{ slowduration }} second.<li><keywordMajor>Rock Enchantment</keywordMajor>: Deals an additional <physicalDamage>{{ tremordamage }} physical damage</physicalDamage> to units below {{ critthreshold*100 }}% Health.<li><keywordMajor>Wild Enchantment</keywordMajor>: Leaves a trail that turns Qiyana <keywordStealth>Invisible</keywordStealth> and grants <speed>{{ haste*100 }}% Move Speed</speed>.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage"],
-            "effect": ["{{ vanillabase }} -> {{ vanillabaseNL }}"]
+            "label": [
+              "Damage"
+            ],
+            "effect": [
+              "{{ vanillabase }} -> {{ vanillabaseNL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [7, 7, 7, 7, 7],
+          "cooldown": [
+            7,
+            7,
+            7,
+            7,
+            7
+          ],
           "cooldownBurn": "7",
-          "cost": [35, 35, 35, 35, 35],
+          "cost": [
+            35,
+            35,
+            35,
+            35,
+            35
+          ],
           "costBurn": "35",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -158,7 +523,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "0",
-          "range": [525, 525, 525, 525, 525],
+          "range": [
+            525,
+            525,
+            525,
+            525,
+            525
+          ],
           "rangeBurn": "525",
           "image": {
             "full": "QiyanaQ.png",
@@ -191,23 +562,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 7, 7, 7, 7],
+          "cooldown": [
+            7,
+            7,
+            7,
+            7,
+            7
+          ],
           "cooldownBurn": "7",
-          "cost": [25, 30, 35, 40, 45],
+          "cost": [
+            25,
+            30,
+            35,
+            40,
+            45
+          ],
           "costBurn": "25/30/35/40/45",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -225,7 +668,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "0",
-          "range": [1100, 1100, 1100, 1100, 1100],
+          "range": [
+            1100,
+            1100,
+            1100,
+            1100,
+            1100
+          ],
           "rangeBurn": "1100",
           "image": {
             "full": "QiyanaW.png",
@@ -244,7 +693,11 @@
           "description": "Qiyana dashes to an enemy, damaging them.",
           "tooltip": "Qiyana dashes through an enemy and deals <physicalDamage>{{ damage }} physical damage</physicalDamage> to them.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Base Damage", "Cooldown", "Mana Cost"],
+            "label": [
+              "Base Damage",
+              "Cooldown",
+              "Mana Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -252,23 +705,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 10, 9, 8, 7],
+          "cooldown": [
+            11,
+            10,
+            9,
+            8,
+            7
+          ],
           "cooldownBurn": "11/10/9/8/7",
-          "cost": [40, 45, 50, 55, 60],
+          "cost": [
+            40,
+            45,
+            50,
+            55,
+            60
+          ],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -286,7 +811,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "0",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "QiyanaE.png",
@@ -305,30 +836,81 @@
           "description": "Qiyana sends out a shockwave that detonates whatever elements she hits with it, stunning and damaging nearby enemies.",
           "tooltip": "Qiyana launches a shockwave that <status>Knocks Back</status> enemies and detonates when it hits terrain. The explosion follows the entire edge of the terrain, <status>Stunning</status> for between 0.5 and {{ stunduration }} seconds and dealing <physicalDamage>{{ damage }}</physicalDamage> plus <physicalDamage>{{ missinghealthdamagerock }} max Health physical damage</physicalDamage>. <status>Stun</status> duration scales down with distance the shockwave has travelled.<br /><br />Any river or brush the shockwave passes through also explode after a delay for the same damage and <status>Stun</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Initial Damage", "Cooldown"],
+            "label": [
+              "Initial Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 120, 120],
+          "cooldown": [
+            120,
+            120,
+            120
+          ],
           "cooldownBurn": "120",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -346,7 +928,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "0",
-          "range": [950, 950, 950],
+          "range": [
+            950,
+            950,
+            950
+          ],
           "rangeBurn": "950",
           "image": {
             "full": "QiyanaR.png",

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Viktor": {
       "id": "Viktor",
@@ -55,10 +55,129 @@
           "chromas": true
         },
         {
+          "id": "112006",
+          "num": 6,
+          "name": "PsyOps Viktor (Ruby)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "112007",
+          "num": 7,
+          "name": "PsyOps Viktor (Sandstone)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "112008",
+          "num": 8,
+          "name": "PsyOps Viktor (Sapphire)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "112009",
+          "num": 9,
+          "name": "PsyOps Viktor (Amethyst)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "112010",
+          "num": 10,
+          "name": "PsyOps Viktor (Turquoise)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "112011",
+          "num": 11,
+          "name": "PsyOps Viktor (Obsidian)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "112012",
+          "num": 12,
+          "name": "PsyOps Viktor (Peridot)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "112013",
+          "num": 13,
+          "name": "PsyOps Viktor (Hunter)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
           "id": "112014",
           "num": 14,
           "name": "High Noon Viktor",
           "chromas": true
+        },
+        {
+          "id": "112015",
+          "num": 15,
+          "name": "High Noon Viktor (Ruby)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "112016",
+          "num": 16,
+          "name": "High Noon Viktor (Catseye)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "112017",
+          "num": 17,
+          "name": "High Noon Viktor (Emerald)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "112018",
+          "num": 18,
+          "name": "High Noon Viktor (Turquoise)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "112019",
+          "num": 19,
+          "name": "High Noon Viktor (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "112020",
+          "num": 20,
+          "name": "High Noon Viktor (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "112021",
+          "num": 21,
+          "name": "High Noon Viktor (Obsidian)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "112022",
+          "num": 22,
+          "name": "High Noon Viktor (Pearl)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "112023",
+          "num": 23,
+          "name": "High Noon Viktor (Nomad)",
+          "chromas": false,
+          "parentSkin": 14
         },
         {
           "id": "112024",
@@ -71,6 +190,62 @@
           "num": 25,
           "name": "Machine Herald Viktor",
           "chromas": true
+        },
+        {
+          "id": "112026",
+          "num": 26,
+          "name": "Machine Herald Viktor (Ruby)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "112027",
+          "num": 27,
+          "name": "Machine Herald Viktor (Emerald)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "112028",
+          "num": 28,
+          "name": "Machine Herald Viktor (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "112029",
+          "num": 29,
+          "name": "Machine Herald Viktor (Turquoise)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "112030",
+          "num": 30,
+          "name": "Machine Herald Viktor (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "112031",
+          "num": 31,
+          "name": "Machine Herald Viktor (Pearl)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "112032",
+          "num": 32,
+          "name": "Machine Herald Viktor (Obsidian)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "112033",
+          "num": 33,
+          "name": "Machine Herald Viktor (Catseye)",
+          "chromas": false,
+          "parentSkin": 25
         }
       ],
       "lore": "The fully biomechanical evolution of his former self, Viktor has embraced his Glorious Evolution and become something of a messiah to his followers. He sacrificed his own humanity under the logic that eliminating emotion would thereby eliminate suffering—and now seeks to bring the revelation of the hexcore to the rest of the world, even if they're incapable of understanding the benefit. After all, to this master of the arcane, violence is merely a variable necessary to balance the ultimate equation.",
@@ -83,7 +258,9 @@
         "Be careful about how close you let Viktor get to you. Viktor's control of the battlefield increases with his proximity to his opponent.",
         "Be aware of how many augments Viktor has upgraded by looking at the color of the light on his staff (purple, yellow, blue, red)."
       ],
-      "tags": ["Mage"],
+      "tags": [
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -134,23 +311,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 8, 7, 6, 5],
+          "cooldown": [
+            9,
+            8,
+            7,
+            6,
+            5
+          ],
           "cooldownBurn": "9/8/7/6/5",
-          "cost": [45, 50, 55, 60, 65],
+          "cost": [
+            45,
+            50,
+            55,
+            60,
+            65
+          ],
           "costBurn": "45/50/55/60/65",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [2.5, 2.5, 2.5, 2.5, 2.5],
-            [30, 30, 30, 30, 30],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              2.5,
+              2.5,
+              2.5,
+              2.5,
+              2.5
+            ],
+            [
+              30,
+              30,
+              30,
+              30,
+              30
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -168,7 +417,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "ViktorQ.png",
@@ -187,30 +442,105 @@
           "description": "Viktor conjures a heavy gravitational field that slows enemies caught within its radius. Enemies who stay in the field for too long become stunned.<br><br>Augment: Viktor's spells apply a slow to enemies.<br>",
           "tooltip": "Viktor deploys a gravitational imprisonment device for {{ fieldduration }} seconds, <status>Slowing</status> enemies inside it by {{ slowpotency*-1 }}%. Enemies who remain within its radius for 1.25 seconds are <status>Stunned</status> for {{ stunduration }} seconds.<br /><br /><keywordMajor>Upgraded Passive:</keywordMajor> Viktor's Abilities <status>Slow</status> by {{ augmentslow }}% for 1 second.<br /><br /><br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Movement Slow"],
+            "label": [
+              "Cooldown",
+              "Movement Slow"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ slowpotency*-1.000000 }}% -> {{ slowpotencynl*-1.000000 }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [17, 16, 15, 14, 13],
+          "cooldown": [
+            17,
+            16,
+            15,
+            14,
+            13
+          ],
           "cooldownBurn": "17/16/15/14/13",
-          "cost": [65, 65, 65, 65, 65],
+          "cost": [
+            65,
+            65,
+            65,
+            65,
+            65
+          ],
           "costBurn": "65",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -228,7 +558,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "ViktorW.png",
@@ -261,23 +597,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11, 10, 9, 8],
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [60, 70, 80, 90, 100],
+          "cost": [
+            60,
+            70,
+            80,
+            90,
+            100
+          ],
           "costBurn": "60/70/80/90/100",
           "datavalues": {},
           "effect": [
             null,
-            [70, 110, 150, 190, 230],
-            [20, 60, 100, 140, 180],
-            [1, 1, 1, 1, 1],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              70,
+              110,
+              150,
+              190,
+              230
+            ],
+            [
+              20,
+              60,
+              100,
+              140,
+              180
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -295,7 +703,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [525, 525, 525, 525, 525],
+          "range": [
+            525,
+            525,
+            525,
+            525,
+            525
+          ],
           "rangeBurn": "525",
           "image": {
             "full": "ViktorE.png",
@@ -326,23 +740,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -360,7 +822,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [700, 700, 700],
+          "range": [
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "ViktorR.png",

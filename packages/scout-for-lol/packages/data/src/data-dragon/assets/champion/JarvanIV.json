@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "JarvanIV": {
       "id": "JarvanIV",
@@ -79,10 +79,80 @@
           "chromas": false
         },
         {
+          "id": "59010",
+          "num": 10,
+          "name": "Warring Kingdoms Jarvan IV (Golden)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
           "id": "59011",
           "num": 11,
           "name": "Pool Party Jarvan IV",
           "chromas": true
+        },
+        {
+          "id": "59012",
+          "num": 12,
+          "name": "Dark Star Jarvan IV (Antimatter)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "59013",
+          "num": 13,
+          "name": "Pool Party Jarvan IV (Ruby)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "59014",
+          "num": 14,
+          "name": "Pool Party Jarvan IV (Emerald)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "59015",
+          "num": 15,
+          "name": "Pool Party Jarvan IV (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "59016",
+          "num": 16,
+          "name": "Pool Party Jarvan IV (Amethyst)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "59017",
+          "num": 17,
+          "name": "Pool Party Jarvan IV (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "59018",
+          "num": 18,
+          "name": "Pool Party Jarvan IV (Pearl)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "59019",
+          "num": 19,
+          "name": "Pool Party Jarvan IV (Obsidian)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "59020",
+          "num": 20,
+          "name": "Pool Party Jarvan IV (Peridot)",
+          "chromas": false,
+          "parentSkin": 11
         },
         {
           "id": "59021",
@@ -91,10 +161,87 @@
           "chromas": true
         },
         {
+          "id": "59022",
+          "num": 22,
+          "name": "Lunar Beast Jarvan IV (Ruby)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "59023",
+          "num": 23,
+          "name": "Lunar Beast Jarvan IV (Catseye)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "59024",
+          "num": 24,
+          "name": "Lunar Beast Jarvan IV (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "59025",
+          "num": 25,
+          "name": "Lunar Beast Jarvan IV (Sapphire)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "59026",
+          "num": 26,
+          "name": "Lunar Beast Jarvan IV (Vitality)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "59027",
+          "num": 27,
+          "name": "Lunar Beast Jarvan IV (Obsidian)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "59028",
+          "num": 28,
+          "name": "Lunar Beast Jarvan IV (Amethyst)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
           "id": "59030",
           "num": 30,
           "name": "Worlds 2021 Jarvan IV",
           "chromas": false
+        },
+        {
+          "id": "59031",
+          "num": 31,
+          "name": "Worlds 2021 Jarvan IV (Aquamarine)",
+          "chromas": true,
+          "parentSkin": 30
+        },
+        {
+          "id": "59032",
+          "num": 32,
+          "name": "Worlds 2021 Jarvan IV (Catseye)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "59033",
+          "num": 33,
+          "name": "Worlds 2021 Jarvan IV (Amethyst)",
+          "chromas": false,
+          "parentSkin": 30
+        },
+        {
+          "id": "59034",
+          "num": 34,
+          "name": "Worlds 2021 Jarvan IV (MAKE/BREAK)",
+          "chromas": false,
+          "parentSkin": 30
         },
         {
           "id": "59035",
@@ -103,16 +250,142 @@
           "chromas": false
         },
         {
+          "id": "59036",
+          "num": 36,
+          "name": "Nightbringer Jarvan IV (Ruby)",
+          "chromas": true,
+          "parentSkin": 35
+        },
+        {
+          "id": "59037",
+          "num": 37,
+          "name": "Nightbringer Jarvan IV (Citrine)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "59038",
+          "num": 38,
+          "name": "Nightbringer Jarvan IV (Amethyst)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "59039",
+          "num": 39,
+          "name": "Nightbringer Jarvan IV (Sapphire)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "59040",
+          "num": 40,
+          "name": "Nightbringer Jarvan IV (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "59041",
+          "num": 41,
+          "name": "Nightbringer Jarvan IV (Emerald)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "59042",
+          "num": 42,
+          "name": "Nightbringer Jarvan IV (Obsidian)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "59043",
+          "num": 43,
+          "name": "Nightbringer Jarvan IV (Pearl)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
           "id": "59044",
           "num": 44,
           "name": "Mythmaker Jarvan IV",
           "chromas": false
         },
         {
+          "id": "59045",
+          "num": 45,
+          "name": "Mythmaker Jarvan IV (Ruby)",
+          "chromas": true,
+          "parentSkin": 44
+        },
+        {
+          "id": "59046",
+          "num": 46,
+          "name": "Mythmaker Jarvan IV (Turquoise)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "59047",
+          "num": 47,
+          "name": "Mythmaker Jarvan IV (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "59048",
+          "num": 48,
+          "name": "Mythmaker Jarvan IV (Sapphire)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "59049",
+          "num": 49,
+          "name": "Mythmaker Jarvan IV (Catseye)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "59050",
+          "num": 50,
+          "name": "Mythmaker Jarvan IV (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "59051",
+          "num": 51,
+          "name": "Mythmaker Jarvan IV (Emerald)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "59052",
+          "num": 52,
+          "name": "Mythmaker Jarvan IV (Obsidian)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
           "id": "59054",
           "num": 54,
           "name": "Prestige Visions of the Fallen Jarvan IV",
           "chromas": false
+        },
+        {
+          "id": "59055",
+          "num": 55,
+          "name": "Prestige Visions of the Fallen Jarvan IV (Vivid)",
+          "chromas": false,
+          "parentSkin": 54
+        },
+        {
+          "id": "59056",
+          "num": 56,
+          "name": "SSG Jarvan IV (Elite)",
+          "chromas": true,
+          "parentSkin": 8
         }
       ],
       "lore": "Prince Jarvan, scion of the Lightshield dynasty, is heir apparent to the throne of Demacia. Raised to be a paragon of his nation's greatest virtues, he is forced to balance the heavy expectations placed upon him with his own desire to fight on the front lines. Jarvan inspires his troops with his fearsome courage and selfless determination, raising his family's colors high and revealing his true strength as a future leader of his people.",
@@ -126,7 +399,10 @@
         "Keep out of the path between Jarvan IV and his Demacian Standard to avoid being knocked up in the air.",
         "Cataclysm's terrain is a frightening force to fight against, but movement abilities can go through it."
       ],
-      "tags": ["Fighter", "Tank"],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 6,
@@ -177,23 +453,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9, 8, 7, 6],
+          "cooldown": [
+            10,
+            9,
+            8,
+            7,
+            6
+          ],
           "cooldownBurn": "10/9/8/7/6",
-          "cost": [45, 50, 55, 60, 65],
+          "cost": [
+            45,
+            50,
+            55,
+            60,
+            65
+          ],
           "costBurn": "45/50/55/60/65",
           "datavalues": {},
           "effect": [
             null,
-            [80, 120, 160, 200, 240],
-            [10, 14, 18, 22, 26],
-            [3, 3, 3, 3, 3],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              80,
+              120,
+              160,
+              200,
+              240
+            ],
+            [
+              10,
+              14,
+              18,
+              22,
+              26
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -211,7 +559,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [770, 770, 770, 770, 770],
+          "range": [
+            770,
+            770,
+            770,
+            770,
+            770
+          ],
           "rangeBurn": "770",
           "image": {
             "full": "JarvanIVDragonStrike.png",
@@ -230,27 +584,105 @@
           "description": "Jarvan IV calls upon the ancient kings of Demacia to shield him from harm and slow surrounding enemies.",
           "tooltip": "Jarvan summons an aegis, <status>Slowing</status> nearby enemies by {{ e2 }}% for {{ e5 }} seconds and granting him a <shield>{{ baseshield }} Shield</shield>, increased by <shield>{{ bonusshield }}</shield> for each enemy champion hit.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Shield Amount", "Slow"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ e2 }}% -> {{ e2NL }}%"]
+            "label": [
+              "Shield Amount",
+              "Slow"
+            ],
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ e2 }}% -> {{ e2NL }}%"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [9, 9, 9, 9, 9],
+          "cooldown": [
+            9,
+            9,
+            9,
+            9,
+            9
+          ],
           "cooldownBurn": "9",
-          "cost": [30, 30, 30, 30, 30],
+          "cost": [
+            30,
+            30,
+            30,
+            30,
+            30
+          ],
           "costBurn": "30",
           "datavalues": {},
           "effect": [
             null,
-            [60, 80, 100, 120, 140],
-            [15, 20, 25, 30, 35],
-            [10, 20, 30, 40, 50],
-            [4, 4, 4, 4, 4],
-            [2, 2, 2, 2, 2],
-            [0.013, 0.013, 0.013, 0.013, 0.013],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              60,
+              80,
+              100,
+              120,
+              140
+            ],
+            [
+              15,
+              20,
+              25,
+              30,
+              35
+            ],
+            [
+              10,
+              20,
+              30,
+              40,
+              50
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0.013,
+              0.013,
+              0.013,
+              0.013,
+              0.013
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -268,7 +700,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [625, 625, 625, 625, 625],
+          "range": [
+            625,
+            625,
+            625,
+            625,
+            625
+          ],
           "rangeBurn": "625",
           "image": {
             "full": "JarvanIVGoldenAegis.png",
@@ -301,23 +739,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11.5, 11, 10.5, 10],
+          "cooldown": [
+            12,
+            11.5,
+            11,
+            10.5,
+            10
+          ],
           "cooldownBurn": "12/11.5/11/10.5/10",
-          "cost": [55, 55, 55, 55, 55],
+          "cost": [
+            55,
+            55,
+            55,
+            55,
+            55
+          ],
           "costBurn": "55",
           "datavalues": {},
           "effect": [
             null,
-            [10, 13, 16, 19, 22],
-            [80, 120, 160, 200, 240],
-            [20, 22.5, 25, 27.5, 30],
-            [8, 8, 8, 8, 8],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              10,
+              13,
+              16,
+              19,
+              22
+            ],
+            [
+              80,
+              120,
+              160,
+              200,
+              240
+            ],
+            [
+              20,
+              22.5,
+              25,
+              27.5,
+              30
+            ],
+            [
+              8,
+              8,
+              8,
+              8,
+              8
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -335,7 +845,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [860, 860, 860, 860, 860],
+          "range": [
+            860,
+            860,
+            860,
+            860,
+            860
+          ],
           "rangeBurn": "860",
           "image": {
             "full": "JarvanIVDemacianStandard.png",
@@ -354,30 +870,81 @@
           "description": "Jarvan IV heroically leaps into battle at a target with such force that he terraforms the surrounding area to create an arena around them. Nearby enemies are damaged at the moment of impact.",
           "tooltip": "Jarvan heroically leaps to an enemy Champion, dealing <physicalDamage>{{ damagecalc }} physical damage</physicalDamage> to them and surrounding enemies and creating an arena of impassable terrain around them for {{ wallduration }} seconds.<br /><br />Jarvan can <recast>Recast</recast> to collapse the terrain.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 105, 90],
+          "cooldown": [
+            120,
+            105,
+            90
+          ],
           "cooldownBurn": "120/105/90",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -395,7 +962,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650],
+          "range": [
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "JarvanIVCataclysm.png",

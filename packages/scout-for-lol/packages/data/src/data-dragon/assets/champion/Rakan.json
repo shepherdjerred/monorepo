@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Rakan": {
       "id": "Rakan",
@@ -55,10 +55,87 @@
           "chromas": true
         },
         {
+          "id": "497006",
+          "num": 6,
+          "name": "Star Guardian Rakan (Ruby)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "497007",
+          "num": 7,
+          "name": "Star Guardian Rakan (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "497008",
+          "num": 8,
+          "name": "Star Guardian Rakan (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
           "id": "497009",
           "num": 9,
           "name": "Elderwood Rakan",
           "chromas": true
+        },
+        {
+          "id": "497010",
+          "num": 10,
+          "name": "Elderwood Rakan (Catseye)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "497011",
+          "num": 11,
+          "name": "Elderwood Rakan (Emerald)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "497012",
+          "num": 12,
+          "name": "Elderwood Rakan (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "497013",
+          "num": 13,
+          "name": "Elderwood Rakan (Pearl)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "497014",
+          "num": 14,
+          "name": "Elderwood Rakan (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "497015",
+          "num": 15,
+          "name": "Elderwood Rakan (Sapphire)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "497016",
+          "num": 16,
+          "name": "Elderwood Rakan (Emberwood)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "497017",
+          "num": 17,
+          "name": "Elderwood Rakan (Ruby)",
+          "chromas": false,
+          "parentSkin": 9
         },
         {
           "id": "497018",
@@ -67,10 +144,122 @@
           "chromas": true
         },
         {
+          "id": "497019",
+          "num": 19,
+          "name": "Arcana Rakan (Ruby)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "497020",
+          "num": 20,
+          "name": "Arcana Rakan (Catseye)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "497021",
+          "num": 21,
+          "name": "Arcana Rakan (Emerald)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "497022",
+          "num": 22,
+          "name": "Arcana Rakan (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "497023",
+          "num": 23,
+          "name": "Arcana Rakan (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "497024",
+          "num": 24,
+          "name": "Arcana Rakan (Sapphire)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "497025",
+          "num": 25,
+          "name": "Arcana Rakan (Pearl)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "497026",
+          "num": 26,
+          "name": "Arcana Rakan (Obsidian)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
           "id": "497027",
           "num": 27,
           "name": "Broken Covenant Rakan",
           "chromas": true
+        },
+        {
+          "id": "497028",
+          "num": 28,
+          "name": "Broken Covenant Rakan (Ruby)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "497029",
+          "num": 29,
+          "name": "Broken Covenant Rakan (Catseye)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "497030",
+          "num": 30,
+          "name": "Broken Covenant Rakan (Turquoise)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "497031",
+          "num": 31,
+          "name": "Broken Covenant Rakan (Sapphire)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "497032",
+          "num": 32,
+          "name": "Broken Covenant Rakan (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "497033",
+          "num": 33,
+          "name": "Broken Covenant Rakan (Emerald)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "497034",
+          "num": 34,
+          "name": "Broken Covenant Rakan (Pearl)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "497035",
+          "num": 35,
+          "name": "Broken Covenant Rakan (Obsidian)",
+          "chromas": false,
+          "parentSkin": 27
         },
         {
           "id": "497036",
@@ -91,10 +280,136 @@
           "chromas": false
         },
         {
+          "id": "497039",
+          "num": 39,
+          "name": "Dragonmancer Rakan (Ruby)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "497040",
+          "num": 40,
+          "name": "Dragonmancer Rakan (Citrine)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "497041",
+          "num": 41,
+          "name": "Dragonmancer Rakan (Amethyst)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "497042",
+          "num": 42,
+          "name": "Dragonmancer Rakan (Emerald)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "497043",
+          "num": 43,
+          "name": "Dragonmancer Rakan (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "497044",
+          "num": 44,
+          "name": "Dragonmancer Rakan (Turquoise)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "497045",
+          "num": 45,
+          "name": "Dragonmancer Rakan (Pearl)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "497046",
+          "num": 46,
+          "name": "Dragonmancer Rakan (Obsidian)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
           "id": "497047",
           "num": 47,
           "name": "Battle Academia Rakan",
           "chromas": true
+        },
+        {
+          "id": "497048",
+          "num": 48,
+          "name": "Battle Academia Rakan (Ruby)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "497049",
+          "num": 49,
+          "name": "Battle Academia Rakan (Emerald)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "497050",
+          "num": 50,
+          "name": "Battle Academia Rakan (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "497051",
+          "num": 51,
+          "name": "Battle Academia Rakan (Sapphire)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "497052",
+          "num": 52,
+          "name": "Battle Academia Rakan (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "497053",
+          "num": 53,
+          "name": "Battle Academia Rakan (Turquoise)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "497054",
+          "num": 54,
+          "name": "Battle Academia Rakan (Obsidian)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "497055",
+          "num": 55,
+          "name": "Battle Academia Rakan (Catseye)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "497056",
+          "num": 56,
+          "name": "SSG Rakan (Elite)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "497057",
+          "num": 57,
+          "name": "iG Rakan (Elite)",
+          "chromas": false,
+          "parentSkin": 4
         }
       ],
       "lore": "As mercurial as he is charming, Rakan is an infamous vastayan troublemaker and the greatest battle-dancer in Lhotlan tribal history. To the humans of the Ionian highlands, his name has long been synonymous with wild festivals, uncontrollable parties, and anarchic music. Few would suspect this energetic, traveling showman is also partner to the rebel Xayah, and is dedicated to her cause.",
@@ -109,7 +424,9 @@
         "Champions with crowd control that can be applied quickly excel against Rakan.",
         "Catching Rakan with no allies around severely inhibits his mobility. Try to find him alone."
       ],
-      "tags": ["Support"],
+      "tags": [
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -146,30 +463,105 @@
           "description": "Flings a magical feather that deals magic damage. Striking a champion or epic monster enables Rakan to heal his allies.",
           "tooltip": "Rakan flings a magical feather that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first enemy hit.<br /><br />If the feather hits a champion or epic jungle monster, Rakan restores <healing>{{ totalheal }} Health</healing> to himself and nearby allies after {{ healdelay }} seconds or when he touches an allied champion.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 10, 9, 8, 7],
+          "cooldown": [
+            11,
+            10,
+            9,
+            8,
+            7
+          ],
           "cooldownBurn": "11/10/9/8/7",
-          "cost": [45, 45, 45, 45, 45],
+          "cost": [
+            45,
+            45,
+            45,
+            45,
+            45
+          ],
           "costBurn": "45",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -187,7 +579,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [850, 850, 850, 850, 850],
+          "range": [
+            850,
+            850,
+            850,
+            850,
+            850
+          ],
           "rangeBurn": "850",
           "image": {
             "full": "RakanQ.png",
@@ -206,7 +604,11 @@
           "description": "Dashes to a location, knocking up nearby enemies on arrival.",
           "tooltip": "Rakan dashes, then spirals into the air, <status>Knocking Up</status> for {{ knockupduration }} second and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "Mana Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "Mana Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -214,23 +616,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 13, 12, 11, 10],
+          "cooldown": [
+            14,
+            13,
+            12,
+            11,
+            10
+          ],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [50, 60, 70, 80, 90],
+          "cost": [
+            50,
+            60,
+            70,
+            80,
+            90
+          ],
           "costBurn": "50/60/70/80/90",
           "datavalues": {},
           "effect": [
             null,
-            [70, 120, 170, 220, 270],
-            [0, 0, 0, 0, 0],
-            [1, 1, 1, 1, 1],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              70,
+              120,
+              170,
+              220,
+              270
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -248,7 +722,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "RakanW.png",
@@ -279,23 +759,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [0, 0, 0, 0, 0],
+          "cooldown": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "cooldownBurn": "0",
-          "cost": [40, 45, 50, 55, 60],
+          "cost": [
+            40,
+            45,
+            50,
+            55,
+            60
+          ],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [5, 5, 5, 5, 5],
-            [3, 3, 3, 3, 3],
-            [20, 18, 16, 14, 12],
-            [40, 45, 50, 55, 60],
-            [700, 700, 700, 700, 700],
-            [1000, 1000, 1000, 1000, 1000],
-            [1150, 1150, 1150, 1150, 1150],
-            [1250, 1250, 1250, 1250, 1250],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              20,
+              18,
+              16,
+              14,
+              12
+            ],
+            [
+              40,
+              45,
+              50,
+              55,
+              60
+            ],
+            [
+              700,
+              700,
+              700,
+              700,
+              700
+            ],
+            [
+              1000,
+              1000,
+              1000,
+              1000,
+              1000
+            ],
+            [
+              1150,
+              1150,
+              1150,
+              1150,
+              1150
+            ],
+            [
+              1250,
+              1250,
+              1250,
+              1250,
+              1250
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -313,7 +865,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "RakanE.png",
@@ -332,7 +890,11 @@
           "description": "Gains Move Speed, charming and dealing magic damage to enemies touched.",
           "tooltip": "Rakan gains <speed>{{ e5 }}% Move Speed</speed> for {{ e2 }} seconds. Rakan deals <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> and <status>Charms</status> enemies for {{ e3 }} second(s) the first time he touches them. The first champion touched grants Rakan <speed>{{ e6 }}% decaying Move Speed</speed>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Charm Duration", "Damage", "Cooldown"],
+            "label": [
+              "Charm Duration",
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e3 }} -> {{ e3NL }}",
               "{{ e1 }} -> {{ e1NL }}",
@@ -340,23 +902,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [130, 110, 90],
+          "cooldown": [
+            130,
+            110,
+            90
+          ],
           "cooldownBurn": "130/110/90",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [100, 200, 300],
-            [4, 4, 4],
-            [1, 1.25, 1.5],
-            [0.25, 0.25, 0.25],
-            [75, 75, 75],
-            [150, 150, 150],
-            [150, 150, 150],
-            [130, 110, 90],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              100,
+              200,
+              300
+            ],
+            [
+              4,
+              4,
+              4
+            ],
+            [
+              1,
+              1.25,
+              1.5
+            ],
+            [
+              0.25,
+              0.25,
+              0.25
+            ],
+            [
+              75,
+              75,
+              75
+            ],
+            [
+              150,
+              150,
+              150
+            ],
+            [
+              150,
+              150,
+              150
+            ],
+            [
+              130,
+              110,
+              90
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -374,7 +984,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [150, 150, 150],
+          "range": [
+            150,
+            150,
+            150
+          ],
           "rangeBurn": "150",
           "image": {
             "full": "RakanR.png",

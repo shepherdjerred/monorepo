@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Camille": {
       "id": "Camille",
@@ -37,6 +37,55 @@
           "chromas": true
         },
         {
+          "id": "164003",
+          "num": 3,
+          "name": "Coven Camille (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "164004",
+          "num": 4,
+          "name": "Coven Camille (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "164005",
+          "num": 5,
+          "name": "Coven Camille (Obsidian)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "164006",
+          "num": 6,
+          "name": "Coven Camille (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "164007",
+          "num": 7,
+          "name": "Coven Camille (Ruby)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "164008",
+          "num": 8,
+          "name": "Coven Camille (Pearl)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
+          "id": "164009",
+          "num": 9,
+          "name": "Coven Camille (Turquoise)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
           "id": "164010",
           "num": 10,
           "name": "iG Camille",
@@ -49,10 +98,136 @@
           "chromas": true
         },
         {
+          "id": "164012",
+          "num": 12,
+          "name": "Arcana Camille (Ruby)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "164013",
+          "num": 13,
+          "name": "Arcana Camille (Citrine)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "164014",
+          "num": 14,
+          "name": "Arcana Camille (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "164015",
+          "num": 15,
+          "name": "Arcana Camille (Emerald)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "164016",
+          "num": 16,
+          "name": "Arcana Camille (Sapphire)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "164017",
+          "num": 17,
+          "name": "Arcana Camille (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "164018",
+          "num": 18,
+          "name": "Arcana Camille (Pearl)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "164019",
+          "num": 19,
+          "name": "Arcana Camille (Obsidian)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "164020",
+          "num": 20,
+          "name": "Coven Camille (Dark Ritual)",
+          "chromas": false,
+          "parentSkin": 2
+        },
+        {
           "id": "164021",
           "num": 21,
           "name": "Strike Commander Camille",
           "chromas": true
+        },
+        {
+          "id": "164022",
+          "num": 22,
+          "name": "Strike Commander Camille (Ruby)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "164023",
+          "num": 23,
+          "name": "Strike Commander Camille (Citrine)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "164024",
+          "num": 24,
+          "name": "Strike Commander Camille (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "164025",
+          "num": 25,
+          "name": "Strike Commander Camille (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "164026",
+          "num": 26,
+          "name": "Strike Commander Camille (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "164027",
+          "num": 27,
+          "name": "Strike Commander Camille (Turquoise)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "164028",
+          "num": 28,
+          "name": "Strike Commander Camille (Obsidian)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "164029",
+          "num": 29,
+          "name": "Strike Commander Camille (Pearl)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "164030",
+          "num": 30,
+          "name": "Strike Commander Camille (Ace)",
+          "chromas": false,
+          "parentSkin": 21
         },
         {
           "id": "164031",
@@ -67,10 +242,143 @@
           "chromas": false
         },
         {
+          "id": "164033",
+          "num": 33,
+          "name": "Winterblessed Camille (Ruby)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "164034",
+          "num": 34,
+          "name": "Winterblessed Camille (Citrine)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "164035",
+          "num": 35,
+          "name": "Winterblessed Camille (Sapphire)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "164036",
+          "num": 36,
+          "name": "Winterblessed Camille (Emerald)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "164037",
+          "num": 37,
+          "name": "Winterblessed Camille (Obsidian)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "164038",
+          "num": 38,
+          "name": "Winterblessed Camille (Pearl)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "164039",
+          "num": 39,
+          "name": "Winterblessed Camille (Turquoise)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "164040",
+          "num": 40,
+          "name": "Winterblessed Camille (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "164041",
+          "num": 41,
+          "name": "Winterblessed Camille (Wreathguard)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "164042",
+          "num": 42,
+          "name": "Winterblessed Camille (Ornamented)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "164043",
+          "num": 43,
+          "name": "iG Camille (Elite)",
+          "chromas": false,
+          "parentSkin": 10
+        },
+        {
           "id": "164044",
           "num": 44,
           "name": "Petals of Spring Camille",
           "chromas": true
+        },
+        {
+          "id": "164045",
+          "num": 45,
+          "name": "Petals of Spring Camille (Ruby)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "164046",
+          "num": 46,
+          "name": "Petals of Spring Camille (Peridot)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "164047",
+          "num": 47,
+          "name": "Petals of Spring Camille (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "164048",
+          "num": 48,
+          "name": "Petals of Spring Camille (Catseye)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "164049",
+          "num": 49,
+          "name": "Petals of Spring Camille (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "164050",
+          "num": 50,
+          "name": "Petals of Spring Camille (Sapphire)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "164051",
+          "num": 51,
+          "name": "Petals of Spring Camille (Obsidian)",
+          "chromas": false,
+          "parentSkin": 44
+        },
+        {
+          "id": "164052",
+          "num": 52,
+          "name": "Petals of Spring Camille (Pearl)",
+          "chromas": false,
+          "parentSkin": 44
         }
       ],
       "lore": "Weaponized to operate outside the boundaries of the law, Camille is the Principal Intelligencer of Clan Ferros—an elegant and elite agent who ensures the Piltover machine and its Zaunite underbelly runs smoothly. Adaptable and precise, she views sloppy technique as an embarrassment that must be put to order. With a mind as sharp as the blades she bears, Camille's pursuit of superiority through hextech body augmentation has left many to wonder if she is now more machine than woman.",
@@ -83,7 +391,10 @@
         "Camille's shield only works against one damage type, so hit her when she's vulnerable to your damage.",
         "The Hextech Ultimatum has a very short range to cast, so try to flash away from her before she gets close."
       ],
-      "tags": ["Fighter", "Assassin"],
+      "tags": [
+        "Fighter",
+        "Assassin"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 8,
@@ -120,7 +431,11 @@
           "description": "Camille's next attack deals bonus damage and grants bonus Move Speed. This spell can be recast for a short period of time, doing significantly increased bonus damage if Camille delays a period of time between the two attacks.",
           "tooltip": "Camille's next Attack deals an additional <physicalDamage>{{ bonusdamage }} physical damage</physicalDamage> and grants her <speed>{{ msbonus*100 }}% Move Speed</speed> for {{ msduration }} second. This ability can be <recast>Recast</recast> in the next {{ qtotalrecasttime }} seconds.<br /><br />If the <recast>Recast</recast> Attack hits at least {{ qrampuptime }} seconds after the first, the bonus damage is increased to <physicalDamage>{{ empoweredbonusdamage }}</physicalDamage> and {{ damageconversionpercentage }} of the Attack's damage is converted into <trueDamage>true damage</trueDamage>.<br /><br /><rules>This Ability triggers spell effects upon dealing damage.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Total AD Ratio", "Move Speed", "Cooldown"],
+            "label": [
+              "Total AD Ratio",
+              "Move Speed",
+              "Cooldown"
+            ],
             "effect": [
               "{{ tadratio*100.000000 }}% -> {{ tadrationl*100.000000 }}%",
               "{{ msbonus*100.000000 }}% -> {{ msbonusnl*100.000000 }}%",
@@ -128,23 +443,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 8, 7, 6, 5],
+          "cooldown": [
+            9,
+            8,
+            7,
+            6,
+            5
+          ],
           "cooldownBurn": "9/8/7/6/5",
-          "cost": [25, 25, 25, 25, 25],
+          "cost": [
+            25,
+            25,
+            25,
+            25,
+            25
+          ],
           "costBurn": "25",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -162,7 +549,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [325, 325, 325, 325, 325],
+          "range": [
+            325,
+            325,
+            325,
+            325,
+            325
+          ],
           "rangeBurn": "325",
           "image": {
             "full": "CamilleQ.png",
@@ -195,23 +588,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [15, 14, 13, 12, 11],
+          "cooldown": [
+            15,
+            14,
+            13,
+            12,
+            11
+          ],
           "cooldownBurn": "15/14/13/12/11",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -229,7 +694,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [610, 610, 610, 610, 610],
+          "range": [
+            610,
+            610,
+            610,
+            610,
+            610
+          ],
           "rangeBurn": "610",
           "image": {
             "full": "CamilleW.png",
@@ -248,7 +719,11 @@
           "description": "Camille pulls herself to a wall, leaping off and knocking up enemy champions upon landing.",
           "tooltip": "Camille fires a hookshot that attaches to terrain, pulling her to it for 1 second and allowing this Ability to be <recast>Recast</recast>.<br /><br /><recast>Recast:</recast> Camille dashes from the wall, colliding with the first enemy champion hit. Upon landing, she gains <attackSpeed>{{ asbuff*100 }}% Attack Speed</attackSpeed> for {{ asduration }} seconds, deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to nearby enemies, and <status>Stuns</status> enemy champions for {{ knockupduration }} seconds. Dashes towards enemy champions travel twice as far.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage", "Attack Speed"],
+            "label": [
+              "Cooldown",
+              "Damage",
+              "Attack Speed"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -256,23 +731,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 15, 14, 13, 12],
+          "cooldown": [
+            16,
+            15,
+            14,
+            13,
+            12
+          ],
           "cooldownBurn": "16/15/14/13/12",
-          "cost": [70, 70, 70, 70, 70],
+          "cost": [
+            70,
+            70,
+            70,
+            70,
+            70
+          ],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -290,7 +837,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "CamilleE.png",
@@ -309,7 +862,11 @@
           "description": "Camille dashes to target champion, anchoring them to the area. She also deals bonus magic damage to the target with her basic attacks.",
           "tooltip": "Camille briefly becomes Untargetable and leaps onto an enemy champion, interrupting channels and locking them into an area they cannot escape by any means for {{ rduration }} seconds. Other nearby enemies are <status>Knocked Away</status>. Her Attacks against the trapped enemy deal an additional <magicDamage>{{ rpercentcurrenthpdamage }}% current Health magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Current Health Damage", "Duration", "Cooldown"],
+            "label": [
+              "Current Health Damage",
+              "Duration",
+              "Cooldown"
+            ],
             "effect": [
               "{{ rpercentcurrenthpdamage }}% -> {{ rpercentcurrenthpdamageNL }}%",
               "{{ rduration }} -> {{ rdurationNL }}",
@@ -317,23 +874,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [140, 115, 90],
+          "cooldown": [
+            140,
+            115,
+            90
+          ],
           "cooldownBurn": "140/115/90",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -351,7 +956,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [475, 475, 475],
+          "range": [
+            475,
+            475,
+            475
+          ],
           "rangeBurn": "475",
           "image": {
             "full": "CamilleR.png",

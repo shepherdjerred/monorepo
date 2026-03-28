@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Ziggs": {
       "id": "Ziggs",
@@ -67,10 +67,108 @@
           "chromas": true
         },
         {
+          "id": "115008",
+          "num": 8,
+          "name": "Odyssey Ziggs (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "115009",
+          "num": 9,
+          "name": "Odyssey Ziggs (Ruby)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "115010",
+          "num": 10,
+          "name": "Odyssey Ziggs (Emerald)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "115011",
+          "num": 11,
+          "name": "Odyssey Ziggs (Pearl)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "115012",
+          "num": 12,
+          "name": "Odyssey Ziggs (Obsidian)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "115013",
+          "num": 13,
+          "name": "Odyssey Ziggs (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
           "id": "115014",
           "num": 14,
           "name": "Sugar Rush Ziggs",
           "chromas": true
+        },
+        {
+          "id": "115015",
+          "num": 15,
+          "name": "Sugar Rush Ziggs (Ruby)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "115016",
+          "num": 16,
+          "name": "Sugar Rush Ziggs (Catseye)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "115017",
+          "num": 17,
+          "name": "Sugar Rush Ziggs (Peridot)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "115018",
+          "num": 18,
+          "name": "Sugar Rush Ziggs (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "115019",
+          "num": 19,
+          "name": "Sugar Rush Ziggs (Amethyst)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "115020",
+          "num": 20,
+          "name": "Sugar Rush Ziggs (Sandstone)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "115021",
+          "num": 21,
+          "name": "Sugar Rush Ziggs (Sweet Tooth)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "115022",
+          "num": 22,
+          "name": "Sugar Rush Ziggs (Meteorite)",
+          "chromas": false,
+          "parentSkin": 14
         },
         {
           "id": "115023",
@@ -85,16 +183,191 @@
           "chromas": true
         },
         {
+          "id": "115025",
+          "num": 25,
+          "name": "BZZZiggs (Ruby)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "115026",
+          "num": 26,
+          "name": "BZZZiggs (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "115027",
+          "num": 27,
+          "name": "BZZZiggs (Sapphire)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "115028",
+          "num": 28,
+          "name": "BZZZiggs (Emerald)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "115029",
+          "num": 29,
+          "name": "BZZZiggs (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "115030",
+          "num": 30,
+          "name": "BZZZiggs (Pearl)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "115031",
+          "num": 31,
+          "name": "BZZZiggs (Obsidian)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "115032",
+          "num": 32,
+          "name": "BZZZiggs (Rainbow)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
           "id": "115033",
           "num": 33,
           "name": "La Ilusión Ziggs",
           "chromas": true
         },
         {
+          "id": "115034",
+          "num": 34,
+          "name": "La Ilusión Ziggs (Ruby)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "115035",
+          "num": 35,
+          "name": "La Ilusión Ziggs (Citrine)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "115036",
+          "num": 36,
+          "name": "La Ilusión Ziggs (Emerald)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "115037",
+          "num": 37,
+          "name": "La Ilusión Ziggs (Turquoise)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "115038",
+          "num": 38,
+          "name": "La Ilusión Ziggs (Sapphire)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "115039",
+          "num": 39,
+          "name": "La Ilusión Ziggs (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "115040",
+          "num": 40,
+          "name": "La Ilusión Ziggs (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "115041",
+          "num": 41,
+          "name": "La Ilusión Ziggs (Rainbow)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "115042",
+          "num": 42,
+          "name": "La Ilusión Ziggs (Vivida)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
           "id": "115043",
           "num": 43,
           "name": "Firecracker Ziggs",
           "chromas": true
+        },
+        {
+          "id": "115044",
+          "num": 44,
+          "name": "Firecracker Ziggs (Ruby)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "115045",
+          "num": 45,
+          "name": "Firecracker Ziggs (Citrine)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "115046",
+          "num": 46,
+          "name": "Firecracker Ziggs (Turquoise)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "115047",
+          "num": 47,
+          "name": "Firecracker Ziggs (Sapphire)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "115048",
+          "num": 48,
+          "name": "Firecracker Ziggs (Amethyst)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "115049",
+          "num": 49,
+          "name": "Firecracker Ziggs (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "115050",
+          "num": 50,
+          "name": "Firecracker Ziggs (Obsidian)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "115051",
+          "num": 51,
+          "name": "Firecracker Ziggs (Emerald)",
+          "chromas": false,
+          "parentSkin": 43
         }
       ],
       "lore": "With a love of big bombs and short fuses, the yordle Ziggs is an explosive force of nature. As an inventor's assistant in Piltover, he was bored by his predictable life and befriended a mad, blue-haired bomber named Jinx. After a wild night on the town, Ziggs took her advice and moved to Zaun, where he now explores his fascinations more freely, terrorizing the chem-barons and regular citizens alike in his never ending quest to blow stuff up.",
@@ -109,7 +382,9 @@
         "Many of Ziggs' abilities have long cooldowns. Try catching him just after he's used his abilities.",
         "Ziggs' ultimate, Mega Inferno Bomb, deals more damage in the center of the explosion."
       ],
-      "tags": ["Mage"],
+      "tags": [
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -160,23 +435,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [6, 5.5, 5, 4.5, 4],
+          "cooldown": [
+            6,
+            5.5,
+            5,
+            4.5,
+            4
+          ],
           "cooldownBurn": "6/5.5/5/4.5/4",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [850, 850, 850, 850, 850],
-            [325, 325, 325, 325, 325],
-            [225, 225, 225, 225, 225],
-            [180, 180, 180, 180, 180],
-            [240, 240, 240, 240, 240],
-            [70, 70, 70, 70, 70],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              850,
+              850,
+              850,
+              850,
+              850
+            ],
+            [
+              325,
+              325,
+              325,
+              325,
+              325
+            ],
+            [
+              225,
+              225,
+              225,
+              225,
+              225
+            ],
+            [
+              180,
+              180,
+              180,
+              180,
+              180
+            ],
+            [
+              240,
+              240,
+              240,
+              240,
+              240
+            ],
+            [
+              70,
+              70,
+              70,
+              70,
+              70
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -194,7 +541,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [850, 850, 850, 850, 850],
+          "range": [
+            850,
+            850,
+            850,
+            850,
+            850
+          ],
           "rangeBurn": "850",
           "image": {
             "full": "ZiggsQ.png",
@@ -213,7 +566,11 @@
           "description": "Ziggs flings an explosive charge that detonates after a delay, or when this ability is activated again. The explosion deals magic damage to enemies, knocking them away. Ziggs is also knocked away, but takes no damage. <br><br>Ziggs can use the Satchel to hexplode vulnerable enemy turrets.",
           "tooltip": "Ziggs flings an explosive charge that detonates after {{ bombduration }} seconds, or when this ability is <recast>Recast</recast>. It deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to enemies and <status>Knocks</status> them <status>Back</status>. Ziggs is also knocked away, but takes no damage.<br /><br />Satchel Charge will automatically destroy towers below {{ turretdestroypercent*100 }}% of their Health.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "Tower Destruction Threshold"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "Tower Destruction Threshold"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -221,23 +578,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [20, 18, 16, 14, 12],
+          "cooldown": [
+            20,
+            18,
+            16,
+            14,
+            12
+          ],
           "cooldownBurn": "20/18/16/14/12",
-          "cost": [80, 80, 80, 80, 80],
+          "cost": [
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
           "costBurn": "80",
           "datavalues": {},
           "effect": [
             null,
-            [70, 105, 140, 175, 210],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              70,
+              105,
+              140,
+              175,
+              210
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -255,7 +684,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1000, 1000, 1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "ZiggsW.png",
@@ -288,23 +723,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 16, 16, 16, 16],
+          "cooldown": [
+            16,
+            16,
+            16,
+            16,
+            16
+          ],
           "cooldownBurn": "16",
-          "cost": [70, 80, 90, 100, 110],
+          "cost": [
+            70,
+            80,
+            90,
+            100,
+            110
+          ],
           "costBurn": "70/80/90/100/110",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [10, 10, 10, 10, 10],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [0.4, 0.4, 0.4, 0.4, 0.4],
-            [0, 0, 0, 0, 0],
-            [135, 135, 135, 135, 135],
-            [150, 150, 150, 150, 150],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              10,
+              10,
+              10,
+              10,
+              10
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              0.4,
+              0.4,
+              0.4,
+              0.4,
+              0.4
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              135,
+              135,
+              135,
+              135,
+              135
+            ],
+            [
+              150,
+              150,
+              150,
+              150,
+              150
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -322,7 +829,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [900, 900, 900, 900, 900],
+          "range": [
+            900,
+            900,
+            900,
+            900,
+            900
+          ],
           "rangeBurn": "900",
           "image": {
             "full": "ZiggsE.png",
@@ -341,7 +854,11 @@
           "description": "Ziggs deploys his ultimate creation, the Mega Inferno Bomb, hurling it an enormous distance. Enemies in the primary blast zone take more damage than those farther away.",
           "tooltip": "Ziggs hurls his ultimate creation, dealing <magicDamage>{{ empowereddamage }} magic damage</magicDamage> in the center of the blast radius, or <magicDamage>{{ blastdamage }} magic damage</magicDamage> at the edge.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Blast Zone Damage", "Damage", "Cooldown"],
+            "label": [
+              "Blast Zone Damage",
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ basedamage*0.650000 }} -> {{ basedamagenl*0.650000 }}",
@@ -349,23 +866,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 95, 70],
+          "cooldown": [
+            120,
+            95,
+            70
+          ],
           "cooldownBurn": "120/95/70",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -383,7 +948,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [5000, 5000, 5000],
+          "range": [
+            5000,
+            5000,
+            5000
+          ],
           "rangeBurn": "5000",
           "image": {
             "full": "ZiggsR.png",

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.5.1",
+  "version": "16.6.1",
   "data": {
     "Taric": {
       "id": "Taric",
@@ -49,10 +49,94 @@
           "chromas": true
         },
         {
+          "id": "44005",
+          "num": 5,
+          "name": "Pool Party Taric (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "44006",
+          "num": 6,
+          "name": "Pool Party Taric (Catseye)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "44007",
+          "num": 7,
+          "name": "Pool Party Taric (Obsidian)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "44008",
+          "num": 8,
+          "name": "Pool Party Taric (Pearl)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
           "id": "44009",
           "num": 9,
           "name": "Taric Luminshield",
           "chromas": true
+        },
+        {
+          "id": "44010",
+          "num": 10,
+          "name": "Taric Luminshield (Pearl)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "44011",
+          "num": 11,
+          "name": "Taric Luminshield (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "44012",
+          "num": 12,
+          "name": "Taric Luminshield (Obsidian)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "44013",
+          "num": 13,
+          "name": "Taric Luminshield (Ruby)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "44014",
+          "num": 14,
+          "name": "Taric Luminshield (Amethyst)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "44015",
+          "num": 15,
+          "name": "Taric Luminshield (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "44016",
+          "num": 16,
+          "name": "Taric Luminshield (Rainbow)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "44017",
+          "num": 17,
+          "name": "Taric Luminshield (Peridot)",
+          "chromas": false,
+          "parentSkin": 9
         },
         {
           "id": "44018",
@@ -61,10 +145,122 @@
           "chromas": true
         },
         {
+          "id": "44019",
+          "num": 19,
+          "name": "Space Groove Taric (Ruby)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "44020",
+          "num": 20,
+          "name": "Space Groove Taric (Catseye)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "44021",
+          "num": 21,
+          "name": "Space Groove Taric (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "44022",
+          "num": 22,
+          "name": "Space Groove Taric (Turquoise)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "44023",
+          "num": 23,
+          "name": "Space Groove Taric (Sapphire)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "44024",
+          "num": 24,
+          "name": "Space Groove Taric (Emerald)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "44025",
+          "num": 25,
+          "name": "Space Groove Taric (Obsidian)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "44026",
+          "num": 26,
+          "name": "Space Groove Taric (Rainbow)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
           "id": "44027",
           "num": 27,
           "name": "Fatebreaker Taric",
           "chromas": true
+        },
+        {
+          "id": "44028",
+          "num": 28,
+          "name": "Fatebreaker Taric (Ruby)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "44029",
+          "num": 29,
+          "name": "Fatebreaker Taric (Citrine)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "44030",
+          "num": 30,
+          "name": "Fatebreaker Taric (Sapphire)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "44031",
+          "num": 31,
+          "name": "Fatebreaker Taric (Emerald)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "44032",
+          "num": 32,
+          "name": "Fatebreaker Taric (Pearl)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "44033",
+          "num": 33,
+          "name": "Fatebreaker Taric (Amethyst)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "44034",
+          "num": 34,
+          "name": "Fatebreaker Taric (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "44035",
+          "num": 35,
+          "name": "Fatebreaker Taric (Obsidian)",
+          "chromas": false,
+          "parentSkin": 27
         }
       ],
       "lore": "Taric is the Aspect of the Protector, wielding incredible power as Runeterra's guardian of life, love, and beauty. Shamed by a dereliction of duty and exiled from his homeland Demacia, Taric ascended Mount Targon to find redemption, only to discover a higher calling among the stars. Imbued with the might of ancient Targon, the Shield of Valoran now stands ever vigilant against the insidious corruption of the Void.",
@@ -78,7 +274,10 @@
         "Taric's ultimate, Cosmic Radiance, has a long delay before its effect. Try to quickly assess whether to disengage the fight or attempt to kill his allies before it goes off.",
         "Taric reduces his spell cooldowns by basic attacking enemies with Bravado. Try to kite him in teamfights and punish him for approaching the minion wave in lane."
       ],
-      "tags": ["Support", "Tank"],
+      "tags": [
+        "Support",
+        "Tank"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 4,
@@ -115,27 +314,105 @@
           "description": "Heals nearby allied champions based on charges stored. Bravado-empowered attacks grant a charge of Starlight's Touch.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Gain a stack (max {{ e6 }}) every {{ stackcooldown }} seconds and when hitting a <spellName>Bravado</spellName> Attack.<br /><br /><spellActive>Active:</spellActive> Consume all stacks to restore <healing>{{ healingperstack }} Health</healing> per stack to nearby ally champions (<healing>{{ maxstackhealing }}</healing> at {{ e6 }} stacks).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Max Charges", "Max Healing"],
-            "effect": ["{{ e6 }} -> {{ e6NL }}", "{{ e5 }} -> {{ e5NL }}"]
+            "label": [
+              "Max Charges",
+              "Max Healing"
+            ],
+            "effect": [
+              "{{ e6 }} -> {{ e6NL }}",
+              "{{ e5 }} -> {{ e5NL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [3, 3, 3, 3, 3],
+          "cooldown": [
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
           "cooldownBurn": "3",
-          "cost": [60, 60, 60, 60, 60],
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [25, 25, 25, 25, 25],
-            [1, 1, 1, 1, 1],
-            [0.15, 0.3, 0.45, 0.6, 0.75],
-            [0.75, 1.5, 2.25, 3, 3.75],
-            [25, 50, 75, 100, 125],
-            [1, 2, 3, 4, 5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              25,
+              25,
+              25,
+              25,
+              25
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0.15,
+              0.3,
+              0.45,
+              0.6,
+              0.75
+            ],
+            [
+              0.75,
+              1.5,
+              2.25,
+              3,
+              3.75
+            ],
+            [
+              25,
+              50,
+              75,
+              100,
+              125
+            ],
+            [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -153,7 +430,13 @@
           "vars": [],
           "costType": " Mana, all Charges",
           "maxammo": "-1",
-          "range": [325, 325, 325, 325, 325],
+          "range": [
+            325,
+            325,
+            325,
+            325,
+            325
+          ],
           "rangeBurn": "325",
           "image": {
             "full": "TaricQ.png",
@@ -172,30 +455,105 @@
           "description": "Passively increase the Armor of Taric and any allied champion with Bastion.<br><br>Actively shields an ally and grants them Bastion for as long as they remain near Taric. Taric's spells also cast off the ally with Bastion.",
           "tooltip": "<spellPassive>Passive: </spellPassive>Taric gains <scaleArmor>{{ bonusarmor }} Armor</scaleArmor> and forms a tether between him and the ally bound by this Ability. As long as they are near each other, the ally gains <scaleArmor>{{ bonusarmor }} Armor</scaleArmor> and Taric casts all his Abilities from both himself and his linked ally.<br /><br /><spellPassive>Active: </spellPassive>Taric binds to an ally champion, granting a <shield>{{ e2 }}% max Health Shield</shield> for {{ e3 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Passive Armor", "Shield Ratio"],
+            "label": [
+              "Passive Armor",
+              "Shield Ratio"
+            ],
             "effect": [
               "{{ armorbonuspercentage*100.000000 }}% -> {{ armorbonuspercentagenl*100.000000 }}%",
               "{{ e2 }}% -> {{ e2NL }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [15, 15, 15, 15, 15],
+          "cooldown": [
+            15,
+            15,
+            15,
+            15,
+            15
+          ],
           "cooldownBurn": "15",
-          "cost": [60, 60, 60, 60, 60],
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [7, 8, 9, 10, 11],
-            [2.5, 2.5, 2.5, 2.5, 2.5],
-            [1000, 1000, 1000, 1000, 1000],
-            [1300, 1300, 1300, 1300, 1300],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            [
+              2.5,
+              2.5,
+              2.5,
+              2.5,
+              2.5
+            ],
+            [
+              1000,
+              1000,
+              1000,
+              1000,
+              1000
+            ],
+            [
+              1300,
+              1300,
+              1300,
+              1300,
+              1300
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -213,7 +571,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "TaricW.png",
@@ -232,30 +596,105 @@
           "description": "Taric readies a beam of starlight that, after a brief delay, deals magic damage and stuns enemies.",
           "tooltip": "Taric projects a beam of starlight, bursting after {{ e3 }} second to deal <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Stun</status> enemies for {{ e2 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 15, 14, 13, 12],
+          "cooldown": [
+            16,
+            15,
+            14,
+            13,
+            12
+          ],
           "cooldownBurn": "16/15/14/13/12",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [90, 130, 170, 210, 250],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [1, 1, 1, 1, 1],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              90,
+              130,
+              170,
+              210,
+              250
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -273,7 +712,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [610, 610, 610, 610, 610],
+          "range": [
+            610,
+            610,
+            610,
+            610,
+            610
+          ],
           "rangeBurn": "610",
           "image": {
             "full": "TaricE.png",
@@ -292,27 +737,79 @@
           "description": "Pulses cosmic energy onto nearby allied champions after a delay, making them invulnerable for a short duration.",
           "tooltip": "Taric calls down protection from the heavens. After {{ initialdelay }} seconds, nearby ally champions become invulnerable for {{ invulnduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
+            "label": [
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
-          "cooldown": [180, 150, 120],
+          "cooldown": [
+            180,
+            150,
+            120
+          ],
           "cooldownBurn": "180/150/120",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -330,7 +827,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400],
+          "range": [
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "TaricR.png",
