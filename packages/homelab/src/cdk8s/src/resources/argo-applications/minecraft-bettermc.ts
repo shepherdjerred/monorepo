@@ -12,6 +12,6 @@ export function createMinecraftBettermcApp(chart: Chart) {
     resourceRequests: { memory: "8Gi", cpu: "1" },
     resourceLimits: { memory: "8Gi" },
     storageGi: 32,
-    whitelist: ["RiotShielder", "vietnamesechovy"],
+    whitelist: ["RiotShielder", "vietnamesechovy", "XiguaShuxin", "XiguaJerred"],
   });
 }

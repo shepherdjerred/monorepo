@@ -12,6 +12,6 @@ export function createMinecraftAllthemonsApp(chart: Chart) {
     resourceRequests: { memory: "10Gi", cpu: "1" },
     resourceLimits: { memory: "10Gi" },
     storageGi: 64,
-    whitelist: ["RiotShielder", "vietnamesechovy"],
+    whitelist: ["RiotShielder", "vietnamesechovy", "XiguaShuxin", "XiguaJerred"],
   });
 }

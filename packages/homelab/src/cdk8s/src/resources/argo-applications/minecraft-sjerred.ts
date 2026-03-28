@@ -85,7 +85,7 @@ export function createMinecraftSjerredApp(chart: Chart) {
       type: "PAPER",
       motd: "Jerred's Really Cool Minecraft Server",
       // ops: "RiotShielder",
-      whitelist: ["RiotShielder", "lolopToaster", "gexboy8", "Virmel"].join(
+      whitelist: ["RiotShielder", "lolopToaster", "gexboy8", "Virmel", "XiguaShuxin", "XiguaJerred"].join(
         ",",
       ),
       spawnProtection: 0,
