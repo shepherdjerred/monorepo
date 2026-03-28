@@ -16,6 +16,11 @@ import { createChartMuseumApp } from "@shepherdjerred/homelab/cdk8s/src/resource
 import { createMinecraftSjerredApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/minecraft-sjerred.ts";
 import { createMinecraftShuxinApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/minecraft-shuxin.ts";
 import { createMinecraftTsmcApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/minecraft-tsmc.ts";
+import { createMinecraftAllthemonsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/minecraft-allthemons.ts";
+import { createMinecraftStoneblock4App } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/minecraft-stoneblock4.ts";
+import { createMinecraftBettermcApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/minecraft-bettermc.ts";
+import { createMinecraftAllofcreateApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/minecraft-allofcreate.ts";
+import { createMinecraftFtbskies2App } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/minecraft-ftbskies2.ts";
 import { createMcRouterApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/mc-router.ts";
 import { createLokiApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/loki.ts";
 import { createPromtailApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/promtail.ts";
@@ -101,6 +106,11 @@ export async function createAppsChart(app: App) {
   createMinecraftSjerredApp(chart);
   createMinecraftShuxinApp(chart);
   createMinecraftTsmcApp(chart);
+  createMinecraftAllthemonsApp(chart);
+  createMinecraftStoneblock4App(chart);
+  createMinecraftBettermcApp(chart);
+  createMinecraftAllofcreateApp(chart);
+  createMinecraftFtbskies2App(chart);
   createLokiApp(chart);
   createPromtailApp(chart);
   createTempoApp(chart);

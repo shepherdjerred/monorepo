@@ -18,9 +18,23 @@ import {
 const ASSETS_DIR = `${import.meta.dir}/../src/data-dragon/assets`;
 const IMG_DIR = `${ASSETS_DIR}/img`;
 const BASE_URL = "https://ddragon.leagueoflegends.com";
-const COMMUNITY_DRAGON_URL = "https://raw.communitydragon.org/latest/game";
-const COMMUNITY_DRAGON_POSITIONS_URL =
-  "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions";
+
+function getCommunityDragonVersion(dataDragonVersion: string): string {
+  const parts = dataDragonVersion.split(".");
+  return `${parts[0]}.${parts[1]}`;
+}
+
+function getCommunityDragonUrl(cdVersion: string): string {
+  return `https://raw.communitydragon.org/${cdVersion}/game`;
+}
+
+function getCommunityDragonPositionsUrl(cdVersion: string): string {
+  return `https://raw.communitydragon.org/${cdVersion}/plugins/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions`;
+}
+
+function getArenaAugmentsUrl(cdVersion: string): string {
+  return `https://raw.communitydragon.org/${cdVersion}/cdragon/arena/en_us.json`;
+}
 
 async function ensureDir(path: string): Promise<void> {
   await $`mkdir -p ${path}`;
@@ -272,10 +286,10 @@ const LANE_ICON_MAP: Record<string, string> = {
   support: "icon-position-utility.png",
 };
 
-async function downloadLaneImages(): Promise<number> {
+async function downloadLaneImages(positionsUrl: string): Promise<number> {
   console.log("\nDownloading lane position icons from CommunityDragon...");
   const laneImages = Object.entries(LANE_ICON_MAP).map(([lane, filename]) => ({
-    url: `${COMMUNITY_DRAGON_POSITIONS_URL}/${filename}`,
+    url: `${positionsUrl}/${filename}`,
     path: `${IMG_DIR}/lane/${lane}.png`,
     name: lane,
   }));
@@ -284,16 +298,13 @@ async function downloadLaneImages(): Promise<number> {
   return laneImages.length;
 }
 
-const ARENA_AUGMENTS_URL =
-  "https://raw.communitydragon.org/latest/cdragon/arena/en_us.json";
-
-async function fetchAndSaveArenaAugments(): Promise<{
+async function fetchAndSaveArenaAugments(arenaAugmentsUrl: string): Promise<{
   iconPaths: Set<string>;
   count: number;
 }> {
   console.log("\nFetching Arena augments from CommunityDragon...");
 
-  const response = await fetch(ARENA_AUGMENTS_URL);
+  const response = await fetch(arenaAugmentsUrl);
   if (!response.ok) {
     throw new Error(
       `Failed to fetch Arena augments: ${String(response.status)} ${response.statusText}`,
@@ -338,15 +349,18 @@ async function fetchAndSaveArenaAugments(): Promise<{
   return { iconPaths, count: parsed.augments.length };
 }
 
-async function downloadAugmentImages(): Promise<number> {
+async function downloadAugmentImages(
+  communityDragonUrl: string,
+  arenaAugmentsUrl: string,
+): Promise<number> {
   console.log("\nDownloading augment icons from CommunityDragon...");
 
-  const { iconPaths } = await fetchAndSaveArenaAugments();
+  const { iconPaths } = await fetchAndSaveArenaAugments(arenaAugmentsUrl);
 
   const augmentImages = [...iconPaths].map((iconPath) => {
     const filename = iconPath.split("/").pop() ?? "unknown.png";
     return {
-      url: `${COMMUNITY_DRAGON_URL}/${iconPath}`,
+      url: `${communityDragonUrl}/${iconPath}`,
       path: `${IMG_DIR}/augment/${filename}`,
       name: filename,
     };
@@ -366,7 +380,11 @@ async function main(): Promise<void> {
   try {
     // Get version from command line or fetch latest
     const version = process.argv[2] ?? (await getLatestVersion());
-    console.log(`\nUsing Data Dragon version: ${version}\n`);
+    const cdVersion = getCommunityDragonVersion(version);
+    const communityDragonUrl = getCommunityDragonUrl(cdVersion);
+    const communityDragonPositionsUrl = getCommunityDragonPositionsUrl(cdVersion);
+    const arenaAugmentsUrl = getArenaAugmentsUrl(cdVersion);
+    console.log(`\nUsing Data Dragon version: ${version} (CommunityDragon: ${cdVersion})\n`);
 
     // Ensure directories exist
     await createDirectories();
@@ -405,8 +423,8 @@ async function main(): Promise<void> {
       championNames,
     );
     const runeImagesCount = await downloadRuneImages(runes);
-    const augmentImagesCount = await downloadAugmentImages();
-    const laneImagesCount = await downloadLaneImages();
+    const augmentImagesCount = await downloadAugmentImages(communityDragonUrl, arenaAugmentsUrl);
+    const laneImagesCount = await downloadLaneImages(communityDragonPositionsUrl);
 
     const totalImages =
       spellImagesCount +
