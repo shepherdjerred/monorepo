@@ -5,6 +5,11 @@
  * producing a pipeline that silently skips work.
  */
 import { readdir } from "node:fs/promises";
+import { execSync } from "node:child_process";
+
+function getRepoRoot(): string {
+  return execSync("git rev-parse --show-toplevel", { encoding: "utf-8" }).trim();
+}
 import {
   ALL_PACKAGES,
   IMAGE_PUSH_TARGETS,
@@ -19,7 +24,9 @@ export async function validateCatalog(): Promise<void> {
   const errors: string[] = [];
 
   // 1. Every packages/* directory must be in ALL_PACKAGES
-  const packageDirs = await readdir("packages", { withFileTypes: true });
+  // Pipeline generator may run from scripts/ci/ or repo root — use git to find root
+  const repoRoot = await getRepoRoot();
+  const packageDirs = await readdir(`${repoRoot}/packages`, { withFileTypes: true });
   const actualPackages = packageDirs
     .filter((d) => d.isDirectory())
     .map((d) => d.name);
@@ -55,11 +62,12 @@ export async function validateCatalog(): Promise<void> {
   // 4. Every IMAGE_PUSH_TARGETS name should map to a PACKAGES_WITH_IMAGES entry or have neededPackages
   //    (This catches the better-skill-capped vs better-skill-capped-fetcher drift)
   for (const img of [...IMAGE_PUSH_TARGETS, ...INFRA_PUSH_TARGETS]) {
-    if (!catalogSet.has(img.name) && !img.neededPackages?.length) {
-      // Image target name doesn't match any package and has no neededPackages
+    const resolvedPkg = img.package ?? img.name;
+    if (!catalogSet.has(resolvedPkg) && !img.neededPackages?.length) {
+      // Image target doesn't map to any package and has no neededPackages
       // This means change detection can't trigger it
       errors.push(
-        `IMAGE_PUSH_TARGETS entry "${img.name}" doesn't match any ALL_PACKAGES entry and has no neededPackages.`,
+        `IMAGE_PUSH_TARGETS entry "${img.name}" doesn't match any ALL_PACKAGES entry (package="${resolvedPkg}") and has no neededPackages.`,
       );
     }
   }

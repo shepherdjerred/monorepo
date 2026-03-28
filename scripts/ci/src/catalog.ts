@@ -29,9 +29,9 @@ export const IMAGE_PUSH_TARGETS: ImageTarget[] = [
 
 export const INFRA_PUSH_TARGETS: ImageTarget[] = [
   { name: "homelab", versionKey: "shepherdjerred/homelab" },
-  { name: "dependency-summary", versionKey: "shepherdjerred/dependency-summary" },
-  { name: "dns-audit", versionKey: "shepherdjerred/dns-audit" },
-  { name: "caddy-s3proxy", versionKey: "shepherdjerred/caddy-s3proxy" },
+  { name: "dependency-summary", package: "homelab", versionKey: "shepherdjerred/dependency-summary" },
+  { name: "dns-audit", package: "homelab", versionKey: "shepherdjerred/dns-audit" },
+  { name: "caddy-s3proxy", package: "homelab", versionKey: "shepherdjerred/caddy-s3proxy" },
 ];
 
 // ---------------------------------------------------------------------------

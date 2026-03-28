@@ -1,5 +1,0 @@
-{{- if eq .chezmoi.os "darwin" }}
-# Move output root to ~/Library/Caches/bazel to avoid fseventsd/Spotlight storms
-# on /private/var/tmp (Bazel 9 does this by default)
-startup --output_user_root=~/Library/Caches/bazel
-{{- end }}
