@@ -1,0 +1,146 @@
+{
+  "questionId": "4181",
+  "questionFrontendId": "3812",
+  "title": "Minimum Edge Toggles on a Tree",
+  "titleSlug": "minimum-edge-toggles-on-a-tree",
+  "difficulty": "Hard",
+  "content": "<p>You are given an <strong>undirected tree</strong> with <code>n</code> nodes, numbered from 0 to <code>n - 1</code>. It is represented by a 2D integer array <code>edges</code>​​​​​​​ of length <code>n - 1</code>, where <code>edges[i] = [a<sub>i</sub>, b<sub>i</sub>]</code> indicates that there is an edge between nodes <code>a<sub>i</sub></code> and <code>b<sub>i</sub></code> in the tree.</p>\n\n<p>You are also given two <strong>binary</strong> strings <code>start</code> and <code>target</code> of length <code>n</code>. For each node <code>x</code>, <code>start[x]</code> is its initial color and <code>target[x]</code> is its desired color.</p>\n\n<p>In one operation, you may pick an edge with index <code>i</code> and <strong>toggle </strong>both of its endpoints. That is, if the edge is <code>[u, v]</code>, then the colors of nodes <code>u</code> and <code>v</code> <strong>each</strong> flip from <code>&#39;0&#39;</code> to <code>&#39;1&#39;</code> or from <code>&#39;1&#39;</code> to <code>&#39;0&#39;</code>.</p>\n\n<p>Return an array of edge indices whose operations transform <code>start</code> into <code>target</code>. Among all valid sequences with <strong>minimum possible length</strong>, return the edge indices in <strong>increasing</strong>​​​​​​​ order.</p>\n\n<p>If it is impossible to transform <code>start</code> into <code>target</code>, return an array containing a single element equal to -1.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<p><strong class=\"example\"><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2025/12/18/example1.png\" style=\"width: 271px; height: 51px;\" />​​​​​​​</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 3, edges = [[0,1],[1,2]], start = &quot;010&quot;, target = &quot;100&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[0]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Toggle edge with index 0, which flips nodes 0 and 1.<br />\n​​​​​​​The string changes from <code>&quot;010&quot;</code> to <code>&quot;100&quot;</code>, matching the target.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<p><strong class=\"example\"><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2025/12/18/example2.png\" style=\"width: 411px; height: 208px;\" /></strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 7, edges = [[0,1],[1,2],[2,3],[3,4],[3,5],[1,6]], start = &quot;0011000&quot;, target = &quot;0010001&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[1,2,5]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Toggle edge with index 1, which flips nodes 1 and 2.</li>\n\t<li>Toggle edge with index 2, which flips nodes 2 and 3.</li>\n\t<li>Toggle edge with index 5, which flips nodes 1 and 6.</li>\n</ul>\n\n<p>After these operations, the resulting string becomes <code>&quot;0010001&quot;</code>, which matches the target.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<p><strong class=\"example\"><img alt=\"\" src=\"https://assets.leetcode.com/uploads/2025/12/18/example3.png\" style=\"width: 161px; height: 51px;\" />​​​​​​​</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 2, edges = [[0,1]], start = &quot;00&quot;, target = &quot;01&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">[-1]</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>There is no sequence of edge toggles that transforms <code>&quot;00&quot;</code> into <code>&quot;01&quot;</code>. Therefore, we return <code>[-1]</code>.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= n == start.length == target.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>edges.length == n - 1</code></li>\n\t<li><code>edges[i] = [a<sub>i</sub>, b<sub>i</sub>]</code></li>\n\t<li><code>0 &lt;= a<sub>i</sub>, b<sub>i</sub> &lt; n</code></li>\n\t<li><code>start[i]</code> is either <code>&#39;0&#39;</code> or <code>&#39;1&#39;</code>.</li>\n\t<li><code>target[i]</code> is either <code>&#39;0&#39;</code> or <code>&#39;1&#39;</code>.</li>\n\t<li>The input is generated such that <code>edges</code> represents a valid tree.</li>\n</ul>\n",
+  "hints": [
+    "Use a depth-first search (DFS).",
+    "Root the tree at any node. Traverse the tree, keeping track of flips applied from the parent to the subtree.",
+    "After processing a child subtree, determine whether the current node still needs to be flipped to match the target. If a flip is needed, record the corresponding edge.",
+    "Collect all flipped edges; if the transformation is impossible, return <code>[-1]</code>."
+  ],
+  "metaData": "{\n  \"name\": \"minimumFlips\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"start\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"target\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"list<integer>\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"5.7K\", \"totalSubmission\": \"8.4K\", \"totalAcceptedRaw\": 5738, \"totalSubmissionRaw\": 8367, \"acRate\": \"68.6%\"}",
+  "likes": 43,
+  "dislikes": 5,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "3\n[[0,1],[1,2]]\n\"010\"\n\"100\"",
+    "7\n[[0,1],[1,2],[2,3],[3,4],[3,5],[1,6]]\n\"0011000\"\n\"0010001\"",
+    "2\n[[0,1]]\n\"00\"\n\"01\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Depth-First Search",
+      "slug": "depth-first-search"
+    },
+    {
+      "name": "Graph Theory",
+      "slug": "graph"
+    },
+    {
+      "name": "Topological Sort",
+      "slug": "topological-sort"
+    },
+    {
+      "name": "Sorting",
+      "slug": "sorting"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    vector<int> minimumFlips(int n, vector<vector<int>>& edges, string start, string target) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public List<Integer> minimumFlips(int n, int[][] edges, String start, String target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def minimumFlips(self, n: int, edges: List[List[int]], start: str, target: str) -> List[int]:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def minimumFlips(self, n, edges, start, target):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :type start: str\n        :type target: str\n        :rtype: List[int]\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edges\n * @param {string} start\n * @param {string} target\n * @return {number[]}\n */\nvar minimumFlips = function(n, edges, start, target) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function minimumFlips(n: number, edges: number[][], start: string, target: string): number[] {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public IList<int> MinimumFlips(int n, int[][] edges, string start, string target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "/**\n * Note: The returned array must be malloced, assume caller calls free().\n */\nint* minimumFlips(int n, int** edges, int edgesSize, int* edgesColSize, char* start, char* target, int* returnSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func minimumFlips(n int, edges [][]int, start string, target string) []int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun minimumFlips(n: Int, edges: Array<IntArray>, start: String, target: String): List<Int> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func minimumFlips(_ n: Int, _ edges: [[Int]], _ start: String, _ target: String) -> [Int] {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn minimum_flips(n: i32, edges: Vec<Vec<i32>>, start: String, target: String) -> Vec<i32> {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} edges\n# @param {String} start\n# @param {String} target\n# @return {Integer[]}\ndef minimum_flips(n, edges, start, target)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edges\n     * @param String $start\n     * @param String $target\n     * @return Integer[]\n     */\n    function minimumFlips($n, $edges, $start, $target) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  List<int> minimumFlips(int n, List<List<int>> edges, String start, String target) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def minimumFlips(n: Int, edges: Array[Array[Int]], start: String, target: String): List[Int] = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec minimum_flips(n :: integer, edges :: [[integer]], start :: String.t, target :: String.t) :: [integer]\n  def minimum_flips(n, edges, start, target) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec minimum_flips(N :: integer(), Edges :: [[integer()]], Start :: unicode:unicode_binary(), Target :: unicode:unicode_binary()) -> [integer()].\nminimum_flips(N, Edges, Start, Target) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (minimum-flips n edges start target)\n  (-> exact-integer? (listof (listof exact-integer?)) string? string? (listof exact-integer?))\n  )"
+    }
+  ],
+  "solution": null
+}

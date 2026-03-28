@@ -1,0 +1,131 @@
+{
+  "questionId": "4201",
+  "questionFrontendId": "3822",
+  "title": "Design Order Management System",
+  "titleSlug": "design-order-management-system",
+  "difficulty": "Medium",
+  "content": "<p>You are asked to design a simple order management system for a trading platform.</p>\n\n<p>Each order is associated with an <code>orderId</code>, an <code>orderType</code> (<code>&quot;buy&quot;</code> or <code>&quot;sell&quot;</code>), and a <code>price</code>.</p>\n\n<p>An order is considered <strong>active</strong> unless it is canceled.</p>\n\n<p>Implement the <code>OrderManagementSystem</code> class:</p>\n\n<ul>\n\t<li><code>OrderManagementSystem()</code>: Initializes the order management system.</li>\n\t<li><code>void addOrder(int orderId, string orderType, int price)</code>: Adds a new <strong>active</strong> order with the given attributes. It is <strong>guaranteed</strong> that <code>orderId</code> is unique.</li>\n\t<li><code>void modifyOrder(int orderId, int newPrice)</code>: Modifies the <strong>price</strong> of an existing order. It is <strong>guaranteed</strong> that the order exists and is <em>active</em>.</li>\n\t<li><code>void cancelOrder(int orderId)</code>: Cancels an existing order. It is <strong>guaranteed</strong> that the order exists and is <em>active</em>.</li>\n\t<li><code>vector&lt;int&gt; getOrdersAtPrice(string orderType, int price)</code>: Returns the <code>orderId</code>s of all <strong>active</strong> orders that match the given <code>orderType</code> and <code>price</code>. If no such orders exist, return an empty list.</li>\n</ul>\n\n<p><strong>Note:</strong> The order of returned <code>orderId</code>s does not matter.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong><br />\n<span class=\"example-io\">[&quot;OrderManagementSystem&quot;, &quot;addOrder&quot;, &quot;addOrder&quot;, &quot;addOrder&quot;, &quot;getOrdersAtPrice&quot;, &quot;modifyOrder&quot;, &quot;modifyOrder&quot;, &quot;getOrdersAtPrice&quot;, &quot;cancelOrder&quot;, &quot;cancelOrder&quot;, &quot;getOrdersAtPrice&quot;]<br />\n[[], [1, &quot;buy&quot;, 1], [2, &quot;buy&quot;, 1], [3, &quot;sell&quot;, 2], [&quot;buy&quot;, 1], [1, 3], [2, 1], [&quot;buy&quot;, 1], [3], [2], [&quot;buy&quot;, 1]]</span></p>\n\n<p><strong>Output:</strong><br />\n<span class=\"example-io\">[null, null, null, null, [2, 1], null, null, [2], null, null, []] </span></p>\n\n<p><strong>Explanation</strong></p>\nOrderManagementSystem orderManagementSystem = new OrderManagementSystem();<br />\norderManagementSystem.addOrder(1, &quot;buy&quot;, 1); // A buy order with ID 1 is added at price 1.<br />\norderManagementSystem.addOrder(2, &quot;buy&quot;, 1); // A buy order with ID 2 is added at price 1.<br />\norderManagementSystem.addOrder(3, &quot;sell&quot;, 2); // A sell order with ID 3 is added at price 2.<br />\norderManagementSystem.getOrdersAtPrice(&quot;buy&quot;, 1); // Both buy orders (IDs 1 and 2) are active at price 1, so the result is <code>[2, 1]</code>.<br />\norderManagementSystem.modifyOrder(1, 3); // Order 1 is updated: its price becomes 3.<br />\norderManagementSystem.modifyOrder(2, 1); // Order 2 is updated, but its price remains 1.<br />\norderManagementSystem.getOrdersAtPrice(&quot;buy&quot;, 1); // Only order 2 is still an active buy order at price 1, so the result is <code>[2]</code>.<br />\norderManagementSystem.cancelOrder(3); // The sell order with ID 3 is canceled and removed from active orders.<br />\norderManagementSystem.cancelOrder(2); // The buy order with ID 2 is canceled and removed from active orders.<br />\norderManagementSystem.getOrdersAtPrice(&quot;buy&quot;, 1); // There are no active buy orders left at price 1, so the result is <code>[]</code>.</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= orderId &lt;= 2000</code></li>\n\t<li><code>orderId</code> is <strong>unique</strong> across all orders.</li>\n\t<li><code>orderType</code> is either <code>&quot;buy&quot;</code> or <code>&quot;sell&quot;</code>.</li>\n\t<li><code>1 &lt;= price &lt;= 10<sup>9</sup></code></li>\n\t<li>The total number of calls to <code>addOrder</code>, <code>modifyOrder</code>, <code>cancelOrder</code>, and <code>getOrdersAtPrice</code> does not exceed <font face=\"monospace\">2000</font>.</li>\n\t<li>For <code>modifyOrder</code> and <code>cancelOrder</code>, the specified <code>orderId</code> is <strong>guaranteed</strong> to exist and be <em>active</em>.</li>\n</ul>\n",
+  "hints": [
+    "Keep track of orders by their <code>orderId</code> so you can quickly modify or cancel them.",
+    "Group active orders by <code>(orderType, price)</code> to efficiently answer queries.",
+    "When an order is modified or canceled, make sure all related data structures stay in sync."
+  ],
+  "metaData": "{\n  \"classname\": \"OrderManagementSystem\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"orderId\"\n        },\n        {\n          \"type\": \"string\",\n          \"name\": \"orderType\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"price\"\n        }\n      ],\n      \"name\": \"addOrder\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"orderId\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"newPrice\"\n        }\n      ],\n      \"name\": \"modifyOrder\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"orderId\"\n        }\n      ],\n      \"name\": \"cancelOrder\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"string\",\n          \"name\": \"orderType\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"price\"\n        }\n      ],\n      \"name\": \"getOrdersAtPrice\",\n      \"return\": {\n        \"type\": \"integer[]\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"818\", \"totalSubmission\": \"1K\", \"totalAcceptedRaw\": 818, \"totalSubmissionRaw\": 1030, \"acRate\": \"79.4%\"}",
+  "likes": 8,
+  "dislikes": 1,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"OrderManagementSystem\",\"addOrder\",\"addOrder\",\"addOrder\",\"getOrdersAtPrice\",\"modifyOrder\",\"modifyOrder\",\"getOrdersAtPrice\",\"cancelOrder\",\"cancelOrder\",\"getOrdersAtPrice\"]\n[[],[1,\"buy\",1],[2,\"buy\",1],[3,\"sell\",2],[\"buy\",1],[1,3],[2,1],[\"buy\",1],[3],[2],[\"buy\",1]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class OrderManagementSystem {\npublic:\n    OrderManagementSystem() {\n        \n    }\n    \n    void addOrder(int orderId, string orderType, int price) {\n        \n    }\n    \n    void modifyOrder(int orderId, int newPrice) {\n        \n    }\n    \n    void cancelOrder(int orderId) {\n        \n    }\n    \n    vector<int> getOrdersAtPrice(string orderType, int price) {\n        \n    }\n};\n\n/**\n * Your OrderManagementSystem object will be instantiated and called as such:\n * OrderManagementSystem* obj = new OrderManagementSystem();\n * obj->addOrder(orderId,orderType,price);\n * obj->modifyOrder(orderId,newPrice);\n * obj->cancelOrder(orderId);\n * vector<int> param_4 = obj->getOrdersAtPrice(orderType,price);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class OrderManagementSystem {\n\n    public OrderManagementSystem() {\n        \n    }\n    \n    public void addOrder(int orderId, String orderType, int price) {\n        \n    }\n    \n    public void modifyOrder(int orderId, int newPrice) {\n        \n    }\n    \n    public void cancelOrder(int orderId) {\n        \n    }\n    \n    public int[] getOrdersAtPrice(String orderType, int price) {\n        \n    }\n}\n\n/**\n * Your OrderManagementSystem object will be instantiated and called as such:\n * OrderManagementSystem obj = new OrderManagementSystem();\n * obj.addOrder(orderId,orderType,price);\n * obj.modifyOrder(orderId,newPrice);\n * obj.cancelOrder(orderId);\n * int[] param_4 = obj.getOrdersAtPrice(orderType,price);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class OrderManagementSystem:\n\n    def __init__(self):\n        \n\n    def addOrder(self, orderId: int, orderType: str, price: int) -> None:\n        \n\n    def modifyOrder(self, orderId: int, newPrice: int) -> None:\n        \n\n    def cancelOrder(self, orderId: int) -> None:\n        \n\n    def getOrdersAtPrice(self, orderType: str, price: int) -> List[int]:\n        \n\n\n# Your OrderManagementSystem object will be instantiated and called as such:\n# obj = OrderManagementSystem()\n# obj.addOrder(orderId,orderType,price)\n# obj.modifyOrder(orderId,newPrice)\n# obj.cancelOrder(orderId)\n# param_4 = obj.getOrdersAtPrice(orderType,price)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class OrderManagementSystem(object):\n\n    def __init__(self):\n        \n\n    def addOrder(self, orderId, orderType, price):\n        \"\"\"\n        :type orderId: int\n        :type orderType: str\n        :type price: int\n        :rtype: None\n        \"\"\"\n        \n\n    def modifyOrder(self, orderId, newPrice):\n        \"\"\"\n        :type orderId: int\n        :type newPrice: int\n        :rtype: None\n        \"\"\"\n        \n\n    def cancelOrder(self, orderId):\n        \"\"\"\n        :type orderId: int\n        :rtype: None\n        \"\"\"\n        \n\n    def getOrdersAtPrice(self, orderType, price):\n        \"\"\"\n        :type orderType: str\n        :type price: int\n        :rtype: List[int]\n        \"\"\"\n        \n\n\n# Your OrderManagementSystem object will be instantiated and called as such:\n# obj = OrderManagementSystem()\n# obj.addOrder(orderId,orderType,price)\n# obj.modifyOrder(orderId,newPrice)\n# obj.cancelOrder(orderId)\n# param_4 = obj.getOrdersAtPrice(orderType,price)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar OrderManagementSystem = function() {\n    \n};\n\n/** \n * @param {number} orderId \n * @param {string} orderType \n * @param {number} price\n * @return {void}\n */\nOrderManagementSystem.prototype.addOrder = function(orderId, orderType, price) {\n    \n};\n\n/** \n * @param {number} orderId \n * @param {number} newPrice\n * @return {void}\n */\nOrderManagementSystem.prototype.modifyOrder = function(orderId, newPrice) {\n    \n};\n\n/** \n * @param {number} orderId\n * @return {void}\n */\nOrderManagementSystem.prototype.cancelOrder = function(orderId) {\n    \n};\n\n/** \n * @param {string} orderType \n * @param {number} price\n * @return {number[]}\n */\nOrderManagementSystem.prototype.getOrdersAtPrice = function(orderType, price) {\n    \n};\n\n/** \n * Your OrderManagementSystem object will be instantiated and called as such:\n * var obj = new OrderManagementSystem()\n * obj.addOrder(orderId,orderType,price)\n * obj.modifyOrder(orderId,newPrice)\n * obj.cancelOrder(orderId)\n * var param_4 = obj.getOrdersAtPrice(orderType,price)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class OrderManagementSystem {\n    constructor() {\n        \n    }\n\n    addOrder(orderId: number, orderType: string, price: number): void {\n        \n    }\n\n    modifyOrder(orderId: number, newPrice: number): void {\n        \n    }\n\n    cancelOrder(orderId: number): void {\n        \n    }\n\n    getOrdersAtPrice(orderType: string, price: number): number[] {\n        \n    }\n}\n\n/**\n * Your OrderManagementSystem object will be instantiated and called as such:\n * var obj = new OrderManagementSystem()\n * obj.addOrder(orderId,orderType,price)\n * obj.modifyOrder(orderId,newPrice)\n * obj.cancelOrder(orderId)\n * var param_4 = obj.getOrdersAtPrice(orderType,price)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class OrderManagementSystem {\n\n    public OrderManagementSystem() {\n        \n    }\n    \n    public void AddOrder(int orderId, string orderType, int price) {\n        \n    }\n    \n    public void ModifyOrder(int orderId, int newPrice) {\n        \n    }\n    \n    public void CancelOrder(int orderId) {\n        \n    }\n    \n    public int[] GetOrdersAtPrice(string orderType, int price) {\n        \n    }\n}\n\n/**\n * Your OrderManagementSystem object will be instantiated and called as such:\n * OrderManagementSystem obj = new OrderManagementSystem();\n * obj.AddOrder(orderId,orderType,price);\n * obj.ModifyOrder(orderId,newPrice);\n * obj.CancelOrder(orderId);\n * int[] param_4 = obj.GetOrdersAtPrice(orderType,price);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} OrderManagementSystem;\n\n\nOrderManagementSystem* orderManagementSystemCreate() {\n    \n}\n\nvoid orderManagementSystemAddOrder(OrderManagementSystem* obj, int orderId, char* orderType, int price) {\n    \n}\n\nvoid orderManagementSystemModifyOrder(OrderManagementSystem* obj, int orderId, int newPrice) {\n    \n}\n\nvoid orderManagementSystemCancelOrder(OrderManagementSystem* obj, int orderId) {\n    \n}\n\nint* orderManagementSystemGetOrdersAtPrice(OrderManagementSystem* obj, char* orderType, int price, int* retSize) {\n    \n}\n\nvoid orderManagementSystemFree(OrderManagementSystem* obj) {\n    \n}\n\n/**\n * Your OrderManagementSystem struct will be instantiated and called as such:\n * OrderManagementSystem* obj = orderManagementSystemCreate();\n * orderManagementSystemAddOrder(obj, orderId, orderType, price);\n \n * orderManagementSystemModifyOrder(obj, orderId, newPrice);\n \n * orderManagementSystemCancelOrder(obj, orderId);\n \n * int* param_4 = orderManagementSystemGetOrdersAtPrice(obj, orderType, price, retSize);\n \n * orderManagementSystemFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type OrderManagementSystem struct {\n    \n}\n\n\nfunc Constructor() OrderManagementSystem {\n    \n}\n\n\nfunc (this *OrderManagementSystem) AddOrder(orderId int, orderType string, price int)  {\n    \n}\n\n\nfunc (this *OrderManagementSystem) ModifyOrder(orderId int, newPrice int)  {\n    \n}\n\n\nfunc (this *OrderManagementSystem) CancelOrder(orderId int)  {\n    \n}\n\n\nfunc (this *OrderManagementSystem) GetOrdersAtPrice(orderType string, price int) []int {\n    \n}\n\n\n/**\n * Your OrderManagementSystem object will be instantiated and called as such:\n * obj := Constructor();\n * obj.AddOrder(orderId,orderType,price);\n * obj.ModifyOrder(orderId,newPrice);\n * obj.CancelOrder(orderId);\n * param_4 := obj.GetOrdersAtPrice(orderType,price);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class OrderManagementSystem() {\n\n    fun addOrder(orderId: Int, orderType: String, price: Int) {\n        \n    }\n\n    fun modifyOrder(orderId: Int, newPrice: Int) {\n        \n    }\n\n    fun cancelOrder(orderId: Int) {\n        \n    }\n\n    fun getOrdersAtPrice(orderType: String, price: Int): IntArray {\n        \n    }\n\n}\n\n/**\n * Your OrderManagementSystem object will be instantiated and called as such:\n * var obj = OrderManagementSystem()\n * obj.addOrder(orderId,orderType,price)\n * obj.modifyOrder(orderId,newPrice)\n * obj.cancelOrder(orderId)\n * var param_4 = obj.getOrdersAtPrice(orderType,price)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass OrderManagementSystem {\n\n    init() {\n        \n    }\n    \n    func addOrder(_ orderId: Int, _ orderType: String, _ price: Int) {\n        \n    }\n    \n    func modifyOrder(_ orderId: Int, _ newPrice: Int) {\n        \n    }\n    \n    func cancelOrder(_ orderId: Int) {\n        \n    }\n    \n    func getOrdersAtPrice(_ orderType: String, _ price: Int) -> [Int] {\n        \n    }\n}\n\n/**\n * Your OrderManagementSystem object will be instantiated and called as such:\n * let obj = OrderManagementSystem()\n * obj.addOrder(orderId, orderType, price)\n * obj.modifyOrder(orderId, newPrice)\n * obj.cancelOrder(orderId)\n * let ret_4: [Int] = obj.getOrdersAtPrice(orderType, price)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct OrderManagementSystem {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl OrderManagementSystem {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn add_order(&self, order_id: i32, order_type: String, price: i32) {\n        \n    }\n    \n    fn modify_order(&self, order_id: i32, new_price: i32) {\n        \n    }\n    \n    fn cancel_order(&self, order_id: i32) {\n        \n    }\n    \n    fn get_orders_at_price(&self, order_type: String, price: i32) -> Vec<i32> {\n        \n    }\n}\n\n/**\n * Your OrderManagementSystem object will be instantiated and called as such:\n * let obj = OrderManagementSystem::new();\n * obj.add_order(orderId, orderType, price);\n * obj.modify_order(orderId, newPrice);\n * obj.cancel_order(orderId);\n * let ret_4: Vec<i32> = obj.get_orders_at_price(orderType, price);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class OrderManagementSystem\n    def initialize()\n        \n    end\n\n\n=begin\n    :type order_id: Integer\n    :type order_type: String\n    :type price: Integer\n    :rtype: Void\n=end\n    def add_order(order_id, order_type, price)\n        \n    end\n\n\n=begin\n    :type order_id: Integer\n    :type new_price: Integer\n    :rtype: Void\n=end\n    def modify_order(order_id, new_price)\n        \n    end\n\n\n=begin\n    :type order_id: Integer\n    :rtype: Void\n=end\n    def cancel_order(order_id)\n        \n    end\n\n\n=begin\n    :type order_type: String\n    :type price: Integer\n    :rtype: Integer[]\n=end\n    def get_orders_at_price(order_type, price)\n        \n    end\n\n\nend\n\n# Your OrderManagementSystem object will be instantiated and called as such:\n# obj = OrderManagementSystem.new()\n# obj.add_order(order_id, order_type, price)\n# obj.modify_order(order_id, new_price)\n# obj.cancel_order(order_id)\n# param_4 = obj.get_orders_at_price(order_type, price)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class OrderManagementSystem {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $orderId\n     * @param String $orderType\n     * @param Integer $price\n     * @return NULL\n     */\n    function addOrder($orderId, $orderType, $price) {\n        \n    }\n  \n    /**\n     * @param Integer $orderId\n     * @param Integer $newPrice\n     * @return NULL\n     */\n    function modifyOrder($orderId, $newPrice) {\n        \n    }\n  \n    /**\n     * @param Integer $orderId\n     * @return NULL\n     */\n    function cancelOrder($orderId) {\n        \n    }\n  \n    /**\n     * @param String $orderType\n     * @param Integer $price\n     * @return Integer[]\n     */\n    function getOrdersAtPrice($orderType, $price) {\n        \n    }\n}\n\n/**\n * Your OrderManagementSystem object will be instantiated and called as such:\n * $obj = OrderManagementSystem();\n * $obj->addOrder($orderId, $orderType, $price);\n * $obj->modifyOrder($orderId, $newPrice);\n * $obj->cancelOrder($orderId);\n * $ret_4 = $obj->getOrdersAtPrice($orderType, $price);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class OrderManagementSystem {\n\n  OrderManagementSystem() {\n    \n  }\n  \n  void addOrder(int orderId, String orderType, int price) {\n    \n  }\n  \n  void modifyOrder(int orderId, int newPrice) {\n    \n  }\n  \n  void cancelOrder(int orderId) {\n    \n  }\n  \n  List<int> getOrdersAtPrice(String orderType, int price) {\n    \n  }\n}\n\n/**\n * Your OrderManagementSystem object will be instantiated and called as such:\n * OrderManagementSystem obj = OrderManagementSystem();\n * obj.addOrder(orderId,orderType,price);\n * obj.modifyOrder(orderId,newPrice);\n * obj.cancelOrder(orderId);\n * List<int> param4 = obj.getOrdersAtPrice(orderType,price);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class OrderManagementSystem() {\n\n    def addOrder(orderId: Int, orderType: String, price: Int): Unit = {\n        \n    }\n\n    def modifyOrder(orderId: Int, newPrice: Int): Unit = {\n        \n    }\n\n    def cancelOrder(orderId: Int): Unit = {\n        \n    }\n\n    def getOrdersAtPrice(orderType: String, price: Int): Array[Int] = {\n        \n    }\n\n}\n\n/**\n * Your OrderManagementSystem object will be instantiated and called as such:\n * val obj = new OrderManagementSystem()\n * obj.addOrder(orderId,orderType,price)\n * obj.modifyOrder(orderId,newPrice)\n * obj.cancelOrder(orderId)\n * val param_4 = obj.getOrdersAtPrice(orderType,price)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule OrderManagementSystem do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec add_order(order_id :: integer, order_type :: String.t, price :: integer) :: any\n  def add_order(order_id, order_type, price) do\n    \n  end\n\n  @spec modify_order(order_id :: integer, new_price :: integer) :: any\n  def modify_order(order_id, new_price) do\n    \n  end\n\n  @spec cancel_order(order_id :: integer) :: any\n  def cancel_order(order_id) do\n    \n  end\n\n  @spec get_orders_at_price(order_type :: String.t, price :: integer) :: [integer]\n  def get_orders_at_price(order_type, price) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# OrderManagementSystem.init_()\n# OrderManagementSystem.add_order(order_id, order_type, price)\n# OrderManagementSystem.modify_order(order_id, new_price)\n# OrderManagementSystem.cancel_order(order_id)\n# param_4 = OrderManagementSystem.get_orders_at_price(order_type, price)\n\n# OrderManagementSystem.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec order_management_system_init_() -> any().\norder_management_system_init_() ->\n  .\n\n-spec order_management_system_add_order(OrderId :: integer(), OrderType :: unicode:unicode_binary(), Price :: integer()) -> any().\norder_management_system_add_order(OrderId, OrderType, Price) ->\n  .\n\n-spec order_management_system_modify_order(OrderId :: integer(), NewPrice :: integer()) -> any().\norder_management_system_modify_order(OrderId, NewPrice) ->\n  .\n\n-spec order_management_system_cancel_order(OrderId :: integer()) -> any().\norder_management_system_cancel_order(OrderId) ->\n  .\n\n-spec order_management_system_get_orders_at_price(OrderType :: unicode:unicode_binary(), Price :: integer()) -> [integer()].\norder_management_system_get_orders_at_price(OrderType, Price) ->\n  .\n\n\n%% Your functions will be called as such:\n%% order_management_system_init_(),\n%% order_management_system_add_order(OrderId, OrderType, Price),\n%% order_management_system_modify_order(OrderId, NewPrice),\n%% order_management_system_cancel_order(OrderId),\n%% Param_4 = order_management_system_get_orders_at_price(OrderType, Price),\n\n%% order_management_system_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define order-management-system%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; add-order : exact-integer? string? exact-integer? -> void?\n    (define/public (add-order order-id order-type price)\n      )\n    ; modify-order : exact-integer? exact-integer? -> void?\n    (define/public (modify-order order-id new-price)\n      )\n    ; cancel-order : exact-integer? -> void?\n    (define/public (cancel-order order-id)\n      )\n    ; get-orders-at-price : string? exact-integer? -> (listof exact-integer?)\n    (define/public (get-orders-at-price order-type price)\n      )))\n\n;; Your order-management-system% object will be instantiated and called as such:\n;; (define obj (new order-management-system%))\n;; (send obj add-order order-id order-type price)\n;; (send obj modify-order order-id new-price)\n;; (send obj cancel-order order-id)\n;; (define param_4 (send obj get-orders-at-price order-type price))"
+    }
+  ],
+  "solution": null
+}

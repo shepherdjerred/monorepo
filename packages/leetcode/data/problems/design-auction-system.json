@@ -1,0 +1,140 @@
+{
+  "questionId": "4067",
+  "questionFrontendId": "3815",
+  "title": "Design Auction System",
+  "titleSlug": "design-auction-system",
+  "difficulty": "Medium",
+  "content": "<p>You are asked to design an auction system that manages bids from multiple users in real time.</p>\n\n<p>Each bid is associated with a <code>userId</code>, an <code>itemId</code>, and a <code>bidAmount</code>.</p>\n\n<p>Implement the <code>AuctionSystem</code> class:​​​​​​​</p>\n\n<ul>\n\t<li><code>AuctionSystem()</code>: Initializes the <code>AuctionSystem</code> object.</li>\n\t<li><code>void addBid(int userId, int itemId, int bidAmount)</code>: Adds a new bid for <code>itemId</code> by <code>userId</code> with <code>bidAmount</code>. If the same <code>userId</code> <strong>already</strong> has a bid on <code>itemId</code>, <strong>replace</strong> it with the new <code>bidAmount</code>.</li>\n\t<li><code>void updateBid(int userId, int itemId, int newAmount)</code>: Updates the existing bid of <code>userId</code> for <code>itemId</code> to <code>newAmount</code>. It is <strong>guaranteed</strong> that this bid <em>exists</em>.</li>\n\t<li><code>void removeBid(int userId, int itemId)</code>: Removes the bid of <code>userId</code> for <code>itemId</code>. It is <strong>guaranteed</strong> that this bid <em>exists</em>.</li>\n\t<li><code>int getHighestBidder(int itemId)</code>: Returns the <code>userId</code> of the <strong>highest</strong> bidder for <code>itemId</code>. If multiple users have the <strong>same highest</strong> <code>bidAmount</code>, return the user with the <strong>highest</strong> <code>userId</code>. If no bids exist for the item, return -1.</li>\n</ul>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong><br />\n<span class=\"example-io\">[&quot;AuctionSystem&quot;, &quot;addBid&quot;, &quot;addBid&quot;, &quot;getHighestBidder&quot;, &quot;updateBid&quot;, &quot;getHighestBidder&quot;, &quot;removeBid&quot;, &quot;getHighestBidder&quot;, &quot;getHighestBidder&quot;]<br />\n[[], [1, 7, 5], [2, 7, 6], [7], [1, 7, 8], [7], [2, 7], [7], [3]]</span></p>\n\n<p><strong>Output:</strong><br />\n<span class=\"example-io\">[null, null, null, 2, null, 1, null, 1, -1] </span></p>\n\n<p><strong>Explanation</strong></p>\nAuctionSystem auctionSystem = new AuctionSystem(); // Initialize the Auction system<br />\nauctionSystem.addBid(1, 7, 5); // User 1 bids 5 on item 7<br />\nauctionSystem.addBid(2, 7, 6); // User 2 bids 6 on item 7<br />\nauctionSystem.getHighestBidder(7); // return 2 as User 2 has the highest bid<br />\nauctionSystem.updateBid(1, 7, 8); // User 1 updates bid to 8 on item 7<br />\nauctionSystem.getHighestBidder(7); // return 1 as User 1 now has the highest bid<br />\nauctionSystem.removeBid(2, 7); // Remove User 2&#39;s bid on item 7<br />\nauctionSystem.getHighestBidder(7); // return 1 as User 1 is the current highest bidder<br />\nauctionSystem.getHighestBidder(3); // return -1 as no bids exist for item 3</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= userId, itemId &lt;= 5 * 10<sup>4</sup></code></li>\n\t<li><code>1 &lt;= bidAmount, newAmount &lt;= 10<sup>9</sup></code></li>\n\t<li>At most <code>5 * 10<sup>4</sup></code> total calls to <code>addBid</code>, <code>updateBid</code>, <code>removeBid</code>, and <code>getHighestBidder</code>.</li>\n\t<li>The input is generated such that for <code>updateBid</code> and <code>removeBid</code>, the bid from the given <code>userId</code> for the given <code>itemId</code> will be valid.</li>\n</ul>\n",
+  "hints": [
+    "Maintain a map from <code>itemId</code> to its active bids.",
+    "For each item, use a data structure ordered by <code>(bidAmount, userId)</code> to get the highest bidder efficiently.",
+    "On <code>addBid</code> or <code>updateBid</code>, remove the old entry (if any) and insert the new one.",
+    "On <code>removeBid</code>, delete the corresponding entry; return the top element for <code>getHighestBidder</code>."
+  ],
+  "metaData": "{\n  \"classname\": \"AuctionSystem\",\n  \"constructor\": {\n    \"params\": []\n  },\n  \"methods\": [\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"userId\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"itemId\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"bidAmount\"\n        }\n      ],\n      \"name\": \"addBid\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"userId\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"itemId\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"newAmount\"\n        }\n      ],\n      \"name\": \"updateBid\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"userId\"\n        },\n        {\n          \"type\": \"integer\",\n          \"name\": \"itemId\"\n        }\n      ],\n      \"name\": \"removeBid\",\n      \"return\": {\n        \"type\": \"void\"\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"type\": \"integer\",\n          \"name\": \"itemId\"\n        }\n      ],\n      \"name\": \"getHighestBidder\",\n      \"return\": {\n        \"type\": \"integer\"\n      }\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  },\n  \"systemdesign\": true\n}",
+  "stats": "{\"totalAccepted\": \"15.3K\", \"totalSubmission\": \"36.5K\", \"totalAcceptedRaw\": 15332, \"totalSubmissionRaw\": 36525, \"acRate\": \"42.0%\"}",
+  "likes": 82,
+  "dislikes": 6,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[\"AuctionSystem\",\"addBid\",\"addBid\",\"getHighestBidder\",\"updateBid\",\"getHighestBidder\",\"removeBid\",\"getHighestBidder\",\"getHighestBidder\"]\n[[],[1,7,5],[2,7,6],[7],[1,7,8],[7],[2,7],[7],[3]]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 3, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Hash Table",
+      "slug": "hash-table"
+    },
+    {
+      "name": "Design",
+      "slug": "design"
+    },
+    {
+      "name": "Heap (Priority Queue)",
+      "slug": "heap-priority-queue"
+    },
+    {
+      "name": "Ordered Set",
+      "slug": "ordered-set"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class AuctionSystem {\npublic:\n    AuctionSystem() {\n        \n    }\n    \n    void addBid(int userId, int itemId, int bidAmount) {\n        \n    }\n    \n    void updateBid(int userId, int itemId, int newAmount) {\n        \n    }\n    \n    void removeBid(int userId, int itemId) {\n        \n    }\n    \n    int getHighestBidder(int itemId) {\n        \n    }\n};\n\n/**\n * Your AuctionSystem object will be instantiated and called as such:\n * AuctionSystem* obj = new AuctionSystem();\n * obj->addBid(userId,itemId,bidAmount);\n * obj->updateBid(userId,itemId,newAmount);\n * obj->removeBid(userId,itemId);\n * int param_4 = obj->getHighestBidder(itemId);\n */"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class AuctionSystem {\n\n    public AuctionSystem() {\n        \n    }\n    \n    public void addBid(int userId, int itemId, int bidAmount) {\n        \n    }\n    \n    public void updateBid(int userId, int itemId, int newAmount) {\n        \n    }\n    \n    public void removeBid(int userId, int itemId) {\n        \n    }\n    \n    public int getHighestBidder(int itemId) {\n        \n    }\n}\n\n/**\n * Your AuctionSystem object will be instantiated and called as such:\n * AuctionSystem obj = new AuctionSystem();\n * obj.addBid(userId,itemId,bidAmount);\n * obj.updateBid(userId,itemId,newAmount);\n * obj.removeBid(userId,itemId);\n * int param_4 = obj.getHighestBidder(itemId);\n */"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class AuctionSystem:\n\n    def __init__(self):\n        \n\n    def addBid(self, userId: int, itemId: int, bidAmount: int) -> None:\n        \n\n    def updateBid(self, userId: int, itemId: int, newAmount: int) -> None:\n        \n\n    def removeBid(self, userId: int, itemId: int) -> None:\n        \n\n    def getHighestBidder(self, itemId: int) -> int:\n        \n\n\n# Your AuctionSystem object will be instantiated and called as such:\n# obj = AuctionSystem()\n# obj.addBid(userId,itemId,bidAmount)\n# obj.updateBid(userId,itemId,newAmount)\n# obj.removeBid(userId,itemId)\n# param_4 = obj.getHighestBidder(itemId)"
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class AuctionSystem(object):\n\n    def __init__(self):\n        \n\n    def addBid(self, userId, itemId, bidAmount):\n        \"\"\"\n        :type userId: int\n        :type itemId: int\n        :type bidAmount: int\n        :rtype: None\n        \"\"\"\n        \n\n    def updateBid(self, userId, itemId, newAmount):\n        \"\"\"\n        :type userId: int\n        :type itemId: int\n        :type newAmount: int\n        :rtype: None\n        \"\"\"\n        \n\n    def removeBid(self, userId, itemId):\n        \"\"\"\n        :type userId: int\n        :type itemId: int\n        :rtype: None\n        \"\"\"\n        \n\n    def getHighestBidder(self, itemId):\n        \"\"\"\n        :type itemId: int\n        :rtype: int\n        \"\"\"\n        \n\n\n# Your AuctionSystem object will be instantiated and called as such:\n# obj = AuctionSystem()\n# obj.addBid(userId,itemId,bidAmount)\n# obj.updateBid(userId,itemId,newAmount)\n# obj.removeBid(userId,itemId)\n# param_4 = obj.getHighestBidder(itemId)"
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "\nvar AuctionSystem = function() {\n    \n};\n\n/** \n * @param {number} userId \n * @param {number} itemId \n * @param {number} bidAmount\n * @return {void}\n */\nAuctionSystem.prototype.addBid = function(userId, itemId, bidAmount) {\n    \n};\n\n/** \n * @param {number} userId \n * @param {number} itemId \n * @param {number} newAmount\n * @return {void}\n */\nAuctionSystem.prototype.updateBid = function(userId, itemId, newAmount) {\n    \n};\n\n/** \n * @param {number} userId \n * @param {number} itemId\n * @return {void}\n */\nAuctionSystem.prototype.removeBid = function(userId, itemId) {\n    \n};\n\n/** \n * @param {number} itemId\n * @return {number}\n */\nAuctionSystem.prototype.getHighestBidder = function(itemId) {\n    \n};\n\n/** \n * Your AuctionSystem object will be instantiated and called as such:\n * var obj = new AuctionSystem()\n * obj.addBid(userId,itemId,bidAmount)\n * obj.updateBid(userId,itemId,newAmount)\n * obj.removeBid(userId,itemId)\n * var param_4 = obj.getHighestBidder(itemId)\n */"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "class AuctionSystem {\n    constructor() {\n        \n    }\n\n    addBid(userId: number, itemId: number, bidAmount: number): void {\n        \n    }\n\n    updateBid(userId: number, itemId: number, newAmount: number): void {\n        \n    }\n\n    removeBid(userId: number, itemId: number): void {\n        \n    }\n\n    getHighestBidder(itemId: number): number {\n        \n    }\n}\n\n/**\n * Your AuctionSystem object will be instantiated and called as such:\n * var obj = new AuctionSystem()\n * obj.addBid(userId,itemId,bidAmount)\n * obj.updateBid(userId,itemId,newAmount)\n * obj.removeBid(userId,itemId)\n * var param_4 = obj.getHighestBidder(itemId)\n */"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class AuctionSystem {\n\n    public AuctionSystem() {\n        \n    }\n    \n    public void AddBid(int userId, int itemId, int bidAmount) {\n        \n    }\n    \n    public void UpdateBid(int userId, int itemId, int newAmount) {\n        \n    }\n    \n    public void RemoveBid(int userId, int itemId) {\n        \n    }\n    \n    public int GetHighestBidder(int itemId) {\n        \n    }\n}\n\n/**\n * Your AuctionSystem object will be instantiated and called as such:\n * AuctionSystem obj = new AuctionSystem();\n * obj.AddBid(userId,itemId,bidAmount);\n * obj.UpdateBid(userId,itemId,newAmount);\n * obj.RemoveBid(userId,itemId);\n * int param_4 = obj.GetHighestBidder(itemId);\n */"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "\n\n\ntypedef struct {\n    \n} AuctionSystem;\n\n\nAuctionSystem* auctionSystemCreate() {\n    \n}\n\nvoid auctionSystemAddBid(AuctionSystem* obj, int userId, int itemId, int bidAmount) {\n    \n}\n\nvoid auctionSystemUpdateBid(AuctionSystem* obj, int userId, int itemId, int newAmount) {\n    \n}\n\nvoid auctionSystemRemoveBid(AuctionSystem* obj, int userId, int itemId) {\n    \n}\n\nint auctionSystemGetHighestBidder(AuctionSystem* obj, int itemId) {\n    \n}\n\nvoid auctionSystemFree(AuctionSystem* obj) {\n    \n}\n\n/**\n * Your AuctionSystem struct will be instantiated and called as such:\n * AuctionSystem* obj = auctionSystemCreate();\n * auctionSystemAddBid(obj, userId, itemId, bidAmount);\n \n * auctionSystemUpdateBid(obj, userId, itemId, newAmount);\n \n * auctionSystemRemoveBid(obj, userId, itemId);\n \n * int param_4 = auctionSystemGetHighestBidder(obj, itemId);\n \n * auctionSystemFree(obj);\n*/"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "type AuctionSystem struct {\n    \n}\n\n\nfunc Constructor() AuctionSystem {\n    \n}\n\n\nfunc (this *AuctionSystem) AddBid(userId int, itemId int, bidAmount int)  {\n    \n}\n\n\nfunc (this *AuctionSystem) UpdateBid(userId int, itemId int, newAmount int)  {\n    \n}\n\n\nfunc (this *AuctionSystem) RemoveBid(userId int, itemId int)  {\n    \n}\n\n\nfunc (this *AuctionSystem) GetHighestBidder(itemId int) int {\n    \n}\n\n\n/**\n * Your AuctionSystem object will be instantiated and called as such:\n * obj := Constructor();\n * obj.AddBid(userId,itemId,bidAmount);\n * obj.UpdateBid(userId,itemId,newAmount);\n * obj.RemoveBid(userId,itemId);\n * param_4 := obj.GetHighestBidder(itemId);\n */"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class AuctionSystem() {\n\n    fun addBid(userId: Int, itemId: Int, bidAmount: Int) {\n        \n    }\n\n    fun updateBid(userId: Int, itemId: Int, newAmount: Int) {\n        \n    }\n\n    fun removeBid(userId: Int, itemId: Int) {\n        \n    }\n\n    fun getHighestBidder(itemId: Int): Int {\n        \n    }\n\n}\n\n/**\n * Your AuctionSystem object will be instantiated and called as such:\n * var obj = AuctionSystem()\n * obj.addBid(userId,itemId,bidAmount)\n * obj.updateBid(userId,itemId,newAmount)\n * obj.removeBid(userId,itemId)\n * var param_4 = obj.getHighestBidder(itemId)\n */"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "\nclass AuctionSystem {\n\n    init() {\n        \n    }\n    \n    func addBid(_ userId: Int, _ itemId: Int, _ bidAmount: Int) {\n        \n    }\n    \n    func updateBid(_ userId: Int, _ itemId: Int, _ newAmount: Int) {\n        \n    }\n    \n    func removeBid(_ userId: Int, _ itemId: Int) {\n        \n    }\n    \n    func getHighestBidder(_ itemId: Int) -> Int {\n        \n    }\n}\n\n/**\n * Your AuctionSystem object will be instantiated and called as such:\n * let obj = AuctionSystem()\n * obj.addBid(userId, itemId, bidAmount)\n * obj.updateBid(userId, itemId, newAmount)\n * obj.removeBid(userId, itemId)\n * let ret_4: Int = obj.getHighestBidder(itemId)\n */"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "struct AuctionSystem {\n\n}\n\n\n/** \n * `&self` means the method takes an immutable reference.\n * If you need a mutable reference, change it to `&mut self` instead.\n */\nimpl AuctionSystem {\n\n    fn new() -> Self {\n        \n    }\n    \n    fn add_bid(&self, user_id: i32, item_id: i32, bid_amount: i32) {\n        \n    }\n    \n    fn update_bid(&self, user_id: i32, item_id: i32, new_amount: i32) {\n        \n    }\n    \n    fn remove_bid(&self, user_id: i32, item_id: i32) {\n        \n    }\n    \n    fn get_highest_bidder(&self, item_id: i32) -> i32 {\n        \n    }\n}\n\n/**\n * Your AuctionSystem object will be instantiated and called as such:\n * let obj = AuctionSystem::new();\n * obj.add_bid(userId, itemId, bidAmount);\n * obj.update_bid(userId, itemId, newAmount);\n * obj.remove_bid(userId, itemId);\n * let ret_4: i32 = obj.get_highest_bidder(itemId);\n */"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "class AuctionSystem\n    def initialize()\n        \n    end\n\n\n=begin\n    :type user_id: Integer\n    :type item_id: Integer\n    :type bid_amount: Integer\n    :rtype: Void\n=end\n    def add_bid(user_id, item_id, bid_amount)\n        \n    end\n\n\n=begin\n    :type user_id: Integer\n    :type item_id: Integer\n    :type new_amount: Integer\n    :rtype: Void\n=end\n    def update_bid(user_id, item_id, new_amount)\n        \n    end\n\n\n=begin\n    :type user_id: Integer\n    :type item_id: Integer\n    :rtype: Void\n=end\n    def remove_bid(user_id, item_id)\n        \n    end\n\n\n=begin\n    :type item_id: Integer\n    :rtype: Integer\n=end\n    def get_highest_bidder(item_id)\n        \n    end\n\n\nend\n\n# Your AuctionSystem object will be instantiated and called as such:\n# obj = AuctionSystem.new()\n# obj.add_bid(user_id, item_id, bid_amount)\n# obj.update_bid(user_id, item_id, new_amount)\n# obj.remove_bid(user_id, item_id)\n# param_4 = obj.get_highest_bidder(item_id)"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class AuctionSystem {\n    /**\n     */\n    function __construct() {\n        \n    }\n  \n    /**\n     * @param Integer $userId\n     * @param Integer $itemId\n     * @param Integer $bidAmount\n     * @return NULL\n     */\n    function addBid($userId, $itemId, $bidAmount) {\n        \n    }\n  \n    /**\n     * @param Integer $userId\n     * @param Integer $itemId\n     * @param Integer $newAmount\n     * @return NULL\n     */\n    function updateBid($userId, $itemId, $newAmount) {\n        \n    }\n  \n    /**\n     * @param Integer $userId\n     * @param Integer $itemId\n     * @return NULL\n     */\n    function removeBid($userId, $itemId) {\n        \n    }\n  \n    /**\n     * @param Integer $itemId\n     * @return Integer\n     */\n    function getHighestBidder($itemId) {\n        \n    }\n}\n\n/**\n * Your AuctionSystem object will be instantiated and called as such:\n * $obj = AuctionSystem();\n * $obj->addBid($userId, $itemId, $bidAmount);\n * $obj->updateBid($userId, $itemId, $newAmount);\n * $obj->removeBid($userId, $itemId);\n * $ret_4 = $obj->getHighestBidder($itemId);\n */"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class AuctionSystem {\n\n  AuctionSystem() {\n    \n  }\n  \n  void addBid(int userId, int itemId, int bidAmount) {\n    \n  }\n  \n  void updateBid(int userId, int itemId, int newAmount) {\n    \n  }\n  \n  void removeBid(int userId, int itemId) {\n    \n  }\n  \n  int getHighestBidder(int itemId) {\n    \n  }\n}\n\n/**\n * Your AuctionSystem object will be instantiated and called as such:\n * AuctionSystem obj = AuctionSystem();\n * obj.addBid(userId,itemId,bidAmount);\n * obj.updateBid(userId,itemId,newAmount);\n * obj.removeBid(userId,itemId);\n * int param4 = obj.getHighestBidder(itemId);\n */"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "class AuctionSystem() {\n\n    def addBid(userId: Int, itemId: Int, bidAmount: Int): Unit = {\n        \n    }\n\n    def updateBid(userId: Int, itemId: Int, newAmount: Int): Unit = {\n        \n    }\n\n    def removeBid(userId: Int, itemId: Int): Unit = {\n        \n    }\n\n    def getHighestBidder(itemId: Int): Int = {\n        \n    }\n\n}\n\n/**\n * Your AuctionSystem object will be instantiated and called as such:\n * val obj = new AuctionSystem()\n * obj.addBid(userId,itemId,bidAmount)\n * obj.updateBid(userId,itemId,newAmount)\n * obj.removeBid(userId,itemId)\n * val param_4 = obj.getHighestBidder(itemId)\n */"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule AuctionSystem do\n  @spec init_() :: any\n  def init_() do\n    \n  end\n\n  @spec add_bid(user_id :: integer, item_id :: integer, bid_amount :: integer) :: any\n  def add_bid(user_id, item_id, bid_amount) do\n    \n  end\n\n  @spec update_bid(user_id :: integer, item_id :: integer, new_amount :: integer) :: any\n  def update_bid(user_id, item_id, new_amount) do\n    \n  end\n\n  @spec remove_bid(user_id :: integer, item_id :: integer) :: any\n  def remove_bid(user_id, item_id) do\n    \n  end\n\n  @spec get_highest_bidder(item_id :: integer) :: integer\n  def get_highest_bidder(item_id) do\n    \n  end\nend\n\n# Your functions will be called as such:\n# AuctionSystem.init_()\n# AuctionSystem.add_bid(user_id, item_id, bid_amount)\n# AuctionSystem.update_bid(user_id, item_id, new_amount)\n# AuctionSystem.remove_bid(user_id, item_id)\n# param_4 = AuctionSystem.get_highest_bidder(item_id)\n\n# AuctionSystem.init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec auction_system_init_() -> any().\nauction_system_init_() ->\n  .\n\n-spec auction_system_add_bid(UserId :: integer(), ItemId :: integer(), BidAmount :: integer()) -> any().\nauction_system_add_bid(UserId, ItemId, BidAmount) ->\n  .\n\n-spec auction_system_update_bid(UserId :: integer(), ItemId :: integer(), NewAmount :: integer()) -> any().\nauction_system_update_bid(UserId, ItemId, NewAmount) ->\n  .\n\n-spec auction_system_remove_bid(UserId :: integer(), ItemId :: integer()) -> any().\nauction_system_remove_bid(UserId, ItemId) ->\n  .\n\n-spec auction_system_get_highest_bidder(ItemId :: integer()) -> integer().\nauction_system_get_highest_bidder(ItemId) ->\n  .\n\n\n%% Your functions will be called as such:\n%% auction_system_init_(),\n%% auction_system_add_bid(UserId, ItemId, BidAmount),\n%% auction_system_update_bid(UserId, ItemId, NewAmount),\n%% auction_system_remove_bid(UserId, ItemId),\n%% Param_4 = auction_system_get_highest_bidder(ItemId),\n\n%% auction_system_init_ will be called before every test case, in which you can do some necessary initializations."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define auction-system%\n  (class object%\n    (super-new)\n    \n    (init-field)\n    \n    ; add-bid : exact-integer? exact-integer? exact-integer? -> void?\n    (define/public (add-bid user-id item-id bid-amount)\n      )\n    ; update-bid : exact-integer? exact-integer? exact-integer? -> void?\n    (define/public (update-bid user-id item-id new-amount)\n      )\n    ; remove-bid : exact-integer? exact-integer? -> void?\n    (define/public (remove-bid user-id item-id)\n      )\n    ; get-highest-bidder : exact-integer? -> exact-integer?\n    (define/public (get-highest-bidder item-id)\n      )))\n\n;; Your auction-system% object will be instantiated and called as such:\n;; (define obj (new auction-system%))\n;; (send obj add-bid user-id item-id bid-amount)\n;; (send obj update-bid user-id item-id new-amount)\n;; (send obj remove-bid user-id item-id)\n;; (define param_4 (send obj get-highest-bidder item-id))"
+    }
+  ],
+  "solution": null
+}

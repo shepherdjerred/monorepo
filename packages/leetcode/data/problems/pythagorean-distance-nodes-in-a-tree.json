@@ -1,0 +1,132 @@
+{
+  "questionId": "4180",
+  "questionFrontendId": "3820",
+  "title": "Pythagorean Distance Nodes in a Tree",
+  "titleSlug": "pythagorean-distance-nodes-in-a-tree",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer <code>n</code> and an undirected tree with <code>n</code> nodes numbered from 0 to <code>n - 1</code>. The tree is represented by a 2D array <code>edges</code> of length <code>n - 1</code>, where <code>edges[i] = [u<sub>i</sub>, v<sub>i</sub>]</code> indicates an undirected edge between <code>u<sub>i</sub></code> and <code>v<sub>i</sub></code>.</p>\n\n<p>You are also given three <strong>distinct</strong> target nodes <code>x</code>, <code>y</code>, and <code>z</code>.</p>\n\n<p>For any node <code>u</code> in the tree:</p>\n\n<ul>\n\t<li>Let <code>dx</code> be the distance from <code>u</code> to node <code>x</code></li>\n\t<li>Let <code>dy</code> be the distance from <code>u</code> to node <code>y</code></li>\n\t<li>Let <code>dz</code> be the distance from <code>u</code> to node <code>z</code></li>\n</ul>\n\n<p>The node <code>u</code> is called <strong>special</strong> if the three distances form a <strong>Pythagorean Triplet</strong>.</p>\n\n<p>Return an integer denoting the number of special nodes in the tree.</p>\n\n<p>A <strong>Pythagorean triplet</strong> consists of three integers <code>a</code>, <code>b</code>, and <code>c</code> which, when sorted in <strong>ascending</strong> order, satisfy <code>a<sup>2</sup> + b<sup>2</sup> = c<sup>2</sup></code>.</p>\n\n<p>The <strong>distance</strong> between two nodes in a tree is the number of edges on the unique path between them.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 4, edges = [[0,1],[0,2],[0,3]], x = 1, y = 2, z = 3</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">3</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>For each node, we compute its distances to nodes <code>x = 1</code>, <code>y = 2</code>, and <code>z = 3</code>.</p>\n\n<ul>\n\t<li>Node 0 has distances 1, 1, and 1. After sorting, the distances are 1, 1, and 1, which do not satisfy the Pythagorean condition.</li>\n\t<li>Node 1 has distances 0, 2, and 2. After sorting, the distances are 0, 2, and 2. Since <code>0<sup>2</sup> + 2<sup>2</sup> = 2<sup>2</sup></code>, node 1 is special.</li>\n\t<li>Node 2 has distances 2, 0, and 2. After sorting, the distances are 0, 2, and 2. Since <code>0<sup>2</sup> + 2<sup>2</sup> = 2<sup>2</sup></code>, node 2 is special.</li>\n\t<li>Node 3 has distances 2, 2, and 0. After sorting, the distances are 0, 2, and 2. This also satisfies the Pythagorean condition.</li>\n</ul>\n\n<p>Therefore, nodes 1, 2, and 3 are special, and the answer is 3.</p>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 4, edges = [[0,1],[1,2],[2,3]], x = 0, y = 3, z = 2</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">0</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>For each node, we compute its distances to nodes <code>x = 0</code>, <code>y = 3</code>, and <code>z = 2</code>.</p>\n\n<ul>\n\t<li>Node 0 has distances 0, 3, and 2. After sorting, the distances are 0, 2, and 3, which do not satisfy the Pythagorean condition.</li>\n\t<li>Node 1 has distances 1, 2, and 1. After sorting, the distances are 1, 1, and 2, which do not satisfy the Pythagorean condition.</li>\n\t<li>Node 2 has distances 2, 1, and 0. After sorting, the distances are 0, 1, and 2, which do not satisfy the Pythagorean condition.</li>\n\t<li>Node 3 has distances 3, 0, and 1. After sorting, the distances are 0, 1, and 3, which do not satisfy the Pythagorean condition.</li>\n</ul>\n\n<p>No node satisfies the Pythagorean condition. Therefore, the answer is 0.</p>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">n = 4, edges = [[0,1],[1,2],[1,3]], x = 1, y = 3, z = 0</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">1</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>For each node, we compute its distances to nodes <code>x = 1</code>, <code>y = 3</code>, and <code>z = 0</code>.</p>\n\n<ul>\n\t<li>Node 0 has distances 1, 2, and 0. After sorting, the distances are 0, 1, and 2, which do not satisfy the Pythagorean condition.</li>\n\t<li>Node 1 has distances 0, 1, and 1. After sorting, the distances are 0, 1, and 1. Since <code>0<sup>2</sup> + 1<sup>2</sup> = 1<sup>2</sup></code>, node 1 is special.</li>\n\t<li>Node 2 has distances 1, 2, and 2. After sorting, the distances are 1, 2, and 2, which do not satisfy the Pythagorean condition.</li>\n\t<li>Node 3 has distances 1, 0, and 2. After sorting, the distances are 0, 1, and 2, which do not satisfy the Pythagorean condition.</li>\n</ul>\n\n<p>Therefore, the answer is 1.</p>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>4 &lt;= n &lt;= 10<sup>5</sup></code></li>\n\t<li><code>edges.length == n - 1</code></li>\n\t<li><code>edges[i] = [u<sub>i</sub>, v<sub>i</sub>]</code></li>\n\t<li><code>0 &lt;= u<sub>i</sub>, v<sub>i</sub>, x, y, z &lt;= n - 1</code></li>\n\t<li><code>x</code>, <code>y</code>, and <code>z</code> are pairwise <strong>distinct</strong>.</li>\n\t<li>The input is generated such that <code>edges</code> represent a valid tree.</li>\n</ul>\n",
+  "hints": [
+    "Run a breadth-first search independently from <code>x</code>, <code>y</code>, and <code>z</code>. This gives you three distance arrays with full coverage.",
+    "For each node, collect its three distances, sort them, and evaluate the Pythagorean condition on the sorted value."
+  ],
+  "metaData": "{\n  \"name\": \"specialNodes\",\n  \"params\": [\n    {\n      \"name\": \"n\",\n      \"type\": \"integer\"\n    },\n    {\n      \"type\": \"integer[][]\",\n      \"name\": \"edges\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"x\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"y\"\n    },\n    {\n      \"type\": \"integer\",\n      \"name\": \"z\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"20.8K\", \"totalSubmission\": \"36K\", \"totalAcceptedRaw\": 20804, \"totalSubmissionRaw\": 35980, \"acRate\": \"57.8%\"}",
+  "likes": 88,
+  "dislikes": 4,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "4\n[[0,1],[0,2],[0,3]]\n1\n2\n3",
+    "4\n[[0,1],[1,2],[2,3]]\n0\n3\n2",
+    "4\n[[0,1],[1,2],[1,3]]\n1\n3\n0"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"paypal\", \"name\": \"PayPal\"}], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Tree",
+      "slug": "tree"
+    },
+    {
+      "name": "Breadth-First Search",
+      "slug": "breadth-first-search"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int specialNodes(int n, vector<vector<int>>& edges, int x, int y, int z) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int specialNodes(int n, int[][] edges, int x, int y, int z) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def specialNodes(self, n: int, edges: List[List[int]], x: int, y: int, z: int) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def specialNodes(self, n, edges, x, y, z):\n        \"\"\"\n        :type n: int\n        :type edges: List[List[int]]\n        :type x: int\n        :type y: int\n        :type z: int\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number} n\n * @param {number[][]} edges\n * @param {number} x\n * @param {number} y\n * @param {number} z\n * @return {number}\n */\nvar specialNodes = function(n, edges, x, y, z) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function specialNodes(n: number, edges: number[][], x: number, y: number, z: number): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int SpecialNodes(int n, int[][] edges, int x, int y, int z) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int specialNodes(int n, int** edges, int edgesSize, int* edgesColSize, int x, int y, int z) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func specialNodes(n int, edges [][]int, x int, y int, z int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun specialNodes(n: Int, edges: Array<IntArray>, x: Int, y: Int, z: Int): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func specialNodes(_ n: Int, _ edges: [[Int]], _ x: Int, _ y: Int, _ z: Int) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn special_nodes(n: i32, edges: Vec<Vec<i32>>, x: i32, y: i32, z: i32) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer} n\n# @param {Integer[][]} edges\n# @param {Integer} x\n# @param {Integer} y\n# @param {Integer} z\n# @return {Integer}\ndef special_nodes(n, edges, x, y, z)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer $n\n     * @param Integer[][] $edges\n     * @param Integer $x\n     * @param Integer $y\n     * @param Integer $z\n     * @return Integer\n     */\n    function specialNodes($n, $edges, $x, $y, $z) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int specialNodes(int n, List<List<int>> edges, int x, int y, int z) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def specialNodes(n: Int, edges: Array[Array[Int]], x: Int, y: Int, z: Int): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec special_nodes(n :: integer, edges :: [[integer]], x :: integer, y :: integer, z :: integer) :: integer\n  def special_nodes(n, edges, x, y, z) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec special_nodes(N :: integer(), Edges :: [[integer()]], X :: integer(), Y :: integer(), Z :: integer()) -> integer().\nspecial_nodes(N, Edges, X, Y, Z) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (special-nodes n edges x y z)\n  (-> exact-integer? (listof (listof exact-integer?)) exact-integer? exact-integer? exact-integer? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}
