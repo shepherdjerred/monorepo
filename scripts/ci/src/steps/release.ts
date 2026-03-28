@@ -1,20 +1,17 @@
 /**
  * Release-please step (main only).
  */
-import { RETRY } from "../lib/buildkite.ts";
-import { k8sPlugin } from "../lib/k8s-plugin.ts";
+import { daggerStep } from "../lib/buildkite.ts";
 import type { BuildkiteStep } from "../lib/types.ts";
 
 const MAIN_ONLY = "build.branch == pipeline.default_branch";
 
 export function releaseStep(): BuildkiteStep {
-  return {
+  return daggerStep({
     label: ":bookmark: Release",
     key: "release",
-    if: MAIN_ONLY,
-    command: ".buildkite/scripts/release.sh",
-    timeout_in_minutes: 10,
-    retry: RETRY,
-    plugins: [k8sPlugin({ secrets: [] })],
-  };
+    daggerCmd: "dagger call release-please --source . --gh-token env:GITHUB_TOKEN",
+    timeoutMinutes: 10,
+    condition: MAIN_ONLY,
+  });
 }

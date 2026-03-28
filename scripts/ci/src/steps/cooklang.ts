@@ -40,10 +40,12 @@ export function cooklangReleaseGroup(): BuildkiteGroup {
         key: "cooklang-release-create",
         if: MAIN_ONLY,
         depends_on: "cooklang-push",
-        command: ".buildkite/scripts/cooklang-create-release.sh",
+        command:
+          'dagger call cooklang-create-release --artifacts $(dagger call cooklang-build --source .) --version "$(buildkite-agent meta-data get cooklang_version || echo dev)" --gh-token env:GITHUB_TOKEN',
         timeout_in_minutes: 10,
         retry: RETRY,
-        plugins: [k8sPlugin({ cpu: "500m", memory: "512Mi", secrets: [] })],
+        env: DAGGER_ENV,
+        plugins: [k8sPlugin({ cpu: "500m", memory: "512Mi" })],
       },
     ],
   };

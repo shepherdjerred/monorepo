@@ -47,10 +47,12 @@ export function clauderonReleaseGroup(): BuildkiteGroup {
     key: "clauderon-upload",
     if: MAIN_ONLY,
     depends_on: TARGETS.map((t) => t.key),
-    command: ".buildkite/scripts/clauderon-upload.sh",
+    command:
+      'dagger call clauderon-upload --binaries $(dagger call rust-build --source . --target x86_64-unknown-linux-gnu) --version "$(buildkite-agent meta-data get clauderon_version || echo dev)" --gh-token env:GITHUB_TOKEN',
     timeout_in_minutes: 10,
     retry: RETRY,
-    plugins: [k8sPlugin({ cpu: "500m", memory: "512Mi", secrets: [] })],
+    env: DAGGER_ENV,
+    plugins: [k8sPlugin({ cpu: "500m", memory: "512Mi" })],
   };
 
   return {

@@ -216,7 +216,7 @@ describe("buildPipeline", () => {
       expect(missing).toEqual([]);
     });
 
-    it("all commands use dagger call or shell scripts", () => {
+    it("all commands use dagger call (no shell script bypasses)", () => {
       const pipeline = buildPipeline(fullBuild());
       const nonDagger: string[] = [];
 
@@ -225,12 +225,8 @@ describe("buildPipeline", () => {
           if (typeof s !== "object" || s === null) continue;
           const obj = s as Record<string, unknown>;
           if (typeof obj["command"] === "string") {
-            const cmd = obj["command"];
-            if (
-              !cmd.includes("dagger call") &&
-              !cmd.includes(".buildkite/scripts/") &&
-              !cmd.includes("echo ")
-            ) {
+            const cmd = obj["command"] as string;
+            if (!cmd.includes("dagger call") && !cmd.includes("echo ")) {
               nonDagger.push(`${obj["key"]}: ${cmd}`);
             }
           }

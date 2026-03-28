@@ -44,8 +44,11 @@ import {
   argoCdHealthWaitHelper,
   cooklangBuildHelper,
   cooklangPushHelper,
+  cooklangCreateReleaseHelper,
   clauderonUploadHelper,
   versionCommitBackHelper,
+  releasePleaseHelper,
+  codeReviewHelper,
   cargoDenyHelper,
 } from "./release";
 
@@ -1060,6 +1063,38 @@ export class Monorepo {
     ghToken: Secret,
   ): Promise<string> {
     return versionCommitBackHelper(digests, version, ghToken).stdout();
+  }
+
+  /** Run release-please to create release PRs and GitHub releases */
+  @func({ cache: "never" })
+  async releasePlease(
+    source: Directory,
+    ghToken: Secret,
+  ): Promise<string> {
+    return releasePleaseHelper(source, ghToken).stdout();
+  }
+
+  /** Create a GitHub release for cooklang-rich-preview */
+  @func({ cache: "never" })
+  async cooklangCreateRelease(
+    artifacts: Directory,
+    version: string,
+    ghToken: Secret,
+  ): Promise<string> {
+    return cooklangCreateReleaseHelper(artifacts, version, ghToken).stdout();
+  }
+
+  /** Run AI code review on a PR */
+  @func({ cache: "never" })
+  async codeReview(
+    source: Directory,
+    prNumber: string,
+    baseBranch: string,
+    commitSha: string,
+    ghToken: Secret,
+    claudeToken: Secret,
+  ): Promise<string> {
+    return codeReviewHelper(source, prNumber, baseBranch, commitSha, ghToken, claudeToken).stdout();
   }
 
   /** Run cargo deny check on the Rust project */

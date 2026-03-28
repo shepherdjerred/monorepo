@@ -343,6 +343,119 @@ export function versionCommitBackHelper(
 }
 
 // ---------------------------------------------------------------------------
+// Release-please
+// ---------------------------------------------------------------------------
+
+// renovate: datasource=npm depName=release-please
+const RELEASE_PLEASE_VERSION = "17.3.0";
+
+/** Run release-please to create release PRs and GitHub releases. */
+export function releasePleaseHelper(
+  source: Directory,
+  ghToken: Secret,
+): Container {
+  return dag
+    .container()
+    .from(BUN_IMAGE)
+    .withExec(["apt-get", "update", "-qq"])
+    .withExec(["apt-get", "install", "-y", "-qq", "--no-install-recommends", "git"])
+    .withExec(["bun", "add", "-g", `release-please@${RELEASE_PLEASE_VERSION}`])
+    .withWorkdir("/workspace")
+    .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES })
+    .withSecretVariable("GITHUB_TOKEN", ghToken)
+    .withExec([
+      "sh",
+      "-c",
+      [
+        `release-please release-pr --token=$GITHUB_TOKEN --repo-url=shepherdjerred/monorepo --target-branch=main || true`,
+        `release-please github-release --token=$GITHUB_TOKEN --repo-url=shepherdjerred/monorepo --target-branch=main`,
+      ].join(" && "),
+    ]);
+}
+
+// ---------------------------------------------------------------------------
+// Cooklang GitHub release
+// ---------------------------------------------------------------------------
+
+/** Create a GitHub release for cooklang-rich-preview with built artifacts. */
+export function cooklangCreateReleaseHelper(
+  artifacts: Directory,
+  version: string,
+  ghToken: Secret,
+): Container {
+  return dag
+    .container()
+    .from(ALPINE_IMAGE)
+    .withExec(["apk", "add", "--no-cache", "gh"])
+    .withSecretVariable("GH_TOKEN", ghToken)
+    .withWorkdir("/artifacts")
+    .withDirectory("/artifacts", artifacts)
+    .withExec([
+      "sh",
+      "-c",
+      `gh release create "cooklang-rich-preview-v${version}" /artifacts/* --repo shepherdjerred/monorepo --title "cooklang-rich-preview v${version}" --generate-notes || echo "Release already exists or no version"`,
+    ]);
+}
+
+// ---------------------------------------------------------------------------
+// Code review
+// ---------------------------------------------------------------------------
+
+// renovate: datasource=npm depName=@anthropic-ai/claude-code
+const CLAUDE_CODE_VERSION = "2.1.71";
+
+/** Run AI code review on a PR. */
+export function codeReviewHelper(
+  source: Directory,
+  prNumber: string,
+  baseBranch: string,
+  commitSha: string,
+  ghToken: Secret,
+  claudeToken: Secret,
+): Container {
+  const prompt = `Review PR #${prNumber} on branch ${baseBranch} (head SHA: ${commitSha}).
+
+Read the CLAUDE.md file first for project context.
+
+Use gh CLI to inspect the PR diff and details:
+  gh pr view ${prNumber} --repo shepherdjerred/monorepo
+  gh pr diff ${prNumber} --repo shepherdjerred/monorepo
+
+Review this PR focusing on things linters and typecheckers can't catch:
+- Functionality: Does the code actually do what the PR claims?
+- Architectural fit: Does this change fit the codebase patterns?
+- Logic errors: Are there bugs, race conditions, or edge cases?
+- Security: Any vulnerabilities that static analysis would miss?
+- Design: Is this the right approach? Are there simpler alternatives?
+
+After reviewing, post your review using gh CLI:
+  gh pr review ${prNumber} --repo shepherdjerred/monorepo --approve --body 'your review'
+  OR
+  gh pr review ${prNumber} --repo shepherdjerred/monorepo --request-changes --body 'your review'
+
+Be direct and concise. If the PR is trivial (pure merge/rebase with minimal changes), approve with a brief note.`;
+
+  return dag
+    .container()
+    .from(BUN_IMAGE)
+    .withExec(["apt-get", "update", "-qq"])
+    .withExec(["apt-get", "install", "-y", "-qq", "--no-install-recommends", "git"])
+    .withExec(["bun", "add", "-g", `@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}`])
+    .withWorkdir("/workspace")
+    .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES })
+    .withSecretVariable("GH_TOKEN", ghToken)
+    .withSecretVariable("CLAUDE_CODE_OAUTH_TOKEN", claudeToken)
+    .withExec([
+      "claude",
+      "--print",
+      "--dangerously-skip-permissions",
+      "--model", "claude-opus-4-6",
+      "--max-turns", "35",
+      prompt,
+    ]);
+}
+
+// ---------------------------------------------------------------------------
 // Cargo deny
 // ---------------------------------------------------------------------------
 
