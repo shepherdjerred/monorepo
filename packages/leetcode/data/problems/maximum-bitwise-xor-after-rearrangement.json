@@ -1,0 +1,137 @@
+{
+  "questionId": "4044",
+  "questionFrontendId": "3849",
+  "title": "Maximum Bitwise XOR After Rearrangement",
+  "titleSlug": "maximum-bitwise-xor-after-rearrangement",
+  "difficulty": "Medium",
+  "content": "<p>You are given two binary strings <code>s</code> and <code>t</code>​​​​​​​, each of length <code>n</code>.</p>\n\n<p>You may <strong>rearrange</strong> the characters of <code>t</code> in any order, but <code>s</code> <strong>must remain unchanged</strong>.</p>\n\n<p>Return a <strong>binary string</strong> of length <code>n</code> representing the <strong>maximum</strong> integer value obtainable by taking the bitwise <strong>XOR</strong> of <code>s</code> and rearranged <code>t</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;101&quot;, t = &quot;011&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;110&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>One optimal rearrangement of <code>t</code> is <code>&quot;011&quot;</code>.</li>\n\t<li>The bitwise XOR of <code>s</code> and rearranged <code>t</code> is <code>&quot;101&quot; XOR &quot;011&quot; = &quot;110&quot;</code>, which is the maximum possible.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;0110&quot;, t = &quot;1110&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;1101&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>One optimal rearrangement of <code>t</code> is <code>&quot;1011&quot;</code>.</li>\n\t<li>The bitwise XOR of <code>s</code> and rearranged <code>t</code> is <code>&quot;0110&quot; XOR &quot;1011&quot; = &quot;1101&quot;</code>, which is the maximum possible.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;0101&quot;, t = &quot;1001&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">&quot;1111&quot;</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>One optimal rearrangement of <code>t</code> is <code>&quot;1010&quot;</code>.</li>\n\t<li>The bitwise XOR of <code>s</code> and rearranged <code>t</code> is <code>&quot;0101&quot; XOR &quot;1010&quot; = &quot;1111&quot;</code>, which is the maximum possible.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n == s.length == t.length &lt;= 2 * 10<sup>5</sup></code></li>\n\t<li><code>s[i]</code> and <code>t[i]</code> are either <code>&#39;0&#39;</code> or <code>&#39;1&#39;</code>.</li>\n</ul>\n",
+  "hints": [
+    "Count how many <code>'0'</code> and <code>'1'</code> characters exist in <code>t</code>.",
+    "To maximize XOR, try to place opposite bits: match <code>'1'</code> in <code>s</code> with <code>'0'</code> from <code>t</code>, and <code>'0'</code> in <code>s</code> with <code>'1'</code>.",
+    "Greedily build the result from left to right, using available counts while maximizing each XOR bit."
+  ],
+  "metaData": "{\n  \"name\": \"maximumXor\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    },\n    {\n      \"type\": \"string\",\n      \"name\": \"t\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"string\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"31.9K\", \"totalSubmission\": \"44.9K\", \"totalAcceptedRaw\": 31896, \"totalSubmissionRaw\": 44925, \"acRate\": \"71.0%\"}",
+  "likes": 47,
+  "dislikes": 2,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"101\"\n\"011\"",
+    "\"0110\"\n\"1110\"",
+    "\"0101\"\n\"1001\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Greedy",
+      "slug": "greedy"
+    },
+    {
+      "name": "Bit Manipulation",
+      "slug": "bit-manipulation"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    string maximumXor(string s, string t) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public String maximumXor(String s, String t) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def maximumXor(self, s: str, t: str) -> str:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def maximumXor(self, s, t):\n        \"\"\"\n        :type s: str\n        :type t: str\n        :rtype: str\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @param {string} t\n * @return {string}\n */\nvar maximumXor = function(s, t) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function maximumXor(s: string, t: string): string {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public string MaximumXor(string s, string t) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "char* maximumXor(char* s, char* t) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func maximumXor(s string, t string) string {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun maximumXor(s: String, t: String): String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func maximumXor(_ s: String, _ t: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn maximum_xor(s: String, t: String) -> String {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @param {String} t\n# @return {String}\ndef maximum_xor(s, t)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @param String $t\n     * @return String\n     */\n    function maximumXor($s, $t) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  String maximumXor(String s, String t) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def maximumXor(s: String, t: String): String = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec maximum_xor(s :: String.t, t :: String.t) :: String.t\n  def maximum_xor(s, t) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec maximum_xor(S :: unicode:unicode_binary(), T :: unicode:unicode_binary()) -> unicode:unicode_binary().\nmaximum_xor(S, T) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (maximum-xor s t)\n  (-> string? string? string?)\n  )"
+    }
+  ],
+  "solution": null
+}

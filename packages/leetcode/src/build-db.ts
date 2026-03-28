@@ -1,7 +1,21 @@
 import { Database } from "bun:sqlite";
 import { readdirSync } from "fs";
 import { join } from "path";
-import { formatDuration, timestamp } from "./lib/leetcode-graphql";
+
+function formatDuration(ms: number): string {
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  const rs = s % 60;
+  if (m < 60) return `${m}m${rs}s`;
+  const h = Math.floor(m / 60);
+  const rm = m % 60;
+  return `${h}h${rm}m`;
+}
+
+function timestamp(): string {
+  return new Date().toLocaleTimeString("en-US", { hour12: false });
+}
 
 const DATA_DIR = new URL("../data", import.meta.url).pathname;
 const PROBLEMS_DIR = join(DATA_DIR, "problems");

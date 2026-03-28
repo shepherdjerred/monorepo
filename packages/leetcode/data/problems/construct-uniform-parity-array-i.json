@@ -1,0 +1,130 @@
+{
+  "questionId": "4256",
+  "questionFrontendId": "3875",
+  "title": "Construct Uniform Parity Array I",
+  "titleSlug": "construct-uniform-parity-array-i",
+  "difficulty": "Easy",
+  "content": "<p>You are given an array <code>nums1</code> of <code>n</code> <strong>distinct</strong> integers.</p>\n\n<p>You want to construct another array <code>nums2</code> of length <code>n</code> such that the elements in <code>nums2</code> are either <strong>all odd or all even</strong>.</p>\n\n<p>For each index <code>i</code>, you must choose <strong>exactly one</strong> of the following (in any order):</p>\n\n<ul>\n\t<li><code>nums2[i] = nums1[i]</code></li>\n\t<li><code>nums2[i] = nums1[i] - nums1[j]</code>, for an index <code>j != i</code></li>\n</ul>\n\n<p>Return <code>true</code> if it is possible to construct such an array, otherwise, return <code>false</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums1 = [2,3]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">true</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Choose <code>nums2[0] = nums1[0] - nums1[1] = 2 - 3 = -1</code>.</li>\n\t<li>Choose <code>nums2[1] = nums1[1] = 3</code>.</li>\n\t<li><code>nums2 = [-1, 3]</code>, and both elements are odd. Thus, the answer is <code>true</code>​​​​​​​.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums1 = [4,6]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">true</span></p>\n\n<p><strong>Explanation:</strong>​​​​​​​</p>\n\n<ul>\n\t<li>Choose <code>nums2[0] = nums1[0] = 4</code>.</li>\n\t<li>Choose <code>nums2[1] = nums1[1] = 6</code>.</li>\n\t<li><code>nums2 = [4, 6]</code>, and all elements are even. Thus, the answer is <code>true</code>.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>1 &lt;= n == nums1.length &lt;= 100</code></li>\n\t<li><code>1 &lt;= nums1[i] &lt;= 100</code></li>\n\t<li><code>nums1</code> consists of distinct integers.</li>\n</ul>\n",
+  "hints": [
+    "There is only one possible answer."
+  ],
+  "metaData": "{\n  \"name\": \"uniformArray\",\n  \"params\": [\n    {\n      \"name\": \"nums1\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"boolean\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"47.9K\", \"totalSubmission\": \"63.3K\", \"totalAcceptedRaw\": 47943, \"totalSubmissionRaw\": 63303, \"acRate\": \"75.7%\"}",
+  "likes": 42,
+  "dislikes": 16,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[2,3]",
+    "[4,6]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 2, \"slug\": \"google\", \"name\": \"Google\"}], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Math",
+      "slug": "math"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    bool uniformArray(vector<int>& nums1) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public boolean uniformArray(int[] nums1) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def uniformArray(self, nums1: list[int]) -> bool:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def uniformArray(self, nums1):\n        \"\"\"\n        :type nums1: List[int]\n        :rtype: bool\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums1\n * @return {boolean}\n */\nvar uniformArray = function(nums1) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function uniformArray(nums1: number[]): boolean {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public bool UniformArray(int[] nums1) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "bool uniformArray(int* nums1, int nums1Size) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func uniformArray(nums1 []int) bool {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun uniformArray(nums1: IntArray): Boolean {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func uniformArray(_ nums1: [Int]) -> Bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn uniform_array(nums1: Vec<i32>) -> bool {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums1\n# @return {Boolean}\ndef uniform_array(nums1)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums1\n     * @return Boolean\n     */\n    function uniformArray($nums1) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  bool uniformArray(List<int> nums1) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def uniformArray(nums1: Array[Int]): Boolean = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec uniform_array(nums1 :: [integer]) :: boolean\n  def uniform_array(nums1) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec uniform_array(Nums1 :: [integer()]) -> boolean().\nuniform_array(Nums1) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (uniform-array nums1)\n  (-> (listof exact-integer?) boolean?)\n  )"
+    }
+  ],
+  "solution": null
+}

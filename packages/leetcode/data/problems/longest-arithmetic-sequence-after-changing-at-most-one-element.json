@@ -1,0 +1,133 @@
+{
+  "questionId": "4230",
+  "questionFrontendId": "3872",
+  "title": "Longest Arithmetic Sequence After Changing At Most One Element",
+  "titleSlug": "longest-arithmetic-sequence-after-changing-at-most-one-element",
+  "difficulty": "Medium",
+  "content": "<p>You are given an integer array <code>nums</code>.</p>\n\n<p>A <span data-keyword=\"subarray\">subarray</span> is <strong>arithmetic</strong> if the difference between consecutive elements in the subarray is constant.</p>\n\n<p>You can replace <strong>at most one</strong> element in <code>nums</code> with any <strong>integer</strong>. Then, you select an arithmetic subarray from <code>nums</code>.</p>\n\n<p>Return an integer denoting the <strong>maximum</strong> length of the arithmetic subarray you can select.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [9,7,5,10,1]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">5</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Replace <code>nums[3] = 10</code> with 3. The array becomes <code>[9, 7, 5, 3, 1]</code>.</li>\n\t<li>Select the subarray <code>[<u><strong>9, 7, 5, 3, 1</strong></u>]</code>, which is arithmetic because consecutive elements have a common difference of -2.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">nums = [1,2,6,7]</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">3</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Replace <code>nums[0] = 1</code> with -2. The array becomes <code>[-2, 2, 6, 7]</code>.</li>\n\t<li>Select the subarray <code>[<u><strong>-2, 2, 6</strong></u>, 7]</code>, which is arithmetic because consecutive elements have a common difference of 4.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>4 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>\n\t<li><code>1 &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>\n</ul>\n",
+  "hints": [
+    "Precompute <code>L[i]</code> = length of longest arithmetic subarray ending at <code>i</code> using fixed differences.",
+    "Precompute <code>R[i]</code> = length of longest arithmetic subarray starting at <code>i</code>.",
+    "For each index <code>i</code> as the replaced element, check if neighbors allow a common difference <code>d = (nums[i+1] - nums[i-1]) / 2</code> and combine <code>L[i-1]</code> and <code>R[i+1]</code>.",
+    "Also consider extending only left or only right, and take the maximum over all positions."
+  ],
+  "metaData": "{\n  \"name\": \"longestArithmetic\",\n  \"params\": [\n    {\n      \"name\": \"nums\",\n      \"type\": \"integer[]\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"10K\", \"totalSubmission\": \"48.7K\", \"totalAcceptedRaw\": 9976, \"totalSubmissionRaw\": 48740, \"acRate\": \"20.5%\"}",
+  "likes": 99,
+  "dislikes": 12,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "[9,7,5,10,1]",
+    "[1,2,6,7]"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [{\"timesEncountered\": 4, \"slug\": \"amazon\", \"name\": \"Amazon\"}], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Array",
+      "slug": "array"
+    },
+    {
+      "name": "Enumeration",
+      "slug": "enumeration"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int longestArithmetic(vector<int>& nums) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int longestArithmetic(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def longestArithmetic(self, nums: List[int]) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def longestArithmetic(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {number[]} nums\n * @return {number}\n */\nvar longestArithmetic = function(nums) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function longestArithmetic(nums: number[]): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int LongestArithmetic(int[] nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int longestArithmetic(int* nums, int numsSize) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func longestArithmetic(nums []int) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun longestArithmetic(nums: IntArray): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func longestArithmetic(_ nums: [Int]) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn longest_arithmetic(nums: Vec<i32>) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {Integer[]} nums\n# @return {Integer}\ndef longest_arithmetic(nums)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param Integer[] $nums\n     * @return Integer\n     */\n    function longestArithmetic($nums) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int longestArithmetic(List<int> nums) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def longestArithmetic(nums: Array[Int]): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec longest_arithmetic(nums :: [integer]) :: integer\n  def longest_arithmetic(nums) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec longest_arithmetic(Nums :: [integer()]) -> integer().\nlongest_arithmetic(Nums) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (longest-arithmetic nums)\n  (-> (listof exact-integer?) exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}

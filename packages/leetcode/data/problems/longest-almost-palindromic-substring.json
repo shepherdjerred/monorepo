@@ -1,0 +1,138 @@
+{
+  "questionId": "4221",
+  "questionFrontendId": "3844",
+  "title": "Longest Almost-Palindromic Substring",
+  "titleSlug": "longest-almost-palindromic-substring",
+  "difficulty": "Medium",
+  "content": "<p>You are given a string <code>s</code> consisting of lowercase English letters.</p>\n\n<p>A <span data-keyword=\"substring-nonempty\">substring</span> is <strong>almost-palindromic</strong> if it becomes a <span data-keyword=\"palindrome-string\">palindrome</span> after removing <strong>exactly</strong> one character from it.</p>\n\n<p>Return an integer denoting the length of the <strong>longest</strong> <strong>almost-palindromic</strong> substring in <code>s</code>.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example 1:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;abca&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">4</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Choose the substring <code>&quot;<u><strong>abca</strong></u>&quot;</code>.</p>\n\n<ul>\n\t<li>Remove <code>&quot;ab<u><strong>c</strong></u>a&quot;</code>.</li>\n\t<li>The string becomes <code>&quot;aba&quot;</code>, which is a palindrome.</li>\n\t<li>Therefore, <code>&quot;abca&quot;</code> is almost-palindromic.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 2:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;abba&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">4</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Choose the substring <code>&quot;<u><strong>abba</strong></u>&quot;</code>.</p>\n\n<ul>\n\t<li>Remove <code>&quot;a<u><strong>b</strong></u>ba&quot;</code>.</li>\n\t<li>The string becomes <code>&quot;aba&quot;</code>, which is a palindrome.</li>\n\t<li>Therefore, <code>&quot;abba&quot;</code> is almost-palindromic.</li>\n</ul>\n</div>\n\n<p><strong class=\"example\">Example 3:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong> <span class=\"example-io\">s = &quot;zzabba&quot;</span></p>\n\n<p><strong>Output:</strong> <span class=\"example-io\">5</span></p>\n\n<p><strong>Explanation:</strong></p>\n\n<p>Choose the substring <code>&quot;z<u><strong>zabba</strong></u>&quot;</code>.</p>\n\n<ul>\n\t<li>Remove <code>&quot;<u><strong>z</strong></u>abba&quot;</code>.</li>\n\t<li>The string becomes <code>&quot;abba&quot;</code>, which is a palindrome.</li>\n\t<li>Therefore, <code>&quot;zabba&quot;</code> is almost-palindromic.</li>\n</ul>\n</div>\n\n<p>&nbsp;</p>\n<p><strong>Constraints:</strong></p>\n\n<ul>\n\t<li><code>2 &lt;= s.length &lt;= 2500</code></li>\n\t<li><code>s</code> consists of only lowercase English letters.</li>\n</ul>\n",
+  "hints": [
+    "Solve greedily",
+    "Fix the center (consider both odd and even centers) and expand outwards",
+    "On the first mismatch, try skipping the left character and continue expanding, and also try skipping the right character; take the longer result",
+    "Track the maximum length found across all centers"
+  ],
+  "metaData": "{\n  \"name\": \"almostPalindromic\",\n  \"params\": [\n    {\n      \"name\": \"s\",\n      \"type\": \"string\"\n    }\n  ],\n  \"return\": {\n    \"type\": \"integer\"\n  }\n}",
+  "stats": "{\"totalAccepted\": \"14.2K\", \"totalSubmission\": \"64K\", \"totalAcceptedRaw\": 14250, \"totalSubmissionRaw\": 64012, \"acRate\": \"22.3%\"}",
+  "likes": 145,
+  "dislikes": 11,
+  "isPaidOnly": false,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "\"abca\"",
+    "\"abba\"",
+    "\"zzabba\""
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Two Pointers",
+      "slug": "two-pointers"
+    },
+    {
+      "name": "String",
+      "slug": "string"
+    },
+    {
+      "name": "Dynamic Programming",
+      "slug": "dynamic-programming"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "C++",
+      "langSlug": "cpp",
+      "code": "class Solution {\npublic:\n    int almostPalindromic(string s) {\n        \n    }\n};"
+    },
+    {
+      "lang": "Java",
+      "langSlug": "java",
+      "code": "class Solution {\n    public int almostPalindromic(String s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Python3",
+      "langSlug": "python3",
+      "code": "class Solution:\n    def almostPalindromic(self, s: str) -> int:\n        "
+    },
+    {
+      "lang": "Python",
+      "langSlug": "python",
+      "code": "class Solution(object):\n    def almostPalindromic(self, s):\n        \"\"\"\n        :type s: str\n        :rtype: int\n        \"\"\"\n        "
+    },
+    {
+      "lang": "JavaScript",
+      "langSlug": "javascript",
+      "code": "/**\n * @param {string} s\n * @return {number}\n */\nvar almostPalindromic = function(s) {\n    \n};"
+    },
+    {
+      "lang": "TypeScript",
+      "langSlug": "typescript",
+      "code": "function almostPalindromic(s: string): number {\n    \n};"
+    },
+    {
+      "lang": "C#",
+      "langSlug": "csharp",
+      "code": "public class Solution {\n    public int AlmostPalindromic(string s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "C",
+      "langSlug": "c",
+      "code": "int almostPalindromic(char* s) {\n    \n}"
+    },
+    {
+      "lang": "Go",
+      "langSlug": "golang",
+      "code": "func almostPalindromic(s string) int {\n    \n}"
+    },
+    {
+      "lang": "Kotlin",
+      "langSlug": "kotlin",
+      "code": "class Solution {\n    fun almostPalindromic(s: String): Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Swift",
+      "langSlug": "swift",
+      "code": "class Solution {\n    func almostPalindromic(_ s: String) -> Int {\n        \n    }\n}"
+    },
+    {
+      "lang": "Rust",
+      "langSlug": "rust",
+      "code": "impl Solution {\n    pub fn almost_palindromic(s: String) -> i32 {\n        \n    }\n}"
+    },
+    {
+      "lang": "Ruby",
+      "langSlug": "ruby",
+      "code": "# @param {String} s\n# @return {Integer}\ndef almost_palindromic(s)\n    \nend"
+    },
+    {
+      "lang": "PHP",
+      "langSlug": "php",
+      "code": "class Solution {\n\n    /**\n     * @param String $s\n     * @return Integer\n     */\n    function almostPalindromic($s) {\n        \n    }\n}"
+    },
+    {
+      "lang": "Dart",
+      "langSlug": "dart",
+      "code": "class Solution {\n  int almostPalindromic(String s) {\n    \n  }\n}"
+    },
+    {
+      "lang": "Scala",
+      "langSlug": "scala",
+      "code": "object Solution {\n    def almostPalindromic(s: String): Int = {\n        \n    }\n}"
+    },
+    {
+      "lang": "Elixir",
+      "langSlug": "elixir",
+      "code": "defmodule Solution do\n  @spec almost_palindromic(s :: String.t) :: integer\n  def almost_palindromic(s) do\n    \n  end\nend"
+    },
+    {
+      "lang": "Erlang",
+      "langSlug": "erlang",
+      "code": "-spec almost_palindromic(S :: unicode:unicode_binary()) -> integer().\nalmost_palindromic(S) ->\n  ."
+    },
+    {
+      "lang": "Racket",
+      "langSlug": "racket",
+      "code": "(define/contract (almost-palindromic s)\n  (-> string? exact-integer?)\n  )"
+    }
+  ],
+  "solution": null
+}
