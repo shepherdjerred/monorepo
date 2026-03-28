@@ -242,7 +242,9 @@ export class RecallDb {
     const table = await this.getLanceTable();
     const raw = await table.vectorSearch(queryVector).limit(limit).toArray();
     // LanceDB returns untyped records — validate with Zod
-    return raw.map((row) => VectorSearchResultSchema.parse(row));
+    return raw.map((row) =>
+      VectorSearchResultSchema.parse({ ...row, vector: Array.from(row.vector) }),
+    );
   }
 
   // Aggregate queries

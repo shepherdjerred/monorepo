@@ -128,8 +128,6 @@ const versions = {
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "library/python":
     "3.14-alpine@sha256:079b889b270e730f38bdbabf505362538db449a216895c2c45664b1538bd34d5",
-  // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
-  "buchgr/bazel-remote-cache": "v2.6.1",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "bitnamilegacy/kubectl/velero": "1.33.4",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver

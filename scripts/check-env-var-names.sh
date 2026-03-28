@@ -22,8 +22,6 @@ BANNED=(
 # These need special handling due to substring overlap with valid names
 # GITHUB_TOKEN: valid in TOFU_GITHUB_TOKEN, comments explaining migration, MCP server requirements
 # ARGOCD_TOKEN: valid in ARGOCD_AUTH_TOKEN, Python variable argocd_token
-# S3_ACCESS_KEY: valid in BAZEL_REMOTE_S3_ACCESS_KEY_ID, SEAWEEDFS_* context
-# S3_SECRET_ACCESS: valid in BAZEL_REMOTE_S3_SECRET_ACCESS_KEY
 
 ERRORS=0
 

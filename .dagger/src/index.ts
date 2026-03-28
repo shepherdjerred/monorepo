@@ -55,6 +55,7 @@ const BUN_IMAGE = "oven/bun:1.2.17-debian";
 const RUST_IMAGE = "rust:1.88.0-bookworm";
 // renovate: datasource=docker depName=golang
 const GO_IMAGE = "golang:1.25.4-bookworm";
+// renovate: datasource=docker depName=mcr.microsoft.com/playwright
 const PLAYWRIGHT_IMAGE = "mcr.microsoft.com/playwright:v1.58.2-noble";
 // renovate: datasource=docker depName=ghcr.io/realm/swiftlint
 const SWIFTLINT_IMAGE = "ghcr.io/realm/swiftlint:0.58.2";
@@ -665,11 +666,9 @@ export class Monorepo {
       "eslint-config",
       "resume",
       "astro-opengraph-images",
-      "cooklang-for-obsidian",
       "cooklang-rich-preview",
       "birmel",
       "starlight-karma-bot",
-      "sentinel",
       "tasknotes-server",
       "tasknotes-types",
       "better-skill-capped",
@@ -678,8 +677,8 @@ export class Monorepo {
       "discord-plays-pokemon",
       "tasks-for-obsidian",
       "toolkit",
-      "status-page/api",
-      "status-page/web",
+      "sjer.red",
+      "homelab",
     ];
 
     const base = this.bunBase(source, "webring"); // any pkg, just to get the base

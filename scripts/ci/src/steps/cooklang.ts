@@ -1,0 +1,50 @@
+/**
+ * Cooklang release step generators.
+ */
+import { RETRY, DAGGER_ENV } from "../lib/buildkite.ts";
+import { k8sPlugin } from "../lib/k8s-plugin.ts";
+import type { BuildkiteGroup } from "../lib/types.ts";
+
+const MAIN_ONLY = "build.branch == pipeline.default_branch";
+
+export function cooklangReleaseGroup(): BuildkiteGroup {
+  return {
+    group: ":cook: Cooklang Release",
+    key: "cooklang-release",
+    steps: [
+      {
+        label: ":cook: Build cooklang plugin",
+        key: "cooklang-build",
+        if: MAIN_ONLY,
+        depends_on: "release",
+        command: "dagger call cooklang-build --source .",
+        timeout_in_minutes: 10,
+        retry: RETRY,
+        env: DAGGER_ENV,
+        plugins: [k8sPlugin({ cpu: "500m", memory: "1Gi" })],
+      },
+      {
+        label: ":cook: Push cooklang to repo",
+        key: "cooklang-push",
+        if: MAIN_ONLY,
+        depends_on: "cooklang-build",
+        command:
+          "dagger call cooklang-push --artifacts $(dagger call cooklang-build --source .) --gh-token env:GH_TOKEN --repo shepherdjerred/cooklang-obsidian-releases",
+        timeout_in_minutes: 10,
+        retry: RETRY,
+        env: DAGGER_ENV,
+        plugins: [k8sPlugin({ cpu: "500m", memory: "512Mi" })],
+      },
+      {
+        label: ":cook: Create cooklang release",
+        key: "cooklang-release-create",
+        if: MAIN_ONLY,
+        depends_on: "cooklang-push",
+        command: ".buildkite/scripts/cooklang-create-release.sh",
+        timeout_in_minutes: 10,
+        retry: RETRY,
+        plugins: [k8sPlugin({ cpu: "500m", memory: "512Mi", secrets: [] })],
+      },
+    ],
+  };
+}

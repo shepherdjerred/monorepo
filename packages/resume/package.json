@@ -2,7 +2,7 @@
   "name": "@shepherdjerred/resume",
   "version": "1.0.0",
   "private": true,
-  "description": "LaTeX resume - built and deployed via Bazel + Buildkite",
+  "description": "LaTeX resume - built and deployed via Dagger + Buildkite",
   "scripts": {
     "build": "true",
     "lint": "true",

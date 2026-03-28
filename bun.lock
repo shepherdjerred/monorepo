@@ -482,9 +482,6 @@
     "packages/leetcode": {
       "name": "@shepherdjerred/leetcode",
       "version": "0.1.0",
-      "dependencies": {
-        "@lancedb/lancedb": "^0.27.1",
-      },
       "devDependencies": {
         "@types/bun": "^1.3.11",
       },

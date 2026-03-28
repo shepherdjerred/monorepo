@@ -3,7 +3,6 @@ set -euo pipefail
 source "$(dirname "$0")/setup-tools.sh"
 
 install_base
-install_bazel
 install_uv
 
 echo "+++ :docker: Push image to GHCR"

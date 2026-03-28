@@ -7,6 +7,12 @@ const ENTITIES: Record<string, string> = {
   "&nbsp;": " ",
   "&#x27;": "'",
   "&#x2F;": "/",
+  "&ldquo;": '"',
+  "&rdquo;": '"',
+  "&rsquo;": "'",
+  "&minus;": "-",
+  "&rarr;": "->",
+  "&times;": "x",
 };
 
 export function htmlToText(html: string): string {
@@ -17,9 +23,14 @@ export function htmlToText(html: string): string {
   text = text.replace(/<(p|div|h[1-6])[^>]*>/gi, "\n");
   // Replace list items with bullet
   text = text.replace(/<li[^>]*>/gi, "\n- ");
-  // Preserve code blocks
-  text = text.replace(/<pre[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/gi, (_, code) => {
-    return "\n```\n" + decodeEntities(code) + "\n```\n";
+  // Superscript/subscript
+  text = text.replace(/<sup>(.*?)<\/sup>/gi, "^$1");
+  text = text.replace(/<sub>(.*?)<\/sub>/gi, "_$1");
+  // Preserve code blocks — handles both <pre><code>...</code></pre> and <pre>...</pre>
+  text = text.replace(/<pre[^>]*>([\s\S]*?)<\/pre>/gi, (_, code) => {
+    // Strip inner <code> tags if present
+    const clean = code.replace(/<\/?code[^>]*>/gi, "");
+    return "\n```\n" + decodeEntities(clean) + "\n```\n";
   });
   // Inline code
   text = text.replace(/<code[^>]*>(.*?)<\/code>/gi, "`$1`");
@@ -45,7 +56,6 @@ function decodeEntities(text: string): string {
 }
 
 export function extractConstraints(html: string): string | null {
-  // Constraints are typically after <strong>Constraints:</strong> in a <ul>
   const match = html.match(/<strong>Constraints:<\/strong>\s*<\/p>\s*<ul>([\s\S]*?)<\/ul>/i);
   if (!match) return null;
   return htmlToText(match[1]);
