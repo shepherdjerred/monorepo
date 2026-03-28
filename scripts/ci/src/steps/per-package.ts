@@ -14,7 +14,7 @@ import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 
 // Import the same dependency map used by the Dagger module
-import { WORKSPACE_DEPS } from "../lib/workspace-deps.ts";
+import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
 
 /**
  * Build Dagger CLI flags for per-package operations.

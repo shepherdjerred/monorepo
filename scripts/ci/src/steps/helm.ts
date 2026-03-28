@@ -5,7 +5,7 @@ import { HELM_CHARTS } from "../catalog.ts";
 import { RETRY, DAGGER_ENV } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
-import { WORKSPACE_DEPS } from "../lib/workspace-deps.ts";
+import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
 
 const MAIN_ONLY = "build.branch == pipeline.default_branch";
 

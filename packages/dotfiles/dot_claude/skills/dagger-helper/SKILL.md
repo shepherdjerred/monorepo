@@ -22,9 +22,12 @@ This agent helps develop Dagger CI/CD pipelines using the **TypeScript SDK** wit
 # List available functions
 dagger functions
 
-# Run pipeline functions
+# Run pipeline functions (--source maps to a Directory param)
 dagger call ci --source=.
 dagger call birmel-ci --source=.
+
+# Dagger Shell (v0.20) — interactive bash-syntax frontend
+dagger                          # opens Dagger Shell by default
 
 # Interactive development
 dagger develop
@@ -61,6 +64,20 @@ Dagger provides three caching mechanisms:
 | **Layer Caching**         | Build instructions, API call results | Reuses unchanged build steps |
 | **Volume Caching**        | Filesystem data (node_modules, etc.) | Persists across sessions     |
 | **Function Call Caching** | Returned values from functions       | Skips entire re-execution    |
+
+## Monorepo: Avoid --source .
+
+For per-package builds, never use `--source .` (syncs entire monorepo). Instead, use `ignore` annotations on `Directory` parameters to filter before transfer:
+
+```typescript
+@func()
+async lint(
+  @argument({ defaultPath: "/", ignore: ["*", "!packages/foo/**", "!tsconfig.json", "!bun.lock"] })
+  source: Directory,
+): Promise<string> { ... }
+```
+
+For repo-wide operations (prettier, shellcheck), `--source .` may still be appropriate. See `references/monorepo-performance.md` for multi-module architecture, cache debugging, remote cache, and Dagger Shell/Checks.
 
 ## TypeScript Module Structure
 
@@ -196,10 +213,10 @@ await Promise.all([
 
 ### Mount vs Copy
 
-| Operation                | Use Case          | In Final Image? |
-| ------------------------ | ----------------- | --------------- |
-| `withMountedDirectory()` | CI operations     | No              |
-| `withDirectory()`        | Publishing images | Yes             |
+| Operation                | Use Case          | In Final Image? | Content-Based Cache? |
+| ------------------------ | ----------------- | --------------- | -------------------- |
+| `withMountedDirectory()` | CI operations     | No              | No (BuildKit skips checksums unless read-only non-root mount) |
+| `withDirectory()`        | Publishing images | Yes             | Yes (full content hash) |
 
 ```typescript
 // CI - mount for speed
@@ -588,6 +605,8 @@ async birmelPublish(
 ## Reference Files
 
 - **`references/release-notes.md`** - Features from Dagger 0.15, 0.16, 0.19, and 0.20: container import/export, Changeset API, Build-an-Agent, engine config, metrics, function caching, TypeScript SDK improvements
+- **`references/monorepo-performance.md`** - Pre-call filtering, `ignore` annotations, `defaultPath` patterns, shared config without `--source .`, multi-module architecture, cache debugging commands, remote/registry cache, Dagger Shell and Checks, version performance history, case studies
+- **`references/bun-container-caveats.md`** - Bun hardlink behavior across filesystem boundaries with CacheVolumes, `.d.ts` file skip bug (#27095), install backend options (`BUN_INSTALL_LINKS`), `bun.lock` vs `bun.lockb`, SDK runtime vs container runtime, workspace hoisting vs isolated mode caching implications
 
 ## When to Ask for Help
 
