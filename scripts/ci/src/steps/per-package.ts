@@ -7,6 +7,7 @@ import {
   PRISMA_PACKAGES,
   ASTRO_PACKAGES,
   SKIP_PACKAGES,
+  PLAYWRIGHT_PACKAGES,
 } from "../catalog.ts";
 import { safeKey, RETRY, DAGGER_ENV } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
@@ -40,8 +41,18 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
     steps.push(
       daggerCallStep(`:eslint: Lint`, `lint-${sk}`, `dagger call lint --source . --pkg ${pkg}`, resources),
       daggerCallStep(`:typescript: Typecheck`, `typecheck-${sk}`, `dagger call typecheck --source . --pkg ${pkg}`, resources),
-      daggerCallStep(`:test_tube: Test`, `test-${sk}`, `dagger call test --source . --pkg ${pkg}`, resources),
     );
+
+    if (PLAYWRIGHT_PACKAGES.has(pkg)) {
+      // Playwright tests need a browser container, not bunBase
+      steps.push(
+        daggerCallStep(`:performing_arts: Playwright Test`, `playwright-test-${sk}`, `dagger call playwright-test --source . --pkg ${pkg}`, resources),
+      );
+    } else {
+      steps.push(
+        daggerCallStep(`:test_tube: Test`, `test-${sk}`, `dagger call test --source . --pkg ${pkg}`, resources),
+      );
+    }
   }
 
   if (ASTRO_PACKAGES.has(pkg)) {

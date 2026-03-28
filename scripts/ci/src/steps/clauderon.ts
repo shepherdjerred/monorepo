@@ -48,7 +48,7 @@ export function clauderonReleaseGroup(): BuildkiteGroup {
     if: MAIN_ONLY,
     depends_on: TARGETS.map((t) => t.key),
     command:
-      'dagger call clauderon-upload --binaries $(dagger call rust-build --source . --target x86_64-unknown-linux-gnu) --version "$(buildkite-agent meta-data get clauderon_version || echo dev)" --gh-token env:GITHUB_TOKEN',
+      'dagger call clauderon-upload --binaries $(dagger call clauderon-collect-binaries --source .) --version "$(buildkite-agent meta-data get clauderon_version || echo dev)" --gh-token env:GITHUB_TOKEN',
     timeout_in_minutes: 10,
     retry: RETRY,
     env: DAGGER_ENV,

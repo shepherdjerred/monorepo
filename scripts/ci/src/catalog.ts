@@ -266,6 +266,9 @@ export const ASTRO_PACKAGES: Set<string> = new Set([
   "cooklang-rich-preview",
 ]);
 
+/** Packages that need Playwright browser tests (run in Playwright container, not bunBase). */
+export const PLAYWRIGHT_PACKAGES: Set<string> = new Set(["sjer.red"]);
+
 // ---------------------------------------------------------------------------
 // Target aliases
 // ---------------------------------------------------------------------------

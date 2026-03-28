@@ -901,10 +901,7 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
             ]);
 
             // Set dummy tokens so CLI tools will make requests (proxy replaces with real tokens)
-            args.extend([
-                "-e".to_owned(),
-                "GH_TOKEN=clauderon-proxy".to_owned(),
-            ]);
+            args.extend(["-e".to_owned(), "GH_TOKEN=clauderon-proxy".to_owned()]);
 
             match agent {
                 AgentType::ClaudeCode => {

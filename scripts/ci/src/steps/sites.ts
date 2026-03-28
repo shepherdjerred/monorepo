@@ -27,9 +27,7 @@ function deploySiteStep(
     `--aws-secret-key env:AWS_SECRET_ACCESS_KEY`,
   ];
 
-  if (site.needsPlaywright) {
-    args.push(`--needs-playwright`);
-  }
+  // Note: Playwright tests are handled by per-package steps, not the deploy step.
 
   return {
     label: `:ship: Deploy ${site.name}`,

@@ -343,6 +343,61 @@ export function versionCommitBackHelper(
 }
 
 // ---------------------------------------------------------------------------
+// Clauderon multi-arch binary collection
+// ---------------------------------------------------------------------------
+
+interface ClauderonTarget {
+  target: string;
+  filename: string;
+}
+
+/** Build clauderon for multiple targets and collect binaries into one Directory. */
+export function clauderonCollectBinariesHelper(
+  source: Directory,
+  targets: ClauderonTarget[],
+): Directory {
+  // renovate: datasource=docker depName=rust
+  const RUST_IMAGE = "rust:1.88.0-bookworm";
+
+  let output = dag.directory();
+
+  for (const { target, filename } of targets) {
+    const binary = dag
+      .container()
+      .from(RUST_IMAGE)
+      .withExec(["apt-get", "update", "-qq"])
+      .withExec([
+        "apt-get",
+        "install",
+        "-y",
+        "-qq",
+        "--no-install-recommends",
+        "clang",
+        "libssl-dev",
+        "pkg-config",
+        "gcc-aarch64-linux-gnu",
+      ])
+      .withMountedCache(
+        "/usr/local/cargo/registry",
+        dag.cacheVolume("cargo-registry"),
+      )
+      .withMountedCache("/usr/local/cargo/git", dag.cacheVolume("cargo-git"))
+      .withMountedCache("/workspace/target", dag.cacheVolume("cargo-target"))
+      .withWorkdir("/workspace")
+      .withDirectory("/workspace", source.directory("packages/clauderon"), {
+        exclude: ["target", "node_modules", ".git"],
+      })
+      .withExec(["rustup", "target", "add", target])
+      .withExec(["cargo", "build", "--release", "--target", target])
+      .file(`/workspace/target/${target}/release/clauderon`);
+
+    output = output.withFile(filename, binary);
+  }
+
+  return output;
+}
+
+// ---------------------------------------------------------------------------
 // Release-please
 // ---------------------------------------------------------------------------
 

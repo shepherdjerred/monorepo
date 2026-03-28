@@ -6,9 +6,13 @@
   "scripts": {
     "scrape:list": "bun run src/scrape-list.ts",
     "scrape:details": "bun run src/scrape-details.ts",
+    "build": "bun run build:db && bun run build:search",
     "build:db": "bun run src/build-db.ts",
     "build:search": "bun run src/build-search-index.ts",
-    "search": "bun run src/search.ts"
+    "search": "bun run src/search.ts",
+    "test": "echo 'No tests configured'",
+    "lint": "echo 'No linting configured'",
+    "typecheck": "bun --target=bun tsc --noEmit"
   },
   "devDependencies": {
     "@types/bun": "^1.3.11"

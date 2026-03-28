@@ -45,6 +45,7 @@ import {
   cooklangBuildHelper,
   cooklangPushHelper,
   cooklangCreateReleaseHelper,
+  clauderonCollectBinariesHelper,
   clauderonUploadHelper,
   versionCommitBackHelper,
   releasePleaseHelper,
@@ -1043,6 +1044,15 @@ export class Monorepo {
     ghToken: Secret,
   ): Promise<string> {
     return cooklangPushHelper(source, version, ghToken).stdout();
+  }
+
+  /** Build clauderon for multiple targets and collect binaries into one Directory */
+  @func()
+  clauderonCollectBinaries(source: Directory): Directory {
+    return clauderonCollectBinariesHelper(source, [
+      { target: "x86_64-unknown-linux-gnu", filename: "clauderon-linux-x86_64" },
+      { target: "aarch64-unknown-linux-gnu", filename: "clauderon-linux-arm64" },
+    ]);
   }
 
   /** Upload clauderon binaries to a GitHub release */

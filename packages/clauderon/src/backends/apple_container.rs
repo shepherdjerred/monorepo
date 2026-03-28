@@ -526,10 +526,7 @@ impl AppleContainerBackend {
             ]);
 
             // Set dummy tokens
-            args.extend([
-                "-e".to_owned(),
-                "GH_TOKEN=clauderon-proxy".to_owned(),
-            ]);
+            args.extend(["-e".to_owned(), "GH_TOKEN=clauderon-proxy".to_owned()]);
 
             match agent {
                 AgentType::ClaudeCode => {

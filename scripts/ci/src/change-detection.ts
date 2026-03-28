@@ -9,6 +9,12 @@ import {
   PACKAGE_TO_SITE,
 } from "./catalog.ts";
 import type { AffectedPackages } from "./lib/types.ts";
+import { execSync } from "node:child_process";
+
+/** Repo root — needed because the pipeline generator may run from scripts/ci/. */
+const REPO_ROOT = execSync("git rev-parse --show-toplevel", {
+  encoding: "utf-8",
+}).trim();
 
 /** Minimum number of dagger steps a build must have to qualify as "fully tested". */
 const MIN_GREEN_STEPS = 40;
@@ -33,7 +39,7 @@ async function getLastGreenCommit(): Promise<string | null> {
     process.env["BUILDKITE_API_TOKEN"] ??
     process.env["BUILDKITE_AGENT_ACCESS_TOKEN"];
   if (!token) {
-    console.error("No Buildkite API token available, skipping green commit lookup");
+    console.error("⚠️  No Buildkite API token — will fall back to full build on main");
     return null;
   }
 
@@ -42,7 +48,7 @@ async function getLastGreenCommit(): Promise<string | null> {
   const currentBuild = process.env["BUILDKITE_BUILD_NUMBER"] ?? "";
 
   if (!org || !pipeline) {
-    console.error("Missing org/pipeline slug, skipping green commit lookup");
+    console.error("⚠️  Missing org/pipeline slug — will fall back to full build on main");
     return null;
   }
 
@@ -59,13 +65,13 @@ async function getLastGreenCommit(): Promise<string | null> {
 
     if (resp.status === 401) {
       console.error(
-        "Buildkite API 401: token not set or agent token lacks REST API permissions",
+        "⚠️  Buildkite API 401: token lacks REST API permissions — will fall back to full build on main",
       );
       return null;
     }
 
     if (!resp.ok) {
-      console.error(`Buildkite API request failed: HTTP ${resp.status}`);
+      console.error(`⚠️  Buildkite API failed (HTTP ${resp.status}) — will fall back to full build on main`);
       return null;
     }
 
@@ -96,11 +102,11 @@ async function getLastGreenCommit(): Promise<string | null> {
       );
     }
   } catch (e) {
-    console.error(`Buildkite API request failed: ${e}`);
+    console.error(`⚠️  Buildkite API request failed: ${e} — will fall back to full build on main`);
     return null;
   }
 
-  console.error("No qualifying green build found");
+  console.error("⚠️  No qualifying green build found in last 10 builds — will fall back to full build on main");
   return null;
 }
 
@@ -182,7 +188,7 @@ async function readWorkspaceDeps(): Promise<Map<string, Set<string>>> {
   const deps = new Map<string, Set<string>>();
   for (const pkg of ALL_PACKAGES) {
     try {
-      const file = Bun.file(`packages/${pkg}/package.json`);
+      const file = Bun.file(`${REPO_ROOT}/packages/${pkg}/package.json`);
       const json = (await file.json()) as {
         dependencies?: Record<string, string>;
         devDependencies?: Record<string, string>;
