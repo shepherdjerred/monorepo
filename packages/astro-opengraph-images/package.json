@@ -87,7 +87,5 @@
     "bun.lock",
     "CHANGELOG.md"
   ],
-  "patchedDependencies": {
-    "satori@0.18.3": "patches/satori@0.18.3.patch"
-  }
+  "patchedDependencies": {}
 }

@@ -13,7 +13,7 @@
     "@astrojs/check": "^0.9.4",
     "@fontsource/roboto": "^5.2.5",
     "astro": "^5.4.3",
-    "astro-opengraph-images": "../../",
+    "astro-opengraph-images": "link:../../",
     "astro-seo": "^0.8.4",
     "react": "^19.0.0",
     "typescript": "^5.8.2"
