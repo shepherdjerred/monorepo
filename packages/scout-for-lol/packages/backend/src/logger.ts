@@ -100,26 +100,34 @@ function fileTransport(logObj: ILogObj): void {
   const name = meta?.name ?? "app";
   const filePath = meta?.path?.filePathWithLine ?? "";
 
-  // Extract message and additional data
-  const args = Object.entries(logObj)
-    .filter(([key]) => !key.startsWith("_"))
-    .map(([, value]) => value);
+  // Extract message and additional data — use Array.from to avoid
+  // Bun ResolveMessage prototype issues with .map()
+  const args: unknown[] = [];
+  for (const [key, value] of Object.entries(logObj)) {
+    if (!key.startsWith("_")) {
+      args.push(value);
+    }
+  }
 
-  const message = args
-    .map((arg) => {
+  const parts: string[] = [];
+  for (const arg of args) {
+    try {
       if (typeof arg === "string") {
-        return arg;
+        parts.push(arg);
+      } else if (arg instanceof Error) {
+        parts.push(`${arg.message}\n${arg.stack ?? ""}`);
+      } else {
+        parts.push(JSON.stringify(arg));
       }
-      if (arg instanceof Error) {
-        return `${arg.message}\n${arg.stack ?? ""}`;
-      }
+    } catch {
       try {
-        return JSON.stringify(arg);
+        parts.push(String(arg));
       } catch {
-        return String(arg);
+        parts.push("[unserializable]");
       }
-    })
-    .join(" ");
+    }
+  }
+  const message = parts.join(" ");
 
   const logLine = `${timestamp} [${level}] [${name}] ${filePath ? `(${filePath}) ` : ""}${message}\n`;
 
