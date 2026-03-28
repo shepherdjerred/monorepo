@@ -1,0 +1,53 @@
+{
+  "questionId": "3574",
+  "questionFrontendId": "3262",
+  "title": "Find Overlapping Shifts",
+  "titleSlug": "find-overlapping-shifts",
+  "difficulty": "Medium",
+  "content": "<p>Table: <code>EmployeeShifts</code></p>\n\n<pre>\n+------------------+---------+\n| Column Name      | Type    |\n+------------------+---------+\n| employee_id      | int     |\n| start_time       | time    |\n| end_time         | time    |\n+------------------+---------+\n(employee_id, start_time) is the unique key for this table.\nThis table contains information about the shifts worked by employees, including the start and end times on a specific date.\n</pre>\n\n<p>Write a solution to count the number of <strong>overlapping shifts</strong> for each employee. Two shifts are considered overlapping if one shift&rsquo;s <code>end_time</code> is <strong>later than</strong> another shift&rsquo;s <code>start_time</code>.</p>\n\n<p><em>Return the result table ordered by</em> <code>employee_id</code> <em>in <strong>ascending</strong> order</em>.</p>\n\n<p>The query result format is in the following example.</p>\n\n<p>&nbsp;</p>\n<p><strong class=\"example\">Example:</strong></p>\n\n<div class=\"example-block\">\n<p><strong>Input:</strong></p>\n\n<p><code>EmployeeShifts</code> table:</p>\n\n<pre class=\"example-io\">\n+-------------+------------+----------+\n| employee_id | start_time | end_time |\n+-------------+------------+----------+\n| 1           | 08:00:00   | 12:00:00 |\n| 1           | 11:00:00   | 15:00:00 |\n| 1           | 14:00:00   | 18:00:00 |\n| 2           | 09:00:00   | 17:00:00 |\n| 2           | 16:00:00   | 20:00:00 |\n| 3           | 10:00:00   | 12:00:00 |\n| 3           | 13:00:00   | 15:00:00 |\n| 3           | 16:00:00   | 18:00:00 |\n| 4           | 08:00:00   | 10:00:00 |\n| 4           | 09:00:00   | 11:00:00 |\n+-------------+------------+----------+\n</pre>\n\n<p><strong>Output:</strong></p>\n\n<pre class=\"example-io\">\n+-------------+--------------------+\n| employee_id | overlapping_shifts |\n+-------------+--------------------+\n| 1           | 2                  |\n| 2           | 1                  |\n| 4           | 1                  |\n+-------------+--------------------+\n</pre>\n\n<p><strong>Explanation:</strong></p>\n\n<ul>\n\t<li>Employee 1 has 3 shifts:\n\t<ul>\n\t\t<li>08:00:00 to 12:00:00</li>\n\t\t<li>11:00:00 to 15:00:00</li>\n\t\t<li>14:00:00 to 18:00:00</li>\n\t</ul>\n\tThe first shift overlaps with the second, and the second overlaps with the third, resulting in 2 overlapping shifts.</li>\n\t<li>Employee 2 has 2 shifts:\n\t<ul>\n\t\t<li>09:00:00 to 17:00:00</li>\n\t\t<li>16:00:00 to 20:00:00</li>\n\t</ul>\n\tThese shifts overlap with each other, resulting in 1 overlapping shift.</li>\n\t<li>Employee 3 has 3 shifts:\n\t<ul>\n\t\t<li>10:00:00 to 12:00:00</li>\n\t\t<li>13:00:00 to 15:00:00</li>\n\t\t<li>16:00:00 to 18:00:00</li>\n\t</ul>\n\tNone of these shifts overlap, so Employee 3 is not included in the output.</li>\n\t<li>Employee 4 has 2 shifts:\n\t<ul>\n\t\t<li>08:00:00 to 10:00:00</li>\n\t\t<li>09:00:00 to 11:00:00</li>\n\t</ul>\n\tThese shifts overlap with each other, resulting in 1 overlapping shift.</li>\n</ul>\n\n<p>The output shows the employee_id and the count of overlapping shifts for each employee who has at least one overlapping shift, ordered by employee_id in ascending order.</p>\n</div>\n",
+  "hints": [],
+  "metaData": "{\"mysql\": [\"Create table if not exists EmployeeShifts(employee_id int, start_time time, end_time time)\"], \"mssql\": [\"Create table  EmployeeShifts(employee_id int, start_time time, end_time time)\"], \"oraclesql\": [\"Create table  EmployeeShifts(employee_id number, start_time date, end_time date)\", \"ALTER SESSION SET nls_date_format='HH24:MI:SS'\"], \"database\": true, \"name\": \"find_overlapping_shifts\", \"pythondata\": [\"EmployeeShifts = pd.DataFrame({\\n    'employee_id': pd.Series(dtype='int'),\\n    'start_time': pd.Series(dtype='datetime64[ns]'),\\n    'end_time': pd.Series(dtype='datetime64[ns]')\\n})\"], \"postgresql\": [\"CREATE TABLE IF NOT EXISTS EmployeeShifts (\\n    employee_id INT,\\n    start_time TIME,\\n    end_time TIME\\n);\\n\"], \"database_schema\": {\"EmployeeShifts\": {\"employee_id\": \"INT\", \"start_time\": \"TIME\", \"end_time\": \"TIME\"}}}",
+  "stats": "{\"totalAccepted\": \"2.4K\", \"totalSubmission\": \"4.2K\", \"totalAcceptedRaw\": 2433, \"totalSubmissionRaw\": 4154, \"acRate\": \"58.6%\"}",
+  "likes": 11,
+  "dislikes": 5,
+  "isPaidOnly": true,
+  "similarQuestions": "[]",
+  "exampleTestcaseList": [
+    "{\"headers\":{\"EmployeeShifts\":[\"employee_id\",\"start_time\",\"end_time\"]},\"rows\":{\"EmployeeShifts\":[[1,\"08:00:00\",\"12:00:00\"],[1,\"11:00:00\",\"15:00:00\"],[1,\"14:00:00\",\"18:00:00\"],[2,\"09:00:00\",\"17:00:00\"],[2,\"16:00:00\",\"20:00:00\"],[3,\"10:00:00\",\"12:00:00\"],[3,\"13:00:00\",\"15:00:00\"],[3,\"16:00:00\",\"18:00:00\"],[4,\"08:00:00\",\"10:00:00\"],[4,\"09:00:00\",\"11:00:00\"]]}}"
+  ],
+  "companyTagStatsV2": "{\"three_months\": [], \"six_months\": [], \"more_than_six_months\": []}",
+  "topicTags": [
+    {
+      "name": "Database",
+      "slug": "database"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "lang": "MySQL",
+      "langSlug": "mysql",
+      "code": "# Write your MySQL query statement below\n"
+    },
+    {
+      "lang": "MS SQL Server",
+      "langSlug": "mssql",
+      "code": "/* Write your T-SQL query statement below */\n"
+    },
+    {
+      "lang": "PostgreSQL",
+      "langSlug": "postgresql",
+      "code": "-- Write your PostgreSQL query statement below\n"
+    },
+    {
+      "lang": "Oracle",
+      "langSlug": "oraclesql",
+      "code": "/* Write your PL/SQL query statement below */\n"
+    },
+    {
+      "lang": "Pandas",
+      "langSlug": "pythondata",
+      "code": "import pandas as pd\n\ndef find_overlapping_shifts(employee_shifts: pd.DataFrame) -> pd.DataFrame:\n    "
+    }
+  ],
+  "solution": null
+}
