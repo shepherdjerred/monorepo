@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-import { unlink } from "node:fs/promises";
 import { z } from "zod";
 import { first } from "remeda";
 import { $ } from "bun";
@@ -27,17 +26,6 @@ async function ensureDir(path: string): Promise<void> {
   await $`mkdir -p ${path}`;
 }
 
-async function forceWrite(
-  path: string,
-  data: string | ArrayBuffer,
-): Promise<void> {
-  try {
-    await unlink(path);
-  } catch {
-    // File may not exist yet
-  }
-  await forceWrite(path, data);
-}
 
 async function getLatestVersion(): Promise<string> {
   console.log("Fetching latest version...");
@@ -81,7 +69,7 @@ async function downloadImage(url: string, outputPath: string): Promise<void> {
     throw new Error(`Failed to fetch image ${url}: ${String(response.status)}`);
   }
   const buffer = await response.arrayBuffer();
-  await forceWrite(outputPath, buffer);
+  await Bun.write(outputPath, buffer);
 }
 
 async function downloadImagesInBatches(
@@ -130,22 +118,22 @@ async function writeJsonAssets(
 ): Promise<void> {
   console.log("\nWriting JSON assets to disk...");
 
-  await forceWrite(
+  await Bun.write(
     `${ASSETS_DIR}/summoner.json`,
     JSON.stringify(summoner, null, 2),
   );
   console.log("✓ Written summoner.json");
 
-  await forceWrite(`${ASSETS_DIR}/item.json`, JSON.stringify(items, null, 2));
+  await Bun.write(`${ASSETS_DIR}/item.json`, JSON.stringify(items, null, 2));
   console.log("✓ Written item.json");
 
-  await forceWrite(
+  await Bun.write(
     `${ASSETS_DIR}/runesReforged.json`,
     JSON.stringify(runes, null, 2),
   );
   console.log("✓ Written runesReforged.json");
 
-  await forceWrite(
+  await Bun.write(
     `${ASSETS_DIR}/version.json`,
     JSON.stringify({ version }, null, 2),
   );
@@ -224,7 +212,7 @@ async function downloadChampionData(
       const response = await fetch(url);
       if (response.ok) {
         const data: unknown = await response.json();
-        await forceWrite(
+        await Bun.write(
           `${ASSETS_DIR}/champion/${championName}.json`,
           JSON.stringify(data, null, 2),
         );
@@ -339,7 +327,7 @@ async function fetchAndSaveArenaAugments(): Promise<{
   }
 
   // Write arena-augments.json
-  await forceWrite(
+  await Bun.write(
     `${ASSETS_DIR}/arena-augments.json`,
     JSON.stringify(cache, null, 2),
   );
@@ -483,7 +471,9 @@ async function updateSnapshots(): Promise<void> {
 
       console.log(`  Updating: ${testFile}`);
       const result =
-        await $`cd ${cwd} && bun test --update-snapshots ${testFile}`.quiet();
+        await $`cd ${cwd} && bun test --update-snapshots ${testFile}`
+          .quiet()
+          .nothrow();
       if (result.exitCode !== 0) {
         console.warn(
           `    ⚠ Warning: snapshot update had non-zero exit code for ${testFile}`,

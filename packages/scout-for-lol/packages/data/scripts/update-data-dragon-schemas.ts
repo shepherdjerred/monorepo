@@ -34,7 +34,9 @@ export const ArenaAugmentApiSchema = z.object({
   iconLarge: z.string(),
   iconSmall: z.string(),
   rarity: z.number(), // 1=prismatic, 2=gold, 3=silver
-  dataValues: z.record(z.string(), z.number()).optional(),
+  dataValues: z
+    .record(z.string(), z.union([z.number(), z.array(z.number())]))
+    .optional(),
   calculations: z.record(z.string(), z.unknown()).optional(),
 });
 
@@ -51,7 +53,7 @@ export type ArenaAugmentCacheEntry = {
   iconLarge: string;
   iconSmall: string;
   rarity: "prismatic" | "gold" | "silver";
-  dataValues: Record<string, number>;
+  dataValues: Record<string, number | number[]>;
   calculations: Record<string, unknown>;
   type: "full";
 };
