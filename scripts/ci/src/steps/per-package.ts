@@ -13,6 +13,23 @@ import { safeKey, RETRY, DAGGER_ENV } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 
+// Import the same dependency map used by the Dagger module
+import { WORKSPACE_DEPS } from "../lib/workspace-deps.ts";
+
+/**
+ * Build Dagger CLI flags for per-package operations.
+ * Generates --pkg-dir, --dep-names, --dep-dirs, --tsconfig flags.
+ */
+function daggerPkgFlags(pkg: string): string {
+  const deps = WORKSPACE_DEPS[pkg] ?? [];
+  const flags = [`--pkg-dir ./packages/${pkg}`, `--pkg ${pkg}`];
+  for (const dep of deps) {
+    flags.push(`--dep-names ${dep}`, `--dep-dirs ./packages/${dep}`);
+  }
+  flags.push("--tsconfig ./tsconfig.base.json");
+  return flags.join(" ");
+}
+
 /** Generate per-package build/test groups for a single package, or null if skipped. */
 export function perPackageSteps(pkg: string): BuildkiteGroup | null {
   if (SKIP_PACKAGES.has(pkg)) return null;
@@ -29,43 +46,46 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
   // Standard Bun/TS package
   const steps: BuildkiteStep[] = [];
 
+  const pf = daggerPkgFlags(pkg);
+
   if (PRISMA_PACKAGES.has(pkg)) {
     // Prisma: combined generate+action in a single dagger pipeline (avoids nested CLI calls)
     steps.push(
-      daggerCallStep(`:eslint: Lint`, `lint-${sk}`, `dagger call generate-and-lint --source . --pkg ${pkg}`, resources),
-      daggerCallStep(`:typescript: Typecheck`, `typecheck-${sk}`, `dagger call generate-and-typecheck --source . --pkg ${pkg}`, resources),
-      daggerCallStep(`:test_tube: Test`, `test-${sk}`, `dagger call generate-and-test --source . --pkg ${pkg}`, resources),
+      daggerCallStep(`:eslint: Lint`, `lint-${sk}`, `dagger call generate-and-lint ${pf}`, resources),
+      daggerCallStep(`:typescript: Typecheck`, `typecheck-${sk}`, `dagger call generate-and-typecheck ${pf}`, resources),
+      daggerCallStep(`:test_tube: Test`, `test-${sk}`, `dagger call generate-and-test ${pf}`, resources),
     );
   } else {
     steps.push(
-      daggerCallStep(`:eslint: Lint`, `lint-${sk}`, `dagger call lint --source . --pkg ${pkg}`, resources),
-      daggerCallStep(`:typescript: Typecheck`, `typecheck-${sk}`, `dagger call typecheck --source . --pkg ${pkg}`, resources),
+      daggerCallStep(`:eslint: Lint`, `lint-${sk}`, `dagger call lint ${pf}`, resources),
+      daggerCallStep(`:typescript: Typecheck`, `typecheck-${sk}`, `dagger call typecheck ${pf}`, resources),
     );
 
     if (PLAYWRIGHT_PACKAGES.has(pkg)) {
       // Playwright tests need a browser container, not bunBase
       steps.push(
-        daggerCallStep(`:performing_arts: Playwright Test`, `playwright-test-${sk}`, `dagger call playwright-test --source . --pkg ${pkg}`, resources),
+        daggerCallStep(`:performing_arts: Playwright Test`, `playwright-test-${sk}`, `dagger call playwright-test ${pf}`, resources),
       );
     } else {
       steps.push(
-        daggerCallStep(`:test_tube: Test`, `test-${sk}`, `dagger call test --source . --pkg ${pkg}`, resources),
+        daggerCallStep(`:test_tube: Test`, `test-${sk}`, `dagger call test ${pf}`, resources),
       );
     }
   }
 
   // homelab: add HA lint/typecheck steps that generate types with HASS_TOKEN
   if (pkg === "homelab") {
+    const haFlags = daggerPkgFlags("homelab/src/ha");
     steps.push(
-      daggerCallStep(`:house: HA Lint`, `ha-lint-${sk}`, `dagger call ha-lint --source . --hass-token env:HASS_TOKEN`, resources),
-      daggerCallStep(`:house: HA Typecheck`, `ha-typecheck-${sk}`, `dagger call ha-typecheck --source . --hass-token env:HASS_TOKEN`, resources),
+      daggerCallStep(`:house: HA Lint`, `ha-lint-${sk}`, `dagger call ha-lint ${haFlags} --hass-token env:HASS_TOKEN`, resources),
+      daggerCallStep(`:house: HA Typecheck`, `ha-typecheck-${sk}`, `dagger call ha-typecheck ${haFlags} --hass-token env:HASS_TOKEN`, resources),
     );
   }
 
   if (ASTRO_PACKAGES.has(pkg)) {
     steps.push(
-      daggerCallStep(`:rocket: Astro Check`, `astro-check-${sk}`, `dagger call astro-check --source . --pkg ${pkg}`, resources),
-      daggerCallStep(`:building_construction: Astro Build`, `astro-build-${sk}`, `dagger call astro-build --source . --pkg ${pkg}`, resources),
+      daggerCallStep(`:rocket: Astro Check`, `astro-check-${sk}`, `dagger call astro-check ${pf}`, resources),
+      daggerCallStep(`:building_construction: Astro Build`, `astro-build-${sk}`, `dagger call astro-build ${pf}`, resources),
     );
   }
 

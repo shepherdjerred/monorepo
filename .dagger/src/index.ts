@@ -8,6 +8,7 @@ import {
   dag,
   Container,
   Directory,
+  File,
   Secret,
   object,
   func,
@@ -34,6 +35,8 @@ import {
 import {
   latexBuildHelper,
 } from "./latex";
+
+import { BUILD_TIME_DEPS, WORKSPACE_DEPS } from "./deps";
 
 import {
   helmPackageHelper,
@@ -101,50 +104,68 @@ export class Monorepo {
   // ---------------------------------------------------------------------------
 
   /**
-   * Bun container with dependencies installed. Excludes node_modules from
-   * source to avoid macOS/Linux binary mismatches (e.g. esbuild).
+   * Bun container with dependencies installed from individual directory params.
+   * Each directory is passed separately for optimal Dagger caching.
    */
-  bunBase(source: Directory, pkg: string): Container {
-    return (
-      dag
-        .container()
-        .from(BUN_IMAGE)
-        .withExec(["apt-get", "update", "-qq"])
-        .withExec([
-          "apt-get",
-          "install",
-          "-y",
-          "-qq",
-          "--no-install-recommends",
-          "zstd",
-          "python3",
-          "python3-setuptools",
-        ])
-        .withMountedCache(
-          "/root/.bun/install/cache",
-          dag.cacheVolume(BUN_CACHE),
-        )
-        .withWorkdir("/workspace")
-        // Copy all package.json files + lockfile first for layer caching.
-        // Bun workspaces need all workspace package.json files to resolve the lockfile.
-        .withDirectory("/workspace", source, {
-          include: ["package.json", "bun.lock", "patches/**", "**/package.json"],
-          exclude: ["**/node_modules/**"],
-        })
-        .withExec(["bun", "install", "--frozen-lockfile"])
-        // Now mount the full source (node_modules excluded so install is preserved)
-        .withDirectory("/workspace", source, {
-          exclude: SOURCE_EXCLUDES,
-        })
-        // Build workspace deps that publish types/exports via dist/
-        .withWorkdir("/workspace/packages/eslint-config")
-        .withExec(["bun", "run", "build"])
-        .withWorkdir("/workspace/packages/astro-opengraph-images")
-        .withExec(["bun", "run", "build"])
-        .withWorkdir("/workspace/packages/webring")
-        .withExec(["bun", "run", "build"])
-        .withWorkdir(`/workspace/packages/${pkg}`)
-    );
+  bunBase(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Container {
+    let container = dag
+      .container()
+      .from(BUN_IMAGE)
+      .withExec(["apt-get", "update", "-qq"])
+      .withExec([
+        "apt-get",
+        "install",
+        "-y",
+        "-qq",
+        "--no-install-recommends",
+        "zstd",
+        "python3",
+        "python3-setuptools",
+      ])
+      .withMountedCache(
+        "/root/.bun/install/cache",
+        dag.cacheVolume(BUN_CACHE),
+      )
+      .withWorkdir(`/workspace/packages/${pkg}`)
+      .withDirectory(`/workspace/packages/${pkg}`, pkgDir, {
+        exclude: SOURCE_EXCLUDES,
+      });
+
+    // Mount deps at correct relative paths for file: protocol resolution
+    for (let i = 0; i < depNames.length; i++) {
+      container = container.withDirectory(
+        `/workspace/packages/${depNames[i]}`,
+        depDirs[i],
+        { exclude: SOURCE_EXCLUDES },
+      );
+    }
+
+    if (tsconfig != null) {
+      container = container.withFile(
+        "/workspace/tsconfig.base.json",
+        tsconfig,
+      );
+    }
+
+    // Per-package lockfile — frozen install
+    container = container.withExec(["bun", "install", "--frozen-lockfile"]);
+
+    // Build deps that publish types/exports via dist/
+    for (const dep of BUILD_TIME_DEPS) {
+      if (depNames.includes(dep)) {
+        container = container
+          .withWorkdir(`/workspace/packages/${dep}`)
+          .withExec(["bun", "run", "build"]);
+      }
+    }
+
+    return container.withWorkdir(`/workspace/packages/${pkg}`);
   }
 
   /**
@@ -204,8 +225,14 @@ export class Monorepo {
 
   /** Run the lint script on a package */
   @func()
-  async lint(source: Directory, pkg: string): Promise<string> {
-    return this.bunBase(source, pkg)
+  async lint(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Promise<string> {
+    return this.bunBase(pkgDir, pkg, depNames, depDirs, tsconfig)
       .withMountedCache(
         `/workspace/packages/${pkg}/.eslintcache`,
         dag.cacheVolume(ESLINT_CACHE),
@@ -216,16 +243,30 @@ export class Monorepo {
 
   /** Run the typecheck script on a package */
   @func()
-  async typecheck(source: Directory, pkg: string): Promise<string> {
-    return this.bunBase(source, pkg)
+  async typecheck(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Promise<string> {
+    return this.bunBase(pkgDir, pkg, depNames, depDirs, tsconfig)
       .withExec(["bun", "run", "typecheck"])
       .stdout();
   }
 
   /** Run the test script on a package */
   @func()
-  async test(source: Directory, pkg: string): Promise<string> {
-    return this.bunBase(source, pkg).withExec(["bun", "run", "test"]).stdout();
+  async test(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Promise<string> {
+    return this.bunBase(pkgDir, pkg, depNames, depDirs, tsconfig)
+      .withExec(["bun", "run", "test"])
+      .stdout();
   }
 
   // ---------------------------------------------------------------------------
@@ -234,8 +275,14 @@ export class Monorepo {
 
   /** Run bun run generate for a package and return the workspace with generated files */
   @func()
-  generate(source: Directory, pkg: string): Directory {
-    return this.bunBase(source, pkg)
+  generate(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Directory {
+    return this.bunBase(pkgDir, pkg, depNames, depDirs, tsconfig)
       .withWorkdir(`/workspace/packages/${pkg}`)
       .withExec(["bun", "run", "generate"])
       .directory("/workspace");
@@ -290,22 +337,40 @@ export class Monorepo {
 
   /** Generate then lint in a single pipeline */
   @func()
-  async generateAndLint(source: Directory, pkg: string): Promise<string> {
-    const generated = this.generate(source, pkg);
+  async generateAndLint(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Promise<string> {
+    const generated = this.generate(pkgDir, pkg, depNames, depDirs, tsconfig);
     return this.lintWithGenerated(generated, pkg);
   }
 
   /** Generate then typecheck in a single pipeline */
   @func()
-  async generateAndTypecheck(source: Directory, pkg: string): Promise<string> {
-    const generated = this.generate(source, pkg);
+  async generateAndTypecheck(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Promise<string> {
+    const generated = this.generate(pkgDir, pkg, depNames, depDirs, tsconfig);
     return this.typecheckWithGenerated(generated, pkg);
   }
 
   /** Generate then test in a single pipeline */
   @func()
-  async generateAndTest(source: Directory, pkg: string): Promise<string> {
-    const generated = this.generate(source, pkg);
+  async generateAndTest(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Promise<string> {
+    const generated = this.generate(pkgDir, pkg, depNames, depDirs, tsconfig);
     return this.testWithGenerated(generated, pkg);
   }
 
@@ -316,11 +381,14 @@ export class Monorepo {
   /** Generate Home Assistant entity types by introspecting a live HA instance */
   @func()
   haGenerate(
-    source: Directory,
+    pkgDir: Directory,
     hassToken: Secret,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
     hassBaseUrl: string = "https://homeassistant.sjer.red",
   ): Directory {
-    return this.bunBase(source, "homelab/src/ha")
+    return this.bunBase(pkgDir, "homelab/src/ha", depNames, depDirs, tsconfig)
       .withSecretVariable("HASS_TOKEN", hassToken)
       .withEnvVariable("HASS_BASE_URL", hassBaseUrl)
       .withExec(["bun", "run", "generate-types"])
@@ -329,8 +397,14 @@ export class Monorepo {
 
   /** Generate HA types then lint homelab/src/ha */
   @func()
-  async haLint(source: Directory, hassToken: Secret): Promise<string> {
-    const generated = this.haGenerate(source, hassToken);
+  async haLint(
+    pkgDir: Directory,
+    hassToken: Secret,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Promise<string> {
+    const generated = this.haGenerate(pkgDir, hassToken, depNames, depDirs, tsconfig);
     return dag
       .container()
       .from(BUN_IMAGE)
@@ -346,8 +420,14 @@ export class Monorepo {
 
   /** Generate HA types then typecheck homelab/src/ha */
   @func()
-  async haTypecheck(source: Directory, hassToken: Secret): Promise<string> {
-    const generated = this.haGenerate(source, hassToken);
+  async haTypecheck(
+    pkgDir: Directory,
+    hassToken: Secret,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Promise<string> {
+    const generated = this.haGenerate(pkgDir, hassToken, depNames, depDirs, tsconfig);
     return dag
       .container()
       .from(BUN_IMAGE)
@@ -363,16 +443,28 @@ export class Monorepo {
 
   /** Run astro check on a package */
   @func()
-  async astroCheck(source: Directory, pkg: string): Promise<string> {
-    return this.bunBase(source, pkg)
+  async astroCheck(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Promise<string> {
+    return this.bunBase(pkgDir, pkg, depNames, depDirs, tsconfig)
       .withExec(["bunx", "astro", "check"])
       .stdout();
   }
 
   /** Run astro build and return the output directory */
   @func()
-  astroBuild(source: Directory, pkg: string): Directory {
-    return this.bunBase(source, pkg)
+  astroBuild(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Directory {
+    return this.bunBase(pkgDir, pkg, depNames, depDirs, tsconfig)
       .withExec(["bunx", "astro", "build"])
       .directory(`/workspace/packages/${pkg}/dist`);
   }
@@ -383,8 +475,14 @@ export class Monorepo {
 
   /** Run vite build and return the output directory */
   @func()
-  viteBuild(source: Directory, pkg: string): Directory {
-    return this.bunBase(source, pkg)
+  viteBuild(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Directory {
+    return this.bunBase(pkgDir, pkg, depNames, depDirs, tsconfig)
       .withExec(["bunx", "vite", "build"])
       .directory(`/workspace/packages/${pkg}/dist`);
   }
@@ -399,33 +497,31 @@ export class Monorepo {
    */
   @func()
   buildImage(
-    source: Directory,
+    pkgDir: Directory,
     pkg: string,
-    neededPackages: string[] = [],
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
     version: string = "dev",
     gitSha: string = "unknown",
   ): Container {
     const excludes = ["node_modules", "dist", ".eslintcache"];
 
-    // Build a minimal workspace: root package.json + target + needed packages
+    // Build a minimal workspace: target + needed packages
     let container = dag
       .container()
       .from(BUN_IMAGE)
       .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
       .withWorkdir("/workspace")
-      .withFile("/workspace/package.json", source.file("package.json"))
-      .withDirectory("/workspace/patches", source.directory("patches"))
-      .withFile("/workspace/bun.lock", source.file("bun.lock"))
       .withDirectory(
         `/workspace/packages/${pkg}`,
-        source.directory(`packages/${pkg}`),
+        pkgDir,
         { exclude: excludes },
       );
 
-    for (const dep of neededPackages) {
+    for (let i = 0; i < depNames.length; i++) {
       container = container.withDirectory(
-        `/workspace/packages/${dep}`,
-        source.directory(`packages/${dep}`),
+        `/workspace/packages/${depNames[i]}`,
+        depDirs[i],
         { exclude: excludes },
       );
     }
@@ -449,16 +545,17 @@ export class Monorepo {
   /** Push a built image to a registry */
   @func({ cache: "never" })
   async pushImage(
-    source: Directory,
+    pkgDir: Directory,
     pkg: string,
     tag: string,
     registryUsername: string,
     registryPassword: Secret,
-    neededPackages: string[] = [],
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
     version: string = "dev",
     gitSha: string = "unknown",
   ): Promise<string> {
-    const image = this.buildImage(source, pkg, neededPackages, version, gitSha);
+    const image = this.buildImage(pkgDir, pkg, depNames, depDirs, version, gitSha);
     return image
       .withRegistryAuth("ghcr.io", registryUsername, registryPassword)
       .publish(tag);
@@ -548,8 +645,13 @@ export class Monorepo {
 
   /** Run cdk8s synth (bun run build) and return the output directory */
   @func()
-  homelabSynth(source: Directory): Directory {
-    return this.bunBase(source, "homelab/src/cdk8s")
+  homelabSynth(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Directory {
+    return this.bunBase(pkgDir, "homelab/src/cdk8s", depNames, depDirs, tsconfig)
       .withExec(["bun", "run", "build"])
       .directory("/workspace/packages/homelab/src/cdk8s/dist");
   }
@@ -578,59 +680,90 @@ export class Monorepo {
 
   /** Run Playwright tests headless in a container */
   @func()
-  async playwrightTest(source: Directory, pkg: string): Promise<string> {
-    return (
-      dag
-        .container()
-        .from(PLAYWRIGHT_IMAGE)
-        // Install pinned bun on the Playwright image (needs unzip)
-        .withExec(["apt-get", "update", "-qq"])
-        .withExec([
-          "apt-get",
-          "install",
-          "-y",
-          "-qq",
-          "--no-install-recommends",
-          "unzip",
-        ])
-        .withExec([
-          "bash",
-          "-c",
-          `curl -fsSL https://bun.sh/install | bash -s -- bun-v${BUN_VERSION}`,
-        ])
-        .withEnvVariable(
-          "PATH",
-          "/root/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-        )
-        .withEnvVariable("CI", "true")
-        .withMountedCache(
-          "/root/.bun/install/cache",
-          dag.cacheVolume(BUN_CACHE),
-        )
-        .withWorkdir("/workspace")
-        .withDirectory("/workspace", source, {
-          exclude: SOURCE_EXCLUDES,
-        })
-        .withExec(["bun", "install", "--frozen-lockfile"])
-        // Build workspace deps needed by sjer.red
-        .withWorkdir("/workspace/packages/eslint-config")
-        .withExec(["bun", "run", "build"])
-        .withWorkdir("/workspace/packages/astro-opengraph-images")
-        .withExec(["bun", "run", "build"])
-        .withWorkdir("/workspace/packages/webring")
-        .withExec(["bun", "run", "build"])
-        .withWorkdir(`/workspace/packages/${pkg}`)
-        // Build the site first — playwright tests run against astro preview which needs dist/
-        .withExec(["bunx", "astro", "build"])
-        .withExec(["bun", "run", "test"])
-        .stdout()
-    );
+  async playwrightTest(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Promise<string> {
+    let container = dag
+      .container()
+      .from(PLAYWRIGHT_IMAGE)
+      // Install pinned bun on the Playwright image (needs unzip)
+      .withExec(["apt-get", "update", "-qq"])
+      .withExec([
+        "apt-get",
+        "install",
+        "-y",
+        "-qq",
+        "--no-install-recommends",
+        "unzip",
+      ])
+      .withExec([
+        "bash",
+        "-c",
+        `curl -fsSL https://bun.sh/install | bash -s -- bun-v${BUN_VERSION}`,
+      ])
+      .withEnvVariable(
+        "PATH",
+        "/root/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      )
+      .withEnvVariable("CI", "true")
+      .withMountedCache(
+        "/root/.bun/install/cache",
+        dag.cacheVolume(BUN_CACHE),
+      )
+      .withWorkdir(`/workspace/packages/${pkg}`)
+      .withDirectory(`/workspace/packages/${pkg}`, pkgDir, {
+        exclude: SOURCE_EXCLUDES,
+      });
+
+    // Mount deps at correct relative paths
+    for (let i = 0; i < depNames.length; i++) {
+      container = container.withDirectory(
+        `/workspace/packages/${depNames[i]}`,
+        depDirs[i],
+        { exclude: SOURCE_EXCLUDES },
+      );
+    }
+
+    if (tsconfig != null) {
+      container = container.withFile(
+        "/workspace/tsconfig.base.json",
+        tsconfig,
+      );
+    }
+
+    container = container.withExec(["bun", "install", "--frozen-lockfile"]);
+
+    // Build deps that publish types/exports via dist/
+    for (const dep of BUILD_TIME_DEPS) {
+      if (depNames.includes(dep)) {
+        container = container
+          .withWorkdir(`/workspace/packages/${dep}`)
+          .withExec(["bun", "run", "build"]);
+      }
+    }
+
+    return container
+      .withWorkdir(`/workspace/packages/${pkg}`)
+      // Build the site first — playwright tests run against astro preview which needs dist/
+      .withExec(["bunx", "astro", "build"])
+      .withExec(["bun", "run", "test"])
+      .stdout();
   }
 
   /** Generate/update Playwright snapshot baselines. Returns the snapshots directory. */
   @func()
-  playwrightUpdate(source: Directory, pkg: string): Directory {
-    return dag
+  playwrightUpdate(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Directory {
+    let container = dag
       .container()
       .from(PLAYWRIGHT_IMAGE)
       .withExec(["apt-get", "update", "-qq"])
@@ -653,17 +786,39 @@ export class Monorepo {
       )
       .withEnvVariable("CI", "true")
       .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
-      .withWorkdir("/workspace")
-      .withDirectory("/workspace", source, {
+      .withWorkdir(`/workspace/packages/${pkg}`)
+      .withDirectory(`/workspace/packages/${pkg}`, pkgDir, {
         exclude: SOURCE_EXCLUDES,
-      })
-      .withExec(["bun", "install", "--frozen-lockfile"])
-      .withWorkdir("/workspace/packages/eslint-config")
-      .withExec(["bun", "run", "build"])
-      .withWorkdir("/workspace/packages/astro-opengraph-images")
-      .withExec(["bun", "run", "build"])
-      .withWorkdir("/workspace/packages/webring")
-      .withExec(["bun", "run", "build"])
+      });
+
+    // Mount deps at correct relative paths
+    for (let i = 0; i < depNames.length; i++) {
+      container = container.withDirectory(
+        `/workspace/packages/${depNames[i]}`,
+        depDirs[i],
+        { exclude: SOURCE_EXCLUDES },
+      );
+    }
+
+    if (tsconfig != null) {
+      container = container.withFile(
+        "/workspace/tsconfig.base.json",
+        tsconfig,
+      );
+    }
+
+    container = container.withExec(["bun", "install", "--frozen-lockfile"]);
+
+    // Build deps that publish types/exports via dist/
+    for (const dep of BUILD_TIME_DEPS) {
+      if (depNames.includes(dep)) {
+        container = container
+          .withWorkdir(`/workspace/packages/${dep}`)
+          .withExec(["bun", "run", "build"]);
+      }
+    }
+
+    return container
       .withWorkdir(`/workspace/packages/${pkg}`)
       .withExec(["bunx", "astro", "build"])
       .withExec(["bunx", "playwright", "test", "--update-snapshots"])
@@ -745,7 +900,15 @@ export class Monorepo {
       "homelab",
     ];
 
-    const base = this.bunBase(source, "webring"); // any pkg, just to get the base
+    const tsconfig = source.file("tsconfig.base.json");
+
+    // Helper: extract pkgDir and dep dirs from full source for a package
+    const dirsFor = (pkg: string) => {
+      const pkgDir = source.directory(`packages/${pkg}`);
+      const deps = WORKSPACE_DEPS[pkg] ?? [];
+      const depDirs = deps.map((d: string) => source.directory(`packages/${d}`));
+      return { pkgDir, depNames: deps, depDirs };
+    };
 
     interface CheckResult {
       label: string;
@@ -773,18 +936,24 @@ export class Monorepo {
 
     // Run all TS packages in parallel
     for (const pkg of tsPackages) {
-      const container = base.withWorkdir(`/workspace/packages/${pkg}`);
+      const { pkgDir, depNames, depDirs } = dirsFor(pkg);
+      const base = this.bunBase(pkgDir, pkg, depNames, depDirs, tsconfig);
       allChecks.push(
-        check(`${pkg}: lint`, container.withExec(["bun", "run", "lint"])),
+        check(`${pkg}: lint`, base
+          .withMountedCache(
+            `/workspace/packages/${pkg}/.eslintcache`,
+            dag.cacheVolume(ESLINT_CACHE),
+          )
+          .withExec(["bun", "run", "lint"])),
       );
       allChecks.push(
         check(
           `${pkg}: typecheck`,
-          container.withExec(["bun", "run", "typecheck"]),
+          base.withExec(["bun", "run", "typecheck"]),
         ),
       );
       allChecks.push(
-        check(`${pkg}: test`, container.withExec(["bun", "run", "test"])),
+        check(`${pkg}: test`, base.withExec(["bun", "run", "test"])),
       );
     }
 
@@ -843,7 +1012,8 @@ export class Monorepo {
     );
 
     // scout-for-lol: generate then lint/typecheck/test
-    const scoutGenerated = this.bunBase(source, "scout-for-lol")
+    const scoutInfo = dirsFor("scout-for-lol");
+    const scoutGenerated = this.bunBase(scoutInfo.pkgDir, "scout-for-lol", scoutInfo.depNames, scoutInfo.depDirs, tsconfig)
       .withExec(["bun", "run", "generate"])
       .directory("/workspace");
     const scoutContainer = dag
@@ -872,7 +1042,8 @@ export class Monorepo {
 
     // homelab/ha: generate types then lint/typecheck (requires HASS_TOKEN)
     if (hassToken != null) {
-      const haGenerated = this.bunBase(source, "homelab/src/ha")
+      const haInfo = dirsFor("homelab/src/ha");
+      const haGenerated = this.bunBase(haInfo.pkgDir, "homelab/src/ha", haInfo.depNames, haInfo.depDirs, tsconfig)
         .withSecretVariable("HASS_TOKEN", hassToken)
         .withEnvVariable("HASS_BASE_URL", "https://homeassistant.sjer.red")
         .withExec(["bun", "run", "generate-types"])
@@ -1041,17 +1212,19 @@ export class Monorepo {
   /** Publish an npm package via bun publish */
   @func({ cache: "never" })
   async publishNpm(
-    source: Directory,
+    pkgDir: Directory,
     pkg: string,
     npmToken: Secret,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
   ): Promise<string> {
-    return publishNpmHelper(source, pkg, npmToken).stdout();
+    return publishNpmHelper(pkgDir, pkg, npmToken, depNames, depDirs).stdout();
   }
 
   /** Build and deploy a static site to S3 or R2 */
   @func({ cache: "never" })
   async deploySite(
-    source: Directory,
+    pkgDir: Directory,
     pkg: string,
     bucket: string,
     buildCmd: string,
@@ -1060,10 +1233,13 @@ export class Monorepo {
     awsAccessKeyId: Secret,
     awsSecretAccessKey: Secret,
     cloudflareAccountId: string = "",
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
   ): Promise<string> {
     return deploySiteHelper(
-      source, pkg, bucket, buildCmd, distSubdir, target,
+      pkgDir, pkg, bucket, buildCmd, distSubdir, target,
       awsAccessKeyId, awsSecretAccessKey, cloudflareAccountId,
+      depNames, depDirs,
     ).stdout();
   }
 
@@ -1092,8 +1268,12 @@ export class Monorepo {
 
   /** Build cooklang-for-obsidian artifacts */
   @func({ cache: "never" })
-  async cooklangBuild(source: Directory): Promise<string> {
-    return cooklangBuildHelper(source).stdout();
+  async cooklangBuild(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+  ): Promise<string> {
+    return cooklangBuildHelper(pkgDir, depNames, depDirs).stdout();
   }
 
   /** Push cooklang artifacts to GitHub repository */

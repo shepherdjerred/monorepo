@@ -25,7 +25,7 @@
     "remeda": "^2.22.5",
     "ts-pattern": "^5.7.1",
     "zod": "^4.1.11",
-    "@shepherdjerred/helm-types": "workspace:*",
+    "@shepherdjerred/helm-types": "file:../helm-types",
     "@grafana/grafana-foundation-sdk": "11.6.0-cogv0.0.x.1759917919"
   },
   "devDependencies": {

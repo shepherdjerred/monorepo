@@ -14,7 +14,7 @@
     "packages/frontend"
   ],
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "workspace:*"
+    "@shepherdjerred/eslint-config": "file:../eslint-config"
   },
   "dependencies": {}
 }

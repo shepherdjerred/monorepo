@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "workspace:*",
+    "@shepherdjerred/eslint-config": "file:../../eslint-config",
     "@tsconfig/node-lts": "^24.0.0",
     "@tsconfig/recommended": "^1.0.11",
     "@tsconfig/strictest": "^2.0.7",

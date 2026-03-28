@@ -111,22 +111,52 @@ export function tofuApplyHelper(
 
 /** Publish an npm package via bun publish. */
 export function publishNpmHelper(
-  source: Directory,
+  pkgDir: Directory,
   pkg: string,
   npmToken: Secret,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
 ): Container {
-  return dag
+  let container = dag
     .container()
     .from(BUN_IMAGE)
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
-    .withWorkdir("/workspace")
-    .withDirectory("/workspace", source, {
-      include: ["package.json", "bun.lock", "patches/**", "**/package.json"],
-      exclude: ["**/node_modules/**"],
-    })
-    .withExec(["bun", "install", "--frozen-lockfile"])
-    .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES })
     .withWorkdir(`/workspace/packages/${pkg}`)
+    .withDirectory(`/workspace/packages/${pkg}`, pkgDir, {
+      exclude: SOURCE_EXCLUDES,
+    });
+
+  // Mount deps at correct relative paths for file: protocol resolution
+  for (let i = 0; i < depNames.length; i++) {
+    container = container.withDirectory(
+      `/workspace/packages/${depNames[i]}`,
+      depDirs[i],
+      { exclude: SOURCE_EXCLUDES },
+    );
+  }
+
+  return container
+    .withExec(["bun", "install", "--frozen-lockfile"])
+    // Replace file: refs with actual versions before publishing
+    .withExec([
+      "sh", "-c",
+      `cd /workspace/packages/${pkg} && node -e '
+        const fs = require("fs");
+        const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+        for (const [depType, deps] of [["dependencies", pkg.dependencies || {}], ["devDependencies", pkg.devDependencies || {}]]) {
+          for (const [name, ver] of Object.entries(deps)) {
+            if (typeof ver === "string" && ver.startsWith("file:")) {
+              const depPath = ver.replace("file:", "");
+              try {
+                const depPkg = JSON.parse(fs.readFileSync(depPath + "/package.json", "utf8"));
+                deps[name] = "^" + depPkg.version;
+              } catch(e) { /* skip if dep not found */ }
+            }
+          }
+        }
+        fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\\n");
+      '`
+    ])
     .withSecretVariable("NPM_TOKEN", npmToken)
     .withExec([
       "sh",
@@ -141,7 +171,7 @@ export function publishNpmHelper(
 
 /** Build and deploy a static site to S3 (SeaweedFS) or R2 (Cloudflare). */
 export function deploySiteHelper(
-  source: Directory,
+  pkgDir: Directory,
   pkg: string,
   bucket: string,
   buildCmd: string,
@@ -150,6 +180,8 @@ export function deploySiteHelper(
   awsAccessKeyId: Secret,
   awsSecretAccessKey: Secret,
   cloudflareAccountId: string = "",
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
 ): Container {
   let container = dag
     .container()
@@ -164,14 +196,22 @@ export function deploySiteHelper(
       "awscli",
     ])
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
-    .withWorkdir("/workspace")
-    .withDirectory("/workspace", source, {
-      include: ["package.json", "bun.lock", "patches/**", "**/package.json"],
-      exclude: ["**/node_modules/**"],
-    })
+    .withWorkdir(`/workspace/packages/${pkg}`)
+    .withDirectory(`/workspace/packages/${pkg}`, pkgDir, {
+      exclude: SOURCE_EXCLUDES,
+    });
+
+  // Mount deps at correct relative paths for file: protocol resolution
+  for (let i = 0; i < depNames.length; i++) {
+    container = container.withDirectory(
+      `/workspace/packages/${depNames[i]}`,
+      depDirs[i],
+      { exclude: SOURCE_EXCLUDES },
+    );
+  }
+
+  container = container
     .withExec(["bun", "install", "--frozen-lockfile"])
-    .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES })
-    .withWorkdir(`/workspace/${pkg}`)
     .withSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyId)
     .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey);
 
@@ -243,20 +283,30 @@ export function argoCdHealthWaitHelper(
 
 /** Build cooklang-for-obsidian artifacts. */
 export function cooklangBuildHelper(
-  source: Directory,
+  pkgDir: Directory,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
 ): Container {
-  return dag
+  let container = dag
     .container()
     .from(BUN_IMAGE)
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
-    .withWorkdir("/workspace")
-    .withDirectory("/workspace", source, {
-      include: ["package.json", "bun.lock", "patches/**", "**/package.json"],
-      exclude: ["**/node_modules/**"],
-    })
-    .withExec(["bun", "install", "--frozen-lockfile"])
-    .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES })
     .withWorkdir("/workspace/packages/cooklang-for-obsidian")
+    .withDirectory("/workspace/packages/cooklang-for-obsidian", pkgDir, {
+      exclude: SOURCE_EXCLUDES,
+    });
+
+  // Mount deps at correct relative paths for file: protocol resolution
+  for (let i = 0; i < depNames.length; i++) {
+    container = container.withDirectory(
+      `/workspace/packages/${depNames[i]}`,
+      depDirs[i],
+      { exclude: SOURCE_EXCLUDES },
+    );
+  }
+
+  return container
+    .withExec(["bun", "install", "--frozen-lockfile"])
     .withExec(["bun", "run", "build"]);
 }
 

@@ -29,8 +29,8 @@
     "@sentry/react": "^10.0.0",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-slot": "^1.2.4",
-    "@scout-for-lol/data": "workspace:*",
-    "@scout-for-lol/ui": "workspace:*",
+    "@scout-for-lol/data": "file:../data",
+    "@scout-for-lol/ui": "file:../ui",
     "@tauri-apps/api": "^2.10.0",
     "@tauri-apps/plugin-dialog": "^2.6.0",
     "@tauri-apps/plugin-fs": "^2.2.0",
@@ -43,7 +43,7 @@
     "zod": "^4.0.0"
   },
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "workspace:*",
+    "@shepherdjerred/eslint-config": "file:../../../eslint-config",
     "@tailwindcss/postcss": "^4.1.17",
     "@tauri-apps/cli": "^2.4.0",
     "@types/node": "^25.0.0",

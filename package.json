@@ -1,12 +1,6 @@
 {
   "name": "@shepherdjerred/monorepo",
   "private": true,
-  "workspaces": [
-    "packages/*",
-    "packages/*/packages/*",
-    "packages/*/src/*",
-    "packages/*/*"
-  ],
   "scripts": {
     "build": "bun run scripts/run-package-script.ts build",
     "test": "bun run scripts/run-package-script.ts test",
@@ -14,11 +8,5 @@
     "lint": "bun run scripts/run-package-script.ts lint",
     "guard:migration": "bun run scripts/guard-no-package-exclusions.ts",
     "prepare": "git rev-parse --git-dir > /dev/null 2>&1 && lefthook install || true"
-  },
-  "patchedDependencies": {
-    "monarch-money-api@0.0.5": "patches/monarch-money-api@0.0.5.patch",
-    "react-native-sound@0.13.0": "patches/react-native-sound@0.13.0.patch",
-    "satori@0.18.3": "patches/satori@0.18.3.patch",
-    "@digital-alchemy/type-writer@25.10.12": "patches/@digital-alchemy%2Ftype-writer@25.10.12.patch"
   }
 }

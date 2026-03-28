@@ -30,8 +30,11 @@
     "zod": "^4.1.11"
   },
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "workspace:*",
+    "@shepherdjerred/eslint-config": "file:../../../eslint-config",
     "eslint": "^9.39.2",
     "typescript": "^5.9.3"
+  },
+  "patchedDependencies": {
+    "@digital-alchemy/type-writer@25.10.12": "patches/@digital-alchemy%2Ftype-writer@25.10.12.patch"
   }
 }

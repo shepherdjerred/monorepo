@@ -6,6 +6,7 @@ import { IMAGE_PUSH_TARGETS, INFRA_PUSH_TARGETS } from "../catalog.ts";
 import { safeKey, RETRY, DAGGER_ENV } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
+import { WORKSPACE_DEPS } from "../lib/workspace-deps.ts";
 
 const MAIN_ONLY = "build.branch == pipeline.default_branch";
 
@@ -13,15 +14,18 @@ function imagePushStep(
   img: ImageTarget,
   dependsOn: string = "release",
 ): BuildkiteStep {
-  // Build the dagger call command
-  // The push-image function handles registry auth via env vars
+  const pkg = img.package ?? img.name;
+  const deps = WORKSPACE_DEPS[pkg] ?? [];
+  const depFlags = deps.flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`]).join(" ");
   const cmd = [
-    `DIGEST=$(dagger call push-image --source . --pkg ${img.name}`,
+    `DIGEST=$(dagger call push-image --pkg-dir ./packages/${pkg} --pkg ${img.name}`,
+    depFlags,
+    `--tsconfig ./tsconfig.base.json`,
     `--tag ghcr.io/${img.versionKey}:latest`,
     `--registry-username $GITHUB_USERNAME`,
     `--registry-password env:GITHUB_TOKEN)`,
     `&& buildkite-agent meta-data set "digest:${img.versionKey}" "$DIGEST"`,
-  ].join(" ");
+  ].filter(Boolean).join(" ");
 
   return {
     label: `:docker: Push ${img.name}`,

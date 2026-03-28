@@ -38,7 +38,7 @@
     "react-native-sound": "^0.13.0",
     "react-native-vector-icons": "^10.3.0",
     "zeego": "^3.0.6",
-    "tasknotes-types": "workspace:*",
+    "tasknotes-types": "file:../tasknotes-types",
     "ts-pattern": "^5.7.1",
     "zod": "^3.25.3"
   },
@@ -54,7 +54,7 @@
     "@react-native/typescript-config": "0.83.1",
     "@types/react": "~19.2.7",
     "@types/react-native-vector-icons": "^6.4.18",
-    "@shepherdjerred/eslint-config": "workspace:*",
+    "@shepherdjerred/eslint-config": "file:../eslint-config",
     "eslint": "^9.39.2",
     "jiti": "^2.6.1",
     "typescript": "^5.9.3",
@@ -62,5 +62,8 @@
   },
   "engines": {
     "node": ">=20.19.4"
+  },
+  "patchedDependencies": {
+    "react-native-sound@0.13.0": "patches/react-native-sound@0.13.0.patch"
   }
 }

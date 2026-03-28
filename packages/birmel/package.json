@@ -43,7 +43,7 @@
     "zod": "^4.2.1"
   },
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "workspace:*",
+    "@shepherdjerred/eslint-config": "file:../eslint-config",
     "@types/bun": "^1.3.5",
     "eslint": "^9.39.2",
     "prisma": "^6.0.0",

@@ -43,7 +43,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "workspace:*",
+    "@shepherdjerred/eslint-config": "file:../eslint-config",
     "@tsconfig/node24": "^24.0.0",
     "@tsconfig/strictest": "^2.0.5",
     "@types/express": "^5.0.0",

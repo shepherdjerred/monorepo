@@ -14,11 +14,11 @@
     "format:write": "bunx prettier --write src"
   },
   "dependencies": {
-    "@scout-for-lol/data": "workspace:*",
+    "@scout-for-lol/data": "file:../data",
     "react": "^19.1.1"
   },
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "workspace:*",
+    "@shepherdjerred/eslint-config": "file:../../../eslint-config",
     "@types/react": "^19.1.13",
     "bun-types": "latest",
     "eslint": "^9.39.2",

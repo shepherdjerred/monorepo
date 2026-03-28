@@ -57,6 +57,26 @@ Modpacks with structure, goals, and quest systems for players who prefer guided 
 - All packs support multiplayer and are available on **CurseForge**
 - Use **CurseForge**, **ATLauncher**, or **Prism Launcher** for installation
 
+## Deployed Servers (March 2026)
+
+All 5 top picks are deployed on the homelab K8s cluster using the itzg/minecraft-server Helm chart with `AUTO_CURSEFORGE` type. Infrastructure details:
+
+| Server | Hostname | JVM | K8s Memory | Storage |
+|--------|----------|-----|------------|---------|
+| All the Mons | `allthemons.sjer.red` | 8G | 10Gi | 64Gi |
+| FTB StoneBlock 4 | `stoneblock4.sjer.red` | 6G | 8Gi | 32Gi |
+| Better Minecraft | `bettermc.sjer.red` | 6G | 8Gi | 32Gi |
+| All of Create | `allofcreate.sjer.red` | 6G | 8Gi | 32Gi |
+| FTB Skies 2 | `ftbskies2.sjer.red` | 6G | 8Gi | 32Gi |
+
+- **Whitelist**: RiotShielder, vietnamesechovy
+- **mc-router** auto-hibernation: idle servers scale to 0, wake on connect
+- **CurseForge API key**: stored in 1Password, shared across all servers
+- **DNS**: CNAMEs to `ddns.sjer.red` + SRV records, managed in OpenTofu (`sjer-red.tf`)
+- **Code**: shared helper at `packages/homelab/src/cdk8s/src/misc/modded-minecraft.ts`, thin server files in `argo-applications/`
+- **No** Velocity, Bedrock, BlueMap, DiscordSRV, or config management (modpacks handle everything)
+- **Rate limit note**: deploying all 5 simultaneously can hit CurseForge API rate limits. Stagger first-time startups if redeploying from scratch.
+
 ## Context
 
 Researched March 2026. Girlfriend prefers structure/goals (Stardew Valley, Pokemon Pokopia player), not a big fan of combat but OK with it if it feels easier.

@@ -14,7 +14,7 @@
     "zod": "^3.24"
   },
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "workspace:*",
+    "@shepherdjerred/eslint-config": "file:../eslint-config",
     "eslint": "^9.39.2",
     "jiti": "^2.6.1",
     "typescript": "^5.8",

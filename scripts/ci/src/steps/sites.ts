@@ -16,16 +16,21 @@ function deploySiteStep(
   const cpu = site.needsPlaywright || site.buildCmd ? "1" : "500m";
   const memory = site.needsPlaywright || site.buildCmd ? "2Gi" : "512Mi";
 
+  const pkgPath = site.buildDir.replace("packages/", "");
+  const depList = (site.workspaceDeps ?? "").split(",").filter(Boolean);
+  const depFlags = depList.flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`]).join(" ");
+
   // Build dagger call command for deploy-site
   const args = [
-    `dagger call deploy-site --source .`,
-    `--pkg ${site.buildDir.replace("packages/", "")}`,
+    `dagger call deploy-site --pkg-dir ./${site.buildDir}`,
+    `--pkg ${pkgPath}`,
+    depFlags,
     `--build-cmd "${site.buildCmd || "true"}"`,
     `--s3-bucket s3://${site.bucket}`,
     `--endpoint-url https://seaweedfs.sjer.red`,
     `--aws-access-key env:AWS_ACCESS_KEY_ID`,
     `--aws-secret-key env:AWS_SECRET_ACCESS_KEY`,
-  ];
+  ].filter(Boolean);
 
   // Note: Playwright tests are handled by per-package steps, not the deploy step.
 

@@ -199,7 +199,7 @@ async function readWorkspaceDeps(): Promise<Map<string, Set<string>>> {
       };
       const workspaceDeps = new Set<string>();
       for (const [name, version] of Object.entries(allDeps)) {
-        if (typeof version === "string" && version.startsWith("workspace:")) {
+        if (typeof version === "string" && (version.startsWith("workspace:") || version.startsWith("file:"))) {
           // Extract the package directory name from the scoped name
           const dirName = name.startsWith("@")
             ? name.split("/")[1] ?? name

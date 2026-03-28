@@ -13,13 +13,13 @@
   "dependencies": {
     "hono": "^4",
     "prom-client": "^15",
-    "tasknotes-types": "workspace:*",
+    "tasknotes-types": "file:../tasknotes-types",
     "zod": "^3.24",
     "gray-matter": "^4",
     "yaml": "^2"
   },
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "workspace:*",
+    "@shepherdjerred/eslint-config": "file:../eslint-config",
     "@types/bun": "latest",
     "eslint": "^9.39.2",
     "jiti": "^2.6.1",
