@@ -1,2 +1,0 @@
-# Parent package for status-page sub-packages (api, web).
-# Individual BUILD.bazel files in each sub-package handle their own targets.

@@ -13,6 +13,42 @@ import {
   func,
 } from "@dagger.io/dagger";
 
+import {
+  qualityRatchetHelper,
+  complianceCheckHelper,
+  knipCheckHelper,
+  gitleaksCheckHelper,
+  suppressionCheckHelper,
+} from "./quality";
+
+import {
+  trivyScanHelper,
+  semgrepScanHelper,
+} from "./security";
+
+import {
+  mavenBuildHelper,
+  mavenTestHelper,
+} from "./java";
+
+import {
+  latexBuildHelper,
+} from "./latex";
+
+import {
+  helmPackageHelper,
+  tofuApplyHelper,
+  publishNpmHelper,
+  deploySiteHelper,
+  argoCdSyncHelper,
+  argoCdHealthWaitHelper,
+  cooklangBuildHelper,
+  cooklangPushHelper,
+  clauderonUploadHelper,
+  versionCommitBackHelper,
+  cargoDenyHelper,
+} from "./release";
+
 // renovate: datasource=docker depName=oven/bun
 const BUN_IMAGE = "oven/bun:1.2.17-debian";
 // renovate: datasource=docker depName=rust
@@ -827,5 +863,208 @@ export class Monorepo {
     }
 
     return summary;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Quality gates (repo-wide)
+  // ---------------------------------------------------------------------------
+
+  /** Run the quality ratchet check across the repo */
+  @func()
+  async qualityRatchet(source: Directory): Promise<string> {
+    return qualityRatchetHelper(source).stdout();
+  }
+
+  /** Run the compliance check across the repo */
+  @func()
+  async complianceCheck(source: Directory): Promise<string> {
+    return complianceCheckHelper(source).stdout();
+  }
+
+  /** Run knip to detect unused exports and dependencies */
+  @func()
+  async knipCheck(source: Directory): Promise<string> {
+    return knipCheckHelper(source).stdout();
+  }
+
+  /** Run gitleaks to detect secrets in the source tree */
+  @func()
+  async gitleaksCheck(source: Directory): Promise<string> {
+    return gitleaksCheckHelper(source).stdout();
+  }
+
+  /** Run the suppression check across the repo */
+  @func()
+  async suppressionCheck(source: Directory): Promise<string> {
+    return suppressionCheckHelper(source).stdout();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Security scanning
+  // ---------------------------------------------------------------------------
+
+  /** Run trivy to scan for high and critical vulnerabilities */
+  @func()
+  async trivyScan(source: Directory): Promise<string> {
+    return trivyScanHelper(source).stdout();
+  }
+
+  /** Run semgrep to scan for code quality and security issues */
+  @func()
+  async semgrepScan(source: Directory): Promise<string> {
+    return semgrepScanHelper(source).stdout();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Java/Maven operations
+  // ---------------------------------------------------------------------------
+
+  /** Build the Maven project (castle-casters) with `mvn package -DskipTests` */
+  @func()
+  async mavenBuild(source: Directory): Promise<string> {
+    return mavenBuildHelper(source).stdout();
+  }
+
+  /** Test the Maven project (castle-casters) with `mvn test` */
+  @func()
+  async mavenTest(source: Directory): Promise<string> {
+    return mavenTestHelper(source).stdout();
+  }
+
+  // ---------------------------------------------------------------------------
+  // LaTeX operations
+  // ---------------------------------------------------------------------------
+
+  /** Build the LaTeX resume with xelatex */
+  @func()
+  async latexBuild(source: Directory): Promise<string> {
+    return latexBuildHelper(source).stdout();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Release/deploy operations (all cache: "never")
+  // ---------------------------------------------------------------------------
+
+  /** Package and push a single Helm chart to ChartMuseum */
+  @func({ cache: "never" })
+  async helmPackage(
+    source: Directory,
+    chartName: string,
+    version: string,
+    chartMuseumUsername: string,
+    chartMuseumPassword: Secret,
+  ): Promise<string> {
+    return helmPackageHelper(
+      source, chartName, version, chartMuseumUsername, chartMuseumPassword,
+    ).stdout();
+  }
+
+  /** Run tofu init + apply on an infrastructure stack */
+  @func({ cache: "never" })
+  async tofuApply(
+    source: Directory,
+    stack: string,
+    awsAccessKeyId: Secret,
+    awsSecretAccessKey: Secret,
+    ghToken: Secret,
+    cloudflareAccountId: Secret | null = null,
+  ): Promise<string> {
+    return tofuApplyHelper(
+      source, stack, awsAccessKeyId, awsSecretAccessKey, ghToken, cloudflareAccountId,
+    ).stdout();
+  }
+
+  /** Publish an npm package via bun publish */
+  @func({ cache: "never" })
+  async publishNpm(
+    source: Directory,
+    pkg: string,
+    npmToken: Secret,
+  ): Promise<string> {
+    return publishNpmHelper(source, pkg, npmToken).stdout();
+  }
+
+  /** Build and deploy a static site to S3 or R2 */
+  @func({ cache: "never" })
+  async deploySite(
+    source: Directory,
+    pkg: string,
+    bucket: string,
+    buildCmd: string,
+    distSubdir: string,
+    target: string,
+    awsAccessKeyId: Secret,
+    awsSecretAccessKey: Secret,
+    cloudflareAccountId: string = "",
+  ): Promise<string> {
+    return deploySiteHelper(
+      source, pkg, bucket, buildCmd, distSubdir, target,
+      awsAccessKeyId, awsSecretAccessKey, cloudflareAccountId,
+    ).stdout();
+  }
+
+  /** Trigger an ArgoCD sync for an application */
+  @func({ cache: "never" })
+  async argoCdSync(
+    appName: string,
+    argoCdToken: Secret,
+    serverUrl: string = "https://argocd.sjer.red",
+  ): Promise<string> {
+    return argoCdSyncHelper(appName, argoCdToken, serverUrl).stdout();
+  }
+
+  /** Wait for an ArgoCD application to become healthy */
+  @func({ cache: "never" })
+  async argoCdHealthWait(
+    appName: string,
+    argoCdToken: Secret,
+    timeoutSeconds: number = 300,
+    serverUrl: string = "https://argocd.sjer.red",
+  ): Promise<string> {
+    return argoCdHealthWaitHelper(
+      appName, argoCdToken, timeoutSeconds, serverUrl,
+    ).stdout();
+  }
+
+  /** Build cooklang-for-obsidian artifacts */
+  @func({ cache: "never" })
+  async cooklangBuild(source: Directory): Promise<string> {
+    return cooklangBuildHelper(source).stdout();
+  }
+
+  /** Push cooklang artifacts to GitHub repository */
+  @func({ cache: "never" })
+  async cooklangPush(
+    source: Directory,
+    version: string,
+    ghToken: Secret,
+  ): Promise<string> {
+    return cooklangPushHelper(source, version, ghToken).stdout();
+  }
+
+  /** Upload clauderon binaries to a GitHub release */
+  @func({ cache: "never" })
+  async clauderonUpload(
+    binaries: Directory,
+    version: string,
+    ghToken: Secret,
+  ): Promise<string> {
+    return clauderonUploadHelper(binaries, version, ghToken).stdout();
+  }
+
+  /** Update versions.ts with new image digests and create auto-merge PR */
+  @func({ cache: "never" })
+  async versionCommitBack(
+    digests: string,
+    version: string,
+    ghToken: Secret,
+  ): Promise<string> {
+    return versionCommitBackHelper(digests, version, ghToken).stdout();
+  }
+
+  /** Run cargo deny check on the Rust project */
+  @func()
+  async cargoDeny(source: Directory): Promise<string> {
+    return cargoDenyHelper(source).stdout();
   }
 }

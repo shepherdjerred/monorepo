@@ -1,0 +1,366 @@
+/**
+ * Release and deploy helper functions.
+ *
+ * These are plain functions (not decorated) — the @func() wrappers live in index.ts.
+ * All deploy/publish operations should use @func({ cache: "never" }) in the wrapper.
+ */
+import { dag, Container, Directory, Secret } from "@dagger.io/dagger";
+
+// renovate: datasource=docker depName=alpine
+const ALPINE_IMAGE = "alpine:3.21";
+// renovate: datasource=docker depName=hashicorp/terraform
+const TOFU_IMAGE = "ghcr.io/opentofu/opentofu:1.9.0";
+
+const SOURCE_EXCLUDES = [
+  "**/node_modules",
+  "**/.eslintcache",
+  "**/dist",
+  "**/target",
+  ".git",
+  "**/.vscode",
+  "**/.idea",
+  "**/coverage",
+  "**/build",
+  "**/.next",
+  "**/.tsbuildinfo",
+  "**/__pycache__",
+  "**/.DS_Store",
+  "**/archive",
+];
+
+// renovate: datasource=docker depName=oven/bun
+const BUN_IMAGE = "oven/bun:1.2.17-debian";
+const BUN_CACHE = "bun-install-cache";
+
+// ---------------------------------------------------------------------------
+// Helm
+// ---------------------------------------------------------------------------
+
+/** Package a single Helm chart and push it to ChartMuseum. */
+export function helmPackageHelper(
+  source: Directory,
+  chartName: string,
+  version: string,
+  chartMuseumUsername: string,
+  chartMuseumPassword: Secret,
+): Container {
+  return dag
+    .container()
+    .from(ALPINE_IMAGE)
+    .withExec(["apk", "add", "--no-cache", "helm", "curl"])
+    .withWorkdir("/chart")
+    .withDirectory(
+      "/chart",
+      source.directory(`packages/homelab/src/cdk8s/helm/${chartName}`),
+    )
+    // Copy CDK8s manifest into templates/ if it exists
+    .withExec([
+      "sh",
+      "-c",
+      `if [ -f /cdk8s-dist/${chartName}.k8s.yaml ]; then mkdir -p templates && cp /cdk8s-dist/${chartName}.k8s.yaml templates/; fi`,
+    ])
+    .withExec(["helm", "package", ".", "--version", version, "--app-version", version])
+    .withSecretVariable("CHARTMUSEUM_PASSWORD", chartMuseumPassword)
+    .withExec([
+      "sh",
+      "-c",
+      `curl -sf -u "${chartMuseumUsername}:$CHARTMUSEUM_PASSWORD" --data-binary @$(ls *.tgz) https://chartmuseum.sjer.red/api/charts`,
+    ]);
+}
+
+// ---------------------------------------------------------------------------
+// OpenTofu
+// ---------------------------------------------------------------------------
+
+/** Run tofu init + apply on a stack. */
+export function tofuApplyHelper(
+  source: Directory,
+  stack: string,
+  awsAccessKeyId: Secret,
+  awsSecretAccessKey: Secret,
+  ghToken: Secret,
+  cloudflareAccountId: Secret | null = null,
+): Container {
+  let container = dag
+    .container()
+    .from(TOFU_IMAGE)
+    .withWorkdir("/workspace")
+    .withDirectory(
+      "/workspace",
+      source.directory(`packages/homelab/src/tofu/${stack}`),
+    )
+    .withSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyId)
+    .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey)
+    .withSecretVariable("GH_TOKEN", ghToken);
+
+  if (cloudflareAccountId != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_cloudflare_account_id",
+      cloudflareAccountId,
+    );
+  }
+
+  return container
+    .withExec(["tofu", "init", "-input=false"])
+    .withExec(["tofu", "apply", "-auto-approve", "-input=false"]);
+}
+
+// ---------------------------------------------------------------------------
+// NPM publish
+// ---------------------------------------------------------------------------
+
+/** Publish an npm package via bun publish. */
+export function publishNpmHelper(
+  source: Directory,
+  pkg: string,
+  npmToken: Secret,
+): Container {
+  return dag
+    .container()
+    .from(BUN_IMAGE)
+    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
+    .withWorkdir("/workspace")
+    .withFile("/workspace/package.json", source.file("package.json"))
+    .withFile("/workspace/bun.lock", source.file("bun.lock"))
+    .withDirectory("/workspace/patches", source.directory("patches"))
+    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES })
+    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withWorkdir(`/workspace/packages/${pkg}`)
+    .withSecretVariable("NPM_TOKEN", npmToken)
+    .withExec([
+      "sh",
+      "-c",
+      `echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc && bun publish --access public --tag latest`,
+    ]);
+}
+
+// ---------------------------------------------------------------------------
+// Site deploy (S3 / R2)
+// ---------------------------------------------------------------------------
+
+/** Build and deploy a static site to S3 (SeaweedFS) or R2 (Cloudflare). */
+export function deploySiteHelper(
+  source: Directory,
+  pkg: string,
+  bucket: string,
+  buildCmd: string,
+  distSubdir: string,
+  target: string,
+  awsAccessKeyId: Secret,
+  awsSecretAccessKey: Secret,
+  cloudflareAccountId: string = "",
+): Container {
+  let container = dag
+    .container()
+    .from(BUN_IMAGE)
+    .withExec(["apt-get", "update", "-qq"])
+    .withExec([
+      "apt-get",
+      "install",
+      "-y",
+      "-qq",
+      "--no-install-recommends",
+      "awscli",
+    ])
+    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
+    .withWorkdir("/workspace")
+    .withFile("/workspace/package.json", source.file("package.json"))
+    .withFile("/workspace/bun.lock", source.file("bun.lock"))
+    .withDirectory("/workspace/patches", source.directory("patches"))
+    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES })
+    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withWorkdir(`/workspace/${pkg}`)
+    .withSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyId)
+    .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey);
+
+  if (buildCmd) {
+    container = container.withExec(["sh", "-c", buildCmd]);
+  }
+
+  const endpoint =
+    target === "r2"
+      ? `https://${cloudflareAccountId}.r2.cloudflarestorage.com`
+      : "https://seaweedfs.sjer.red";
+
+  return container.withExec([
+    "aws",
+    "s3",
+    "sync",
+    distSubdir,
+    `s3://${bucket}/`,
+    "--endpoint-url",
+    endpoint,
+    "--delete",
+  ]);
+}
+
+// ---------------------------------------------------------------------------
+// ArgoCD
+// ---------------------------------------------------------------------------
+
+/** Trigger an ArgoCD sync for an application. */
+export function argoCdSyncHelper(
+  appName: string,
+  argoCdToken: Secret,
+  serverUrl: string = "https://argocd.sjer.red",
+): Container {
+  return dag
+    .container()
+    .from(ALPINE_IMAGE)
+    .withExec(["apk", "add", "--no-cache", "curl"])
+    .withSecretVariable("ARGOCD_TOKEN", argoCdToken)
+    .withExec([
+      "sh",
+      "-c",
+      `curl -sf -X POST "${serverUrl}/api/v1/applications/${appName}/sync" -H "Authorization: Bearer $ARGOCD_TOKEN" -H "Content-Type: application/json" || true`,
+    ]);
+}
+
+/** Poll ArgoCD until an application is healthy or timeout. */
+export function argoCdHealthWaitHelper(
+  appName: string,
+  argoCdToken: Secret,
+  timeoutSeconds: number = 300,
+  serverUrl: string = "https://argocd.sjer.red",
+): Container {
+  return dag
+    .container()
+    .from(ALPINE_IMAGE)
+    .withExec(["apk", "add", "--no-cache", "curl", "jq"])
+    .withSecretVariable("ARGOCD_TOKEN", argoCdToken)
+    .withExec([
+      "sh",
+      "-c",
+      `elapsed=0; while [ $elapsed -lt ${timeoutSeconds} ]; do status=$(curl -sf -H "Authorization: Bearer $ARGOCD_TOKEN" "${serverUrl}/api/v1/applications/${appName}" | jq -r '.status.health.status'); echo "Health: $status ($elapsed/${timeoutSeconds}s)"; if [ "$status" = "Healthy" ]; then exit 0; fi; sleep 10; elapsed=$((elapsed + 10)); done; echo "Timeout waiting for ${appName} to become healthy"; exit 1`,
+    ]);
+}
+
+// ---------------------------------------------------------------------------
+// Cooklang
+// ---------------------------------------------------------------------------
+
+/** Build cooklang-for-obsidian artifacts. */
+export function cooklangBuildHelper(
+  source: Directory,
+): Container {
+  return dag
+    .container()
+    .from(BUN_IMAGE)
+    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
+    .withWorkdir("/workspace")
+    .withFile("/workspace/package.json", source.file("package.json"))
+    .withFile("/workspace/bun.lock", source.file("bun.lock"))
+    .withDirectory("/workspace/patches", source.directory("patches"))
+    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES })
+    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withWorkdir("/workspace/packages/cooklang-for-obsidian")
+    .withExec(["bun", "run", "build"]);
+}
+
+/** Push cooklang artifacts to a GitHub repository. */
+export function cooklangPushHelper(
+  source: Directory,
+  version: string,
+  ghToken: Secret,
+): Container {
+  return dag
+    .container()
+    .from(ALPINE_IMAGE)
+    .withExec(["apk", "add", "--no-cache", "curl", "git", "gh"])
+    .withSecretVariable("GH_TOKEN", ghToken)
+    .withWorkdir("/artifacts")
+    .withDirectory("/artifacts", source)
+    .withExec([
+      "sh",
+      "-c",
+      `for f in main.js manifest.json styles.css; do
+        if [ -f "$f" ]; then
+          gh api repos/shepherdjerred/cooklang-for-obsidian/contents/$f \
+            --method PUT \
+            -f message="chore: update $f v${version}" \
+            -f content="$(base64 < $f)" \
+            -f sha="$(gh api repos/shepherdjerred/cooklang-for-obsidian/contents/$f --jq .sha 2>/dev/null || echo '')" \
+            2>/dev/null || true
+        fi
+      done`,
+    ]);
+}
+
+// ---------------------------------------------------------------------------
+// Clauderon
+// ---------------------------------------------------------------------------
+
+/** Upload clauderon binaries to a GitHub release. */
+export function clauderonUploadHelper(
+  binaries: Directory,
+  version: string,
+  ghToken: Secret,
+): Container {
+  return dag
+    .container()
+    .from(ALPINE_IMAGE)
+    .withExec(["apk", "add", "--no-cache", "gh"])
+    .withSecretVariable("GH_TOKEN", ghToken)
+    .withWorkdir("/artifacts")
+    .withDirectory("/artifacts", binaries)
+    .withExec([
+      "sh",
+      "-c",
+      `gh release upload "clauderon-v${version}" /artifacts/* --repo shepherdjerred/monorepo --clobber`,
+    ]);
+}
+
+// ---------------------------------------------------------------------------
+// Version commit-back
+// ---------------------------------------------------------------------------
+
+/** Update versions.ts with new image digests and create an auto-merge PR. */
+export function versionCommitBackHelper(
+  digests: string,
+  version: string,
+  ghToken: Secret,
+): Container {
+  return dag
+    .container()
+    .from(ALPINE_IMAGE)
+    .withExec(["apk", "add", "--no-cache", "git", "gh", "jq", "sed"])
+    .withSecretVariable("GH_TOKEN", ghToken)
+    .withExec([
+      "sh",
+      "-c",
+      `git clone "https://x-access-token:$GH_TOKEN@github.com/shepherdjerred/monorepo.git" /repo && cd /repo && \
+       echo '${digests}' | jq -r 'to_entries[] | "s|\\(.key).*|\\(.key): \\"\\(.value)\\",|"' | while read -r pattern; do \
+         sed -i "$pattern" packages/homelab/src/cdk8s/src/versions.ts; \
+       done && \
+       git checkout -b "chore/version-bump-${version}" && \
+       git add -A && git commit -m "chore: bump image versions to ${version}" && \
+       git push origin "chore/version-bump-${version}" && \
+       gh pr create --title "chore: bump image versions to ${version}" --body "Auto-generated version bump" --auto`,
+    ]);
+}
+
+// ---------------------------------------------------------------------------
+// Cargo deny
+// ---------------------------------------------------------------------------
+
+/** Run cargo deny check on the Rust project. */
+export function cargoDenyHelper(source: Directory): Container {
+  // renovate: datasource=docker depName=rust
+  const RUST_IMAGE = "rust:1.88.0-bookworm";
+  return dag
+    .container()
+    .from(RUST_IMAGE)
+    .withExec(["cargo", "install", "cargo-deny"])
+    .withWorkdir("/workspace")
+    .withDirectory("/workspace", source.directory("packages/clauderon"), {
+      exclude: ["target", "node_modules", ".git"],
+    })
+    .withMountedCache(
+      "/usr/local/cargo/registry",
+      dag.cacheVolume("cargo-registry"),
+    )
+    .withExec(["cargo", "deny", "check"]);
+}

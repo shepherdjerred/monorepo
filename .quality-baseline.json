@@ -12,11 +12,6 @@
   },
   "rust-allow": {},
   "prettier-ignore": {},
-  "hermeticity-exempt": {
-    "tools/bazel/cargo_deny_runner.sh": 1,
-    "tools/bazel/jscpd_runner.sh": 1,
-    "tools/bazel/knip_runner.sh": 1,
-    "tools/bazel/semgrep_runner.sh": 2
-  },
+  "hermeticity-exempt": {},
   "updated": "2026-03-11"
 }

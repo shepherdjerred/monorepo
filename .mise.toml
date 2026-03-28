@@ -4,8 +4,6 @@
 [tools]
 bun = "latest"
 rust = "latest"
-bazelisk = "latest"
-buildifier = "latest"
 java = "latest"
 
 [tasks.dev]

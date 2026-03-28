@@ -1,7 +1,0 @@
-load("@rules_shellcheck//shellcheck:defs.bzl", "shellcheck_test")
-
-shellcheck_test(
-    name = "shellcheck",
-    data = glob(["scripts/*.sh"]),
-    severity = "warning",
-)

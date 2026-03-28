@@ -1,9 +1,0 @@
-load("@bun_modules//:defs.bzl", "bun_link_all_packages")
-
-bun_link_all_packages(name = "node_modules")
-
-exports_files([
-    "package.json",
-    "tsconfig.base.json",
-    "scripts/lint-helm.sh",
-] + glob(["patches/*.patch"]))

@@ -1,12 +1,6 @@
 # CLAUDE.md - resume
 
-LaTeX resume. Build/deploy handled by Bazel + Buildkite (not Bun).
-
-## Build
-
-```bash
-bazel build //packages/resume:resume
-```
+LaTeX resume. Build/deploy handled by Dagger + Buildkite.
 
 ## Deploy
 

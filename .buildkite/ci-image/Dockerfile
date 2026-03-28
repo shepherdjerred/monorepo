@@ -17,21 +17,9 @@ RUN apt-get update -qq && \
     libssl-dev pkg-config gpg && \
     rm -rf /var/lib/apt/lists/*
 
-# renovate: datasource=github-releases depName=bazelbuild/bazelisk
-ARG BAZELISK_VERSION=1.28.1
-RUN curl -fsSL "https://github.com/bazelbuild/bazelisk/releases/download/v${BAZELISK_VERSION}/bazelisk-linux-amd64" \
-    -o /usr/local/bin/bazel && \
-    chmod +x /usr/local/bin/bazel
-
-# Pre-download the actual Bazel binary (avoid download on first run)
-COPY .bazelversion /tmp/.bazelversion
-RUN cd /tmp && USE_BAZEL_VERSION=$(tr -d '\r' < .bazelversion) bazel --version
-
-# renovate: datasource=github-releases depName=bazel-contrib/target-determinator
-ARG TARGET_DETERMINATOR_VERSION=0.32.0
-RUN curl -fsSL "https://github.com/bazel-contrib/target-determinator/releases/download/v${TARGET_DETERMINATOR_VERSION}/target-determinator.linux.amd64" \
-    -o /usr/local/bin/target-determinator && \
-    chmod +x /usr/local/bin/target-determinator
+# Dagger CLI
+RUN curl -fsSL https://dl.dagger.io/dagger/install.sh | sh && \
+    mv /root/.local/bin/dagger /usr/local/bin/dagger || true
 
 # renovate: datasource=github-releases depName=BurntSushi/ripgrep
 ARG RIPGREP_VERSION=14.1.1

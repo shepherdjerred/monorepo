@@ -7,7 +7,7 @@ This is a Kubernetes homelab infrastructure monorepo using CDK8s for infrastruct
 - **Runtime**: Bun (not Node.js)
 - **Language**: TypeScript (strict mode)
 - **Infrastructure**: CDK8s for Kubernetes manifests
-- **CI/CD**: Bazel + Buildkite + Python CI scripts
+- **CI/CD**: Dagger + Buildkite + Python CI scripts
 
 ## Workspaces
 

@@ -196,6 +196,7 @@ async function main() {
   if (embedder) embedder.shutdown();
   searchDb.close();
   sourceDb.close();
+  process.exit(0);
 }
 
 main().catch((err) => {

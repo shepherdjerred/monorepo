@@ -28,7 +28,7 @@ pre-commit:
                   run: bash scripts/check-env-var-names.sh {staged_files}
 
                 - name: merge-conflicts
-                  glob: "*.{ts,tsx,js,jsx,json,yml,yaml,md,rs,sh,bzl,toml,astro}"
+                  glob: "*.{ts,tsx,js,jsx,json,yml,yaml,md,rs,sh,toml,astro}"
                   exclude:
                     - "lefthook.yml"
                   run: "! grep -n '<<<<<<< \\|>>>>>>> ' {staged_files}"
@@ -212,15 +212,6 @@ pre-commit:
                   glob: "packages/glance/**/*.swift"
                   run: swiftlint --strict {staged_files}
 
-                # --- buildifier ---
-                - name: buildifier
-                  glob: "**/{BUILD.bazel,*.bzl,MODULE.bazel,REPO.bazel}"
-                  exclude:
-                    - "node_modules/**"
-                    - "**/node_modules/**"
-                  run: buildifier --lint=fix {staged_files}
-                  stage_fixed: true
-
                 # --- shellcheck ---
                 - name: shellcheck
                   glob: "**/*.sh"
@@ -258,7 +249,7 @@ pre-commit:
               - "packages/clauderon/Cargo.toml"
               - "packages/clauderon/Cargo.lock"
               - "packages/clauderon/deny.toml"
-            run: bazel test //packages/clauderon:cargo_deny --test_output=errors
+            run: cargo deny check
 
           # --- TypeScript typecheck per package ---
           - name: birmel-typecheck

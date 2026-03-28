@@ -3,9 +3,6 @@
 # Source this file: source "$(dirname "$0")/setup-tools.sh"
 set -euo pipefail
 
-# renovate: datasource=github-releases depName=bazelbuild/bazelisk
-BAZELISK_VERSION="1.28.1"
-
 # renovate: datasource=github-releases depName=BurntSushi/ripgrep
 RIPGREP_VERSION="14.1.1"
 
@@ -14,9 +11,6 @@ KUBECTL_VERSION="v1.34.1"
 
 # renovate: datasource=github-releases depName=koalaman/shellcheck
 SHELLCHECK_VERSION="0.10.0"
-
-# renovate: datasource=github-releases depName=bazel-contrib/target-determinator
-TARGET_DETERMINATOR_VERSION="0.32.0"
 
 # renovate: datasource=github-releases depName=astral-sh/uv
 UV_VERSION="0.6.9"
@@ -65,16 +59,6 @@ install_ripgrep() {
     curl -fsSL "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl.tar.gz" | tar xz -C /tmp
     cp /tmp/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl/rg /usr/local/bin/rg
     chmod +x /usr/local/bin/rg
-}
-
-install_bazel() {
-    if command -v bazel &>/dev/null; then
-        echo "--- :bazel: Bazelisk already installed, skipping"
-        return
-    fi
-    echo "--- :bazel: Installing Bazelisk ${BAZELISK_VERSION}"
-    curl -fsSL "https://github.com/bazelbuild/bazelisk/releases/download/v${BAZELISK_VERSION}/bazelisk-linux-amd64" -o /usr/local/bin/bazel
-    chmod +x /usr/local/bin/bazel
 }
 
 install_uv() {
@@ -161,16 +145,6 @@ install_shellcheck() {
     curl -fsSL "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | tar xJ -C /tmp
     cp /tmp/shellcheck-v${SHELLCHECK_VERSION}/shellcheck /usr/local/bin/shellcheck
     chmod +x /usr/local/bin/shellcheck
-}
-
-install_target_determinator() {
-    if command -v target-determinator &>/dev/null; then
-        echo "--- :bazel: target-determinator already installed, skipping"
-        return
-    fi
-    echo "--- :bazel: Installing target-determinator ${TARGET_DETERMINATOR_VERSION}"
-    curl -fsSL "https://github.com/bazel-contrib/target-determinator/releases/download/v${TARGET_DETERMINATOR_VERSION}/target-determinator.linux.amd64" -o /usr/local/bin/target-determinator
-    chmod +x /usr/local/bin/target-determinator
 }
 
 install_rust() {

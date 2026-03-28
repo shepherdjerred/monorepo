@@ -50,12 +50,6 @@ packages/dpp/
 .build-*.lock
 .generate-done
 
-# Bazel
-bazel-bin
-bazel-out
-bazel-testlogs
-bazel-monorepo
-
 # Lefthook local overrides
 lefthook-local.yml
 

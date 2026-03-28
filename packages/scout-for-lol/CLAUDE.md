@@ -27,7 +27,7 @@ packages/
 | Linting       | ESLint + Prettier                |
 | Database      | Prisma ORM                       |
 | Validation    | Zod                              |
-| CI/CD         | Bazel + Buildkite                |
+| CI/CD         | Dagger + Buildkite               |
 | Task Runner   | mise                             |
 | Bot Framework | Discord.js                       |
 | Frontend      | Astro                            |
@@ -84,20 +84,9 @@ bun run build:windows    # Build for Windows
 
 Each package supports: `dev`, `build`, `test`, `lint`, `format`, `typecheck`
 
-## CI/CD Pipeline (Bazel + Buildkite)
+## CI/CD Pipeline (Dagger + Buildkite)
 
-### Build & Test
-
-```bash
-bazel build //packages/scout-for-lol/...    # Build all packages
-bazel test //packages/scout-for-lol/...     # Run all tests
-```
-
-### Container Image
-
-```bash
-bazel build //packages/scout-for-lol:image  # Build backend container image
-```
+CI builds, tests, and creates container images via Dagger pipelines on Buildkite.
 
 ---
 

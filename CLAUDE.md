@@ -42,10 +42,6 @@ bun run --filter='./packages/<name>' <script>
 # Linting (per-package)
 cd packages/<name> && bunx eslint . --fix
 
-# Bazel build & test
-bazel build //...
-bazel test //...
-
 # CI runs on Buildkite (NOT GitHub Actions)
 # Check CI status via Buildkite CLI or web UI, never `gh run`
 
@@ -56,7 +52,7 @@ cd scripts/ci && uv run python -m ci.<module>
 ## Development Setup
 
 ```bash
-mise trust && mise dev   # Installs bun + bazel
+mise trust && mise dev   # Installs bun + rust
 ```
 
 ## Verification
@@ -66,30 +62,6 @@ Always verify changes:
 1. `bun run typecheck` - Type errors
 2. `bun run test` - Test failures
 3. `bunx eslint . --fix` - Lint issues (in relevant package)
-
-## Bazel Debugging
-
-- Never pipe build/test commands through `grep`, `tail`, or `head` inline. Run the command raw, get the full output, then reason about it. A missed grep pattern means re-running the entire build (30-60s wasted).
-- When a test fails, Bazel prints `see /path/to/test.log`. **Read that file with the Read tool.** Do not grep or tail the bazel stderr output.
-- When a build action fails, use `--sandbox_debug` to retain the sandbox, then inspect it.
-- When debugging `run_shell` actions, add `set -x` to the script to trace execution.
-- Never use `bazel clean`, `--expunge`, `shutdown`, or `--force fetch` as debugging steps. If Bazel seems stale, the bug is in your code.
-- Never run build tools (`bun install`, `prisma generate`, `tsc`, etc.) outside Bazel.
-- Never tag targets `manual` to hide failures. Fix the root cause.
-- Stop after 2 failed iterations of debugging a shell script in a Bazel action. Step back and reconsider the approach.
-
-## Bazel Conventions
-
-- Use `@types/bun`, never `bun-types` in BUILD.bazel deps
-- `bun_library` globs must exclude `*.test.ts` and `*.spec.ts`
-- Manual tags require a `# Manual: <reason>` comment on the preceding line
-- Never use `readlink -f` (not portable on macOS) — use POSIX `_realpath` or `$BUN_BINARY`
-- Never use `python3` in runner scripts — use `$BUN_BINARY -e` instead
-- Never add `/usr/local/bin` to PATH in `.bzl` files
-- New workspace packages must add their `package.json` to `npm_translate_lock` data list in `MODULE.bazel`
-- Version constants (Bun, Prisma) have a single source of truth in `versions.bzl` files
-- Scoped packages (e.g. `@shepherdjerred/eslint-config`) must set `package_name` on `bun_library`
-- During development, use targeted builds (`bazel test //packages/foo:lint`) — never `bazel test //...`
 
 ## Package Notes
 

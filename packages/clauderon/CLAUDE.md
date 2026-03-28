@@ -47,10 +47,6 @@ cd web/client && bun test              # Client only
 # Mobile (React Native)
 cd mobile && bun test                  # Jest tests
 cd mobile && bun test:windows          # Windows-specific
-
-# Full build + test (CI simulation)
-bazel build //packages/clauderon/...
-bazel test //packages/clauderon/...
 ```
 
 **Test Organization:**
@@ -105,14 +101,12 @@ mise run setup-tools                   # Install nextest, bacon, cargo-watch
 
 ## CI
 
-CI runs via Bazel + Buildkite. The pipeline:
+CI runs via Dagger + Buildkite. The pipeline:
 
 1. Builds docs and web packages
 2. Builds Rust binary
 3. Runs clippy and tests
 4. Creates release artifacts
-
-Run locally: `bazel build //packages/clauderon/...` and `bazel test //packages/clauderon/...`
 
 ## Architecture
 
