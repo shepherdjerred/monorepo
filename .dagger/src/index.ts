@@ -278,7 +278,12 @@ export class Monorepo {
       extraAptPackages,
     )
       .withWorkdir(`/workspace/packages/${pkg}`)
-      .withEnvVariable("_CACHE_BUST", "v3")
+      .withEnvVariable("_CACHE_BUST", "v4-debug")
+      .withExec([
+        "bash",
+        "-c",
+        "ls node_modules/.bin/ | head -20 || echo 'no bin dir'; find . -name prisma -path '*/bin/*' 2>/dev/null | head -5",
+      ])
       .withExec(["bun", "run", "generate"])
       .directory("/workspace");
   }
