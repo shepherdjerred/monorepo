@@ -123,7 +123,21 @@ export class Monorepo {
         "make",
         "g++",
         ...extraAptPackages,
-      ])
+      ]);
+
+    // Install Node.js 22 for Prisma packages — must happen BEFORE bun install
+    // so Prisma's preinstall version check passes and its binary gets created
+    if (extraAptPackages.includes("curl")) {
+      container = container
+        .withExec([
+          "bash",
+          "-c",
+          "mkdir -p /opt/node && curl -fsSL https://nodejs.org/dist/v22.16.0/node-v22.16.0-linux-x64.tar.xz | tar -xJ --strip-components=1 -C /opt/node",
+        ])
+        .withEnvVariable("PATH", "/opt/node/bin:/usr/local/bin:/usr/bin:/bin");
+    }
+
+    container = container
       .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
       .withWorkdir(`/workspace/packages/${pkg}`)
       .withDirectory(`/workspace/packages/${pkg}`, pkgDir, {
@@ -269,22 +283,17 @@ export class Monorepo {
     tsconfig: File | null = null,
     extraAptPackages: string[] = [],
   ): Directory {
-    return (
-      this.bunBase(pkgDir, pkg, depNames, depDirs, tsconfig, extraAptPackages)
-        .withWorkdir(`/workspace/packages/${pkg}`)
-        // Install Node.js 22 for Prisma — its preinstall checks node version
-        // and Bun's node wrapper fails the check. Install node to /opt/node,
-        // then run bun run generate (which calls bunx prisma generate — bunx
-        // will now find a valid node and the preinstall succeeds).
-        .withExec([
-          "bash",
-          "-c",
-          "mkdir -p /opt/node && curl -fsSL https://nodejs.org/dist/v22.16.0/node-v22.16.0-linux-x64.tar.xz | tar -xJ --strip-components=1 -C /opt/node",
-        ])
-        .withEnvVariable("PATH", "/opt/node/bin:/usr/local/bin:/usr/bin:/bin")
-        .withExec(["bun", "run", "generate"])
-        .directory("/workspace")
-    );
+    return this.bunBase(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      tsconfig,
+      extraAptPackages,
+    )
+      .withWorkdir(`/workspace/packages/${pkg}`)
+      .withExec(["bun", "run", "generate"])
+      .directory("/workspace");
   }
 
   /** Run lint with pre-generated workspace (e.g. after Prisma generate) */
