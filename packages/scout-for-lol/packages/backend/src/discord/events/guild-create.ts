@@ -81,7 +81,7 @@ async function resolveInstaller(guild: Guild): Promise<string> {
       type: AuditLogEvent.BotAdd,
     });
 
-    const botUserId = guild.client.user?.id;
+    const botUserId = guild.client.user.id;
     const now = Date.now();
 
     for (const [, entry] of auditLogs.entries) {
@@ -90,10 +90,7 @@ async function resolveInstaller(guild: Guild): Promise<string> {
         continue;
       }
       // Only accept recent entries (within 5 minutes)
-      if (
-        entry.createdTimestamp !== undefined &&
-        now - entry.createdTimestamp > FIVE_MINUTES_MS
-      ) {
+      if (now - entry.createdTimestamp > FIVE_MINUTES_MS) {
         continue;
       }
       if (entry.executor?.id !== undefined) {

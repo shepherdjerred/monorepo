@@ -123,21 +123,8 @@ export class Monorepo {
         "make",
         "g++",
         ...extraAptPackages,
-      ]);
+      ])
 
-    // Install Node.js 22 for Prisma packages — must happen BEFORE bun install
-    // so Prisma's preinstall version check passes and its binary gets created
-    if (extraAptPackages.includes("curl")) {
-      container = container
-        .withExec([
-          "bash",
-          "-c",
-          "mkdir -p /opt/node && curl -fsSL https://nodejs.org/dist/v22.16.0/node-v22.16.0-linux-x64.tar.xz | tar -xJ --strip-components=1 -C /opt/node",
-        ])
-        .withEnvVariable("PATH", "/opt/node/bin:/usr/local/bin:/usr/bin:/bin");
-    }
-
-    container = container
       .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
       .withWorkdir(`/workspace/packages/${pkg}`)
       .withDirectory(`/workspace/packages/${pkg}`, pkgDir, {
@@ -286,16 +273,8 @@ export class Monorepo {
     depNames: string[] = [],
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
-    extraAptPackages: string[] = [],
   ): Directory {
-    return this.bunBase(
-      pkgDir,
-      pkg,
-      depNames,
-      depDirs,
-      tsconfig,
-      extraAptPackages,
-    )
+    return this.bunBase(pkgDir, pkg, depNames, depDirs, tsconfig)
       .withWorkdir(`/workspace/packages/${pkg}`)
       .withExec(["bun", "run", "generate"])
       .directory("/workspace");
@@ -307,8 +286,14 @@ export class Monorepo {
     return dag
       .container()
       .from(BUN_IMAGE)
+      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
       .withWorkdir(`/workspace/packages/${pkg}`)
       .withDirectory("/workspace", generated)
+      .withExec([
+        "bash",
+        "-c",
+        "bun install --frozen-lockfile 2>/dev/null || bun install",
+      ])
       .withMountedCache(
         `/workspace/packages/${pkg}/.eslintcache`,
         dag.cacheVolume(ESLINT_CACHE),
@@ -323,22 +308,35 @@ export class Monorepo {
    * the same system tools (python3, make, g++) available.
    */
   private generatedBase(generated: Directory, pkg: string): Container {
-    return dag
-      .container()
-      .from(BUN_IMAGE)
-      .withExec(["apt-get", "update", "-qq"])
-      .withExec([
-        "apt-get",
-        "install",
-        "-y",
-        "-qq",
-        "--no-install-recommends",
-        "python3",
-        "make",
-        "g++",
-      ])
-      .withWorkdir(`/workspace/packages/${pkg}`)
-      .withDirectory("/workspace", generated);
+    return (
+      dag
+        .container()
+        .from(BUN_IMAGE)
+        .withExec(["apt-get", "update", "-qq"])
+        .withExec([
+          "apt-get",
+          "install",
+          "-y",
+          "-qq",
+          "--no-install-recommends",
+          "python3",
+          "make",
+          "g++",
+        ])
+        .withMountedCache(
+          "/root/.bun/install/cache",
+          dag.cacheVolume(BUN_CACHE),
+        )
+        .withWorkdir(`/workspace/packages/${pkg}`)
+        .withDirectory("/workspace", generated)
+        // Provide DATABASE_URL for Prisma client init in tests
+        .withEnvVariable("DATABASE_URL", "file:./test.db")
+        .withExec([
+          "bash",
+          "-c",
+          "bun install --frozen-lockfile 2>/dev/null || bun install",
+        ])
+    );
   }
 
   /** Run typecheck with pre-generated workspace */
@@ -372,26 +370,9 @@ export class Monorepo {
     depNames: string[] = [],
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
-    extraAptPackages: string[] = [],
   ): Promise<string> {
-    // Run generate then lint in the same container to avoid workspace
-    // resolution issues when copying the generated directory to a fresh container
-    return this.bunBase(
-      pkgDir,
-      pkg,
-      depNames,
-      depDirs,
-      tsconfig,
-      extraAptPackages,
-    )
-      .withWorkdir(`/workspace/packages/${pkg}`)
-      .withExec(["bun", "run", "generate"])
-      .withMountedCache(
-        `/workspace/packages/${pkg}/.eslintcache`,
-        dag.cacheVolume(ESLINT_CACHE),
-      )
-      .withExec(["bun", "run", "lint"])
-      .stdout();
+    const generated = this.generate(pkgDir, pkg, depNames, depDirs, tsconfig);
+    return this.lintWithGenerated(generated, pkg);
   }
 
   /** Generate then typecheck in a single pipeline */
@@ -402,20 +383,9 @@ export class Monorepo {
     depNames: string[] = [],
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
-    extraAptPackages: string[] = [],
   ): Promise<string> {
-    return this.bunBase(
-      pkgDir,
-      pkg,
-      depNames,
-      depDirs,
-      tsconfig,
-      extraAptPackages,
-    )
-      .withWorkdir(`/workspace/packages/${pkg}`)
-      .withExec(["bun", "run", "generate"])
-      .withExec(["bun", "run", "typecheck"])
-      .stdout();
+    const generated = this.generate(pkgDir, pkg, depNames, depDirs, tsconfig);
+    return this.typecheckWithGenerated(generated, pkg);
   }
 
   /** Generate then test in a single pipeline */
@@ -426,20 +396,9 @@ export class Monorepo {
     depNames: string[] = [],
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
-    extraAptPackages: string[] = [],
   ): Promise<string> {
-    return this.bunBase(
-      pkgDir,
-      pkg,
-      depNames,
-      depDirs,
-      tsconfig,
-      extraAptPackages,
-    )
-      .withWorkdir(`/workspace/packages/${pkg}`)
-      .withExec(["bun", "run", "generate"])
-      .withExec(["bun", "run", "test"])
-      .stdout();
+    const generated = this.generate(pkgDir, pkg, depNames, depDirs, tsconfig);
+    return this.testWithGenerated(generated, pkg);
   }
 
   // ---------------------------------------------------------------------------

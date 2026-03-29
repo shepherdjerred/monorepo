@@ -54,7 +54,7 @@ export function SoundPackEditorProvider({
   children,
   initialPack,
 }: SoundPackEditorProviderProps) {
-  const [soundPack, setSoundPack] = useState<SoundPack>(
+  const [soundPack, setSoundPack] = useState(
     initialPack ?? createEmptySoundPack(generateId(), "My Sound Pack"),
   );
   const [isDirty, setIsDirty] = useState(false);

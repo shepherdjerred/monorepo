@@ -14,10 +14,10 @@
     "start": "bunx prisma db push --skip-generate && bun run src/index.ts",
     "dev": "bun run --watch src/index.ts",
     "build": "true",
-    "generate": "bunx prisma generate",
-    "test": "bunx --env-file=.env.test prisma generate && bun --env-file=.env.test test",
-    "typecheck": "prisma generate && tsc --noEmit",
-    "lint": "prisma generate && eslint ."
+    "generate": "bunx --trust prisma@6 generate",
+    "test": "bunx --env-file=.env.test --trust prisma@6 generate && bun --env-file=.env.test test",
+    "typecheck": "bunx --trust prisma@6 generate && tsc --noEmit",
+    "lint": "bunx --trust prisma@6 generate && eslint ."
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.1",

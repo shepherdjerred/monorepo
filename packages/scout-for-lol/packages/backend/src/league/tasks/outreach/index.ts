@@ -82,15 +82,15 @@ async function runThreeDayOutreach(client: Client): Promise<void> {
     }
     // 3+ subs = they're set up, skip the nudge
 
-    if (message !== undefined) {
+    if (message === undefined) {
+      logger.info(
+        `[Outreach] 3-day skip for ${guild.serverName}: ${subCount.toString()} subs (already set up)`,
+      );
+    } else {
       const userId = DiscordAccountIdSchema.parse(guild.addedByDiscordId);
       const sent = await sendDM(client, userId, message);
       logger.info(
         `[Outreach] 3-day DM to ${guild.addedByDiscordId} for ${guild.serverName}: ${sent ? "sent" : "failed"}`,
-      );
-    } else {
-      logger.info(
-        `[Outreach] 3-day skip for ${guild.serverName}: ${subCount.toString()} subs (already set up)`,
       );
     }
 
