@@ -275,7 +275,7 @@ export class Monorepo {
         // Remove Bun's node wrapper — Prisma's preinstall script checks
         // `node --version` and rejects Bun's wrapper. Without a `node` binary,
         // Prisma skips the check entirely and runs under Bun.
-        .withExec(["rm", "-f", "/usr/local/bin/node"])
+        .withExec(["rm", "-f", "/usr/local/bun-node-fallback-bin/node"])
         .withExec(["bun", "run", "generate"])
         .directory("/workspace")
     );
