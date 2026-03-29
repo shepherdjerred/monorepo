@@ -267,8 +267,16 @@ export class Monorepo {
     depNames: string[] = [],
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
+    extraAptPackages: string[] = [],
   ): Directory {
-    return this.bunBase(pkgDir, pkg, depNames, depDirs, tsconfig)
+    return this.bunBase(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      tsconfig,
+      extraAptPackages,
+    )
       .withWorkdir(`/workspace/packages/${pkg}`)
       .withExec(["bun", "run", "generate"])
       .directory("/workspace");
@@ -345,8 +353,16 @@ export class Monorepo {
     depNames: string[] = [],
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
+    extraAptPackages: string[] = [],
   ): Promise<string> {
-    const generated = this.generate(pkgDir, pkg, depNames, depDirs, tsconfig);
+    const generated = this.generate(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      tsconfig,
+      extraAptPackages,
+    );
     return this.lintWithGenerated(generated, pkg);
   }
 
@@ -358,8 +374,16 @@ export class Monorepo {
     depNames: string[] = [],
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
+    extraAptPackages: string[] = [],
   ): Promise<string> {
-    const generated = this.generate(pkgDir, pkg, depNames, depDirs, tsconfig);
+    const generated = this.generate(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      tsconfig,
+      extraAptPackages,
+    );
     return this.typecheckWithGenerated(generated, pkg);
   }
 
@@ -371,8 +395,16 @@ export class Monorepo {
     depNames: string[] = [],
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
+    extraAptPackages: string[] = [],
   ): Promise<string> {
-    const generated = this.generate(pkgDir, pkg, depNames, depDirs, tsconfig);
+    const generated = this.generate(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      tsconfig,
+      extraAptPackages,
+    );
     return this.testWithGenerated(generated, pkg);
   }
 

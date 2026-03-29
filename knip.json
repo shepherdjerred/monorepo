@@ -79,7 +79,8 @@
     },
     "packages/scout-for-lol/packages/desktop": {
       "entry": ["src/main.tsx", "vite.config.ts"],
-      "project": ["src/**/*.{ts,tsx}", "*.ts"]
+      "project": ["src/**/*.{ts,tsx}", "*.ts"],
+      "postcss": false
     },
     "packages/scout-for-lol/packages/ui": {
       "entry": ["src/index.ts"],
