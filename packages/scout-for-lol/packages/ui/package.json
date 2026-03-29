@@ -18,7 +18,6 @@
     "react": "^19.1.1"
   },
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "file:../../../eslint-config",
     "@types/react": "^19.1.13",
     "bun-types": "latest",
     "eslint": "^9.39.2",

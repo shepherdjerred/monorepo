@@ -1,14 +1,6 @@
 {
   "name": "scout-for-lol",
   "private": true,
-  "workspaces": [
-    "packages/backend",
-    "packages/data",
-    "packages/report",
-    "packages/frontend",
-    "packages/desktop",
-    "packages/ui"
-  ],
   "scripts": {
     "build": "bun run --filter='*' build",
     "typecheck": "bun run --filter='*' typecheck",

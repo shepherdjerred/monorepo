@@ -153,16 +153,10 @@ export class Monorepo {
       }
     }
 
-    // Per-package lockfile — try frozen install, fall back to regular install
-    // (Bun has a known issue where file: protocol deps in workspaces always
-    // trigger "lockfile had changes" even when the lockfile was just generated)
+    // Per-package lockfile — frozen install (after deps are built so file: refs find dist/)
     container = container
       .withWorkdir(`/workspace/packages/${pkg}`)
-      .withExec([
-        "bash",
-        "-c",
-        "bun install --frozen-lockfile 2>/dev/null || bun install",
-      ]);
+      .withExec(["bun", "install", "--frozen-lockfile"]);
 
     return container;
   }
@@ -400,6 +394,12 @@ export class Monorepo {
       "nodejs",
       "npm",
     ])
+      // HA tsconfig extends ../../tsconfig.base.json (homelab level);
+      // pkgDir only contains src/ha, so mount the parent tsconfig too.
+      .withFile(
+        "/workspace/packages/homelab/tsconfig.base.json",
+        dag.host().file("packages/homelab/tsconfig.base.json"),
+      )
       .withSecretVariable("HASS_TOKEN", hassToken)
       .withEnvVariable("HASS_BASE_URL", hassBaseUrl)
       .withExec(["bun", "run", "generate-types"])

@@ -34,6 +34,16 @@ When asked to get CI passing, fix a build, fix lints, or complete any task with 
 - When finishing a coding task, run the relevant verification commands for the area you changed and fix the failures before you stop.
 - Prefer simple, reviewable configuration over hidden automation. If a safeguard matters, document it here or in a skill instead of relying on opaque hook behavior.
 
+## Engineering Principles
+
+These apply to all work — code, infrastructure, configuration, CI pipelines, scripts, and system design.
+
+- **Fail fast** — Surface errors immediately. Never swallow exceptions, ignore error return values, or silently fall back. If something is wrong, crash or throw at the point of failure. This applies equally to shell scripts, CI pipelines, Kubernetes manifests, and application code.
+- **Never use type assertions** — No `as` casts (except `as const` and `as unknown` which the ESLint rule allows). Use runtime validation (Zod `.parse()`, `Array.isArray()`, `typeof`) or proper type narrowing instead. More broadly: never lie to a type system or validation layer — if the types don't fit, fix the data or the design, not the types.
+- **Strong, static typing** — Leverage type systems fully. No `any`, no implicit `any`, no loose types. Precise function signatures, return types, and data structures. This extends beyond TypeScript: use strict schemas for config (Zod, JSON Schema, Helm values types), typed IaC (cdk8s, CDKTF over raw YAML), and validated inputs at every system boundary.
+- **Quality is paramount** — Never take shortcuts. No TODO hacks, no "good enough for now" workarounds, no skipped edge cases. Write correct, complete solutions the first time — whether that's code, a Helm chart, a CI pipeline, or a database migration.
+- **Take the time you need** — Use as many tokens and tool calls as necessary to complete a task properly. Never rush or cut corners to save tokens. Investigate thoroughly, verify end-to-end, and get it right.
+
 ## Research Preferences
 
 - When researching topics, emphasize **GitHub**, **Hacker News**, and **Wikipedia** as primary sources.

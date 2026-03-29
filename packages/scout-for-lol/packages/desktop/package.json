@@ -43,7 +43,6 @@
     "zod": "^4.0.0"
   },
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "file:../../../eslint-config",
     "@tailwindcss/postcss": "^4.1.17",
     "@tauri-apps/cli": "^2.4.0",
     "@types/node": "^25.0.0",

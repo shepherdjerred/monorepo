@@ -50,7 +50,6 @@
   "version": "0.0.1",
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
-    "@shepherdjerred/eslint-config": "file:../../../eslint-config",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "bun-types": "latest",
