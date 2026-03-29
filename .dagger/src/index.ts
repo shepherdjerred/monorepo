@@ -49,7 +49,7 @@ import {
 } from "./release";
 
 // renovate: datasource=docker depName=oven/bun
-const BUN_IMAGE = "oven/bun:1.3.11-debian";
+const BUN_IMAGE = "oven/bun:1.2.17-debian";
 // renovate: datasource=docker depName=rust
 const RUST_IMAGE = "rust:1.89.0-bookworm";
 // renovate: datasource=docker depName=golang
@@ -61,7 +61,7 @@ const SWIFTLINT_IMAGE = "ghcr.io/realm/swiftlint:0.58.2";
 
 // Pinned Bun version for containers that install Bun manually (e.g. Playwright)
 // renovate: datasource=npm depName=bun
-const BUN_VERSION = "1.3.11";
+const BUN_VERSION = "1.2.17";
 
 /** Directories excluded when mounting source into containers. */
 const SOURCE_EXCLUDES = [
