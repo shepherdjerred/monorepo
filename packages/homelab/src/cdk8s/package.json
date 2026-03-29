@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.17.17",
+    "jiti": "^2.6.1",
     "type-fest": "^5.0.0",
     "yaml": "^2.8.1"
   }

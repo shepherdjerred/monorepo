@@ -16,5 +16,7 @@
     "yaml": "^2.8.1",
     "zod": "^4.1.11"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "jiti": "^2.6.1"
+  }
 }

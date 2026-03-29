@@ -26,6 +26,7 @@
     "@shepherdjerred/eslint-config": "file:../eslint-config",
     "@types/bun": "latest",
     "eslint": "^9.39.2",
+    "jiti": "^2.6.1",
     "typescript": "latest"
   },
   "dependencies": {

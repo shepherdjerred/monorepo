@@ -15,6 +15,7 @@
       "devDependencies": {
         "@astrojs/check": "^0.9.4",
         "@shepherdjerred/eslint-config": "file:../eslint-config",
+        "jiti": "^2.6.1",
         "typescript": "^5.9.3",
       },
     },

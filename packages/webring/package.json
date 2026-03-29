@@ -53,6 +53,7 @@
     "eslint": "^9.22.0",
     "express": "^5.0.0",
     "globals": "^17.0.0",
+    "jiti": "^2.6.1",
     "typedoc": "^0.28.0",
     "typedoc-plugin-extras": "^4.0.1",
     "typedoc-plugin-zod": "^1.4.0",

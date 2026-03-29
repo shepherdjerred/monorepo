@@ -1,0 +1,3 @@
+# Castle-casters: log4j 1.x is EOL, no upgrade path (game uses legacy dependencies)
+CVE-2019-17571
+CVE-2021-4104

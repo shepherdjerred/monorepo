@@ -6,6 +6,7 @@
       "name": "@discord-plays-pokemon/monorepo",
       "devDependencies": {
         "@shepherdjerred/eslint-config": "file:../eslint-config",
+        "jiti": "^2.6.1",
       },
     },
     "packages/backend": {

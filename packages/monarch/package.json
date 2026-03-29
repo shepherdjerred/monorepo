@@ -23,6 +23,7 @@
     "@shepherdjerred/eslint-config": "file:../eslint-config",
     "bun-types": "^1.3.5",
     "eslint": "^9.39.2",
+    "jiti": "^2.6.1",
     "typescript": "^5.7.2"
   },
   "author": "Jerred Shepherd",

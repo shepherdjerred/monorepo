@@ -14,7 +14,8 @@
     "packages/frontend"
   ],
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "file:../eslint-config"
+    "@shepherdjerred/eslint-config": "file:../eslint-config",
+    "jiti": "^2.6.1"
   },
   "dependencies": {}
 }

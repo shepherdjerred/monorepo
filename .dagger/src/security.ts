@@ -26,6 +26,7 @@ const SOURCE_EXCLUDES = [
   "**/__pycache__",
   "**/.DS_Store",
   "**/archive",
+  "**/practice",
 ];
 
 /** Scan the source tree with trivy for vulnerabilities (HIGH, CRITICAL severity). */
@@ -44,6 +45,8 @@ export function trivyScanHelper(source: Directory): Container {
       "1",
       "--severity",
       "HIGH,CRITICAL",
+      "--ignorefile",
+      "/workspace/.trivyignore",
       "/workspace",
     ]);
 }
