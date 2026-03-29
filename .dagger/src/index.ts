@@ -272,13 +272,15 @@ export class Monorepo {
     return (
       this.bunBase(pkgDir, pkg, depNames, depDirs, tsconfig, extraAptPackages)
         .withWorkdir(`/workspace/packages/${pkg}`)
-        // Ensure workspace root node_modules/.bin is on PATH so sub-packages
-        // can find hoisted binaries (e.g. prisma, prettier) without bunx
+        // Symlink hoisted bins into sub-package node_modules/.bin so that
+        // workspace sub-package scripts can find them (e.g. prisma, prettier).
+        // Bun hoists bins to root but sub-package scripts only see local bins.
         .withExec([
           "bash",
           "-c",
-          `export PATH="/workspace/packages/${pkg}/node_modules/.bin:$PATH" && bun run generate`,
+          'for dir in packages/*/node_modules/.bin; do for bin in node_modules/.bin/*; do ln -sf "$(readlink -f "$bin")" "$dir/$(basename "$bin")" 2>/dev/null; done; done; true',
         ])
+        .withExec(["bun", "run", "generate"])
         .directory("/workspace")
     );
   }
