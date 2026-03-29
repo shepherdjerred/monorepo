@@ -18,9 +18,9 @@
   },
   "trustedDependencies": [],
   "scripts": {
-    "build": "cd src/cdk8s && bun run build",
-    "test": "cd src/cdk8s && bun run test && cd ../helm-types && bun run test",
-    "lint": "cd src/cdk8s && bun run lint && cd ../deps-email && bun run lint && cd ../helm-types && bun run lint",
-    "typecheck": "cd src/cdk8s && bun run typecheck && cd ../deps-email && bun run typecheck && cd ../helm-types && bun run typecheck"
+    "build": "cd src/cdk8s && bun install && bun run build",
+    "test": "cd src/cdk8s && bun install && bun run test && cd ../helm-types && bun install && bun run test",
+    "lint": "cd src/cdk8s && bun install && bun run lint && cd ../deps-email && bun install && bun run lint && cd ../helm-types && bun install && bun run lint",
+    "typecheck": "cd src/cdk8s && bun install && bun run typecheck && cd ../deps-email && bun install && bun run typecheck && cd ../helm-types && bun install && bun run typecheck"
   }
 }

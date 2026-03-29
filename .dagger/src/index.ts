@@ -49,7 +49,7 @@ import {
 } from "./release";
 
 // renovate: datasource=docker depName=oven/bun
-const BUN_IMAGE = "oven/bun:1.2.17-debian";
+const BUN_IMAGE = "oven/bun:1.3.11-debian";
 // renovate: datasource=docker depName=rust
 const RUST_IMAGE = "rust:1.89.0-bookworm";
 // renovate: datasource=docker depName=golang
@@ -61,7 +61,7 @@ const SWIFTLINT_IMAGE = "ghcr.io/realm/swiftlint:0.58.2";
 
 // Pinned Bun version for containers that install Bun manually (e.g. Playwright)
 // renovate: datasource=npm depName=bun
-const BUN_VERSION = "1.2.17";
+const BUN_VERSION = "1.3.11";
 
 /** Directories excluded when mounting source into containers. */
 const SOURCE_EXCLUDES = [
@@ -105,6 +105,7 @@ export class Monorepo {
     depNames: string[] = [],
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
+    extraAptPackages: string[] = [],
   ): Container {
     let container = dag
       .container()
@@ -121,6 +122,7 @@ export class Monorepo {
         "python3-setuptools",
         "make",
         "g++",
+        ...extraAptPackages,
       ])
       .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
       .withWorkdir(`/workspace/packages/${pkg}`)
@@ -288,17 +290,37 @@ export class Monorepo {
       .stdout();
   }
 
+  /**
+   * Base container with system deps for running generated workspaces.
+   * Mirrors the apt-get packages from bunBase so tests/typechecks have
+   * the same system tools (python3, make, g++) available.
+   */
+  private generatedBase(generated: Directory, pkg: string): Container {
+    return dag
+      .container()
+      .from(BUN_IMAGE)
+      .withExec(["apt-get", "update", "-qq"])
+      .withExec([
+        "apt-get",
+        "install",
+        "-y",
+        "-qq",
+        "--no-install-recommends",
+        "python3",
+        "make",
+        "g++",
+      ])
+      .withWorkdir(`/workspace/packages/${pkg}`)
+      .withDirectory("/workspace", generated);
+  }
+
   /** Run typecheck with pre-generated workspace */
   @func()
   async typecheckWithGenerated(
     generated: Directory,
     pkg: string,
   ): Promise<string> {
-    return dag
-      .container()
-      .from(BUN_IMAGE)
-      .withWorkdir(`/workspace/packages/${pkg}`)
-      .withDirectory("/workspace", generated)
+    return this.generatedBase(generated, pkg)
       .withExec(["bun", "run", "typecheck"])
       .stdout();
   }
@@ -306,11 +328,7 @@ export class Monorepo {
   /** Run test with pre-generated workspace */
   @func()
   async testWithGenerated(generated: Directory, pkg: string): Promise<string> {
-    return dag
-      .container()
-      .from(BUN_IMAGE)
-      .withWorkdir(`/workspace/packages/${pkg}`)
-      .withDirectory("/workspace", generated)
+    return this.generatedBase(generated, pkg)
       .withExec(["bun", "run", "test"])
       .stdout();
   }
@@ -372,7 +390,10 @@ export class Monorepo {
     tsconfig: File | null = null,
     hassBaseUrl: string = "https://homeassistant.sjer.red",
   ): Directory {
-    return this.bunBase(pkgDir, "homelab/src/ha", depNames, depDirs, tsconfig)
+    return this.bunBase(pkgDir, "homelab/src/ha", depNames, depDirs, tsconfig, [
+      "nodejs",
+      "npm",
+    ])
       .withSecretVariable("HASS_TOKEN", hassToken)
       .withEnvVariable("HASS_BASE_URL", hassBaseUrl)
       .withExec(["bun", "run", "generate-types"])
