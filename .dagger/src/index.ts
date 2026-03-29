@@ -302,8 +302,12 @@ export class Monorepo {
     return dag
       .container()
       .from(BUN_IMAGE)
+      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
       .withWorkdir(`/workspace/packages/${pkg}`)
-      .withDirectory("/workspace", generated)
+      .withDirectory("/workspace", generated, {
+        exclude: ["**/opt/node/**"],
+      })
+      .withExec(["bun", "install"])
       .withMountedCache(
         `/workspace/packages/${pkg}/.eslintcache`,
         dag.cacheVolume(ESLINT_CACHE),
@@ -332,8 +336,12 @@ export class Monorepo {
         "make",
         "g++",
       ])
+      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
       .withWorkdir(`/workspace/packages/${pkg}`)
-      .withDirectory("/workspace", generated);
+      .withDirectory("/workspace", generated, {
+        exclude: ["**/opt/node/**"],
+      })
+      .withExec(["bun", "install"]);
   }
 
   /** Run typecheck with pre-generated workspace */
