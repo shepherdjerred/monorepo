@@ -269,21 +269,18 @@ export class Monorepo {
     tsconfig: File | null = null,
     extraAptPackages: string[] = [],
   ): Directory {
-    return this.bunBase(
-      pkgDir,
-      pkg,
-      depNames,
-      depDirs,
-      tsconfig,
-      extraAptPackages,
-    )
-      .withWorkdir(`/workspace/packages/${pkg}`)
-      .withExec([
-        "bash",
-        "-c",
-        "echo '=== DEBUG v5 ==='; ls node_modules/.bin/prisma 2>&1; ls node_modules/.bin/ 2>&1 | head -20; find /workspace -name prisma -path '*/.bin/*' 2>/dev/null | head -5; echo '=== END DEBUG ==='; bun run generate",
-      ])
-      .directory("/workspace");
+    return (
+      this.bunBase(pkgDir, pkg, depNames, depDirs, tsconfig, extraAptPackages)
+        .withWorkdir(`/workspace/packages/${pkg}`)
+        // Install Node.js 22 for Prisma (its preinstall checks node version;
+        // without a real Node.js, prisma binary is never created during bun install)
+        .withExec([
+          "bash",
+          "-c",
+          "apt-get install -y -qq curl ca-certificates gnupg && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && apt-get install -y -qq nodejs && bun install --frozen-lockfile && bun run generate",
+        ])
+        .directory("/workspace")
+    );
   }
 
   /** Run lint with pre-generated workspace (e.g. after Prisma generate) */
