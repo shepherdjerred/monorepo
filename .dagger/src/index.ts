@@ -302,12 +302,8 @@ export class Monorepo {
     return dag
       .container()
       .from(BUN_IMAGE)
-      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
       .withWorkdir(`/workspace/packages/${pkg}`)
-      .withDirectory("/workspace", generated, {
-        exclude: ["**/opt/node/**"],
-      })
-      .withExec(["bun", "install"])
+      .withDirectory("/workspace", generated)
       .withMountedCache(
         `/workspace/packages/${pkg}/.eslintcache`,
         dag.cacheVolume(ESLINT_CACHE),
@@ -336,12 +332,8 @@ export class Monorepo {
         "make",
         "g++",
       ])
-      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
       .withWorkdir(`/workspace/packages/${pkg}`)
-      .withDirectory("/workspace", generated, {
-        exclude: ["**/opt/node/**"],
-      })
-      .withExec(["bun", "install"]);
+      .withDirectory("/workspace", generated);
   }
 
   /** Run typecheck with pre-generated workspace */
@@ -377,15 +369,24 @@ export class Monorepo {
     tsconfig: File | null = null,
     extraAptPackages: string[] = [],
   ): Promise<string> {
-    const generated = this.generate(
+    // Run generate then lint in the same container to avoid workspace
+    // resolution issues when copying the generated directory to a fresh container
+    return this.bunBase(
       pkgDir,
       pkg,
       depNames,
       depDirs,
       tsconfig,
       extraAptPackages,
-    );
-    return this.lintWithGenerated(generated, pkg);
+    )
+      .withWorkdir(`/workspace/packages/${pkg}`)
+      .withExec(["bun", "run", "generate"])
+      .withMountedCache(
+        `/workspace/packages/${pkg}/.eslintcache`,
+        dag.cacheVolume(ESLINT_CACHE),
+      )
+      .withExec(["bun", "run", "lint"])
+      .stdout();
   }
 
   /** Generate then typecheck in a single pipeline */
@@ -398,15 +399,18 @@ export class Monorepo {
     tsconfig: File | null = null,
     extraAptPackages: string[] = [],
   ): Promise<string> {
-    const generated = this.generate(
+    return this.bunBase(
       pkgDir,
       pkg,
       depNames,
       depDirs,
       tsconfig,
       extraAptPackages,
-    );
-    return this.typecheckWithGenerated(generated, pkg);
+    )
+      .withWorkdir(`/workspace/packages/${pkg}`)
+      .withExec(["bun", "run", "generate"])
+      .withExec(["bun", "run", "typecheck"])
+      .stdout();
   }
 
   /** Generate then test in a single pipeline */
@@ -419,15 +423,18 @@ export class Monorepo {
     tsconfig: File | null = null,
     extraAptPackages: string[] = [],
   ): Promise<string> {
-    const generated = this.generate(
+    return this.bunBase(
       pkgDir,
       pkg,
       depNames,
       depDirs,
       tsconfig,
       extraAptPackages,
-    );
-    return this.testWithGenerated(generated, pkg);
+    )
+      .withWorkdir(`/workspace/packages/${pkg}`)
+      .withExec(["bun", "run", "generate"])
+      .withExec(["bun", "run", "test"])
+      .stdout();
   }
 
   // ---------------------------------------------------------------------------
