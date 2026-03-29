@@ -47,19 +47,6 @@
     </profile>
   </profiles>
 
-  <repositories>
-    <repository>
-      <id>cron-app</id>
-      <url>https://artifactory.cronapp.io/public-release/</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
-
   <build>
     <resources>
       <resource>
