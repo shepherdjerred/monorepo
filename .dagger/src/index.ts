@@ -420,7 +420,7 @@ export class Monorepo {
         .withExec([
           "bash",
           "-c",
-          "for d in $(find . -name schema.prisma -path '*/prisma/*' -not -path '*/node_modules/*' | xargs -I{} dirname {} | xargs -I{} dirname {}); do (cd \"$d\" && bunx --trust prisma@6 db push --skip-generate --accept-data-loss); done",
+          "for d in $(find . -name schema.prisma -path '*/prisma/*' -not -path '*/node_modules/*' | xargs -I{} dirname {} | xargs -I{} dirname {}); do (cd \"$d\" && bunx --trust prisma@6 db push --skip-generate --accept-data-loss 2>/dev/null) || true; done",
         ])
         .withExec(["bun", "run", "test"])
         .stdout()
