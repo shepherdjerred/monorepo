@@ -13,7 +13,7 @@ import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/
 const CURSEFORGE_1P_ITEM_PATH =
   "vaults/v64ocnykdqju4ui6j6pua56xw4/items/evbgkoazs6dquzlrl5fv7h2gtm";
 
-export interface ModdedMinecraftServerConfig {
+export type ModdedMinecraftServerConfig = {
   name: string;
   curseForgePageUrl: string;
   hostname: string;
@@ -23,7 +23,7 @@ export interface ModdedMinecraftServerConfig {
   resourceLimits: { memory: string };
   storageGi: number;
   whitelist: string[];
-}
+};
 
 export function createModdedMinecraftApp(
   chart: Chart,

@@ -43,7 +43,13 @@ export async function crawlSite(options: CrawlOptions): Promise<CrawlResult> {
   const start = performance.now();
   const { baseUrl, maxDepth, useBrowser, useSitemap, verbose, quiet, tags } =
     options;
-  const log = quiet ? (_msg: string) => { /* noop */ } : (msg: string) => { console.log(msg); };
+  const log = quiet
+    ? (_msg: string) => {
+        /* noop */
+      }
+    : (msg: string) => {
+        console.log(msg);
+      };
 
   const urls = await (useSitemap
     ? fetchSitemapUrls(baseUrl, useBrowser, verbose, log)
@@ -107,7 +113,12 @@ export async function crawlSite(options: CrawlOptions): Promise<CrawlResult> {
  */
 async function discoverUrls(
   startUrl: string,
-  opts: { maxDepth: number; useBrowser: boolean; verbose: boolean; log: (msg: string) => void },
+  opts: {
+    maxDepth: number;
+    useBrowser: boolean;
+    verbose: boolean;
+    log: (msg: string) => void;
+  },
 ): Promise<string[]> {
   const { maxDepth, useBrowser, verbose, log } = opts;
   log("Discovering pages...");

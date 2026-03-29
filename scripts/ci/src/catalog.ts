@@ -66,7 +66,6 @@ export interface NpmPackage {
 }
 
 export const NPM_PACKAGES: NpmPackage[] = [
-  { name: "bun-decompile", dir: "packages/bun-decompile" },
   { name: "astro-opengraph-images", dir: "packages/astro-opengraph-images" },
   { name: "webring", dir: "packages/webring" },
   { name: "helm-types", dir: "packages/homelab/src/helm-types" },
@@ -202,7 +201,6 @@ export const ALL_PACKAGES: string[] = [
   "astro-opengraph-images",
   "better-skill-capped",
   "birmel",
-  "bun-decompile",
   "castle-casters",
   "clauderon",
   "cooklang-rich-preview",

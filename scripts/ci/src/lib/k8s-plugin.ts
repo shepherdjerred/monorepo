@@ -20,7 +20,7 @@ export function k8sPlugin(
   return {
     kubernetes: {
       checkout: {
-        cloneFlags: "--depth=100 --dissociate",
+        cloneFlags: "--depth=100",
         fetchFlags: "--depth=100",
       },
       podSpecPatch: {
@@ -42,6 +42,13 @@ export function k8sPlugin(
               },
             ],
             envFrom: secretRefs,
+            volumeMounts: [
+              {
+                name: "buildkite-git-mirrors",
+                mountPath: "/buildkite/git-mirrors",
+                readOnly: true,
+              },
+            ],
           },
         ],
       },

@@ -33,13 +33,6 @@ GH_VERSION="2.72.0"
 # renovate: datasource=github-releases depName=rust-lang/rustup versioning=semver
 RUSTUP_VERSION="1.28.2"
 
-fix_git_alternates() {
-    if [ -f .git/objects/info/alternates ]; then
-        echo "--- Fixing git alternates"
-        git repack -a -d 2>/dev/null || true
-        rm -f .git/objects/info/alternates
-    fi
-}
 
 install_base() {
     if command -v jq &>/dev/null && command -v gcc &>/dev/null; then
@@ -163,5 +156,3 @@ install_rust() {
     apt-get install -y -qq gcc-aarch64-linux-gnu > /dev/null
 }
 
-# Auto-fix git alternates when sourced (every CI step gets a fresh clone)
-fix_git_alternates

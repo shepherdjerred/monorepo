@@ -171,13 +171,13 @@ zfs get sync,logbias,atime "$DATASET"`,
               image: `docker.io/alpine:${versions["library/alpine"]}`,
               command: ["/bin/sh", "-c"],
               args: [
-                `set -e
+                String.raw`set -e
 apk add --no-cache curl
 USER=$(cat /secret/username)
 CRED=$(cat /secret/credential)
 AUTH=$(echo -n "$USER:$CRED" | base64)
 CONFIG=$(printf '{"auths":{"https://index.docker.io/v1/":{"auth":"%s"}}}' "$AUTH")
-CONFIG_B64=$(echo -n "$CONFIG" | base64 | tr -d '\\n')
+CONFIG_B64=$(echo -n "$CONFIG" | base64 | tr -d '\n')
 
 TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
 CA=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
@@ -187,16 +187,16 @@ API=https://kubernetes.default.svc/api/v1/namespaces/dagger/secrets
 STATUS=$(curl -s -o /dev/null -w "%{http_code}" --cacert "$CA" -H "Authorization: Bearer $TOKEN" "$API/docker-hub-config")
 if [ "$STATUS" = "200" ]; then
   echo "Secret exists, patching..."
-  curl -sf --cacert "$CA" -H "Authorization: Bearer $TOKEN" \\
-    -H "Content-Type: application/strategic-merge-patch+json" \\
-    -X PATCH "$API/docker-hub-config" \\
-    -d "{\\"data\\":{\\"config.json\\":\\"$CONFIG_B64\\"}}"
+  curl -sf --cacert "$CA" -H "Authorization: Bearer $TOKEN" \
+    -H "Content-Type: application/strategic-merge-patch+json" \
+    -X PATCH "$API/docker-hub-config" \
+    -d "{\"data\":{\"config.json\":\"$CONFIG_B64\"}}"
 else
   echo "Creating secret..."
-  curl -sf --cacert "$CA" -H "Authorization: Bearer $TOKEN" \\
-    -H "Content-Type: application/json" \\
-    -X POST "$API" \\
-    -d "{\\"apiVersion\\":\\"v1\\",\\"kind\\":\\"Secret\\",\\"metadata\\":{\\"name\\":\\"docker-hub-config\\",\\"namespace\\":\\"dagger\\"},\\"data\\":{\\"config.json\\":\\"$CONFIG_B64\\"}}"
+  curl -sf --cacert "$CA" -H "Authorization: Bearer $TOKEN" \
+    -H "Content-Type: application/json" \
+    -X POST "$API" \
+    -d "{\"apiVersion\":\"v1\",\"kind\":\"Secret\",\"metadata\":{\"name\":\"docker-hub-config\",\"namespace\":\"dagger\"},\"data\":{\"config.json\":\"$CONFIG_B64\"}}"
 fi
 echo "Done."`,
               ],

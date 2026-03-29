@@ -305,7 +305,6 @@ const PIPELINE: Node[] = [
       "bun.lock",
       // Each workspace's package.json
       "packages/birmel/package.json",
-      "packages/bun-decompile/package.json",
       "packages/eslint-config/package.json",
       "packages/resume/package.json",
       "packages/tools/package.json",
@@ -351,7 +350,6 @@ const PIPELINE: Node[] = [
       "tsconfig.base.json",
       "scripts/",
       "packages/birmel/",
-      "packages/bun-decompile/",
       "packages/eslint-config/",
       "packages/tools/",
       "packages/clauderon/web/",

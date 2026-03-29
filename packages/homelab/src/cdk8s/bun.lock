@@ -1,0 +1,69 @@
+{
+  "lockfileVersion": 1,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "@homelab/cdk8s",
+      "dependencies": {
+        "@grafana/grafana-foundation-sdk": "11.6.0-cogv0.0.x.1759917919",
+        "@shepherdjerred/helm-types": "file:../helm-types",
+        "cdk8s": "^2.69.60",
+        "cdk8s-plus-31": "^2.2.4",
+        "constructs": "^10.4.2",
+        "cron-parser": "^5.4.0",
+        "lodash": "^4.17.21",
+        "remeda": "^2.22.5",
+        "ts-pattern": "^5.7.1",
+        "zod": "^4.1.11",
+      },
+      "devDependencies": {
+        "@types/lodash": "^4.17.17",
+        "type-fest": "^5.0.0",
+        "yaml": "^2.8.1",
+      },
+    },
+  },
+  "packages": {
+    "@grafana/grafana-foundation-sdk": ["@grafana/grafana-foundation-sdk@11.6.0-cogv0.0.x.1759917919", "", { "dependencies": { "tslib": "^2.6.2" } }, "sha512-cVFNeub37cYQQj+fTY+XdwHi4s7NOxWjhOhJoYFUFcv68TFqIvXFzrzKptGftR0eH3W3nMGm5Bc6nf7T3aEtPA=="],
+
+    "@shepherdjerred/helm-types": ["@shepherdjerred/helm-types@file:../helm-types", { "dependencies": { "yaml": "^2.8.1", "zod": "^4.1.11" }, "bin": { "helm-types": "dist/cli.js" } }],
+
+    "@types/lodash": ["@types/lodash@4.17.24", "", {}, "sha512-gIW7lQLZbue7lRSWEFql49QJJWThrTFFeIMJdp3eH4tKoxm1OvEPg02rm4wCCSHS0cL3/Fizimb35b7k8atwsQ=="],
+
+    "balanced-match": ["balanced-match@1.0.2", "", {}, "sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw=="],
+
+    "brace-expansion": ["brace-expansion@2.0.3", "", { "dependencies": { "balanced-match": "^1.0.0" } }, "sha512-MCV/fYJEbqx68aE58kv2cA/kiky1G8vux3OR6/jbS+jIMe/6fJWa0DTzJU7dqijOWYwHi1t29FlfYI9uytqlpA=="],
+
+    "cdk8s": ["cdk8s@2.70.53", "", { "dependencies": { "fast-json-patch": "^3.1.1", "follow-redirects": "^1.15.11", "yaml": "2.8.3" }, "peerDependencies": { "constructs": "^10" } }, "sha512-udjFM/9Q6MCFzbG5gnfIZ2OEdeZU0mbFWiNJrcQ9DOpifK1CgGs8rIUgVvwM9qaYIghZCMCRhTvYoBuuPbSPNw=="],
+
+    "cdk8s-plus-31": ["cdk8s-plus-31@2.6.40", "", { "dependencies": { "minimatch": "^9.0.9" }, "peerDependencies": { "cdk8s": "^2.68.11", "constructs": "^10.3.0" } }, "sha512-1UwCHOfIGwEy87n3UBeI8XYukXUPIxHy6poGH1qWmqRAx91fN7pSw4yWZNc5YZzY1C3znjF+XgZxdzcvEFZTXQ=="],
+
+    "constructs": ["constructs@10.6.0", "", {}, "sha512-TxHOnBO5zMo/G76ykzGF/wMpEHu257TbWiIxP9K0Yv/+t70UzgBQiTqjkAsWOPC6jW91DzJI0+ehQV6xDRNBuQ=="],
+
+    "cron-parser": ["cron-parser@5.5.0", "", { "dependencies": { "luxon": "^3.7.1" } }, "sha512-oML4lKUXxizYswqmxuOCpgFS8BNUJpIu6k/2HVHyaL8Ynnf3wdf9tkns0yRdJLSIjkJ+b0DXHMZEHGpMwjnPww=="],
+
+    "fast-json-patch": ["fast-json-patch@3.1.1", "", {}, "sha512-vf6IHUX2SBcA+5/+4883dsIjpBTqmfBjmYiWK1savxQmFk4JfBMLa7ynTYOs1Rolp/T1betJxHiGD3g1Mn8lUQ=="],
+
+    "follow-redirects": ["follow-redirects@1.15.11", "", {}, "sha512-deG2P0JfjrTxl50XGCDyfI97ZGVCxIpfKYmfyrQ54n5FO/0gfIES8C/Psl6kWVDolizcaaxZJnTS0QSMxvnsBQ=="],
+
+    "lodash": ["lodash@4.17.23", "", {}, "sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w=="],
+
+    "luxon": ["luxon@3.7.2", "", {}, "sha512-vtEhXh/gNjI9Yg1u4jX/0YVPMvxzHuGgCm6tC5kZyb08yjGWGnqAjGJvcXbqQR2P3MyMEFnRbpcdFS6PBcLqew=="],
+
+    "minimatch": ["minimatch@9.0.9", "", { "dependencies": { "brace-expansion": "^2.0.2" } }, "sha512-OBwBN9AL4dqmETlpS2zasx+vTeWclWzkblfZk7KTA5j3jeOONz/tRCnZomUyvNg83wL5Zv9Ss6HMJXAgL8R2Yg=="],
+
+    "remeda": ["remeda@2.33.6", "", {}, "sha512-tazDGH7s75kUPGBKLvhgBEHMgW+TdDFhjUAMdQj57IoWz6HsGa5D2RX5yDUz6IIqiRRvZiaEHzCzWdTeixc/Kg=="],
+
+    "tagged-tag": ["tagged-tag@1.0.0", "", {}, "sha512-yEFYrVhod+hdNyx7g5Bnkkb0G6si8HJurOoOEgC8B/O0uXLHlaey/65KRv6cuWBNhBgHKAROVpc7QyYqE5gFng=="],
+
+    "ts-pattern": ["ts-pattern@5.9.0", "", {}, "sha512-6s5V71mX8qBUmlgbrfL33xDUwO0fq48rxAu2LBE11WBeGdpCPOsXksQbZJHvHwhrd3QjUusd3mAOM5Gg0mFBLg=="],
+
+    "tslib": ["tslib@2.8.1", "", {}, "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="],
+
+    "type-fest": ["type-fest@5.5.0", "", { "dependencies": { "tagged-tag": "^1.0.0" } }, "sha512-PlBfpQwiUvGViBNX84Yxwjsdhd1TUlXr6zjX7eoirtCPIr08NAmxwa+fcYBTeRQxHo9YC9wwF3m9i700sHma8g=="],
+
+    "yaml": ["yaml@2.8.3", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-AvbaCLOO2Otw/lW5bmh9d/WEdcDFdQp2Z2ZUH3pX9U2ihyUY0nvLv7J6TrWowklRGPYbB/IuIMfYgxaCPg5Bpg=="],
+
+    "zod": ["zod@4.3.6", "", {}, "sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg=="],
+  }
+}

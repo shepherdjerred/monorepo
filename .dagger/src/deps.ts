@@ -11,7 +11,6 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   resume: [],
 
   // eslint-config only
-  "bun-decompile": ["eslint-config"],
   "astro-opengraph-images": ["eslint-config"],
   webring: ["eslint-config"],
   toolkit: ["eslint-config"],
@@ -48,4 +47,5 @@ export const BUILD_TIME_DEPS: string[] = [
   "eslint-config",
   "astro-opengraph-images",
   "webring",
+  "tasknotes-types",
 ];

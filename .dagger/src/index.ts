@@ -119,6 +119,10 @@ export class Monorepo {
         "zstd",
         "python3",
         "python3-setuptools",
+        "make",
+        "g++",
+        "nodejs",
+        "npm",
       ])
       .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
       .withWorkdir(`/workspace/packages/${pkg}`)
@@ -459,6 +463,7 @@ export class Monorepo {
     tsconfig: File | null = null,
   ): Directory {
     return this.bunBase(pkgDir, pkg, depNames, depDirs, tsconfig)
+      .withExec(["bunx", "playwright", "install", "--with-deps", "chromium"])
       .withExec(["bunx", "astro", "build"])
       .directory(`/workspace/packages/${pkg}/dist`);
   }

@@ -7,7 +7,7 @@ steps:
     plugins:
       - kubernetes:
           checkout:
-            cloneFlags: "--depth=100 --dissociate"
+            cloneFlags: "--depth=100"
             fetchFlags: --depth=100
           podSpecPatch:
             serviceAccountName: buildkite-agent-stack-k8s-controller
@@ -24,3 +24,7 @@ steps:
                   - secretRef:
                       name: buildkite-argocd-token
                       optional: true
+                volumeMounts:
+                  - name: buildkite-git-mirrors
+                    mountPath: /buildkite/git-mirrors
+                    readOnly: true

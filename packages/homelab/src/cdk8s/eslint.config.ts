@@ -8,6 +8,10 @@ export default [
   }),
   { rules: { "no-console": "off" } },
   {
+    files: ["src/misc/modded-minecraft.ts"],
+    rules: { "no-secrets/no-secrets": "off" },
+  },
+  {
     ignores: ["generated/"],
   },
 ] satisfies TSESLint.FlatConfig.ConfigArray;
