@@ -1,7 +1,9 @@
 {
   "name": "scout-for-lol",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "build": "bun run --filter='./packages/*' build",
     "typecheck": "bun run --filter='./packages/*' typecheck",
