@@ -78,8 +78,9 @@
       "project": ["src/**/*.{ts,tsx,astro}", "*.ts"]
     },
     "packages/scout-for-lol/packages/desktop": {
-      "entry": ["src/main.tsx", "vite.config.ts"],
-      "project": ["src/**/*.{ts,tsx}", "*.ts"],
+      "entry": ["src/main.tsx"],
+      "project": ["src/**/*.{ts,tsx}"],
+      "vite": false,
       "postcss": false
     },
     "packages/scout-for-lol/packages/ui": {

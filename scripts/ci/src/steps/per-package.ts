@@ -50,25 +50,23 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
 
   if (PRISMA_PACKAGES.has(pkg)) {
     // Prisma: combined generate+action in a single dagger pipeline (avoids nested CLI calls)
-    // Prisma CLI requires Node.js, so install it as an extra apt package
-    const prismaFlags = `${pf} --extra-apt-packages nodejs --extra-apt-packages npm`;
     steps.push(
       daggerCallStep(
         `:eslint: Lint`,
         `lint-${sk}`,
-        `dagger call generate-and-lint ${prismaFlags}`,
+        `dagger call generate-and-lint ${pf}`,
         resources,
       ),
       daggerCallStep(
         `:typescript: Typecheck`,
         `typecheck-${sk}`,
-        `dagger call generate-and-typecheck ${prismaFlags}`,
+        `dagger call generate-and-typecheck ${pf}`,
         resources,
       ),
       daggerCallStep(
         `:test_tube: Test`,
         `test-${sk}`,
-        `dagger call generate-and-test ${prismaFlags}`,
+        `dagger call generate-and-test ${pf}`,
         resources,
       ),
     );
