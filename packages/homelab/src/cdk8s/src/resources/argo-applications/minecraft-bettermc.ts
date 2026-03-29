@@ -8,9 +8,9 @@ export function createMinecraftBettermcApp(chart: Chart) {
       "https://www.curseforge.com/minecraft/modpacks/better-mc-forge-bmc4",
     hostname: "bettermc.sjer.red",
     motd: "Better Minecraft",
-    memory: "6G",
-    resourceRequests: { memory: "8Gi", cpu: "1" },
-    resourceLimits: { memory: "8Gi" },
+    memory: "12G",
+    resourceRequests: { memory: "16Gi", cpu: "1" },
+    resourceLimits: { memory: "16Gi" },
     storageGi: 32,
     whitelist: [
       "RiotShielder",

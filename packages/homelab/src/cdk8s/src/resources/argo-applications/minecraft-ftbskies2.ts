@@ -8,9 +8,9 @@ export function createMinecraftFtbskies2App(chart: Chart) {
       "https://www.curseforge.com/minecraft/modpacks/ftb-skies-2",
     hostname: "ftbskies2.sjer.red",
     motd: "FTB Skies 2",
-    memory: "6G",
-    resourceRequests: { memory: "8Gi", cpu: "1" },
-    resourceLimits: { memory: "8Gi" },
+    memory: "12G",
+    resourceRequests: { memory: "16Gi", cpu: "1" },
+    resourceLimits: { memory: "16Gi" },
     storageGi: 32,
     whitelist: [
       "RiotShielder",

@@ -58,7 +58,16 @@ export function complianceCheckHelper(source: Directory): Container {
 /** Run knip to detect unused code and return its output. */
 export function knipCheckHelper(source: Directory): Container {
   return bunContainer(source)
-    .withExec(["bun", "install"])
+    .withExec([
+      "bash",
+      "-c",
+      'for dir in packages/*/; do [ -f "$dir/bun.lock" ] && (cd "$dir" && bun install --frozen-lockfile 2>/dev/null || bun install) || true; done',
+    ])
+    .withExec([
+      "bash",
+      "-c",
+      'for dir in packages/*/packages/*/; do [ -f "$dir/package.json" ] && (cd "$dir" && bun install 2>/dev/null) || true; done',
+    ])
     .withExec(["bunx", "knip", "--no-exit-code", "--no-config-hints"]);
 }
 

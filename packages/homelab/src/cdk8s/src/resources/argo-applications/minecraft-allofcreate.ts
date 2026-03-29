@@ -8,9 +8,9 @@ export function createMinecraftAllofcreateApp(chart: Chart) {
       "https://www.curseforge.com/minecraft/modpacks/all-of-create",
     hostname: "allofcreate.sjer.red",
     motd: "All of Create",
-    memory: "6G",
-    resourceRequests: { memory: "8Gi", cpu: "1" },
-    resourceLimits: { memory: "8Gi" },
+    memory: "12G",
+    resourceRequests: { memory: "16Gi", cpu: "1" },
+    resourceLimits: { memory: "16Gi" },
     storageGi: 32,
     whitelist: [
       "RiotShielder",

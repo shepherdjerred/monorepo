@@ -8,9 +8,9 @@ export function createMinecraftAllthemonsApp(chart: Chart) {
       "https://www.curseforge.com/minecraft/modpacks/all-the-mons",
     hostname: "allthemons.sjer.red",
     motd: "All the Mons (ATM10 + Cobblemon)",
-    memory: "8G",
-    resourceRequests: { memory: "10Gi", cpu: "1" },
-    resourceLimits: { memory: "10Gi" },
+    memory: "16G",
+    resourceRequests: { memory: "20Gi", cpu: "1" },
+    resourceLimits: { memory: "20Gi" },
     storageGi: 64,
     whitelist: [
       "RiotShielder",

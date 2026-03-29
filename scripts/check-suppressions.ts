@@ -54,7 +54,9 @@ async function main(): Promise<void> {
 
   // In CI mode, skip staged-diff check (quality-ratchet enforces total counts)
   if (process.argv.includes("--ci")) {
-    console.log("CI mode: skipping staged-diff check (quality-ratchet covers this)");
+    console.log(
+      "CI mode: skipping staged-diff check (quality-ratchet covers this)",
+    );
     return;
   }
 

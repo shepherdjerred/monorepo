@@ -8,9 +8,9 @@ export function createMinecraftStoneblock4App(chart: Chart) {
       "https://www.curseforge.com/minecraft/modpacks/ftb-stoneblock-4",
     hostname: "stoneblock4.sjer.red",
     motd: "FTB StoneBlock 4",
-    memory: "6G",
-    resourceRequests: { memory: "8Gi", cpu: "1" },
-    resourceLimits: { memory: "8Gi" },
+    memory: "12G",
+    resourceRequests: { memory: "16Gi", cpu: "1" },
+    resourceLimits: { memory: "16Gi" },
     storageGi: 32,
     whitelist: [
       "RiotShielder",
