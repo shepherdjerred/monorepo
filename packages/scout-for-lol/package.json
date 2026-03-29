@@ -1,13 +1,16 @@
 {
   "name": "scout-for-lol",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "build": "for d in packages/*/; do (cd \"$d\" && bun run build); done",
-    "typecheck": "for d in packages/*/; do (cd \"$d\" && bun run typecheck); done",
-    "lint": "for d in packages/*/; do (cd \"$d\" && bun run lint); done",
+    "build": "bun run --filter='./packages/*' build",
+    "typecheck": "bun run --filter='./packages/*' typecheck",
+    "lint": "bun run --filter='./packages/*' lint",
     "lint:ci": "bunx eslint packages/ --format json --output-file eslint-report.json || true",
-    "format": "for d in packages/*/; do (cd \"$d\" && bun run format); done",
-    "test": "for d in packages/*/; do (cd \"$d\" && bun run test); done",
+    "format": "bun run --filter='./packages/*' format",
+    "test": "bun run --filter='./packages/*' test",
     "clean": "rm -rf node_modules packages/*/node_modules",
     "generate": "bun run --cwd packages/backend generate",
     "knip": "knip-bun",
