@@ -277,7 +277,7 @@ export class Monorepo {
         .withExec([
           "bash",
           "-c",
-          "curl -fsSL https://nodejs.org/dist/v22.16.0/node-v22.16.0-linux-x64.tar.xz | tar -xJ --strip-components=1 -C /opt/node && export PATH=/opt/node/bin:$PATH && bun install --frozen-lockfile && bun run generate",
+          "mkdir -p /opt/node && curl -fsSL https://nodejs.org/dist/v22.16.0/node-v22.16.0-linux-x64.tar.xz | tar -xJ --strip-components=1 -C /opt/node && export PATH=/opt/node/bin:$PATH && bun install --frozen-lockfile && bun run generate",
         ])
         .directory("/workspace")
     );
