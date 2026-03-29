@@ -115,6 +115,7 @@
     "packages/dotfiles/**",
     "packages/fonts/**",
     "packages/anki/**",
+    "packages/webring/example/**",
     "scripts/**"
   ]
 }

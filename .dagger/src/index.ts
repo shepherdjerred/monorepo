@@ -388,18 +388,28 @@ export class Monorepo {
     depNames: string[] = [],
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
+    homelabTsconfig: File | null = null,
     hassBaseUrl: string = "https://homeassistant.sjer.red",
   ): Directory {
-    return this.bunBase(pkgDir, "homelab/src/ha", depNames, depDirs, tsconfig, [
-      "nodejs",
-      "npm",
-    ])
-      // HA tsconfig extends ../../tsconfig.base.json (homelab level);
-      // pkgDir only contains src/ha, so mount the parent tsconfig too.
-      .withFile(
+    let container = this.bunBase(
+      pkgDir,
+      "homelab/src/ha",
+      depNames,
+      depDirs,
+      tsconfig,
+      ["nodejs", "npm"],
+    );
+
+    // HA tsconfig extends ../../tsconfig.base.json (homelab level);
+    // pkgDir only contains src/ha, so mount the parent tsconfig too.
+    if (homelabTsconfig != null) {
+      container = container.withFile(
         "/workspace/packages/homelab/tsconfig.base.json",
-        dag.host().file("packages/homelab/tsconfig.base.json"),
-      )
+        homelabTsconfig,
+      );
+    }
+
+    return container
       .withSecretVariable("HASS_TOKEN", hassToken)
       .withEnvVariable("HASS_BASE_URL", hassBaseUrl)
       .withExec(["bun", "run", "generate-types"])
@@ -414,6 +424,7 @@ export class Monorepo {
     depNames: string[] = [],
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
+    homelabTsconfig: File | null = null,
   ): Promise<string> {
     const generated = this.haGenerate(
       pkgDir,
@@ -421,6 +432,7 @@ export class Monorepo {
       depNames,
       depDirs,
       tsconfig,
+      homelabTsconfig,
     );
     return dag
       .container()
@@ -443,6 +455,7 @@ export class Monorepo {
     depNames: string[] = [],
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
+    homelabTsconfig: File | null = null,
   ): Promise<string> {
     const generated = this.haGenerate(
       pkgDir,
@@ -450,6 +463,7 @@ export class Monorepo {
       depNames,
       depDirs,
       tsconfig,
+      homelabTsconfig,
     );
     return dag
       .container()

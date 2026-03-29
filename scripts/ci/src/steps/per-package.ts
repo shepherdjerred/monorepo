@@ -119,6 +119,7 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
         `--dep-dirs ./packages/${dep}`,
       ]),
       `--tsconfig ./tsconfig.base.json`,
+      `--homelab-tsconfig ./packages/homelab/tsconfig.base.json`,
     ].join(" ");
     steps.push(
       daggerCallStep(
