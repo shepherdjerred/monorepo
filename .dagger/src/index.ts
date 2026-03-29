@@ -272,13 +272,17 @@ export class Monorepo {
     return (
       this.bunBase(pkgDir, pkg, depNames, depDirs, tsconfig, extraAptPackages)
         .withWorkdir(`/workspace/packages/${pkg}`)
-        // Install Node.js 22 for Prisma (its preinstall checks node version;
-        // without a real Node.js, prisma binary is never created during bun install)
+        // Install Node.js 22 for Prisma — its preinstall checks node version
+        // and Bun's node wrapper fails the check. Install node to /opt/node,
+        // then run bun run generate (which calls bunx prisma generate — bunx
+        // will now find a valid node and the preinstall succeeds).
         .withExec([
           "bash",
           "-c",
-          "mkdir -p /opt/node && curl -fsSL https://nodejs.org/dist/v22.16.0/node-v22.16.0-linux-x64.tar.xz | tar -xJ --strip-components=1 -C /opt/node && export PATH=/opt/node/bin:$PATH && bun install --frozen-lockfile && bun run generate",
+          "mkdir -p /opt/node && curl -fsSL https://nodejs.org/dist/v22.16.0/node-v22.16.0-linux-x64.tar.xz | tar -xJ --strip-components=1 -C /opt/node",
         ])
+        .withEnvVariable("PATH", "/opt/node/bin:/usr/local/bin:/usr/bin:/bin")
+        .withExec(["bun", "run", "generate"])
         .directory("/workspace")
     );
   }
