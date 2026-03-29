@@ -51,7 +51,7 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
   if (PRISMA_PACKAGES.has(pkg)) {
     // Prisma: combined generate+action in a single dagger pipeline (avoids nested CLI calls)
     // Prisma needs curl (to download Node.js) for its preinstall check
-    const prismaFlags = `${pf} --extra-apt-packages curl`;
+    const prismaFlags = `${pf} --extra-apt-packages curl --extra-apt-packages ca-certificates --extra-apt-packages xz-utils`;
     steps.push(
       daggerCallStep(
         `:eslint: Lint`,
