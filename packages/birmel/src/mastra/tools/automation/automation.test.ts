@@ -62,17 +62,6 @@ function getStringField(
 
 describe("Phase 1: Shell Tool", () => {
   test("executes Python code", async () => {
-    try {
-      const proc = Bun.spawnSync(["python3", "--version"]);
-      if (proc.exitCode !== 0) {
-        console.log("Python3 not available, skipping test");
-        return;
-      }
-    } catch {
-      console.log("Python3 not available, skipping test");
-      return;
-    }
-
     const result = await executeTool(executeShellCommandTool, {
       command: "python3",
       args: ["-c", "print('Hello from Python')"],

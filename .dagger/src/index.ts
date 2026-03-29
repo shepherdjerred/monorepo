@@ -121,8 +121,6 @@ export class Monorepo {
         "python3-setuptools",
         "make",
         "g++",
-        "nodejs",
-        "npm",
       ])
       .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
       .withWorkdir(`/workspace/packages/${pkg}`)

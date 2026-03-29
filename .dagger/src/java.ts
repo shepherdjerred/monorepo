@@ -20,7 +20,13 @@ export function mavenBuildHelper(pkgDir: Directory): Container {
     .withDirectory("/workspace", pkgDir, {
       exclude: [".git", "target"],
     })
-    .withExec(["mvn", "package", "-DskipTests"]);
+    .withExec([
+      "mvn",
+      "package",
+      "-DskipTests",
+      "-Dmaven.wagon.http.connectionTimeout=10000",
+      "-Dmaven.wagon.http.readTimeout=30000",
+    ]);
 }
 
 /** Test a Maven project (castle-casters) with `mvn test`. */
@@ -33,5 +39,10 @@ export function mavenTestHelper(pkgDir: Directory): Container {
     .withDirectory("/workspace", pkgDir, {
       exclude: [".git", "target"],
     })
-    .withExec(["mvn", "test"]);
+    .withExec([
+      "mvn",
+      "test",
+      "-Dmaven.wagon.http.connectionTimeout=10000",
+      "-Dmaven.wagon.http.readTimeout=30000",
+    ]);
 }
