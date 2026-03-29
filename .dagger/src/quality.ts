@@ -59,12 +59,7 @@ export function complianceCheckHelper(source: Directory): Container {
 export function knipCheckHelper(source: Directory): Container {
   return bunContainer(source)
     .withExec(["bun", "install"])
-    .withExec([
-      "bunx",
-      "knip",
-      "--no-exit-code",
-      "--no-config-hints",
-    ]);
+    .withExec(["bunx", "knip", "--no-exit-code", "--no-config-hints"]);
 }
 
 /** Run gitleaks to detect secrets in the source tree. */
@@ -91,7 +86,5 @@ export function suppressionCheckHelper(source: Directory): Container {
       "--no-install-recommends",
       "git",
     ])
-    .withDirectory("/workspace/.git", source.directory(".git"))
-    .withExec(["rm", "-f", "/workspace/.git/objects/info/alternates"])
-    .withExec(["bun", "scripts/check-suppressions.ts"]);
+    .withExec(["bun", "scripts/check-suppressions.ts", "--ci"]);
 }
