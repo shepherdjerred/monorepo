@@ -415,11 +415,12 @@ export class Monorepo {
     return (
       this.generateContainer(pkgDir, pkg, depNames, depDirs, tsconfig)
         .withEnvVariable("DATABASE_URL", "file:./test.db")
-        // Push schema to test DB so Prisma queries don't fail on missing tables
+        // Push schema to test DB so Prisma queries don't fail on missing tables.
+        // Find prisma schema dirs and push each one.
         .withExec([
           "bash",
           "-c",
-          "bunx --trust prisma@6 db push --skip-generate --accept-data-loss 2>/dev/null || true",
+          "for d in $(find . -name schema.prisma -path '*/prisma/*' -not -path '*/node_modules/*' | xargs -I{} dirname {} | xargs -I{} dirname {}); do (cd \"$d\" && bunx --trust prisma@6 db push --skip-generate --accept-data-loss); done",
         ])
         .withExec(["bun", "run", "test"])
         .stdout()
