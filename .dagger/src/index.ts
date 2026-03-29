@@ -302,10 +302,8 @@ export class Monorepo {
     return dag
       .container()
       .from(BUN_IMAGE)
-      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
       .withWorkdir(`/workspace/packages/${pkg}`)
       .withDirectory("/workspace", generated)
-      .withExec(["bun", "install", "--frozen-lockfile"])
       .withMountedCache(
         `/workspace/packages/${pkg}/.eslintcache`,
         dag.cacheVolume(ESLINT_CACHE),
@@ -334,10 +332,8 @@ export class Monorepo {
         "make",
         "g++",
       ])
-      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
       .withWorkdir(`/workspace/packages/${pkg}`)
-      .withDirectory("/workspace", generated)
-      .withExec(["bun", "install", "--frozen-lockfile"]);
+      .withDirectory("/workspace", generated);
   }
 
   /** Run typecheck with pre-generated workspace */
