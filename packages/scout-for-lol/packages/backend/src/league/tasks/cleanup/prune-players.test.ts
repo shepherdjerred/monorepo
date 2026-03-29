@@ -111,7 +111,7 @@ function setupTestDatabase(): {
   return { prisma, testDir, testDbPath };
 }
 
-describe.serial("pruneOrphanedPlayers", () => {
+describe("pruneOrphanedPlayers", () => {
   let prisma: ExtendedPrismaClient;
   let testDir: string;
 
