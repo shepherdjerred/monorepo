@@ -275,6 +275,7 @@ export class Monorepo {
         // Symlink hoisted bins into sub-package node_modules/.bin so that
         // workspace sub-package scripts can find them (e.g. prisma, prettier).
         // Bun hoists bins to root but sub-package scripts only see local bins.
+        .withEnvVariable("_CACHE_BUST", "v2")
         .withExec([
           "bash",
           "-c",
