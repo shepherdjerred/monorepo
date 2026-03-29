@@ -269,17 +269,16 @@ export class Monorepo {
     tsconfig: File | null = null,
     extraAptPackages: string[] = [],
   ): Directory {
-    return this.bunBase(
-      pkgDir,
-      pkg,
-      depNames,
-      depDirs,
-      tsconfig,
-      extraAptPackages,
-    )
-      .withWorkdir(`/workspace/packages/${pkg}`)
-      .withExec(["bun", "run", "generate"])
-      .directory("/workspace");
+    return (
+      this.bunBase(pkgDir, pkg, depNames, depDirs, tsconfig, extraAptPackages)
+        .withWorkdir(`/workspace/packages/${pkg}`)
+        // Remove Bun's node wrapper — Prisma's preinstall script checks
+        // `node --version` and rejects Bun's wrapper. Without a `node` binary,
+        // Prisma skips the check entirely and runs under Bun.
+        .withExec(["rm", "-f", "/usr/local/bin/node"])
+        .withExec(["bun", "run", "generate"])
+        .directory("/workspace")
+    );
   }
 
   /** Run lint with pre-generated workspace (e.g. after Prisma generate) */
