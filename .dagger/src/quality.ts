@@ -61,12 +61,7 @@ export function knipCheckHelper(source: Directory): Container {
     .withExec([
       "bash",
       "-c",
-      'for dir in packages/*/; do [ -f "$dir/bun.lock" ] && (cd "$dir" && bun install --frozen-lockfile 2>/dev/null || bun install) || true; done',
-    ])
-    .withExec([
-      "bash",
-      "-c",
-      'for dir in packages/*/packages/*/; do [ -f "$dir/package.json" ] && (cd "$dir" && bun install 2>/dev/null) || true; done',
+      'for dir in $(find packages/ -name bun.lock -not -path "*/node_modules/*" | xargs -I{} dirname {}); do (cd "$dir" && bun install --frozen-lockfile 2>/dev/null || bun install) || true; done',
     ])
     .withExec(["bunx", "knip", "--no-exit-code", "--no-config-hints"]);
 }

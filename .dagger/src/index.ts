@@ -153,10 +153,16 @@ export class Monorepo {
       }
     }
 
-    // Per-package lockfile — frozen install (after deps are built so file: refs find dist/)
+    // Per-package lockfile — try frozen install, fall back to regular install
+    // (Bun has a known issue where file: protocol deps in workspaces always
+    // trigger "lockfile had changes" even when the lockfile was just generated)
     container = container
       .withWorkdir(`/workspace/packages/${pkg}`)
-      .withExec(["bun", "install", "--frozen-lockfile"]);
+      .withExec([
+        "bash",
+        "-c",
+        "bun install --frozen-lockfile 2>/dev/null || bun install",
+      ]);
 
     return container;
   }
