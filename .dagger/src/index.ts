@@ -269,17 +269,14 @@ export class Monorepo {
     tsconfig: File | null = null,
     extraAptPackages: string[] = [],
   ): Directory {
-    return this.bunBase(
-      pkgDir,
-      pkg,
-      depNames,
-      depDirs,
-      tsconfig,
-      extraAptPackages,
-    )
-      .withWorkdir(`/workspace/packages/${pkg}`)
-      .withExec(["bun", "run", "generate"])
-      .directory("/workspace");
+    return (
+      this.bunBase(pkgDir, pkg, depNames, depDirs, tsconfig, extraAptPackages)
+        .withWorkdir(`/workspace/packages/${pkg}`)
+        // Cache-bust: force re-execution after Prisma/bunx fix
+        .withEnvVariable("CACHE_BUST", "2026-03-29")
+        .withExec(["bun", "run", "generate"])
+        .directory("/workspace")
+    );
   }
 
   /** Run lint with pre-generated workspace (e.g. after Prisma generate) */
