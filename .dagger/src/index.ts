@@ -167,10 +167,15 @@ export class Monorepo {
       }
     }
 
-    // Per-package lockfile — frozen install (after deps are built so file: refs find dist/)
+    // Per-package lockfile — try frozen install first, fall back to non-frozen
+    // (lockfile may differ between local monorepo context and isolated Dagger container)
     container = container
       .withWorkdir(`/workspace/packages/${pkg}`)
-      .withExec(["bun", "install", "--frozen-lockfile"]);
+      .withExec([
+        "bash",
+        "-c",
+        "bun install --frozen-lockfile 2>/dev/null || bun install",
+      ]);
 
     return container;
   }
