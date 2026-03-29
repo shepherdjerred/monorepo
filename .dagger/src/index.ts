@@ -265,6 +265,19 @@ export class Monorepo {
   // Prisma generation (run once, reuse across lint/typecheck/test)
   // ---------------------------------------------------------------------------
 
+  /** Run bun run generate and return the container (for chaining lint/typecheck/test) */
+  private generateContainer(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Container {
+    return this.bunBase(pkgDir, pkg, depNames, depDirs, tsconfig)
+      .withWorkdir(`/workspace/packages/${pkg}`)
+      .withExec(["bun", "run", "generate"]);
+  }
+
   /** Run bun run generate for a package and return the workspace with generated files */
   @func()
   generate(
@@ -274,10 +287,13 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
   ): Directory {
-    return this.bunBase(pkgDir, pkg, depNames, depDirs, tsconfig)
-      .withWorkdir(`/workspace/packages/${pkg}`)
-      .withExec(["bun", "run", "generate"])
-      .directory("/workspace");
+    return this.generateContainer(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      tsconfig,
+    ).directory("/workspace");
   }
 
   /** Run lint with pre-generated workspace (e.g. after Prisma generate) */
@@ -308,35 +324,28 @@ export class Monorepo {
    * the same system tools (python3, make, g++) available.
    */
   private generatedBase(generated: Directory, pkg: string): Container {
-    return (
-      dag
-        .container()
-        .from(BUN_IMAGE)
-        .withExec(["apt-get", "update", "-qq"])
-        .withExec([
-          "apt-get",
-          "install",
-          "-y",
-          "-qq",
-          "--no-install-recommends",
-          "python3",
-          "make",
-          "g++",
-        ])
-        .withMountedCache(
-          "/root/.bun/install/cache",
-          dag.cacheVolume(BUN_CACHE),
-        )
-        .withWorkdir(`/workspace/packages/${pkg}`)
-        .withDirectory("/workspace", generated)
-        // Provide DATABASE_URL for Prisma client init in tests
-        .withEnvVariable("DATABASE_URL", "file:./test.db")
-        .withExec([
-          "bash",
-          "-c",
-          "bun install --frozen-lockfile 2>/dev/null || bun install",
-        ])
-    );
+    return dag
+      .container()
+      .from(BUN_IMAGE)
+      .withExec(["apt-get", "update", "-qq"])
+      .withExec([
+        "apt-get",
+        "install",
+        "-y",
+        "-qq",
+        "--no-install-recommends",
+        "python3",
+        "make",
+        "g++",
+      ])
+      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
+      .withWorkdir(`/workspace/packages/${pkg}`)
+      .withDirectory("/workspace", generated)
+      .withExec([
+        "bash",
+        "-c",
+        "bun install --frozen-lockfile 2>/dev/null || bun install",
+      ]);
   }
 
   /** Run typecheck with pre-generated workspace */
@@ -362,7 +371,7 @@ export class Monorepo {
   // Combined generate + action (avoids nested CLI calls / SSH serialization)
   // ---------------------------------------------------------------------------
 
-  /** Generate then lint in a single pipeline */
+  /** Generate then lint — chains on the same container to avoid SIGILL from bun install in fresh containers */
   @func()
   async generateAndLint(
     pkgDir: Directory,
@@ -371,11 +380,16 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
   ): Promise<string> {
-    const generated = this.generate(pkgDir, pkg, depNames, depDirs, tsconfig);
-    return this.lintWithGenerated(generated, pkg);
+    return this.generateContainer(pkgDir, pkg, depNames, depDirs, tsconfig)
+      .withMountedCache(
+        `/workspace/packages/${pkg}/.eslintcache`,
+        dag.cacheVolume(ESLINT_CACHE),
+      )
+      .withExec(["bun", "run", "lint"])
+      .stdout();
   }
 
-  /** Generate then typecheck in a single pipeline */
+  /** Generate then typecheck — chains on the same container */
   @func()
   async generateAndTypecheck(
     pkgDir: Directory,
@@ -384,11 +398,12 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
   ): Promise<string> {
-    const generated = this.generate(pkgDir, pkg, depNames, depDirs, tsconfig);
-    return this.typecheckWithGenerated(generated, pkg);
+    return this.generateContainer(pkgDir, pkg, depNames, depDirs, tsconfig)
+      .withExec(["bun", "run", "typecheck"])
+      .stdout();
   }
 
-  /** Generate then test in a single pipeline */
+  /** Generate then test — chains on the same container */
   @func()
   async generateAndTest(
     pkgDir: Directory,
@@ -397,8 +412,10 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
   ): Promise<string> {
-    const generated = this.generate(pkgDir, pkg, depNames, depDirs, tsconfig);
-    return this.testWithGenerated(generated, pkg);
+    return this.generateContainer(pkgDir, pkg, depNames, depDirs, tsconfig)
+      .withEnvVariable("DATABASE_URL", "file:./test.db")
+      .withExec(["bun", "run", "test"])
+      .stdout();
   }
 
   // ---------------------------------------------------------------------------
