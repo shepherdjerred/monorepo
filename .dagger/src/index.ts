@@ -272,9 +272,13 @@ export class Monorepo {
     return (
       this.bunBase(pkgDir, pkg, depNames, depDirs, tsconfig, extraAptPackages)
         .withWorkdir(`/workspace/packages/${pkg}`)
-        // Cache-bust: force re-execution after Prisma/bunx fix
-        .withEnvVariable("CACHE_BUST", "2026-03-29")
-        .withExec(["bun", "run", "generate"])
+        // Ensure workspace root node_modules/.bin is on PATH so sub-packages
+        // can find hoisted binaries (e.g. prisma, prettier) without bunx
+        .withExec([
+          "bash",
+          "-c",
+          `export PATH="/workspace/packages/${pkg}/node_modules/.bin:$PATH" && bun run generate`,
+        ])
         .directory("/workspace")
     );
   }
