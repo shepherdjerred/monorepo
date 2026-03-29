@@ -9,7 +9,7 @@
     "format": "bun run --filter='./packages/*' format",
     "test": "bun run --filter='./packages/*' test",
     "clean": "rm -rf node_modules packages/*/node_modules",
-    "generate": "cd packages/backend && bun run generate",
+    "generate": "bun run --cwd packages/backend generate",
     "knip": "knip-bun",
     "knip:ci": "knip-bun --reporter json > knip-report.json || true",
     "duplication-check": "bun run scripts/check-duplication.ts"
