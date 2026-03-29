@@ -269,21 +269,18 @@ export class Monorepo {
     tsconfig: File | null = null,
     extraAptPackages: string[] = [],
   ): Directory {
-    return (
-      this.bunBase(pkgDir, pkg, depNames, depDirs, tsconfig, extraAptPackages)
-        .withWorkdir(`/workspace/packages/${pkg}`)
-        // Symlink hoisted bins into sub-package node_modules/.bin so that
-        // workspace sub-package scripts can find them (e.g. prisma, prettier).
-        // Bun hoists bins to root but sub-package scripts only see local bins.
-        .withEnvVariable("_CACHE_BUST", "v2")
-        .withExec([
-          "bash",
-          "-c",
-          'for dir in packages/*/node_modules/.bin; do for bin in node_modules/.bin/*; do ln -sf "$(readlink -f "$bin")" "$dir/$(basename "$bin")" 2>/dev/null; done; done; true',
-        ])
-        .withExec(["bun", "run", "generate"])
-        .directory("/workspace")
-    );
+    return this.bunBase(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      tsconfig,
+      extraAptPackages,
+    )
+      .withWorkdir(`/workspace/packages/${pkg}`)
+      .withEnvVariable("_CACHE_BUST", "v3")
+      .withExec(["bun", "run", "generate"])
+      .directory("/workspace");
   }
 
   /** Run lint with pre-generated workspace (e.g. after Prisma generate) */
