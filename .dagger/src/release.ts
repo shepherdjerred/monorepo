@@ -237,7 +237,26 @@ export function deploySiteHelper(
     );
   }
 
+  container = container.withExec([
+    "bash",
+    "-c",
+    "bun install --frozen-lockfile 2>/dev/null || bun install",
+  ]);
+
+  // Build workspace deps that need compilation (e.g. astro-opengraph-images)
+  for (const dep of depNames) {
+    container = container
+      .withWorkdir(`/workspace/packages/${dep}`)
+      .withExec([
+        "bash",
+        "-c",
+        "bun install --frozen-lockfile 2>/dev/null || bun install",
+      ])
+      .withExec(["sh", "-c", "bun run build 2>/dev/null || true"]);
+  }
+
   container = container
+    .withWorkdir(`/workspace/packages/${pkg}`)
     .withExec([
       "bash",
       "-c",
