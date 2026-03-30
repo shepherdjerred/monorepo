@@ -243,11 +243,18 @@ export function deploySiteHelper(
     "bun install --frozen-lockfile 2>/dev/null || bun install",
   ]);
 
-  // Build workspace deps that need compilation (e.g. astro-opengraph-images)
-  for (const dep of depNames) {
+  // Build workspace deps that need compilation (e.g. astro-opengraph-images).
+  // Skip eslint-config (lint-only dep, no dist/ needed for site build).
+  const buildDeps = depNames.filter((d) => d !== "eslint-config");
+  for (const dep of buildDeps) {
     container = container
       .withWorkdir(`/workspace/packages/${dep}`)
-      .withExec(["sh", "-c", "bun run build 2>/dev/null || true"]);
+      .withExec([
+        "bash",
+        "-c",
+        "bun install --frozen-lockfile 2>/dev/null || bun install",
+      ])
+      .withExec(["bun", "run", "build"]);
   }
 
   container = container
