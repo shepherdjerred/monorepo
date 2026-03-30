@@ -247,21 +247,11 @@ export function deploySiteHelper(
   for (const dep of depNames) {
     container = container
       .withWorkdir(`/workspace/packages/${dep}`)
-      .withExec([
-        "bash",
-        "-c",
-        "bun install --frozen-lockfile 2>/dev/null || bun install",
-      ])
       .withExec(["sh", "-c", "bun run build 2>/dev/null || true"]);
   }
 
   container = container
     .withWorkdir(`/workspace/packages/${pkg}`)
-    .withExec([
-      "bash",
-      "-c",
-      "bun install --frozen-lockfile 2>/dev/null || bun install",
-    ])
     .withSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyId)
     .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey);
 
