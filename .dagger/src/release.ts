@@ -61,13 +61,9 @@ export function helmPackageHelper(
       `if [ -f /cdk8s-dist/${chartName}.k8s.yaml ]; then mkdir -p templates && cp /cdk8s-dist/${chartName}.k8s.yaml templates/; fi`,
     ])
     .withExec([
-      "helm",
-      "package",
-      ".",
-      "--version",
-      version,
-      "--app-version",
-      version,
+      "sh",
+      "-c",
+      `sed -i 's/\\$version/${version}/g; s/\\$appVersion/${version}/g' Chart.yaml && helm package . --version ${version} --app-version ${version}`,
     ])
     .withSecretVariable("CHARTMUSEUM_PASSWORD", chartMuseumPassword);
 
