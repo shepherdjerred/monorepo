@@ -20,13 +20,12 @@ function imagePushStep(
     .flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`])
     .join(" ");
   const cmd = [
-    'echo "DEBUG: GH_TOKEN length=$(echo -n $GH_TOKEN | wc -c)" &&',
     `DIGEST=$(dagger call push-image --pkg-dir ./packages/${pkg} --pkg ${img.name}`,
     depFlags,
     `--tag ghcr.io/${img.versionKey}:latest`,
     `--registry-username shepherdjerred`,
     `--registry-password env:GH_TOKEN)`,
-    `&& buildkite-agent meta-data set "digest:${img.versionKey}" "$DIGEST"`,
+    `&& if [ -n "$DIGEST" ]; then buildkite-agent meta-data set "digest:${img.versionKey}" "$DIGEST"; else echo "WARN: empty digest for ${img.name}"; fi`,
   ]
     .filter(Boolean)
     .join(" ");

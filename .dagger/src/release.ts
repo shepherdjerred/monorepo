@@ -4,7 +4,7 @@
  * These are plain functions (not decorated) — the @func() wrappers live in index.ts.
  * All deploy/publish operations should use @func({ cache: "never" }) in the wrapper.
  */
-import { dag, Container, Directory, Secret } from "@dagger.io/dagger";
+import { dag, Container, Directory, File, Secret } from "@dagger.io/dagger";
 
 // renovate: datasource=docker depName=alpine
 const ALPINE_IMAGE = "alpine:3.21";
@@ -337,6 +337,7 @@ export function cooklangBuildHelper(
   pkgDir: Directory,
   depNames: string[] = [],
   depDirs: Directory[] = [],
+  tsconfig: File | null = null,
 ): Container {
   let container = dag
     .container()
@@ -346,6 +347,10 @@ export function cooklangBuildHelper(
     .withDirectory("/workspace/packages/cooklang-rich-preview", pkgDir, {
       exclude: SOURCE_EXCLUDES,
     });
+
+  if (tsconfig != null) {
+    container = container.withFile("/workspace/tsconfig.base.json", tsconfig);
+  }
 
   // Mount deps at correct relative paths for file: protocol resolution
   for (let i = 0; i < depNames.length; i++) {

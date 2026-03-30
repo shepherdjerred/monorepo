@@ -1405,8 +1405,9 @@ export class Monorepo {
     pkgDir: Directory,
     depNames: string[] = [],
     depDirs: Directory[] = [],
+    tsconfig: File | null = null,
   ): Promise<string> {
-    return cooklangBuildHelper(pkgDir, depNames, depDirs).stdout();
+    return cooklangBuildHelper(pkgDir, depNames, depDirs, tsconfig).stdout();
   }
 
   /** Push cooklang artifacts to GitHub repository */
