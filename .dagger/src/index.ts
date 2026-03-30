@@ -605,8 +605,12 @@ export class Monorepo {
 
     // Install deps then set up the final image
     return container
-      .withExec(["bun", "install"])
       .withWorkdir(`/workspace/packages/${pkg}`)
+      .withExec([
+        "bash",
+        "-c",
+        "bun install --frozen-lockfile 2>/dev/null || bun install",
+      ])
       .withLabel(
         "org.opencontainers.image.source",
         "https://github.com/shepherdjerred/monorepo",
