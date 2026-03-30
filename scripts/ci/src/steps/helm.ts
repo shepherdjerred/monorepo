@@ -19,7 +19,7 @@ function cdk8sSynthStep(dependsOn: string[]): BuildkiteStep {
     key: "homelab-cdk8s",
     if: MAIN_ONLY,
     depends_on: dependsOn,
-    command: `dagger call homelab-synth --pkg-dir ./packages/homelab/src/cdk8s --pkg homelab/src/cdk8s ${depFlags} --tsconfig ./tsconfig.base.json`,
+    command: `dagger call homelab-synth --pkg-dir ./packages/homelab/src/cdk8s ${depFlags} --tsconfig ./tsconfig.base.json`,
     timeout_in_minutes: 15,
     retry: RETRY,
     env: DAGGER_ENV,

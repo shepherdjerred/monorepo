@@ -158,7 +158,11 @@ export function publishNpmHelper(
 
   return (
     container
-      .withExec(["bun", "install", "--frozen-lockfile"])
+      .withExec([
+        "bash",
+        "-c",
+        "bun install --frozen-lockfile 2>/dev/null || bun install",
+      ])
       // Replace file: refs with actual versions before publishing
       .withExec([
         "sh",
@@ -238,7 +242,11 @@ export function deploySiteHelper(
   }
 
   container = container
-    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withExec([
+      "bash",
+      "-c",
+      "bun install --frozen-lockfile 2>/dev/null || bun install",
+    ])
     .withSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyId)
     .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey);
 
@@ -380,7 +388,11 @@ export function cooklangPushHelper(
   const container = dag
     .container()
     .from(ALPINE_IMAGE)
-    .withExec(["apk", "add", "--no-cache", "curl", "git", "gh"])
+    .withExec([
+      "sh",
+      "-c",
+      "apk add --no-cache curl git && curl -fsSL https://github.com/cli/cli/releases/download/v2.74.0/gh_2.74.0_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_2.74.0_linux_amd64/bin/gh",
+    ])
     .withSecretVariable("GH_TOKEN", ghToken)
     .withWorkdir("/artifacts")
     .withDirectory("/artifacts", source);
@@ -421,7 +433,11 @@ export function clauderonUploadHelper(
   const container = dag
     .container()
     .from(ALPINE_IMAGE)
-    .withExec(["apk", "add", "--no-cache", "gh"])
+    .withExec([
+      "sh",
+      "-c",
+      "apk add --no-cache curl && curl -fsSL https://github.com/cli/cli/releases/download/v2.74.0/gh_2.74.0_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_2.74.0_linux_amd64/bin/gh",
+    ])
     .withSecretVariable("GH_TOKEN", ghToken)
     .withWorkdir("/artifacts")
     .withDirectory("/artifacts", binaries);
@@ -454,7 +470,11 @@ export function versionCommitBackHelper(
   const container = dag
     .container()
     .from(ALPINE_IMAGE)
-    .withExec(["apk", "add", "--no-cache", "git", "gh", "jq", "sed"])
+    .withExec([
+      "sh",
+      "-c",
+      "apk add --no-cache git jq sed curl && curl -fsSL https://github.com/cli/cli/releases/download/v2.74.0/gh_2.74.0_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_2.74.0_linux_amd64/bin/gh",
+    ])
     .withSecretVariable("GH_TOKEN", ghToken);
 
   if (dryrun) {
@@ -592,7 +612,11 @@ export function cooklangCreateReleaseHelper(
   const container = dag
     .container()
     .from(ALPINE_IMAGE)
-    .withExec(["apk", "add", "--no-cache", "gh"])
+    .withExec([
+      "sh",
+      "-c",
+      "apk add --no-cache curl && curl -fsSL https://github.com/cli/cli/releases/download/v2.74.0/gh_2.74.0_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_2.74.0_linux_amd64/bin/gh",
+    ])
     .withSecretVariable("GH_TOKEN", ghToken)
     .withWorkdir("/artifacts")
     .withDirectory("/artifacts", artifacts);
