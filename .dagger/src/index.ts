@@ -174,6 +174,7 @@ export class Monorepo {
     return dag
       .container()
       .from(RUST_IMAGE)
+      .withExec(["dpkg", "--add-architecture", "arm64"])
       .withExec(["apt-get", "update", "-qq"])
       .withExec([
         "apt-get",
@@ -184,6 +185,7 @@ export class Monorepo {
         "libclang-dev",
         "pkg-config",
         "libssl-dev",
+        "libssl-dev:arm64",
         "mold",
         "gcc-aarch64-linux-gnu",
       ])
@@ -694,9 +696,34 @@ export class Monorepo {
     pkgDir: Directory,
     target: string = "x86_64-unknown-linux-gnu",
   ): Container {
-    return this.rustBase(pkgDir)
-      .withExec(["rustup", "target", "add", target])
-      .withExec(["cargo", "build", "--release", "--target", target]);
+    let container = this.rustBase(pkgDir).withExec([
+      "rustup",
+      "target",
+      "add",
+      target,
+    ]);
+
+    // Set cross-compilation env vars for aarch64
+    if (target === "aarch64-unknown-linux-gnu") {
+      container = container
+        .withEnvVariable(
+          "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER",
+          "aarch64-linux-gnu-gcc",
+        )
+        .withEnvVariable(
+          "PKG_CONFIG_PATH",
+          "/usr/lib/aarch64-linux-gnu/pkgconfig",
+        )
+        .withEnvVariable("PKG_CONFIG_SYSROOT_DIR", "/usr/aarch64-linux-gnu");
+    }
+
+    return container.withExec([
+      "cargo",
+      "build",
+      "--release",
+      "--target",
+      target,
+    ]);
   }
 
   // ---------------------------------------------------------------------------
