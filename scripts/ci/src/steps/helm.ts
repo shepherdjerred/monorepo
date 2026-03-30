@@ -2,7 +2,7 @@
  * Homelab Helm chart step generators.
  */
 import { HELM_CHARTS } from "../catalog.ts";
-import { RETRY, DAGGER_ENV } from "../lib/buildkite.ts";
+import { RETRY, DAGGER_ENV, DRYRUN_FLAG } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
@@ -33,8 +33,7 @@ function helmPushStep(): BuildkiteStep {
     key: "homelab-helm-push",
     if: MAIN_ONLY,
     depends_on: "homelab-cdk8s",
-    command:
-      "dagger call helm-package --source . --chart-dir packages/homelab/charts --chart-museum-password env:CHARTMUSEUM_PASSWORD",
+    command: `dagger call helm-package --source . --chart-dir packages/homelab/charts --chart-museum-password env:CHARTMUSEUM_PASSWORD${DRYRUN_FLAG}`,
     parallelism: HELM_CHARTS.length,
     timeout_in_minutes: 10,
     retry: RETRY,

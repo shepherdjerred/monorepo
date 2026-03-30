@@ -60,6 +60,7 @@ GITHUB_MATCHES=$(grep -n 'GITHUB_TOKEN' "$@" \
   | grep -v 'server-github expects' \
   | grep -v 'mcp-gateway' \
   | grep -v 'YOUR_GITHUB_TOKEN' \
+  | grep -v 'env:GITHUB_TOKEN' \
   || true)
 
 if [ -n "$GITHUB_MATCHES" ]; then

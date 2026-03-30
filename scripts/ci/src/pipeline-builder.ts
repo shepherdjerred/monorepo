@@ -94,14 +94,10 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     // Wait for all build/test to pass before release steps
     steps.push({ wait: "", if: "build.branch == pipeline.default_branch" });
 
-    const dryrun = process.env["DRYRUN"] === "true";
-
     // Release (always on main when there are releasable changes)
-    if (!dryrun) {
-      steps.push(releaseStep());
-    }
+    steps.push(releaseStep());
 
-    // --- Publish app images (Docker push OK in dryrun) ---
+    // --- Publish app images ---
     const hasImages = affected.buildAll || affected.hasImagePackages.size > 0;
     let appPushKeys: string[] = [];
     if (hasImages) {
@@ -109,77 +105,72 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
       appPushKeys = allPushKeys(IMAGE_PUSH_TARGETS);
     }
 
-    if (!dryrun) {
-      // --- Publish NPM packages ---
-      steps.push(publishNpmGroup());
+    // --- Publish NPM packages ---
+    steps.push(publishNpmGroup());
 
-      // --- Clauderon Release ---
-      if (affected.buildAll || affected.clauderonChanged) {
-        steps.push(clauderonReleaseGroup());
-      }
+    // --- Clauderon Release ---
+    if (affected.buildAll || affected.clauderonChanged) {
+      steps.push(clauderonReleaseGroup());
+    }
 
-      // --- Cooklang Release ---
-      if (affected.buildAll || affected.cooklangChanged) {
-        steps.push(cooklangReleaseGroup());
-      }
+    // --- Cooklang Release ---
+    if (affected.buildAll || affected.cooklangChanged) {
+      steps.push(cooklangReleaseGroup());
+    }
 
-      // --- Deploy sites ---
-      if (affected.buildAll || affected.hasSitePackages.size > 0) {
-        const sitesToDeploy = filterSites(
-          affected.hasSitePackages,
-          affected.buildAll,
-        );
-        const deployDeps = appPushKeys.length > 0 ? appPushKeys : ["release"];
-        steps.push(deploySitesGroup(sitesToDeploy, deployDeps));
-      }
+    // --- Deploy sites ---
+    if (affected.buildAll || affected.hasSitePackages.size > 0) {
+      const sitesToDeploy = filterSites(
+        affected.hasSitePackages,
+        affected.buildAll,
+      );
+      const deployDeps = appPushKeys.length > 0 ? appPushKeys : ["release"];
+      steps.push(deploySitesGroup(sitesToDeploy, deployDeps));
+    }
 
-      // --- Deploy ArgoCD sync (for app images) ---
-      if (hasImages) {
-        steps.push(argoCdSyncStep(appPushKeys));
-      }
+    // --- Deploy ArgoCD sync (for app images) ---
+    if (hasImages) {
+      steps.push(argoCdSyncStep(appPushKeys));
     }
 
     // --- Homelab release track ---
     if (affected.buildAll || affected.homelabChanged) {
-      // Homelab infra images (Docker push OK in dryrun)
+      // Homelab infra images (4 parallel)
       steps.push(homelabImagesGroup());
       const infraPushKeys = allPushKeys(INFRA_PUSH_TARGETS);
 
-      if (!dryrun) {
-        // Homelab Helm: cdk8s build -> helm chart push
-        steps.push(homelabHelmGroup(infraPushKeys));
+      // Homelab Helm: cdk8s build -> helm chart push
+      steps.push(homelabHelmGroup(infraPushKeys));
 
-        // Homelab Tofu: 3 parallel stacks
-        steps.push(homelabTofuGroup());
+      // Homelab Tofu: 3 parallel stacks
+      steps.push(homelabTofuGroup());
 
-        // Homelab ArgoCD sync (depends on helm push + all tofu stacks)
-        const argocdDeps = [
-          "homelab-helm-push",
-          ...TOFU_STACKS.map((s) => `tofu-${s}`),
-        ];
-        steps.push(
-          argoCdSyncStep(argocdDeps, {
-            key: "homelab-argocd-sync",
-            app: "apps",
-          }),
-        );
+      // Homelab ArgoCD sync (depends on helm push + all tofu stacks)
+      const argocdDeps = [
+        "homelab-helm-push",
+        ...TOFU_STACKS.map((s) => `tofu-${s}`),
+      ];
+      steps.push(
+        argoCdSyncStep(argocdDeps, {
+          key: "homelab-argocd-sync",
+          app: "apps",
+        }),
+      );
 
-        // Wait for ArgoCD healthy
-        steps.push(
-          argoCdHealthStep("homelab-argocd-sync", {
-            key: "homelab-argocd-health",
-            app: "apps",
-          }),
-        );
-      }
+      // Wait for ArgoCD healthy
+      steps.push(
+        argoCdHealthStep("homelab-argocd-sync", {
+          key: "homelab-argocd-health",
+          app: "apps",
+        }),
+      );
     }
 
     // --- Version Commit-Back ---
     if (
-      !dryrun &&
-      (affected.buildAll ||
-        affected.hasImagePackages.size > 0 ||
-        affected.homelabChanged)
+      affected.buildAll ||
+      affected.hasImagePackages.size > 0 ||
+      affected.homelabChanged
     ) {
       const vcbDeps: string[] = [];
       if (hasImages) {

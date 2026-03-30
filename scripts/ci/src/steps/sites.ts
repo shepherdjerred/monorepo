@@ -3,7 +3,7 @@
  */
 import type { DeploySite } from "../catalog.ts";
 import { DEPLOY_SITES, PACKAGE_TO_SITE } from "../catalog.ts";
-import { safeKey, RETRY, DAGGER_ENV } from "../lib/buildkite.ts";
+import { safeKey, RETRY, DAGGER_ENV, DRYRUN_FLAG } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 
@@ -38,7 +38,7 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
     key: `deploy-${safeKey(site.bucket)}`,
     if: MAIN_ONLY,
     depends_on: dependsOn,
-    command: args.join(" "),
+    command: args.join(" ") + DRYRUN_FLAG,
     timeout_in_minutes: 15,
     retry: RETRY,
     env: DAGGER_ENV,

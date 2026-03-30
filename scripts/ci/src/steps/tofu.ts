@@ -2,7 +2,7 @@
  * OpenTofu stack step generators.
  */
 import { TOFU_STACKS, TOFU_STACK_LABELS } from "../catalog.ts";
-import { RETRY, DAGGER_ENV } from "../lib/buildkite.ts";
+import { RETRY, DAGGER_ENV, DRYRUN_FLAG } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 
@@ -15,7 +15,7 @@ function tofuStackStep(stack: string): BuildkiteStep {
     key: `tofu-${stack}`,
     if: MAIN_ONLY,
     depends_on: "release",
-    command: `dagger call tofu-apply --source . --stack ${stack}`,
+    command: `dagger call tofu-apply --source . --stack ${stack}${DRYRUN_FLAG}`,
     timeout_in_minutes: 15,
     retry: RETRY,
     env: DAGGER_ENV,

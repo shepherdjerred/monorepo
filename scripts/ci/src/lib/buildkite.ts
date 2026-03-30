@@ -17,6 +17,9 @@ export const RETRY = {
   ],
 };
 
+/** Returns "--dryrun" if DRYRUN env var is set, empty string otherwise. */
+export const DRYRUN_FLAG = process.env["DRYRUN"] === "true" ? " --dryrun" : "";
+
 /** Dagger environment variables for CI steps. */
 export const DAGGER_ENV: Record<string, string> = {
   DAGGER_NO_NAG: "1",

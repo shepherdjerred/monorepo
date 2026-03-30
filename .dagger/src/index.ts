@@ -1280,6 +1280,7 @@ export class Monorepo {
     version: string,
     chartMuseumUsername: string,
     chartMuseumPassword: Secret,
+    dryrun = false,
   ): Promise<string> {
     return helmPackageHelper(
       source,
@@ -1287,6 +1288,7 @@ export class Monorepo {
       version,
       chartMuseumUsername,
       chartMuseumPassword,
+      dryrun,
     ).stdout();
   }
 
@@ -1299,6 +1301,7 @@ export class Monorepo {
     awsSecretAccessKey: Secret,
     ghToken: Secret,
     cloudflareAccountId: Secret | null = null,
+    dryrun = false,
   ): Promise<string> {
     return tofuApplyHelper(
       source,
@@ -1307,6 +1310,7 @@ export class Monorepo {
       awsSecretAccessKey,
       ghToken,
       cloudflareAccountId,
+      dryrun,
     ).stdout();
   }
 
@@ -1318,8 +1322,16 @@ export class Monorepo {
     npmToken: Secret,
     depNames: string[] = [],
     depDirs: Directory[] = [],
+    dryrun = false,
   ): Promise<string> {
-    return publishNpmHelper(pkgDir, pkg, npmToken, depNames, depDirs).stdout();
+    return publishNpmHelper(
+      pkgDir,
+      pkg,
+      npmToken,
+      depNames,
+      depDirs,
+      dryrun,
+    ).stdout();
   }
 
   /** Build and deploy a static site to S3 or R2 */
@@ -1336,6 +1348,7 @@ export class Monorepo {
     cloudflareAccountId: string = "",
     depNames: string[] = [],
     depDirs: Directory[] = [],
+    dryrun = false,
   ): Promise<string> {
     return deploySiteHelper(
       pkgDir,
@@ -1349,6 +1362,7 @@ export class Monorepo {
       cloudflareAccountId,
       depNames,
       depDirs,
+      dryrun,
     ).stdout();
   }
 
@@ -1358,8 +1372,9 @@ export class Monorepo {
     appName: string,
     argoCdToken: Secret,
     serverUrl: string = "https://argocd.sjer.red",
+    dryrun = false,
   ): Promise<string> {
-    return argoCdSyncHelper(appName, argoCdToken, serverUrl).stdout();
+    return argoCdSyncHelper(appName, argoCdToken, serverUrl, dryrun).stdout();
   }
 
   /** Wait for an ArgoCD application to become healthy */
@@ -1369,12 +1384,14 @@ export class Monorepo {
     argoCdToken: Secret,
     timeoutSeconds: number = 300,
     serverUrl: string = "https://argocd.sjer.red",
+    dryrun = false,
   ): Promise<string> {
     return argoCdHealthWaitHelper(
       appName,
       argoCdToken,
       timeoutSeconds,
       serverUrl,
+      dryrun,
     ).stdout();
   }
 
@@ -1394,8 +1411,9 @@ export class Monorepo {
     source: Directory,
     version: string,
     ghToken: Secret,
+    dryrun = false,
   ): Promise<string> {
-    return cooklangPushHelper(source, version, ghToken).stdout();
+    return cooklangPushHelper(source, version, ghToken, dryrun).stdout();
   }
 
   /** Build clauderon for multiple targets and collect binaries into one Directory */
@@ -1419,8 +1437,9 @@ export class Monorepo {
     binaries: Directory,
     version: string,
     ghToken: Secret,
+    dryrun = false,
   ): Promise<string> {
-    return clauderonUploadHelper(binaries, version, ghToken).stdout();
+    return clauderonUploadHelper(binaries, version, ghToken, dryrun).stdout();
   }
 
   /** Update versions.ts with new image digests and create auto-merge PR */
@@ -1429,14 +1448,19 @@ export class Monorepo {
     digests: string,
     version: string,
     ghToken: Secret,
+    dryrun = false,
   ): Promise<string> {
-    return versionCommitBackHelper(digests, version, ghToken).stdout();
+    return versionCommitBackHelper(digests, version, ghToken, dryrun).stdout();
   }
 
   /** Run release-please to create release PRs and GitHub releases */
   @func({ cache: "never" })
-  async releasePlease(source: Directory, ghToken: Secret): Promise<string> {
-    return releasePleaseHelper(source, ghToken).stdout();
+  async releasePlease(
+    source: Directory,
+    ghToken: Secret,
+    dryrun = false,
+  ): Promise<string> {
+    return releasePleaseHelper(source, ghToken, dryrun).stdout();
   }
 
   /** Create a GitHub release for cooklang-rich-preview */
@@ -1445,8 +1469,14 @@ export class Monorepo {
     artifacts: Directory,
     version: string,
     ghToken: Secret,
+    dryrun = false,
   ): Promise<string> {
-    return cooklangCreateReleaseHelper(artifacts, version, ghToken).stdout();
+    return cooklangCreateReleaseHelper(
+      artifacts,
+      version,
+      ghToken,
+      dryrun,
+    ).stdout();
   }
 
   /** Run AI code review on a PR */

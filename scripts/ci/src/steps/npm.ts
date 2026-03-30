@@ -2,7 +2,7 @@
  * NPM publish step generators.
  */
 import { NPM_PACKAGES } from "../catalog.ts";
-import { safeKey, RETRY, DAGGER_ENV } from "../lib/buildkite.ts";
+import { safeKey, RETRY, DAGGER_ENV, DRYRUN_FLAG } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
@@ -14,13 +14,14 @@ function npmPublishStep(pkg: { name: string; dir: string }): BuildkiteStep {
   const depFlags = deps
     .flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`])
     .join(" ");
-  const cmd = [
-    `dagger call publish-npm --pkg-dir ./${pkg.dir} --pkg ${pkg.name}`,
-    depFlags,
-    `--npm-token env:NPM_TOKEN`,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const cmd =
+    [
+      `dagger call publish-npm --pkg-dir ./${pkg.dir} --pkg ${pkg.name}`,
+      depFlags,
+      `--npm-token env:NPM_TOKEN`,
+    ]
+      .filter(Boolean)
+      .join(" ") + DRYRUN_FLAG;
   return {
     label: `:npm: Publish ${pkg.name}`,
     key: `npm-${safeKey(pkg.name)}`,

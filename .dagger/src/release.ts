@@ -43,39 +43,45 @@ export function helmPackageHelper(
   version: string,
   chartMuseumUsername: string,
   chartMuseumPassword: Secret,
+  dryrun = false,
 ): Container {
-  return (
-    dag
-      .container()
-      .from(ALPINE_IMAGE)
-      .withExec(["apk", "add", "--no-cache", "helm", "curl"])
-      .withWorkdir("/chart")
-      .withDirectory(
-        "/chart",
-        source.directory(`packages/homelab/src/cdk8s/helm/${chartName}`),
-      )
-      // Copy CDK8s manifest into templates/ if it exists
-      .withExec([
-        "sh",
-        "-c",
-        `if [ -f /cdk8s-dist/${chartName}.k8s.yaml ]; then mkdir -p templates && cp /cdk8s-dist/${chartName}.k8s.yaml templates/; fi`,
-      ])
-      .withExec([
-        "helm",
-        "package",
-        ".",
-        "--version",
-        version,
-        "--app-version",
-        version,
-      ])
-      .withSecretVariable("CHARTMUSEUM_PASSWORD", chartMuseumPassword)
-      .withExec([
-        "sh",
-        "-c",
-        `curl -sf -u "${chartMuseumUsername}:$CHARTMUSEUM_PASSWORD" --data-binary @$(ls *.tgz) https://chartmuseum.sjer.red/api/charts`,
-      ])
-  );
+  let container = dag
+    .container()
+    .from(ALPINE_IMAGE)
+    .withExec(["apk", "add", "--no-cache", "helm", "curl"])
+    .withWorkdir("/chart")
+    .withDirectory(
+      "/chart",
+      source.directory(`packages/homelab/src/cdk8s/helm/${chartName}`),
+    )
+    // Copy CDK8s manifest into templates/ if it exists
+    .withExec([
+      "sh",
+      "-c",
+      `if [ -f /cdk8s-dist/${chartName}.k8s.yaml ]; then mkdir -p templates && cp /cdk8s-dist/${chartName}.k8s.yaml templates/; fi`,
+    ])
+    .withExec([
+      "helm",
+      "package",
+      ".",
+      "--version",
+      version,
+      "--app-version",
+      version,
+    ])
+    .withSecretVariable("CHARTMUSEUM_PASSWORD", chartMuseumPassword);
+
+  if (dryrun) {
+    return container.withExec([
+      "echo",
+      `DRYRUN: would push ${chartName}-${version}.tgz to ChartMuseum`,
+    ]);
+  }
+  return container.withExec([
+    "sh",
+    "-c",
+    `curl -sf -u "${chartMuseumUsername}:$CHARTMUSEUM_PASSWORD" --data-binary @$(ls *.tgz) https://chartmuseum.sjer.red/api/charts`,
+  ]);
 }
 
 // ---------------------------------------------------------------------------
@@ -90,6 +96,7 @@ export function tofuApplyHelper(
   awsSecretAccessKey: Secret,
   ghToken: Secret,
   cloudflareAccountId: Secret | null = null,
+  dryrun = false,
 ): Container {
   let container = dag
     .container()
@@ -110,9 +117,12 @@ export function tofuApplyHelper(
     );
   }
 
-  return container
-    .withExec(["tofu", "init", "-input=false"])
-    .withExec(["tofu", "apply", "-auto-approve", "-input=false"]);
+  container = container.withExec(["tofu", "init", "-input=false"]);
+
+  if (dryrun) {
+    return container.withExec(["tofu", "plan", "-input=false"]);
+  }
+  return container.withExec(["tofu", "apply", "-auto-approve", "-input=false"]);
 }
 
 // ---------------------------------------------------------------------------
@@ -126,6 +136,7 @@ export function publishNpmHelper(
   npmToken: Secret,
   depNames: string[] = [],
   depDirs: Directory[] = [],
+  dryrun = false,
 ): Container {
   let container = dag
     .container()
@@ -173,7 +184,9 @@ export function publishNpmHelper(
       .withExec([
         "sh",
         "-c",
-        `echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc && bun publish --access public --tag latest`,
+        dryrun
+          ? `echo "DRYRUN: would publish ${pkg} to npm" && bun publish --access public --tag latest --dry-run`
+          : `echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc && bun publish --access public --tag latest`,
       ])
   );
 }
@@ -195,6 +208,7 @@ export function deploySiteHelper(
   cloudflareAccountId: string = "",
   depNames: string[] = [],
   depDirs: Directory[] = [],
+  dryrun = false,
 ): Container {
   let container = dag
     .container()
@@ -237,6 +251,12 @@ export function deploySiteHelper(
       ? `https://${cloudflareAccountId}.r2.cloudflarestorage.com`
       : "https://seaweedfs.sjer.red";
 
+  if (dryrun) {
+    return container.withExec([
+      "echo",
+      `DRYRUN: would sync ${distSubdir} to s3://${bucket}/ via ${endpoint}`,
+    ]);
+  }
   return container.withExec([
     "aws",
     "s3",
@@ -258,17 +278,25 @@ export function argoCdSyncHelper(
   appName: string,
   argoCdToken: Secret,
   serverUrl: string = "https://argocd.sjer.red",
+  dryrun = false,
 ): Container {
-  return dag
+  const container = dag
     .container()
     .from(ALPINE_IMAGE)
     .withExec(["apk", "add", "--no-cache", "curl"])
-    .withSecretVariable("ARGOCD_TOKEN", argoCdToken)
-    .withExec([
-      "sh",
-      "-c",
-      `curl -sf -X POST "${serverUrl}/api/v1/applications/${appName}/sync" -H "Authorization: Bearer $ARGOCD_TOKEN" -H "Content-Type: application/json" || true`,
+    .withSecretVariable("ARGOCD_TOKEN", argoCdToken);
+
+  if (dryrun) {
+    return container.withExec([
+      "echo",
+      `DRYRUN: would sync ArgoCD app ${appName}`,
     ]);
+  }
+  return container.withExec([
+    "sh",
+    "-c",
+    `curl -sf -X POST "${serverUrl}/api/v1/applications/${appName}/sync" -H "Authorization: Bearer $ARGOCD_TOKEN" -H "Content-Type: application/json" || true`,
+  ]);
 }
 
 /** Poll ArgoCD until an application is healthy or timeout. */
@@ -277,7 +305,17 @@ export function argoCdHealthWaitHelper(
   argoCdToken: Secret,
   timeoutSeconds: number = 300,
   serverUrl: string = "https://argocd.sjer.red",
+  dryrun = false,
 ): Container {
+  if (dryrun) {
+    return dag
+      .container()
+      .from(ALPINE_IMAGE)
+      .withExec([
+        "echo",
+        `DRYRUN: would wait for ArgoCD app ${appName} to become healthy`,
+      ]);
+  }
   return dag
     .container()
     .from(ALPINE_IMAGE)
@@ -328,18 +366,26 @@ export function cooklangPushHelper(
   source: Directory,
   version: string,
   ghToken: Secret,
+  dryrun = false,
 ): Container {
-  return dag
+  const container = dag
     .container()
     .from(ALPINE_IMAGE)
     .withExec(["apk", "add", "--no-cache", "curl", "git", "gh"])
     .withSecretVariable("GH_TOKEN", ghToken)
     .withWorkdir("/artifacts")
-    .withDirectory("/artifacts", source)
-    .withExec([
-      "sh",
-      "-c",
-      `for f in main.js manifest.json styles.css; do
+    .withDirectory("/artifacts", source);
+
+  if (dryrun) {
+    return container.withExec([
+      "echo",
+      `DRYRUN: would push cooklang artifacts v${version}`,
+    ]);
+  }
+  return container.withExec([
+    "sh",
+    "-c",
+    `for f in main.js manifest.json styles.css; do
         if [ -f "$f" ]; then
           gh api repos/shepherdjerred/cooklang-for-obsidian/contents/$f \
             --method PUT \
@@ -349,7 +395,7 @@ export function cooklangPushHelper(
             2>/dev/null || true
         fi
       done`,
-    ]);
+  ]);
 }
 
 // ---------------------------------------------------------------------------
@@ -361,19 +407,28 @@ export function clauderonUploadHelper(
   binaries: Directory,
   version: string,
   ghToken: Secret,
+  dryrun = false,
 ): Container {
-  return dag
+  const container = dag
     .container()
     .from(ALPINE_IMAGE)
     .withExec(["apk", "add", "--no-cache", "gh"])
     .withSecretVariable("GH_TOKEN", ghToken)
     .withWorkdir("/artifacts")
-    .withDirectory("/artifacts", binaries)
-    .withExec([
+    .withDirectory("/artifacts", binaries);
+
+  if (dryrun) {
+    return container.withExec([
       "sh",
       "-c",
-      `gh release upload "clauderon-v${version}" /artifacts/* --repo shepherdjerred/monorepo --clobber`,
+      `echo "DRYRUN: would upload clauderon-v${version}" && ls -la /artifacts/`,
     ]);
+  }
+  return container.withExec([
+    "sh",
+    "-c",
+    `gh release upload "clauderon-v${version}" /artifacts/* --repo shepherdjerred/monorepo --clobber`,
+  ]);
 }
 
 // ---------------------------------------------------------------------------
@@ -385,16 +440,24 @@ export function versionCommitBackHelper(
   digests: string,
   version: string,
   ghToken: Secret,
+  dryrun = false,
 ): Container {
-  return dag
+  const container = dag
     .container()
     .from(ALPINE_IMAGE)
     .withExec(["apk", "add", "--no-cache", "git", "gh", "jq", "sed"])
-    .withSecretVariable("GH_TOKEN", ghToken)
-    .withExec([
-      "sh",
-      "-c",
-      `git clone "https://x-access-token:$GH_TOKEN@github.com/shepherdjerred/monorepo.git" /repo && cd /repo && \
+    .withSecretVariable("GH_TOKEN", ghToken);
+
+  if (dryrun) {
+    return container.withExec([
+      "echo",
+      `DRYRUN: would commit version bump ${version}`,
+    ]);
+  }
+  return container.withExec([
+    "sh",
+    "-c",
+    `git clone "https://x-access-token:$GH_TOKEN@github.com/shepherdjerred/monorepo.git" /repo && cd /repo && \
        echo '${digests}' | jq -r 'to_entries[] | "s|\\(.key).*|\\(.key): \\"\\(.value)\\",|"' | while read -r pattern; do \
          sed -i "$pattern" packages/homelab/src/cdk8s/src/versions.ts; \
        done && \
@@ -402,7 +465,7 @@ export function versionCommitBackHelper(
        git add -A && git commit -m "chore: bump image versions to ${version}" && \
        git push origin "chore/version-bump-${version}" && \
        gh pr create --title "chore: bump image versions to ${version}" --body "Auto-generated version bump" --auto`,
-    ]);
+  ]);
 }
 
 // ---------------------------------------------------------------------------
@@ -471,8 +534,9 @@ const RELEASE_PLEASE_VERSION = "17.3.0";
 export function releasePleaseHelper(
   source: Directory,
   ghToken: Secret,
+  dryrun = false,
 ): Container {
-  return dag
+  const container = dag
     .container()
     .from(BUN_IMAGE)
     .withExec(["apt-get", "update", "-qq"])
@@ -487,15 +551,22 @@ export function releasePleaseHelper(
     .withExec(["bun", "add", "-g", `release-please@${RELEASE_PLEASE_VERSION}`])
     .withWorkdir("/workspace")
     .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES })
-    .withSecretVariable("GITHUB_TOKEN", ghToken)
-    .withExec([
-      "sh",
-      "-c",
-      [
-        `release-please release-pr --token=$GITHUB_TOKEN --repo-url=shepherdjerred/monorepo --target-branch=main || true`,
-        `release-please github-release --token=$GITHUB_TOKEN --repo-url=shepherdjerred/monorepo --target-branch=main`,
-      ].join(" && "),
+    .withSecretVariable("GH_TOKEN", ghToken);
+
+  if (dryrun) {
+    return container.withExec([
+      "echo",
+      "DRYRUN: would run release-please (release-pr + github-release)",
     ]);
+  }
+  return container.withExec([
+    "sh",
+    "-c",
+    [
+      `release-please release-pr --token=$GH_TOKEN --repo-url=shepherdjerred/monorepo --target-branch=main || true`,
+      `release-please github-release --token=$GH_TOKEN --repo-url=shepherdjerred/monorepo --target-branch=main`,
+    ].join(" && "),
+  ]);
 }
 
 // ---------------------------------------------------------------------------
@@ -507,19 +578,28 @@ export function cooklangCreateReleaseHelper(
   artifacts: Directory,
   version: string,
   ghToken: Secret,
+  dryrun = false,
 ): Container {
-  return dag
+  const container = dag
     .container()
     .from(ALPINE_IMAGE)
     .withExec(["apk", "add", "--no-cache", "gh"])
     .withSecretVariable("GH_TOKEN", ghToken)
     .withWorkdir("/artifacts")
-    .withDirectory("/artifacts", artifacts)
-    .withExec([
+    .withDirectory("/artifacts", artifacts);
+
+  if (dryrun) {
+    return container.withExec([
       "sh",
       "-c",
-      `gh release create "cooklang-rich-preview-v${version}" /artifacts/* --repo shepherdjerred/monorepo --title "cooklang-rich-preview v${version}" --generate-notes || echo "Release already exists or no version"`,
+      `echo "DRYRUN: would create cooklang release v${version}" && ls -la /artifacts/`,
     ]);
+  }
+  return container.withExec([
+    "sh",
+    "-c",
+    `gh release create "cooklang-rich-preview-v${version}" /artifacts/* --repo shepherdjerred/monorepo --title "cooklang-rich-preview v${version}" --generate-notes || echo "Release already exists or no version"`,
+  ]);
 }
 
 // ---------------------------------------------------------------------------

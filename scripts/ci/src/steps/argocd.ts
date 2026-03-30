@@ -1,7 +1,7 @@
 /**
  * ArgoCD sync and health check step generators.
  */
-import { RETRY, DAGGER_ENV } from "../lib/buildkite.ts";
+import { RETRY, DAGGER_ENV, DRYRUN_FLAG } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteStep } from "../lib/types.ts";
 
@@ -17,7 +17,7 @@ export function argoCdSyncStep(
     key: opts.key ?? "deploy-argocd",
     if: MAIN_ONLY,
     depends_on: dependsOn,
-    command: `dagger call argo-cd-sync --app ${app} --argocd-token env:ARGOCD_TOKEN`,
+    command: `dagger call argo-cd-sync --app ${app} --argocd-token env:ARGOCD_TOKEN${DRYRUN_FLAG}`,
     timeout_in_minutes: 10,
     retry: RETRY,
     env: DAGGER_ENV,
@@ -41,7 +41,7 @@ export function argoCdHealthStep(
     key: opts.key ?? "argocd-health",
     if: MAIN_ONLY,
     depends_on: dependsOn,
-    command: `dagger call argo-cd-health-wait --app ${app} --argocd-token env:ARGOCD_TOKEN --timeout-secs 300`,
+    command: `dagger call argo-cd-health-wait --app ${app} --argocd-token env:ARGOCD_TOKEN --timeout-secs 300${DRYRUN_FLAG}`,
     timeout_in_minutes: 10,
     retry: RETRY,
     env: DAGGER_ENV,

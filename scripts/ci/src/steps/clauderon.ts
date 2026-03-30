@@ -1,7 +1,7 @@
 /**
  * Clauderon release step generators (Rust binary build + upload).
  */
-import { RETRY, DAGGER_ENV } from "../lib/buildkite.ts";
+import { RETRY, DAGGER_ENV, DRYRUN_FLAG } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 
@@ -47,8 +47,7 @@ export function clauderonReleaseGroup(): BuildkiteGroup {
     key: "clauderon-upload",
     if: MAIN_ONLY,
     depends_on: TARGETS.map((t) => t.key),
-    command:
-      'dagger call clauderon-upload --binaries $(dagger call clauderon-collect-binaries --pkg-dir ./packages/clauderon) --version "$(buildkite-agent meta-data get clauderon_version || echo dev)" --gh-token env:GITHUB_TOKEN',
+    command: `dagger call clauderon-upload --binaries $(dagger call clauderon-collect-binaries --pkg-dir ./packages/clauderon) --version "$(buildkite-agent meta-data get clauderon_version || echo dev)" --gh-token env:GITHUB_TOKEN${DRYRUN_FLAG}`,
     timeout_in_minutes: 10,
     retry: RETRY,
     env: DAGGER_ENV,
