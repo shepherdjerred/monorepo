@@ -20,6 +20,7 @@ function imagePushStep(
     .flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`])
     .join(" ");
   const cmd = [
+    `echo "DEBUG: GH_TOKEN set=${GH_TOKEN:+yes}" &&`,
     `DIGEST=$(dagger call push-image --pkg-dir ./packages/${pkg} --pkg ${img.name}`,
     depFlags,
     `--tag ghcr.io/${img.versionKey}:latest`,
