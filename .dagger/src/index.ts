@@ -1427,15 +1427,17 @@ export class Monorepo {
     ).stdout();
   }
 
-  /** Build cooklang-for-obsidian artifacts */
-  @func({ cache: "never" })
-  async cooklangBuild(
+  /** Build cooklang-rich-preview artifacts and return the dist directory */
+  @func()
+  cooklangBuild(
     pkgDir: Directory,
     depNames: string[] = [],
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
-  ): Promise<string> {
-    return cooklangBuildHelper(pkgDir, depNames, depDirs, tsconfig).stdout();
+  ): Directory {
+    return cooklangBuildHelper(pkgDir, depNames, depDirs, tsconfig).directory(
+      "/workspace/packages/cooklang-rich-preview/dist",
+    );
   }
 
   /** Push cooklang artifacts to GitHub repository */

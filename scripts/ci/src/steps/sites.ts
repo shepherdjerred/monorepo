@@ -6,6 +6,7 @@ import { DEPLOY_SITES, PACKAGE_TO_SITE } from "../catalog.ts";
 import { safeKey, RETRY, DAGGER_ENV, DRYRUN_FLAG } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
+import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
 
 const MAIN_ONLY = "build.branch == pipeline.default_branch";
 
@@ -14,8 +15,8 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
   const memory = "512Mi";
 
   const pkgPath = site.buildDir.replace("packages/", "");
-  const depList = (site.workspaceDeps ?? "").split(",").filter(Boolean);
-  const depFlags = depList
+  const deps = WORKSPACE_DEPS[pkgPath] ?? [];
+  const depFlags = deps
     .flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`])
     .join(" ");
 
