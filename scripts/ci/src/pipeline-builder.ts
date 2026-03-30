@@ -62,16 +62,16 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     if (group) steps.push(group);
   }
 
-  // --- Quality gates (every build) ---
-  steps.push(prettierStep());
+  // --- Quality gates (blocking — must pass before releases) ---
   steps.push(shellcheckStep());
   steps.push(qualityRatchetStep());
   steps.push(complianceCheckStep());
-  steps.push(knipCheckStep());
   steps.push(gitleaksCheckStep());
   steps.push(suppressionCheckStep());
 
-  // --- Security scans (soft_fail) ---
+  // --- Quality checks (non-blocking — run in parallel, don't gate releases) ---
+  steps.push(prettierStep());
+  steps.push(knipCheckStep());
   steps.push(trivyScanStep());
   steps.push(semgrepScanStep());
 

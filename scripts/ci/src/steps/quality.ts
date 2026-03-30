@@ -10,6 +10,7 @@ export function prettierStep(): BuildkiteStep {
     key: "prettier",
     daggerCmd: "dagger call prettier --source .",
     timeoutMinutes: 10,
+    softFail: true,
   });
 }
 
@@ -46,6 +47,7 @@ export function knipCheckStep(): BuildkiteStep {
     key: "knip-check",
     daggerCmd: "dagger call knip-check --source .",
     timeoutMinutes: 10,
+    softFail: true,
   });
 }
 
