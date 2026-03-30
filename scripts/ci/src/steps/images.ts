@@ -22,9 +22,8 @@ function imagePushStep(
   const cmd = [
     `DIGEST=$(dagger call push-image --pkg-dir ./packages/${pkg} --pkg ${img.name}`,
     depFlags,
-    `--tsconfig ./tsconfig.base.json`,
     `--tag ghcr.io/${img.versionKey}:latest`,
-    `--registry-username $GITHUB_USERNAME`,
+    `--registry-username shepherdjerred`,
     `--registry-password env:GH_TOKEN)`,
     `&& buildkite-agent meta-data set "digest:${img.versionKey}" "$DIGEST"`,
   ]

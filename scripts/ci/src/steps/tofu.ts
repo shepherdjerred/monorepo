@@ -15,7 +15,18 @@ function tofuStackStep(stack: string): BuildkiteStep {
     key: `tofu-${stack}`,
     if: MAIN_ONLY,
     depends_on: "release",
-    command: `dagger call tofu-apply --source . --stack ${stack}${DRYRUN_FLAG}`,
+    command:
+      [
+        `dagger call tofu-apply --source . --stack ${stack}`,
+        `--aws-access-key-id env:SEAWEEDFS_ACCESS_KEY_ID`,
+        `--aws-secret-access-key env:SEAWEEDFS_SECRET_ACCESS_KEY`,
+        `--gh-token env:TOFU_GITHUB_TOKEN`,
+        stack === "cloudflare"
+          ? `--cloudflare-account-id env:CLOUDFLARE_ACCOUNT_ID`
+          : "",
+      ]
+        .filter(Boolean)
+        .join(" ") + DRYRUN_FLAG,
     timeout_in_minutes: 15,
     retry: RETRY,
     env: DAGGER_ENV,

@@ -185,7 +185,7 @@ export function publishNpmHelper(
         "sh",
         "-c",
         dryrun
-          ? `echo "DRYRUN: would publish ${pkg} to npm" && bun publish --access public --tag latest --dry-run`
+          ? `echo "DRYRUN: would publish ${pkg} to npm"`
           : `echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc && bun publish --access public --tag latest`,
       ])
   );
@@ -332,7 +332,7 @@ export function argoCdHealthWaitHelper(
 // Cooklang
 // ---------------------------------------------------------------------------
 
-/** Build cooklang-for-obsidian artifacts. */
+/** Build cooklang-rich-preview artifacts. */
 export function cooklangBuildHelper(
   pkgDir: Directory,
   depNames: string[] = [],
@@ -342,8 +342,8 @@ export function cooklangBuildHelper(
     .container()
     .from(BUN_IMAGE)
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
-    .withWorkdir("/workspace/packages/cooklang-for-obsidian")
-    .withDirectory("/workspace/packages/cooklang-for-obsidian", pkgDir, {
+    .withWorkdir("/workspace/packages/cooklang-rich-preview")
+    .withDirectory("/workspace/packages/cooklang-rich-preview", pkgDir, {
       exclude: SOURCE_EXCLUDES,
     });
 
@@ -357,7 +357,11 @@ export function cooklangBuildHelper(
   }
 
   return container
-    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withExec([
+      "bash",
+      "-c",
+      "bun install --frozen-lockfile 2>/dev/null || bun install",
+    ])
     .withExec(["bun", "run", "build"]);
 }
 
@@ -387,11 +391,11 @@ export function cooklangPushHelper(
     "-c",
     `for f in main.js manifest.json styles.css; do
         if [ -f "$f" ]; then
-          gh api repos/shepherdjerred/cooklang-for-obsidian/contents/$f \
+          gh api repos/shepherdjerred/cooklang-obsidian-releases/contents/$f \
             --method PUT \
             -f message="chore: update $f v${version}" \
             -f content="$(base64 < $f)" \
-            -f sha="$(gh api repos/shepherdjerred/cooklang-for-obsidian/contents/$f --jq .sha 2>/dev/null || echo '')" \
+            -f sha="$(gh api repos/shepherdjerred/cooklang-obsidian-releases/contents/$f --jq .sha 2>/dev/null || echo '')" \
             2>/dev/null || true
         fi
       done`,

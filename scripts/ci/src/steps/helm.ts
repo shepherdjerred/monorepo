@@ -27,14 +27,20 @@ function cdk8sSynthStep(dependsOn: string[]): BuildkiteStep {
   };
 }
 
-function helmPushStep(): BuildkiteStep {
+function helmPushStep(chartName: string): BuildkiteStep {
   return {
-    label: ":helm: Push Helm Charts",
-    key: "homelab-helm-push",
+    label: `:helm: Push ${chartName}`,
+    key: `helm-push-${chartName}`,
     if: MAIN_ONLY,
     depends_on: "homelab-cdk8s",
-    command: `dagger call helm-package --source . --chart-dir packages/homelab/charts --chart-museum-password env:CHARTMUSEUM_PASSWORD${DRYRUN_FLAG}`,
-    parallelism: HELM_CHARTS.length,
+    command:
+      [
+        `dagger call helm-package --source .`,
+        `--chart-name ${chartName}`,
+        `--version "$(buildkite-agent meta-data get release-version || echo 0.0.1)"`,
+        `--chart-museum-username "$CHARTMUSEUM_USERNAME"`,
+        `--chart-museum-password env:CHARTMUSEUM_PASSWORD`,
+      ].join(" ") + DRYRUN_FLAG,
     timeout_in_minutes: 10,
     retry: RETRY,
     env: DAGGER_ENV,
@@ -45,7 +51,10 @@ function helmPushStep(): BuildkiteStep {
 export function homelabHelmGroup(dependsOn: string[]): BuildkiteGroup {
   return {
     group: ":helm: Homelab Helm",
-    key: "homelab-helm",
-    steps: [cdk8sSynthStep(dependsOn), helmPushStep()],
+    key: "homelab-helm-push",
+    steps: [
+      cdk8sSynthStep(dependsOn),
+      ...HELM_CHARTS.map((chart) => helmPushStep(chart)),
+    ],
   };
 }
