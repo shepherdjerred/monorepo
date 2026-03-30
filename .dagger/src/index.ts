@@ -185,6 +185,7 @@ export class Monorepo {
         "pkg-config",
         "libssl-dev",
         "mold",
+        "gcc-aarch64-linux-gnu",
       ])
       .withMountedCache(
         "/usr/local/cargo/registry",
