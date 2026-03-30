@@ -72,7 +72,8 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
   // --- Quality checks (non-blocking — run in parallel, don't gate releases) ---
   steps.push(prettierStep());
   steps.push(knipCheckStep());
-  steps.push(trivyScanStep());
+  // TODO: re-enable when Trivy timeout is resolved
+  // steps.push(trivyScanStep());
   steps.push(semgrepScanStep());
 
   // --- Code Review (PRs only) ---
