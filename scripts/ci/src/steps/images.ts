@@ -25,7 +25,7 @@ function imagePushStep(
     `--tsconfig ./tsconfig.base.json`,
     `--tag ghcr.io/${img.versionKey}:latest`,
     `--registry-username $GITHUB_USERNAME`,
-    `--registry-password env:GITHUB_TOKEN)`,
+    `--registry-password env:GH_TOKEN)`,
     `&& buildkite-agent meta-data set "digest:${img.versionKey}" "$DIGEST"`,
   ]
     .filter(Boolean)
