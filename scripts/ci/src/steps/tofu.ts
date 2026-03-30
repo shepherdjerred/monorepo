@@ -22,7 +22,7 @@ function tofuStackStep(stack: string): BuildkiteStep {
         `--aws-secret-access-key env:SEAWEEDFS_SECRET_ACCESS_KEY`,
         `--gh-token env:TOFU_GITHUB_TOKEN`,
         stack === "cloudflare"
-          ? `--cloudflare-account-id env:CLOUDFLARE_ACCOUNT_ID`
+          ? `--cloudflare-account-id env:CLOUDFLARE_ACCOUNT_ID --cloudflare-api-token env:CLOUDFLARE_API_TOKEN`
           : "",
       ]
         .filter(Boolean)

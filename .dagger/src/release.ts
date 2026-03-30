@@ -92,6 +92,7 @@ export function tofuApplyHelper(
   awsSecretAccessKey: Secret,
   ghToken: Secret,
   cloudflareAccountId: Secret | null = null,
+  cloudflareApiToken: Secret | null = null,
   dryrun = false,
 ): Container {
   let container = dag
@@ -110,6 +111,13 @@ export function tofuApplyHelper(
     container = container.withSecretVariable(
       "TF_VAR_cloudflare_account_id",
       cloudflareAccountId,
+    );
+  }
+
+  if (cloudflareApiToken != null) {
+    container = container.withSecretVariable(
+      "CLOUDFLARE_API_TOKEN",
+      cloudflareApiToken,
     );
   }
 

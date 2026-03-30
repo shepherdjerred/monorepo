@@ -1333,6 +1333,7 @@ export class Monorepo {
     awsSecretAccessKey: Secret,
     ghToken: Secret,
     cloudflareAccountId: Secret | null = null,
+    cloudflareApiToken: Secret | null = null,
     dryrun = false,
   ): Promise<string> {
     return tofuApplyHelper(
@@ -1342,6 +1343,7 @@ export class Monorepo {
       awsSecretAccessKey,
       ghToken,
       cloudflareAccountId,
+      cloudflareApiToken,
       dryrun,
     ).stdout();
   }
