@@ -554,9 +554,10 @@ export function clauderonCollectBinariesHelper(
   let output = dag.directory();
 
   for (const { target, filename } of targets) {
-    const binary = dag
+    let container = dag
       .container()
       .from(RUST_IMAGE)
+      .withExec(["dpkg", "--add-architecture", "arm64"])
       .withExec(["apt-get", "update", "-qq"])
       .withExec([
         "apt-get",
@@ -566,6 +567,7 @@ export function clauderonCollectBinariesHelper(
         "--no-install-recommends",
         "clang",
         "libssl-dev",
+        "libssl-dev:arm64",
         "pkg-config",
         "gcc-aarch64-linux-gnu",
       ])
@@ -579,7 +581,28 @@ export function clauderonCollectBinariesHelper(
       .withDirectory("/workspace", pkgDir, {
         exclude: ["target", "node_modules", ".git"],
       })
-      .withExec(["rustup", "target", "add", target])
+      .withExec(["rustup", "target", "add", target]);
+
+    // Cross-compilation setup for aarch64
+    if (target === "aarch64-unknown-linux-gnu") {
+      container = container
+        .withEnvVariable(
+          "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER",
+          "aarch64-linux-gnu-gcc",
+        )
+        .withEnvVariable(
+          "PKG_CONFIG_PATH",
+          "/usr/lib/aarch64-linux-gnu/pkgconfig",
+        )
+        .withEnvVariable("PKG_CONFIG_SYSROOT_DIR", "/usr/aarch64-linux-gnu")
+        .withExec([
+          "sh",
+          "-c",
+          `sed -i '/\\[target.aarch64-unknown-linux-gnu\\]/,/^\\[/{s/linker = .*/linker = "aarch64-linux-gnu-gcc"/; s/rustflags = .*/rustflags = []/}' .cargo/config.toml`,
+        ]);
+    }
+
+    const binary = container
       .withExec(["cargo", "build", "--release", "--target", target])
       .file(`/workspace/target/${target}/release/clauderon`);
 
