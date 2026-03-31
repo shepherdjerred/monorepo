@@ -47,7 +47,7 @@ export function clauderonReleaseGroup(): BuildkiteGroup {
     key: "clauderon-upload",
     if: MAIN_ONLY,
     depends_on: TARGETS.map((t) => t.key),
-    command: `dagger call clauderon-upload --binaries $(dagger call clauderon-collect-binaries --pkg-dir ./packages/clauderon) --version "$(buildkite-agent meta-data get clauderon_version || echo dev)" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
+    command: `dagger call clauderon-build-and-upload --pkg-dir ./packages/clauderon --version "$(buildkite-agent meta-data get clauderon_version || echo dev)" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
     timeout_in_minutes: 10,
     retry: RETRY,
     env: DAGGER_ENV,

@@ -1517,6 +1517,18 @@ export class Monorepo {
     return clauderonUploadHelper(binaries, version, ghToken, dryrun).stdout();
   }
 
+  /** Build clauderon for all targets and upload to GitHub release */
+  @func({ cache: "never" })
+  async clauderonBuildAndUpload(
+    pkgDir: Directory,
+    version: string,
+    ghToken: Secret,
+    dryrun = false,
+  ): Promise<string> {
+    const binaries = this.clauderonCollectBinaries(pkgDir);
+    return clauderonUploadHelper(binaries, version, ghToken, dryrun).stdout();
+  }
+
   /** Update versions.ts with new image digests and create auto-merge PR */
   @func({ cache: "never" })
   async versionCommitBack(
