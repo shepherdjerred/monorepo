@@ -265,8 +265,20 @@ export function deploySiteHelper(
       .withExec(["bun", "run", "build"]);
   }
 
+  // Install Playwright if the site needs it (e.g. for OG image generation)
   container = container
     .withWorkdir(`/workspace/packages/${pkg}`)
+    .withMountedCache(
+      "/root/.cache/ms-playwright",
+      dag.cacheVolume("playwright-cache"),
+    )
+    .withExec([
+      "bash",
+      "-c",
+      "bunx playwright install chromium --with-deps 2>/dev/null || true",
+    ]);
+
+  container = container
     .withSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyId)
     .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey);
 
