@@ -217,6 +217,7 @@ export function deploySiteHelper(
   depNames: string[] = [],
   depDirs: Directory[] = [],
   dryrun = false,
+  tsconfig: File | null = null,
 ): Container {
   let container = dag
     .container()
@@ -243,6 +244,10 @@ export function deploySiteHelper(
       depDirs[i],
       { exclude: SOURCE_EXCLUDES },
     );
+  }
+
+  if (tsconfig != null) {
+    container = container.withFile("/workspace/tsconfig.base.json", tsconfig);
   }
 
   container = container.withExec([

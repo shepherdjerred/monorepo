@@ -1383,6 +1383,7 @@ export class Monorepo {
     depNames: string[] = [],
     depDirs: Directory[] = [],
     dryrun = false,
+    tsconfig: File | null = null,
   ): Promise<string> {
     return deploySiteHelper(
       pkgDir,
@@ -1397,6 +1398,7 @@ export class Monorepo {
       depNames,
       depDirs,
       dryrun,
+      tsconfig,
     ).stdout();
   }
 
