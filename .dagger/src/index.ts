@@ -710,13 +710,17 @@ export class Monorepo {
           "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER",
           "aarch64-linux-gnu-gcc",
         )
-        // Don't use mold linker for cross-compilation (it can't find aarch64 ld)
-        .withEnvVariable("CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUSTFLAGS", "")
         .withEnvVariable(
           "PKG_CONFIG_PATH",
           "/usr/lib/aarch64-linux-gnu/pkgconfig",
         )
-        .withEnvVariable("PKG_CONFIG_SYSROOT_DIR", "/usr/aarch64-linux-gnu");
+        .withEnvVariable("PKG_CONFIG_SYSROOT_DIR", "/usr/aarch64-linux-gnu")
+        // Override .cargo/config.toml: use aarch64 gcc instead of clang+mold
+        .withExec([
+          "sh",
+          "-c",
+          `sed -i '/\\[target.aarch64-unknown-linux-gnu\\]/,/^\\[/{s/linker = .*/linker = "aarch64-linux-gnu-gcc"/; s/rustflags = .*/rustflags = []/}' .cargo/config.toml`,
+        ]);
     }
 
     return container.withExec([
