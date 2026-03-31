@@ -17,7 +17,6 @@ fn test_git_config_env_vars() {
         &PathBuf::new(), // initial_workdir
         "test prompt",
         1000,
-        None,
         AgentType::ClaudeCode,
         false,
         false,
@@ -72,7 +71,6 @@ fn test_git_config_omitted_when_none() {
         &PathBuf::new(),
         "test prompt",
         1000,
-        None,
         AgentType::ClaudeCode,
         false,
         false,
@@ -112,7 +110,6 @@ fn test_docker_run_arg_order() {
         &PathBuf::new(),
         "test prompt",
         1000,
-        None,
         AgentType::ClaudeCode,
         false, // print mode
         false, // dangerous_skip_checks
@@ -163,7 +160,6 @@ fn test_docker_env_vars() {
         &PathBuf::new(),
         "test prompt",
         1000,
-        None,
         AgentType::ClaudeCode,
         false, // print mode
         false, // dangerous_skip_checks
@@ -289,7 +285,6 @@ fn test_volume_mount_format() {
         &PathBuf::new(),
         "test prompt",
         1000,
-        None,
         AgentType::ClaudeCode,
         false, // print mode
         false, // dangerous_skip_checks
@@ -355,7 +350,6 @@ fn test_workspace_mount_destination() {
         &PathBuf::new(),
         "test prompt",
         1000,
-        None,
         AgentType::ClaudeCode,
         false, // print mode
         false, // dangerous_skip_checks
@@ -403,7 +397,6 @@ fn test_final_command_format() {
         &PathBuf::new(),
         prompt,
         1000,
-        None,
         AgentType::ClaudeCode,
         false, // print mode
         true,  // dangerous_skip_checks - pass true to get --dangerously-skip-permissions

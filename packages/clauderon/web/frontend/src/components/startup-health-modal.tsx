@@ -17,8 +17,6 @@ function getHealthLabel(state: ResourceState): string {
       return "Unknown";
     case "Stopped":
       return "Stopped";
-    case "Hibernated":
-      return "Hibernated";
     case "Pending":
       return "Pending";
     case "Missing":
@@ -33,13 +31,14 @@ function getHealthLabel(state: ResourceState): string {
       return "Data Lost";
     case "WorktreeMissing":
       return "Worktree Missing";
+    default:
+      return "Unknown";
   }
 }
 
 function getHealthColor(state: ResourceState): string {
   switch (state.type) {
     case "Stopped":
-    case "Hibernated":
     case "Pending":
       return "bg-yellow-500/20 text-yellow-700 border-yellow-500/50";
     case "Missing":
@@ -50,6 +49,8 @@ function getHealthColor(state: ResourceState): string {
     case "DataLost":
     case "WorktreeMissing":
       return "bg-red-500/20 text-red-700 border-red-500/50";
+    default:
+      return "bg-gray-500/20 text-gray-700 border-gray-500/50";
     case "Healthy":
       return "bg-gray-500/20 text-gray-700 border-gray-500/50";
   }

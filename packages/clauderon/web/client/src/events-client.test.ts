@@ -14,7 +14,6 @@ function noopError(_error: Error): void {
 }
 import {
   SessionStatus,
-  AccessMode,
   BackendType,
   AgentType,
   ClaudeWorkingStatus,
@@ -103,9 +102,7 @@ function createMockSession(overrides: Partial<Session> = {}): Session {
     branch_name: "main",
     initial_prompt: "test prompt",
     dangerous_skip_checks: false,
-    dangerous_copy_creds: false,
     claude_status: ClaudeWorkingStatus.Unknown,
-    access_mode: AccessMode.ReadWrite,
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",
     ...overrides,
@@ -258,7 +255,6 @@ describe("EventsClient - onEvent", () => {
       type: "session_updated",
       session: createMockSession({
         status: SessionStatus.Archived,
-        access_mode: AccessMode.ReadOnly,
       }),
     };
 

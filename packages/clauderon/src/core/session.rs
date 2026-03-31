@@ -31,7 +31,7 @@ pub struct SessionRepository {
     /// Whether this is the primary repository (determines working directory)
     pub is_primary: bool,
 
-    /// Base branch to clone from (for clone-based backends like Sprites)
+    /// Base branch to clone from (for clone-based backends)
     /// When None, clones the repository's default branch
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub base_branch: Option<String>,
@@ -91,7 +91,7 @@ pub struct Session {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub repositories: Option<Vec<SessionRepository>>,
 
-    /// Backend-specific identifier (zellij session name, docker container id, or kubernetes pod name)
+    /// Backend-specific identifier (zellij session name, docker container id, etc.)
     pub backend_id: Option<String>,
 
     /// Initial prompt given to the AI agent
@@ -99,11 +99,6 @@ pub struct Session {
 
     /// Whether to skip safety checks
     pub dangerous_skip_checks: bool,
-
-    /// Whether this session was created with --dangerous-copy-creds
-    /// Sessions with copy-creds have no hook-based status tracking (degraded mode)
-    #[serde(default)]
-    pub dangerous_copy_creds: bool,
 
     /// URL of the associated pull request
     pub pr_url: Option<String>,
@@ -145,12 +140,6 @@ pub struct Session {
 
     /// List of changed files in the worktree with their git status
     pub worktree_changed_files: Option<Vec<crate::utils::git::ChangedFile>>,
-
-    /// Access mode for proxy filtering
-    pub access_mode: AccessMode,
-
-    /// Port for session-specific HTTP proxy (container backends: Docker and Apple Container)
-    pub proxy_port: Option<u16>,
 
     /// Path to Claude Code's session history file (.jsonl)
     #[typeshare(serialized_as = "String")]
@@ -210,10 +199,6 @@ pub struct SessionConfig {
     pub model: Option<SessionModel>,
     /// Whether to skip safety checks
     pub dangerous_skip_checks: bool,
-    /// Whether using copy-creds mode (degraded status tracking)
-    pub dangerous_copy_creds: bool,
-    /// Access mode for proxy filtering
-    pub access_mode: AccessMode,
 }
 
 impl Session {
@@ -238,7 +223,6 @@ impl Session {
             backend_id: None,
             initial_prompt: config.initial_prompt,
             dangerous_skip_checks: config.dangerous_skip_checks,
-            dangerous_copy_creds: config.dangerous_copy_creds,
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,
@@ -252,8 +236,6 @@ impl Session {
             merge_conflict: false,
             worktree_dirty: false,
             worktree_changed_files: None,
-            access_mode: config.access_mode,
-            proxy_port: None,
             history_file_path: None,
             reconcile_attempts: 0,
             last_reconcile_error: None,
@@ -327,12 +309,6 @@ impl Session {
         self.updated_at = Utc::now();
     }
 
-    /// Update access mode
-    pub fn set_access_mode(&mut self, mode: AccessMode) {
-        self.access_mode = mode;
-        self.updated_at = Utc::now();
-    }
-
     /// Set the session title
     pub fn set_title(&mut self, title: Option<String>) {
         self.title = title;
@@ -342,12 +318,6 @@ impl Session {
     /// Set the session description
     pub fn set_description(&mut self, description: Option<String>) {
         self.description = description;
-        self.updated_at = Utc::now();
-    }
-
-    /// Set the proxy port
-    pub fn set_proxy_port(&mut self, port: u16) {
-        self.proxy_port = Some(port);
         self.updated_at = Utc::now();
     }
 
@@ -558,15 +528,8 @@ pub enum BackendType {
     /// Docker container
     Docker,
 
-    /// Kubernetes pod
-    Kubernetes,
-
-    /// Apple Container (macOS 26+ with Apple silicon)
-    #[cfg(target_os = "macos")]
-    AppleContainer,
-
-    /// Sprites.dev cloud container
-    Sprites,
+    /// AI Sandbox (Zellij + ai-sandbox)
+    AiSandbox,
 }
 
 /// AI agent type
@@ -1009,45 +972,14 @@ impl std::str::FromStr for ClaudeWorkingStatus {
     }
 }
 
-/// Access mode for proxy filtering
-#[typeshare]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
-pub enum AccessMode {
-    /// Read-only: GET, HEAD, OPTIONS allowed; POST, PUT, DELETE, PATCH blocked
-    ReadOnly,
-    /// Read-write: All HTTP methods allowed
-    #[default]
-    ReadWrite,
-}
-
-impl std::fmt::Display for AccessMode {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::ReadOnly => write!(f, "ReadOnly"),
-            Self::ReadWrite => write!(f, "ReadWrite"),
-        }
-    }
-}
-
-impl std::str::FromStr for AccessMode {
-    type Err = anyhow::Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "readonly" | "read-only" | "ro" => Ok(Self::ReadOnly),
-            "readwrite" | "read-write" | "rw" => Ok(Self::ReadWrite),
-            _ => Err(anyhow::anyhow!("Invalid access mode: {s}")),
-        }
-    }
-}
-
 // ============================================================================
 // Health System Types
 // ============================================================================
 
 /// State of a session's backend resource
 ///
-/// This enum represents the actual state of the underlying resource (container,
-/// pod, or sprite) as observed during a health check.
+/// This enum represents the actual state of the underlying resource (container
+/// or process) as observed during a health check.
 #[typeshare]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", content = "content")]
@@ -1058,10 +990,7 @@ pub enum ResourceState {
     /// Backend is stopped/exited (can be started)
     Stopped,
 
-    /// Sprites: sprite is hibernated (can be woken)
-    Hibernated,
-
-    /// Kubernetes: pod is waiting for resources (Pending state)
+    /// Resource is pending/starting
     Pending,
 
     /// Backend resource is gone but can be recreated (data preserved)
@@ -1073,14 +1002,13 @@ pub enum ResourceState {
         message: String,
     },
 
-    /// Kubernetes: pod is in CrashLoopBackOff
+    /// Resource is crash-looping
     CrashLoop,
 
     /// Resource was deleted externally (outside clauderon)
     DeletedExternally,
 
     /// Data has been lost and cannot be recovered
-    /// (e.g., PVC deleted, sprite with auto_destroy deleted)
     DataLost {
         /// Why data was lost.
         reason: String,
@@ -1109,7 +1037,6 @@ impl ResourceState {
         match self {
             Self::Healthy => "OK",
             Self::Stopped => "Stopped",
-            Self::Hibernated => "Hibernated",
             Self::Pending => "Pending",
             Self::Missing => "Missing",
             Self::Error { .. } => "Error",
@@ -1126,7 +1053,6 @@ impl std::fmt::Display for ResourceState {
         match self {
             Self::Healthy => write!(f, "Healthy"),
             Self::Stopped => write!(f, "Stopped"),
-            Self::Hibernated => write!(f, "Hibernated"),
             Self::Pending => write!(f, "Pending"),
             Self::Missing => write!(f, "Missing"),
             Self::Error { message } => write!(f, "Error: {message}"),
@@ -1144,9 +1070,6 @@ impl std::fmt::Display for ResourceState {
 pub enum AvailableAction {
     /// Start a stopped container (Docker: docker start)
     Start,
-
-    /// Wake a hibernated sprite
-    Wake,
 
     /// Delete and recreate the backend resource (preserves data)
     Recreate,
@@ -1167,7 +1090,6 @@ impl AvailableAction {
     pub const fn label(&self) -> &'static str {
         match self {
             Self::Start => "Start",
-            Self::Wake => "Wake",
             Self::Recreate => "Recreate",
             Self::RecreateFresh => "Recreate Fresh",
             Self::UpdateImage => "Update Image",
@@ -1180,7 +1102,6 @@ impl AvailableAction {
     pub const fn description(&self) -> &'static str {
         match self {
             Self::Start => "Start the stopped container",
-            Self::Wake => "Wake the hibernated sprite",
             Self::Recreate => "Delete and recreate the backend (data preserved)",
             Self::RecreateFresh => "Recreate with fresh git clone (uncommitted changes lost)",
             Self::UpdateImage => "Pull the latest Docker image and recreate",
@@ -1212,7 +1133,7 @@ pub struct SessionHealthReport {
     /// Session name
     pub session_name: String,
 
-    /// Backend type (Docker, Kubernetes, Zellij, Sprites)
+    /// Backend type
     pub backend_type: BackendType,
 
     /// Current resource state
@@ -1595,7 +1516,6 @@ mod tests {
             backend_id: None,
             initial_prompt: "test".to_owned(),
             dangerous_skip_checks: false,
-            dangerous_copy_creds: false,
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,
@@ -1609,8 +1529,6 @@ mod tests {
             merge_conflict: false,
             worktree_dirty: false,
             worktree_changed_files: None,
-            access_mode: AccessMode::ReadOnly,
-            proxy_port: None,
             history_file_path: None,
             reconcile_attempts: 0,
             last_reconcile_error: None,
@@ -1646,7 +1564,6 @@ mod tests {
             backend_id: None,
             initial_prompt: "test".to_owned(),
             dangerous_skip_checks: false,
-            dangerous_copy_creds: false,
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,
@@ -1660,8 +1577,6 @@ mod tests {
             merge_conflict: false,
             worktree_dirty: false,
             worktree_changed_files: None,
-            access_mode: AccessMode::ReadOnly,
-            proxy_port: None,
             history_file_path: None,
             reconcile_attempts: 0,
             last_reconcile_error: None,
@@ -1698,7 +1613,6 @@ mod tests {
             backend_id: None,
             initial_prompt: "test".to_owned(),
             dangerous_skip_checks: false,
-            dangerous_copy_creds: false,
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,
@@ -1712,8 +1626,6 @@ mod tests {
             merge_conflict: false,
             worktree_dirty: false,
             worktree_changed_files: None,
-            access_mode: AccessMode::ReadOnly,
-            proxy_port: None,
             history_file_path: None,
             reconcile_attempts: 0,
             last_reconcile_error: None,
@@ -1746,7 +1658,6 @@ mod tests {
             backend_id: None,
             initial_prompt: "test".to_owned(),
             dangerous_skip_checks: false,
-            dangerous_copy_creds: false,
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,
@@ -1760,8 +1671,6 @@ mod tests {
             merge_conflict: false,
             worktree_dirty: false,
             worktree_changed_files: None,
-            access_mode: AccessMode::ReadOnly,
-            proxy_port: None,
             history_file_path: None,
             reconcile_attempts: 0,
             last_reconcile_error: None,
@@ -2007,7 +1916,6 @@ mod tests {
             backend_id: None,
             initial_prompt: "test".to_owned(),
             dangerous_skip_checks: false,
-            dangerous_copy_creds: false,
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,
@@ -2021,8 +1929,6 @@ mod tests {
             merge_conflict: false,
             worktree_dirty: false,
             worktree_changed_files: None,
-            access_mode: AccessMode::ReadOnly,
-            proxy_port: None,
             history_file_path: None,
             reconcile_attempts: 0,
             last_reconcile_error: None,

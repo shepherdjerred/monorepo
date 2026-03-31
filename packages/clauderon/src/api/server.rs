@@ -3,11 +3,9 @@ use std::sync::Arc;
 use anyhow::Context;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::{UnixListener, UnixStream};
-use uuid::Uuid;
 
 use crate::backends::DockerBackend;
 use crate::core::SessionManager;
-use crate::proxy::{ProxyConfig, ProxyManager};
 use crate::store::{SqliteStore, Store};
 use crate::utils::paths;
 
@@ -21,28 +19,27 @@ use super::protocol::{Request, Response};
 /// Returns an error if the database cannot be opened, the socket cannot be
 /// bound, or other I/O errors occur.
 pub async fn run_daemon() -> anyhow::Result<()> {
-    run_daemon_with_options(true).await
+    run_daemon_with_options().await
 }
 
-/// Run the clauderon daemon with proxy option
+/// Run the clauderon daemon
 ///
 /// # Errors
 ///
 /// Returns an error if the database cannot be opened, the socket cannot be
 /// bound, or other I/O errors occur.
-pub async fn run_daemon_with_options(enable_proxy: bool) -> anyhow::Result<()> {
+pub async fn run_daemon_with_options() -> anyhow::Result<()> {
     let flags = crate::feature_flags::FeatureFlags::load(None)?;
     let server_config = crate::feature_flags::ServerConfig::load(
         &crate::feature_flags::CliServerConfig::default(),
     )?;
-    run_daemon_with_http(enable_proxy, Some(3030), false, flags, server_config).await
+    run_daemon_with_http(Some(3030), false, flags, server_config).await
 }
 
 /// Run the clauderon daemon with HTTP server option
 ///
 /// # Arguments
 ///
-/// * `enable_proxy` - Whether to enable proxy services
 /// * `http_port` - HTTP server port (None to disable)
 /// * `dev_mode` - Whether to serve frontend from filesystem instead of embedded
 /// * `feature_flags` - Feature flags configuration
@@ -53,7 +50,6 @@ pub async fn run_daemon_with_options(enable_proxy: bool) -> anyhow::Result<()> {
 /// Returns an error if the database cannot be opened, the socket cannot be
 /// bound, or other I/O errors occur.
 pub async fn run_daemon_with_http(
-    enable_proxy: bool,
     http_port: Option<u16>,
     dev_mode: bool,
     feature_flags: crate::feature_flags::FeatureFlags,
@@ -81,31 +77,7 @@ pub async fn run_daemon_with_http(
     let store: Arc<dyn Store> = Arc::new(sqlite_store);
     tracing::debug!("Database store initialized successfully");
 
-    // Initialize proxy services if enabled
-    let proxy_manager: Option<Arc<ProxyManager>> = if enable_proxy {
-        match ProxyManager::new(ProxyConfig::default(), None) {
-            Ok(mut pm) => {
-                if let Err(e) = pm.start().await {
-                    tracing::error!("Failed to start proxy services: {}", e);
-                    tracing::warn!("Continuing without proxy support");
-                    None
-                } else {
-                    Some(Arc::new(pm))
-                }
-            }
-            Err(e) => {
-                tracing::error!("Failed to create proxy manager: {}", e);
-                tracing::warn!("Continuing without proxy support");
-                None
-            }
-        }
-    } else {
-        tracing::info!("Proxy services disabled");
-        None
-    };
-
     // Initialize the session manager
-    // Note: Proxy config is now provided per-session, not at backend initialization
     tracing::debug!("Initializing session manager...");
     let docker_backend = DockerBackend::new();
     let feature_flags_arc = Arc::new(feature_flags);
@@ -120,11 +92,6 @@ pub async fn run_daemon_with_http(
         e
     })?;
 
-    // Wire up proxy manager for per-session filtering (if available)
-    if let Some(ref pm) = proxy_manager {
-        session_manager.set_proxy_manager(Arc::clone(pm));
-    }
-
     // Wire up server config for org_id and other settings
     session_manager.set_server_config(Arc::new(server_config.clone()));
 
@@ -138,53 +105,12 @@ pub async fn run_daemon_with_http(
         // Set broadcaster on manager before Arc wrapping
         session_manager.set_event_broadcaster(event_broadcaster.clone());
 
-        // Set HTTP port for Docker/K8s hook communication
+        // Set HTTP port for Docker hook communication
         session_manager.set_http_port(port);
 
         let manager = Arc::new(session_manager);
         let console_state = Arc::new(crate::api::console_state::ConsoleState::new());
         tracing::info!("Session manager initialized with event broadcasting");
-
-        // Restore session proxies for active sessions (if proxy manager is enabled)
-        if let Some(ref pm) = proxy_manager {
-            tracing::info!("Restoring session proxies for active sessions...");
-
-            // Get all sessions from database
-            let sessions = manager.list_sessions().await;
-
-            // Extract port allocations for PortAllocator restoration
-            let port_allocations: Vec<(u16, Uuid)> = sessions
-                .iter()
-                .filter_map(|s| s.proxy_port.map(|port| (port, s.id)))
-                .collect();
-
-            // Restore port allocations in PortAllocator
-            // This must succeed before we attempt to restore session proxies to avoid state inconsistency
-            let port_allocation_success = if !port_allocations.is_empty() {
-                match pm
-                    .port_allocator()
-                    .restore_allocations(port_allocations)
-                    .await
-                {
-                    Ok(()) => true,
-                    Err(e) => {
-                        tracing::error!("Failed to restore port allocations: {}", e);
-                        tracing::warn!(
-                            "Skipping session proxy restoration to avoid port conflicts"
-                        );
-                        false
-                    }
-                }
-            } else {
-                true // No ports to restore, safe to proceed
-            };
-
-            // Restore session proxies only if port allocations were successful
-            if port_allocation_success && let Err(e) = pm.restore_session_proxies(&sessions).await {
-                tracing::error!("Failed to restore session proxies: {}", e);
-                tracing::warn!("Existing sessions may not have network connectivity");
-            }
-        }
 
         // Spawn both Unix socket and HTTP servers concurrently
         let unix_socket_future = run_unix_socket_server(Arc::clone(&manager));
@@ -268,7 +194,7 @@ async fn run_unix_socket_server(manager: Arc<SessionManager>) -> anyhow::Result<
     tracing::info!(socket = %socket_path.display(), "Unix socket daemon listening");
 
     // Note: Hook messages are now received via HTTP endpoint (/api/hooks)
-    // for Docker/K8s backends. Zellij uses the same HTTP endpoint.
+    // for Docker backends. Zellij uses the same HTTP endpoint.
 
     // Start CI status poller for GitHub PR checks
     let ci_poller = crate::ci::CIPoller::new(Arc::clone(&manager));

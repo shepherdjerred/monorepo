@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Clock, FolderOpen } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { DirectoryBrowserDialog } from "./directory-browser-dialog.tsx";
+import { apiClient } from "@/lib/api-client";
 import type { RecentRepoDto } from "@clauderon/client";
 
 type RepositoryPathSelectorProps = {
@@ -45,8 +47,11 @@ export function RepositoryPathSelector({
   onChange,
   required,
 }: RepositoryPathSelectorProps) {
-  const [recentRepos] = useState<RecentRepoDto[]>([]);
-  const [isLoadingRecentRepos] = useState(false);
+  const { data: recentRepos = [], isLoading: isLoadingRecentRepos } = useQuery({
+    queryKey: ["recent-repos"],
+    queryFn: () => apiClient.getRecentRepos(),
+    staleTime: 30_000,
+  });
   const [showDropdown, setShowDropdown] = useState(false);
   const [showBrowser, setShowBrowser] = useState(false);
 

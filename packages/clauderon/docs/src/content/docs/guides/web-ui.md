@@ -18,7 +18,7 @@ WebAuthn passwordless authentication (optional).
 
 ![Dashboard](../../../assets/screenshots/web/dashboard.png)
 
-Shows all sessions with status, backend, agent, access mode, and timestamps. Filter by status, backend, agent:
+Shows all sessions with status, backend, agent, and timestamps. Filter by status, backend, agent:
 
 ![Session Filters](../../../assets/screenshots/web/session-filters.png)
 
@@ -28,7 +28,7 @@ Shows all sessions with status, backend, agent, access mode, and timestamps. Fil
 
 ![Create Session Dialog](../../../assets/screenshots/web/create-dialog.png)
 
-Click "New Session" to configure: repository path, prompt, backend, agent, access mode.
+Click "New Session" to configure: repository path, prompt, backend, agent.
 
 ## Session Details
 
@@ -38,7 +38,6 @@ Click a session to view chat history, task status, token usage, logs, and file c
 
 - **Archive** - Hide completed sessions (toggle "Show Archived" to view)
 - **Delete** - Permanently removes worktree, backend resources, and DB record
-- **Access Mode** - Toggle read-only/read-write from session dropdown
 
 ## Authentication Setup
 

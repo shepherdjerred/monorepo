@@ -191,15 +191,6 @@ fn build_action_buttons(actions: &[AvailableAction]) -> Line<'static> {
                 ));
                 spans.push(Span::raw(" Start"));
             }
-            AvailableAction::Wake => {
-                spans.push(Span::styled(
-                    "[W]",
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD),
-                ));
-                spans.push(Span::raw(" Wake"));
-            }
             AvailableAction::Recreate => {
                 spans.push(Span::styled(
                     "[R]",
@@ -257,7 +248,6 @@ fn get_state_display(state: &ResourceState) -> &'static str {
     match state {
         ResourceState::Healthy => "OK",
         ResourceState::Stopped => "Stopped",
-        ResourceState::Hibernated => "Hibernated",
         ResourceState::Pending => "Pending",
         ResourceState::Missing => "Missing",
         ResourceState::Error { .. } => "Error",
@@ -272,7 +262,7 @@ fn get_state_display(state: &ResourceState) -> &'static str {
 fn get_state_color(state: &ResourceState) -> Color {
     match state {
         ResourceState::Healthy => Color::Green,
-        ResourceState::Stopped | ResourceState::Hibernated | ResourceState::Pending => {
+        ResourceState::Stopped | ResourceState::Pending => {
             Color::Yellow
         }
         ResourceState::Missing => Color::LightYellow,

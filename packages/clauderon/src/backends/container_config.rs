@@ -1,22 +1,21 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-/// Unified image pull policy for both Docker and Kubernetes backends.
+/// Unified image pull policy for container backends.
 ///
 /// This enum provides a consistent interface across different container runtimes,
 /// automatically mapping to the appropriate backend-specific format:
 /// - Docker: `--pull=always|missing|never`
-/// - Kubernetes: `imagePullPolicy: Always|IfNotPresent|Never`
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 #[derive(Default)]
 pub enum ImagePullPolicy {
-    /// Always pull the latest version of the image (Docker: --pull=always, K8s: Always)
+    /// Always pull the latest version of the image (Docker: --pull=always)
     Always,
-    /// Pull image only if not present locally (Docker: --pull=missing, K8s: IfNotPresent)
+    /// Pull image only if not present locally (Docker: --pull=missing)
     #[default]
     IfNotPresent,
-    /// Never pull, use local cache only; fails if image not found (Docker: --pull=never, K8s: Never)
+    /// Never pull, use local cache only; fails if image not found (Docker: --pull=never)
     Never,
 }
 
@@ -59,34 +58,20 @@ impl ImagePullPolicy {
         }
     }
 
-    /// Convert to Kubernetes imagePullPolicy value.
-    ///
-    /// Returns the appropriate string for Kubernetes pod spec's `imagePullPolicy` field.
-    #[must_use]
-    pub fn to_kubernetes_value(self) -> &'static str {
-        match self {
-            Self::Always => "Always",
-            Self::IfNotPresent => "IfNotPresent",
-            Self::Never => "Never",
-        }
-    }
 }
 
 /// Container resource limits in normalized format.
 ///
-/// Supports both Docker and Kubernetes resource specifications:
-/// - Docker: CPU as decimal cores (e.g., "2.0"), memory with suffixes (e.g., "2g")
-/// - Kubernetes: CPU as millicores or cores (e.g., "2000m", "2"), memory with binary suffixes (e.g., "2Gi")
+/// Supports Docker resource specifications:
+/// - CPU as decimal cores (e.g., "2.0"), memory with suffixes (e.g., "2g")
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ResourceLimits {
     /// CPU limit. Examples:
     /// - Docker: "2.0" (2 cores), "0.5" (half a core)
-    /// - Kubernetes: "2000m" (2000 millicores = 2 cores), "500m" (0.5 cores)
     pub cpu: Option<String>,
 
     /// Memory limit. Examples:
     /// - Docker: "2g" (2 gigabytes), "512m" (512 megabytes)
-    /// - Kubernetes: "2Gi" (2 gibibytes), "512Mi" (512 mebibytes)
     pub memory: Option<String>,
 }
 
@@ -267,7 +252,7 @@ impl ImageConfig {
     }
 }
 
-/// Validate Docker/K8s image name format.
+/// Validate Docker image name format.
 ///
 /// Ensures image name follows container registry naming conventions and
 /// doesn't contain characters that could be exploited for command injection.
@@ -306,6 +291,72 @@ fn validate_image_name(image: &str) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Generate plugin configuration for containers.
+///
+/// Creates a known_marketplaces.json file with container-adjusted paths that point to
+/// the mounted plugin directories. Plugin files themselves are mounted read-only from
+/// the host, so this only generates the configuration metadata.
+pub fn generate_plugin_config(
+    clauderon_dir: &std::path::Path,
+    plugin_manifest: &crate::plugins::PluginManifest,
+) -> anyhow::Result<()> {
+    use anyhow::Context;
+
+    let plugins_dir = clauderon_dir.join("plugins");
+    std::fs::create_dir_all(&plugins_dir).context("Failed to create plugins directory")?;
+
+    // Transform marketplace paths from host to container paths
+    let container_marketplaces =
+        transform_marketplace_paths_for_container(&plugin_manifest.marketplace_configs);
+
+    // Write known_marketplaces.json with container paths
+    let marketplaces_path = plugins_dir.join("known_marketplaces.json");
+    std::fs::write(
+        &marketplaces_path,
+        serde_json::to_string_pretty(&container_marketplaces)?,
+    )
+    .with_context(|| {
+        format!(
+            "Failed to write known_marketplaces.json to {}",
+            marketplaces_path.display()
+        )
+    })?;
+
+    tracing::debug!(
+        "Generated plugin config at {} with {} marketplaces",
+        marketplaces_path.display(),
+        plugin_manifest.installed_plugins.len()
+    );
+
+    Ok(())
+}
+
+/// Transform marketplace configuration paths from host to container paths.
+///
+/// Replaces host-specific paths (e.g., /Users/foo/.claude/plugins/...) with container
+/// paths (e.g., /workspace/.claude/plugins/...) since HOME=/workspace in containers.
+fn transform_marketplace_paths_for_container(host_config: &serde_json::Value) -> serde_json::Value {
+    let mut container_config = host_config.clone();
+
+    if let Some(obj) = container_config.as_object_mut() {
+        for (_marketplace_name, marketplace_data) in obj.iter_mut() {
+            if let Some(install_location) = marketplace_data.get_mut("installLocation")
+                && let Some(path_str) = install_location.as_str()
+            {
+                if path_str.contains(".claude/plugins/marketplaces") {
+                    if let Some(idx) = path_str.find(".claude/plugins/marketplaces") {
+                        let marketplace_relative = &path_str[idx..];
+                        let container_path = format!("/workspace/{marketplace_relative}");
+                        *install_location = serde_json::Value::String(container_path);
+                    }
+                }
+            }
+        }
+    }
+
+    container_config
+}
+
 /// Docker backend global configuration.
 ///
 /// Loaded from `~/.clauderon/docker-config.toml` and provides default values
@@ -329,7 +380,7 @@ pub struct DockerConfig {
     /// Use Docker volumes instead of bind mounts (default: false)
     ///
     /// When enabled, Docker creates a named volume for each session and clones
-    /// repositories into it (similar to Sprites/K8s backends). This enables:
+    /// repositories into it. This enables:
     /// - Remote Docker hosts without local filesystem access
     /// - Truly isolated sessions that don't rely on local worktrees
     ///
@@ -384,16 +435,6 @@ mod tests {
         assert_eq!(ImagePullPolicy::Always.to_docker_flag(), Some("always"));
         assert_eq!(ImagePullPolicy::IfNotPresent.to_docker_flag(), None);
         assert_eq!(ImagePullPolicy::Never.to_docker_flag(), Some("never"));
-    }
-
-    #[test]
-    fn test_image_pull_policy_kubernetes_value() {
-        assert_eq!(ImagePullPolicy::Always.to_kubernetes_value(), "Always");
-        assert_eq!(
-            ImagePullPolicy::IfNotPresent.to_kubernetes_value(),
-            "IfNotPresent"
-        );
-        assert_eq!(ImagePullPolicy::Never.to_kubernetes_value(), "Never");
     }
 
     #[test]
@@ -468,6 +509,110 @@ mod tests {
         assert_eq!(config.image.pull_policy, ImagePullPolicy::IfNotPresent);
         assert!(config.resources.is_none());
         assert!(config.extra_flags.is_empty());
+    }
+
+    #[test]
+    fn test_generate_plugin_config() {
+        use crate::plugins::{DiscoveredPlugin, PluginManifest};
+
+        let dir = tempfile::tempdir().unwrap();
+        let clauderon_dir = dir.path().to_path_buf();
+
+        let manifest = PluginManifest {
+            marketplace_configs: serde_json::json!({
+                "test-marketplace": {
+                    "installLocation": "/home/user/.claude/plugins/marketplaces/test-marketplace",
+                    "source": {
+                        "source": "github",
+                        "repo": "test/test"
+                    }
+                }
+            }),
+            installed_plugins: vec![DiscoveredPlugin {
+                name: "test-plugin".to_owned(),
+                marketplace: "test-marketplace".to_owned(),
+                path: std::path::PathBuf::from(
+                    "/home/user/.claude/plugins/marketplaces/test-marketplace/plugins/test-plugin",
+                ),
+            }],
+        };
+
+        generate_plugin_config(&clauderon_dir, &manifest).unwrap();
+
+        let marketplaces_path = clauderon_dir.join("plugins/known_marketplaces.json");
+        assert!(marketplaces_path.exists());
+
+        let content = std::fs::read_to_string(&marketplaces_path).unwrap();
+        assert!(content.contains("/workspace/.claude/plugins/marketplaces"));
+    }
+
+    #[test]
+    fn test_generate_plugin_config_creates_directory() {
+        use crate::plugins::PluginManifest;
+
+        let dir = tempfile::tempdir().unwrap();
+        let clauderon_dir = dir.path().to_path_buf();
+
+        let manifest = PluginManifest::empty();
+        generate_plugin_config(&clauderon_dir, &manifest).unwrap();
+
+        assert!(clauderon_dir.join("plugins").exists());
+    }
+
+    #[test]
+    fn test_transform_marketplace_paths() {
+        let host_config = serde_json::json!({
+            "official": {
+                "installLocation": "/Users/foo/.claude/plugins/marketplaces/official",
+                "source": {"source": "github"}
+            },
+            "custom": {
+                "installLocation": "/home/user/.claude/plugins/marketplaces/custom",
+                "source": {"source": "local"}
+            }
+        });
+
+        let container_config = transform_marketplace_paths_for_container(&host_config);
+
+        let official_location = container_config["official"]["installLocation"]
+            .as_str()
+            .unwrap();
+        assert_eq!(
+            official_location,
+            "/workspace/.claude/plugins/marketplaces/official"
+        );
+
+        let custom_location = container_config["custom"]["installLocation"]
+            .as_str()
+            .unwrap();
+        assert_eq!(
+            custom_location,
+            "/workspace/.claude/plugins/marketplaces/custom"
+        );
+    }
+
+    #[test]
+    fn test_transform_marketplace_paths_no_match() {
+        let host_config = serde_json::json!({
+            "test": {
+                "installLocation": "/some/other/path",
+                "source": {"source": "github"}
+            }
+        });
+
+        let container_config = transform_marketplace_paths_for_container(&host_config);
+
+        let location = container_config["test"]["installLocation"]
+            .as_str()
+            .unwrap();
+        assert_eq!(location, "/some/other/path");
+    }
+
+    #[test]
+    fn test_transform_marketplace_paths_empty_config() {
+        let host_config = serde_json::json!({});
+        let container_config = transform_marketplace_paths_for_container(&host_config);
+        assert!(container_config.as_object().unwrap().is_empty());
     }
 
     #[test]

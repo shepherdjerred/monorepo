@@ -2,10 +2,20 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import type { PropsWithChildren, ReactNode } from "react";
 import * as Sentry from "@sentry/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./index.css";
 import "./assets/fonts.css";
 import { App } from "./app.tsx";
 import { getSentryDsn } from "./config.ts";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      staleTime: 30_000,
+    },
+  },
+});
 
 // Workaround: @sentry/react ErrorBoundary types are incompatible with React 19's
 // stricter class component typing. The component works at runtime; this cast
@@ -33,7 +43,9 @@ if (root == null) {
 createRoot(root).render(
   <StrictMode>
     <ErrorBoundary fallback={<p>An error occurred.</p>}>
-      <App />
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
     </ErrorBoundary>
   </StrictMode>,
 );

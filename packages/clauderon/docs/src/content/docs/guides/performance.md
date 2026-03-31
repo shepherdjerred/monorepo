@@ -64,20 +64,6 @@ clauderon create --backend docker --memory-limit 4g
 | Node.js build | 1GB     | 2GB         |
 | Rust build    | 2GB     | 4GB         |
 
-## Proxy Performance
-
-| Setting                   | Impact                         |
-| ------------------------- | ------------------------------ |
-| TLS overhead              | ~5-10ms per request            |
-| Audit logging             | +20% latency, -15% throughput  |
-| Port reuse (experimental) | ~100ms faster session creation |
-
-```toml
-[feature_flags]
-proxy_port_reuse = true    # experimental, dev only
-audit_logging = false      # disable for performance
-```
-
 ## Git Worktree Performance
 
 | Repository Size | Worktree Creation | Full Clone |
@@ -110,14 +96,12 @@ clauderon cache size               # check usage
 | Session create (Zellij) | 500ms  | 1s         | >2s    |
 | Session create (Docker) | 3s     | 10s        | >20s   |
 | Agent first token       | 1s     | 3s         | >5s    |
-| Proxy overhead          | 10ms   | 20ms       | >50ms  |
 
 ## Resource Usage Targets
 
 | Component         | CPU      | Memory    | Disk      |
 | ----------------- | -------- | --------- | --------- |
 | clauderon daemon  | <5% idle | 50-100MB  | Minimal   |
-| Proxy per session | <2%      | 10-20MB   | Logs only |
 | Docker container  | Varies   | 512MB-8GB | Repo size |
 | Database          | <1%      | 10-20MB   | 10-100MB  |
 
@@ -126,6 +110,5 @@ clauderon cache size               # check usage
 | Symptom                   | Solution                                            |
 | ------------------------- | --------------------------------------------------- |
 | Slow image pulls (30s-5m) | Pre-pull images; use `--pull-policy if-not-present` |
-| High proxy latency        | Check `clauderon serve` logs; disable audit logging |
 | Slow git operations (>5s) | Run `git gc`; check for large untracked files       |
 | Resource contention       | Reduce concurrent sessions; set CPU/memory limits   |

@@ -2,9 +2,7 @@ import type {
   Session,
   CreateSessionRequest,
   RecentRepoDto,
-  AccessMode,
   SystemStatus,
-  UpdateCredentialRequest,
   AuthStatus,
   RegistrationStartRequest,
   RegistrationStartResponse,
@@ -26,7 +24,6 @@ import type {
 import { ApiError, NetworkError, SessionNotFoundError } from "./errors.ts";
 import {
   type ClauderonClientConfig,
-  type StorageClassInfo,
   getDefaultBaseUrl,
 } from "./client-types.ts";
 import { readResponseJson } from "./json.ts";
@@ -130,22 +127,12 @@ export class ClauderonClient {
   }
 
   /**
-   * Start a stopped session (container/pod)
+   * Start a stopped session container
    */
   async startSession(id: string): Promise<void> {
     await this.requestVoid(
       "POST",
       `/api/sessions/${encodeURIComponent(id)}/start`,
-    );
-  }
-
-  /**
-   * Wake a hibernated session (sprites)
-   */
-  async wakeSession(id: string): Promise<void> {
-    await this.requestVoid(
-      "POST",
-      `/api/sessions/${encodeURIComponent(id)}/wake`,
     );
   }
 
@@ -176,14 +163,6 @@ export class ClauderonClient {
       "POST",
       "/api/browse-directory",
       { path },
-    );
-  }
-
-  async updateAccessMode(id: string, mode: AccessMode): Promise<void> {
-    await this.requestVoid(
-      "POST",
-      `/api/sessions/${encodeURIComponent(id)}/access-mode`,
-      { access_mode: mode },
     );
   }
 
@@ -226,33 +205,6 @@ export class ClauderonClient {
 
   async getFeatureFlags(): Promise<FeatureFlagsResponse> {
     return this.request<FeatureFlagsResponse>("GET", "/api/feature-flags");
-  }
-
-  async updateCredential(serviceId: string, value: string): Promise<void> {
-    const request: UpdateCredentialRequest = { service_id: serviceId, value };
-    await this.requestVoid("POST", "/api/credentials", request);
-  }
-
-  /**
-   * Get available Kubernetes storage classes
-   * Only applicable when Kubernetes backend is available
-   */
-  async getStorageClasses(): Promise<StorageClassInfo[]> {
-    try {
-      const response = await this.request<{
-        storage_classes: StorageClassInfo[];
-      }>("GET", "/api/storage-classes");
-      return response.storage_classes;
-    } catch (error) {
-      // If endpoint not available or K8s not configured, return empty array
-      if (
-        error instanceof ApiError &&
-        (error.statusCode === 404 || error.statusCode === 501)
-      ) {
-        return [];
-      }
-      throw error;
-    }
   }
 
   /**

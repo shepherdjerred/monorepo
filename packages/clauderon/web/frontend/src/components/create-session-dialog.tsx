@@ -1,12 +1,12 @@
 import { useState, useMemo } from "react";
 import type {
   CreateSessionRequest,
-  StorageClassInfo,
   CreateRepositoryInput,
 } from "@clauderon/client";
-import { AgentType, BackendType, AccessMode } from "@clauderon/shared";
-import { useSessionContext } from "@/contexts/session-context.tsx";
-import { useFeatureFlags } from "@/contexts/feature-flags-context.tsx";
+import { AgentType, BackendType } from "@clauderon/shared";
+import { useCreateSession } from "@/hooks/use-session-mutations";
+import { apiClient } from "@/lib/api-client";
+import { useFeatureFlags } from "@/hooks/use-feature-flags";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { X, Plus } from "lucide-react";
@@ -26,13 +26,12 @@ type CreateSessionDialogProps = {
 };
 
 export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
-  const { createSession, client } = useSessionContext();
-  const { flags } = useFeatureFlags();
+  const createSessionMutation = useCreateSession();
+  const { data: featureFlagsResponse } = useFeatureFlags();
+  const flags = featureFlagsResponse?.flags ?? null;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [storageClasses] = useState<StorageClassInfo[]>([]);
-  const [loadingStorageClasses] = useState(false);
 
   const {
     multiRepoEnabled,
@@ -51,7 +50,6 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     backend: BackendType.Docker,
     agent: AgentType.ClaudeCode,
     model: undefined,
-    access_mode: AccessMode.ReadWrite,
     plan_mode: true,
     dangerous_skip_checks: true,
     container_image: "",
@@ -61,11 +59,9 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     storage_class: "",
   });
 
-  // Auto-check dangerous_skip_checks for Docker, Kubernetes, and Sprites, uncheck for Zellij
-  // Fetch storage classes when Kubernetes backend is selected
+  // Auto-check dangerous_skip_checks for Docker, uncheck for Zellij
   // Reset model when agent changes
   // Fetch feature flags on mount
-  // Reset backend if Kubernetes is disabled
   // Sync repositories array with multi-repo toggle
   const availableModels = useMemo(
     () => getModelsForAgent(formData.agent),
@@ -74,7 +70,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
 
   const buildSessionRequest = (): CreateSessionRequest => {
     // Build CreateRepositoryInput array
-    // Use repositories array if multi-repo enabled, or if base_branch is specified (for Sprites/K8s)
+    // Use repositories array if multi-repo enabled, or if base_branch is specified
     const firstRepo = repositories[0];
     if (firstRepo == null) {
       throw new Error("No repository specified");
@@ -100,7 +96,6 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       dangerous_skip_checks: formData.dangerous_skip_checks,
       print_mode: false,
       plan_mode: formData.plan_mode,
-      access_mode: formData.access_mode,
       images: [],
       // Include container settings if specified
       pull_policy: formData.pull_policy,
@@ -122,7 +117,7 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     toast.info(`Uploading ${String(selectedFiles.length)} image(s)...`);
     for (const file of selectedFiles) {
       try {
-        await client.uploadImage(sessionId, file);
+        await apiClient.uploadImage(sessionId, file);
       } catch (error_) {
         console.error("Failed to upload image:", error_);
         toast.warning(`Failed to upload ${file.name}`);
@@ -134,21 +129,6 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
-
-    // Validate storage class for Kubernetes backend
-    if (
-      formData.backend === BackendType.Kubernetes &&
-      storageClasses.length > 0
-    ) {
-      const hasDefault = storageClasses.some((sc) => sc.is_default);
-      if (!hasDefault && !formData.storage_class) {
-        setError(
-          "No default storage class available. Please select a storage class.",
-        );
-        setIsSubmitting(false);
-        return;
-      }
-    }
 
     try {
       // Validate repositories
@@ -164,11 +144,11 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
       }
 
       const request = buildSessionRequest();
-      const result = await createSession(request);
+      const result = await createSessionMutation.mutateAsync(request);
 
       // Upload images if any were selected
-      if (result) {
-        await uploadImages(result);
+      if (result.id) {
+        await uploadImages(result.id);
       }
 
       toast.success("Session created successfully");
@@ -336,8 +316,8 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
                     }}
                   >
                     <strong>Warning:</strong> Multi-repository sessions are only
-                    supported with Docker backend. Zellij, Kubernetes, and
-                    Sprites backends will reject multi-repo sessions.
+                    supported with Docker backend. Other backends will reject
+                    multi-repo sessions.
                   </div>
                 )}
             </div>
@@ -366,7 +346,6 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               formData={formData}
               setFormData={setFormData}
               featureFlags={flags}
-              enableReadonlyMode={flags?.enable_readonly_mode === true}
               availableModels={availableModels}
             />
 
@@ -375,12 +354,12 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               setSelectedFiles={setSelectedFiles}
             />
 
-            <AdvancedContainerSettings
-              formData={formData}
-              setFormData={setFormData}
-              loadingStorageClasses={loadingStorageClasses}
-              storageClasses={storageClasses}
-            />
+            {formData.backend === BackendType.Docker && (
+              <AdvancedContainerSettings
+                formData={formData}
+                setFormData={setFormData}
+              />
+            )}
 
             <div className="flex items-center gap-2">
               <input
@@ -394,7 +373,6 @@ export function CreateSessionDialog({ onClose }: CreateSessionDialogProps) {
               />
               <Label htmlFor="plan-mode" className="cursor-pointer">
                 Start in plan mode
-                {flags?.enable_readonly_mode === true ? " (read-only)" : ""}
               </Label>
             </div>
 

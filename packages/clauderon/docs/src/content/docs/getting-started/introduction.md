@@ -5,14 +5,14 @@ description: Learn what clauderon is and why you might want to use it
 
 **clauderon** manages AI coding agent sessions from one place — terminal, browser, or phone.
 
-Run Claude Code, Codex, and Gemini side by side. Monitor from any device. Switch backends for different isolation needs. Agents never see your credentials — the proxy injects tokens at request time.
+Run Claude Code, Codex, and Gemini side by side. Monitor from any device. Switch backends for different isolation needs.
 
 ## Features
 
 - **Agents**: Claude Code (default), Codex, Gemini
 - **Interfaces**: TUI, Web UI (`localhost:3030`), Mobile, CLI
 - **Backends**: Zellij (lightweight, host tools) or Docker (full isolation)
-- **Security**: Zero-credential proxy with TLS interception, audit logging, 1Password support
+- **Security**: Audit logging
 - **Persistence**: SQLite storage, session archiving, resume across restarts
 
 ![TUI Session List](../../../assets/screenshots/tui/session-list.png)
@@ -22,15 +22,15 @@ Run Claude Code, Codex, and Gemini side by side. Monitor from any device. Switch
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────┐
-│                 clauderon daemon                 │
-├─────────────────────────────────────────────────┤
-│  HTTP API :3030  │  Proxy  │  Session Manager   │
-└─────────────────────────────────────────────────┘
-       │               │              │
-       ▼               ▼              ▼
-   Web/Mobile/TUI  Credential    Docker/Zellij
-                   Injection     Backends
+┌─────────────────────────────────────┐
+│           clauderon daemon          │
+├─────────────────────────────────────┤
+│  HTTP API :3030  │ Session Manager  │
+└─────────────────────────────────────┘
+       │                    │
+       ▼                    ▼
+   Web/Mobile/TUI     Docker/Zellij
+                       Backends
 ```
 
 ## Quick Example

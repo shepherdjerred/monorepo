@@ -158,6 +158,36 @@ async fn run_main_loop(
                             }
                             continue;
                         }
+                        Some(BackendType::AiSandbox) => {
+                            // Use external command for AI Sandbox (same as Zellij)
+                            if let Ok(Some(command)) = app.get_attach_command().await {
+                                disable_raw_mode()?;
+                                execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+
+                                tracing::info!("Attaching... Detach with Ctrl+O, d");
+
+                                let status = std::process::Command::new(&command[0])
+                                    .args(&command[1..])
+                                    .status();
+
+                                enable_raw_mode()?;
+                                execute!(terminal.backend_mut(), EnterAlternateScreen)?;
+                                terminal.clear()?;
+
+                                match status {
+                                    Ok(s) if s.success() => {
+                                        app.status_message = Some("Detached from AI Sandbox session".to_owned());
+                                    }
+                                    Ok(s) => {
+                                        app.status_message = Some(format!("AI Sandbox attach exited with: {s}"));
+                                    }
+                                    Err(e) => {
+                                        app.status_message = Some(format!("Failed to attach: {e}"));
+                                    }
+                                }
+                            }
+                            continue;
+                        }
                         Some(BackendType::Zellij) => {
                             // Use external command for Zellij (legacy behavior)
                             if let Ok(Some(command)) = app.get_attach_command().await {
@@ -188,43 +218,6 @@ async fn run_main_loop(
                                 let _ = app.refresh_sessions().await;
                                 continue;
                             }
-                        }
-                        Some(BackendType::Kubernetes) => {
-                            // Use PTY-based attachment for Kubernetes
-                            match app.attach_selected_session().await {
-                                Ok(()) => {
-                                    app.status_message = Some("Attached - Press Ctrl+Q to detach, Ctrl+Left/Right to switch sessions".to_owned());
-                                }
-                                Err(e) => {
-                                    app.status_message = Some(format!("Attach failed: {e}"));
-                                }
-                            }
-                            continue;
-                        }
-                        Some(BackendType::Sprites) => {
-                            // Use PTY-based attachment for Sprites
-                            match app.attach_selected_session().await {
-                                Ok(()) => {
-                                    app.status_message = Some("Attached - Press Ctrl+Q to detach, Ctrl+Left/Right to switch sessions".to_owned());
-                                }
-                                Err(e) => {
-                                    app.status_message = Some(format!("Attach failed: {e}"));
-                                }
-                            }
-                            continue;
-                        }
-                        #[cfg(target_os = "macos")]
-                        Some(BackendType::AppleContainer) => {
-                            // Use PTY-based attachment for Apple Container
-                            match app.attach_selected_session().await {
-                                Ok(()) => {
-                                    app.status_message = Some("Attached - Press Ctrl+Q to detach, Ctrl+Left/Right to switch sessions".to_owned());
-                                }
-                                Err(e) => {
-                                    app.status_message = Some(format!("Attach failed: {e}"));
-                                }
-                            }
-                            continue;
                         }
                         #[cfg(target_os = "macos")]
                         _ => {}

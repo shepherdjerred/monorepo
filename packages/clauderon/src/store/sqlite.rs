@@ -1250,13 +1250,13 @@ impl Store for SqliteStore {
             r"
             INSERT OR REPLACE INTO sessions (
                 id, name, title, description, status, backend, agent, model, repo_path, worktree_path,
-                subdirectory, branch_name, backend_id, initial_prompt, dangerous_skip_checks, dangerous_copy_creds,
+                subdirectory, branch_name, backend_id, initial_prompt, dangerous_skip_checks,
                 pr_url, pr_check_status, pr_review_decision, pr_review_status, pr_merge_methods, pr_default_merge_method,
                 pr_delete_branch_on_merge, claude_status, claude_status_updated_at,
-                merge_conflict, worktree_dirty, worktree_changed_files, access_mode, proxy_port, history_file_path,
+                merge_conflict, worktree_dirty, worktree_changed_files, history_file_path,
                 reconcile_attempts, last_reconcile_error, last_reconcile_at, error_message,
                 created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ",
         )
         .bind(session.id.to_string())
@@ -1280,7 +1280,6 @@ impl Store for SqliteStore {
         .bind(&session.backend_id)
         .bind(&session.initial_prompt)
         .bind(session.dangerous_skip_checks)
-        .bind(session.dangerous_copy_creds)
         .bind(&session.pr_url)
         .bind(
             session
@@ -1319,8 +1318,6 @@ impl Store for SqliteStore {
                 .as_ref()
                 .and_then(|files| serde_json::to_string(files).ok()),
         )
-        .bind(session.access_mode.to_string())
-        .bind(session.proxy_port.map(i64::from))
         .bind(
             session
                 .history_file_path
@@ -1580,10 +1577,6 @@ const fn event_type_name(event_type: &crate::core::events::EventType) -> &'stati
 
 /// Row type for sessions table
 #[derive(sqlx::FromRow)]
-#[expect(
-    clippy::struct_excessive_bools,
-    reason = "mirrors database schema with boolean columns"
-)]
 struct SessionRow {
     id: String,
     name: String,
@@ -1600,7 +1593,6 @@ struct SessionRow {
     backend_id: Option<String>,
     initial_prompt: String,
     dangerous_skip_checks: bool,
-    dangerous_copy_creds: bool,
     pr_url: Option<String>,
     pr_check_status: Option<String>,
     pr_review_decision: Option<String>,
@@ -1613,8 +1605,6 @@ struct SessionRow {
     merge_conflict: bool,
     worktree_dirty: bool,
     worktree_changed_files: Option<String>,
-    access_mode: String,
-    proxy_port: Option<i64>,
     history_file_path: Option<String>,
     reconcile_attempts: i64,
     last_reconcile_error: Option<String>,
@@ -1824,7 +1814,6 @@ impl TryFrom<SessionRow> for Session {
             backend_id: row.backend_id,
             initial_prompt: row.initial_prompt,
             dangerous_skip_checks: row.dangerous_skip_checks,
-            dangerous_copy_creds: row.dangerous_copy_creds,
             can_merge_pr: row.pr_url.is_some()
                 && pr_check_status == Some(crate::core::CheckStatus::Passing)
                 && pr_review_status == Some(crate::core::PrReviewStatus::Approved)
@@ -1844,13 +1833,6 @@ impl TryFrom<SessionRow> for Session {
                 .worktree_changed_files
                 .as_ref()
                 .and_then(|json| serde_json::from_str(json).ok()),
-            access_mode: row.access_mode.parse().unwrap_or_default(),
-            #[expect(
-                clippy::cast_possible_truncation,
-                clippy::cast_sign_loss,
-                reason = "port numbers are always within u16 range (0-65535)"
-            )]
-            proxy_port: row.proxy_port.map(|p| p as u16),
             history_file_path: row.history_file_path.map(PathBuf::from),
             #[expect(
                 clippy::cast_possible_truncation,

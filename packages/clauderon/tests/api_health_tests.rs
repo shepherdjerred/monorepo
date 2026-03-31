@@ -31,16 +31,6 @@ fn test_resource_state_stopped_serialization() {
 }
 
 #[test]
-fn test_resource_state_hibernated_serialization() {
-    let state = ResourceState::Hibernated;
-    let json = serde_json::to_string(&state).unwrap();
-    assert!(json.contains("Hibernated"));
-
-    let parsed: ResourceState = serde_json::from_str(&json).unwrap();
-    assert!(matches!(parsed, ResourceState::Hibernated));
-}
-
-#[test]
 fn test_resource_state_pending_serialization() {
     let state = ResourceState::Pending;
     let json = serde_json::to_string(&state).unwrap();
@@ -101,16 +91,16 @@ fn test_resource_state_deleted_externally_serialization() {
 #[test]
 fn test_resource_state_data_lost_serialization() {
     let state = ResourceState::DataLost {
-        reason: "PVC was deleted".to_owned(),
+        reason: "Volume was deleted".to_owned(),
     };
     let json = serde_json::to_string(&state).unwrap();
     assert!(json.contains("DataLost"));
-    assert!(json.contains("PVC was deleted"));
+    assert!(json.contains("Volume was deleted"));
 
     let parsed: ResourceState = serde_json::from_str(&json).unwrap();
     match parsed {
         ResourceState::DataLost { reason } => {
-            assert_eq!(reason, "PVC was deleted");
+            assert_eq!(reason, "Volume was deleted");
         }
         _ => panic!("Expected DataLost state"),
     }
@@ -147,7 +137,6 @@ fn test_resource_state_is_healthy() {
 fn test_available_action_serialization() {
     let actions = vec![
         (AvailableAction::Start, "Start"),
-        (AvailableAction::Wake, "Wake"),
         (AvailableAction::Recreate, "Recreate"),
         (AvailableAction::RecreateFresh, "RecreateFresh"),
         (AvailableAction::UpdateImage, "UpdateImage"),
@@ -308,25 +297,10 @@ fn test_stopped_container_actions() {
 }
 
 #[test]
-fn test_hibernated_sprite_actions() {
-    let mut report = create_test_health_report();
-    report.backend_type = BackendType::Sprites;
-    report.state = ResourceState::Hibernated;
-    report.available_actions = vec![AvailableAction::Wake, AvailableAction::Recreate];
-
-    assert!(report.available_actions.contains(&AvailableAction::Wake));
-    assert!(
-        report
-            .available_actions
-            .contains(&AvailableAction::Recreate)
-    );
-}
-
-#[test]
 fn test_data_lost_actions() {
     let mut report = create_test_health_report();
     report.state = ResourceState::DataLost {
-        reason: "PVC deleted".to_owned(),
+        reason: "Volume deleted".to_owned(),
     };
     report.available_actions = vec![AvailableAction::Cleanup, AvailableAction::RecreateFresh];
     report.data_safe = false;
@@ -370,28 +344,6 @@ fn test_docker_bind_mount_data_safe() {
 }
 
 #[test]
-fn test_kubernetes_pvc_exists_data_safe() {
-    let mut report = create_test_health_report();
-    report.backend_type = BackendType::Kubernetes;
-    report.state = ResourceState::Missing;
-    report.data_safe = true;
-
-    assert!(report.data_safe);
-}
-
-#[test]
-fn test_kubernetes_pvc_deleted_data_lost() {
-    let mut report = create_test_health_report();
-    report.backend_type = BackendType::Kubernetes;
-    report.state = ResourceState::DataLost {
-        reason: "PVC was deleted".to_owned(),
-    };
-    report.data_safe = false;
-
-    assert!(!report.data_safe);
-}
-
-#[test]
 fn test_zellij_always_data_safe() {
     let mut report = create_test_health_report();
     report.backend_type = BackendType::Zellij;
@@ -401,14 +353,3 @@ fn test_zellij_always_data_safe() {
     assert!(report.data_safe);
 }
 
-#[test]
-fn test_sprites_auto_destroy_not_data_safe() {
-    let mut report = create_test_health_report();
-    report.backend_type = BackendType::Sprites;
-    report.state = ResourceState::Stopped;
-    report.available_actions = vec![]; // Blocked
-    report.data_safe = false;
-
-    assert!(!report.data_safe);
-    assert!(report.is_blocked());
-}

@@ -69,7 +69,7 @@ Default is "locked" -- all keystrokes forwarded to container. Press `Ctrl+L` to 
 
 ![Create Dialog](../../../assets/screenshots/tui/create-dialog.png)
 
-Press `n` to open. Configure: repository (recent/browse/manual path), backend, agent, access mode, plan mode, model override, base branch. Use `Ctrl+E` to edit prompt in `$EDITOR`. Press `i` to attach images (PNG, JPG, GIF, WebP).
+Press `n` to open. Configure: repository (recent/browse/manual path), backend, agent, plan mode, model override, base branch. Use `Ctrl+E` to edit prompt in `$EDITOR`. Press `i` to attach images (PNG, JPG, GIF, WebP).
 
 ### Docker-specific options
 
@@ -81,10 +81,9 @@ Press `h` on a session:
 
 | State      | Actions                           |
 | ---------- | --------------------------------- |
-| Healthy    | Recreate, Cleanup                 |
-| Stopped    | Start, Recreate, Cleanup          |
-| Hibernated | Wake, Recreate, Cleanup           |
-| Error      | Recreate, Recreate Fresh, Cleanup |
+| Healthy   | Recreate, Cleanup                 |
+| Stopped   | Start, Recreate, Cleanup          |
+| Error     | Recreate, Recreate Fresh, Cleanup |
 | Missing    | Recreate, Recreate Fresh, Cleanup |
 | CrashLoop  | Recreate Fresh, Cleanup           |
 

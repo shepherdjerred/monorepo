@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { X, Folder, FolderOpen, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { apiClient } from "@/lib/api-client";
 import type { DirectoryEntryDto } from "@clauderon/client";
 
 type DirectoryBrowserDialogProps = {
@@ -14,21 +15,46 @@ export function DirectoryBrowserDialog({
   onSelect,
   initialPath,
 }: DirectoryBrowserDialogProps) {
+  const client = apiClient;
   const [currentPath, setCurrentPath] = useState(initialPath ?? "~");
-  const [parentPath] = useState<string | null>(null);
-  const [entries] = useState<DirectoryEntryDto[]>([]);
-  const [isLoading] = useState(false);
-  const [error] = useState<string | null>(null);
+  const [parentPath, setParentPath] = useState<string | null>(null);
+  const [entries, setEntries] = useState<DirectoryEntryDto[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Fetch directory contents
+  const fetchDirectory = useCallback(
+    async (path: string) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await client.browseDirectory(path);
+        setCurrentPath(response.current_path);
+        setParentPath(response.parent_path ?? null);
+        setEntries(response.entries);
+        if (response.error) {
+          setError(response.error);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to browse directory");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [client],
+  );
+
+  useEffect(() => {
+    void fetchDirectory(currentPath);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleNavigateToParent = () => {
     if (parentPath != null && parentPath.length > 0) {
-      setCurrentPath(parentPath);
+      void fetchDirectory(parentPath);
     }
   };
 
   const handleNavigateToDirectory = (path: string) => {
-    setCurrentPath(path);
+    void fetchDirectory(path);
   };
 
   const handleSelectCurrent = () => {
@@ -37,7 +63,7 @@ export function DirectoryBrowserDialog({
   };
 
   const handleGoHome = () => {
-    setCurrentPath("~");
+    void fetchDirectory("~");
   };
 
   // Render breadcrumb from path
@@ -48,7 +74,7 @@ export function DirectoryBrowserDialog({
       <div className="flex items-center gap-1 text-sm font-mono overflow-x-auto">
         <button
           onClick={() => {
-            setCurrentPath("/");
+            void fetchDirectory("/");
           }}
           className="cursor-pointer px-2 py-1 hover:bg-primary/10 rounded transition-all duration-200"
         >
@@ -61,7 +87,7 @@ export function DirectoryBrowserDialog({
               <span className="text-muted-foreground">/</span>
               <button
                 onClick={() => {
-                  setCurrentPath(path);
+                  void fetchDirectory(path);
                 }}
                 className="cursor-pointer px-2 py-1 hover:bg-primary/10 rounded transition-all duration-200"
               >

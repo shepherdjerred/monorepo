@@ -57,7 +57,7 @@ cd mobile && bun test:windows          # Windows-specific
 
 **Key Patterns:**
 
-- **Conditional E2E**: Tests marked `#[ignore]` skip when Docker/K8s unavailable
+- **Conditional E2E**: Tests marked `#[ignore]` skip when Docker unavailable
 - **Test Helpers**: See `tests/common/mod.rs` for availability checks, skip macros, cleanup guards
 - **Mocks**: Mock backends (`MockGitBackend`, `MockApiClient`) for testing without external deps
 

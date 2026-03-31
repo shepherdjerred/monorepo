@@ -9,8 +9,6 @@ function getHealthLabel(state: ResourceState): string {
       return "Unknown";
     case "Stopped":
       return "Stopped";
-    case "Hibernated":
-      return "Hibernated";
     case "Pending":
       return "Pending";
     case "Missing":
@@ -31,7 +29,6 @@ function getHealthLabel(state: ResourceState): string {
 function getHealthColor(state: ResourceState): string {
   switch (state.type) {
     case "Stopped":
-    case "Hibernated":
     case "Pending":
       return "bg-yellow-500/20 text-yellow-700 border-yellow-500/50";
     case "Missing":
@@ -70,10 +67,6 @@ describe("StartupHealthModal helpers", () => {
       expect(getHealthLabel({ type: "Stopped" })).toBe("Stopped");
     });
 
-    test("returns Hibernated for hibernated state", () => {
-      expect(getHealthLabel({ type: "Hibernated" })).toBe("Hibernated");
-    });
-
     test("returns Pending for pending state", () => {
       expect(getHealthLabel({ type: "Pending" })).toBe("Pending");
     });
@@ -99,7 +92,7 @@ describe("StartupHealthModal helpers", () => {
     });
 
     test("returns Data Lost for data lost state", () => {
-      expect(getHealthLabel({ type: "DataLost", reason: "PVC deleted" })).toBe(
+      expect(getHealthLabel({ type: "DataLost", reason: "Volume deleted" })).toBe(
         "Data Lost",
       );
     });
@@ -120,7 +113,6 @@ describe("StartupHealthModal helpers", () => {
       const yellowColor =
         "bg-yellow-500/20 text-yellow-700 border-yellow-500/50";
       expect(getHealthColor({ type: "Stopped" })).toBe(yellowColor);
-      expect(getHealthColor({ type: "Hibernated" })).toBe(yellowColor);
       expect(getHealthColor({ type: "Pending" })).toBe(yellowColor);
     });
 
@@ -137,7 +129,7 @@ describe("StartupHealthModal helpers", () => {
       );
       expect(getHealthColor({ type: "CrashLoop" })).toBe(redColor);
       expect(getHealthColor({ type: "DeletedExternally" })).toBe(redColor);
-      expect(getHealthColor({ type: "DataLost", reason: "PVC deleted" })).toBe(
+      expect(getHealthColor({ type: "DataLost", reason: "Volume deleted" })).toBe(
         redColor,
       );
       expect(getHealthColor({ type: "WorktreeMissing" })).toBe(redColor);

@@ -57,10 +57,8 @@ pub async fn handle_request(
                         req.agent,
                         req.model,
                         req.dangerous_skip_checks,
-                        req.dangerous_copy_creds,
                         req.print_mode,
                         req.plan_mode,
-                        req.access_mode,
                         req.images,
                         req.container_image,
                         req.pull_policy,
@@ -103,10 +101,8 @@ pub async fn handle_request(
                         req.agent,
                         req.model,
                         req.dangerous_skip_checks,
-                        req.dangerous_copy_creds,
                         req.print_mode,
                         req.plan_mode,
-                        req.access_mode,
                         req.images,
                         req.container_image,
                         req.pull_policy,
@@ -120,7 +116,6 @@ pub async fn handle_request(
                         tracing::info!(
                             id = %session.id,
                             name = %session.name,
-                            access_mode = ?session.access_mode,
                             warnings = ?warnings,
                             "Session created (sync)"
                         );
@@ -232,22 +227,6 @@ pub async fn handle_request(
                 }
             }
         },
-
-        Request::UpdateAccessMode { id, access_mode } => {
-            match manager.update_access_mode(&id, access_mode).await {
-                Ok(()) => {
-                    tracing::info!(session = %id, mode = ?access_mode, "Access mode updated");
-                    Response::AccessModeUpdated
-                }
-                Err(e) => {
-                    tracing::error!(session = %id, error = %e, "Failed to update access mode");
-                    Response::Error {
-                        code: "UPDATE_ERROR".to_owned(),
-                        message: e.to_string(),
-                    }
-                }
-            }
-        }
 
         Request::Subscribe => {
             // TODO: Implement real-time subscriptions
@@ -381,31 +360,6 @@ pub async fn handle_request(
             }
         }
 
-        Request::WakeSession { id } => {
-            let session_id = match uuid::Uuid::parse_str(&id) {
-                Ok(id) => id,
-                Err(e) => {
-                    return Response::Error {
-                        code: "INVALID_ID".to_owned(),
-                        message: format!("Invalid session ID: {e}"),
-                    };
-                }
-            };
-            match manager.wake_session(session_id).await {
-                Ok(_result) => {
-                    tracing::info!(id = %id, "Session woken");
-                    Response::Woken
-                }
-                Err(e) => {
-                    tracing::error!(id = %id, error = %e, "Failed to wake session");
-                    Response::Error {
-                        code: "WAKE_ERROR".to_owned(),
-                        message: e.to_string(),
-                    }
-                }
-            }
-        }
-
         Request::RecreateSession { id } => {
             let session_id = match uuid::Uuid::parse_str(&id) {
                 Ok(id) => id,
@@ -515,10 +469,7 @@ pub async fn handle_create_session_with_progress(
     let backend_name = match req.backend {
         crate::core::BackendType::Zellij => "Zellij session",
         crate::core::BackendType::Docker => "Docker container",
-        crate::core::BackendType::Kubernetes => "Kubernetes pod",
-        #[cfg(target_os = "macos")]
-        crate::core::BackendType::AppleContainer => "Apple container",
-        crate::core::BackendType::Sprites => "Sprites container",
+        crate::core::BackendType::AiSandbox => "AI Sandbox session",
     };
 
     // Step 1: Creating git worktree
@@ -542,10 +493,8 @@ pub async fn handle_create_session_with_progress(
             req.agent,
             req.model,
             req.dangerous_skip_checks,
-            req.dangerous_copy_creds,
             req.print_mode,
             req.plan_mode,
-            req.access_mode,
             req.images,
             req.container_image,
             req.pull_policy,

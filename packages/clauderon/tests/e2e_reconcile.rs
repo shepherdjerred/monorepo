@@ -8,7 +8,7 @@ mod common;
 use std::sync::Arc;
 
 use clauderon::backends::{DockerBackend, ExecutionBackend, GitBackend, GitOperations};
-use clauderon::core::{AccessMode, AgentType, BackendType, Session, SessionConfig, SessionStatus};
+use clauderon::core::{AgentType, BackendType, Session, SessionConfig, SessionStatus};
 use clauderon::store::{SqliteStore, Store};
 use tempfile::TempDir;
 
@@ -26,8 +26,6 @@ fn create_test_session(name: &str, worktree_path: &std::path::Path) -> Session {
         backend: BackendType::Docker,
         agent: AgentType::ClaudeCode,
         dangerous_skip_checks: true,
-        dangerous_copy_creds: false,
-        access_mode: AccessMode::default(),
         repositories: None,
         model: None,
     });

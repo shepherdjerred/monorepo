@@ -94,8 +94,6 @@ impl MockApiClient {
             agent: AgentType::ClaudeCode,
             model: None, // Mock uses default model
             dangerous_skip_checks: false,
-            dangerous_copy_creds: false,
-            access_mode: crate::core::AccessMode::default(),
         };
 
         let mut session = Session::new(config);
@@ -179,8 +177,6 @@ impl ApiClient for MockApiClient {
             agent: request.agent,
             model: request.model,
             dangerous_skip_checks: request.dangerous_skip_checks,
-            dangerous_copy_creds: request.dangerous_copy_creds,
-            access_mode: request.access_mode,
         };
 
         let mut session = Session::new(config);
@@ -429,11 +425,6 @@ impl ApiClient for MockApiClient {
         Ok(())
     }
 
-    async fn wake_session(&mut self, _id: uuid::Uuid) -> anyhow::Result<()> {
-        // Mock implementation - no-op
-        Ok(())
-    }
-
     async fn recreate_session(&mut self, _id: uuid::Uuid) -> anyhow::Result<()> {
         // Mock implementation - no-op
         Ok(())
@@ -488,10 +479,8 @@ mod tests {
             agent: AgentType::ClaudeCode,
             model: None, // Test uses default model
             dangerous_skip_checks: false,
-            dangerous_copy_creds: false,
             print_mode: false,
             plan_mode: true,
-            access_mode: crate::core::AccessMode::default(),
             images: vec![],
             container_image: None,
             pull_policy: None,

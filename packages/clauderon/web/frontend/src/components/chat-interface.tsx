@@ -5,7 +5,7 @@ import { MessageBubble } from "./message-bubble.tsx";
 import { Send, Terminal as TerminalIcon, X, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useSessionContext } from "@/contexts/session-context.tsx";
+import { apiClient } from "@/lib/api-client";
 
 type ChatInterfaceProps = {
   sessionId: string;
@@ -25,8 +25,6 @@ export function ChatInterface({
 
   // Still need console client for sending input
   const { client, isConnected } = useConsole(sessionId);
-
-  const { client: apiClient } = useSessionContext();
 
   const [input, setInput] = useState("");
   const [attachedImages, setAttachedImages] = useState<File[]>([]);

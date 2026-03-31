@@ -8,11 +8,9 @@ use uuid::Uuid;
 
 use crate::backends::{
     DockerBackend, ExecutionBackend, GitBackend, GitOperations, ImageConfig, ImagePullPolicy,
-    KubernetesBackend, ResourceLimits, SpritesBackend, ZellijBackend,
+    AiSandboxBackend, ResourceLimits, ZellijBackend,
 };
 
-#[cfg(target_os = "macos")]
-use crate::backends::AppleContainerBackend;
 use crate::core::console_manager::ConsoleManager;
 use crate::store::Store;
 
@@ -134,16 +132,9 @@ pub struct SessionManager {
     git: Arc<dyn GitOperations>,
     zellij: Arc<dyn ExecutionBackend>,
     docker: Arc<dyn ExecutionBackend>,
-    kubernetes: Arc<dyn ExecutionBackend>,
-    /// Concrete Kubernetes backend for API operations (e.g., listing storage classes)
-    kubernetes_backend: Option<Arc<crate::backends::KubernetesBackend>>,
-    #[cfg(target_os = "macos")]
-    apple_container: Arc<dyn ExecutionBackend>,
-    sprites: Arc<dyn ExecutionBackend>,
+    ai_sandbox: Arc<dyn ExecutionBackend>,
     console_manager: Arc<ConsoleManager>,
     sessions: RwLock<Vec<Session>>,
-    /// Optional proxy manager for per-session filtering
-    proxy_manager: Option<Arc<crate::proxy::ProxyManager>>,
     /// Optional event broadcaster for real-time WebSocket updates
     event_broadcaster: Option<EventBroadcaster>,
     /// Semaphore to limit concurrent creations (max 3)
@@ -179,19 +170,12 @@ impl SessionManager {
     /// # Errors
     ///
     /// Returns an error if the store cannot be read.
-    #[expect(
-        clippy::too_many_arguments,
-        reason = "session manager requires many backend and configuration dependencies"
-    )]
     pub async fn new(
         store: Arc<dyn Store>,
         git: Arc<dyn GitOperations>,
         zellij: Arc<dyn ExecutionBackend>,
         docker: Arc<dyn ExecutionBackend>,
-        kubernetes: Arc<dyn ExecutionBackend>,
-        kubernetes_backend: Option<Arc<crate::backends::KubernetesBackend>>,
-        #[cfg(target_os = "macos")] apple_container: Arc<dyn ExecutionBackend>,
-        sprites: Arc<dyn ExecutionBackend>,
+        ai_sandbox: Arc<dyn ExecutionBackend>,
         feature_flags: Arc<crate::feature_flags::FeatureFlags>,
     ) -> anyhow::Result<Self> {
         let sessions = store.list_sessions().await?;
@@ -201,14 +185,9 @@ impl SessionManager {
             git,
             zellij,
             docker,
-            kubernetes,
-            kubernetes_backend,
-            #[cfg(target_os = "macos")]
-            apple_container,
-            sprites,
+            ai_sandbox,
             console_manager: Arc::new(ConsoleManager::new()),
             sessions: RwLock::new(sessions),
-            proxy_manager: None,
             event_broadcaster: None,
             creation_semaphore: Arc::new(Semaphore::new(3)),
             deletion_semaphore: Arc::new(Semaphore::new(3)),
@@ -223,33 +202,22 @@ impl SessionManager {
     /// Create a new session manager with default backends
     ///
     /// This is a convenience constructor for production use that creates
-    /// real Git, Zellij, Docker, and Kubernetes backends.
+    /// real Git, Zellij, Docker, and other backends.
     ///
     /// # Errors
     ///
-    /// Returns an error if the store cannot be read or Kubernetes client fails.
+    /// Returns an error if the store cannot be read.
     pub async fn with_defaults(
         store: Arc<dyn Store>,
         feature_flags: Arc<crate::feature_flags::FeatureFlags>,
     ) -> anyhow::Result<Self> {
-        let kubernetes_backend = Arc::new(
-            KubernetesBackend::new(crate::backends::KubernetesConfig::load_or_default()).await?,
-        );
-
-        #[expect(
-            clippy::clone_on_ref_ptr,
-            reason = "clone needed for implicit coercion to Arc<dyn Trait>"
-        )]
+        let git: Arc<dyn GitOperations> = Arc::new(GitBackend::new());
         Self::new(
             store,
-            Arc::new(GitBackend::new()),
+            Arc::clone(&git),
             Arc::new(ZellijBackend::new()),
             Arc::new(DockerBackend::new()),
-            kubernetes_backend.clone(),
-            Some(kubernetes_backend),
-            #[cfg(target_os = "macos")]
-            Arc::new(AppleContainerBackend::new()),
-            Arc::new(crate::backends::SpritesBackend::new()),
+            Arc::new(AiSandboxBackend::new(Arc::clone(&git))),
             feature_flags,
         )
         .await
@@ -257,44 +225,26 @@ impl SessionManager {
 
     /// Create a new session manager with a custom Docker backend
     ///
-    /// This is useful for providing a DockerBackend configured with proxy support.
+    /// This is useful for providing a custom DockerBackend configuration.
     ///
     /// # Errors
     ///
-    /// Returns an error if the store cannot be read or Kubernetes client fails.
+    /// Returns an error if the store cannot be read.
     pub async fn with_docker_backend(
         store: Arc<dyn Store>,
         docker: DockerBackend,
         feature_flags: Arc<crate::feature_flags::FeatureFlags>,
     ) -> anyhow::Result<Self> {
-        let kubernetes_backend = Arc::new(
-            KubernetesBackend::new(crate::backends::KubernetesConfig::load_or_default()).await?,
-        );
-
-        #[expect(
-            clippy::clone_on_ref_ptr,
-            reason = "clone needed for implicit coercion to Arc<dyn Trait>"
-        )]
+        let git: Arc<dyn GitOperations> = Arc::new(GitBackend::new());
         Self::new(
             store,
-            Arc::new(GitBackend::new()),
+            Arc::clone(&git),
             Arc::new(ZellijBackend::new()),
             Arc::new(docker),
-            kubernetes_backend.clone(),
-            Some(kubernetes_backend),
-            #[cfg(target_os = "macos")]
-            Arc::new(AppleContainerBackend::new()),
-            Arc::new(SpritesBackend::new()),
+            Arc::new(AiSandboxBackend::new(Arc::clone(&git))),
             feature_flags,
         )
         .await
-    }
-
-    /// Set the proxy manager for per-session filtering
-    ///
-    /// This should be called after construction to enable per-session proxy support.
-    pub fn set_proxy_manager(&mut self, proxy_manager: Arc<crate::proxy::ProxyManager>) {
-        self.proxy_manager = Some(proxy_manager);
     }
 
     /// Set the event broadcaster for real-time WebSocket updates
@@ -308,7 +258,7 @@ impl SessionManager {
     /// Set the HTTP server port for hook communication
     ///
     /// This should be called after construction to enable HTTP-based hook communication
-    /// for Docker and Kubernetes containers (required since Unix sockets don't work
+    /// for Docker containers (required since Unix sockets don't work
     /// across VM/network boundaries).
     pub fn set_http_port(&mut self, port: u16) {
         self.http_port = Some(port);
@@ -323,16 +273,7 @@ impl SessionManager {
     }
 
     /// Validate that the requested backend is enabled via feature flags
-    fn validate_backend_enabled(&self, backend: BackendType) -> anyhow::Result<()> {
-        if backend == BackendType::Kubernetes && !self.feature_flags.enable_kubernetes_backend {
-            anyhow::bail!(
-                "Kubernetes backend is not enabled. To enable, set environment variable:\n  \
-                CLAUDERON_FEATURE_ENABLE_KUBERNETES_BACKEND=true\n\
-                Or add to ~/.clauderon/config.toml:\n  \
-                [feature_flags]\n  \
-                enable_kubernetes_backend = true"
-            );
-        }
+    fn validate_backend_enabled(&self, _backend: BackendType) -> anyhow::Result<()> {
 
         Ok(())
     }
@@ -343,13 +284,6 @@ impl SessionManager {
         Arc::clone(&self.console_manager)
     }
 
-    /// Get reference to Kubernetes backend
-    ///
-    /// Returns the Kubernetes backend for API operations like listing storage classes.
-    #[must_use]
-    pub fn kubernetes_backend(&self) -> Option<&crate::backends::KubernetesBackend> {
-        self.kubernetes_backend.as_ref().map(Arc::as_ref)
-    }
 
     /// Get reference to feature flags
     ///
@@ -357,25 +291,6 @@ impl SessionManager {
     #[must_use]
     pub fn feature_flags(&self) -> Arc<crate::feature_flags::FeatureFlags> {
         Arc::clone(&self.feature_flags)
-    }
-
-    /// Validate that read-only mode is allowed if requested
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if read-only mode is requested but the feature flag is disabled.
-    fn validate_readonly_mode_allowed(
-        &self,
-        access_mode: crate::core::AccessMode,
-    ) -> anyhow::Result<()> {
-        if access_mode == crate::core::AccessMode::ReadOnly
-            && !self.feature_flags.enable_readonly_mode
-        {
-            anyhow::bail!(
-                "Read-only mode is not available. This feature is experimental and must be explicitly enabled."
-            );
-        }
-        Ok(())
     }
 
     /// List all sessions
@@ -394,10 +309,7 @@ impl SessionManager {
             Arc::clone(&self.git),
             Arc::clone(&self.zellij),
             Arc::clone(&self.docker),
-            Arc::clone(&self.kubernetes),
-            #[cfg(target_os = "macos")]
-            Arc::clone(&self.apple_container),
-            Arc::clone(&self.sprites),
+            Arc::clone(&self.ai_sandbox),
         )
     }
 
@@ -481,7 +393,7 @@ impl SessionManager {
     }
 
     // ========================================================================
-    // Session Action Methods (Start, Wake, Recreate)
+    // Session Action Methods (Start, Recreate)
     // ========================================================================
 
     /// Start a stopped container session
@@ -560,79 +472,10 @@ impl SessionManager {
         })
     }
 
-    /// Wake a hibernated sprite session
-    ///
-    /// Only applicable to Sprites backend.
-    ///
-    /// # Arguments
-    ///
-    /// * `session_id` - UUID of the session to wake
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the session is not found, it's not a Sprites session,
-    /// or the wake operation fails.
-    #[instrument(skip(self), fields(session_id = %session_id))]
-    pub async fn wake_session(
-        &self,
-        session_id: Uuid,
-    ) -> anyhow::Result<crate::core::session::RecreateResult> {
-        let sessions = self.sessions.read().await;
-        let session = sessions
-            .iter()
-            .find(|s| s.id == session_id)
-            .ok_or_else(|| anyhow::anyhow!("Session not found: {session_id}"))?;
-
-        if session.backend != BackendType::Sprites {
-            anyhow::bail!("Wake is only supported for Sprites sessions");
-        }
-
-        let backend_id = session
-            .backend_id
-            .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("Session has no backend ID"))?
-            .clone();
-        let session_name = session.name.clone();
-        drop(sessions);
-
-        tracing::info!(
-            session_id = %session_id,
-            name = %session_name,
-            backend_id = %backend_id,
-            "Waking hibernated sprite"
-        );
-
-        self.sprites.wake(&backend_id).await?;
-
-        // Update session status
-        let mut sessions = self.sessions.write().await;
-        if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
-            session.set_status(SessionStatus::Running);
-            let session_clone = session.clone();
-            drop(sessions);
-
-            self.store.save_session(&session_clone).await?;
-
-            // Broadcast event
-            if let Some(ref broadcaster) = self.event_broadcaster {
-                broadcast_event(broadcaster, WsEvent::SessionUpdated(session_clone)).await;
-            }
-        }
-
-        tracing::info!(session_id = %session_id, "Successfully woke sprite");
-
-        Ok(crate::core::session::RecreateResult {
-            session_id,
-            new_backend_id: backend_id,
-            success: true,
-            message: "Sprite woken successfully".to_owned(),
-        })
-    }
-
     /// Recreate a session with blocking check
     ///
     /// This is the new unified recreate method that:
-    /// 1. Checks if recreation is blocked (e.g., Sprites with auto_destroy)
+    /// 1. Checks if recreation is blocked
     /// 2. Returns a RecreateBlockedError if blocked
     /// 3. Otherwise performs the recreation and returns RecreateResult
     ///
@@ -818,10 +661,7 @@ impl SessionManager {
         match backend_type {
             BackendType::Zellij => self.zellij.as_ref(),
             BackendType::Docker => self.docker.as_ref(),
-            BackendType::Kubernetes => self.kubernetes.as_ref(),
-            #[cfg(target_os = "macos")]
-            BackendType::AppleContainer => self.apple_container.as_ref(),
-            BackendType::Sprites => self.sprites.as_ref(),
+            BackendType::AiSandbox => self.ai_sandbox.as_ref(),
         }
     }
 
@@ -907,7 +747,6 @@ impl SessionManager {
     /// Returns the UUID of the newly created session (in Creating status)
     #[expect(
         clippy::too_many_arguments,
-        clippy::fn_params_excessive_bools,
         reason = "session creation requires many configuration parameters"
     )]
     pub async fn start_session_creation(
@@ -919,10 +758,8 @@ impl SessionManager {
         agent: super::session::AgentType,
         model: Option<super::session::SessionModel>,
         dangerous_skip_checks: bool,
-        dangerous_copy_creds: bool,
         print_mode: bool,
         plan_mode: bool,
-        access_mode: super::session::AccessMode,
         images: Vec<String>,
         container_image: Option<String>,
         pull_policy: Option<String>,
@@ -930,6 +767,11 @@ impl SessionManager {
         memory_limit: Option<String>,
         storage_class: Option<String>,
     ) -> anyhow::Result<Uuid> {
+        // Expand tilde in user-provided repo path
+        let repo_path = crate::utils::expand_tilde(&repo_path)
+            .to_string_lossy()
+            .to_string();
+
         // Validate backend is enabled
         self.validate_backend_enabled(backend)?;
 
@@ -967,9 +809,6 @@ impl SessionManager {
             self.feature_flags.enable_experimental_models,
         )
         .with_context(|| format!("Cannot create session with agent {agent:?}"))?;
-
-        // Validate read-only mode is enabled if requested
-        self.validate_readonly_mode_allowed(access_mode)?;
 
         // Process repositories (multi-repo mode or legacy single-repo mode)
         let repo_inputs = if let Some(repos) = repositories {
@@ -1105,8 +944,6 @@ impl SessionManager {
             agent,
             model,
             dangerous_skip_checks,
-            dangerous_copy_creds,
-            access_mode,
         });
 
         // Set history file path for Claude Code sessions
@@ -1121,7 +958,7 @@ impl SessionManager {
         // Set initial progress
         session.set_progress(crate::api::protocol::ProgressStep {
             step: 0,
-            total: 5,
+            total: 4,
             message: "Queued for creation".to_owned(),
         });
 
@@ -1197,10 +1034,8 @@ impl SessionManager {
                     model,
                     print_mode,
                     plan_mode,
-                    access_mode,
                     images,
                     dangerous_skip_checks,
-                    dangerous_copy_creds,
                     container_image,
                     pull_policy,
                     cpu_limit,
@@ -1218,7 +1053,6 @@ impl SessionManager {
     /// This method should not be called directly - it's spawned as a background task.
     #[expect(
         clippy::too_many_arguments,
-        clippy::fn_params_excessive_bools,
         reason = "session creation requires many configuration parameters"
     )]
     async fn complete_session_creation(
@@ -1235,10 +1069,8 @@ impl SessionManager {
         model: Option<super::session::SessionModel>,
         print_mode: bool,
         plan_mode: bool,
-        access_mode: super::session::AccessMode,
         images: Vec<String>,
         dangerous_skip_checks: bool,
-        dangerous_copy_creds: bool,
         container_image: Option<String>,
         pull_policy: Option<String>,
         cpu_limit: Option<String>,
@@ -1263,7 +1095,7 @@ impl SessionManager {
         let update_progress = |step: u32, message: String| async move {
             let progress = crate::api::protocol::ProgressStep {
                 step,
-                total: 5,
+                total: 4,
                 message,
             };
 
@@ -1289,50 +1121,84 @@ impl SessionManager {
 
         // Execute creation steps
         let result: anyhow::Result<()> = async {
-            update_progress(1, "Creating git worktrees".to_owned()).await;
+            let manages_own_repo = self.get_backend(backend).manages_own_repo();
 
-            // Create worktrees for all repositories in parallel
-            let worktree_futures: Vec<_> = repos_for_task
-                .iter()
-                .map(
-                    |(git_root, _subdirectory, mount_name, _is_primary, _base_branch)| {
-                        let worktree_path = crate::utils::paths::worktree_path(&format!(
-                            "{full_name}-{mount_name}"
-                        ));
-                        let git_root = git_root.clone();
-                        let branch_name = full_name.clone();
+            // Create worktrees/clones for all repositories
+            let created_worktrees = if !manages_own_repo {
+                update_progress(1, "Creating git worktrees".to_owned()).await;
 
-                        async move {
-                            tracing::info!(
-                                session_id = %session_id,
-                                mount_name = %mount_name,
-                                git_root = %git_root.display(),
-                                worktree_path = %worktree_path.display(),
-                                "Creating worktree for repository"
-                            );
+                // Create worktrees for all repositories in parallel
+                let worktree_futures: Vec<_> = repos_for_task
+                    .iter()
+                    .map(
+                        |(git_root, _subdirectory, mount_name, _is_primary, _base_branch)| {
+                            let worktree_path = crate::utils::paths::worktree_path(&format!(
+                                "{full_name}-{mount_name}"
+                            ));
+                            let git_root = git_root.clone();
+                            let branch_name = full_name.clone();
 
-                            let warning = self
-                                .git
-                                .create_worktree(&git_root, &worktree_path, &branch_name)
-                                .await?;
+                            async move {
+                                tracing::info!(
+                                    session_id = %session_id,
+                                    mount_name = %mount_name,
+                                    git_root = %git_root.display(),
+                                    worktree_path = %worktree_path.display(),
+                                    "Creating worktree for repository"
+                                );
 
-                            Ok::<(PathBuf, Option<String>), anyhow::Error>((worktree_path, warning))
-                        }
-                    },
-                )
-                .collect();
+                                let warning = self
+                                    .git
+                                    .create_worktree(&git_root, &worktree_path, &branch_name)
+                                    .await?;
 
-            let worktree_results = futures::future::join_all(worktree_futures).await;
+                                Ok::<(PathBuf, Option<String>), anyhow::Error>((worktree_path, warning))
+                            }
+                        },
+                    )
+                    .collect();
 
-            // Check for any failures and collect worktree paths
-            let mut created_worktrees = Vec::new();
-            for (idx, result) in worktree_results.into_iter().enumerate() {
-                let (worktree_path, _warning) = result.with_context(|| {
-                    let (_, _, mount_name, _, _) = &repos_for_task[idx];
-                    format!("Failed to create worktree for repository '{mount_name}'")
-                })?;
-                created_worktrees.push(worktree_path);
-            }
+                let worktree_results = futures::future::join_all(worktree_futures).await;
+
+                // Check for any failures and collect worktree paths
+                let mut created = Vec::new();
+                for (idx, result) in worktree_results.into_iter().enumerate() {
+                    let (worktree_path, _warning) = result.with_context(|| {
+                        let (_, _, mount_name, _, _) = &repos_for_task[idx];
+                        format!("Failed to create worktree for repository '{mount_name}'")
+                    })?;
+                    created.push(worktree_path);
+                }
+                created
+            } else {
+                update_progress(1, "Setting up local clones".to_owned()).await;
+
+                // Clone-based setup for backends that manage their own repo
+                let mut created = Vec::new();
+                for (git_root, _subdirectory, mount_name, _is_primary, _base_branch) in &repos_for_task {
+                    let clone_path = crate::utils::paths::worktree_path(&format!(
+                        "{full_name}-{mount_name}"
+                    ));
+
+                    tracing::info!(
+                        session_id = %session_id,
+                        mount_name = %mount_name,
+                        git_root = %git_root.display(),
+                        clone_path = %clone_path.display(),
+                        "Creating local clone for repository"
+                    );
+
+                    self.git
+                        .claim_or_clone(git_root, &clone_path, &full_name)
+                        .await
+                        .with_context(|| {
+                            format!("Failed to clone repository '{mount_name}'")
+                        })?;
+
+                    created.push(clone_path);
+                }
+                created
+            };
 
             // Find the primary repository's actual worktree path
             let primary_worktree_path = created_worktrees
@@ -1420,45 +1286,7 @@ impl SessionManager {
                 }
             }
 
-            update_progress(2, "Setting up session proxy".to_owned()).await;
-            // Create per-session proxy for container backends (Docker and Apple Container)
-            #[cfg(target_os = "macos")]
-            let needs_proxy = matches!(backend, BackendType::Docker | BackendType::AppleContainer);
-            #[cfg(not(target_os = "macos"))]
-            let needs_proxy = backend == BackendType::Docker;
-
-            let proxy_port = if needs_proxy {
-                let proxy_manager = self.proxy_manager.as_ref().ok_or_else(|| {
-                    anyhow::anyhow!("Proxy manager required for container backend")
-                })?;
-
-                let port = proxy_manager
-                    .create_session_proxy(session_id, access_mode)
-                    .await
-                    .context("Session proxy creation failed - cannot create session")?;
-
-                if let Some(session) = self
-                    .sessions
-                    .write()
-                    .await
-                    .iter_mut()
-                    .find(|s| s.id == session_id)
-                {
-                    session.set_proxy_port(port);
-                }
-
-                tracing::info!(
-                    session_id = %session_id,
-                    name = %full_name,
-                    port = port,
-                    "Created required session proxy"
-                );
-                Some(port)
-            } else {
-                None // Non-container backends don't need proxy
-            };
-
-            update_progress(3, "Preparing agent environment".to_owned()).await;
+            update_progress(2, "Preparing agent environment".to_owned()).await;
             // Prepend plan mode instruction if enabled
             let transformed_prompt = if plan_mode {
                 format!(
@@ -1469,7 +1297,14 @@ impl SessionManager {
                 initial_prompt.clone()
             };
 
-            update_progress(4, "Starting backend resource".to_owned()).await;
+            update_progress(3, "Starting backend resource".to_owned()).await;
+
+            tracing::info!(
+                session_id = %session_id,
+                backend = ?backend,
+                workdir = %primary_worktree_path.display(),
+                "Invoking backend.create()"
+            );
 
             // Parse container image configuration from request
             let container_image_config = if let Some(image) = container_image {
@@ -1530,10 +1365,8 @@ impl SessionManager {
                 model: model.as_ref().map(|m| m.to_cli_flag().to_owned()),
                 print_mode,
                 plan_mode,
-                session_proxy_port: proxy_port,
                 images,
                 dangerous_skip_checks,
-                dangerous_copy_creds,
                 session_id: Some(session_id),
                 initial_workdir: subdirectory.clone(),
                 http_port: self.http_port,
@@ -1548,7 +1381,7 @@ impl SessionManager {
                     self.zellij
                         .create(
                             &full_name,
-                            &worktree_path,
+                            &primary_worktree_path,
                             &transformed_prompt,
                             create_options,
                         )
@@ -1558,38 +1391,17 @@ impl SessionManager {
                     self.docker
                         .create(
                             &full_name,
-                            &worktree_path,
+                            &primary_worktree_path,
                             &transformed_prompt,
                             create_options,
                         )
                         .await?
                 }
-                BackendType::Kubernetes => {
-                    self.kubernetes
+                BackendType::AiSandbox => {
+                    self.ai_sandbox
                         .create(
                             &full_name,
-                            &worktree_path,
-                            &transformed_prompt,
-                            create_options,
-                        )
-                        .await?
-                }
-                #[cfg(target_os = "macos")]
-                BackendType::AppleContainer => {
-                    self.apple_container
-                        .create(
-                            &full_name,
-                            &worktree_path,
-                            &transformed_prompt,
-                            create_options,
-                        )
-                        .await?
-                }
-                BackendType::Sprites => {
-                    self.sprites
-                        .create(
-                            &full_name,
-                            &worktree_path,
+                            &primary_worktree_path,
                             &transformed_prompt,
                             create_options,
                         )
@@ -1597,7 +1409,7 @@ impl SessionManager {
                 }
             };
 
-            update_progress(5, "Finalizing session".to_owned()).await;
+            update_progress(4, "Finalizing session".to_owned()).await;
 
             // Update session with backend ID and Running status
             {
@@ -1614,10 +1426,6 @@ impl SessionManager {
                 }
             }
 
-            #[cfg(target_os = "macos")]
-            let is_container_backend =
-                matches!(backend, BackendType::Docker | BackendType::AppleContainer);
-            #[cfg(not(target_os = "macos"))]
             let is_container_backend = backend == BackendType::Docker;
 
             if is_container_backend
@@ -1720,23 +1528,16 @@ impl SessionManager {
                 // CLEANUP: Remove partially created resources
                 tracing::warn!(session_id = %session_id, "Cleaning up after failed creation");
 
-                // Remove proxy if created for container backends (Docker and Apple Container)
-                #[cfg(target_os = "macos")]
-                let needs_proxy_cleanup =
-                    matches!(backend, BackendType::Docker | BackendType::AppleContainer);
-                #[cfg(not(target_os = "macos"))]
-                let needs_proxy_cleanup = backend == BackendType::Docker;
-
-                if needs_proxy_cleanup && let Some(ref proxy_manager) = self.proxy_manager {
-                    let _ = proxy_manager.destroy_session_proxy(session_id).await;
+                // Remove worktree/clone if created
+                if self.get_backend(backend).manages_own_repo() {
+                    let _ = self.git.delete_clone(&worktree_path).await;
+                } else {
+                    let repo_path_buf = PathBuf::from(&repo_path);
+                    let _ = self
+                        .git
+                        .delete_worktree(&repo_path_buf, &worktree_path)
+                        .await;
                 }
-
-                // Remove worktree if created
-                let repo_path_buf = PathBuf::from(&repo_path);
-                let _ = self
-                    .git
-                    .delete_worktree(&repo_path_buf, &worktree_path)
-                    .await;
 
                 // Remove from database
                 let _ = self.store.delete_session(session_id).await;
@@ -1775,13 +1576,11 @@ impl SessionManager {
             repo_path = %repo_path,
             backend = ?backend,
             agent = ?agent,
-            access_mode = ?access_mode,
             image_count = images.len()
         )
     )]
     #[expect(
         clippy::too_many_arguments,
-        clippy::fn_params_excessive_bools,
         reason = "session creation requires many configuration parameters"
     )]
     pub async fn create_session(
@@ -1793,10 +1592,8 @@ impl SessionManager {
         agent: super::session::AgentType,
         model: Option<super::session::SessionModel>,
         dangerous_skip_checks: bool,
-        dangerous_copy_creds: bool,
         print_mode: bool,
         plan_mode: bool,
-        access_mode: super::session::AccessMode,
         images: Vec<String>,
         container_image: Option<String>,
         pull_policy: Option<String>,
@@ -1804,6 +1601,11 @@ impl SessionManager {
         memory_limit: Option<String>,
         storage_class: Option<String>,
     ) -> anyhow::Result<(Session, Option<Vec<String>>)> {
+        // Expand tilde in user-provided repo path
+        let repo_path = crate::utils::expand_tilde(&repo_path)
+            .to_string_lossy()
+            .to_string();
+
         // Validate backend is enabled
         self.validate_backend_enabled(backend)?;
 
@@ -1815,43 +1617,6 @@ impl SessionManager {
                 Use asynchronous session creation for multi-repo support."
             );
         }
-
-        // Validate remote backend configuration
-        // Remote backends (Sprites, Kubernetes) require explicit configuration
-        if backend == BackendType::Sprites {
-            let sprites_config = crate::backends::sprites_config::SpritesConfig::load_or_default();
-            if !sprites_config.is_connected_mode() && !dangerous_copy_creds {
-                anyhow::bail!(
-                    "Sprites backend requires remote connectivity configuration.\n\n\
-                    Options:\n\
-                    1. Configure `daemon_address` in ~/.clauderon/sprites-config.toml (recommended)\n\
-                       Example: daemon_address = \"100.64.0.1:3030\" (your Tailscale IP)\n\n\
-                    2. Use --dangerous-copy-creds flag to inject real API tokens\n\
-                       WARNING: This exposes your tokens to the remote environment\n\n\
-                    See documentation for details on zero-trust proxy setup."
-                );
-            }
-        }
-
-        // Validate Kubernetes remote backend configuration
-        if backend == BackendType::Kubernetes {
-            let k8s_config = crate::backends::KubernetesConfig::load_or_default();
-            if !k8s_config.is_connected_mode() && !dangerous_copy_creds {
-                anyhow::bail!(
-                    "Kubernetes backend requires remote connectivity configuration.\n\n\
-                    Options:\n\
-                    1. Configure `proxy_mode` in ~/.clauderon/k8s-config.toml (recommended)\n\
-                       Options: \"clusterip\" or \"host-gateway\"\n\
-                       Example: proxy_mode = \"clusterip\"\n\n\
-                    2. Use --dangerous-copy-creds flag to inject real API tokens\n\
-                       WARNING: This exposes your tokens to the remote environment\n\n\
-                    See documentation for details on Kubernetes proxy setup."
-                );
-            }
-        }
-
-        // Validate read-only mode is enabled if requested
-        self.validate_readonly_mode_allowed(access_mode)?;
 
         // Validate and resolve git repository path
         let repo_path_buf = std::path::PathBuf::from(&repo_path);
@@ -1919,8 +1684,6 @@ impl SessionManager {
             agent,
             model,
             dangerous_skip_checks,
-            dangerous_copy_creds,
-            access_mode,
         });
 
         // Set history file path for Claude Code sessions (directory created after worktree exists)
@@ -1944,12 +1707,17 @@ impl SessionManager {
         );
         self.store.record_event(&event).await?;
 
-        // Create git worktree
+        // Create git worktree or local clone
         let repo_path_buf = PathBuf::from(&repo_path);
-        let worktree_warning = self
-            .git
-            .create_worktree(&repo_path_buf, &worktree_path, &full_name)
-            .await?;
+        let worktree_warning = if self.get_backend(backend).manages_own_repo() {
+            self.git
+                .claim_or_clone(&repo_path_buf, &worktree_path, &full_name)
+                .await?
+        } else {
+            self.git
+                .create_worktree(&repo_path_buf, &worktree_path, &full_name)
+                .await?
+        };
 
         // Now that worktree exists, create the history directory
         if let Some(ref history_path) = session.history_file_path
@@ -1970,36 +1738,6 @@ impl SessionManager {
                 );
             }
         }
-
-        // Create per-session proxy for container backends (Docker and Apple Container)
-        // BEFORE creating container (required, no fallback)
-        #[cfg(target_os = "macos")]
-        let needs_proxy = matches!(backend, BackendType::Docker | BackendType::AppleContainer);
-        #[cfg(not(target_os = "macos"))]
-        let needs_proxy = backend == BackendType::Docker;
-
-        let proxy_port = if needs_proxy {
-            let proxy_manager = self
-                .proxy_manager
-                .as_ref()
-                .ok_or_else(|| anyhow::anyhow!("Proxy manager required for container backend"))?;
-
-            let port = proxy_manager
-                .create_session_proxy(session.id, access_mode)
-                .await
-                .context("Session proxy creation failed - cannot create session")?;
-
-            session.set_proxy_port(port);
-            tracing::info!(
-                session_id = %session.id,
-                name = %session.name,
-                port = port,
-                "Created required session proxy"
-            );
-            Some(port)
-        } else {
-            None // Non-container backends don't need proxy
-        };
 
         // Prepend plan mode instruction if enabled
         let transformed_prompt = if plan_mode {
@@ -2056,11 +1794,9 @@ impl SessionManager {
             model: model.as_ref().map(|m| m.to_cli_flag().to_owned()),
             print_mode,
             plan_mode,
-            session_proxy_port: proxy_port,
             images,
             dangerous_skip_checks,
-            dangerous_copy_creds,
-            session_id: Some(session.id), // Pass session ID for Kubernetes PVC labeling
+            session_id: Some(session.id),
             initial_workdir: subdirectory.clone(),
             http_port: self.http_port,
             container_image: container_image_config,
@@ -2090,29 +1826,8 @@ impl SessionManager {
                     )
                     .await?
             }
-            BackendType::Kubernetes => {
-                self.kubernetes
-                    .create(
-                        &full_name,
-                        &worktree_path,
-                        &transformed_prompt,
-                        create_options,
-                    )
-                    .await?
-            }
-            #[cfg(target_os = "macos")]
-            BackendType::AppleContainer => {
-                self.apple_container
-                    .create(
-                        &full_name,
-                        &worktree_path,
-                        &transformed_prompt,
-                        create_options,
-                    )
-                    .await?
-            }
-            BackendType::Sprites => {
-                self.sprites
+            BackendType::AiSandbox => {
+                self.ai_sandbox
                     .create(
                         &full_name,
                         &worktree_path,
@@ -2126,11 +1841,7 @@ impl SessionManager {
         session.set_backend_id(backend_id.clone());
         session.set_status(SessionStatus::Running);
 
-        // Start console session for container backends (Docker and Apple Container)
-        #[cfg(target_os = "macos")]
-        let is_container_backend =
-            matches!(backend, BackendType::Docker | BackendType::AppleContainer);
-        #[cfg(not(target_os = "macos"))]
+        // Start console session for container backends (Docker)
         let is_container_backend = backend == BackendType::Docker;
 
         if is_container_backend
@@ -2210,22 +1921,18 @@ impl SessionManager {
         match session.backend {
             BackendType::Zellij => Ok(self.zellij.attach_command(backend_id)),
             BackendType::Docker => Ok(self.docker.attach_command(backend_id)),
-            BackendType::Kubernetes => Ok(self.kubernetes.attach_command(backend_id)),
-            #[cfg(target_os = "macos")]
-            BackendType::AppleContainer => Ok(self.apple_container.attach_command(backend_id)),
-            BackendType::Sprites => Ok(self.sprites.attach_command(backend_id)),
+            BackendType::AiSandbox => Ok(self.ai_sandbox.attach_command(backend_id)),
         }
     }
 
     /// Archive a session
     ///
     /// Archives a session by:
-    /// 1. Stopping all backend resources (containers, pods, etc.)
-    /// 2. Destroying proxies for Docker/AppleContainer backends
-    /// 3. Clearing the backend_id
-    /// 4. Setting status to Archived
+    /// 1. Stopping all backend resources (containers)
+    /// 2. Clearing the backend_id
+    /// 3. Setting status to Archived
     ///
-    /// Storage (worktrees, PVCs) is preserved for potential unarchiving.
+    /// Storage (worktrees) is preserved for potential unarchiving.
     ///
     /// # Errors
     ///
@@ -2256,27 +1963,6 @@ impl SessionManager {
                         );
                     }
                 }
-                BackendType::Kubernetes => {
-                    // Use special method that preserves the workspace PVC
-                    if let Some(ref k8s_backend) = self.kubernetes_backend {
-                        if let Err(e) = k8s_backend.stop_pod_preserve_storage(backend_id).await {
-                            tracing::warn!(
-                                session_id = %session_id,
-                                error = %e,
-                                "Failed to stop Kubernetes pod during archive"
-                            );
-                        }
-                    } else {
-                        // Fallback to regular delete if concrete backend not available
-                        if let Err(e) = self.kubernetes.delete(backend_id).await {
-                            tracing::warn!(
-                                session_id = %session_id,
-                                error = %e,
-                                "Failed to delete Kubernetes pod during archive"
-                            );
-                        }
-                    }
-                }
                 BackendType::Zellij => {
                     if let Err(e) = self.zellij.delete(backend_id).await {
                         tracing::warn!(
@@ -2286,44 +1972,16 @@ impl SessionManager {
                         );
                     }
                 }
-                #[cfg(target_os = "macos")]
-                BackendType::AppleContainer => {
-                    if let Err(e) = self.apple_container.delete(backend_id).await {
+                BackendType::AiSandbox => {
+                    if let Err(e) = self.ai_sandbox.delete(backend_id).await {
                         tracing::warn!(
                             session_id = %session_id,
                             error = %e,
-                            "Failed to delete Apple container during archive"
-                        );
-                    }
-                }
-                BackendType::Sprites => {
-                    if let Err(e) = self.sprites.delete(backend_id).await {
-                        tracing::warn!(
-                            session_id = %session_id,
-                            error = %e,
-                            "Failed to delete Sprite during archive"
+                            "Failed to delete AI Sandbox session during archive"
                         );
                     }
                 }
             }
-        }
-
-        // Destroy proxy for backends that use proxies (Docker and Apple Container)
-        #[cfg(target_os = "macos")]
-        let needs_proxy_cleanup =
-            matches!(backend, BackendType::Docker | BackendType::AppleContainer);
-        #[cfg(not(target_os = "macos"))]
-        let needs_proxy_cleanup = backend == BackendType::Docker;
-
-        if needs_proxy_cleanup
-            && let Some(ref proxy_manager) = self.proxy_manager
-            && let Err(e) = proxy_manager.destroy_session_proxy(session_id).await
-        {
-            tracing::warn!(
-                session_id = %session_id,
-                error = %e,
-                "Failed to destroy proxy during archive"
-            );
         }
 
         // Clear backend_id and set status to Archived
@@ -2362,10 +2020,9 @@ impl SessionManager {
     ///
     /// Restores an archived session by:
     /// 1. Setting status to Creating
-    /// 2. Recreating proxy (for Docker/AppleContainer backends)
-    /// 3. Recreating container using existing worktree/PVC
-    /// 4. Updating backend_id
-    /// 5. Setting status to Idle
+    /// 2. Recreating container using existing worktree
+    /// 3. Updating backend_id
+    /// 4. Setting status to Idle
     ///
     /// # Errors
     ///
@@ -2382,9 +2039,7 @@ impl SessionManager {
             agent,
             subdirectory,
             dangerous_skip_checks,
-            proxy_port,
             model,
-            access_mode,
         ) = {
             let sessions = self.sessions.read().await;
             let session = sessions
@@ -2406,9 +2061,7 @@ impl SessionManager {
                 session.agent,
                 session.subdirectory.clone(),
                 session.dangerous_skip_checks,
-                session.proxy_port,
                 session.model_cli_flag().map(str::to_string),
-                session.access_mode,
             )
         };
 
@@ -2424,46 +2077,14 @@ impl SessionManager {
         let event = Event::new(session_id, EventType::SessionRestored);
         self.store.record_event(&event).await?;
 
-        // Recreate proxy for backends that use proxies (Docker and Apple Container)
-        #[cfg(target_os = "macos")]
-        let needs_proxy = matches!(backend, BackendType::Docker | BackendType::AppleContainer);
-        #[cfg(not(target_os = "macos"))]
-        let needs_proxy = backend == BackendType::Docker;
-
-        let new_proxy_port = if needs_proxy {
-            if let Some(ref proxy_manager) = self.proxy_manager {
-                // Allocate a new proxy port (or reuse the old one if available)
-                match proxy_manager
-                    .create_session_proxy(session_id, access_mode)
-                    .await
-                {
-                    Ok(port) => Some(port),
-                    Err(e) => {
-                        tracing::warn!(
-                            session_id = %session_id,
-                            error = %e,
-                            "Failed to create proxy during unarchive (continuing without proxy)"
-                        );
-                        proxy_port // Fall back to old port if available
-                    }
-                }
-            } else {
-                proxy_port
-            }
-        } else {
-            None
-        };
-
         // Build creation options
         let create_options = crate::backends::CreateOptions {
             agent,
             model,
             print_mode: false,
             plan_mode: false,
-            session_proxy_port: new_proxy_port,
             images: vec![],
             dangerous_skip_checks,
-            dangerous_copy_creds: false,
             session_id: Some(session_id),
             initial_workdir: subdirectory,
             http_port: self.http_port,
@@ -2486,16 +2107,6 @@ impl SessionManager {
                 )
                 .await
                 .context("Failed to recreate Docker container")?,
-            BackendType::Kubernetes => self
-                .kubernetes
-                .create(
-                    &session_name,
-                    &worktree_path,
-                    &initial_prompt,
-                    create_options,
-                )
-                .await
-                .context("Failed to recreate Kubernetes pod")?,
             BackendType::Zellij => self
                 .zellij
                 .create(
@@ -2506,9 +2117,8 @@ impl SessionManager {
                 )
                 .await
                 .context("Failed to recreate Zellij session")?,
-            #[cfg(target_os = "macos")]
-            BackendType::AppleContainer => self
-                .apple_container
+            BackendType::AiSandbox => self
+                .ai_sandbox
                 .create(
                     &session_name,
                     &worktree_path,
@@ -2516,17 +2126,7 @@ impl SessionManager {
                     create_options,
                 )
                 .await
-                .context("Failed to recreate Apple container")?,
-            BackendType::Sprites => self
-                .sprites
-                .create(
-                    &session_name,
-                    &worktree_path,
-                    &initial_prompt,
-                    create_options,
-                )
-                .await
-                .context("Failed to recreate Sprite")?,
+                .context("Failed to recreate AI Sandbox session")?,
         };
 
         // Update session with new backend ID and set to Idle
@@ -2534,9 +2134,6 @@ impl SessionManager {
             let mut sessions = self.sessions.write().await;
             if let Some(session) = sessions.iter_mut().find(|s| s.id == session_id) {
                 session.set_backend_id(new_backend_id.clone());
-                if let Some(port) = new_proxy_port {
-                    session.proxy_port = Some(port);
-                }
                 session.set_status(SessionStatus::Idle);
                 session.reset_reconcile_state();
                 let session_clone = session.clone();
@@ -2625,7 +2222,7 @@ impl SessionManager {
                 session.set_status(SessionStatus::Deleting);
                 session.set_progress(crate::api::protocol::ProgressStep {
                     step: 0,
-                    total: 4,
+                    total: 3,
                     message: "Queued for deletion".to_owned(),
                 });
 
@@ -2662,7 +2259,7 @@ impl SessionManager {
     /// Complete session deletion in background (spawned by start_session_deletion)
     ///
     /// This method should not be called directly - it's spawned as a background task.
-    async fn complete_session_deletion(&self, session_id: Uuid, session_name: String) {
+    async fn complete_session_deletion(&self, session_id: Uuid, _session_name: String) {
         let Ok(_permit) = self.deletion_semaphore.acquire().await else {
             tracing::error!(session_id = %session_id, "Semaphore closed during deletion");
             // Mark session as failed instead of panicking
@@ -2683,7 +2280,7 @@ impl SessionManager {
         let update_progress = |step: u32, message: String| async move {
             let progress = crate::api::protocol::ProgressStep {
                 step,
-                total: 4,
+                total: 3,
                 message,
             };
 
@@ -2733,42 +2330,18 @@ impl SessionManager {
                     BackendType::Docker => {
                         let _ = self.docker.delete(backend_id).await;
                     }
-                    BackendType::Kubernetes => {
-                        let _ = self.kubernetes.delete(backend_id).await;
-                    }
-                    #[cfg(target_os = "macos")]
-                    BackendType::AppleContainer => {
-                        let _ = self.apple_container.delete(backend_id).await;
-                    }
-                    BackendType::Sprites => {
-                        let _ = self.sprites.delete(backend_id).await;
+                    BackendType::AiSandbox => {
+                        let _ = self.ai_sandbox.delete(backend_id).await;
                     }
                 }
             }
 
-            update_progress(2, "Removing session proxy".to_owned()).await;
-            // Destroy per-session proxy if it exists for container backends (Docker and Apple Container)
-            #[cfg(target_os = "macos")]
-            let needs_proxy_cleanup =
-                matches!(backend, BackendType::Docker | BackendType::AppleContainer);
-            #[cfg(not(target_os = "macos"))]
-            let needs_proxy_cleanup = backend == BackendType::Docker;
-
-            if needs_proxy_cleanup
-                && let Some(ref proxy_manager) = self.proxy_manager
-                && let Err(e) = proxy_manager.destroy_session_proxy(session_id).await
-            {
-                tracing::warn!(
-                    session_id = %session_id,
-                    name = %session_name,
-                    error = %e,
-                    "Failed to destroy session proxy"
-                );
+            update_progress(2, "Removing git worktree/clone".to_owned()).await;
+            if self.get_backend(backend).manages_own_repo() {
+                let _ = self.git.delete_clone(&worktree_path).await;
+            } else {
+                let _ = self.git.delete_worktree(&repo_path, &worktree_path).await;
             }
-
-            update_progress(3, "Removing git worktree".to_owned()).await;
-            // Delete git worktree
-            let _ = self.git.delete_worktree(&repo_path, &worktree_path).await;
 
             // Clean up uploaded files
             if let Err(e) = crate::uploads::cleanup_session_uploads(session_id) {
@@ -2779,7 +2352,7 @@ impl SessionManager {
                 );
             }
 
-            update_progress(4, "Cleaning up database".to_owned()).await;
+            update_progress(3, "Cleaning up database".to_owned()).await;
             // Record deletion event
             let event = Event::new(session_id, EventType::SessionDeleted { reason: None });
             self.store.record_event(&event).await?;
@@ -2854,69 +2427,47 @@ impl SessionManager {
                 BackendType::Docker => {
                     let _ = self.docker.delete(backend_id).await;
                 }
-                BackendType::Kubernetes => {
-                    let _ = self.kubernetes.delete(backend_id).await;
-                }
-                #[cfg(target_os = "macos")]
-                BackendType::AppleContainer => {
-                    let _ = self.apple_container.delete(backend_id).await;
-                }
-                BackendType::Sprites => {
-                    let _ = self.sprites.delete(backend_id).await;
+                BackendType::AiSandbox => {
+                    let _ = self.ai_sandbox.delete(backend_id).await;
                 }
             }
         }
 
-        // Destroy per-session proxy if it exists for container backends (Docker and Apple Container)
-        #[cfg(target_os = "macos")]
-        let needs_proxy_cleanup = matches!(
-            session.backend,
-            BackendType::Docker | BackendType::AppleContainer
-        );
-        #[cfg(not(target_os = "macos"))]
-        let needs_proxy_cleanup = session.backend == BackendType::Docker;
-
-        if needs_proxy_cleanup
-            && let Some(ref proxy_manager) = self.proxy_manager
-            && let Err(e) = proxy_manager.destroy_session_proxy(session.id).await
-        {
-            tracing::warn!(
-                session_id = %session.id,
-                name = %session.name,
-                error = %e,
-                "Failed to destroy session proxy"
-            );
-        }
-
-        // Delete git worktrees for all repositories
+        // Delete git worktrees/clones for all repositories
+        let manages_own_repo = self.get_backend(session.backend).manages_own_repo();
         if let Some(ref repositories) = session.repositories {
-            // Multi-repo session: delete all worktrees
+            // Multi-repo session: delete all worktrees/clones
             for repo in repositories {
                 tracing::info!(
                     session_id = %session.id,
                     mount_name = %repo.mount_name,
                     worktree_path = %repo.worktree_path.display(),
-                    "Deleting worktree for repository"
+                    "Deleting worktree/clone for repository"
                 );
-                if let Err(e) = self
-                    .git
-                    .delete_worktree(&repo.repo_path, &repo.worktree_path)
-                    .await
-                {
+                let result = if manages_own_repo {
+                    self.git.delete_clone(&repo.worktree_path).await
+                } else {
+                    self.git.delete_worktree(&repo.repo_path, &repo.worktree_path).await
+                };
+                if let Err(e) = result {
                     tracing::warn!(
                         session_id = %session.id,
                         mount_name = %repo.mount_name,
                         error = %e,
-                        "Failed to delete worktree"
+                        "Failed to delete worktree/clone"
                     );
                 }
             }
         } else {
-            // Legacy single-repo session: delete the single worktree
-            let _ = self
-                .git
-                .delete_worktree(&session.repo_path, &session.worktree_path)
-                .await;
+            // Legacy single-repo session
+            if manages_own_repo {
+                let _ = self.git.delete_clone(&session.worktree_path).await;
+            } else {
+                let _ = self
+                    .git
+                    .delete_worktree(&session.repo_path, &session.worktree_path)
+                    .await;
+            }
         }
 
         // Record deletion event
@@ -2982,8 +2533,6 @@ impl SessionManager {
             initial_prompt,
             agent,
             dangerous_skip_checks,
-            _access_mode,
-            proxy_port,
             old_backend_id,
         ) = {
             let sessions = self.sessions.read().await;
@@ -3000,8 +2549,6 @@ impl SessionManager {
                 s.initial_prompt.clone(),
                 s.agent,
                 s.dangerous_skip_checks,
-                s.access_mode,
-                s.proxy_port,
                 s.backend_id.clone(),
             )
         };
@@ -3041,10 +2588,8 @@ impl SessionManager {
                 model: session.model_cli_flag().map(str::to_string),
                 print_mode: false,
                 plan_mode: false,
-                session_proxy_port: proxy_port,
                 images: vec![],
                 dangerous_skip_checks,
-                dangerous_copy_creds: false, // Docker refresh doesn't need copy-creds
                 session_id: Some(session_id),
                 initial_workdir: subdirectory,
                 http_port: self.http_port,
@@ -3146,10 +2691,7 @@ impl SessionManager {
                 let exists = match session.backend {
                     BackendType::Zellij => self.zellij.exists(backend_id).await?,
                     BackendType::Docker => self.docker.exists(backend_id).await?,
-                    BackendType::Kubernetes => self.kubernetes.exists(backend_id).await?,
-                    #[cfg(target_os = "macos")]
-                    BackendType::AppleContainer => self.apple_container.exists(backend_id).await?,
-                    BackendType::Sprites => self.sprites.exists(backend_id).await?,
+                    BackendType::AiSandbox => self.ai_sandbox.exists(backend_id).await?,
                 };
 
                 if !exists {
@@ -3233,24 +2775,6 @@ impl SessionManager {
                                 );
                             }
                         }
-                    } else {
-                        // Clean up orphaned session proxy for non-running sessions (container backends)
-                        #[cfg(target_os = "macos")]
-                        let needs_proxy_cleanup = matches!(
-                            session.backend,
-                            BackendType::Docker | BackendType::AppleContainer
-                        );
-                        #[cfg(not(target_os = "macos"))]
-                        let needs_proxy_cleanup = session.backend == BackendType::Docker;
-
-                        if needs_proxy_cleanup && let Some(ref proxy_manager) = self.proxy_manager {
-                            tracing::info!(
-                                session_id = %session.id,
-                                name = %session.name,
-                                "Destroying proxy for session with missing container"
-                            );
-                            let _ = proxy_manager.destroy_session_proxy(session.id).await;
-                        }
                     }
                 } else {
                     // Container exists but session is archived/failed - clean up zombie
@@ -3268,60 +2792,16 @@ impl SessionManager {
                         match session.backend {
                             BackendType::Docker => {
                                 let _ = self.docker.delete(backend_id).await;
-                                if let Some(ref proxy_manager) = self.proxy_manager {
-                                    let _ = proxy_manager.destroy_session_proxy(session.id).await;
-                                }
-                            }
-                            BackendType::Kubernetes => {
-                                let _ = self.kubernetes.delete(backend_id).await;
                             }
                             BackendType::Zellij => {
                                 let _ = self.zellij.delete(backend_id).await;
                             }
-                            #[cfg(target_os = "macos")]
-                            BackendType::AppleContainer => {
-                                let _ = self.apple_container.delete(backend_id).await;
-                                if let Some(ref proxy_manager) = self.proxy_manager {
-                                    let _ = proxy_manager.destroy_session_proxy(session.id).await;
-                                }
-                            }
-                            BackendType::Sprites => {
-                                let _ = self.sprites.delete(backend_id).await;
+                            BackendType::AiSandbox => {
+                                let _ = self.ai_sandbox.delete(backend_id).await;
                             }
                         }
                     }
 
-                    // Verify proxy exists for running container sessions (Docker and Apple Container)
-                    #[cfg(target_os = "macos")]
-                    let needs_proxy_check = matches!(
-                        session.backend,
-                        BackendType::Docker | BackendType::AppleContainer
-                    ) && session.status == SessionStatus::Running;
-                    #[cfg(not(target_os = "macos"))]
-                    let needs_proxy_check = session.backend == BackendType::Docker
-                        && session.status == SessionStatus::Running;
-
-                    if needs_proxy_check
-                        && let Some(ref proxy_manager) = self.proxy_manager
-                        && let Some(port) = session.proxy_port
-                    {
-                        // Check if proxy is actually listening
-                        if tokio::net::TcpStream::connect(format!("127.0.0.1:{port}"))
-                            .await
-                            .is_err()
-                        {
-                            tracing::warn!(
-                                session_id = %session.id,
-                                name = %session.name,
-                                port = port,
-                                "Session proxy not responding - attempting recreation"
-                            );
-                            // Attempt auto-recreation
-                            let _ = proxy_manager
-                                .restore_session_proxies(std::slice::from_ref(session))
-                                .await;
-                        }
-                    }
                 }
             }
         }
@@ -3352,7 +2832,7 @@ impl SessionManager {
             anyhow::bail!("Cannot recreate container for archived session - unarchive it first");
         }
 
-        // Only Docker and Kubernetes backends support recreation
+        // Zellij sessions cannot be recreated
         if session.backend == BackendType::Zellij {
             anyhow::bail!("Zellij sessions cannot be recreated automatically");
         }
@@ -3370,16 +2850,9 @@ impl SessionManager {
                 BackendType::Docker => {
                     let _ = self.docker.delete(backend_id).await;
                 }
-                BackendType::Kubernetes => {
-                    let _ = self.kubernetes.delete(backend_id).await;
-                }
                 BackendType::Zellij => {} // Already checked above
-                #[cfg(target_os = "macos")]
-                BackendType::AppleContainer => {
-                    let _ = self.apple_container.delete(backend_id).await;
-                }
-                BackendType::Sprites => {
-                    let _ = self.sprites.delete(backend_id).await;
+                BackendType::AiSandbox => {
+                    let _ = self.ai_sandbox.delete(backend_id).await;
                 }
             }
         }
@@ -3390,10 +2863,8 @@ impl SessionManager {
             model: session.model_cli_flag().map(str::to_string),
             print_mode: false, // Never use print mode for recreation
             plan_mode: false,  // Don't enter plan mode - session already has context
-            session_proxy_port: session.proxy_port,
             images: vec![], // No images for recreation
             dangerous_skip_checks: session.dangerous_skip_checks,
-            dangerous_copy_creds: false, // Recreation uses existing session config
             session_id: Some(session.id),
             initial_workdir: session.subdirectory.clone(),
             http_port: self.http_port,
@@ -3416,29 +2887,8 @@ impl SessionManager {
                     )
                     .await?
             }
-            BackendType::Kubernetes => {
-                self.kubernetes
-                    .create(
-                        &session.name,
-                        &session.worktree_path,
-                        &session.initial_prompt,
-                        create_options,
-                    )
-                    .await?
-            }
-            #[cfg(target_os = "macos")]
-            BackendType::AppleContainer => {
-                self.apple_container
-                    .create(
-                        &session.name,
-                        &session.worktree_path,
-                        &session.initial_prompt,
-                        create_options,
-                    )
-                    .await?
-            }
-            BackendType::Sprites => {
-                self.sprites
+            BackendType::AiSandbox => {
+                self.ai_sandbox
                     .create(
                         &session.name,
                         &session.worktree_path,
@@ -3473,61 +2923,6 @@ impl SessionManager {
         if let Some(ref broadcaster) = self.event_broadcaster {
             broadcast_event(broadcaster, WsEvent::SessionUpdated(session_clone)).await;
         }
-
-        Ok(())
-    }
-
-    /// Update the access mode for a session
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the session is not found or the store update fails.
-    #[instrument(skip(self), fields(id_or_name = %id_or_name, new_mode = ?new_mode))]
-    pub async fn update_access_mode(
-        &self,
-        id_or_name: &str,
-        new_mode: super::session::AccessMode,
-    ) -> anyhow::Result<()> {
-        let mut sessions = self.sessions.write().await;
-        let session = sessions
-            .iter_mut()
-            .find(|s| s.name == id_or_name || s.id.to_string() == id_or_name)
-            .ok_or_else(|| anyhow::anyhow!("Session not found: {id_or_name}"))?;
-
-        // Validate read-only mode is enabled if requested
-        self.validate_readonly_mode_allowed(new_mode)?;
-
-        let session_id = session.id;
-        let backend = session.backend;
-        session.set_access_mode(new_mode);
-        let session_clone = session.clone();
-        drop(sessions);
-
-        // Update runtime proxy if session has one (container backends: Docker and Apple Container)
-        #[cfg(target_os = "macos")]
-        let needs_proxy = matches!(backend, BackendType::Docker | BackendType::AppleContainer);
-        #[cfg(not(target_os = "macos"))]
-        let needs_proxy = backend == BackendType::Docker;
-
-        if needs_proxy && let Some(ref proxy_manager) = self.proxy_manager {
-            // Only update proxy if session actually has a proxy port allocated
-            // (proxy creation can fail gracefully, leaving session without proxy)
-            if session_clone.proxy_port.is_some() {
-                proxy_manager
-                    .update_session_access_mode(session_id, new_mode)
-                    .await?;
-            }
-        }
-
-        // Update in store
-        self.store.save_session(&session_clone).await?;
-
-        tracing::info!(
-            session_id = %session_id,
-            name = %session_clone.name,
-            mode = ?new_mode,
-            "Updated session access mode"
-        );
 
         Ok(())
     }
@@ -4213,63 +3608,6 @@ impl SessionManager {
                     );
                 }
             }
-            #[cfg(target_os = "macos")]
-            BackendType::AppleContainer => {
-                // Send prompt via container exec with stdin (similar to Docker)
-                let container_name = format!("clauderon-{backend_id}");
-                let mut child = tokio::process::Command::new("container")
-                    .args(["exec", "-i", &container_name, "claude"])
-                    .stdin(std::process::Stdio::piped())
-                    .stdout(std::process::Stdio::piped())
-                    .stderr(std::process::Stdio::piped())
-                    .spawn()?;
-
-                // Write prompt to stdin
-                if let Some(mut stdin) = child.stdin.take() {
-                    use tokio::io::AsyncWriteExt;
-                    stdin.write_all(prompt.as_bytes()).await?;
-                    stdin.write_all(b"\n").await?;
-                    drop(stdin); // Close stdin to signal end of input
-                }
-
-                let output = child.wait_with_output().await?;
-
-                if !output.status.success() {
-                    anyhow::bail!(
-                        "Failed to send prompt: {}",
-                        String::from_utf8_lossy(&output.stderr)
-                    );
-                }
-            }
-            BackendType::Kubernetes => {
-                // Send prompt via kubectl exec with stdin (similar to Docker)
-                let namespace = crate::backends::KubernetesConfig::load_or_default().namespace;
-                let mut child = tokio::process::Command::new("kubectl")
-                    .args([
-                        "exec", "-i", "-n", &namespace, backend_id, "-c", "claude", "--", "claude",
-                    ])
-                    .stdin(std::process::Stdio::piped())
-                    .stdout(std::process::Stdio::piped())
-                    .stderr(std::process::Stdio::piped())
-                    .spawn()?;
-
-                // Write prompt to stdin
-                if let Some(mut stdin) = child.stdin.take() {
-                    use tokio::io::AsyncWriteExt;
-                    stdin.write_all(prompt.as_bytes()).await?;
-                    stdin.write_all(b"\n").await?;
-                    drop(stdin); // Close stdin to signal end of input
-                }
-
-                let output = child.wait_with_output().await?;
-
-                if !output.status.success() {
-                    anyhow::bail!(
-                        "Failed to send prompt: {}",
-                        String::from_utf8_lossy(&output.stderr)
-                    );
-                }
-            }
             BackendType::Zellij => {
                 // Send prompt via zellij write
                 let output = tokio::process::Command::new("zellij")
@@ -4284,32 +3622,8 @@ impl SessionManager {
                     );
                 }
             }
-            BackendType::Sprites => {
-                // Send prompt via sprite CLI exec (similar to kubectl exec)
-                // Use -s global flag to specify which sprite
-                let mut child = tokio::process::Command::new("sprite")
-                    .args(["-s", backend_id, "exec", "claude"])
-                    .stdin(std::process::Stdio::piped())
-                    .stdout(std::process::Stdio::piped())
-                    .stderr(std::process::Stdio::piped())
-                    .spawn()?;
-
-                // Write prompt to stdin
-                if let Some(mut stdin) = child.stdin.take() {
-                    use tokio::io::AsyncWriteExt;
-                    stdin.write_all(prompt.as_bytes()).await?;
-                    stdin.write_all(b"\n").await?;
-                    drop(stdin); // Close stdin to signal end of input
-                }
-
-                let output = child.wait_with_output().await?;
-
-                if !output.status.success() {
-                    anyhow::bail!(
-                        "Failed to send prompt: {}",
-                        String::from_utf8_lossy(&output.stderr)
-                    );
-                }
+            BackendType::AiSandbox => {
+                anyhow::bail!("Send prompt is not supported for AI Sandbox sessions - attach directly instead");
             }
         }
 
@@ -4322,319 +3636,95 @@ impl SessionManager {
         Ok(())
     }
 
-    /// Get system status including credentials and proxies.
+    /// Get system status.
     ///
     /// # Errors
     ///
-    /// Returns an error if the proxy manager is not available.
+    /// Returns an error if status cannot be determined.
     pub async fn get_system_status(&self) -> anyhow::Result<crate::api::protocol::SystemStatus> {
-        use crate::api::protocol::{CredentialStatus, ProxyStatus, SystemStatus};
+        use crate::api::protocol::SystemStatus;
 
-        let mut credentials = Vec::new();
-        let mut proxies = Vec::new();
-        let mut active_session_proxies: u32 = 0;
 
-        // Collect credential and proxy status if proxy manager is available
-        if let Some(ref pm) = self.proxy_manager {
-            let creds = pm.get_credentials();
-            let secrets_dir = pm.secrets_dir();
-
-            // Helper to create masked value (first 8 chars + "****..." + last 4 chars)
-            let mask_credential = |value: &str| -> String {
-                if value.len() <= 12 {
-                    // Don't reveal any chars for short tokens to avoid leaking info
-                    "****".to_owned()
-                } else {
-                    format!(
-                        "{start}****...{end}",
-                        start = &value[..8],
-                        end = &value[value.len() - 4..]
-                    )
-                }
-            };
-
-            // Helper to determine credential source
-            let credential_source = |env_var: &str, file_name: &str| -> (Option<String>, bool) {
-                if std::env::var(env_var).is_ok() {
-                    (Some("environment".to_owned()), true) // readonly
-                } else {
-                    let path = secrets_dir.join(file_name);
-                    if path.exists() {
-                        (Some("file".to_owned()), false) // not readonly
-                    } else {
-                        (None, false)
-                    }
-                }
-            };
-            let codex_env_present = [
-                "CODEX_ACCESS_TOKEN",
-                "CODEX_REFRESH_TOKEN",
-                "CODEX_ID_TOKEN",
-            ]
-            .iter()
-            .any(|name| std::env::var(name).is_ok());
-            let codex_auth_source = creds.codex_auth_json_path.as_ref().and_then(|path| {
-                if path.exists() {
-                    Some(format!("auth.json:{}", path.display()))
-                } else {
-                    None
-                }
-            });
-
-            // GitHub
-            let (source, readonly) = credential_source("GH_TOKEN", "github_token");
-            credentials.push(CredentialStatus {
-                name: "GitHub".to_owned(),
-                service_id: "github".to_owned(),
-                available: creds.github_token.is_some(),
-                source,
-                readonly,
-                masked_value: creds.github_token.as_ref().map(|v| mask_credential(v)),
-            });
-
-            // Anthropic
-            let (source, readonly) =
-                credential_source("CLAUDE_CODE_OAUTH_TOKEN", "anthropic_oauth_token");
-            credentials.push(CredentialStatus {
-                name: "Anthropic".to_owned(),
-                service_id: "anthropic".to_owned(),
-                available: creds.anthropic_oauth_token.is_some(),
-                source,
-                readonly,
-                masked_value: creds
-                    .anthropic_oauth_token
-                    .as_ref()
-                    .map(|v| mask_credential(v)),
-            });
-
-            // OpenAI
-            let (source, readonly) = if std::env::var("OPENAI_API_KEY").is_ok()
-                || std::env::var("CODEX_API_KEY").is_ok()
+        // Try to fetch Claude Code usage if OAuth token is available
+        let oauth_token = std::env::var("CLAUDE_CODE_OAUTH_TOKEN").ok();
+        let claude_usage = if let Some(ref oauth_token) = oauth_token {
+            // Check cache first
             {
-                (Some("environment".to_owned()), true)
-            } else {
-                let path = secrets_dir.join("openai_api_key");
-                if path.exists() {
-                    (Some("file".to_owned()), false)
-                } else if codex_auth_source.is_some() && creds.openai_api_key.is_some() {
-                    (codex_auth_source.clone(), true)
+                let cache = self.usage_cache.read().await;
+                if let Some(cached_usage) = cache.get() {
+                    tracing::debug!("Using cached usage data");
+                    Some(cached_usage.clone())
                 } else {
-                    (None, false)
-                }
-            };
-            credentials.push(CredentialStatus {
-                name: "OpenAI".to_owned(),
-                service_id: "openai".to_owned(),
-                available: creds.openai_api_key.is_some(),
-                source,
-                readonly,
-                masked_value: creds.openai_api_key.as_ref().map(|v| mask_credential(v)),
-            });
-            let (source, readonly) = if codex_env_present {
-                (Some("environment".to_owned()), true)
-            } else if codex_auth_source.is_some() {
-                (codex_auth_source.clone(), true)
-            } else {
-                (None, true)
-            };
-            credentials.push(CredentialStatus {
-                name: "ChatGPT".to_owned(),
-                service_id: "chatgpt".to_owned(),
-                available: creds.codex_access_token().is_some(),
-                source,
-                readonly,
-                masked_value: creds
-                    .codex_access_token()
-                    .as_ref()
-                    .map(|v| mask_credential(v)),
-            });
+                    drop(cache); // Release read lock
 
-            // PagerDuty
-            let (source, readonly) = credential_source("PAGERDUTY_TOKEN", "pagerduty_token");
-            credentials.push(CredentialStatus {
-                name: "PagerDuty".to_owned(),
-                service_id: "pagerduty".to_owned(),
-                available: creds.pagerduty_token.is_some(),
-                source,
-                readonly,
-                masked_value: creds.pagerduty_token.as_ref().map(|v| mask_credential(v)),
-            });
+                    // Cache miss - fetch fresh data
+                    let org_id_override = self.server_config.as_ref().and_then(|c| c.org_id());
+                    match Self::fetch_claude_usage(oauth_token, org_id_override).await {
+                        Ok(usage) => {
+                            tracing::info!(
+                                org_id = %usage.organization_id,
+                                five_hour_utilization = %usage.five_hour.utilization,
+                                seven_day_utilization = %usage.seven_day.utilization,
+                                "Successfully fetched Claude Code usage"
+                            );
 
-            // Sentry
-            let (source, readonly) = credential_source("SENTRY_AUTH_TOKEN", "sentry_auth_token");
-            credentials.push(CredentialStatus {
-                name: "Sentry".to_owned(),
-                service_id: "sentry".to_owned(),
-                available: creds.sentry_auth_token.is_some(),
-                source,
-                readonly,
-                masked_value: creds.sentry_auth_token.as_ref().map(|v| mask_credential(v)),
-            });
+                            // Cache successful fetch
+                            let mut cache = self.usage_cache.write().await;
+                            cache.set(usage.clone());
 
-            // Grafana
-            let (source, readonly) = credential_source("GRAFANA_API_KEY", "grafana_api_key");
-            credentials.push(CredentialStatus {
-                name: "Grafana".to_owned(),
-                service_id: "grafana".to_owned(),
-                available: creds.grafana_api_key.is_some(),
-                source,
-                readonly,
-                masked_value: creds.grafana_api_key.as_ref().map(|v| mask_credential(v)),
-            });
-
-            // npm
-            let (source, readonly) = credential_source("NPM_TOKEN", "npm_token");
-            credentials.push(CredentialStatus {
-                name: "npm".to_owned(),
-                service_id: "npm".to_owned(),
-                available: creds.npm_token.is_some(),
-                source,
-                readonly,
-                masked_value: creds.npm_token.as_ref().map(|v| mask_credential(v)),
-            });
-
-            // Docker
-            let (source, readonly) = credential_source("DOCKER_TOKEN", "docker_token");
-            credentials.push(CredentialStatus {
-                name: "Docker".to_owned(),
-                service_id: "docker".to_owned(),
-                available: creds.docker_token.is_some(),
-                source,
-                readonly,
-                masked_value: creds.docker_token.as_ref().map(|v| mask_credential(v)),
-            });
-
-            // Kubernetes
-            let (source, readonly) = credential_source("K8S_TOKEN", "k8s_token");
-            credentials.push(CredentialStatus {
-                name: "Kubernetes".to_owned(),
-                service_id: "k8s".to_owned(),
-                available: creds.k8s_token.is_some(),
-                source,
-                readonly,
-                masked_value: creds.k8s_token.as_ref().map(|v| mask_credential(v)),
-            });
-
-            // Talos
-            let (source, readonly) = credential_source("TALOS_TOKEN", "talos_token");
-            credentials.push(CredentialStatus {
-                name: "Talos".to_owned(),
-                service_id: "talos".to_owned(),
-                available: creds.talos_token.is_some(),
-                source,
-                readonly,
-                masked_value: creds.talos_token.as_ref().map(|v| mask_credential(v)),
-            });
-
-            // Collect proxy status (only Talos gateway is global)
-            if pm.is_talos_configured() {
-                proxies.push(ProxyStatus {
-                    name: "Talos mTLS Gateway".to_owned(),
-                    port: pm.talos_gateway_port(),
-                    active: true,
-                    proxy_type: "global".to_owned(),
-                });
-            }
-
-            // Count session-specific proxies
-            #[expect(
-                clippy::cast_possible_truncation,
-                reason = "unlikely to have more than 4 billion sessions"
-            )]
-            {
-                active_session_proxies = pm.active_session_proxy_count().await as u32;
-            }
-
-            // Try to fetch Claude Code usage if OAuth token is available
-            let claude_usage = if let Some(oauth_token) = creds.anthropic_oauth_token.as_ref() {
-                // Check cache first
-                {
-                    let cache = self.usage_cache.read().await;
-                    if let Some(cached_usage) = cache.get() {
-                        tracing::debug!("Using cached usage data");
-                        Some(cached_usage.clone())
-                    } else {
-                        drop(cache); // Release read lock
-
-                        // Cache miss - fetch fresh data
-                        let org_id_override = self.server_config.as_ref().and_then(|c| c.org_id());
-                        match Self::fetch_claude_usage(oauth_token, org_id_override).await {
-                            Ok(usage) => {
-                                tracing::info!(
-                                    org_id = %usage.organization_id,
-                                    five_hour_utilization = %usage.five_hour.utilization,
-                                    seven_day_utilization = %usage.seven_day.utilization,
-                                    "Successfully fetched Claude Code usage"
-                                );
-
-                                // Cache successful fetch
-                                let mut cache = self.usage_cache.write().await;
-                                cache.set(usage.clone());
-
-                                Some(usage)
-                            }
-                            Err(usage_error) => {
-                                // Log with appropriate severity based on error type
-                                match usage_error.error_type.as_str() {
-                                    "invalid_token" | "unauthorized" | "invalid_token_format" => {
-                                        tracing::error!(
-                                            error_type = %usage_error.error_type,
-                                            message = %usage_error.message,
-                                            "Usage tracking authentication failed"
-                                        );
-                                    }
-                                    _ => {
-                                        tracing::warn!(
-                                            error_type = %usage_error.error_type,
-                                            message = %usage_error.message,
-                                            "Usage tracking failed - continuing without usage data"
-                                        );
-                                    }
+                            Some(usage)
+                        }
+                        Err(usage_error) => {
+                            // Log with appropriate severity based on error type
+                            match usage_error.error_type.as_str() {
+                                "invalid_token" | "unauthorized" | "invalid_token_format" => {
+                                    tracing::error!(
+                                        error_type = %usage_error.error_type,
+                                        message = %usage_error.message,
+                                        "Usage tracking authentication failed"
+                                    );
                                 }
-
-                                // Don't cache errors - Return ClaudeUsage with error field populated
-                                use crate::api::protocol::{ClaudeUsage, UsageWindow};
-                                Some(ClaudeUsage {
-                                    organization_id: String::new(),
-                                    organization_name: None,
-                                    five_hour: UsageWindow {
-                                        current: 0.0,
-                                        limit: 0.0,
-                                        utilization: 0.0,
-                                        resets_at: None,
-                                    },
-                                    seven_day: UsageWindow {
-                                        current: 0.0,
-                                        limit: 0.0,
-                                        utilization: 0.0,
-                                        resets_at: None,
-                                    },
-                                    seven_day_sonnet: None,
-                                    fetched_at: chrono::Utc::now().to_rfc3339(),
-                                    error: Some(usage_error),
-                                })
+                                _ => {
+                                    tracing::warn!(
+                                        error_type = %usage_error.error_type,
+                                        message = %usage_error.message,
+                                        "Usage tracking failed - continuing without usage data"
+                                    );
+                                }
                             }
+
+                            // Don't cache errors - Return ClaudeUsage with error field populated
+                            use crate::api::protocol::{ClaudeUsage, UsageWindow};
+                            Some(ClaudeUsage {
+                                organization_id: String::new(),
+                                organization_name: None,
+                                five_hour: UsageWindow {
+                                    current: 0.0,
+                                    limit: 0.0,
+                                    utilization: 0.0,
+                                    resets_at: None,
+                                },
+                                seven_day: UsageWindow {
+                                    current: 0.0,
+                                    limit: 0.0,
+                                    utilization: 0.0,
+                                    resets_at: None,
+                                },
+                                seven_day_sonnet: None,
+                                fetched_at: chrono::Utc::now().to_rfc3339(),
+                                error: Some(usage_error),
+                            })
                         }
                     }
                 }
-            } else {
-                tracing::debug!("No Anthropic OAuth token available - skipping usage fetch");
-                None
-            };
-
-            return Ok(SystemStatus {
-                credentials,
-                proxies,
-                active_session_proxies,
-                claude_usage,
-            });
-        }
+            }
+        } else {
+            tracing::debug!("No Anthropic OAuth token available - skipping usage fetch");
+            None
+        };
 
         Ok(SystemStatus {
-            credentials,
-            proxies,
-            active_session_proxies,
-            claude_usage: None,
+            claude_usage,
         })
     }
 
@@ -4748,113 +3838,4 @@ impl SessionManager {
         Ok(usage)
     }
 
-    /// Update a credential value.
-    ///
-    /// Note: The updated credential will be available for newly created sessions.
-    /// Existing proxy instances will continue using their current credentials until
-    /// they are restarted.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if:
-    /// - The proxy manager is not available
-    /// - The credential is readonly (from environment variable)
-    /// - The service ID is invalid
-    /// - File I/O fails
-    pub fn update_credential(&self, service_id: &str, value: &str) -> anyhow::Result<()> {
-        // Validate service_id format to prevent path traversal
-        if !service_id
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || c == '_')
-        {
-            anyhow::bail!("Invalid service ID format: must be alphanumeric or underscore");
-        }
-
-        // Validate we have a proxy manager
-        let Some(ref pm) = self.proxy_manager else {
-            anyhow::bail!("Proxy manager not available");
-        };
-
-        // Map service ID to file name
-        let file_name = Self::credential_file_name(service_id)?;
-
-        // Map service ID to environment variable name
-        let env_var = Self::credential_env_var(service_id)?;
-
-        // Check if credential is from environment (readonly)
-        if std::env::var(env_var).is_ok() {
-            anyhow::bail!(
-                "Credential for {service_id} is set via environment variable {env_var} and cannot be updated via API"
-            );
-        }
-
-        // Ensure secrets directory exists with proper permissions
-        let secrets_dir = pm.secrets_dir().clone();
-        if !secrets_dir.exists() {
-            std::fs::create_dir_all(&secrets_dir)?;
-            #[cfg(unix)]
-            {
-                use std::os::unix::fs::PermissionsExt;
-                std::fs::set_permissions(&secrets_dir, std::fs::Permissions::from_mode(0o700))?;
-            }
-        }
-
-        // Write credential to file
-        let file_path = secrets_dir.join(file_name);
-        let trimmed_value = value.trim();
-        std::fs::write(&file_path, trimmed_value)?;
-
-        // Set file permissions to 0600 (owner read/write only)
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            std::fs::set_permissions(&file_path, std::fs::Permissions::from_mode(0o600))?;
-        }
-
-        // Note: We don't reload credentials here because ProxyManager is behind Arc
-        // and we don't have mutable access. The credential will be picked up by newly
-        // created sessions/proxies. For a full reload, the proxy service would need to be restarted.
-
-        tracing::info!(
-            service_id = service_id,
-            file_path = %file_path.display(),
-            "Updated credential (will take effect for new sessions)"
-        );
-
-        Ok(())
-    }
-
-    /// Map service ID to credential file name.
-    fn credential_file_name(service_id: &str) -> anyhow::Result<&'static str> {
-        match service_id {
-            "github" => Ok("github_token"),
-            "anthropic" => Ok("anthropic_oauth_token"),
-            "openai" => Ok("openai_api_key"),
-            "pagerduty" => Ok("pagerduty_token"),
-            "sentry" => Ok("sentry_auth_token"),
-            "grafana" => Ok("grafana_api_key"),
-            "npm" => Ok("npm_token"),
-            "docker" => Ok("docker_token"),
-            "k8s" => Ok("k8s_token"),
-            "talos" => Ok("talos_token"),
-            _ => anyhow::bail!("Invalid service ID: {service_id}"),
-        }
-    }
-
-    /// Map service ID to environment variable name.
-    fn credential_env_var(service_id: &str) -> anyhow::Result<&'static str> {
-        match service_id {
-            "github" => Ok("GH_TOKEN"),
-            "anthropic" => Ok("CLAUDE_CODE_OAUTH_TOKEN"),
-            "openai" => Ok("OPENAI_API_KEY"),
-            "pagerduty" => Ok("PAGERDUTY_TOKEN"),
-            "sentry" => Ok("SENTRY_AUTH_TOKEN"),
-            "grafana" => Ok("GRAFANA_API_KEY"),
-            "npm" => Ok("NPM_TOKEN"),
-            "docker" => Ok("DOCKER_TOKEN"),
-            "k8s" => Ok("K8S_TOKEN"),
-            "talos" => Ok("TALOS_TOKEN"),
-            _ => anyhow::bail!("Invalid service ID: {service_id}"),
-        }
-    }
 }

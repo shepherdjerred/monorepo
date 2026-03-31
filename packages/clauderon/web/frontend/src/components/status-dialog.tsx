@@ -1,105 +1,22 @@
-import { useState, useCallback } from "react";
 import {
   X,
   XCircle,
-  Globe,
-  Server,
-  Shield,
-  Loader2,
   TrendingUp,
 } from "lucide-react";
-import type { SystemStatus, ProxyStatus } from "@clauderon/client";
-import { useSessionContext } from "@/contexts/session-context.tsx";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
+import { LoadingBlock } from "./loading-block.tsx";
 import { UsageProgressBar } from "./usage-progress-bar.tsx";
-import { CredentialCard } from "./credential-card.tsx";
 
 type StatusDialogProps = {
   onClose: () => void;
 };
 
 export function StatusDialog({ onClose }: StatusDialogProps) {
-  const { client } = useSessionContext();
-  const [status, setStatus] = useState<SystemStatus | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Credential input state
-  const [credentialInputs, setCredentialInputs] = useState<Map<string, string>>(
-    new Map(),
-  );
-  const [showCredentials, setShowCredentials] = useState<Map<string, boolean>>(
-    new Map(),
-  );
-  const [savingCredential, setSavingCredential] = useState<string | null>(null);
-  const [saveErrors, setSaveErrors] = useState<Map<string, string>>(new Map());
-
-  const fetchStatus = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const data = await client.getSystemStatus();
-      setStatus(data);
-    } catch (error_) {
-      setError(error_ instanceof Error ? error_.message : String(error_));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [client]);
-
-  const handleCredentialChange = (serviceId: string, value: string) => {
-    const newInputs = new Map(credentialInputs);
-    newInputs.set(serviceId, value);
-    setCredentialInputs(newInputs);
-
-    // Clear error when user starts typing
-    const newErrors = new Map(saveErrors);
-    newErrors.delete(serviceId);
-    setSaveErrors(newErrors);
-  };
-
-  const toggleShowCredential = (serviceId: string) => {
-    const newShow = new Map(showCredentials);
-    newShow.set(serviceId, newShow.get(serviceId) !== true);
-    setShowCredentials(newShow);
-  };
-
-  const handleSaveCredential = async (serviceId: string) => {
-    const value = credentialInputs.get(serviceId);
-    if (value == null || value.length === 0 || value.trim() === "") {
-      const newErrors = new Map(saveErrors);
-      newErrors.set(serviceId, "Credential value cannot be empty");
-      setSaveErrors(newErrors);
-      return;
-    }
-
-    setSavingCredential(serviceId);
-    const newErrors = new Map(saveErrors);
-    newErrors.delete(serviceId);
-    setSaveErrors(newErrors);
-
-    try {
-      await client.updateCredential(serviceId, value);
-
-      // Clear input
-      const newInputs = new Map(credentialInputs);
-      newInputs.delete(serviceId);
-      setCredentialInputs(newInputs);
-
-      // Refresh status to show updated credential
-      await fetchStatus();
-    } catch (error_) {
-      const errorMap = new Map(saveErrors);
-      errorMap.set(
-        serviceId,
-        error_ instanceof Error ? error_.message : String(error_),
-      );
-      setSaveErrors(errorMap);
-      // Refresh to show actual state even on error
-      await fetchStatus();
-    } finally {
-      setSavingCredential(null);
-    }
-  };
+  const statusQuery = useQuery({
+    queryKey: ["system-status"],
+    queryFn: () => apiClient.getSystemStatus(),
+  });
 
   return (
     <>
@@ -138,128 +55,10 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
 
           {/* Content */}
           <div className="flex-1 overflow-auto p-6 space-y-6">
-            {isLoading && (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              </div>
-            )}
-
-            {error != null && error.length > 0 && (
-              <div
-                className="p-4 border-4 font-mono"
-                style={{
-                  backgroundColor: "hsl(0, 75%, 95%)",
-                  color: "hsl(0, 75%, 40%)",
-                  borderColor: "hsl(0, 75%, 50%)",
-                }}
-              >
-                <strong className="font-bold">ERROR:</strong> {error}
-              </div>
-            )}
-
-            {status != null && (
+            <LoadingBlock
+              queries={[statusQuery]}
+              renderSuccess={(status) => (
               <>
-                {/* Credentials Section */}
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Shield className="w-5 h-5 text-primary" />
-                    <h3 className="text-xl font-semibold">Credentials</h3>
-                  </div>
-
-                  <div className="grid gap-3">
-                    {status.credentials.map((cred) => (
-                      <CredentialCard
-                        key={cred.service_id}
-                        cred={cred}
-                        credentialInput={
-                          credentialInputs.get(cred.service_id) ?? ""
-                        }
-                        showCredential={
-                          showCredentials.get(cred.service_id) === true
-                        }
-                        savingCredential={savingCredential === cred.service_id}
-                        saveError={saveErrors.get(cred.service_id)}
-                        onCredentialChange={handleCredentialChange}
-                        onToggleShow={toggleShowCredential}
-                        onSave={(id) => {
-                          void handleSaveCredential(id);
-                        }}
-                      />
-                    ))}
-                  </div>
-
-                  <div className="mt-4 space-y-2">
-                    <p className="text-sm text-muted-foreground">
-                      Credentials can be loaded from environment variables or
-                      files in ~/.secrets/
-                    </p>
-                    <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
-                      <p className="text-sm text-yellow-600 dark:text-yellow-500">
-                        <strong>Note:</strong> Updated credentials will take
-                        effect for new sessions. Restart the clauderon daemon
-                        for changes to apply to all services.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Proxies Section */}
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Server className="w-5 h-5 text-primary" />
-                    <h3 className="text-xl font-semibold">Proxy Services</h3>
-                  </div>
-
-                  <div className="grid gap-3">
-                    {status.proxies.map((proxy: ProxyStatus) => (
-                      <div
-                        key={`${proxy.name}-${String(proxy.port)}`}
-                        className="flex items-center justify-between p-4 bg-secondary/30 rounded-md border border-secondary"
-                      >
-                        <div className="flex items-center gap-3">
-                          {proxy.active ? (
-                            <div className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
-                          ) : (
-                            <div className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
-                          )}
-                          <div>
-                            <div className="font-medium">{proxy.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              Port {String(proxy.port)} • {proxy.proxy_type}
-                            </div>
-                          </div>
-                        </div>
-                        <span
-                          className={`text-sm font-medium ${
-                            proxy.active ? "text-green-500" : "text-red-500"
-                          }`}
-                        >
-                          {proxy.active ? "Active" : "Inactive"}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Session Proxies Summary */}
-                  {status.active_session_proxies > 0 && (
-                    <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-md">
-                      <div className="flex items-center gap-2">
-                        <Globe className="w-4 h-4 text-blue-500" />
-                        <span className="text-sm">
-                          <span className="font-semibold">
-                            {String(status.active_session_proxies)}
-                          </span>{" "}
-                          session-specific{" "}
-                          {status.active_session_proxies === 1
-                            ? "proxy"
-                            : "proxies"}{" "}
-                          running
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
                 {/* Claude Code Usage Section */}
                 {status.claude_usage != null && (
                   <div>
@@ -362,21 +161,9 @@ export function StatusDialog({ onClose }: StatusDialogProps) {
                     )}
                   </div>
                 )}
-
-                {/* Info Footer */}
-                <div className="pt-4 border-t text-sm text-muted-foreground space-y-2">
-                  <p>
-                    <strong>Credentials</strong> are automatically injected into
-                    proxied requests based on the target host.
-                  </p>
-                  <p>
-                    <strong>Global proxies</strong> are shared across all
-                    sessions. <strong>Session proxies</strong> are created per
-                    Docker session with access mode filtering.
-                  </p>
-                </div>
               </>
-            )}
+              )}
+            />
           </div>
 
           {/* Footer Actions */}

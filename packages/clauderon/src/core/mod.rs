@@ -16,7 +16,7 @@ pub use events::Event;
 pub use health::HealthService;
 pub use manager::SessionManager;
 pub use session::{
-    AccessMode, AgentType, AvailableAction, BackendType, BlockerDetails, CheckStatus,
+    AgentType, AvailableAction, BackendType, BlockerDetails, CheckStatus,
     ClaudeWorkingStatus, HealthCheckResult, MergeMethod, PrReviewStatus, RecreateBlockedError,
     RecreateResult, ResourceState, ReviewDecision, Session, SessionConfig, SessionHealthReport,
     SessionRepository, SessionStatus, WorkflowStage,

@@ -2,7 +2,7 @@
 
 use clauderon::api::protocol::{CreateSessionRequest, Request, Response};
 use clauderon::backends::DockerBackend;
-use clauderon::core::{AccessMode, AgentType, BackendType, SessionStatus};
+use clauderon::core::{AgentType, BackendType, SessionStatus};
 use std::path::PathBuf;
 
 #[test]
@@ -25,10 +25,8 @@ fn test_create_session_request_serialization() {
         agent: AgentType::ClaudeCode,
         model: None,
         dangerous_skip_checks: false,
-        dangerous_copy_creds: false,
         print_mode: false,
         plan_mode: true,
-        access_mode: AccessMode::default(),
         images: vec![],
         container_image: None,
         pull_policy: None,
@@ -166,10 +164,8 @@ fn test_print_mode_serialization() {
         agent: AgentType::ClaudeCode,
         model: None,
         dangerous_skip_checks: true,
-        dangerous_copy_creds: false,
         print_mode: true,
         plan_mode: false,
-        access_mode: AccessMode::default(),
         images: vec![],
         container_image: None,
         pull_policy: None,
@@ -229,7 +225,6 @@ fn test_print_mode_flows_to_docker_args() {
         &PathBuf::new(),
         "Generate a hello world",
         1000,
-        None,
         AgentType::ClaudeCode,
         print_mode,
         true, // dangerous_skip_checks - pass true to get --dangerously-skip-permissions
@@ -346,7 +341,6 @@ fn test_interactive_mode_no_print_flag_in_docker_args() {
         &PathBuf::new(),
         "Interactive prompt",
         1000,
-        None,
         AgentType::ClaudeCode,
         false, // interactive mode
         false, // dangerous_skip_checks

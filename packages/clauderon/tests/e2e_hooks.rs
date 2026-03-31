@@ -178,7 +178,7 @@ async fn test_hook_installer_creates_files() {
 // =============================================================================
 
 /// Test that hooks can send messages via HTTP to the host
-/// This is the primary hook communication method for Docker/K8s containers
+/// This is the primary hook communication method for Docker containers
 #[tokio::test]
 #[ignore] // Requires Docker
 async fn test_http_hook_communication() {

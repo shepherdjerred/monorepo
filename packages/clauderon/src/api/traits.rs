@@ -58,9 +58,6 @@ pub trait ApiClient: Send + Sync {
     /// Start a stopped session.
     async fn start_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()>;
 
-    /// Wake a hibernated session.
-    async fn wake_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()>;
-
     /// Recreate a session (preserves data).
     async fn recreate_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()>;
 

@@ -1,6 +1,9 @@
 import { useState } from "react";
 import type { Session } from "@clauderon/client";
-import { useSessionContext } from "@/contexts/session-context.tsx";
+import {
+  useUpdateSessionMetadata,
+  useRegenerateMetadata,
+} from "@/hooks/use-session-mutations";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { X, RefreshCw } from "lucide-react";
@@ -15,7 +18,8 @@ export function EditSessionDialog({
   session,
   onClose,
 }: EditSessionDialogProps) {
-  const { updateSession, regenerateMetadata } = useSessionContext();
+  const updateMetadataMutation = useUpdateSessionMetadata();
+  const regenerateMetadataMutation = useRegenerateMetadata();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,7 +35,11 @@ export function EditSessionDialog({
     setError(null);
 
     try {
-      await updateSession(session.id, formData.title, formData.description);
+      await updateMetadataMutation.mutateAsync({
+        id: session.id,
+        title: formData.title,
+        description: formData.description,
+      });
       toast.success("Session updated successfully");
       onClose();
     } catch (caughtError) {
@@ -53,20 +61,18 @@ export function EditSessionDialog({
     toast.info("Regenerating session metadata...");
     onClose();
 
-    // Fire-and-forget operation
-    const regenerate = async () => {
-      try {
-        await regenerateMetadata(session.id);
+    regenerateMetadataMutation.mutate(session.id, {
+      onSuccess: () => {
         toast.success("Session metadata regenerated");
-      } catch (caughtError: unknown) {
+      },
+      onError: (caughtError: unknown) => {
         const errorMsg =
           caughtError instanceof Error
             ? caughtError.message
             : String(caughtError);
         toast.error(`Failed to regenerate metadata: ${errorMsg}`);
-      }
-    };
-    void regenerate();
+      },
+    });
   };
 
   return (

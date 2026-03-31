@@ -130,7 +130,6 @@ fn state_display(state: &ResourceState) -> (&'static str, Color) {
     match state {
         ResourceState::Healthy => ("OK", Color::Green),
         ResourceState::Stopped => ("Stopped", Color::Yellow),
-        ResourceState::Hibernated => ("Hibernated", Color::Cyan),
         ResourceState::Pending => ("Pending", Color::Yellow),
         ResourceState::Missing => ("Missing", Color::Red),
         ResourceState::Error { .. } => ("Error", Color::Red),

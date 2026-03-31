@@ -42,5 +42,5 @@
   <path d="M 210 60 L 218 68 L 232 54" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 
   <!-- Title -->
-  <text x="200" y="260" text-anchor="middle" font-family="system-ui" font-size="14" fill="#64748b">Zero-credential architecture for AI agents</text>
+  <text x="200" y="260" text-anchor="middle" font-family="system-ui" font-size="14" fill="#64748b">Session management for AI coding agents</text>
 </svg>

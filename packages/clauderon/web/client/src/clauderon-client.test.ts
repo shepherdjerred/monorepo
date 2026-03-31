@@ -3,7 +3,6 @@ import { ClauderonClient } from "./clauderon-client.ts";
 import { ApiError, NetworkError, SessionNotFoundError } from "./errors.ts";
 import {
   SessionStatus,
-  AccessMode,
   BackendType,
   AgentType,
   ClaudeWorkingStatus,
@@ -49,9 +48,7 @@ function createMockSession(overrides: Partial<Session> = {}): Session {
     branch_name: "main",
     initial_prompt: "test prompt",
     dangerous_skip_checks: false,
-    dangerous_copy_creds: false,
     claude_status: ClaudeWorkingStatus.Unknown,
-    access_mode: AccessMode.ReadWrite,
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",
     ...overrides,
@@ -283,24 +280,6 @@ describe("ClauderonClient - createSession and session actions", () => {
     expect(repos).toEqual(mockRepos);
   });
 
-  test("updates access mode successfully", async () => {
-    const mockFetch = createMockFetch(
-      new Map([
-        [
-          "POST http://localhost:3030/api/sessions/session1/access-mode",
-          { status: 204 },
-        ],
-      ]),
-    );
-
-    const client = new ClauderonClient({
-      baseUrl: "http://localhost:3030",
-      fetch: mockFetch,
-    });
-    await expect(
-      client.updateAccessMode("session1", AccessMode.ReadWrite),
-    ).resolves.toBeUndefined();
-  });
 });
 
 describe("ClauderonClient - error handling and health", () => {
@@ -435,40 +414,6 @@ describe("ClauderonClient - start, wake, recreate, cleanup", () => {
       fetch: mockFetch,
     });
     await expect(client.startSession("session1")).rejects.toThrow(ApiError);
-  });
-
-  test("wakes a hibernated session successfully", async () => {
-    const mockFetch = createMockFetch(
-      new Map([
-        [
-          "POST http://localhost:3030/api/sessions/session1/wake",
-          { status: 204 },
-        ],
-      ]),
-    );
-
-    const client = new ClauderonClient({
-      baseUrl: "http://localhost:3030",
-      fetch: mockFetch,
-    });
-    await expect(client.wakeSession("session1")).resolves.toBeUndefined();
-  });
-
-  test("throws ApiError when session cannot be woken", async () => {
-    const mockFetch = createMockFetch(
-      new Map([
-        [
-          "POST http://localhost:3030/api/sessions/session1/wake",
-          { status: 400, body: { error: "Session is not hibernated" } },
-        ],
-      ]),
-    );
-
-    const client = new ClauderonClient({
-      baseUrl: "http://localhost:3030",
-      fetch: mockFetch,
-    });
-    await expect(client.wakeSession("session1")).rejects.toThrow(ApiError);
   });
 
   test("recreates session and returns result", async () => {

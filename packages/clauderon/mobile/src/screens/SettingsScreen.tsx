@@ -148,7 +148,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
         >
           <Text style={[styles.statusButtonText, { color: colors.textDark }]}>System Status</Text>
           <Text style={[styles.statusButtonSubtext, { color: colors.textLight }]}>
-            Credentials, usage, and proxies
+            Usage and system info
           </Text>
         </TouchableOpacity>
 

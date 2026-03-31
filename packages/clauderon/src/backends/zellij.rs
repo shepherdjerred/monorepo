@@ -1,5 +1,7 @@
+use anyhow::Context;
 use async_trait::async_trait;
 use std::path::Path;
+use std::process::Stdio;
 use tokio::process::Command;
 
 use super::traits::ExecutionBackend;
@@ -127,15 +129,13 @@ impl ZellijBackend {
             name,
             workdir,
             initial_prompt,
-            super::traits::CreateOptions {
+            crate::backends::CreateOptions {
                 agent: AgentType::ClaudeCode,
                 model: None, // Use default model
                 print_mode: false,
                 plan_mode: true, // Default to plan mode
-                session_proxy_port: None,
                 images: vec![],
                 dangerous_skip_checks: false,
-                dangerous_copy_creds: false, // Zellij is local, no copy-creds needed
                 session_id: None,
                 initial_workdir: std::path::PathBuf::new(),
                 http_port: None,
@@ -190,10 +190,10 @@ impl ExecutionBackend for ZellijBackend {
         name: &str,
         workdir: &Path,
         initial_prompt: &str,
-        options: super::traits::CreateOptions,
+        options: crate::backends::CreateOptions,
     ) -> anyhow::Result<String> {
         // Multi-repository sessions are not supported in Zellij backend
-        if !options.repositories.is_empty() {
+        if options.repositories.len() > 1 {
             anyhow::bail!(
                 "Multi-repository sessions are not supported for Zellij backend. \
                 Please use Docker backend for multi-repo sessions, or use single-repository mode."
@@ -201,19 +201,39 @@ impl ExecutionBackend for ZellijBackend {
         }
 
         // Create a new Zellij session in the background
+        // Note: We use .status() with stdout nulled for the create command because zellij's
+        // background server inherits stdout/stderr pipes, keeping them open indefinitely
+        // and causing .output() to hang.
         let args = Self::build_create_session_args(name);
-        let output = Command::new("zellij").args(&args[..]).output().await?;
+        let timeout_duration = std::time::Duration::from_secs(30);
+        let mut child = Command::new("zellij")
+            .args(&args[..])
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .context("Failed to spawn 'zellij attach --create-background'")?;
 
-        if !output.status.success() {
-            let stderr = String::from_utf8_lossy(&output.stderr);
+        let status = tokio::time::timeout(timeout_duration, child.wait())
+            .await
+            .map_err(|_| {
+                let _ = child.start_kill();
+                anyhow::anyhow!("Timed out waiting for 'zellij attach --create-background' ({}s)", timeout_duration.as_secs())
+            })?
+            ?;
+
+        if !status.success() {
             tracing::error!(
                 session = name,
                 workdir = %workdir.display(),
-                stderr = %stderr,
+                exit_code = ?status.code(),
                 "Failed to create Zellij session"
             );
-            anyhow::bail!("Failed to create Zellij session: {stderr}");
+            anyhow::bail!("Failed to create Zellij session (exit code: {:?})", status.code());
         }
+
+        // Wait for session plugins to initialize before sending actions
+        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
 
         // Run Claude in the session
         // Note: Unlike Docker backend, Zellij doesn't create .claude.json config files.
@@ -229,12 +249,19 @@ impl ExecutionBackend for ZellijBackend {
             options.session_id.as_ref(),
             options.model.as_deref(),
         );
-        let output = Command::new("zellij")
-            .args(&pane_args[..])
-            .env("ZELLIJ_SESSION_NAME", name)
-            .env("COLORTERM", "truecolor")
-            .output()
-            .await?;
+        let output = tokio::time::timeout(
+            timeout_duration,
+            Command::new("zellij")
+                .args(&pane_args[..])
+                .stdin(Stdio::null())
+                .stdout(Stdio::null())
+                .env("ZELLIJ_SESSION_NAME", name)
+                .env("COLORTERM", "truecolor")
+                .output(),
+        )
+        .await
+        .map_err(|_| anyhow::anyhow!("Timed out waiting for 'zellij action new-pane' ({}s)", timeout_duration.as_secs()))?
+        ?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
@@ -337,7 +364,6 @@ impl ExecutionBackend for ZellijBackend {
             can_update_image: false, // No container image for Zellij
             preserves_data_on_recreate: true,
             can_start: false, // Zellij sessions can't be "started" in the same way
-            can_wake: false,
             data_preservation_description: "Your code is safe (stored in local git worktree). Only terminal state (scrollback, running processes) will be lost.",
         }
     }
@@ -361,6 +387,69 @@ impl ExecutionBackend for ZellijBackend {
 mod tests {
     use super::*;
     use std::path::PathBuf;
+
+    fn make_test_repo(mount_name: &str, is_primary: bool) -> crate::core::session::SessionRepository {
+        crate::core::session::SessionRepository {
+            repo_path: PathBuf::from("/tmp/repo"),
+            subdirectory: PathBuf::new(),
+            worktree_path: PathBuf::from("/tmp/worktree"),
+            branch_name: "test-branch".to_owned(),
+            mount_name: mount_name.to_owned(),
+            is_primary,
+            base_branch: None,
+        }
+    }
+
+    /// Mirrors the multi-repo guard logic from ZellijBackend::create()
+    fn would_reject_as_multi_repo(
+        repos: &[crate::core::session::SessionRepository],
+    ) -> Option<String> {
+        if repos.len() > 1 {
+            Some(
+                "Multi-repository sessions are not supported for Zellij backend.".to_owned(),
+            )
+        } else {
+            None
+        }
+    }
+
+    #[test]
+    fn test_single_repo_not_rejected_as_multi_repo() {
+        let repos = vec![make_test_repo("primary", true)];
+        assert!(
+            would_reject_as_multi_repo(&repos).is_none(),
+            "Single-repo session should not be rejected as multi-repo"
+        );
+    }
+
+    #[test]
+    fn test_empty_repos_not_rejected_as_multi_repo() {
+        assert!(
+            would_reject_as_multi_repo(&[]).is_none(),
+            "Empty repos should not be rejected as multi-repo"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_multi_repo_rejected() {
+        let backend = ZellijBackend::new();
+        let options = crate::backends::CreateOptions {
+            repositories: vec![
+                make_test_repo("primary", true),
+                make_test_repo("secondary", false),
+            ],
+            ..Default::default()
+        };
+        let result = backend
+            .create("test", Path::new("/tmp"), "prompt", options)
+            .await;
+        let err = result.expect_err("Multi-repo should be rejected");
+        assert!(
+            err.to_string()
+                .contains("Multi-repository sessions are not supported"),
+            "Expected multi-repo rejection error, got: {err}"
+        );
+    }
 
     /// Test that session creation uses --create-background flag
     #[test]

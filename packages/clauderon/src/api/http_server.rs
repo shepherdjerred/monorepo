@@ -4,7 +4,6 @@ use crate::api::static_files::{serve_docs, serve_static};
 use crate::api::ws_events::{EventBroadcaster, broadcast_event};
 use crate::auth::{self, AuthState};
 use crate::core::manager::SessionManager;
-use crate::core::session::AccessMode;
 use crate::core::session::AgentType;
 use crate::core::session::ClaudeWorkingStatus;
 use crate::hooks::{HookEvent, HookMessage};
@@ -63,7 +62,6 @@ pub fn create_router(auth_state: &Option<AuthState>, dev_mode: bool) -> Router<A
         .route("/api/sessions/{id}/archive", post(archive_session))
         .route("/api/sessions/{id}/unarchive", post(unarchive_session))
         .route("/api/sessions/{id}/refresh", post(refresh_session))
-        .route("/api/sessions/{id}/access-mode", post(update_access_mode))
         .route("/api/sessions/{id}/metadata", post(update_metadata))
         .route(
             "/api/sessions/{id}/regenerate-metadata",
@@ -76,14 +74,11 @@ pub fn create_router(auth_state: &Option<AuthState>, dev_mode: bool) -> Router<A
         .route("/api/health", get(get_health))
         .route("/api/sessions/{id}/health", get(get_session_health))
         .route("/api/sessions/{id}/start", post(start_session))
-        .route("/api/sessions/{id}/wake", post(wake_session))
         .route("/api/sessions/{id}/recreate", post(recreate_session))
         .route("/api/sessions/{id}/cleanup", post(cleanup_session))
         .route("/api/recent-repos", get(get_recent_repos))
         .route("/api/browse-directory", post(browse_directory))
         .route("/api/status", get(get_system_status))
-        .route("/api/storage-classes", get(get_storage_classes))
-        .route("/api/credentials", post(update_credential))
         .route("/api/feature-flags", get(get_feature_flags));
 
     // Apply auth middleware to protected routes if authentication is enabled
@@ -279,15 +274,6 @@ async fn create_session(
     // Validate model compatibility with agent and experimental models
     request.validate(&state.session_manager.feature_flags())?;
 
-    // Validate read-only mode is enabled if requested
-    if request.access_mode == crate::core::session::AccessMode::ReadOnly
-        && !state.feature_flags.enable_readonly_mode
-    {
-        return Err(AppError::BadRequest(
-            "Read-only mode is not available. This feature is experimental and must be explicitly enabled.".to_owned()
-        ));
-    }
-
     // Start async creation (returns immediately with session ID)
     let session_id = state
         .session_manager
@@ -299,10 +285,8 @@ async fn create_session(
             request.agent,
             request.model,
             request.dangerous_skip_checks,
-            request.dangerous_copy_creds,
             request.print_mode,
             request.plan_mode,
-            request.access_mode,
             request.images,
             request.container_image,
             request.pull_policy,
@@ -412,7 +396,7 @@ async fn get_session_health(
     Ok(Json(report))
 }
 
-/// Start a stopped session (container/pod)
+/// Start a stopped session container
 async fn start_session(
     State(state): State<AppState>,
     Path(id): Path<String>,
@@ -423,26 +407,6 @@ async fn start_session(
         .map_err(|e| AppError::BadRequest(format!("Invalid session ID: {e}")))?;
 
     state.session_manager.start_session(session_id).await?;
-
-    // Broadcast session updated event
-    if let Some(session) = state.session_manager.get_session(&id).await {
-        broadcast_event(&state.event_broadcaster, Event::SessionUpdated(session)).await;
-    }
-
-    Ok(StatusCode::NO_CONTENT)
-}
-
-/// Wake a hibernated session (sprites)
-async fn wake_session(
-    State(state): State<AppState>,
-    Path(id): Path<String>,
-) -> Result<StatusCode, AppError> {
-    validate_session_id(&id)?;
-
-    let session_id = Uuid::parse_str(&id)
-        .map_err(|e| AppError::BadRequest(format!("Invalid session ID: {e}")))?;
-
-    state.session_manager.wake_session(session_id).await?;
 
     // Broadcast session updated event
     if let Some(session) = state.session_manager.get_session(&id).await {
@@ -509,12 +473,6 @@ async fn cleanup_session(
     Ok(StatusCode::NO_CONTENT)
 }
 
-/// Request to update access mode
-#[derive(Debug, Deserialize, Serialize)]
-struct UpdateAccessModeRequest {
-    access_mode: AccessMode,
-}
-
 /// Request to update session metadata
 #[derive(Debug, Deserialize, Serialize)]
 struct UpdateMetadataRequest {
@@ -540,36 +498,6 @@ struct HistoryResponse {
     total_lines: u64,
     /// Whether the history file exists
     file_exists: bool,
-}
-
-/// Update session access mode
-async fn update_access_mode(
-    State(state): State<AppState>,
-    Path(id): Path<String>,
-    Json(request): Json<UpdateAccessModeRequest>,
-) -> Result<StatusCode, AppError> {
-    validate_session_id(&id)?;
-
-    // Validate read-only mode is enabled if requested
-    if request.access_mode == crate::core::session::AccessMode::ReadOnly
-        && !state.feature_flags.enable_readonly_mode
-    {
-        return Err(AppError::BadRequest(
-            "Read-only mode is not available. This feature is experimental and must be explicitly enabled.".to_owned()
-        ));
-    }
-
-    state
-        .session_manager
-        .update_access_mode(&id, request.access_mode)
-        .await?;
-
-    // Broadcast session updated event
-    if let Some(session) = state.session_manager.get_session(&id).await {
-        broadcast_event(&state.event_broadcaster, Event::SessionUpdated(session)).await;
-    }
-
-    Ok(StatusCode::NO_CONTENT)
 }
 
 /// Update session metadata (title and description)
@@ -732,42 +660,12 @@ async fn browse_directory(
     }))
 }
 
-/// Get system status (credentials and proxies)
+/// Get system status
 async fn get_system_status(
     State(state): State<AppState>,
 ) -> Result<Json<crate::api::protocol::SystemStatus>, AppError> {
     let status = state.session_manager.get_system_status().await?;
     Ok(Json(status))
-}
-
-/// Get available Kubernetes storage classes
-async fn get_storage_classes(
-    State(state): State<AppState>,
-) -> Result<Json<serde_json::Value>, AppError> {
-    let k8s_backend = state
-        .session_manager
-        .kubernetes_backend()
-        .ok_or_else(|| AppError::BadRequest("Kubernetes backend not available".to_owned()))?;
-
-    let storage_classes = k8s_backend
-        .list_storage_classes()
-        .await
-        .map_err(|e| AppError::BadRequest(format!("Failed to list storage classes: {e}")))?;
-
-    Ok(Json(json!({ "storage_classes": storage_classes })))
-}
-
-/// Update a credential
-async fn update_credential(
-    State(state): State<AppState>,
-    Json(request): Json<crate::api::protocol::UpdateCredentialRequest>,
-) -> Result<StatusCode, AppError> {
-    state
-        .session_manager
-        .update_credential(&request.service_id, &request.value)
-        .map_err(|e| AppError::BadRequest(e.to_string()))?;
-
-    Ok(StatusCode::NO_CONTENT)
 }
 
 /// Upload an image file for a session

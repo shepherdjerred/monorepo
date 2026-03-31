@@ -3,9 +3,7 @@ import type {
   Session,
   CreateSessionRequest,
   RecentRepoDto,
-  AccessMode,
   SystemStatus,
-  UpdateCredentialRequest,
   UploadResponse,
 } from "../types/generated";
 import { ApiError, NetworkError, SessionNotFoundError } from "./errors";
@@ -147,30 +145,10 @@ export class ClauderonClient {
   }
 
   /**
-   * Update session access mode
-   */
-  async updateAccessMode(id: string, mode: AccessMode): Promise<void> {
-    await this.requestVoid("POST", `/api/sessions/${encodeURIComponent(id)}/access-mode`, {
-      access_mode: mode,
-    });
-  }
-
-  /**
-   * Get system status including credentials and proxies
+   * Get system status
    */
   async getSystemStatus(): Promise<SystemStatus> {
     return SystemStatusResponseSchema.parse(await this.requestJson("GET", "/api/status"));
-  }
-
-  /**
-   * Update a credential value
-   */
-  async updateCredential(serviceId: string, value: string): Promise<void> {
-    const request: UpdateCredentialRequest = {
-      service_id: serviceId,
-      value,
-    };
-    await this.requestVoid("POST", "/api/credentials", request);
   }
 
   /**

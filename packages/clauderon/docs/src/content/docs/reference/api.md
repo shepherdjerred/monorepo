@@ -31,7 +31,6 @@ GET /api/sessions?include_archived=false
       "name": "session-name",
       "backend": "docker",
       "agent": "claude",
-      "access_mode": "read-write",
       "status": "running",
       "repo_path": "/home/user/project",
       "created_at": "2024-01-15T10:30:00Z",
@@ -63,7 +62,6 @@ POST /api/sessions
   "prompt": "Fix the login bug",
   "backend": "docker",
   "agent": "claude",
-  "access_mode": "read-write",
   "model": "claude-sonnet-4-5"
 }
 ```
@@ -90,7 +88,6 @@ POST /api/sessions
 | `prompt`       | string  | Yes      | Initial prompt                 |
 | `backend`      | string  | No       | Backend type                   |
 | `agent`        | string  | No       | Agent type (default: "claude") |
-| `access_mode`  | string  | No       | "read-only" or "read-write"    |
 | `no_plan_mode` | boolean | No       | Disable plan mode              |
 | `model`        | string  | No       | Model override                 |
 | `name`         | string  | No       | Custom session name            |
@@ -112,16 +109,6 @@ POST /api/sessions/:id/archive
 POST /api/sessions/:id/unarchive
 ```
 
-### Set Access Mode
-
-```http
-PUT /api/sessions/:id/access-mode
-```
-
-```json
-{ "access_mode": "read-only" }
-```
-
 ### Refresh Session
 
 ```http
@@ -130,11 +117,10 @@ POST /api/sessions/:id/refresh
 
 Pulls latest image and recreates container (Docker only).
 
-### Start / Wake / Recreate / Cleanup
+### Start / Recreate / Cleanup
 
 ```http
 POST /api/sessions/:id/start
-POST /api/sessions/:id/wake
 POST /api/sessions/:id/recreate          # body: { "fresh": false }
 POST /api/sessions/:id/recreate-fresh
 POST /api/sessions/:id/cleanup
@@ -199,11 +185,10 @@ POST /api/browse-directory
 { "path": "/home/user/projects", "show_hidden": false }
 ```
 
-### Get Config / Credentials
+### Get Config
 
 ```http
 GET /api/config
-GET /api/credentials
 ```
 
 ## WebSocket API

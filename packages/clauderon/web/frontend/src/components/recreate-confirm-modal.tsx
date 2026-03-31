@@ -24,7 +24,6 @@ type RecreateConfirmModalProps = {
   session: Session;
   healthReport: SessionHealthReport;
   onStart: () => void;
-  onWake: () => void;
   onRecreate: () => void;
   onRecreateFresh: () => void;
   onUpdateImage: () => void;
@@ -41,8 +40,6 @@ function getStateDisplay(state: ResourceState): {
       return { label: "OK", color: "text-green-600" };
     case "Stopped":
       return { label: "Stopped", color: "text-yellow-600" };
-    case "Hibernated":
-      return { label: "Hibernated", color: "text-blue-600" };
     case "Pending":
       return { label: "Pending", color: "text-yellow-600" };
     case "Missing":
@@ -84,12 +81,6 @@ function ActionButton({
       case AvailableAction.Start:
         return {
           label: "Start",
-          icon: <Play className="w-4 h-4 mr-2" />,
-          variant: "brutalist",
-        };
-      case AvailableAction.Wake:
-        return {
-          label: "Wake",
           icon: <Play className="w-4 h-4 mr-2" />,
           variant: "brutalist",
         };
@@ -143,7 +134,6 @@ export function RecreateConfirmModal({
   session,
   healthReport,
   onStart,
-  onWake,
   onRecreate,
   onRecreateFresh,
   onUpdateImage,
@@ -164,9 +154,6 @@ export function RecreateConfirmModal({
     switch (action) {
       case AvailableAction.Start:
         onStart();
-        break;
-      case AvailableAction.Wake:
-        onWake();
         break;
       case AvailableAction.Recreate:
         onRecreate();

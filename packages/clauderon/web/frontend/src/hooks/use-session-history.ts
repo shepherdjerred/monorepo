@@ -1,5 +1,6 @@
-import { useState } from "react";
-import type { Message } from "@/lib/claude-parser.ts";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
+import { parseMessages, type Message } from "@/lib/claude-parser";
 
 export type HistoryState = {
   messages: Message[];
@@ -10,23 +11,40 @@ export type HistoryState = {
 
 /**
  * Hook to fetch and poll session history from JSONL file
- *
- * @param sessionId Session ID to fetch history for
- * @param _pollingInterval Polling interval in ms (default: 2000)
  */
 export function useSessionHistory(
-  _sessionId: string | null,
-  _pollingInterval = 2000,
+  sessionId: string | null,
+  pollingInterval = 2000,
 ): HistoryState {
-  const [messages] = useState<Message[]>([]);
-  const [isLoading] = useState(true);
-  const [error] = useState<string | null>(null);
-  const [fileExists] = useState(false);
+  const query = useQuery({
+    queryKey: ["session-history", sessionId],
+    queryFn: async () => {
+      if (sessionId == null) {
+        throw new Error("No session ID");
+      }
+      return apiClient.getSessionHistory(sessionId);
+    },
+    enabled: sessionId != null,
+    refetchInterval: pollingInterval,
+    staleTime: 1_000,
+  });
+
+  if (query.data == null) {
+    return {
+      messages: [],
+      isLoading: query.isLoading,
+      error: query.error instanceof Error ? query.error.message : null,
+      fileExists: false,
+    };
+  }
+
+  const terminalOutput = query.data.lines.join("\n");
+  const messages = parseMessages(terminalOutput);
 
   return {
     messages,
-    isLoading,
-    error,
-    fileExists,
+    isLoading: false,
+    error: null,
+    fileExists: query.data.fileExists,
   };
 }

@@ -215,11 +215,11 @@ mod tests {
     #[test]
     fn test_backend_error_unavailable() {
         let err = BackendError::Unavailable {
-            backend: BackendType::Kubernetes,
+            backend: BackendType::Docker,
             reason: "not installed".to_owned(),
         };
         let msg = err.to_string();
-        assert!(msg.contains("Kubernetes"));
+        assert!(msg.contains("Docker"));
         assert!(msg.contains("not installed"));
     }
 }

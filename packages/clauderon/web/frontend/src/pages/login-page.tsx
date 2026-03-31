@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { get } from "@github/webauthn-json";
-import { useClauderonClient } from "@/hooks/use-clauderon-client.ts";
-import { useAuth } from "@/contexts/auth-context.tsx";
+import { useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
 
 export function LoginPage() {
-  const client = useClauderonClient();
-  const { refreshAuthStatus } = useAuth();
+  const queryClient = useQueryClient();
   const [username, setUsername] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -17,21 +16,21 @@ export function LoginPage() {
 
     try {
       // Start login flow - options is typed as 'any' from TypeShare
-      const response = await client.loginStart({ username });
+      const response = await apiClient.loginStart({ username });
 
       // Trigger passkey authentication
       // response.options is 'any' from the generated type, get() accepts CredentialRequestOptionsJSON
       const credential = await get(response.options);
 
       // Finish login flow - credential field accepts 'any' in the generated type
-      await client.loginFinish({
+      await apiClient.loginFinish({
         username,
         challenge_id: response.challenge_id,
         credential,
       });
 
       // Refresh auth status
-      await refreshAuthStatus();
+      await queryClient.invalidateQueries({ queryKey: ["auth-status"] });
     } catch (error_) {
       console.error("Login error:", error_);
       setError(

@@ -29,16 +29,11 @@ pub struct BackendCapabilities {
     ///
     /// - Docker bind mount: true (code is on host)
     /// - Docker volume: true (volume survives container recreation)
-    /// - Kubernetes: true (PVC preserves workspace)
     /// - Zellij: true (code is in local worktree)
-    /// - Sprites: depends on auto_destroy setting
     pub preserves_data_on_recreate: bool,
 
     /// Whether this backend supports starting a stopped resource
     pub can_start: bool,
-
-    /// Whether this backend supports waking a hibernated resource
-    pub can_wake: bool,
 
     /// Human-readable description of data preservation behavior
     pub data_preservation_description: &'static str,
@@ -51,7 +46,6 @@ impl Default for BackendCapabilities {
             can_update_image: false,
             preserves_data_on_recreate: true,
             can_start: false,
-            can_wake: false,
             data_preservation_description: "Data is preserved during recreation.",
         }
     }
@@ -69,10 +63,7 @@ pub enum BackendResourceHealth {
     /// Resource is stopped/exited but exists
     Stopped,
 
-    /// Resource is hibernated (Sprites only)
-    Hibernated,
-
-    /// Resource is pending/starting (Kubernetes only)
+    /// Resource is pending/starting
     Pending,
 
     /// Resource is in an error state
@@ -81,7 +72,7 @@ pub enum BackendResourceHealth {
         message: String,
     },
 
-    /// Resource is crash-looping (Kubernetes only)
+    /// Resource is crash-looping
     CrashLoop,
 
     /// Resource does not exist
@@ -98,7 +89,6 @@ impl BackendResourceHealth {
         match self {
             Self::Running => ResourceState::Healthy,
             Self::Stopped => ResourceState::Stopped,
-            Self::Hibernated => ResourceState::Hibernated,
             Self::Pending => ResourceState::Pending,
             Self::Error { message } => ResourceState::Error { message },
             Self::CrashLoop => ResourceState::CrashLoop,
@@ -141,6 +131,41 @@ pub trait GitOperations: Send + Sync {
 
     /// Get the current branch of a worktree
     async fn get_branch(&self, worktree_path: &Path) -> anyhow::Result<String>;
+
+    /// Clone a repository locally (git clone --local)
+    /// Returns Ok(None) on success, Ok(Some(warning)) on partial success
+    async fn clone_local(
+        &self,
+        source_repo: &Path,
+        target_path: &Path,
+        branch_name: &str,
+    ) -> anyhow::Result<Option<String>> {
+        let _ = (source_repo, target_path, branch_name);
+        anyhow::bail!("clone_local not supported by this git backend")
+    }
+
+    /// Delete a local clone (rm -rf)
+    async fn delete_clone(&self, clone_path: &Path) -> anyhow::Result<()> {
+        let _ = clone_path;
+        anyhow::bail!("delete_clone not supported by this git backend")
+    }
+
+    /// Claim a pre-staged clone from the pool, or fall back to inline clone
+    async fn claim_or_clone(
+        &self,
+        source_repo: &Path,
+        target_path: &Path,
+        branch_name: &str,
+    ) -> anyhow::Result<Option<String>> {
+        self.clone_local(source_repo, target_path, branch_name)
+            .await
+    }
+
+    /// Replenish the pre-staged clone pool (background task)
+    async fn replenish_pool(&self, source_repo: &Path) -> anyhow::Result<()> {
+        let _ = source_repo;
+        Ok(())
+    }
 }
 
 /// Options for creating an execution backend session.
@@ -165,18 +190,13 @@ pub struct CreateOptions {
     /// When enabled, the manager prepends instructions to the prompt before passing to backends.
     pub plan_mode: bool,
 
-    /// Session-specific proxy port (overrides global proxy port).
-    /// Only applicable to Docker backend.
-    pub session_proxy_port: Option<u16>,
-
     /// Image file paths to attach to initial prompt
     pub images: Vec<String>,
 
     /// Skip safety checks (dangerous)
     pub dangerous_skip_checks: bool,
 
-    /// Session UUID (for Kubernetes PVC labeling and tracking)
-    /// Only applicable to Kubernetes backend.
+    /// Session UUID for tracking.
     pub session_id: Option<uuid::Uuid>,
 
     /// Initial working directory relative to worktree root
@@ -190,20 +210,16 @@ pub struct CreateOptions {
     /// Optional: Override container image settings.
     ///
     /// When provided, overrides the default image configuration from the backend's config file.
-    /// Applies to both Docker and Kubernetes backends.
+    /// Applies to Docker backend.
     pub container_image: Option<ImageConfig>,
 
     /// Optional: Override container resource limits.
     ///
     /// When provided, overrides the default resource limits from the backend's config file.
     /// For Docker: sets --cpus and --memory flags.
-    /// For Kubernetes: sets CPU/memory requests and limits in pod spec.
     pub container_resources: Option<ResourceLimits>,
 
-    /// Optional: Override storage class for PVCs (Kubernetes only).
-    ///
-    /// When provided, overrides the default storage class from the backend's config file.
-    /// Applies only to Kubernetes backend for PVC creation.
+    /// Optional: Override storage class.
     pub storage_class_override: Option<String>,
 
     /// Repositories to mount in the session.
@@ -214,23 +230,10 @@ pub struct CreateOptions {
     /// Use volume mode instead of bind mounts (Docker only).
     ///
     /// When true, creates a Docker volume and clones repositories into it
-    /// (similar to Sprites/K8s backends). When false (default), bind mounts
+    /// When false (default), bind mounts
     /// local worktrees directly.
     pub volume_mode: bool,
 
-    /// For remote backends: copy real credentials into the container.
-    ///
-    /// This is a DANGEROUS option that bypasses the zero-trust proxy model.
-    /// When enabled, real API tokens are injected into the remote environment,
-    /// which means they could be exfiltrated by malicious code.
-    ///
-    /// Only use this when:
-    /// - The daemon is not reachable from the remote backend (no Tailscale, etc.)
-    /// - You trust the code running in the remote environment
-    ///
-    /// When this is false and no `daemon_address` is configured, remote backends
-    /// will fail with an error asking you to configure connectivity.
-    pub dangerous_copy_creds: bool,
 }
 
 /// Trait for execution backends (Zellij, Docker, etc.)
@@ -264,13 +267,19 @@ pub trait ExecutionBackend: Send + Sync {
 
     /// Whether this backend requires remote connectivity configuration.
     ///
-    /// Remote backends (Sprites, Kubernetes) cannot mount local directories
-    /// and require explicit configuration for credential handling:
-    /// - Connected mode: `daemon_address` set, uses HTTP proxy
-    /// - Disconnected mode: `--dangerous-copy-creds` flag, injects real tokens
+    /// Remote backends cannot mount local directories
+    /// and require explicit configuration for credential handling.
     ///
-    /// Local backends (Docker, Zellij, AppleContainer) return `false`.
+    /// Local backends (Docker, Zellij) return `false`.
     fn is_remote(&self) -> bool {
+        false
+    }
+
+    /// Whether this backend manages its own repository setup (clone instead of worktree).
+    ///
+    /// When true, the session manager skips worktree creation and delegates
+    /// repository setup to the backend's `create()` method.
+    fn manages_own_repo(&self) -> bool {
         false
     }
 
@@ -313,17 +322,6 @@ pub trait ExecutionBackend: Send + Sync {
         anyhow::bail!("This backend does not support starting stopped resources")
     }
 
-    /// Wake a hibernated resource
-    ///
-    /// Only applicable to Sprites backend for hibernated sprites.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the backend doesn't support this operation or if
-    /// waking fails.
-    async fn wake(&self, _id: &str) -> anyhow::Result<()> {
-        anyhow::bail!("This backend does not support waking hibernated resources")
-    }
 }
 
 /// Deprecated alias for [`ExecutionBackend`].

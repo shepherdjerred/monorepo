@@ -1,9 +1,6 @@
 import { useState } from "react";
 import type { Session } from "@clauderon/client";
-import { AuthProvider } from "./contexts/auth-context.tsx";
 import { AuthGuard } from "./components/auth-guard.tsx";
-import { SessionProvider } from "./contexts/session-context.tsx";
-import { FeatureFlagsProvider } from "./contexts/feature-flags-context.tsx";
 import { SessionList } from "./components/session-list.tsx";
 import { CreateSessionDialog } from "./components/create-session-dialog.tsx";
 import { Console } from "./components/console.tsx";
@@ -44,7 +41,7 @@ function AppContent() {
   };
 
   return (
-    <SessionProvider>
+    <>
       <Toaster position="top-right" richColors />
       <div className="h-screen w-screen overflow-hidden bg-background text-foreground">
         <SessionList onAttach={handleAttach} onCreateNew={handleCreateNew} />
@@ -71,18 +68,14 @@ function AppContent() {
           <CreateSessionDialog onClose={handleCloseDialog} />
         )}
       </div>
-    </SessionProvider>
+    </>
   );
 }
 
 export function App() {
   return (
-    <AuthProvider>
-      <AuthGuard>
-        <FeatureFlagsProvider>
-          <AppContent />
-        </FeatureFlagsProvider>
-      </AuthGuard>
-    </AuthProvider>
+    <AuthGuard>
+      <AppContent />
+    </AuthGuard>
   );
 }

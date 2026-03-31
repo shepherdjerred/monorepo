@@ -49,35 +49,6 @@ docker ps -a | grep clauderon  # Docker backend
 clauderon reconcile
 ```
 
-## Proxy Issues
-
-### Credentials Not Injecting
-
-```bash
-clauderon config credentials                    # check status
-ls -la ~/.clauderon/secrets/                     # verify files exist
-chmod 600 ~/.clauderon/secrets/*                 # fix permissions
-tail ~/.clauderon/audit.jsonl | jq               # check audit log
-curl -H "Authorization: Bearer $(cat ~/.clauderon/secrets/github_token)" \
-  https://api.github.com/user                    # test directly
-```
-
-### Certificate Errors
-
-```bash
-rm ~/.clauderon/proxy-ca.pem ~/.clauderon/proxy-ca-key.pem  # regenerate CA
-clauderon daemon
-docker exec <container> cat /etc/clauderon/proxy-ca.pem      # verify mounted
-```
-
-### Requests Blocked (403 in read-only)
-
-```bash
-clauderon list                                              # check access mode
-clauderon set-access-mode <session> read-write              # change mode
-jq 'select(.allowed == false)' ~/.clauderon/audit.jsonl     # check blocked
-```
-
 ## Docker Backend
 
 ### Container Won't Start
@@ -116,14 +87,6 @@ clauderon reconcile
 ### Environment Variables Missing
 
 Delete and recreate session (daemon must be running during creation).
-
-## 1Password Issues
-
-| Problem        | Solution                                                                        |
-| -------------- | ------------------------------------------------------------------------------- |
-| `op` not found | `brew install 1password-cli`                                                    |
-| Not signed in  | `op signin` or `export OP_SERVICE_ACCOUNT_TOKEN="..."`                          |
-| Item not found | Verify format: `op://Vault/Item/Field`; test: `op read "op://Vault/Item/Field"` |
 
 ## Performance Issues
 

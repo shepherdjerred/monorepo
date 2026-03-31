@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
 
 use crate::core::session::{
-    AccessMode, AgentType, BackendType, HealthCheckResult, Session, SessionHealthReport,
-    SessionModel, SessionStatus,
+    AgentType, BackendType, HealthCheckResult, Session, SessionHealthReport, SessionModel,
+    SessionStatus,
 };
 
 use super::types::ReconcileReportDto;
@@ -49,14 +49,6 @@ pub enum Request {
         id: String,
     },
 
-    /// Update session access mode
-    UpdateAccessMode {
-        /// Session ID to update.
-        id: String,
-        /// New access mode for proxy filtering.
-        access_mode: AccessMode,
-    },
-
     /// Reconcile state with reality
     Reconcile,
 
@@ -98,17 +90,12 @@ pub enum Request {
         id: String,
     },
 
-    /// Start a stopped session (container/pod)
+    /// Start a stopped session container
     StartSession {
         /// Session ID to start.
         id: String,
     },
 
-    /// Wake a hibernated session (sprites)
-    WakeSession {
-        /// Session ID to wake.
-        id: String,
-    },
 
     /// Recreate a session (delete and recreate backend)
     RecreateSession {
@@ -209,7 +196,7 @@ pub struct CreateRepositoryInput {
     /// Exactly one repository must be marked as primary in multi-repo sessions.
     pub is_primary: bool,
 
-    /// Base branch to clone from (for clone-based backends like Sprites/K8s).
+    /// Base branch to clone from (for clone-based backends).
     /// When None, clones the repository's default branch.
     /// The session's working branch is always created fresh from this base.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -219,10 +206,6 @@ pub struct CreateRepositoryInput {
 /// Request to create a new session
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[expect(
-    clippy::struct_excessive_bools,
-    reason = "independent configuration flags"
-)]
 pub struct CreateSessionRequest {
     /// Path to the repository (LEGACY: used when repositories is None)
     pub repo_path: String,
@@ -251,13 +234,6 @@ pub struct CreateSessionRequest {
     /// Skip safety checks
     pub dangerous_skip_checks: bool,
 
-    /// For remote backends: copy real credentials into the container.
-    ///
-    /// WARNING: This is dangerous - it exposes your API tokens to the remote environment.
-    /// Only use when the daemon is not reachable from the remote backend.
-    #[serde(default)]
-    pub dangerous_copy_creds: bool,
-
     /// Run in print mode (non-interactive, outputs response and exits)
     #[serde(default)]
     pub print_mode: bool,
@@ -265,10 +241,6 @@ pub struct CreateSessionRequest {
     /// Start in plan mode
     #[serde(default = "default_plan_mode")]
     pub plan_mode: bool,
-
-    /// Access mode for proxy filtering
-    #[serde(default)]
-    pub access_mode: AccessMode,
 
     /// Image file paths to attach to initial prompt.
     ///
@@ -302,7 +274,6 @@ pub struct CreateSessionRequest {
     ///
     /// Format:
     /// - Docker: Decimal cores (e.g., `"2.0"`, `"0.5"`)
-    /// - Kubernetes: Millicores or cores (e.g., `"2000m"`, `"2"`)
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cpu_limit: Option<String>,
 
@@ -310,15 +281,10 @@ pub struct CreateSessionRequest {
     ///
     /// Format: Number with suffix
     /// - Docker: `"2g"` (2 gigabytes), `"512m"` (512 megabytes)
-    /// - Kubernetes: `"2Gi"` (2 gibibytes), `"512Mi"` (512 mebibytes)
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub memory_limit: Option<String>,
 
-    /// Optional: Storage class for persistent volumes (Kubernetes only).
-    ///
-    /// Format: Storage class name (e.g., `"gp2"`, `"standard"`)
-    /// Only applicable to Kubernetes backend.
-    /// If not specified, uses cluster default or config file setting.
+    /// Optional: Storage class override.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub storage_class: Option<String>,
 }
@@ -437,9 +403,6 @@ pub enum Response {
     /// List of recent repositories with timestamps
     RecentRepos(Vec<RecentRepoDto>),
 
-    /// Access mode updated successfully
-    AccessModeUpdated,
-
     /// Session ID returned
     SessionId {
         /// The resolved session ID.
@@ -464,9 +427,6 @@ pub enum Response {
     /// Session started successfully
     Started,
 
-    /// Session woken successfully
-    Woken,
-
     /// Session recreated successfully
     Recreated {
         /// New backend resource ID (if changed).
@@ -476,7 +436,7 @@ pub enum Response {
     /// Session cleaned up successfully
     CleanedUp,
 
-    /// Action blocked error (e.g., recreate blocked for sprites with auto_destroy)
+    /// Action blocked error (e.g., recreate blocked when data would be lost)
     ActionBlocked {
         /// Explanation of why the action was blocked.
         reason: String,
@@ -535,73 +495,13 @@ pub enum Event {
     },
 }
 
-/// Credential availability status
-#[typeshare]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CredentialStatus {
-    /// Human-readable credential name (e.g., "GitHub", "Anthropic")
-    pub name: String,
-
-    /// Service identifier for updates (e.g., "github", "anthropic")
-    pub service_id: String,
-
-    /// Whether the credential is available
-    pub available: bool,
-
-    /// Source of credential if available ("environment" or "file")
-    pub source: Option<String>,
-
-    /// Whether the credential is readonly (from environment)
-    pub readonly: bool,
-
-    /// Optional masked preview like "ghp_****...abc123"
-    pub masked_value: Option<String>,
-}
-
-/// Proxy status information
-#[typeshare]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ProxyStatus {
-    /// Proxy name (e.g., "HTTP Auth Proxy", "Kubernetes Proxy")
-    pub name: String,
-
-    /// Port number the proxy is running on
-    pub port: u16,
-
-    /// Whether the proxy is currently active
-    pub active: bool,
-
-    /// Proxy type ("global" or "session-specific")
-    pub proxy_type: String,
-}
-
-/// System status response including credentials and proxies
+/// System status response
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemStatus {
-    /// List of credential statuses
-    pub credentials: Vec<CredentialStatus>,
-
-    /// List of proxy statuses
-    pub proxies: Vec<ProxyStatus>,
-
-    /// Total number of active sessions with proxies
-    pub active_session_proxies: u32,
-
     /// Claude Code usage tracking (if available)
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub claude_usage: Option<ClaudeUsage>,
-}
-
-/// Request to update a credential
-#[typeshare]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UpdateCredentialRequest {
-    /// Service identifier (e.g., "github", "anthropic")
-    pub service_id: String,
-
-    /// The credential token/key value
-    pub value: String,
 }
 
 /// Request to merge a pull request

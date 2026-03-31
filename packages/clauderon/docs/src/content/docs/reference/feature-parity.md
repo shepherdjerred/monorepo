@@ -42,7 +42,7 @@ description: Comprehensive tracking of feature implementation across platforms a
 | External editor (Ctrl+E)            | ✅  | ❌  |   ❌   |
 | Backend/Agent selection             | ✅  | ✅  |   ✅   |
 | Model selection                     | ✅  | ✅  |   ❌   |
-| Access mode / Plan mode             | ✅  | ✅  |   ✅   |
+| Plan mode                           | ✅  | ✅  |   ✅   |
 | Multi-repository support            | ❌  | ✅  |   ❌   |
 | Container config (image/CPU/memory) | ❌  | ✅  |   ❌   |
 | Image attachments                   | ✅  | ✅  |   ❌   |
@@ -72,7 +72,7 @@ description: Comprehensive tracking of feature implementation across platforms a
 | Feature                                      | TUI | Web | Mobile |
 | -------------------------------------------- | :-: | :-: | :----: |
 | Health status per session                    | ✅  | ✅  |   ❌   |
-| Health actions (Start/Wake/Recreate/Cleanup) | ✅  | ✅  |   ❌   |
+| Health actions (Start/Recreate/Cleanup)      | ✅  | ✅  |   ❌   |
 | Data safety indicator                        | ✅  | ✅  |   ❌   |
 | Retry reconciliation                         | ✅  | ❌  |   ❌   |
 
@@ -84,7 +84,7 @@ description: Comprehensive tracking of feature implementation across platforms a
 | WebAuthn/Passkey login              | ❌  | ✅  |   ❌   |
 | Daemon URL configuration            | ❌  | ❌  |   ✅   |
 | Help / keyboard shortcuts           | ✅  | ❌  |   ❌   |
-| Credential status/editing           | ❌  | ✅  |   ✅   |
+| System status                       | ❌  | ✅  |   ✅   |
 | Usage tracking                      | ❌  | ✅  |   ✅   |
 
 ---
@@ -100,7 +100,6 @@ description: Comprehensive tracking of feature implementation across platforms a
 | Custom container image |       ✅        |      N/A       |
 | Volume mode option     |       ✅        |      N/A       |
 | Shared cargo/sccache   | ✅ Named volume |    ✅ Host     |
-| Zero-credential proxy  |   ✅ Optional   |      N/A       |
 | Claude Code            |       ✅        |       ✅       |
 | Codex                  |       ✅        |       ❌       |
 | Gemini                 |       ✅        |       ✅       |
@@ -123,12 +122,10 @@ description: Comprehensive tracking of feature implementation across platforms a
 | `/api/sessions/{id}/unarchive`           | POST   | ✅  | ✅  |   ✅   | ✅  |
 | `/api/sessions/{id}/refresh`             | POST   | ✅  | ✅  |   ✅   | ✅  |
 | `/api/sessions/{id}/start`               | POST   | ✅  | ✅  |   ❌   | ❌  |
-| `/api/sessions/{id}/wake`                | POST   | ✅  | ✅  |   ❌   | ❌  |
 | `/api/sessions/{id}/recreate`            | POST   | ✅  | ✅  |   ❌   | ❌  |
 | `/api/sessions/{id}/cleanup`             | POST   | ✅  | ✅  |   ❌   | ❌  |
 | `/api/sessions/{id}/metadata`            | POST   | ❌  | ✅  |   ✅   | ❌  |
 | `/api/sessions/{id}/regenerate-metadata` | POST   | ❌  | ✅  |   ✅   | ❌  |
-| `/api/sessions/{id}/access-mode`         | POST   | ✅  | ✅  |   ✅   | ✅  |
 | `/api/sessions/{id}/history`             | GET    | ❌  | ✅  |   ✅   | ❌  |
 | `/api/sessions/{id}/upload`              | POST   | ❌  | ✅  |   ✅   | ❌  |
 | `/api/health`                            | GET    | ✅  | ✅  |   ❌   | ❌  |
@@ -160,7 +157,7 @@ description: Comprehensive tracking of feature implementation across platforms a
 | Gap                         | Affected | Impact                          |
 | --------------------------- | -------- | ------------------------------- |
 | TUI: No metadata editing    | TUI      | Cannot update title/description |
-| TUI: No system status       | TUI      | Cannot view credentials/usage   |
+| TUI: No system status       | TUI      | Cannot view usage stats         |
 | Mobile: No terminal         | Mobile   | Text-only, no PTY               |
 | Mobile: No container config | Mobile   | Cannot set CPU/memory/image     |
 

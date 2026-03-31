@@ -18,11 +18,9 @@ Loaded at daemon startup. Require restart to change.
 | ---------------------------- | ------- | ------------------------------------------------------------ |
 | `enable_webauthn_auth`       | `false` | WebAuthn passwordless authentication                         |
 | `enable_ai_metadata`         | `true`  | AI-generated session titles from prompts                     |
-| `enable_auto_reconcile`      | `true`  | Auto-sync database with backends on startup                  |
-| `enable_proxy_port_reuse`    | `false` | Reuse proxy ports across sessions (experimental)             |
-| `enable_usage_tracking`      | `false` | Track Claude API usage per session                           |
-| `enable_experimental_models` | `false` | Enable Codex/Gemini models                                   |
-| `enable_readonly_mode`       | `false` | Read-only proxy mode (experimental, known issues #424, #205) |
+| `enable_auto_reconcile`      | `true`  | Auto-sync database with backends on startup |
+| `enable_usage_tracking`      | `false` | Track Claude API usage per session          |
+| `enable_experimental_models` | `false` | Enable Codex/Gemini models                  |
 
 ## Configuration Examples
 
@@ -42,10 +40,8 @@ clauderon daemon
 enable_webauthn_auth = false
 enable_ai_metadata = true
 enable_auto_reconcile = true
-enable_proxy_port_reuse = false
 enable_usage_tracking = false
 enable_experimental_models = false
-enable_readonly_mode = false
 ```
 
 ## Flag Requirements

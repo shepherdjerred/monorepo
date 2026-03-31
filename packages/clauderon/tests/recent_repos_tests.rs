@@ -17,7 +17,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use clauderon::backends::{ExecutionBackend, GitOperations, MockExecutionBackend, MockGitBackend};
-use clauderon::core::{AccessMode, AgentType, BackendType, SessionManager};
+use clauderon::core::{AgentType, BackendType, SessionManager};
 use clauderon::feature_flags::FeatureFlags;
 use clauderon::store::{SqliteStore, Store};
 use tempfile::TempDir;
@@ -77,10 +77,6 @@ async fn create_test_manager_with_limit(
     let git = Arc::new(MockGitBackend::new());
     let zellij = Arc::new(MockExecutionBackend::zellij());
     let docker = Arc::new(MockExecutionBackend::docker());
-    let kubernetes = Arc::new(MockExecutionBackend::kubernetes());
-    let sprites = Arc::new(MockExecutionBackend::sprites());
-    #[cfg(target_os = "macos")]
-    let apple_container = Arc::new(MockExecutionBackend::apple_container());
 
     fn to_git_ops(arc: Arc<MockGitBackend>) -> Arc<dyn GitOperations> {
         arc
@@ -94,11 +90,7 @@ async fn create_test_manager_with_limit(
         to_git_ops(git),
         to_exec_backend(zellij),
         to_exec_backend(docker),
-        to_exec_backend(kubernetes),
-        None,
-        #[cfg(target_os = "macos")]
-        to_exec_backend(apple_container),
-        to_exec_backend(sprites),
+        to_exec_backend(Arc::new(MockExecutionBackend::new())), // ai_sandbox
         Arc::new(clauderon::feature_flags::FeatureFlags::default()),
     )
     .await
@@ -126,10 +118,8 @@ async fn test_recent_repo_tracked_on_session_create() {
             AgentType::ClaudeCode,
             None,                  // model
             true,                  // dangerous_skip_checks
-            false,                 // dangerous_copy_creds
             false,                 // print_mode
             false,                 // plan_mode
-            AccessMode::default(), // access_mode
             vec![],                // images
             None,                  // container_image
             None,                  // pull_policy
@@ -345,10 +335,8 @@ async fn test_nonexistent_repo_handles_gracefully() {
             AgentType::ClaudeCode,
             None,
             true,
-            false, // dangerous_copy_creds
             false,
             false,
-            AccessMode::default(),
             vec![],
             None,
             None,

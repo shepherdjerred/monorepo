@@ -325,32 +325,6 @@ impl Client {
         }
     }
 
-    /// Update the access mode for a session
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the session is not found or the request fails.
-    pub async fn update_access_mode(
-        &mut self,
-        id: &str,
-        access_mode: crate::core::session::AccessMode,
-    ) -> anyhow::Result<()> {
-        let response = self
-            .send_request(Request::UpdateAccessMode {
-                id: id.to_owned(),
-                access_mode,
-            })
-            .await?;
-
-        match response {
-            Response::AccessModeUpdated => Ok(()),
-            Response::Error { code, message } => {
-                anyhow::bail!("[{code}] {message}")
-            }
-            _ => anyhow::bail!("Unexpected response"),
-        }
-    }
-
     /// Send a prompt to a session (for hotkey triggers)
     ///
     /// # Errors
@@ -417,25 +391,6 @@ impl Client {
     pub async fn start_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()> {
         let response = self
             .send_request(Request::StartSession { id: id.to_string() })
-            .await?;
-
-        match response {
-            Response::Ok => Ok(()),
-            Response::Error { code, message } => {
-                anyhow::bail!("[{code}] {message}")
-            }
-            _ => anyhow::bail!("Unexpected response"),
-        }
-    }
-
-    /// Wake a hibernated session.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the request fails or the server returns an error response.
-    pub async fn wake_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()> {
-        let response = self
-            .send_request(Request::WakeSession { id: id.to_string() })
             .await?;
 
         match response {
@@ -607,10 +562,6 @@ impl ApiClient for Client {
 
     async fn start_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()> {
         Self::start_session(self, id).await
-    }
-
-    async fn wake_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()> {
-        Self::wake_session(self, id).await
     }
 
     async fn recreate_session(&mut self, id: uuid::Uuid) -> anyhow::Result<()> {

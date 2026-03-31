@@ -15,7 +15,7 @@ pub mod agents;
 pub mod api;
 /// WebAuthn-based authentication system.
 pub mod auth;
-/// Execution backend implementations (Docker, K8s, Sprites, Zellij).
+/// Execution backend implementations (Docker, Zellij, AI Sandbox, Apple Container).
 pub mod backends;
 /// CI status polling for pull requests.
 pub mod ci;
@@ -31,8 +31,6 @@ pub mod hooks;
 pub mod observability;
 /// Claude Code plugin discovery and inheritance.
 pub mod plugins;
-/// Zero-credential proxy for injecting API tokens.
-pub mod proxy;
 /// Persistent storage backends (SQLite).
 pub mod store;
 /// Terminal user interface built with ratatui.

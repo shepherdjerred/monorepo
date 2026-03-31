@@ -22,20 +22,11 @@ pub struct FeatureFlags {
     /// Enable automatic session reconciliation on startup
     pub enable_auto_reconcile: bool,
 
-    /// Enable session proxy port reuse (experimental)
-    pub enable_proxy_port_reuse: bool,
-
     /// Enable Claude usage tracking via API
     pub enable_usage_tracking: bool,
 
-    /// Enable Kubernetes backend (experimental, disabled by default)
-    pub enable_kubernetes_backend: bool,
-
     /// Enable experimental AI models (Codex, Gemini)
     pub enable_experimental_models: bool,
-
-    /// Enable read-only mode (experimental, security issues #424, #205)
-    pub enable_readonly_mode: bool,
 }
 
 impl Default for FeatureFlags {
@@ -44,11 +35,8 @@ impl Default for FeatureFlags {
             enable_webauthn_auth: false,
             enable_ai_metadata: true,
             enable_auto_reconcile: true,
-            enable_proxy_port_reuse: false,
             enable_usage_tracking: false,
-            enable_kubernetes_backend: false,
             enable_experimental_models: false,
-            enable_readonly_mode: false,
         }
     }
 }
@@ -60,9 +48,7 @@ impl FeatureFlags {
     /// - enable_webauthn_auth: WebAuthn authentication flow
     /// - enable_ai_metadata: AI-powered session metadata generation
     /// - enable_auto_reconcile: Automatic session reconciliation on startup
-    /// - enable_proxy_port_reuse: Session proxy port reuse behavior
     /// - enable_usage_tracking: Claude usage tracking via API
-    /// - enable_readonly_mode: Read-only mode access restrictions
     ///
     /// # Errors
     /// Returns an error if the TOML config file exists but cannot be parsed
@@ -118,17 +104,10 @@ impl FeatureFlags {
             enable_webauthn_auth: parse_env_bool_option("CLAUDERON_FEATURE_ENABLE_WEBAUTHN_AUTH"),
             enable_ai_metadata: parse_env_bool_option("CLAUDERON_FEATURE_ENABLE_AI_METADATA"),
             enable_auto_reconcile: parse_env_bool_option("CLAUDERON_FEATURE_ENABLE_AUTO_RECONCILE"),
-            enable_proxy_port_reuse: parse_env_bool_option(
-                "CLAUDERON_FEATURE_ENABLE_PROXY_PORT_REUSE",
-            ),
             enable_usage_tracking: parse_env_bool_option("CLAUDERON_FEATURE_ENABLE_USAGE_TRACKING"),
-            enable_kubernetes_backend: parse_env_bool_option(
-                "CLAUDERON_FEATURE_ENABLE_KUBERNETES_BACKEND",
-            ),
             enable_experimental_models: parse_env_bool_option(
                 "CLAUDERON_FEATURE_ENABLE_EXPERIMENTAL_MODELS",
             ),
-            enable_readonly_mode: parse_env_bool_option("CLAUDERON_FEATURE_ENABLE_READONLY_MODE"),
         }
     }
 
@@ -146,20 +125,11 @@ impl FeatureFlags {
         if other.enable_auto_reconcile != defaults.enable_auto_reconcile {
             self.enable_auto_reconcile = other.enable_auto_reconcile;
         }
-        if other.enable_proxy_port_reuse != defaults.enable_proxy_port_reuse {
-            self.enable_proxy_port_reuse = other.enable_proxy_port_reuse;
-        }
         if other.enable_usage_tracking != defaults.enable_usage_tracking {
             self.enable_usage_tracking = other.enable_usage_tracking;
         }
-        if other.enable_kubernetes_backend != defaults.enable_kubernetes_backend {
-            self.enable_kubernetes_backend = other.enable_kubernetes_backend;
-        }
         if other.enable_experimental_models != defaults.enable_experimental_models {
             self.enable_experimental_models = other.enable_experimental_models;
-        }
-        if other.enable_readonly_mode != defaults.enable_readonly_mode {
-            self.enable_readonly_mode = other.enable_readonly_mode;
         }
     }
 
@@ -174,20 +144,11 @@ impl FeatureFlags {
         if let Some(val) = env.enable_auto_reconcile {
             self.enable_auto_reconcile = val;
         }
-        if let Some(val) = env.enable_proxy_port_reuse {
-            self.enable_proxy_port_reuse = val;
-        }
         if let Some(val) = env.enable_usage_tracking {
             self.enable_usage_tracking = val;
         }
-        if let Some(val) = env.enable_kubernetes_backend {
-            self.enable_kubernetes_backend = val;
-        }
         if let Some(val) = env.enable_experimental_models {
             self.enable_experimental_models = val;
-        }
-        if let Some(val) = env.enable_readonly_mode {
-            self.enable_readonly_mode = val;
         }
     }
 
@@ -202,20 +163,11 @@ impl FeatureFlags {
         if let Some(val) = cli.enable_auto_reconcile {
             self.enable_auto_reconcile = val;
         }
-        if let Some(val) = cli.enable_proxy_port_reuse {
-            self.enable_proxy_port_reuse = val;
-        }
         if let Some(val) = cli.enable_usage_tracking {
             self.enable_usage_tracking = val;
         }
-        if let Some(val) = cli.enable_kubernetes_backend {
-            self.enable_kubernetes_backend = val;
-        }
         if let Some(val) = cli.enable_experimental_models {
             self.enable_experimental_models = val;
-        }
-        if let Some(val) = cli.enable_readonly_mode {
-            self.enable_readonly_mode = val;
         }
     }
 
@@ -226,20 +178,11 @@ impl FeatureFlags {
         tracing::info!("  enable_webauthn_auth: {}", self.enable_webauthn_auth);
         tracing::info!("  enable_ai_metadata: {}", self.enable_ai_metadata);
         tracing::info!("  enable_auto_reconcile: {}", self.enable_auto_reconcile);
-        tracing::info!(
-            "  enable_proxy_port_reuse: {}",
-            self.enable_proxy_port_reuse
-        );
         tracing::info!("  enable_usage_tracking: {}", self.enable_usage_tracking);
-        tracing::info!(
-            "  enable_kubernetes_backend: {}",
-            self.enable_kubernetes_backend
-        );
         tracing::info!(
             "  enable_experimental_models: {}",
             self.enable_experimental_models
         );
-        tracing::info!("  enable_readonly_mode: {}", self.enable_readonly_mode);
     }
 }
 
@@ -252,16 +195,10 @@ pub struct CliFeatureFlags {
     pub enable_ai_metadata: Option<bool>,
     /// Override automatic reconciliation.
     pub enable_auto_reconcile: Option<bool>,
-    /// Override proxy port reuse.
-    pub enable_proxy_port_reuse: Option<bool>,
     /// Override usage tracking.
     pub enable_usage_tracking: Option<bool>,
-    /// Override Kubernetes backend availability.
-    pub enable_kubernetes_backend: Option<bool>,
     /// Override experimental model support.
     pub enable_experimental_models: Option<bool>,
-    /// Override read-only mode.
-    pub enable_readonly_mode: Option<bool>,
 }
 
 /// Environment variable feature flag overrides (returns Option<bool> to distinguish "not set")
@@ -270,11 +207,8 @@ struct EnvFeatureFlags {
     pub enable_webauthn_auth: Option<bool>,
     pub enable_ai_metadata: Option<bool>,
     pub enable_auto_reconcile: Option<bool>,
-    pub enable_proxy_port_reuse: Option<bool>,
     pub enable_usage_tracking: Option<bool>,
-    pub enable_kubernetes_backend: Option<bool>,
     pub enable_experimental_models: Option<bool>,
-    pub enable_readonly_mode: Option<bool>,
 }
 
 /// Configuration file structure
@@ -498,11 +432,8 @@ mod tests {
         assert!(!flags.enable_webauthn_auth);
         assert!(flags.enable_ai_metadata);
         assert!(flags.enable_auto_reconcile);
-        assert!(!flags.enable_proxy_port_reuse);
         assert!(!flags.enable_usage_tracking);
-        assert!(!flags.enable_kubernetes_backend);
         assert!(!flags.enable_experimental_models);
-        assert!(!flags.enable_readonly_mode);
     }
 
     #[test]
@@ -526,11 +457,8 @@ mod tests {
             enable_webauthn_auth: true,
             enable_ai_metadata: false,
             enable_auto_reconcile: false,
-            enable_proxy_port_reuse: true,
             enable_usage_tracking: true,
-            enable_kubernetes_backend: true,
             enable_experimental_models: false,
-            enable_readonly_mode: false,
         };
 
         // Merge with defaults - should not change anything
@@ -541,9 +469,7 @@ mod tests {
         assert!(base.enable_webauthn_auth);
         assert!(!base.enable_ai_metadata);
         assert!(!base.enable_auto_reconcile);
-        assert!(base.enable_proxy_port_reuse);
         assert!(base.enable_usage_tracking);
-        assert!(base.enable_kubernetes_backend);
     }
 
     #[test]
@@ -561,7 +487,6 @@ mod tests {
         // Other flags should remain at default
         assert!(flags.enable_ai_metadata);
         assert!(flags.enable_auto_reconcile);
-        assert!(!flags.enable_proxy_port_reuse);
     }
 
     #[test]
@@ -603,7 +528,6 @@ mod tests {
         // Defaults should be preserved for non-overridden flags
         assert!(flags.enable_ai_metadata);
         assert!(flags.enable_auto_reconcile);
-        assert!(!flags.enable_proxy_port_reuse);
     }
 
     #[test]
@@ -614,9 +538,7 @@ mod tests {
         assert!(!flags.enable_webauthn_auth);
         assert!(flags.enable_ai_metadata);
         assert!(flags.enable_auto_reconcile);
-        assert!(!flags.enable_proxy_port_reuse);
         assert!(!flags.enable_usage_tracking);
-        assert!(!flags.enable_readonly_mode);
     }
 
     #[test]

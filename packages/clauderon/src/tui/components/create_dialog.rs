@@ -7,9 +7,9 @@ use ratatui::{
 };
 
 use super::SPINNER_FRAMES;
-use crate::backends::{ImagePullPolicy, KubernetesConfig, SpritesConfig};
+use crate::backends::ImagePullPolicy;
 use crate::core::{
-    AccessMode, AgentType, BackendType,
+    AgentType, BackendType,
     session::{ClaudeModel, CodexModel, GeminiModel, SessionModel},
 };
 use crate::tui::app::{App, CreateDialogFocus, CreateDialogState};
@@ -26,18 +26,8 @@ const OUTER_BORDER: u16 = 2; // border on top and bottom
 /// Check if a backend is available (configured) for use
 fn is_backend_available(backend: BackendType) -> bool {
     match backend {
-        BackendType::Sprites => SpritesConfig::load_or_default().is_connected_mode(),
-        BackendType::Kubernetes => true, // Always available, use dangerous-copy-creds if no proxy
-        BackendType::Zellij | BackendType::Docker => true,
-        #[cfg(target_os = "macos")]
-        BackendType::AppleContainer => true,
+        BackendType::Zellij | BackendType::Docker | BackendType::AiSandbox => true,
     }
-}
-
-/// Check if K8s proxy mode is configured
-#[must_use]
-pub fn is_k8s_proxy_configured() -> bool {
-    KubernetesConfig::load_or_default().is_connected_mode()
 }
 
 /// Calculate layout for the create dialog.
@@ -59,10 +49,6 @@ pub fn calculate_layout(dialog: &CreateDialogState) -> (u16, Vec<Constraint>) {
         dialog.images.len().min(3) as u16 + 2
     };
 
-    // Check conditions for optional fields
-    let is_k8s = dialog.backend == BackendType::Kubernetes;
-    let show_copy_creds = is_k8s && !is_k8s_proxy_configured();
-
     // Build constraints dynamically
     let mut constraints = vec![
         Constraint::Length(prompt_height),      // Prompt (dynamic)
@@ -74,22 +60,9 @@ pub fn calculate_layout(dialog: &CreateDialogState) -> (u16, Vec<Constraint>) {
         Constraint::Length(RADIO_FIELD_HEIGHT), // Agent
         Constraint::Length(RADIO_FIELD_HEIGHT), // Model
         Constraint::Length(SPACER_HEIGHT),      // Spacer
-        Constraint::Length(RADIO_FIELD_HEIGHT), // Access mode
         Constraint::Length(CHECKBOX_HEIGHT),    // Skip checks
         Constraint::Length(CHECKBOX_HEIGHT),    // Plan mode
     ];
-
-    // Add dangerous copy creds checkbox (only for K8s without proxy)
-    if show_copy_creds {
-        constraints.push(Constraint::Length(CHECKBOX_HEIGHT));
-    }
-
-    // Add K8s-specific fields
-    if is_k8s {
-        constraints.push(Constraint::Length(TEXT_FIELD_HEIGHT)); // Container image
-        constraints.push(Constraint::Length(RADIO_FIELD_HEIGHT)); // Pull policy
-        constraints.push(Constraint::Length(TEXT_FIELD_HEIGHT)); // Storage class
-    }
 
     // Footer
     constraints.push(Constraint::Length(SPACER_HEIGHT)); // Spacer
@@ -135,10 +108,6 @@ pub fn render(frame: &mut Frame<'_>, app: &App, area: Rect) {
     // Get layout constraints from single source of truth
     let (_total_height, constraints) = calculate_layout(dialog);
 
-    // Check conditions for layout indexing
-    let is_k8s = dialog.backend == BackendType::Kubernetes;
-    let show_copy_creds = is_k8s && !is_k8s_proxy_configured();
-
     // Calculate visible lines for prompt field (matches calculate_layout)
     let prompt_lines = dialog.prompt.lines().count().max(1);
     let prompt_height = prompt_lines.clamp(5, 15);
@@ -169,33 +138,10 @@ pub fn render(frame: &mut Frame<'_>, app: &App, area: Rect) {
     let model_idx = idx;
     idx += 1;
     idx += 1; // spacer
-    let access_idx = idx;
-    idx += 1;
     let skip_checks_idx = idx;
     idx += 1;
     let plan_mode_idx = idx;
     idx += 1;
-
-    // Conditional fields - only increment index if field is shown
-    let dangerous_copy_creds_idx = if show_copy_creds {
-        let i = idx;
-        idx += 1;
-        i
-    } else {
-        0 // Won't be used
-    };
-
-    let (container_image_idx, pull_policy_idx, storage_class_idx) = if is_k8s {
-        let ci = idx;
-        idx += 1;
-        let pp = idx;
-        idx += 1;
-        let sc = idx;
-        idx += 1;
-        (ci, pp, sc)
-    } else {
-        (0, 0, 0) // Won't be used
-    };
 
     idx += 1; // spacer
     let buttons_idx = idx;
@@ -236,41 +182,16 @@ pub fn render(frame: &mut Frame<'_>, app: &App, area: Rect) {
         inner[base_branch_idx],
     );
 
-    // Backend selection - show unavailable backends grayed out
-    let sprites_available = is_backend_available(BackendType::Sprites);
-
-    let sprites_label = if sprites_available {
-        "Sprites"
-    } else {
-        "Sprites (not configured)"
-    };
-
-    // Conditionally build backend options based on feature flags
-    let mut backend_options: Vec<(&str, bool, bool)> = vec![
+    // Backend selection
+    let backend_options: Vec<(&str, bool, bool)> = vec![
         ("Zellij", dialog.backend == BackendType::Zellij, true),
         ("Docker", dialog.backend == BackendType::Docker, true),
+        (
+            "AI Sandbox",
+            dialog.backend == BackendType::AiSandbox,
+            true,
+        ),
     ];
-
-    if dialog.feature_flags.enable_kubernetes_backend {
-        backend_options.push((
-            "Kubernetes",
-            dialog.backend == BackendType::Kubernetes,
-            true, // Always available, use dangerous-copy-creds if no proxy
-        ));
-    }
-
-    backend_options.push((
-        sprites_label,
-        dialog.backend == BackendType::Sprites,
-        sprites_available,
-    ));
-
-    #[cfg(target_os = "macos")]
-    backend_options.push((
-        "Apple Container",
-        dialog.backend == BackendType::AppleContainer,
-        true,
-    ));
 
     render_backend_field(
         frame,
@@ -450,18 +371,6 @@ pub fn render(frame: &mut Frame<'_>, app: &App, area: Rect) {
         inner[model_idx],
     );
 
-    // Access mode selection
-    render_radio_field(
-        frame,
-        "Access Mode",
-        &[
-            ("Read-Only", dialog.access_mode == AccessMode::ReadOnly),
-            ("Read-Write", dialog.access_mode == AccessMode::ReadWrite),
-        ],
-        dialog.focus == CreateDialogFocus::AccessMode,
-        inner[access_idx],
-    );
-
     // Skip checks checkbox
     render_checkbox_field(
         frame,
@@ -479,54 +388,6 @@ pub fn render(frame: &mut Frame<'_>, app: &App, area: Rect) {
         dialog.focus == CreateDialogFocus::PlanMode,
         inner[plan_mode_idx],
     );
-
-    // Dangerous copy creds checkbox (only show for K8s when proxy not configured)
-    if show_copy_creds {
-        render_checkbox_field(
-            frame,
-            "Copy credentials to container (dangerous, no proxy)",
-            dialog.dangerous_copy_creds,
-            dialog.focus == CreateDialogFocus::DangerousCopyCreds,
-            inner[dangerous_copy_creds_idx],
-        );
-    }
-
-    // K8s-specific options (only show when K8s backend is selected)
-    if is_k8s {
-        // Container image text field
-        render_text_field(
-            frame,
-            "Container Image (optional)",
-            &dialog.container_image,
-            dialog.focus == CreateDialogFocus::ContainerImage,
-            inner[container_image_idx],
-        );
-
-        // Pull policy radio buttons
-        render_radio_field(
-            frame,
-            "Pull Policy",
-            &[
-                (
-                    "IfNotPresent",
-                    dialog.pull_policy == ImagePullPolicy::IfNotPresent,
-                ),
-                ("Always", dialog.pull_policy == ImagePullPolicy::Always),
-                ("Never", dialog.pull_policy == ImagePullPolicy::Never),
-            ],
-            dialog.focus == CreateDialogFocus::PullPolicy,
-            inner[pull_policy_idx],
-        );
-
-        // Storage class text field
-        render_text_field(
-            frame,
-            "Storage Class (optional)",
-            &dialog.storage_class,
-            dialog.focus == CreateDialogFocus::StorageClass,
-            inner[storage_class_idx],
-        );
-    }
 
     // Buttons
     render_buttons(

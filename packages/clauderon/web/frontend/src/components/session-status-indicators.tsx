@@ -133,30 +133,6 @@ export function SessionStatusIndicators({ session }: { session: Session }) {
         </TooltipProvider>
       )}
 
-      {session.dangerous_copy_creds === true && (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex items-center gap-2 p-2 bg-yellow-500/10 border-l-4 border-yellow-500 cursor-help">
-                <AlertTriangle className="w-3.5 h-3.5 text-yellow-600" />
-                <span className="text-sm font-mono font-semibold text-yellow-600">
-                  Copy-creds mode
-                </span>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent>
-              <div className="max-w-xs text-xs">
-                <p className="font-semibold mb-1">Limited Status Tracking</p>
-                <p>
-                  This session uses --dangerous-copy-creds, which bypasses the
-                  proxy. Agent status updates (working, idle, etc.) are not
-                  available.
-                </p>
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      )}
     </div>
   );
 }

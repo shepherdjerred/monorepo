@@ -97,7 +97,7 @@ export function RepositoryEntryForm({
         <Label htmlFor={`base-branch-${repo.id}`} className="text-sm">
           Base Branch{" "}
           <span className="text-xs text-muted-foreground">
-            (optional, for Sprites/K8s)
+            (optional)
           </span>
         </Label>
         <input
@@ -112,7 +112,7 @@ export function RepositoryEntryForm({
           maxLength={128}
         />
         <p className="text-xs text-muted-foreground">
-          Branch to clone from for clone-based backends (Sprites, Kubernetes).
+          Branch to clone from for clone-based backends.
           Leave empty for default branch.
         </p>
       </div>

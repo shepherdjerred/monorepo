@@ -1,13 +1,4 @@
 /**
- * Information about a Kubernetes storage class
- */
-export type StorageClassInfo = {
-  name: string;
-  provisioner: string;
-  is_default: boolean;
-};
-
-/**
  * Configuration options for ClauderonClient
  */
 export type ClauderonClientConfig = {

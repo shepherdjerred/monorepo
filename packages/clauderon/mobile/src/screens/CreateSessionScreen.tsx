@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import type { RootStackScreenProps } from "../types/navigation";
 import type { CreateSessionRequest } from "../types/generated";
-import { BackendType, AgentType, AccessMode } from "../types/generated";
+import { BackendType, AgentType } from "../types/generated";
 import { useSessionContext } from "../contexts/SessionContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { RecentReposSelector } from "../components/RecentReposSelector";
@@ -24,8 +24,7 @@ type CreateSessionScreenProps = RootStackScreenProps<"CreateSession">;
 const BACKENDS: { value: BackendType; label: string }[] = [
   { value: BackendType.Docker, label: "Docker" },
   { value: BackendType.Zellij, label: "Zellij" },
-  { value: BackendType.Kubernetes, label: "Kubernetes" },
-  { value: BackendType.AppleContainer, label: "Apple Container" },
+  { value: BackendType.AiSandbox, label: "AI Sandbox" },
 ];
 
 const AGENTS: { value: AgentType; label: string }[] = [
@@ -42,7 +41,6 @@ export function CreateSessionScreen({ navigation }: CreateSessionScreenProps) {
   const [initialPrompt, setInitialPrompt] = useState("");
   const [backend, setBackend] = useState<BackendType>(BackendType.Docker);
   const [agent, setAgent] = useState<AgentType>(AgentType.ClaudeCode);
-  const [accessMode, setAccessMode] = useState<AccessMode>(AccessMode.ReadWrite);
   const [planMode, setPlanMode] = useState(true);
   const [skipChecks, setSkipChecks] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -65,7 +63,6 @@ export function CreateSessionScreen({ navigation }: CreateSessionScreenProps) {
         initial_prompt: initialPrompt.trim(),
         backend,
         agent,
-        access_mode: accessMode,
         plan_mode: planMode,
         dangerous_skip_checks: skipChecks,
       };
@@ -84,7 +81,6 @@ export function CreateSessionScreen({ navigation }: CreateSessionScreenProps) {
     initialPrompt,
     backend,
     agent,
-    accessMode,
     planMode,
     skipChecks,
     createSession,
@@ -199,51 +195,6 @@ export function CreateSessionScreen({ navigation }: CreateSessionScreenProps) {
                 </Text>
               </TouchableOpacity>
             ))}
-          </View>
-        </View>
-
-        {/* Access Mode */}
-        <View style={styles.field}>
-          <Text style={[styles.label, { color: colors.textDark }]}>Access Mode</Text>
-          <View style={styles.optionsRow}>
-            <TouchableOpacity
-              style={[
-                themedStyles.optionButton,
-                accessMode === AccessMode.ReadOnly && { backgroundColor: colors.primary },
-              ]}
-              onPress={() => {
-                setAccessMode(AccessMode.ReadOnly);
-              }}
-            >
-              <Text
-                style={[
-                  styles.optionButtonText,
-                  { color: colors.textDark },
-                  accessMode === AccessMode.ReadOnly && { color: colors.textWhite },
-                ]}
-              >
-                Read Only
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                themedStyles.optionButton,
-                accessMode === AccessMode.ReadWrite && { backgroundColor: colors.primary },
-              ]}
-              onPress={() => {
-                setAccessMode(AccessMode.ReadWrite);
-              }}
-            >
-              <Text
-                style={[
-                  styles.optionButtonText,
-                  { color: colors.textDark },
-                  accessMode === AccessMode.ReadWrite && { color: colors.textWhite },
-                ]}
-              >
-                Read Write
-              </Text>
-            </TouchableOpacity>
           </View>
         </View>
 

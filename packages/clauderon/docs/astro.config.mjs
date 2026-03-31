@@ -29,13 +29,6 @@ export default defineConfig({
           ],
         },
         {
-          label: "Core Concepts",
-          items: [
-            { label: "Zero-Credential Proxy", slug: "guides/proxy" },
-            { label: "Access Modes", slug: "guides/access-modes" },
-          ],
-        },
-        {
           label: "User Interfaces",
           items: [
             { label: "Command Line (CLI)", slug: "reference/cli" },
@@ -62,7 +55,6 @@ export default defineConfig({
           label: "Guides",
           items: [
             { label: "Using Hooks", slug: "guides/hooks" },
-            { label: "1Password Integration", slug: "guides/onepassword" },
             { label: "Multi-Repository Sessions", slug: "guides/multi-repo" },
             { label: "Model Selection", slug: "guides/model-selection" },
             {

@@ -1,7 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import type { Session, SessionHealthReport } from "@clauderon/client";
 import { SessionStatus } from "@clauderon/shared";
 import type { MergeMethod } from "@clauderon/shared";
+import { useQueryClient } from "@tanstack/react-query";
 import { SessionCard } from "./session-card.tsx";
 import { ThemeToggle } from "./theme-toggle.tsx";
 import { ConfirmDialog } from "./confirm-dialog.tsx";
@@ -10,7 +11,18 @@ import { EditSessionDialog } from "./edit-session-dialog.tsx";
 import { StartupHealthModal } from "./startup-health-modal.tsx";
 import { RecreateBlockedModal } from "./recreate-blocked-modal.tsx";
 import { RecreateModalWrapper } from "./recreate-modal-callbacks.tsx";
-import { useSessionContext } from "@/contexts/session-context.tsx";
+import { useSessions, useHealthReports } from "@/hooks/use-sessions";
+import {
+  useArchiveSession,
+  useUnarchiveSession,
+  useRefreshSession,
+  useDeleteSession,
+  useMergePr,
+  useStartSession,
+  useRecreateSession,
+  useCleanupSession,
+} from "@/hooks/use-session-mutations";
+import { useSessionEvents } from "@/hooks/use-session-events.ts";
 import { toast } from "sonner";
 import { Plus, RefreshCw, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,23 +49,53 @@ type SessionListProps = {
 };
 
 export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
-  const {
-    sessions,
-    isLoading,
-    error,
-    refreshSessions,
-    archiveSession,
-    unarchiveSession,
-    refreshSession,
-    deleteSession,
-    mergePr,
-    getSessionHealth,
-    healthReports,
-    startSession,
-    wakeSession,
-    recreateSession,
-    cleanupSession,
-  } = useSessionContext();
+  const queryClient = useQueryClient();
+  const sessionsQuery = useSessions();
+  const healthQuery = useHealthReports();
+  const archiveSessionMutation = useArchiveSession();
+  const unarchiveSessionMutation = useUnarchiveSession();
+  const refreshSessionMutation = useRefreshSession();
+  const deleteSessionMutation = useDeleteSession();
+  const mergePrMutation = useMergePr();
+  const startSessionMutation = useStartSession();
+  const recreateSessionMutation = useRecreateSession();
+  const cleanupSessionMutation = useCleanupSession();
+
+  const sessions = useMemo(() => {
+    return new Map((sessionsQuery.data ?? []).map((s) => [s.id, s]));
+  }, [sessionsQuery.data]);
+
+  const isLoading = sessionsQuery.isLoading;
+  const error = sessionsQuery.error;
+
+  const healthReports = useMemo(() => {
+    if (healthQuery.data == null) return new Map<string, SessionHealthReport>();
+    return new Map(
+      healthQuery.data.sessions.map((report) => [report.session_id, report]),
+    );
+  }, [healthQuery.data]);
+
+  const getSessionHealth = useCallback(
+    (sessionId: string): SessionHealthReport | undefined => {
+      return healthReports.get(sessionId);
+    },
+    [healthReports],
+  );
+
+  // Invalidate queries on WebSocket events
+  const handleEvent = useCallback(
+    (event: { type: string }) => {
+      if (
+        event.type === "SessionCreated" ||
+        event.type === "SessionUpdated" ||
+        event.type === "SessionDeleted"
+      ) {
+        void queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      }
+    },
+    [queryClient],
+  );
+  useSessionEvents(handleEvent);
 
   // Initialize filter from URL parameter
   const getInitialFilter = (): FilterStatus => {
@@ -107,7 +149,35 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
     }
   }, [sessions, filter]);
 
-  // Note: useEffect hooks for URL sync, auto-refresh, tick counter, and startup health check were removed during stub-out
+  // Track last refresh time from query updates
+  useEffect(() => {
+    if (sessionsQuery.dataUpdatedAt > 0) {
+      setLastRefreshTime(new Date(sessionsQuery.dataUpdatedAt));
+    }
+  }, [sessionsQuery.dataUpdatedAt]);
+
+  // Tick counter for "Xs ago" display
+  useEffect(() => {
+    const interval = setInterval(() => {
+      _setTickCounter((c) => c + 1);
+    }, 5_000);
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Sync filter to URL query param
+  useEffect(() => {
+    const params = new URLSearchParams(globalThis.location.search);
+    if (filter === "all") {
+      params.delete("tab");
+    } else {
+      params.set("tab", filter);
+    }
+    const query = params.toString();
+    const newUrl = query.length > 0 ? `?${query}` : globalThis.location.pathname;
+    globalThis.history.replaceState(null, "", newUrl);
+  }, [filter]);
 
   // Compute unhealthy sessions for the startup modal
   const unhealthySessions = useMemo(() => {
@@ -165,36 +235,40 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
     method: MergeMethod,
     deleteBranch: boolean,
   ) => {
-    const doMerge = async () => {
-      try {
-        await mergePr(session.id, method, deleteBranch);
-        toast.success(`Pull request for "${session.name}" merged successfully`);
-      } catch (caughtError: unknown) {
-        toast.error(
-          `Failed to merge PR: ${caughtError instanceof Error ? caughtError.message : String(caughtError)}`,
-        );
-      }
-    };
-    void doMerge();
+    mergePrMutation.mutate(
+      { id: session.id, method, deleteBranch },
+      {
+        onSuccess: () => {
+          toast.success(
+            `Pull request for "${session.name}" merged successfully`,
+          );
+        },
+        onError: (caughtError: unknown) => {
+          toast.error(
+            `Failed to merge PR: ${caughtError instanceof Error ? caughtError.message : String(caughtError)}`,
+          );
+        },
+      },
+    );
   };
 
   const runConfirmAction = async (type: string, sessionObj: Session) => {
     try {
       switch (type) {
         case "archive":
-          await archiveSession(sessionObj.id);
+          await archiveSessionMutation.mutateAsync(sessionObj.id);
           toast.success(`Session "${sessionObj.name}" archived`);
           break;
         case "unarchive":
-          await unarchiveSession(sessionObj.id);
+          await unarchiveSessionMutation.mutateAsync(sessionObj.id);
           toast.success(`Session "${sessionObj.name}" restored from archive`);
           break;
         case "refresh":
-          await refreshSession(sessionObj.id);
+          await refreshSessionMutation.mutateAsync(sessionObj.id);
           toast.success(`Session "${sessionObj.name}" is being refreshed`);
           break;
         case "delete":
-          await deleteSession(sessionObj.id);
+          await deleteSessionMutation.mutateAsync(sessionObj.id);
           toast.info(`Deleting session "${sessionObj.name}"...`);
           break;
       }
@@ -233,10 +307,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
             variant="ghost"
             size="icon"
             onClick={() => {
-              void (async () => {
-                await refreshSessions(false);
-                setLastRefreshTime(new Date());
-              })();
+              void queryClient.invalidateQueries({ queryKey: ["sessions"] });
             }}
             disabled={isLoading}
             aria-label="Refresh sessions"
@@ -306,7 +377,8 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
       <main className="flex-1 overflow-auto p-4">
         {error != null && (
           <div className="p-4 bg-destructive/10 text-destructive border-2 border-destructive rounded-md mb-4">
-            <strong className="font-mono">Error:</strong> {error.message}
+            <strong className="font-mono">Error:</strong>{" "}
+            {error instanceof Error ? error.message : String(error)}
           </div>
         )}
 
@@ -441,11 +513,10 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
               setRecreateModalSession(null);
             }
           }}
-          startSession={startSession}
-          wakeSession={wakeSession}
-          recreateSession={recreateSession}
-          refreshSession={refreshSession}
-          cleanupSession={cleanupSession}
+          startSession={(id: string) => startSessionMutation.mutateAsync(id)}
+          recreateSession={(id: string) => recreateSessionMutation.mutateAsync(id).then(() => {})}
+          refreshSession={(id: string) => refreshSessionMutation.mutateAsync(id)}
+          cleanupSession={(id: string) => cleanupSessionMutation.mutateAsync(id)}
         />
       )}
 

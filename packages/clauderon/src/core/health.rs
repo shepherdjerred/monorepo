@@ -20,10 +20,7 @@ pub struct HealthService {
     git: Arc<dyn GitOperations>,
     zellij: Arc<dyn ExecutionBackend>,
     docker: Arc<dyn ExecutionBackend>,
-    kubernetes: Arc<dyn ExecutionBackend>,
-    #[cfg(target_os = "macos")]
-    apple_container: Arc<dyn ExecutionBackend>,
-    sprites: Arc<dyn ExecutionBackend>,
+    ai_sandbox: Arc<dyn ExecutionBackend>,
 }
 
 impl std::fmt::Debug for HealthService {
@@ -38,18 +35,13 @@ impl HealthService {
         git: Arc<dyn GitOperations>,
         zellij: Arc<dyn ExecutionBackend>,
         docker: Arc<dyn ExecutionBackend>,
-        kubernetes: Arc<dyn ExecutionBackend>,
-        #[cfg(target_os = "macos")] apple_container: Arc<dyn ExecutionBackend>,
-        sprites: Arc<dyn ExecutionBackend>,
+        ai_sandbox: Arc<dyn ExecutionBackend>,
     ) -> Self {
         Self {
             git,
             zellij,
             docker,
-            kubernetes,
-            #[cfg(target_os = "macos")]
-            apple_container,
-            sprites,
+            ai_sandbox,
         }
     }
 
@@ -58,10 +50,7 @@ impl HealthService {
         match backend_type {
             BackendType::Zellij => self.zellij.as_ref(),
             BackendType::Docker => self.docker.as_ref(),
-            BackendType::Kubernetes => self.kubernetes.as_ref(),
-            #[cfg(target_os = "macos")]
-            BackendType::AppleContainer => self.apple_container.as_ref(),
-            BackendType::Sprites => self.sprites.as_ref(),
+            BackendType::AiSandbox => self.ai_sandbox.as_ref(),
         }
     }
 
@@ -202,31 +191,6 @@ impl HealthService {
                 }
             }
 
-            BackendResourceHealth::Hibernated => {
-                let mut actions = Vec::new();
-                if capabilities.can_wake {
-                    actions.push(AvailableAction::Wake);
-                }
-                if capabilities.can_recreate {
-                    actions.push(AvailableAction::Recreate);
-                }
-
-                SessionHealthReport {
-                    session_id: session.id,
-                    session_name: session.name.clone(),
-                    backend_type: session.backend,
-                    state: ResourceState::Hibernated,
-                    available_actions: actions.clone(),
-                    recommended_action: actions.first().copied(),
-                    description: "The sprite is hibernated.".to_owned(),
-                    details: format!(
-                        "{}\n\nWaking will restore the sprite to its previous state.",
-                        capabilities.data_preservation_description
-                    ),
-                    data_safe: capabilities.preserves_data_on_recreate,
-                }
-            }
-
             BackendResourceHealth::Pending => SessionHealthReport {
                 session_id: session.id,
                 session_name: session.name.clone(),
@@ -275,7 +239,7 @@ impl HealthService {
                     state: ResourceState::CrashLoop,
                     available_actions: actions,
                     recommended_action: Some(AvailableAction::Recreate),
-                    description: "The pod is in a crash loop.".to_owned(),
+                    description: "The container is in a crash loop.".to_owned(),
                     details: format!(
                         "{}\n\nThe container keeps crashing and restarting. Recreation may fix the issue.",
                         capabilities.data_preservation_description
@@ -286,7 +250,7 @@ impl HealthService {
 
             BackendResourceHealth::NotFound => {
                 if capabilities.preserves_data_on_recreate {
-                    // Data is preserved (bind mount or PVC exists)
+                    // Data is preserved (bind mount exists)
                     let mut actions = vec![AvailableAction::Recreate];
                     actions.push(AvailableAction::Cleanup);
 
@@ -299,13 +263,13 @@ impl HealthService {
                         recommended_action: Some(AvailableAction::Recreate),
                         description: "The backend resource is missing.".to_owned(),
                         details: format!(
-                            "{}\n\nThe container/pod was deleted but your data is preserved.",
+                            "{}\n\nThe container was deleted but your data is preserved.",
                             capabilities.data_preservation_description
                         ),
                         data_safe: true,
                     }
                 } else {
-                    // Data is lost (Sprites with auto_destroy, etc.)
+                    // Data is lost
                     SessionHealthReport {
                         session_id: session.id,
                         session_name: session.name.clone(),
@@ -394,7 +358,7 @@ mod tests {
     use super::*;
     use crate::backends::mock::{MockExecutionBackend, MockGitBackend};
     use crate::core::session::{
-        AccessMode, AgentType, ClaudeWorkingStatus, SessionConfig, SessionRepository, SessionStatus,
+        AgentType, ClaudeWorkingStatus, SessionConfig, SessionRepository, SessionStatus,
     };
     use chrono::Utc;
     use std::path::PathBuf;
@@ -418,7 +382,6 @@ mod tests {
             backend_id: Some("test-container".to_owned()),
             initial_prompt: "test".to_owned(),
             dangerous_skip_checks: false,
-            dangerous_copy_creds: false,
             pr_url: None,
             pr_check_status: None,
             pr_review_decision: None,
@@ -432,8 +395,6 @@ mod tests {
             merge_conflict: false,
             worktree_dirty: false,
             worktree_changed_files: None,
-            access_mode: AccessMode::ReadWrite,
-            proxy_port: None,
             history_file_path: None,
             reconcile_attempts: 0,
             last_reconcile_error: None,
@@ -461,9 +422,6 @@ mod tests {
             git.clone(),
             mock_backend.clone(),
             mock_backend.clone(),
-            mock_backend.clone(),
-            #[cfg(target_os = "macos")]
-            mock_backend.clone(),
             mock_backend,
         );
 
@@ -486,9 +444,6 @@ mod tests {
         let health_service = HealthService::new(
             git.clone(),
             mock_backend.clone(),
-            mock_backend.clone(),
-            mock_backend.clone(),
-            #[cfg(target_os = "macos")]
             mock_backend.clone(),
             mock_backend,
         );
@@ -516,9 +471,6 @@ mod tests {
         let health_service = HealthService::new(
             git.clone(),
             mock_backend.clone(),
-            mock_backend.clone(),
-            mock_backend.clone(),
-            #[cfg(target_os = "macos")]
             mock_backend.clone(),
             mock_backend,
         );

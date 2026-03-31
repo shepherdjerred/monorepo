@@ -8,9 +8,9 @@ use uuid::Uuid;
 
 use crate::api::console_protocol::SignalType;
 use crate::api::{ApiClient, Client};
-use crate::backends::{ImagePullPolicy, SpritesConfig};
+use crate::backends::ImagePullPolicy;
 use crate::core::session::{HealthCheckResult, SessionHealthReport, SessionModel};
-use crate::core::{AccessMode, AgentType, BackendType, MergeMethod, Session, SessionStatus};
+use crate::core::{AgentType, BackendType, MergeMethod, Session, SessionStatus};
 use crate::tui::attached::PtySession;
 
 /// Progress update from background session creation task
@@ -324,19 +324,15 @@ pub enum CreateDialogFocus {
     Agent,
     /// Model selector.
     Model,
-    /// Access mode selector.
-    AccessMode,
     /// Skip safety checks toggle.
     SkipChecks,
     /// Plan mode toggle.
     PlanMode,
-    /// Dangerous credential copy toggle.
-    DangerousCopyCreds,
     /// Custom container image input.
     ContainerImage,
     /// Image pull policy selector.
     PullPolicy,
-    /// Kubernetes storage class input.
+    /// Storage class input.
     StorageClass,
     /// Create/Cancel buttons.
     Buttons,
@@ -382,10 +378,6 @@ pub struct DirectoryPickerState {
 
 /// Create dialog state for managing session creation UI.
 #[derive(Debug, Clone)]
-#[expect(
-    clippy::struct_excessive_bools,
-    reason = "dialog has many independent boolean option fields"
-)]
 pub struct CreateDialogState {
     /// Initial prompt text for the session.
     pub prompt: String,
@@ -401,24 +393,16 @@ pub struct CreateDialogState {
     pub skip_checks: bool,
     /// Whether to start in plan mode.
     pub plan_mode: bool,
-    /// Access mode for proxy filtering.
-    pub access_mode: AccessMode,
-
-    /// Copy credentials directly to container (dangerous, bypasses proxy).
-    /// Used when proxy mode is not configured for K8s backend.
-    pub dangerous_copy_creds: bool,
-
-    // === Kubernetes-specific options ===
-    /// Custom container image for K8s backend (empty = use default)
+    /// Custom container image (empty = use default)
     pub container_image: String,
 
-    /// Image pull policy for K8s backend
+    /// Image pull policy
     pub pull_policy: ImagePullPolicy,
 
-    /// Storage class for K8s persistent volume (empty = use default)
+    /// Storage class (empty = use default)
     pub storage_class: String,
 
-    /// Base branch to clone from (for clone-based backends like Sprites/K8s).
+    /// Base branch to clone from (for clone-based backends).
     /// When empty, clones the repository's default branch.
     pub base_branch: String,
 
@@ -682,18 +666,10 @@ impl CreateDialogState {
 
     /// Check if a backend is available for use.
     ///
-    /// Remote backends (Sprites) require configuration to be usable:
-    /// - Sprites: requires `daemon_address` in sprites-config.toml
-    ///
-    /// Kubernetes is always available when enabled via feature flag - use dangerous-copy-creds if no proxy configured.
-    /// Local backends (Zellij, Docker, AppleContainer) are always available.
+    /// Local backends (Zellij, Docker, AiSandbox) are always available.
     fn is_backend_available(&self, backend: BackendType) -> bool {
         match backend {
-            BackendType::Sprites => SpritesConfig::load_or_default().is_connected_mode(),
-            BackendType::Kubernetes => self.feature_flags.enable_kubernetes_backend, // Available if feature enabled
-            BackendType::Zellij | BackendType::Docker => true,
-            #[cfg(target_os = "macos")]
-            BackendType::AppleContainer => true,
+            BackendType::Zellij | BackendType::Docker | BackendType::AiSandbox => true,
         }
     }
 
@@ -701,67 +677,37 @@ impl CreateDialogState {
     fn next_backend(backend: BackendType) -> BackendType {
         match backend {
             BackendType::Zellij => BackendType::Docker,
-            BackendType::Docker => BackendType::Kubernetes,
-            BackendType::Kubernetes => BackendType::Sprites,
-            #[cfg(target_os = "macos")]
-            BackendType::Sprites => BackendType::AppleContainer,
-            #[cfg(target_os = "macos")]
-            BackendType::AppleContainer => BackendType::Zellij,
-            #[cfg(not(target_os = "macos"))]
-            BackendType::Sprites => BackendType::Zellij,
+            BackendType::Docker => BackendType::AiSandbox,
+            BackendType::AiSandbox => BackendType::Zellij,
         }
     }
 
     /// Get the previous backend in the cycle order.
     fn prev_backend(backend: BackendType) -> BackendType {
         match backend {
-            #[cfg(target_os = "macos")]
-            BackendType::Zellij => BackendType::AppleContainer,
-            #[cfg(target_os = "macos")]
-            BackendType::AppleContainer => BackendType::Sprites,
-            #[cfg(not(target_os = "macos"))]
-            BackendType::Zellij => BackendType::Sprites,
-            BackendType::Sprites => BackendType::Kubernetes,
-            BackendType::Kubernetes => BackendType::Docker,
+            BackendType::Zellij => BackendType::AiSandbox,
+            BackendType::AiSandbox => BackendType::Docker,
             BackendType::Docker => BackendType::Zellij,
         }
     }
 
     /// Update skip_checks based on the selected backend.
     fn update_skip_checks_for_backend(&mut self) {
-        // Docker, Kubernetes, Sprites, and AppleContainer benefit from skipping checks (isolated environments)
+        // Docker and AiSandbox benefit from skipping checks (isolated environments)
         // Zellij runs locally so checks are more important
-        #[cfg(target_os = "macos")]
-        {
-            self.skip_checks = matches!(
-                self.backend,
-                BackendType::Docker
-                    | BackendType::Kubernetes
-                    | BackendType::Sprites
-                    | BackendType::AppleContainer
-            );
-        }
-        #[cfg(not(target_os = "macos"))]
-        {
-            self.skip_checks = matches!(
-                self.backend,
-                BackendType::Docker | BackendType::Kubernetes | BackendType::Sprites
-            );
-        }
+        self.skip_checks = matches!(
+            self.backend,
+            BackendType::Docker | BackendType::AiSandbox
+        );
     }
 
-    /// Cycle through backends: Zellij → Docker → Kubernetes → Sprites → [AppleContainer] → Zellij, auto-adjusting skip_checks
+    /// Cycle through backends: Zellij → Docker → AiSandbox → Zellij, auto-adjusting skip_checks
     /// Skips backends that are not configured/available.
     pub fn toggle_backend(&mut self) {
         let starting_backend = self.backend;
         let mut next = Self::next_backend(self.backend);
 
-        // Loop to find the next available backend
-        // Maximum iterations = number of backends to prevent infinite loop
-        #[cfg(target_os = "macos")]
-        const MAX_BACKENDS: usize = 5;
-        #[cfg(not(target_os = "macos"))]
-        const MAX_BACKENDS: usize = 4;
+        const MAX_BACKENDS: usize = 3;
 
         for _ in 0..MAX_BACKENDS {
             if self.is_backend_available(next) {
@@ -780,17 +726,13 @@ impl CreateDialogState {
         // since Zellij and Docker are always available)
     }
 
-    /// Cycle through backends in reverse: Zellij → [AppleContainer] → Sprites → Kubernetes → Docker → Zellij
+    /// Cycle through backends in reverse: Zellij → AiSandbox → Docker → Zellij
     /// Skips backends that are not configured/available.
     pub fn toggle_backend_reverse(&mut self) {
         let starting_backend = self.backend;
         let mut prev = Self::prev_backend(self.backend);
 
-        // Loop to find the previous available backend
-        #[cfg(target_os = "macos")]
-        const MAX_BACKENDS: usize = 5;
-        #[cfg(not(target_os = "macos"))]
-        const MAX_BACKENDS: usize = 4;
+        const MAX_BACKENDS: usize = 3;
 
         for _ in 0..MAX_BACKENDS {
             if self.is_backend_available(prev) {
@@ -806,14 +748,6 @@ impl CreateDialogState {
         }
 
         // No available backend found, stay on current
-    }
-
-    /// Toggle between ReadOnly and ReadWrite access modes
-    pub fn toggle_access_mode(&mut self) {
-        self.access_mode = match self.access_mode {
-            AccessMode::ReadOnly => AccessMode::ReadWrite,
-            AccessMode::ReadWrite => AccessMode::ReadOnly,
-        };
     }
 
     /// Toggle through image pull policies: IfNotPresent → Always → Never → IfNotPresent
@@ -1006,8 +940,6 @@ impl Default for CreateDialogState {
             model: None, // Default to CLI default
             skip_checks: false,
             plan_mode: true,                         // Default to plan mode ON
-            access_mode: AccessMode::default(),      // ReadOnly by default (secure)
-            dangerous_copy_creds: false,             // Default to proxy mode (secure)
             container_image: String::new(),          // Empty = use default image
             pull_policy: ImagePullPolicy::default(), // IfNotPresent
             storage_class: String::new(),            // Empty = use default storage class
@@ -1293,15 +1225,6 @@ impl App {
     pub async fn start_session(&mut self, id: Uuid) -> anyhow::Result<()> {
         if let Some(client) = &mut self.client {
             client.start_session(id).await?;
-        }
-        self.refresh_sessions().await?;
-        Ok(())
-    }
-
-    /// Wake a hibernated session
-    pub async fn wake_session(&mut self, id: Uuid) -> anyhow::Result<()> {
-        if let Some(client) = &mut self.client {
-            client.wake_session(id).await?;
         }
         self.refresh_sessions().await?;
         Ok(())
@@ -1711,27 +1634,7 @@ impl App {
     /// Returns an error if session creation fails.
     pub async fn create_session_from_dialog(&mut self) -> anyhow::Result<()> {
         use crate::api::protocol::CreateSessionRequest;
-        use crate::core::BackendType;
-
-        // Only pass K8s-specific options when using K8s backend
-        let (container_image, pull_policy, storage_class) =
-            if self.create_dialog.backend == BackendType::Kubernetes {
-                (
-                    if self.create_dialog.container_image.is_empty() {
-                        None
-                    } else {
-                        Some(self.create_dialog.container_image.clone())
-                    },
-                    Some(self.create_dialog.pull_policy.to_string()),
-                    if self.create_dialog.storage_class.is_empty() {
-                        None
-                    } else {
-                        Some(self.create_dialog.storage_class.clone())
-                    },
-                )
-            } else {
-                (None, None, None)
-            };
+        let (container_image, pull_policy, storage_class) = (None, None, None);
 
         let request = CreateSessionRequest {
             repo_path: self.create_dialog.repo_path.clone(),
@@ -1741,10 +1644,8 @@ impl App {
             agent: self.create_dialog.agent,
             model: self.create_dialog.model, // Use selected model from dialog
             dangerous_skip_checks: self.create_dialog.skip_checks,
-            dangerous_copy_creds: self.create_dialog.dangerous_copy_creds,
             print_mode: false, // TUI always uses interactive mode
             plan_mode: self.create_dialog.plan_mode,
-            access_mode: self.create_dialog.access_mode,
             images: self.create_dialog.images.clone(),
             container_image,
             pull_policy,
@@ -1916,8 +1817,6 @@ impl App {
     ///
     /// Supported backends:
     /// - Docker: Uses console socket via daemon
-    /// - Sprites: Uses console socket via daemon
-    /// - Kubernetes: Uses console socket via daemon
     ///
     /// # Errors
     ///
@@ -1927,15 +1826,13 @@ impl App {
             .selected_session()
             .ok_or_else(|| anyhow::anyhow!("No session selected"))?;
 
-        // Docker, Sprites, and Kubernetes sessions support PTY attachment
+        // Docker sessions support PTY attachment
         if !matches!(
             session.backend,
             crate::core::BackendType::Docker
-                | crate::core::BackendType::Sprites
-                | crate::core::BackendType::Kubernetes
         ) {
             return Err(anyhow::anyhow!(
-                "PTY attachment only supported for Docker, Sprites, and Kubernetes sessions"
+                "PTY attachment only supported for Docker sessions"
             ));
         }
 
@@ -2146,14 +2043,14 @@ impl App {
     pub async fn switch_to_next_session(&mut self) -> anyhow::Result<bool> {
         use crate::core::{BackendType, SessionStatus};
 
-        // Get list of attachable sessions (Docker, Sprites, and Kubernetes support PTY)
+        // Get list of attachable sessions (Docker supports PTY)
         let attachable_sessions: Vec<_> = self
             .sessions
             .iter()
             .filter(|s| {
                 matches!(
                     s.backend,
-                    BackendType::Docker | BackendType::Sprites | BackendType::Kubernetes
+                    BackendType::Docker
                 ) && s.backend_id.is_some()
                     && s.status != SessionStatus::Archived
             })
@@ -2202,14 +2099,14 @@ impl App {
     pub async fn switch_to_previous_session(&mut self) -> anyhow::Result<bool> {
         use crate::core::{BackendType, SessionStatus};
 
-        // Get list of attachable sessions (Docker, Sprites, and Kubernetes support PTY)
+        // Get list of attachable sessions (Docker supports PTY)
         let attachable_sessions: Vec<_> = self
             .sessions
             .iter()
             .filter(|s| {
                 matches!(
                     s.backend,
-                    BackendType::Docker | BackendType::Sprites | BackendType::Kubernetes
+                    BackendType::Docker
                 ) && s.backend_id.is_some()
                     && s.status != SessionStatus::Archived
             })

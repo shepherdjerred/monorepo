@@ -1,5 +1,5 @@
-import type { StorageClassInfo, SessionModel } from "@clauderon/client";
-import type { AgentType, AccessMode } from "@clauderon/shared";
+import type { SessionModel } from "@clauderon/client";
+import type { AgentType } from "@clauderon/shared";
 import { BackendType } from "@clauderon/shared";
 import { Label } from "@/components/ui/label";
 
@@ -8,7 +8,6 @@ export type SessionFormData = {
   backend: BackendType;
   agent: AgentType;
   model: SessionModel | undefined;
-  access_mode: AccessMode;
   plan_mode: boolean;
   dangerous_skip_checks: boolean;
   container_image: string;
@@ -21,13 +20,9 @@ export type SessionFormData = {
 export function AdvancedContainerSettings({
   formData,
   setFormData,
-  loadingStorageClasses,
-  storageClasses,
 }: {
   formData: SessionFormData;
   setFormData: React.Dispatch<React.SetStateAction<SessionFormData>>;
-  loadingStorageClasses: boolean;
-  storageClasses: StorageClassInfo[];
 }) {
   return (
     <details
@@ -137,47 +132,6 @@ export function AdvancedContainerSettings({
           </div>
         </div>
 
-        {/* Storage Class (Kubernetes only) */}
-        {formData.backend === BackendType.Kubernetes && (
-          <div className="space-y-2">
-            <Label htmlFor="storage_class">Storage Class (Kubernetes)</Label>
-            {loadingStorageClasses ? (
-              <div className="text-sm text-muted-foreground">
-                Loading storage classes...
-              </div>
-            ) : storageClasses.length > 0 ? (
-              <>
-                <select
-                  id="storage_class"
-                  value={formData.storage_class}
-                  onChange={(e) => {
-                    setFormData({
-                      ...formData,
-                      storage_class: e.target.value,
-                    });
-                  }}
-                  className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
-                >
-                  <option value="">Use default from config</option>
-                  {storageClasses.map((sc) => (
-                    <option key={sc.name} value={sc.name}>
-                      {sc.name} {sc.is_default ? "(default)" : ""} -{" "}
-                      {sc.provisioner}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Storage class for persistent volume claims (PVCs). Affects
-                  cache and workspace volumes.
-                </p>
-              </>
-            ) : (
-              <div className="text-sm text-muted-foreground">
-                No storage classes available. Check cluster configuration.
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </details>
   );

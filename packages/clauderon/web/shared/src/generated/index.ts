@@ -131,7 +131,7 @@ export interface CreateRepositoryInput {
 	 */
 	is_primary: boolean;
 	/**
-	 * Base branch to clone from (for clone-based backends like Sprites/K8s).
+	 * Base branch to clone from (for clone-based backends).
 	 * When None, clones the repository's default branch.
 	 * The session's working branch is always created fresh from this base.
 	 */
@@ -144,12 +144,8 @@ export enum BackendType {
 	Zellij = "Zellij",
 	/** Docker container */
 	Docker = "Docker",
-	/** Kubernetes pod */
-	Kubernetes = "Kubernetes",
-	/** Apple Container (macOS 26+ with Apple silicon) */
-	AppleContainer = "AppleContainer",
-	/** Sprites.dev cloud container */
-	Sprites = "Sprites",
+	/** AI Sandbox (Zellij + ai-sandbox) */
+	AiSandbox = "AiSandbox",
 }
 
 /** AI agent type */
@@ -170,14 +166,6 @@ export type SessionModel =
 	| { type: "Codex", content: CodexModel }
 	/** Gemini model */
 	| { type: "Gemini", content: GeminiModel };
-
-/** Access mode for proxy filtering */
-export enum AccessMode {
-	/** Read-only: GET, HEAD, OPTIONS allowed; POST, PUT, DELETE, PATCH blocked */
-	ReadOnly = "ReadOnly",
-	/** Read-write: All HTTP methods allowed */
-	ReadWrite = "ReadWrite",
-}
 
 /** Request to create a new session */
 export interface CreateSessionRequest {
@@ -203,19 +191,10 @@ export interface CreateSessionRequest {
 	model?: SessionModel;
 	/** Skip safety checks */
 	dangerous_skip_checks: boolean;
-	/**
-	 * For remote backends: copy real credentials into the container.
-	 * 
-	 * WARNING: This is dangerous - it exposes your API tokens to the remote environment.
-	 * Only use when the daemon is not reachable from the remote backend.
-	 */
-	dangerous_copy_creds?: boolean;
 	/** Run in print mode (non-interactive, outputs response and exits) */
 	print_mode?: boolean;
 	/** Start in plan mode */
 	plan_mode: boolean;
-	/** Access mode for proxy filtering */
-	access_mode?: AccessMode;
 	/**
 	 * Image file paths to attach to initial prompt.
 	 * 
@@ -249,7 +228,6 @@ export interface CreateSessionRequest {
 	 * 
 	 * Format:
 	 * - Docker: Decimal cores (e.g., `"2.0"`, `"0.5"`)
-	 * - Kubernetes: Millicores or cores (e.g., `"2000m"`, `"2"`)
 	 */
 	cpu_limit?: string;
 	/**
@@ -257,33 +235,10 @@ export interface CreateSessionRequest {
 	 * 
 	 * Format: Number with suffix
 	 * - Docker: `"2g"` (2 gigabytes), `"512m"` (512 megabytes)
-	 * - Kubernetes: `"2Gi"` (2 gibibytes), `"512Mi"` (512 mebibytes)
 	 */
 	memory_limit?: string;
-	/**
-	 * Optional: Storage class for persistent volumes (Kubernetes only).
-	 * 
-	 * Format: Storage class name (e.g., `"gp2"`, `"standard"`)
-	 * Only applicable to Kubernetes backend.
-	 * If not specified, uses cluster default or config file setting.
-	 */
+	/** Optional: Storage class override. */
 	storage_class?: string;
-}
-
-/** Credential availability status */
-export interface CredentialStatus {
-	/** Human-readable credential name (e.g., "GitHub", "Anthropic") */
-	name: string;
-	/** Service identifier for updates (e.g., "github", "anthropic") */
-	service_id: string;
-	/** Whether the credential is available */
-	available: boolean;
-	/** Source of credential if available ("environment" or "file") */
-	source?: string;
-	/** Whether the credential is readonly (from environment) */
-	readonly: boolean;
-	/** Optional masked preview like "ghp_****...abc123" */
-	masked_value?: string;
 }
 
 /**
@@ -297,16 +252,10 @@ export interface FeatureFlags {
 	enable_ai_metadata: boolean;
 	/** Enable automatic session reconciliation on startup */
 	enable_auto_reconcile: boolean;
-	/** Enable session proxy port reuse (experimental) */
-	enable_proxy_port_reuse: boolean;
 	/** Enable Claude usage tracking via API */
 	enable_usage_tracking: boolean;
-	/** Enable Kubernetes backend (experimental, disabled by default) */
-	enable_kubernetes_backend: boolean;
 	/** Enable experimental AI models (Codex, Gemini) */
 	enable_experimental_models: boolean;
-	/** Enable read-only mode (experimental, security issues #424, #205) */
-	enable_readonly_mode: boolean;
 }
 
 /** Feature flags response for the frontend */
@@ -320,17 +269,15 @@ export interface FeatureFlagsResponse {
 /**
  * State of a session's backend resource
  * 
- * This enum represents the actual state of the underlying resource (container,
- * pod, or sprite) as observed during a health check.
+ * This enum represents the actual state of the underlying resource (container
+ * or process) as observed during a health check.
  */
 export type ResourceState = 
 	/** Backend is running and healthy */
 	| { type: "Healthy", content?: undefined }
 	/** Backend is stopped/exited (can be started) */
 	| { type: "Stopped", content?: undefined }
-	/** Sprites: sprite is hibernated (can be woken) */
-	| { type: "Hibernated", content?: undefined }
-	/** Kubernetes: pod is waiting for resources (Pending state) */
+	/** Resource is pending/starting */
 	| { type: "Pending", content?: undefined }
 	/** Backend resource is gone but can be recreated (data preserved) */
 	| { type: "Missing", content?: undefined }
@@ -339,14 +286,11 @@ export type ResourceState =
 	/** Error description. */
 	message: string;
 }}
-	/** Kubernetes: pod is in CrashLoopBackOff */
+	/** Resource is crash-looping */
 	| { type: "CrashLoop", content?: undefined }
 	/** Resource was deleted externally (outside clauderon) */
 	| { type: "DeletedExternally", content?: undefined }
-	/**
-	 * Data has been lost and cannot be recovered
-	 * (e.g., PVC deleted, sprite with auto_destroy deleted)
-	 */
+	/** Data has been lost and cannot be recovered */
 	| { type: "DataLost", content: {
 	/** Why data was lost. */
 	reason: string;
@@ -358,8 +302,6 @@ export type ResourceState =
 export enum AvailableAction {
 	/** Start a stopped container (Docker: docker start) */
 	Start = "Start",
-	/** Wake a hibernated sprite */
-	Wake = "Wake",
 	/** Delete and recreate the backend resource (preserves data) */
 	Recreate = "Recreate",
 	/** Recreate with a fresh git clone (data will be lost) */
@@ -376,7 +318,7 @@ export interface SessionHealthReport {
 	session_id: string;
 	/** Session name */
 	session_name: string;
-	/** Backend type (Docker, Kubernetes, Zellij, Sprites) */
+	/** Backend type */
 	backend_type: BackendType;
 	/** Current resource state */
 	state: ResourceState;
@@ -460,18 +402,6 @@ export interface ProgressStep {
 	total: number;
 	/** Description of current step */
 	message: string;
-}
-
-/** Proxy status information */
-export interface ProxyStatus {
-	/** Proxy name (e.g., "HTTP Auth Proxy", "Kubernetes Proxy") */
-	name: string;
-	/** Port number the proxy is running on */
-	port: number;
-	/** Whether the proxy is currently active */
-	active: boolean;
-	/** Proxy type ("global" or "session-specific") */
-	proxy_type: string;
 }
 
 /** Recent repository entry with timestamp */
@@ -579,7 +509,7 @@ export interface SessionRepository {
 	/** Whether this is the primary repository (determines working directory) */
 	is_primary: boolean;
 	/**
-	 * Base branch to clone from (for clone-based backends like Sprites)
+	 * Base branch to clone from (for clone-based backends)
 	 * When None, clones the repository's default branch
 	 */
 	base_branch?: string;
@@ -669,17 +599,12 @@ export interface Session {
 	 * None indicates a legacy single-repo session using the fields above
 	 */
 	repositories?: SessionRepository[];
-	/** Backend-specific identifier (zellij session name, docker container id, or kubernetes pod name) */
+	/** Backend-specific identifier (zellij session name, docker container id, etc.) */
 	backend_id?: string;
 	/** Initial prompt given to the AI agent */
 	initial_prompt: string;
 	/** Whether to skip safety checks */
 	dangerous_skip_checks: boolean;
-	/**
-	 * Whether this session was created with --dangerous-copy-creds
-	 * Sessions with copy-creds have no hook-based status tracking (degraded mode)
-	 */
-	dangerous_copy_creds?: boolean;
 	/** URL of the associated pull request */
 	pr_url?: string;
 	/** Status of PR checks */
@@ -706,10 +631,6 @@ export interface Session {
 	worktree_dirty: boolean;
 	/** List of changed files in the worktree with their git status */
 	worktree_changed_files?: ChangedFile[];
-	/** Access mode for proxy filtering */
-	access_mode: AccessMode;
-	/** Port for session-specific HTTP proxy (container backends: Docker and Apple Container) */
-	proxy_port?: number;
 	/** Path to Claude Code's session history file (.jsonl) */
 	history_file_path: string;
 	/** Number of times we've attempted to recreate the container */
@@ -728,24 +649,10 @@ export interface Session {
 	updated_at: string;
 }
 
-/** System status response including credentials and proxies */
+/** System status response */
 export interface SystemStatus {
-	/** List of credential statuses */
-	credentials: CredentialStatus[];
-	/** List of proxy statuses */
-	proxies: ProxyStatus[];
-	/** Total number of active sessions with proxies */
-	active_session_proxies: number;
 	/** Claude Code usage tracking (if available) */
 	claude_usage?: ClaudeUsage;
-}
-
-/** Request to update a credential */
-export interface UpdateCredentialRequest {
-	/** Service identifier (e.g., "github", "anthropic") */
-	service_id: string;
-	/** The credential token/key value */
-	value: string;
 }
 
 /** Response from uploading an image file */
@@ -818,23 +725,14 @@ export enum CodexModel {
 	O4Mini = "O4Mini",
 	/** o3-mini (small reasoning model) */
 	O3Mini = "O3Mini",
-	/** @deprecated Legacy variant for database compatibility */
 	Gpt5_2Codex = "Gpt5_2Codex",
-	/** @deprecated Legacy variant for database compatibility */
 	Gpt5_2 = "Gpt5_2",
-	/** @deprecated Legacy variant for database compatibility */
 	Gpt5_2Instant = "Gpt5_2Instant",
-	/** @deprecated Legacy variant for database compatibility */
 	Gpt5_2Thinking = "Gpt5_2Thinking",
-	/** @deprecated Legacy variant for database compatibility */
 	Gpt5_2Pro = "Gpt5_2Pro",
-	/** @deprecated Legacy variant for database compatibility */
 	Gpt5_1 = "Gpt5_1",
-	/** @deprecated Legacy variant for database compatibility */
 	Gpt5_1Instant = "Gpt5_1Instant",
-	/** @deprecated Legacy variant for database compatibility */
 	Gpt5_1Thinking = "Gpt5_1Thinking",
-	/** @deprecated Legacy variant for database compatibility */
 	Gpt4_1 = "Gpt4_1",
 }
 
@@ -951,9 +849,7 @@ export enum GeminiModel {
 	Gemini2_5Pro = "Gemini2_5Pro",
 	/** Gemini 2.5 Flash (fast legacy model) */
 	Gemini2_5Flash = "Gemini2_5Flash",
-	/** @deprecated Legacy variant for database compatibility */
 	Gemini3Pro = "Gemini3Pro",
-	/** @deprecated Legacy variant for database compatibility */
 	Gemini2_0Flash = "Gemini2_0Flash",
 }
 
@@ -988,13 +884,6 @@ export type Request =
 	/** Session ID to attach to. */
 	id: string;
 }}
-	/** Update session access mode */
-	| { type: "UpdateAccessMode", payload: {
-	/** Session ID to update. */
-	id: string;
-	/** New access mode for proxy filtering. */
-	access_mode: AccessMode;
-}}
 	/** Reconcile state with reality */
 	| { type: "Reconcile", payload?: undefined }
 	/** Subscribe to real-time updates */
@@ -1027,14 +916,9 @@ export type Request =
 	/** Session ID to check. */
 	id: string;
 }}
-	/** Start a stopped session (container/pod) */
+	/** Start a stopped session container */
 	| { type: "StartSession", payload: {
 	/** Session ID to start. */
-	id: string;
-}}
-	/** Wake a hibernated session (sprites) */
-	| { type: "WakeSession", payload: {
-	/** Session ID to wake. */
 	id: string;
 }}
 	/** Recreate a session (delete and recreate backend) */
@@ -1096,8 +980,6 @@ export type Response =
 	| { type: "Subscribed", payload?: undefined }
 	/** List of recent repositories with timestamps */
 	| { type: "RecentRepos", payload: RecentRepoDto[] }
-	/** Access mode updated successfully */
-	| { type: "AccessModeUpdated", payload?: undefined }
 	/** Session ID returned */
 	| { type: "SessionId", payload: {
 	/** The resolved session ID. */
@@ -1116,8 +998,6 @@ export type Response =
 	| { type: "SessionHealth", payload: SessionHealthReport }
 	/** Session started successfully */
 	| { type: "Started", payload?: undefined }
-	/** Session woken successfully */
-	| { type: "Woken", payload?: undefined }
 	/** Session recreated successfully */
 	| { type: "Recreated", payload: {
 	/** New backend resource ID (if changed). */
@@ -1125,7 +1005,7 @@ export type Response =
 }}
 	/** Session cleaned up successfully */
 	| { type: "CleanedUp", payload?: undefined }
-	/** Action blocked error (e.g., recreate blocked for sprites with auto_destroy) */
+	/** Action blocked error (e.g., recreate blocked when data would be lost) */
 	| { type: "ActionBlocked", payload: {
 	/** Explanation of why the action was blocked. */
 	reason: string;

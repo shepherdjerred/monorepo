@@ -1,21 +1,80 @@
-import type { ReactNode } from "react";
-import { useAuth } from "@/contexts/auth-context.tsx";
+import { useState, useEffect, type ReactNode } from "react";
+import { useAuthStatus } from "@/hooks/use-auth";
 import { LoginPage } from "@/pages/login-page.tsx";
 import { RegistrationPage } from "@/pages/registration-page.tsx";
+import { Loader2, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type AuthGuardProps = {
   children: ReactNode;
 };
 
 export function AuthGuard({ children }: AuthGuardProps) {
-  const { authStatus, isLoading } = useAuth();
+  const { data, isLoading, isError, error, refetch } = useAuthStatus();
+  const [timedOut, setTimedOut] = useState(false);
 
-  // Show loading state
-  if (isLoading || !authStatus) {
+  useEffect(() => {
+    if (!isLoading) {
+      setTimedOut(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setTimedOut(true);
+    }, 10_000);
+
+    return () => clearTimeout(timer);
+  }, [isLoading]);
+
+  // Error state
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="text-center space-y-4">
+          <AlertTriangle className="w-12 h-12 text-destructive mx-auto" />
+          <p className="text-muted-foreground font-mono">
+            {error instanceof Error ? error.message : "Unknown error"}
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => void refetch()}
+            className="cursor-pointer"
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Loading state
+  if (isLoading || !data) {
+    if (timedOut) {
+      return (
+        <div className="flex items-center justify-center min-h-screen bg-background">
+          <div className="text-center space-y-4">
+            <AlertTriangle className="w-12 h-12 text-muted-foreground mx-auto" />
+            <p className="text-muted-foreground font-mono">
+              Unable to connect to clauderon daemon
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void refetch()}
+              className="cursor-pointer"
+            >
+              Retry
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
@@ -23,18 +82,16 @@ export function AuthGuard({ children }: AuthGuardProps) {
   }
 
   // If auth is not required (localhost mode), render children directly
-  if (!authStatus.requires_auth) {
+  if (!data.requires_auth) {
     return <>{children}</>;
   }
 
   // Auth is required - check if we need registration or login
-  if (!authStatus.has_users) {
-    // No users exist - show registration
+  if (!data.has_users) {
     return <RegistrationPage />;
   }
 
-  if (authStatus.current_user == null) {
-    // User not logged in - show login
+  if (data.current_user == null) {
     return <LoginPage />;
   }
 

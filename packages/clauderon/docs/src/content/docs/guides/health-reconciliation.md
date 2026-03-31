@@ -9,7 +9,6 @@ description: Understanding and managing session health states and automatic reco
 | --------------------- | ---------------------------- | ----------- | ------------------- |
 | **Healthy**           | Running normally             | N/A         | None                |
 | **Stopped**           | Container stopped but intact | ✅ Yes      | Start               |
-| **Hibernated**        | Suspended to save resources  | ✅ Yes      | Wake                |
 | **Pending**           | Creation in progress         | ⏳ Wait     | Wait or cancel      |
 | **Error**             | Failed to start/run          | ✅ Yes      | Recreate            |
 | **CrashLoop**         | Repeatedly crashing          | ⚠️ Maybe    | Recreate Fresh      |
@@ -27,14 +26,14 @@ description: Understanding and managing session health states and automatic reco
     ┌─────────────────►  Healthy  ◄─────────────┐
     │                     │                      │
     │                     ▼                      │
-    │               ┌──────────┐           ┌─────┴────┐
-    │               │ Stopped  │           │   Wake   │
-    │               └────┬─────┘           └──────────┘
-    │                    │                      ▲
-    │                    ▼                      │
-    │              ┌──────────┐           ┌─────┴────────┐
-    └──────────────┤  Start   │           │  Hibernated  │
-                   └──────────┘           └──────────────┘
+    │               ┌──────────┐
+    │               │ Stopped  │
+    │               └────┬─────┘
+    │                    │
+    │                    ▼
+    └──────────────┌──────────┐
+                   │  Start   │
+                   └──────────┘
 
          Error/Missing/CrashLoop
                    │
@@ -56,20 +55,19 @@ description: Understanding and managing session health states and automatic reco
 
 ## Available Actions by State
 
-| State      | Start | Wake | Recreate | Recreate Fresh | Cleanup |
-| ---------- | :---: | :--: | :------: | :------------: | :-----: |
-| Healthy    |       |      |    ✅    |                |   ✅    |
-| Stopped    |  ✅   |      |    ✅    |                |   ✅    |
-| Hibernated |       |  ✅  |    ✅    |                |   ✅    |
-| Error      |       |      |    ✅    |       ✅       |   ✅    |
-| CrashLoop  |       |      |          |       ✅       |   ✅    |
-| Missing    |       |      |    ✅    |       ✅       |   ✅    |
+| State     | Start | Recreate | Recreate Fresh | Cleanup |
+| --------- | :---: | :------: | :------------: | :-----: |
+| Healthy   |       |    ✅    |                |   ✅    |
+| Stopped   |  ✅   |    ✅    |                |   ✅    |
+| Error     |       |    ✅    |       ✅       |   ✅    |
+| CrashLoop |       |          |       ✅       |   ✅    |
+| Missing   |       |    ✅    |       ✅       |   ✅    |
 
 ## Data Preservation
 
 | Action         |     Git state     | Uncommitted changes  | Chat history | Config |
 | -------------- | :---------------: | :------------------: | :----------: | :----: |
-| Start / Wake   |        ✅         |          ✅          |      ✅      |   ✅   |
+| Start          |        ✅         |          ✅          |      ✅      |   ✅   |
 | Recreate       |        ✅         | ✅ (if clone exists) |      ✅      |   ✅   |
 | Recreate Fresh | ✅ committed only |          ❌          |      ✅      |   ✅   |
 | Cleanup        |        ❌         |          ❌          |      ❌      |   ❌   |
@@ -93,14 +91,12 @@ Automatically recovers sessions from failures using exponential backoff (30s, 2m
 | CrashLoop         | Wait, then recreate fresh          |
 | DeletedExternally | Mark missing, attempt recreate     |
 | Stopped           | No action (intentional)            |
-| Hibernated        | No action (intentional)            |
 
 ## Recovery Commands
 
 ```bash
 # CLI
 clauderon start <session>
-clauderon wake <session>
 clauderon recreate <session>
 clauderon recreate <session> --fresh
 clauderon cleanup <session>
@@ -108,7 +104,6 @@ clauderon delete <session>
 
 # API
 POST /api/sessions/{id}/start
-POST /api/sessions/{id}/wake
 POST /api/sessions/{id}/recreate
 POST /api/sessions/{id}/recreate-fresh
 POST /api/sessions/{id}/cleanup

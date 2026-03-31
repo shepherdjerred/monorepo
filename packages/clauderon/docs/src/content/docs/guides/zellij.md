@@ -7,8 +7,7 @@ description: Running sessions in Zellij terminal panes
 
 1. Creates a git worktree in `~/.clauderon/worktrees/<session-name>/`
 2. Creates a new Zellij session
-3. Configures proxy environment variables
-4. Starts the chosen agent with your prompt
+3. Starts the chosen agent with your prompt
 
 ## Creating Sessions
 
@@ -30,16 +29,6 @@ clauderon attach <session-name>
 zellij attach clauderon-<session-name>
 ```
 
-## Environment Variables
-
-| Variable              | Purpose                   |
-| --------------------- | ------------------------- |
-| `HTTP_PROXY`          | Points to clauderon proxy |
-| `HTTPS_PROXY`         | Points to clauderon proxy |
-| `SSL_CERT_FILE`       | CA certificate path       |
-| `NODE_EXTRA_CA_CERTS` | CA for Node.js            |
-| `REQUESTS_CA_BUNDLE`  | CA for Python             |
-
 ## Key Bindings
 
 - `Ctrl+p` - Zellij mode selection
@@ -51,5 +40,5 @@ zellij attach clauderon-<session-name>
 | Problem           | Fix                                                               |
 | ----------------- | ----------------------------------------------------------------- |
 | Session not found | `zellij list-sessions` to check; `clauderon reconcile` to sync DB |
-| Proxy env not set | Session may have started without daemon. Delete and recreate.     |
+| Env not set       | Session may have started without daemon. Delete and recreate.     |
 | Zellij not found  | `brew install zellij` (macOS) or `cargo install zellij` (Linux)   |

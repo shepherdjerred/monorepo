@@ -24,7 +24,6 @@ Hooks are **not yet implemented**. This page documents the planned design.
 | `SESSION_ID`    | Unique session ID                   |
 | `BACKEND`       | Backend type (zellij, docker, etc.) |
 | `AGENT`         | Agent type (claude, codex, gemini)  |
-| `ACCESS_MODE`   | Access mode (read-only, read-write) |
 | `REPO_PATH`     | Path to the git repository          |
 | `WORKTREE_PATH` | Path to the worktree                |
 

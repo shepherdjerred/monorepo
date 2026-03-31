@@ -140,6 +140,205 @@ impl GitOperations for GitBackend {
         worktree_path.exists()
     }
 
+    /// Clone a repository locally using `git clone --local`
+    #[instrument(skip(self), fields(source = %source_repo.display(), target = %target_path.display(), branch = %branch_name))]
+    async fn clone_local(
+        &self,
+        source_repo: &Path,
+        target_path: &Path,
+        branch_name: &str,
+    ) -> anyhow::Result<Option<String>> {
+        // Ensure parent directory exists
+        if let Some(parent) = target_path.parent() {
+            tokio::fs::create_dir_all(parent).await?;
+        }
+
+        // git clone --local <source> <target>
+        let output = Command::new("git")
+            .args(["clone", "--local"])
+            .arg(source_repo)
+            .arg(target_path)
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            anyhow::bail!("Failed to clone repository: {stderr}");
+        }
+
+        // Fetch latest from origin
+        let output = Command::new("git")
+            .current_dir(target_path)
+            .args(["fetch", "origin"])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            tracing::warn!(target = %target_path.display(), "git fetch origin failed: {stderr}");
+        }
+
+        // Create and checkout the branch
+        let output = Command::new("git")
+            .current_dir(target_path)
+            .args(["checkout", "-b", branch_name])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            // Branch might already exist, try just checking out
+            let fallback = Command::new("git")
+                .current_dir(target_path)
+                .args(["checkout", branch_name])
+                .output()
+                .await?;
+            if !fallback.status.success() {
+                let fallback_stderr = String::from_utf8_lossy(&fallback.stderr);
+                anyhow::bail!("Failed to checkout branch '{branch_name}': {stderr} / {fallback_stderr}");
+            }
+        }
+
+        tracing::info!(
+            target = %target_path.display(),
+            branch = branch_name,
+            "Cloned repository locally"
+        );
+
+        Ok(None)
+    }
+
+    /// Delete a local clone
+    #[instrument(skip(self), fields(clone_path = %clone_path.display()))]
+    async fn delete_clone(&self, clone_path: &Path) -> anyhow::Result<()> {
+        if clone_path.exists() {
+            tokio::fs::remove_dir_all(clone_path).await?;
+            tracing::info!(clone_path = %clone_path.display(), "Deleted local clone");
+        }
+        Ok(())
+    }
+
+    /// Claim a pre-staged clone from the pool, or fall back to inline clone
+    #[instrument(skip(self), fields(source = %source_repo.display(), target = %target_path.display(), branch = %branch_name))]
+    async fn claim_or_clone(
+        &self,
+        source_repo: &Path,
+        target_path: &Path,
+        branch_name: &str,
+    ) -> anyhow::Result<Option<String>> {
+        // Derive pool path from repo name
+        let repo_name = source_repo
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("repo");
+        let pool_dir = dirs::home_dir()
+            .unwrap_or_default()
+            .join(".clauderon")
+            .join("pool");
+        let staged_path = pool_dir.join(format!("{repo_name}-next"));
+
+        if staged_path.exists() {
+            tracing::info!(staged = %staged_path.display(), "Claiming pre-staged clone");
+
+            // Move staged clone to target
+            tokio::fs::rename(&staged_path, target_path).await?;
+
+            // Fetch latest and checkout branch
+            let _ = Command::new("git")
+                .current_dir(target_path)
+                .args(["fetch", "origin"])
+                .output()
+                .await;
+
+            let output = Command::new("git")
+                .current_dir(target_path)
+                .args(["checkout", "-b", branch_name])
+                .output()
+                .await?;
+
+            if !output.status.success() {
+                let _ = Command::new("git")
+                    .current_dir(target_path)
+                    .args(["checkout", branch_name])
+                    .output()
+                    .await;
+            }
+
+            // Spawn background replenish
+            let source = source_repo.to_path_buf();
+            let git = Self::new();
+            tokio::spawn(async move {
+                if let Err(e) = git.replenish_pool(&source).await {
+                    tracing::warn!(error = %e, "Failed to replenish clone pool");
+                }
+            });
+
+            Ok(None)
+        } else {
+            // No staged clone available, fall back to inline clone
+            let result = self.clone_local(source_repo, target_path, branch_name).await;
+
+            // Spawn background replenish for next time
+            let source = source_repo.to_path_buf();
+            let git = Self::new();
+            tokio::spawn(async move {
+                if let Err(e) = git.replenish_pool(&source).await {
+                    tracing::warn!(error = %e, "Failed to replenish clone pool");
+                }
+            });
+
+            result
+        }
+    }
+
+    /// Replenish the pre-staged clone pool
+    #[instrument(skip(self), fields(source = %source_repo.display()))]
+    async fn replenish_pool(&self, source_repo: &Path) -> anyhow::Result<()> {
+        let repo_name = source_repo
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("repo");
+        let pool_dir = dirs::home_dir()
+            .unwrap_or_default()
+            .join(".clauderon")
+            .join("pool");
+        tokio::fs::create_dir_all(&pool_dir).await?;
+
+        let staged_path = pool_dir.join(format!("{repo_name}-next"));
+        if staged_path.exists() {
+            tracing::debug!("Pool already has a staged clone, skipping replenish");
+            return Ok(());
+        }
+
+        let wip_path = pool_dir.join(format!("{repo_name}-next-wip"));
+        // Clean up any leftover WIP
+        if wip_path.exists() {
+            tokio::fs::remove_dir_all(&wip_path).await?;
+        }
+
+        let output = Command::new("git")
+            .args(["clone", "--local"])
+            .arg(source_repo)
+            .arg(&wip_path)
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            anyhow::bail!("Failed to replenish pool: {stderr}");
+        }
+
+        // Atomically move to staged path
+        tokio::fs::rename(&wip_path, &staged_path).await?;
+
+        tracing::info!(
+            staged = %staged_path.display(),
+            "Replenished clone pool"
+        );
+
+        Ok(())
+    }
+
     /// Get the current branch of a worktree
     ///
     /// # Errors

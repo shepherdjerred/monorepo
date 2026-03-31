@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { create } from "@github/webauthn-json";
-import { useClauderonClient } from "@/hooks/use-clauderon-client.ts";
-import { useAuth } from "@/contexts/auth-context.tsx";
+import { useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
 
 export function RegistrationPage() {
-  const client = useClauderonClient();
-  const { refreshAuthStatus } = useAuth();
+  const queryClient = useQueryClient();
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [deviceName, setDeviceName] = useState("");
@@ -20,7 +19,7 @@ export function RegistrationPage() {
     try {
       // Start registration flow - options is typed as 'any' from TypeShare
       const trimmedDisplayName = displayName.trim();
-      const response = await client.registerStart({
+      const response = await apiClient.registerStart({
         username,
         ...(trimmedDisplayName && { display_name: trimmedDisplayName }),
       });
@@ -31,7 +30,7 @@ export function RegistrationPage() {
 
       // Finish registration flow - credential field accepts 'any' in the generated type
       const trimmedDeviceName = deviceName.trim();
-      await client.registerFinish({
+      await apiClient.registerFinish({
         username,
         challenge_id: response.challenge_id,
         credential,
@@ -39,7 +38,7 @@ export function RegistrationPage() {
       });
 
       // Refresh auth status
-      await refreshAuthStatus();
+      await queryClient.invalidateQueries({ queryKey: ["auth-status"] });
     } catch (error_) {
       console.error("Registration error:", error_);
       setError(

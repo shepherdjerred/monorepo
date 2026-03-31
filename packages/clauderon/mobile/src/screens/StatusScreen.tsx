@@ -11,7 +11,6 @@ import type { RootStackScreenProps } from "../types/navigation";
 import type { SystemStatus } from "../types/generated";
 import { useSessionContext } from "../contexts/SessionContext";
 import { useTheme } from "../contexts/ThemeContext";
-import { CredentialRow } from "../components/CredentialRow";
 import { UsageProgressBar } from "../components/UsageProgressBar";
 import { typography } from "../styles/typography";
 
@@ -48,15 +47,6 @@ export function StatusScreen(_props: StatusScreenProps) {
     void loadStatus();
   }, [loadStatus]);
 
-  const handleCredentialSave = useCallback(
-    async (serviceId: string, value: string) => {
-      if (!client) return;
-      await client.updateCredential(serviceId, value);
-      await loadStatus(); // Refresh to show updated status
-    },
-    [client, loadStatus],
-  );
-
   if (isLoading) {
     return (
       <View style={[styles.centered, { backgroundColor: colors.background }]}>
@@ -89,25 +79,6 @@ export function StatusScreen(_props: StatusScreenProps) {
         />
       }
     >
-      {/* Credentials Section */}
-      <View style={styles.section}>
-        <Text
-          style={[
-            styles.sectionTitle,
-            { color: colors.textDark, borderBottomColor: colors.border },
-          ]}
-        >
-          Credentials
-        </Text>
-        {status?.credentials.map((credential) => (
-          <CredentialRow
-            key={credential.service_id}
-            credential={credential}
-            onSave={handleCredentialSave}
-          />
-        ))}
-      </View>
-
       {/* Usage Section */}
       {status?.claude_usage && (
         <View style={styles.section}>
@@ -158,56 +129,6 @@ export function StatusScreen(_props: StatusScreenProps) {
         </View>
       )}
 
-      {/* Proxies Section */}
-      <View style={styles.section}>
-        <Text
-          style={[
-            styles.sectionTitle,
-            { color: colors.textDark, borderBottomColor: colors.border },
-          ]}
-        >
-          Proxies
-        </Text>
-        {status?.proxies.length === 0 ? (
-          <Text style={[styles.emptyText, { color: colors.textLight }]}>No active proxies</Text>
-        ) : (
-          status?.proxies.map((proxy) => (
-            <View
-              key={`${proxy.name}-${proxy.port}`}
-              style={[styles.proxyRow, { borderBottomColor: colors.borderLight }]}
-            >
-              <View style={styles.proxyInfo}>
-                <Text style={[styles.proxyName, { color: colors.textDark }]}>{proxy.name}</Text>
-                <Text style={[styles.proxyMeta, { color: colors.textLight }]}>
-                  Port {proxy.port} - {proxy.proxy_type}
-                </Text>
-              </View>
-              <View
-                style={[
-                  styles.proxyStatus,
-                  { borderColor: colors.border },
-                  { backgroundColor: proxy.active ? colors.success : colors.surface },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.proxyStatusText,
-                    { color: proxy.active ? colors.textWhite : colors.textDark },
-                  ]}
-                >
-                  {proxy.active ? "Active" : "Inactive"}
-                </Text>
-              </View>
-            </View>
-          ))
-        )}
-        {status && status.active_session_proxies > 0 && (
-          <Text style={[styles.sessionProxyCount, { color: colors.textLight }]}>
-            {status.active_session_proxies} session-specific{" "}
-            {status.active_session_proxies === 1 ? "proxy" : "proxies"} active
-          </Text>
-        )}
-      </View>
     </ScrollView>
   );
 }
@@ -269,41 +190,6 @@ const styles = StyleSheet.create({
   },
   fetchedAt: {
     fontSize: typography.fontSize.xs,
-    marginTop: 12,
-  },
-  emptyText: {
-    fontSize: typography.fontSize.base,
-  },
-  proxyRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-  },
-  proxyInfo: {
-    flex: 1,
-  },
-  proxyName: {
-    fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.medium,
-  },
-  proxyMeta: {
-    fontSize: typography.fontSize.xs,
-    marginTop: 2,
-  },
-  proxyStatus: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderWidth: 2,
-  },
-  proxyStatusText: {
-    fontSize: typography.fontSize.xs,
-    fontWeight: typography.fontWeight.bold,
-    textTransform: "uppercase",
-  },
-  sessionProxyCount: {
-    fontSize: typography.fontSize.sm,
     marginTop: 12,
   },
 });

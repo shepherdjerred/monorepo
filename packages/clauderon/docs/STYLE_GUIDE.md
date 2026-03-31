@@ -971,7 +971,7 @@ Cards display session information in a structured, scannable format.
     {/* Status indicators: PR, Claude, conflicts */}
     <div className="flex flex-col gap-1 mb-3">...</div>
 
-    {/* Metadata: timestamp, branch, access mode */}
+    {/* Metadata: timestamp, branch */}
     <div className="flex items-center gap-4 text-xs">...</div>
   </CardContent>
 
@@ -986,7 +986,7 @@ Cards display session information in a structured, scannable format.
 - **Status Dot**: 4×4 pixel square with 2px border, filled with status color
 - **Hover Effect**: `shadow-[4px_4px_0_hsl(var(--foreground))]` on hover
 - **Border**: Always 2px solid
-- **Badge**: Monospace font for backend type (Docker, Kubernetes)
+- **Badge**: Monospace font for backend type (Docker, Zellij)
 
 **Visual Reference:** `assets/web session list.png`
 
@@ -1055,7 +1055,7 @@ Cards display session information in a structured, scannable format.
 2. **Name** (15-40ch): Session name, truncated with ellipsis
 3. **Repository** (12-30ch): Repo directory name
 4. **Status** (8-15ch): Color-coded status text
-5. **Backend** (10-15ch): Docker/K8s
+5. **Backend** (10-15ch): Docker/Zellij
 6. **Branch/PR** (10-25ch): Git branch or "PR"
 7. **Claude** (2ch): `◎` if Claude is active
 8. **CI** (2ch): `●` (colored by CI status)

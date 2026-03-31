@@ -22,13 +22,12 @@ Everything else (dev tools, shell preferences, package managers) is your choice.
 
 Understanding what Clauderon does helps explain why these requirements exist:
 
-- Creates a Docker container or Kubernetes pod
+- Creates a Docker container
 - Runs `claude` (or `codex`) as the main command, wrapped in a shell script
 - Sets `HOME=/workspace` and mounts your session's git worktree there
 - Mounts cache volumes for Rust builds (`/workspace/.cargo/`, `/workspace/.cache/sccache/`)
-- Mounts configuration files to `/etc/clauderon/` (proxy CA cert, Codex/Talos configs)
 - Installs Claude Code hooks that report events back to the host via HTTP
-- Sets environment variables for proxy, git config, and credential placeholders
+- Sets environment variables for git config
 - Uses `--user $(id -u):$(id -g)` so files have correct ownership
 
 ## Core Requirements (REQUIRED)
@@ -39,7 +38,7 @@ These are hard requirements - without them, Clauderon sessions won't work.
 
 **Why**: Clauderon runs this as the container's main command.
 
-**Source**: `src/backends/docker.rs`, `src/backends/kubernetes.rs`
+**Source**: `src/backends/docker.rs`
 
 **What to do**: Install the Claude Code CLI or Codex CLI and ensure it's in PATH (typically `/usr/local/bin/claude` or `/usr/local/bin/codex`).
 
@@ -118,12 +117,6 @@ These are common assumptions that are actually wrong. Clauderon handles these fo
 **Don't**: Configure `host.docker.internal` resolution or add host entries.
 
 **Why**: Clauderon adds `--add-host host.docker.internal:host-gateway` automatically.
-
-### ❌ Proxy Setup
-
-**Don't**: Set `HTTP_PROXY`, `HTTPS_PROXY`, or `NO_PROXY` in your image.
-
-**Why**: Clauderon sets these environment variables dynamically based on proxy configuration.
 
 ### ❌ Volume/Cache Directories
 
@@ -227,18 +220,6 @@ For more complete examples, see [`examples/`](../examples/).
 2. Verify Clauderon mounted the parent `.git` directory correctly
 3. Check git config: `git config --list`
 
-### Proxy certificate errors (HTTPS requests fail)
-
-**Problem**: Tools don't respect the custom CA certificate.
-
-**Solution**: Clauderon sets these environment variables:
-
-- `SSL_CERT_FILE=/etc/clauderon/proxy-ca.pem`
-- `NODE_EXTRA_CA_CERTS=/etc/clauderon/proxy-ca.pem` (Node.js)
-- `REQUESTS_CA_BUNDLE=/etc/clauderon/proxy-ca.pem` (Python)
-
-Most tools respect these automatically. If a tool doesn't, configure it manually to trust `$SSL_CERT_FILE`.
-
 ### Cache volumes owned by root
 
 **Problem**: Docker creates named volumes as root:root, causing permission warnings.
@@ -247,7 +228,6 @@ Most tools respect these automatically. If a tool doesn't, configure it manually
 
 1. **Accept the warnings** (recommended) - Clauderon will work fine, you'll just see warnings
 2. Add `sudo` to your image and use it for cache writes (not recommended)
-3. Use an init container to fix permissions (Kubernetes only)
 
 ### "sccache: command not found" warnings
 
@@ -298,7 +278,6 @@ docker attach clauderon-test-session
 - [ ] Can create files and directories in `/workspace`
 - [ ] Environment variables are set (`echo $HOME`, `echo $CARGO_HOME`)
 - [ ] Hooks are working (check Clauderon logs for hook events)
-- [ ] Proxy works if enabled (test HTTPS requests)
 
 ## Advanced: Environment Variables Reference
 
@@ -325,30 +304,10 @@ Clauderon sets many environment variables. Your image doesn't need to set these 
 
 - `CODEX_HOME=/workspace/.codex`
 
-### Proxy (if enabled)
-
-- `HTTP_PROXY=http://host.docker.internal:{port}`
-- `HTTPS_PROXY=http://host.docker.internal:{port}`
-- `NO_PROXY=localhost,127.0.0.1,host.docker.internal`
-- `SSL_CERT_FILE=/etc/clauderon/proxy-ca.pem`
-- `NODE_EXTRA_CA_CERTS=/etc/clauderon/proxy-ca.pem`
-- `REQUESTS_CA_BUNDLE=/etc/clauderon/proxy-ca.pem`
-
-### Authentication (placeholder values, replaced by proxy)
-
-- `GH_TOKEN=clauderon-proxy`
-- `CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-clauderon-proxy-placeholder`
-- `OPENAI_API_KEY=sk-openai-clauderon-proxy-placeholder` (Codex)
-- `CODEX_API_KEY=sk-openai-clauderon-proxy-placeholder` (Codex)
-
 ### Session metadata
 
 - `CLAUDERON_SESSION_ID={uuid}` - Session ID for hook communication
 - `CLAUDERON_HTTP_PORT={port}` - HTTP port for hook communication
-
-### Talos (if Talos enabled)
-
-- `TALOSCONFIG=/etc/clauderon/talos/config`
 
 ## Advanced: Volume Mounts Reference
 
@@ -365,16 +324,6 @@ Clauderon mounts these volumes automatically. Don't pre-create them in your imag
 - `/workspace/.cargo/registry` - Rust crate downloads (named volume: `clauderon-cargo-registry`)
 - `/workspace/.cargo/git` - Rust git dependencies (named volume: `clauderon-cargo-git`)
 - `/workspace/.cache/sccache` - Compilation cache (named volume: `clauderon-sccache`)
-
-### Configuration mounts (read-only, if enabled)
-
-- `/etc/clauderon/proxy-ca.pem` - Proxy CA certificate
-- `/etc/clauderon/codex/` - Codex configuration directory
-- `/etc/clauderon/codex/auth.json` - Codex authentication
-- `/etc/clauderon/codex/config.toml` - Codex config
-- `/etc/clauderon/talos/` - Talos configuration directory
-- `/etc/clauderon/talos/config` - Talos config file
-- `/etc/claude-code/managed-settings.json` - Claude Code managed settings (proxy mode only)
 
 ### Permissions note
 

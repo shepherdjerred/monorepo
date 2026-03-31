@@ -66,7 +66,6 @@ async fn test_docker_session() {
 - `docker_available()` -- dependency check
 - `skip_if_no_docker!()` -- graceful skip
 - `init_git_repo(path)` -- git repo setup
-- `SpriteCleanupGuard` -- RAII cleanup via Drop
 
 ## Web (TypeScript/React)
 

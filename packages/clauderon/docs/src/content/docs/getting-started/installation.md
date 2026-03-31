@@ -45,12 +45,6 @@ sudo cp target/release/clauderon /usr/local/bin/
 ## Setup
 
 ```bash
-# Configure credentials
-mkdir -p ~/.clauderon/secrets
-echo "your-github-token" > ~/.clauderon/secrets/github_token
-echo "your-anthropic-token" > ~/.clauderon/secrets/anthropic_oauth_token
-chmod 600 ~/.clauderon/secrets/*
-
 # Start daemon
 clauderon daemon
 

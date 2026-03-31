@@ -8,8 +8,7 @@ description: Running sessions in Docker containers
 1. Creates a git worktree in `~/.clauderon/worktrees/<session-name>/`
 2. Creates a container with your specified image
 3. Mounts the worktree at `/workspace`
-4. Configures proxy env vars and CA certificate
-5. Starts the chosen agent with your prompt
+4. Starts the chosen agent with your prompt
 
 ## Creating Sessions
 
@@ -60,20 +59,9 @@ clauderon refresh <session-name>
 | Host Path                        | Container Path                        | Purpose           |
 | -------------------------------- | ------------------------------------- | ----------------- |
 | `~/.clauderon/worktrees/<name>/` | `/workspace`                          | Git worktree      |
-| `~/.clauderon/proxy-ca.pem`      | `/etc/clauderon/proxy-ca.pem`         | CA certificate    |
 | `~/.clauderon/claude.json`       | `/workspace/.claude.json`             | Claude onboarding |
 | `~/.clauderon/uploads/<id>/`     | `/workspace/.clauderon/uploads/<id>/` | Uploaded images   |
 | `~/.clauderon/hooks/`            | `/workspace/.clauderon/hooks/`        | Claude Code hooks |
-
-## Environment Variables
-
-| Variable              | Value                                | Purpose         |
-| --------------------- | ------------------------------------ | --------------- |
-| `HTTP_PROXY`          | `http://host.docker.internal:<port>` | Proxy for HTTP  |
-| `HTTPS_PROXY`         | `http://host.docker.internal:<port>` | Proxy for HTTPS |
-| `SSL_CERT_FILE`       | `/etc/clauderon/proxy-ca.pem`        | CA certificate  |
-| `NODE_EXTRA_CA_CERTS` | `/etc/clauderon/proxy-ca.pem`        | CA for Node.js  |
-| `REQUESTS_CA_BUNDLE`  | `/etc/clauderon/proxy-ca.pem`        | CA for Python   |
 
 ## Custom Images
 
@@ -85,5 +73,5 @@ Any Docker image works if it has a shell, curl/wget, and git. Claude Code is aut
 | --------------------- | ----------------------------------------------------------------------------- |
 | Permission denied     | `sudo usermod -aG docker $USER && newgrp docker`                              |
 | Container won't start | `docker info` to check Docker; `docker ps -a \| grep clauderon` for conflicts |
-| Network issues        | `curl -x http://localhost:3030 https://api.anthropic.com` to test proxy       |
+| Network issues        | Check container network connectivity and DNS resolution                       |
 | Out of disk space     | `docker system df` then `docker system prune -a`                              |

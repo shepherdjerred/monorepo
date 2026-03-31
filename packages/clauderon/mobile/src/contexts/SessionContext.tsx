@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
-import type { Session, CreateSessionRequest, AccessMode } from "../types/generated";
+import type { Session, CreateSessionRequest } from "../types/generated";
 import { ClauderonClient } from "../api/ClauderonClient";
 import type { SessionEvent } from "../api/EventsClient";
 import { EventsClient } from "../api/EventsClient";
@@ -16,7 +16,6 @@ type SessionContextValue = {
   archiveSession: (id: string) => Promise<void>;
   unarchiveSession: (id: string) => Promise<void>;
   refreshSession: (id: string) => Promise<void>;
-  updateAccessMode: (id: string, mode: AccessMode) => Promise<void>;
   refreshSessions: () => Promise<void>;
 };
 
@@ -196,22 +195,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     [client],
   );
 
-  const updateAccessMode = useCallback(
-    async (id: string, mode: AccessMode): Promise<void> => {
-      if (!client) {
-        throw new Error("No daemon URL configured");
-      }
-
-      try {
-        await client.updateAccessMode(id, mode);
-      } catch (error_) {
-        setError(error_ instanceof Error ? error_ : new Error("Failed to update access mode"));
-        throw error_;
-      }
-    },
-    [client],
-  );
-
   const value: SessionContextValue = {
     sessions,
     isLoading,
@@ -222,7 +205,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     archiveSession,
     unarchiveSession,
     refreshSession,
-    updateAccessMode,
     refreshSessions,
   };
 

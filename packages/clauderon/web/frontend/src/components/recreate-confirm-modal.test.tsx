@@ -12,8 +12,6 @@ function getStateDisplay(state: ResourceState): {
       return { label: "OK", color: "text-green-600" };
     case "Stopped":
       return { label: "Stopped", color: "text-yellow-600" };
-    case "Hibernated":
-      return { label: "Hibernated", color: "text-blue-600" };
     case "Pending":
       return { label: "Pending", color: "text-yellow-600" };
     case "Missing":
@@ -40,8 +38,6 @@ function getActionDetails(action: AvailableAction): {
   switch (action) {
     case AvailableAction.Start:
       return { label: "Start", variant: "brutalist" };
-    case AvailableAction.Wake:
-      return { label: "Wake", variant: "brutalist" };
     case AvailableAction.Recreate:
       return { label: "Recreate", variant: "brutalist" };
     case AvailableAction.RecreateFresh:
@@ -86,12 +82,6 @@ describe("RecreateConfirmModal helpers", () => {
       expect(display.color).toBe("text-yellow-600");
     });
 
-    test("returns correct display for Hibernated state", () => {
-      const display = getStateDisplay({ type: "Hibernated" });
-      expect(display.label).toBe("Hibernated");
-      expect(display.color).toBe("text-blue-600");
-    });
-
     test("returns correct display for Missing state", () => {
       const display = getStateDisplay({ type: "Missing" });
       expect(display.label).toBe("Missing");
@@ -116,7 +106,7 @@ describe("RecreateConfirmModal helpers", () => {
     test("returns correct display for DataLost state", () => {
       const display = getStateDisplay({
         type: "DataLost",
-        reason: "PVC deleted",
+        reason: "Volume deleted",
       });
       expect(display.label).toBe("Data Lost");
       expect(display.color).toBe("text-red-600");
@@ -127,12 +117,6 @@ describe("RecreateConfirmModal helpers", () => {
     test("returns correct details for Start action", () => {
       const details = getActionDetails(AvailableAction.Start);
       expect(details.label).toBe("Start");
-      expect(details.variant).toBe("brutalist");
-    });
-
-    test("returns correct details for Wake action", () => {
-      const details = getActionDetails(AvailableAction.Wake);
-      expect(details.label).toBe("Wake");
       expect(details.variant).toBe("brutalist");
     });
 
@@ -181,19 +165,9 @@ describe("RecreateConfirmModal action availability", () => {
     expect(report.available_actions).not.toContain(AvailableAction.Start);
   });
 
-  test("hibernated sprite offers Wake and Recreate", () => {
-    const report = createMockHealthReport({
-      backend_type: BackendType.Sprites,
-      state: { type: "Hibernated" },
-      available_actions: [AvailableAction.Wake, AvailableAction.Recreate],
-    });
-    expect(report.available_actions).toContain(AvailableAction.Wake);
-    expect(report.available_actions).toContain(AvailableAction.Recreate);
-  });
-
   test("data lost offers Cleanup and RecreateFresh", () => {
     const report = createMockHealthReport({
-      state: { type: "DataLost", reason: "PVC was deleted" },
+      state: { type: "DataLost", reason: "Volume was deleted" },
       available_actions: [
         AvailableAction.Cleanup,
         AvailableAction.RecreateFresh,
@@ -240,25 +214,6 @@ describe("RecreateConfirmModal data safety", () => {
     expect(report.data_safe).toBe(true);
   });
 
-  test("Kubernetes recreate is data safe when PVC exists", () => {
-    const report = createMockHealthReport({
-      backend_type: BackendType.Kubernetes,
-      state: { type: "Missing" },
-      data_safe: true,
-      description: "Pod not found. Your code is safe (stored in PVC).",
-    });
-    expect(report.data_safe).toBe(true);
-  });
-
-  test("Kubernetes PVC deleted is not data safe", () => {
-    const report = createMockHealthReport({
-      backend_type: BackendType.Kubernetes,
-      state: { type: "DataLost", reason: "PVC was deleted" },
-      data_safe: false,
-    });
-    expect(report.data_safe).toBe(false);
-  });
-
   test("Zellij recreate is data safe", () => {
     const report = createMockHealthReport({
       backend_type: BackendType.Zellij,
@@ -270,14 +225,4 @@ describe("RecreateConfirmModal data safety", () => {
     expect(report.data_safe).toBe(true);
   });
 
-  test("Sprites with auto_destroy is not data safe", () => {
-    const report = createMockHealthReport({
-      backend_type: BackendType.Sprites,
-      state: { type: "Stopped" },
-      data_safe: false,
-      description:
-        "Sprite stopped with auto_destroy enabled. Data would be lost.",
-    });
-    expect(report.data_safe).toBe(false);
-  });
 });

@@ -1,6 +1,6 @@
 import type { SessionModel } from "@clauderon/client";
 import type { FeatureFlags } from "@clauderon/shared";
-import { AgentType, BackendType, AccessMode } from "@clauderon/shared";
+import { AgentType, BackendType } from "@clauderon/shared";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -9,9 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Check, AlertCircle } from "lucide-react";
 import { ProviderIcon } from "./provider-icon.tsx";
-import { AGENT_CAPABILITIES } from "@/lib/agent-features";
 import type { getModelsForAgent } from "@/lib/model-options";
 import type { SessionFormData } from "./advanced-container-settings.tsx";
 
@@ -19,9 +17,7 @@ function toBackendType(value: string): BackendType | undefined {
   const map: Record<string, BackendType> = {
     [BackendType.Docker]: BackendType.Docker,
     [BackendType.Zellij]: BackendType.Zellij,
-    [BackendType.Kubernetes]: BackendType.Kubernetes,
-    [BackendType.Sprites]: BackendType.Sprites,
-    [BackendType.AppleContainer]: BackendType.AppleContainer,
+    [BackendType.AiSandbox]: BackendType.AiSandbox,
   };
   return map[value];
 }
@@ -31,14 +27,6 @@ function toAgentType(value: string): AgentType | undefined {
     [AgentType.ClaudeCode]: AgentType.ClaudeCode,
     [AgentType.Codex]: AgentType.Codex,
     [AgentType.Gemini]: AgentType.Gemini,
-  };
-  return map[value];
-}
-
-function toAccessMode(value: string): AccessMode | undefined {
-  const map: Record<string, AccessMode> = {
-    [AccessMode.ReadOnly]: AccessMode.ReadOnly,
-    [AccessMode.ReadWrite]: AccessMode.ReadWrite,
   };
   return map[value];
 }
@@ -54,7 +42,6 @@ type AgentModelSelectorProps = {
   formData: SessionFormData;
   setFormData: React.Dispatch<React.SetStateAction<SessionFormData>>;
   featureFlags: FeatureFlags | null;
-  enableReadonlyMode: boolean;
   availableModels: ReturnType<typeof getModelsForAgent>;
 };
 
@@ -62,7 +49,6 @@ export function AgentModelSelector({
   formData,
   setFormData,
   featureFlags,
-  enableReadonlyMode,
   availableModels,
 }: AgentModelSelectorProps) {
   return (
@@ -85,10 +71,7 @@ export function AgentModelSelector({
           >
             <option value="Docker">Docker</option>
             <option value="Zellij">Zellij</option>
-            {featureFlags?.enable_kubernetes_backend === true && (
-              <option value="Kubernetes">Kubernetes</option>
-            )}
-            <option value="Sprites">Sprites</option>
+            <option value="AiSandbox">AI Sandbox</option>
           </select>
         </div>
 
@@ -176,87 +159,8 @@ export function AgentModelSelector({
           </select>
         </div>
 
-        {enableReadonlyMode && (
-          <div className="space-y-2">
-            <Label htmlFor="access_mode" className="font-semibold">
-              Access Mode
-              <span className="ml-2 text-xs text-yellow-600 font-bold">
-                EXPERIMENTAL
-              </span>
-            </Label>
-            <select
-              id="access_mode"
-              value={formData.access_mode}
-              onChange={(e) => {
-                const accessMode = toAccessMode(e.target.value);
-                if (accessMode != null) {
-                  setFormData({ ...formData, access_mode: accessMode });
-                }
-              }}
-              className="cursor-pointer flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option value="ReadWrite">Read-Write</option>
-              <option value="ReadOnly">Read-Only</option>
-            </select>
-          </div>
-        )}
       </div>
 
-      {/* Agent Capabilities Info */}
-      {formData.agent in AGENT_CAPABILITIES && (
-        <div
-          className="mt-2 p-3 border-2 text-sm"
-          style={{
-            backgroundColor: "hsl(220, 15%, 98%)",
-            borderColor: "hsl(220, 85%, 65%)",
-            color: "hsl(220, 85%, 20%)",
-          }}
-        >
-          <p className="font-semibold font-mono mb-2">
-            {AGENT_CAPABILITIES[formData.agent].displayName} Capabilities:
-          </p>
-          <ul className="space-y-1.5 pl-1">
-            {AGENT_CAPABILITIES[formData.agent].features.map((feature, idx) => (
-              <li key={idx} className="flex items-start gap-2">
-                {feature.supported ? (
-                  <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                ) : (
-                  <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
-                )}
-                <div className="flex-1">
-                  <span
-                    className={
-                      feature.supported ? "text-green-900" : "text-yellow-900"
-                    }
-                  >
-                    {feature.name}
-                  </span>
-                  {feature.note != null && feature.note.length > 0 && (
-                    <span className="text-xs block text-muted-foreground mt-0.5">
-                      {feature.note}
-                    </span>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {formData.backend === BackendType.Kubernetes && (
-        <div
-          className="mt-2 p-3 border-2 text-sm font-mono"
-          style={{
-            backgroundColor: "hsl(220, 15%, 90%)",
-            borderColor: "hsl(220, 85%, 65%)",
-            color: "hsl(220, 85%, 25%)",
-          }}
-        >
-          <strong>Note:</strong> Requires kubectl access and the{" "}
-          <code>clauderon</code> namespace. Configuration:{" "}
-          <code>~/.clauderon/k8s-config.toml</code>
-        </div>
-      )}
     </>
   );
 }

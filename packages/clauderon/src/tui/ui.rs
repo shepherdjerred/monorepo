@@ -295,12 +295,8 @@ fn render_help(frame: &mut Frame<'_>, app: &App, area: Rect) {
             ];
 
             match session.backend {
-                BackendType::Zellij => vec![("Ctrl+O, d", "Detach from session")],
-                BackendType::Docker | BackendType::Kubernetes | BackendType::Sprites => {
-                    container_hints
-                }
-                #[cfg(target_os = "macos")]
-                BackendType::AppleContainer => container_hints,
+                BackendType::Zellij | BackendType::AiSandbox => vec![("Ctrl+O, d", "Detach from session")],
+                BackendType::Docker => container_hints,
             }
         },
     );

@@ -7,7 +7,6 @@ type RecreateModalWrapperProps = {
   healthReport: SessionHealthReport;
   onOpenChange: (open: boolean) => void;
   startSession: (id: string) => Promise<void>;
-  wakeSession: (id: string) => Promise<void>;
   recreateSession: (id: string) => Promise<void>;
   refreshSession: (id: string) => Promise<void>;
   cleanupSession: (id: string) => Promise<void>;
@@ -34,7 +33,6 @@ export function RecreateModalWrapper({
   healthReport,
   onOpenChange,
   startSession,
-  wakeSession,
   recreateSession,
   refreshSession,
   cleanupSession,
@@ -51,14 +49,6 @@ export function RecreateModalWrapper({
           session.name,
           "started",
           "start",
-        );
-      }}
-      onWake={() => {
-        void toastAction(
-          wakeSession(session.id),
-          session.name,
-          "is waking up",
-          "wake",
         );
       }}
       onRecreate={() => {

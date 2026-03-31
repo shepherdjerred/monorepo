@@ -332,7 +332,6 @@ fn health_display(state: &ResourceState) -> (&'static str, Color) {
     match state {
         ResourceState::Healthy => ("OK", Color::Green),
         ResourceState::Stopped => ("Stopped", Color::Yellow),
-        ResourceState::Hibernated => ("Hibernated", Color::Cyan),
         ResourceState::Pending => ("Pending", Color::Yellow),
         ResourceState::Missing => ("Missing", Color::Red),
         ResourceState::Error { .. } => ("Error", Color::Red),
@@ -501,12 +500,7 @@ pub fn render(frame: &mut Frame<'_>, app: &App, area: Rect) {
                 Span::raw(" ")
             };
 
-            // Copy-creds mode indicator (degraded status tracking)
-            let copycreds_indicator = if session.dangerous_copy_creds {
-                Span::styled("🔓", Style::default().fg(Color::Yellow))
-            } else {
-                Span::raw("  ")
-            };
+            let copycreds_indicator = Span::raw("  ");
 
             let backend_text = format!("{:?}", session.backend);
             let _agent_text = match session.agent {

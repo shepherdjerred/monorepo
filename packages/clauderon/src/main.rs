@@ -19,7 +19,6 @@ clauderon manages isolated sessions for AI coding agents like Claude Code.
 It provides:
   - Session lifecycle management (create, list, attach, archive, delete)
   - Multiple backends (Zellij terminal multiplexer, Docker containers)
-  - Credential proxy for secure API access
   - Real-time session monitoring via TUI or web UI
 
 The daemon runs in the background and handles all session operations.
@@ -39,25 +38,6 @@ ENVIRONMENT VARIABLES:
                                 Example: http://192.168.1.100:3030
     CLAUDERON_RP_ID             WebAuthn RP ID (default: hostname from ORIGIN)
 
-    Credentials (env var or file in ~/.clauderon/secrets/):
-        GH_TOKEN                GitHub API token
-        CLAUDE_CODE_OAUTH_TOKEN Anthropic OAuth token
-        OPENAI_API_KEY          OpenAI API key
-        CODEX_API_KEY           Codex API key (alias of OPENAI_API_KEY)
-        PAGERDUTY_TOKEN         PagerDuty API token
-        SENTRY_AUTH_TOKEN       Sentry authentication token
-        GRAFANA_API_KEY         Grafana API key
-        NPM_TOKEN               npm registry token
-        DOCKER_TOKEN            Docker registry token
-        K8S_TOKEN               Kubernetes token
-        TALOS_TOKEN             Talos OS token
-    Codex auth (env var or ~/.codex/auth.json):
-        CODEX_ACCESS_TOKEN      Codex access token
-        CODEX_REFRESH_TOKEN     Codex refresh token
-        CODEX_ID_TOKEN          Codex ID token
-        CODEX_ACCOUNT_ID        ChatGPT account ID (optional)
-        CODEX_AUTH_JSON_PATH    Override ~/.codex/auth.json path
-
 FILE LOCATIONS:
     ~/.clauderon/               Base directory for all data
     ~/.clauderon/db.sqlite      Session database (SQLite)
@@ -66,16 +46,6 @@ FILE LOCATIONS:
     ~/.clauderon/worktrees/     Git worktrees for sessions
     ~/.clauderon/logs/          Log files (daily rotation)
     ~/.clauderon/config.toml    Main configuration file
-    ~/.clauderon/proxy.toml     Proxy service configuration
-    ~/.clauderon/audit.jsonl    HTTP proxy audit log
-    ~/.clauderon/secrets/       Credential files directory
-
-PROXY CONFIGURATION (~/.clauderon/proxy.toml):
-    secrets_dir                 Credential files directory (default: ~/.clauderon/secrets)
-    talos_gateway_port          Talos mTLS gateway port (default: 18082)
-    audit_enabled               Enable audit logging (default: true)
-    audit_log_path              Audit log file path
-    codex_auth_json_path        Path to host Codex auth.json (default: ~/.codex/auth.json)
 
 Use 'clauderon <command> --help' for command-specific information.
 Use 'clauderon config' to inspect current configuration and paths.")]
@@ -92,11 +62,8 @@ enum Commands {
     /// It is automatically spawned when needed, but can be started manually.
     #[command(after_help = "\
 EXAMPLES:
-    # Start daemon with defaults (proxy enabled, HTTP on port 3030)
+    # Start daemon with defaults (HTTP on port 3030)
     clauderon daemon
-
-    # Start daemon without proxy services
-    clauderon daemon --no-proxy
 
     # Start daemon with HTTP server disabled
     clauderon daemon --http-port 0
@@ -117,10 +84,6 @@ ENVIRONMENT:
     CLAUDERON_RP_ID       WebAuthn RP ID (default: hostname from ORIGIN)
     CLAUDERON_LOG_FORMAT  Log format: 'text' (default) or 'json' for structured logs")]
     Daemon {
-        /// Disable proxy services (credential injection, TLS interception)
-        #[arg(long, default_value = "false")]
-        no_proxy: bool,
-
         /// HTTP server port for web UI and API (0 to disable)
         #[arg(long, default_value = "3030")]
         http_port: u16,
@@ -177,16 +140,10 @@ ENVIRONMENT:
         enable_ai_metadata: Option<bool>,
 
         /// [default: true] Enable automatic session reconciliation on startup.
-        /// Syncs database state with actual backend resources (containers, pods, etc).
+        /// Syncs database state with actual backend resources (containers).
         /// Env: CLAUDERON_FEATURE_ENABLE_AUTO_RECONCILE
         #[arg(long, help_heading = "Feature Flags")]
         enable_auto_reconcile: Option<bool>,
-
-        /// [default: false] Enable proxy port reuse across sessions (experimental).
-        /// Reduces port allocation but may cause conflicts.
-        /// Env: CLAUDERON_FEATURE_ENABLE_PROXY_PORT_REUSE
-        #[arg(long, help_heading = "Feature Flags")]
-        enable_proxy_port_reuse: Option<bool>,
 
         /// [default: false] Enable Claude API usage tracking.
         /// Records token usage and costs per session.
@@ -194,22 +151,11 @@ ENVIRONMENT:
         #[arg(long, help_heading = "Feature Flags")]
         enable_usage_tracking: Option<bool>,
 
-        /// [default: false] Enable Kubernetes backend (experimental).
-        /// Allows running sessions as pods in a K8s cluster.
-        /// Requires: kubectl configured, namespace created, storage class available.
-        /// Env: CLAUDERON_FEATURE_ENABLE_KUBERNETES_BACKEND
-        #[arg(long, help_heading = "Feature Flags")]
-        enable_kubernetes_backend: Option<bool>,
-
         /// [default: false] Enable experimental AI models (Codex, Gemini).
         /// Env: CLAUDERON_FEATURE_ENABLE_EXPERIMENTAL_MODELS
         #[arg(long, help_heading = "Feature Flags")]
         enable_experimental_models: Option<bool>,
 
-        /// [default: false] Enable read-only mode (experimental, security issues #424, #205).
-        /// Env: CLAUDERON_FEATURE_ENABLE_READONLY_MODE
-        #[arg(long, help_heading = "Feature Flags")]
-        enable_readonly_mode: Option<bool>,
     },
 
     /// Launch the terminal UI
@@ -233,7 +179,7 @@ KEYBOARD SHORTCUTS:
     /// Create a new session
     ///
     /// Creates an isolated git worktree and launches an AI coding agent.
-    /// The session runs in the specified backend with proxy credential injection.
+    /// The session runs in the specified backend.
     #[command(after_help = "\
 EXAMPLES:
     # Create a basic session
@@ -279,21 +225,9 @@ BACKENDS:
         #[arg(long, default_value = "false")]
         dangerous_skip_checks: bool,
 
-        /// Copy real credentials to remote backends (dangerous)
-        ///
-        /// For remote backends (Sprites, Kubernetes): injects real API tokens.
-        /// WARNING: This exposes your tokens to the remote environment.
-        /// Only use when daemon_address is not configured.
-        #[arg(long, default_value = "false")]
-        dangerous_copy_creds: bool,
-
         /// Non-interactive print mode (outputs response and exits)
         #[arg(long, default_value = "false")]
         print: bool,
-
-        /// Access mode: 'read-only' or 'read-write' (default)
-        #[arg(long, default_value = "read-write", value_parser = ["read-only", "read-write"])]
-        access_mode: String,
 
         /// Skip plan mode (start directly in implementation mode)
         #[arg(long, default_value = "false")]
@@ -420,23 +354,6 @@ EXAMPLES:
     },
 
     /// Update session access mode
-    ///
-    /// Changes the HTTP proxy filtering mode for a session.
-    #[command(after_help = "\
-EXAMPLES:
-    # Switch to read-only mode (safer)
-    clauderon set-access-mode my-session --mode read-only
-
-    # Switch to read-write mode (allows commits, PRs)
-    clauderon set-access-mode my-session --mode read-write")]
-    SetAccessMode {
-        /// Session name or UUID
-        session: String,
-
-        /// Access mode: 'read-only' or 'read-write'
-        #[arg(long, value_parser = ["read-only", "read-write"])]
-        mode: String,
-    },
 
     /// Reconcile database state with actual backends
     ///
@@ -476,7 +393,7 @@ VOLUMES REMOVED:
 
     /// Show configuration, paths, and environment info
     ///
-    /// Inspect current runtime configuration and credential status.
+    /// Inspect current runtime configuration.
     #[command(subcommand)]
     Config(ConfigCommands),
 }
@@ -507,14 +424,6 @@ EXAMPLES:
 EXAMPLES:
     clauderon config env")]
     Env,
-
-    /// Show credential status
-    ///
-    /// Lists all credentials with their source (env var, file, or missing).
-    #[command(after_help = "\
-EXAMPLES:
-    clauderon config credentials")]
-    Credentials,
 }
 
 #[tokio::main]
@@ -566,7 +475,6 @@ async fn main() -> anyhow::Result<()> {
 
     match cli.command {
         Commands::Daemon {
-            no_proxy,
             http_port,
             dev,
             bind_addr,
@@ -576,22 +484,16 @@ async fn main() -> anyhow::Result<()> {
             enable_webauthn_auth,
             enable_ai_metadata,
             enable_auto_reconcile,
-            enable_proxy_port_reuse,
             enable_usage_tracking,
-            enable_kubernetes_backend,
             enable_experimental_models,
-            enable_readonly_mode,
         } => {
             // Build CLI feature flag overrides
             let cli_flags = clauderon::feature_flags::CliFeatureFlags {
                 enable_webauthn_auth,
                 enable_ai_metadata,
                 enable_auto_reconcile,
-                enable_proxy_port_reuse,
                 enable_usage_tracking,
-                enable_kubernetes_backend,
                 enable_experimental_models,
-                enable_readonly_mode,
             };
 
             // Build CLI server config overrides
@@ -612,7 +514,7 @@ async fn main() -> anyhow::Result<()> {
 
             let port = if http_port > 0 { Some(http_port) } else { None };
             let dev_mode = dev || std::env::var("CLAUDERON_DEV").is_ok();
-            api::server::run_daemon_with_http(!no_proxy, port, dev_mode, flags, server_config)
+            api::server::run_daemon_with_http(port, dev_mode, flags, server_config)
                 .await?;
         }
         Commands::Tui => {
@@ -624,9 +526,7 @@ async fn main() -> anyhow::Result<()> {
             backend,
             agent,
             dangerous_skip_checks,
-            dangerous_copy_creds,
             print,
-            access_mode,
             no_plan_mode,
             image,
             pull_policy,
@@ -636,17 +536,9 @@ async fn main() -> anyhow::Result<()> {
             let backend_type = match backend.to_lowercase().as_str() {
                 "zellij" => core::session::BackendType::Zellij,
                 "docker" => core::session::BackendType::Docker,
-                "kubernetes" | "k8s" => core::session::BackendType::Kubernetes,
-                "sprites" => core::session::BackendType::Sprites,
-                #[cfg(target_os = "macos")]
-                "apple" | "apple-container" => core::session::BackendType::AppleContainer,
+                "ai-sandbox" => core::session::BackendType::AiSandbox,
                 _ => anyhow::bail!(
-                    "Unknown backend: {backend}. Use 'zellij', 'docker', 'kubernetes', 'sprites'{}",
-                    if cfg!(target_os = "macos") {
-                        ", or 'apple'"
-                    } else {
-                        ""
-                    }
+                    "Unknown backend: {backend}. Use 'zellij', 'docker', or 'ai-sandbox'"
                 ),
             };
 
@@ -656,18 +548,6 @@ async fn main() -> anyhow::Result<()> {
                 "gemini" => core::session::AgentType::Gemini,
                 _ => anyhow::bail!("Unknown agent: {agent}. Use 'claude', 'codex', or 'gemini'"),
             };
-
-            let access_mode = access_mode.parse::<core::session::AccessMode>()?;
-
-            // Validate read-only mode is enabled if requested
-            if access_mode == core::session::AccessMode::ReadOnly {
-                let flags = clauderon::feature_flags::FeatureFlags::load(None)?;
-                if !flags.enable_readonly_mode {
-                    anyhow::bail!(
-                        "Read-only mode is not available. Enable with --enable-readonly-mode or CLAUDERON_FEATURE_ENABLE_READONLY_MODE=true"
-                    );
-                }
-            }
 
             let mut client = api::client::Client::connect().await?;
             let (session, warnings) = client
@@ -679,10 +559,8 @@ async fn main() -> anyhow::Result<()> {
                     agent: agent_type,
                     model: None, // CLI doesn't support model selection yet
                     dangerous_skip_checks,
-                    dangerous_copy_creds,
                     print_mode: print,
                     plan_mode: !no_plan_mode,
-                    access_mode,
                     images: vec![],
                     container_image: image,
                     pull_policy,
@@ -749,23 +627,6 @@ async fn main() -> anyhow::Result<()> {
             let mut client = api::client::Client::connect().await?;
             client.delete_session(&session).await?;
             println!("Deleted session: {session}");
-        }
-        Commands::SetAccessMode { session, mode } => {
-            let access_mode = mode.parse::<core::session::AccessMode>()?;
-
-            // Validate read-only mode is enabled if requested
-            if access_mode == core::session::AccessMode::ReadOnly {
-                let flags = clauderon::feature_flags::FeatureFlags::load(None)?;
-                if !flags.enable_readonly_mode {
-                    anyhow::bail!(
-                        "Read-only mode is not available. Enable with --enable-readonly-mode or CLAUDERON_FEATURE_ENABLE_READONLY_MODE=true"
-                    );
-                }
-            }
-
-            let mut client = api::client::Client::connect().await?;
-            client.update_access_mode(&session, access_mode).await?;
-            println!("Updated '{session}' to {access_mode}");
         }
         Commands::Reconcile => {
             let mut client = api::client::Client::connect().await?;
@@ -1009,11 +870,6 @@ fn handle_config_command(cmd: &ConfigCommands) {
             print_path("Log file", &utils::paths::log_path());
             print_path("Config file", &utils::paths::config_path());
 
-            let home = dirs::home_dir().unwrap_or_default();
-            print_path("Proxy config", &home.join(".clauderon/proxy.toml"));
-            print_path("Audit log", &home.join(".clauderon/audit.jsonl"));
-            print_path("Secrets directory", &home.join(".clauderon/secrets"));
-            print_path("Codex auth.json", &codex_auth_json_path());
             println!();
 
             // Key environment variables
@@ -1022,47 +878,9 @@ fn handle_config_command(cmd: &ConfigCommands) {
             print_env("CLAUDERON_BIND_ADDR", Some("127.0.0.1"));
             print_env("VISUAL", None);
             print_env("EDITOR", None);
-            println!();
-
-            // Credential summary
-            println!("CREDENTIALS:");
-            let secrets_dir = home.join(".clauderon/secrets");
-            print_credential_status("GitHub", "GH_TOKEN", "github_token", &secrets_dir);
-            print_credential_status(
-                "Anthropic",
-                "CLAUDE_CODE_OAUTH_TOKEN",
-                "anthropic_oauth_token",
-                &secrets_dir,
-            );
-            print_credential_status("OpenAI", "OPENAI_API_KEY", "openai_api_key", &secrets_dir);
-            print_codex_credential_status(&codex_auth_json_path());
-            print_credential_status(
-                "PagerDuty",
-                "PAGERDUTY_TOKEN",
-                "pagerduty_token",
-                &secrets_dir,
-            );
-            print_credential_status(
-                "Sentry",
-                "SENTRY_AUTH_TOKEN",
-                "sentry_auth_token",
-                &secrets_dir,
-            );
-            print_credential_status(
-                "Grafana",
-                "GRAFANA_API_KEY",
-                "grafana_api_key",
-                &secrets_dir,
-            );
-            print_credential_status("npm", "NPM_TOKEN", "npm_token", &secrets_dir);
-            print_credential_status("Docker", "DOCKER_TOKEN", "docker_token", &secrets_dir);
-            print_credential_status("Kubernetes", "K8S_TOKEN", "k8s_token", &secrets_dir);
-            print_credential_status("Talos", "TALOS_TOKEN", "talos_token", &secrets_dir);
         }
         ConfigCommands::Paths => {
             println!("clauderon file paths\n");
-
-            let home = dirs::home_dir().unwrap_or_default();
 
             println!("CORE:");
             print_path("Base directory", &utils::paths::base_dir());
@@ -1077,13 +895,6 @@ fn handle_config_command(cmd: &ConfigCommands) {
             println!("DATA:");
             print_path("Worktrees", &utils::paths::worktrees_dir());
             print_path("Logs", &utils::paths::log_path());
-            print_path("Audit log", &home.join(".clauderon/audit.jsonl"));
-            println!();
-
-            println!("CONFIGURATION:");
-            print_path("Proxy config", &home.join(".clauderon/proxy.toml"));
-            print_path("Secrets directory", &home.join(".clauderon/secrets"));
-            print_path("Codex auth.json", &codex_auth_json_path());
         }
         ConfigCommands::Env => {
             println!("clauderon environment variables\n");
@@ -1106,84 +917,6 @@ fn handle_config_command(cmd: &ConfigCommands) {
                 "CLAUDERON_RP_ID",
                 "WebAuthn relying party ID",
                 Some("localhost"),
-            );
-            println!();
-
-            println!("CREDENTIALS:");
-            print_env_detailed("GH_TOKEN", "GitHub API token", None);
-            print_env_detailed("CLAUDE_CODE_OAUTH_TOKEN", "Anthropic OAuth token", None);
-            print_env_detailed("OPENAI_API_KEY", "OpenAI API key", None);
-            print_env_detailed(
-                "CODEX_API_KEY",
-                "Codex API key (alias of OPENAI_API_KEY)",
-                None,
-            );
-            print_env_detailed("PAGERDUTY_TOKEN", "PagerDuty API token", None);
-            print_env_detailed("SENTRY_AUTH_TOKEN", "Sentry auth token", None);
-            print_env_detailed("GRAFANA_API_KEY", "Grafana API key", None);
-            print_env_detailed("NPM_TOKEN", "npm registry token", None);
-            print_env_detailed("DOCKER_TOKEN", "Docker registry token", None);
-            print_env_detailed("K8S_TOKEN", "Kubernetes token", None);
-            print_env_detailed("TALOS_TOKEN", "Talos OS token", None);
-            println!();
-            println!("CODEX AUTH:");
-            print_env_detailed("CODEX_ACCESS_TOKEN", "Codex access token", None);
-            print_env_detailed("CODEX_REFRESH_TOKEN", "Codex refresh token", None);
-            print_env_detailed("CODEX_ID_TOKEN", "Codex ID token", None);
-            print_env_detailed("CODEX_ACCOUNT_ID", "ChatGPT account ID (optional)", None);
-            print_env_detailed(
-                "CODEX_AUTH_JSON_PATH",
-                "Override ~/.codex/auth.json path",
-                None,
-            );
-        }
-        ConfigCommands::Credentials => {
-            println!("clauderon credential status\n");
-
-            let home = dirs::home_dir().unwrap_or_default();
-            let secrets_dir = home.join(".clauderon/secrets");
-
-            println!("{:<20} {:<12} {:<30}", "SERVICE", "STATUS", "SOURCE");
-            println!("{}", "-".repeat(62));
-
-            print_credential_row("GitHub", "GH_TOKEN", "github_token", &secrets_dir);
-            print_credential_row(
-                "Anthropic",
-                "CLAUDE_CODE_OAUTH_TOKEN",
-                "anthropic_oauth_token",
-                &secrets_dir,
-            );
-            print_credential_row("OpenAI", "OPENAI_API_KEY", "openai_api_key", &secrets_dir);
-            print_codex_credential_row(&codex_auth_json_path());
-            print_credential_row(
-                "PagerDuty",
-                "PAGERDUTY_TOKEN",
-                "pagerduty_token",
-                &secrets_dir,
-            );
-            print_credential_row(
-                "Sentry",
-                "SENTRY_AUTH_TOKEN",
-                "sentry_auth_token",
-                &secrets_dir,
-            );
-            print_credential_row(
-                "Grafana",
-                "GRAFANA_API_KEY",
-                "grafana_api_key",
-                &secrets_dir,
-            );
-            print_credential_row("npm", "NPM_TOKEN", "npm_token", &secrets_dir);
-            print_credential_row("Docker", "DOCKER_TOKEN", "docker_token", &secrets_dir);
-            print_credential_row("Kubernetes", "K8S_TOKEN", "k8s_token", &secrets_dir);
-            print_credential_row("Talos", "TALOS_TOKEN", "talos_token", &secrets_dir);
-
-            println!();
-            println!("Credentials are loaded from environment variables first,");
-            println!("then from files in {}", secrets_dir.display());
-            println!(
-                "Codex auth tokens are loaded from env or {}",
-                codex_auth_json_path().display()
             );
         }
     }
@@ -1235,97 +968,3 @@ fn print_env_detailed(name: &str, description: &str, default: Option<&str>) {
     println!("        {description}");
 }
 
-fn print_credential_status(
-    service: &str,
-    env_var: &str,
-    file_name: &str,
-    secrets_dir: &std::path::Path,
-) {
-    let from_env = std::env::var(env_var).is_ok();
-    let from_file = secrets_dir.join(file_name).exists();
-
-    let status = if from_env {
-        "from env"
-    } else if from_file {
-        "from file"
-    } else {
-        "missing"
-    };
-
-    let marker = if from_env || from_file { "+" } else { "-" };
-    println!("    [{marker}] {service:<20} ({status})");
-}
-
-fn print_credential_row(
-    service: &str,
-    env_var: &str,
-    file_name: &str,
-    secrets_dir: &std::path::Path,
-) {
-    let from_env = std::env::var(env_var).is_ok();
-    let file_path = secrets_dir.join(file_name);
-    let from_file = file_path.exists();
-
-    let (status, source) = if from_env {
-        ("loaded", format!("env:{env_var}"))
-    } else if from_file {
-        ("loaded", format!("file:{}", file_path.display()))
-    } else {
-        ("missing", "-".to_owned())
-    };
-
-    println!("{service:<20} {status:<12} {source:<30}");
-}
-
-fn codex_auth_json_path() -> std::path::PathBuf {
-    if let Ok(path) = std::env::var("CODEX_AUTH_JSON_PATH") {
-        return std::path::PathBuf::from(path);
-    }
-    dirs::home_dir()
-        .unwrap_or_default()
-        .join(".codex/auth.json")
-}
-
-fn codex_env_present() -> bool {
-    [
-        "CODEX_ACCESS_TOKEN",
-        "CODEX_REFRESH_TOKEN",
-        "CODEX_ID_TOKEN",
-    ]
-    .iter()
-    .any(|name| std::env::var(name).is_ok())
-}
-
-fn print_codex_credential_status(auth_path: &std::path::Path) {
-    let from_env = codex_env_present();
-    let from_file = auth_path.exists();
-
-    let status = if from_env {
-        "from env"
-    } else if from_file {
-        "from auth.json"
-    } else {
-        "missing"
-    };
-
-    let marker = if from_env || from_file { "+" } else { "-" };
-    println!(
-        "    [{marker}] {service:<20} ({status})",
-        service = "ChatGPT"
-    );
-}
-
-fn print_codex_credential_row(auth_path: &std::path::Path) {
-    let from_env = codex_env_present();
-    let from_file = auth_path.exists();
-
-    let (status, source) = if from_env {
-        ("loaded", "env:CODEX_*".to_owned())
-    } else if from_file {
-        ("loaded", format!("auth.json:{}", auth_path.display()))
-    } else {
-        ("missing", "-".to_owned())
-    };
-
-    println!("{:<20} {:<12} {:<30}", "ChatGPT", status, source);
-}

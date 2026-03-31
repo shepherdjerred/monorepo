@@ -11,7 +11,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { AGENT_CAPABILITIES } from "@/lib/agent-features";
 import { ProviderIcon } from "./provider-icon.tsx";
 import { MergePrDialog } from "./merge-pr-dialog.tsx";
 import { WorkflowProgress } from "./workflow-progress.tsx";
@@ -125,53 +124,12 @@ export function SessionCard({
               <Badge variant="outline" className="border-2 font-mono text-xs">
                 {session.backend}
               </Badge>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge
-                      variant="outline"
-                      className="border-2 font-mono text-xs cursor-help flex items-center gap-1"
-                    >
-                      <ProviderIcon agent={session.agent} />
-                      {session.agent}
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <div className="text-xs max-w-xs">
-                      <p className="font-semibold mb-1">
-                        {AGENT_CAPABILITIES[session.agent].displayName}{" "}
-                        Capabilities
-                      </p>
-                      <ul className="space-y-1">
-                        {AGENT_CAPABILITIES[session.agent].features.map(
-                          (feature, idx) => (
-                            <li key={idx} className="flex items-start gap-1.5">
-                              <span className="flex-shrink-0">
-                                {feature.supported ? "\u2713" : "\u26A0"}
-                              </span>
-                              <span
-                                className={
-                                  feature.supported ? "" : "text-yellow-600"
-                                }
-                              >
-                                {feature.name}
-                                {feature.note != null &&
-                                  feature.note.length > 0 && (
-                                    <span className="text-muted-foreground block text-xs mt-0.5">
-                                      {feature.note}
-                                    </span>
-                                  )}
-                              </span>
-                            </li>
-                          ),
-                        )}
-                      </ul>
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <Badge variant="secondary" className="font-mono text-xs">
-                {session.access_mode}
+              <Badge
+                variant="outline"
+                className="border-2 font-mono text-xs flex items-center gap-1"
+              >
+                <ProviderIcon agent={session.agent} />
+                {session.agent}
               </Badge>
               {healthReport != null &&
                 healthReport.state.type !== "Healthy" && (

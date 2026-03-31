@@ -26,8 +26,7 @@ curl -X POST http://localhost:3030/api/sessions \
       { "path": "/home/user/projects/api-service", "mount_name": "api" }
     ],
     "backend": "docker",
-    "agent": "claude-code",
-    "access_mode": "read-write"
+    "agent": "claude-code"
   }'
 ```
 

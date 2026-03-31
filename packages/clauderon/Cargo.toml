@@ -66,30 +66,18 @@ arboard = "3.4"  # Cross-platform clipboard access
 uzers = "0.11"  # Safe Unix user/group info (for getuid)
 walkdir = "2"  # Recursive directory traversal (for Codex history file search)
 
-# HTTP Proxy with TLS interception
-hudsucker = { version = "0.24", default-features = false, features = ["rcgen-ca", "rustls-client", "http2"] }
+# HTTP types
 http = "1"
 base64 = "0.22"
 
-# TLS
+# TLS (used by reqwest, rustls crypto provider)
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
-tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12", "logging"] }
-rcgen = { version = "0.14", features = ["pem", "x509-parser"] }
-rustls-pemfile = "2"
-
-# gRPC (for Talos gateway)
-tonic = "0.14"
-prost = "0.14"
 
 # Config files
 toml = "0.9"
 serde_yaml = "0.9"
 
-# Kubernetes client
-kube = { version = "3.0", features = ["runtime", "derive"] }
-k8s-openapi = { version = "0.27", features = ["v1_33"] }
-
-# Time handling (for certificate generation)
+# Time handling
 time = "0.3"
 
 # HTTP/WebSocket server

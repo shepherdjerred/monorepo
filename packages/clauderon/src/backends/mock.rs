@@ -186,25 +186,6 @@ impl MockExecutionBackend {
         Self::with_prefix("docker")
     }
 
-    /// Create a mock Kubernetes backend
-    #[must_use]
-    pub fn kubernetes() -> Self {
-        Self::with_prefix("kubernetes")
-    }
-
-    /// Create a mock Sprites backend
-    #[must_use]
-    pub fn sprites() -> Self {
-        Self::with_prefix("sprites")
-    }
-
-    /// Create a mock Apple Container backend
-    #[cfg(target_os = "macos")]
-    #[must_use]
-    pub fn apple_container() -> Self {
-        Self::with_prefix("apple_container")
-    }
-
     /// Configure the mock to fail all operations
     pub fn set_should_fail(&self, should_fail: bool) {
         self.should_fail.store(should_fail, Ordering::SeqCst);
@@ -308,7 +289,6 @@ impl ExecutionBackend for MockExecutionBackend {
             can_update_image: true,
             preserves_data_on_recreate: true,
             can_start: true,
-            can_wake: false,
             data_preservation_description: "Mock backend - data is preserved.",
         }
     }

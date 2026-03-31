@@ -10,9 +10,8 @@
 
 mod common;
 
-use clauderon::backends::{CreateOptions, DockerBackend, DockerProxyConfig, ExecutionBackend};
+use clauderon::backends::{CreateOptions, DockerBackend, ExecutionBackend};
 use clauderon::core::AgentType;
-use clauderon::proxy::{Credentials, ProxyCa};
 use std::path::PathBuf;
 use std::time::Duration;
 use tempfile::TempDir;
@@ -51,10 +50,8 @@ async fn test_claude_starts_in_docker() {
                 model: None,
                 print_mode: false,
                 plan_mode: true,
-                session_proxy_port: None,
                 images: vec![],
                 dangerous_skip_checks: false,
-                dangerous_copy_creds: false,
                 session_id: None,
                 initial_workdir: PathBuf::new(),
                 http_port: None,
@@ -131,10 +128,8 @@ async fn test_claude_writes_debug_files() {
                 model: None,
                 print_mode: false,
                 plan_mode: true,
-                session_proxy_port: None,
                 images: vec![],
                 dangerous_skip_checks: false,
-                dangerous_copy_creds: false,
                 session_id: None,
                 initial_workdir: PathBuf::new(),
                 http_port: None,
@@ -199,10 +194,8 @@ async fn test_container_runs_as_non_root() {
                 model: None,
                 print_mode: false,
                 plan_mode: true,
-                session_proxy_port: None,
                 images: vec![],
                 dangerous_skip_checks: false,
-                dangerous_copy_creds: false,
                 session_id: None,
                 initial_workdir: PathBuf::new(),
                 http_port: None,
@@ -279,10 +272,8 @@ async fn test_initial_prompt_executed() {
                 model: None,
                 print_mode: false,
                 plan_mode: true,
-                session_proxy_port: None,
                 images: vec![],
                 dangerous_skip_checks: false,
-                dangerous_copy_creds: false,
                 session_id: None,
                 initial_workdir: PathBuf::new(),
                 http_port: None,
@@ -315,191 +306,11 @@ async fn test_initial_prompt_executed() {
     }
 }
 
-/// TRUE E2E TEST: Run Claude in print mode through OAuth proxy
+/// Print mode E2E test (proxy module removed - test disabled)
 ///
-/// This test verifies the FULL print mode + OAuth proxy flow:
-/// 1. Starts a TLS-intercepting proxy with OAuth credentials
-/// 2. Container starts with `claude --print --verbose`
-/// 3. Claude makes API calls through the proxy
-/// 4. Proxy injects `Authorization: Bearer` header
-/// 5. Claude outputs a response and exits
-///
-/// Requirements:
-/// - Docker installed and running
-/// - CLAUDE_CODE_OAUTH_TOKEN environment variable set
-/// - Network access to api.anthropic.com
+/// Previously tested OAuth proxy flow. The proxy module has been removed.
 #[tokio::test]
-#[ignore] // Requires Docker + OAuth token - run with --include-ignored
+#[ignore] // Proxy module removed - test disabled
 async fn test_claude_print_mode_e2e() {
-    use clauderon::proxy::{AuditLogger, HttpAuthProxy};
-    use std::sync::Arc;
-
-    if !common::docker_available() {
-        eprintln!("Skipping: Docker not available");
-        return;
-    }
-
-    // Require OAuth token for this test
-    let oauth_token = match std::env::var("CLAUDE_CODE_OAUTH_TOKEN") {
-        Ok(token) if token.starts_with("sk-ant-oat01-") => token,
-        _ => {
-            eprintln!("Skipping: CLAUDE_CODE_OAUTH_TOKEN not set or invalid format");
-            return;
-        }
-    };
-
-    // Set up temp directory for proxy configs
-    let temp_dir = TempDir::new().expect("Failed to create temp dir");
-    let clauderon_dir = temp_dir.path().to_path_buf();
-
-    // Generate proxy CA certificate
-    println!("Generating proxy CA...");
-    let proxy_ca = ProxyCa::load_or_generate(&clauderon_dir).expect("Failed to generate proxy CA");
-
-    // Load credentials from environment (reads CLAUDE_CODE_OAUTH_TOKEN)
-    let credentials = Credentials::load_from_env();
-    assert!(
-        credentials.get("anthropic").is_some(),
-        "Anthropic OAuth token should be loaded from CLAUDE_CODE_OAUTH_TOKEN"
-    );
-    println!("OAuth token loaded: {}...", &oauth_token[..20]);
-
-    // Use a random available port for the proxy (to avoid conflicts with running daemon)
-    let listener =
-        std::net::TcpListener::bind("127.0.0.1:0").expect("Failed to bind to random port");
-    let proxy_port = listener.local_addr().unwrap().port();
-    drop(listener); // Release the port so the proxy can use it
-    println!("Using port {proxy_port} for test proxy");
-
-    // Create and start the proxy
-    println!("Starting proxy on port {proxy_port}...");
-    let audit_logger = Arc::new(AuditLogger::noop());
-    let rcgen_ca = proxy_ca
-        .to_rcgen_authority()
-        .expect("Failed to create rcgen authority");
-    let proxy = HttpAuthProxy::new(proxy_port, rcgen_ca, Arc::new(credentials), audit_logger);
-
-    // Start proxy in background
-    let proxy_handle = tokio::spawn(async move {
-        if let Err(e) = proxy.run().await {
-            eprintln!("Proxy error: {e}");
-        }
-    });
-
-    // Give proxy time to start
-    sleep(Duration::from_millis(500)).await;
-
-    // Create Docker backend with clauderon directory
-    let docker = DockerBackend::with_clauderon_dir(clauderon_dir.clone());
-
-    let container_name = format!("print-mode-e2e-{}", &uuid::Uuid::new_v4().to_string()[..8]);
-
-    // Create a simple file for Claude to read (deterministic test)
-    std::fs::write(temp_dir.path().join("test.txt"), "Hello, World!")
-        .expect("Failed to write test file");
-
-    // Use print mode - Claude will output response and exit
-    let options = CreateOptions {
-        agent: AgentType::ClaudeCode,
-        model: None,
-        print_mode: true,
-        plan_mode: false, // Don't need plan mode for this test
-        session_proxy_port: Some(proxy_port),
-        images: vec![],
-        dangerous_skip_checks: true,
-        dangerous_copy_creds: false,
-        session_id: None,
-        initial_workdir: PathBuf::new(),
-        http_port: None,
-        container_image: None,
-        container_resources: None,
-        repositories: vec![],
-        storage_class_override: None,
-        volume_mode: false,
-    };
-
-    // Simple prompt that should produce predictable-ish output
-    println!("Creating container with print mode...");
-    let result = docker
-        .create(
-            &container_name,
-            temp_dir.path(),
-            "Read test.txt and tell me what it says. Be very brief, one sentence max.",
-            options,
-        )
-        .await;
-
-    match result {
-        Ok(name) => {
-            println!("Created container: {name}");
-
-            // Wait for Claude to process and respond
-            // Print mode should complete relatively quickly for a simple prompt
-            let max_wait = Duration::from_secs(120);
-            let poll_interval = Duration::from_secs(5);
-            let start = std::time::Instant::now();
-
-            let mut final_output = String::new();
-
-            while start.elapsed() < max_wait {
-                sleep(poll_interval).await;
-
-                // Check if container is still running
-                let running = docker.is_running(&name).await.unwrap_or(false);
-
-                // Get current output
-                if let Ok(logs) = docker.get_output(&name, 200).await {
-                    final_output = logs.clone();
-
-                    // Container exited - print mode complete
-                    if !running {
-                        println!(
-                            "Container exited. Output length: {} chars",
-                            final_output.len()
-                        );
-                        break;
-                    }
-                }
-
-                if !running {
-                    break;
-                }
-            }
-
-            println!("=== Claude Print Mode Output ===");
-            println!("{final_output}");
-            println!("=================================");
-
-            // Verify we got some output (Claude responded)
-            assert!(!final_output.is_empty(), "Print mode should produce output");
-
-            // Check for error indicators
-            assert!(
-                !final_output.contains("Error:") || final_output.contains("Hello"),
-                "Output should not be just errors: {final_output}"
-            );
-
-            // The output should mention something from the file or be a valid response
-            let seems_valid = final_output.contains("Hello")
-                || final_output.contains("World")
-                || final_output.contains("test.txt")
-                || final_output.len() > 100; // Some substantial output
-
-            assert!(
-                seems_valid,
-                "Output should be a valid Claude response about the file: {final_output}"
-            );
-
-            // Cleanup
-            let _ = docker.delete(&name).await;
-            proxy_handle.abort();
-
-            println!("✓ Print mode E2E test passed!");
-        }
-        Err(e) => {
-            proxy_handle.abort();
-            eprintln!("Container creation failed: {e}");
-            // Don't fail the test if container creation fails (may be image issue)
-        }
-    }
+    eprintln!("Skipping: Proxy module has been removed");
 }

@@ -1,7 +1,7 @@
 //! End-to-end tests for health check functionality
 //!
 //! These tests verify the health service can detect various backend states.
-//! Many tests require external dependencies (Docker, Kubernetes, etc.) and are
+//! Many tests require external dependencies (Docker, etc.) and are
 //! conditionally skipped when those dependencies are not available.
 //!
 //! Run all tests: cargo test --test e2e_health
@@ -13,7 +13,7 @@ use clauderon::backends::{DockerBackend, GitBackend, GitOperations};
 use clauderon::core::session::{
     AvailableAction, HealthCheckResult, ResourceState, SessionHealthReport,
 };
-use clauderon::core::{AccessMode, AgentType, BackendType, Session, SessionConfig, SessionStatus};
+use clauderon::core::{AgentType, BackendType, Session, SessionConfig, SessionStatus};
 use tempfile::TempDir;
 
 /// Helper to create a test session
@@ -34,8 +34,6 @@ fn create_test_session(
         backend,
         agent: AgentType::ClaudeCode,
         dangerous_skip_checks: true,
-        dangerous_copy_creds: false,
-        access_mode: AccessMode::default(),
         repositories: None,
         model: None,
     });
@@ -107,7 +105,7 @@ fn test_health_check_result_counts_missing() {
 #[test]
 fn test_health_check_result_counts_blocked() {
     let temp = TempDir::new().unwrap();
-    let session = create_test_session("blocked-test", BackendType::Sprites, temp.path());
+    let session = create_test_session("blocked-test", BackendType::Docker, temp.path());
 
     let report = create_mock_health_report(
         &session,
@@ -129,7 +127,7 @@ fn test_health_check_result_mixed_states() {
 
     let healthy_session = create_test_session("healthy", BackendType::Docker, temp.path());
     let missing_session = create_test_session("missing", BackendType::Docker, temp.path());
-    let blocked_session = create_test_session("blocked", BackendType::Sprites, temp.path());
+    let blocked_session = create_test_session("blocked", BackendType::Docker, temp.path());
 
     let reports = vec![
         create_mock_health_report(
@@ -162,7 +160,6 @@ fn test_resource_state_is_healthy() {
     assert!(ResourceState::Healthy.is_healthy());
     assert!(!ResourceState::Stopped.is_healthy());
     assert!(!ResourceState::Missing.is_healthy());
-    assert!(!ResourceState::Hibernated.is_healthy());
     assert!(!ResourceState::Pending.is_healthy());
     assert!(!ResourceState::CrashLoop.is_healthy());
     assert!(!ResourceState::DeletedExternally.is_healthy());
@@ -174,7 +171,6 @@ fn test_resource_state_needs_attention() {
     assert!(!ResourceState::Healthy.needs_attention());
     assert!(ResourceState::Stopped.needs_attention());
     assert!(ResourceState::Missing.needs_attention());
-    assert!(ResourceState::Hibernated.needs_attention());
     assert!(!ResourceState::Pending.needs_attention()); // Pending is a transient state, doesn't need attention
     assert!(ResourceState::CrashLoop.needs_attention());
 }
@@ -296,88 +292,6 @@ fn test_docker_missing_actions() {
     assert!(report.data_safe);
 }
 
-// ========== Kubernetes-specific Tests ==========
-
-#[test]
-fn test_kubernetes_healthy_actions() {
-    let temp = TempDir::new().unwrap();
-    let session = create_test_session("k8s-healthy", BackendType::Kubernetes, temp.path());
-
-    let report = create_mock_health_report(
-        &session,
-        ResourceState::Healthy,
-        vec![AvailableAction::Recreate],
-        true,
-    );
-
-    assert!(
-        report
-            .available_actions
-            .contains(&AvailableAction::Recreate)
-    );
-    assert!(report.data_safe); // PVC preserves data
-}
-
-#[test]
-fn test_kubernetes_pending_state() {
-    let temp = TempDir::new().unwrap();
-    let session = create_test_session("k8s-pending", BackendType::Kubernetes, temp.path());
-
-    let report = create_mock_health_report(
-        &session,
-        ResourceState::Pending,
-        vec![AvailableAction::Recreate],
-        true,
-    );
-
-    assert!(matches!(report.state, ResourceState::Pending));
-    assert!(!report.needs_attention()); // Pending is transient, doesn't need attention
-}
-
-#[test]
-fn test_kubernetes_crash_loop_state() {
-    let temp = TempDir::new().unwrap();
-    let session = create_test_session("k8s-crash", BackendType::Kubernetes, temp.path());
-
-    let report = create_mock_health_report(
-        &session,
-        ResourceState::CrashLoop,
-        vec![AvailableAction::Recreate],
-        true,
-    );
-
-    assert!(matches!(report.state, ResourceState::CrashLoop));
-    assert!(report.needs_attention());
-    assert!(
-        report
-            .available_actions
-            .contains(&AvailableAction::Recreate)
-    );
-}
-
-#[test]
-fn test_kubernetes_pvc_deleted_data_lost() {
-    let temp = TempDir::new().unwrap();
-    let session = create_test_session("k8s-pvc-deleted", BackendType::Kubernetes, temp.path());
-
-    let report = create_mock_health_report(
-        &session,
-        ResourceState::DataLost {
-            reason: "PVC was deleted".to_owned(),
-        },
-        vec![AvailableAction::Cleanup, AvailableAction::RecreateFresh],
-        false,
-    );
-
-    assert!(!report.data_safe);
-    assert!(report.available_actions.contains(&AvailableAction::Cleanup));
-    assert!(
-        report
-            .available_actions
-            .contains(&AvailableAction::RecreateFresh)
-    );
-}
-
 // ========== Zellij-specific Tests ==========
 
 #[test]
@@ -418,88 +332,6 @@ fn test_zellij_missing_actions() {
             .contains(&AvailableAction::Recreate)
     );
     assert!(report.data_safe); // Code is on local filesystem
-}
-
-// ========== Sprites-specific Tests ==========
-
-#[test]
-fn test_sprites_healthy_no_auto_destroy() {
-    let temp = TempDir::new().unwrap();
-    let session = create_test_session("sprites-healthy", BackendType::Sprites, temp.path());
-
-    // Sprites without auto_destroy can be recreated
-    let report = create_mock_health_report(
-        &session,
-        ResourceState::Healthy,
-        vec![AvailableAction::Recreate],
-        true,
-    );
-
-    assert!(
-        report
-            .available_actions
-            .contains(&AvailableAction::Recreate)
-    );
-    assert!(report.data_safe);
-}
-
-#[test]
-fn test_sprites_hibernated_actions() {
-    let temp = TempDir::new().unwrap();
-    let session = create_test_session("sprites-hibernated", BackendType::Sprites, temp.path());
-
-    let report = create_mock_health_report(
-        &session,
-        ResourceState::Hibernated,
-        vec![AvailableAction::Wake, AvailableAction::Recreate],
-        true,
-    );
-
-    assert!(report.available_actions.contains(&AvailableAction::Wake));
-    assert!(
-        report
-            .available_actions
-            .contains(&AvailableAction::Recreate)
-    );
-    assert!(report.data_safe);
-}
-
-#[test]
-fn test_sprites_stopped_auto_destroy_blocked() {
-    let temp = TempDir::new().unwrap();
-    let session = create_test_session("sprites-blocked", BackendType::Sprites, temp.path());
-
-    // Sprites with auto_destroy=true that are stopped are blocked
-    let report = create_mock_health_report(
-        &session,
-        ResourceState::Stopped,
-        vec![], // No actions = blocked
-        false,  // Data is not safe
-    );
-
-    assert!(report.is_blocked());
-    assert!(!report.data_safe);
-}
-
-#[test]
-fn test_sprites_deleted_externally() {
-    let temp = TempDir::new().unwrap();
-    let session = create_test_session("sprites-deleted", BackendType::Sprites, temp.path());
-
-    let report = create_mock_health_report(
-        &session,
-        ResourceState::DeletedExternally,
-        vec![AvailableAction::Cleanup, AvailableAction::RecreateFresh],
-        false,
-    );
-
-    assert!(!report.data_safe);
-    assert!(report.available_actions.contains(&AvailableAction::Cleanup));
-    assert!(
-        report
-            .available_actions
-            .contains(&AvailableAction::RecreateFresh)
-    );
 }
 
 // ========== Worktree Missing Tests ==========

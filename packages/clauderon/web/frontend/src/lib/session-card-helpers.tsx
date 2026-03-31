@@ -129,17 +129,11 @@ export function getHealthDisplay(state: ResourceState): {
         className: "bg-yellow-500/20 text-yellow-700 border-yellow-500/50",
         tooltip: "Container stopped - can be started or recreated",
       };
-    case "Hibernated":
-      return {
-        label: "Hibernated",
-        className: "bg-blue-500/20 text-blue-700 border-blue-500/50",
-        tooltip: "Sprite is hibernated - can be woken",
-      };
     case "Pending":
       return {
         label: "Pending",
         className: "bg-yellow-500/20 text-yellow-700 border-yellow-500/50",
-        tooltip: "Pod is pending - waiting for resources",
+        tooltip: "Resource is pending - waiting for resources",
       };
     case "Missing":
       return {
@@ -157,7 +151,7 @@ export function getHealthDisplay(state: ResourceState): {
       return {
         label: "Crash Loop",
         className: "bg-red-500/20 text-red-700 border-red-500/50",
-        tooltip: "Pod is in CrashLoopBackOff",
+        tooltip: "Container is in a crash loop",
       };
     case "DeletedExternally":
       return {

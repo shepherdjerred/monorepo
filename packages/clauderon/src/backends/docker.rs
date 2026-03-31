@@ -7,7 +7,7 @@ use super::container_config::{DockerConfig, ImageConfig, ResourceLimits};
 use super::traits::ExecutionBackend;
 use crate::core::AgentType;
 use crate::plugins::{PluginDiscovery, PluginManifest};
-use crate::proxy::{dummy_auth_json_string, dummy_config_toml, generate_plugin_config};
+use crate::backends::container_config::generate_plugin_config;
 
 /// Sanitize git config value to prevent environment variable injection
 ///
@@ -71,31 +71,9 @@ async fn read_git_user_config() -> (Option<String>, Option<String>) {
 ///   cargo install sccache
 /// or add it to the Dockerfile.
 ///
-/// Proxy configuration for Docker containers.
-#[derive(Debug, Clone)]
-pub struct DockerProxyConfig {
-    /// Session-specific proxy port (required).
-    pub session_proxy_port: u16,
-    /// Path to the clauderon config directory (contains CA cert, talosconfig).
-    pub clauderon_dir: PathBuf,
-}
-
-impl DockerProxyConfig {
-    /// Create a new proxy configuration.
-    #[must_use]
-    pub fn new(session_proxy_port: u16, clauderon_dir: PathBuf) -> Self {
-        Self {
-            session_proxy_port,
-            clauderon_dir,
-        }
-    }
-}
-
 /// Docker container backend
 #[derive(Debug)]
 pub struct DockerBackend {
-    /// Path to clauderon directory for proxy CA and configs.
-    clauderon_dir: PathBuf,
     /// Docker backend configuration (loaded from ~/.clauderon/docker-config.toml or defaults)
     config: DockerConfig,
 }
@@ -107,33 +85,15 @@ impl DockerBackend {
     /// otherwise uses default configuration.
     #[must_use]
     pub fn new() -> Self {
-        let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
         let config = DockerConfig::load_or_default();
-        Self {
-            clauderon_dir: home.join(".clauderon"),
-            config,
-        }
-    }
-
-    /// Create a Docker backend with a specific clauderon directory.
-    #[must_use]
-    pub fn with_clauderon_dir(clauderon_dir: PathBuf) -> Self {
-        let config = DockerConfig::load_or_default();
-        Self {
-            clauderon_dir,
-            config,
-        }
+        Self { config }
     }
 
     /// Create a Docker backend with custom configuration (for testing).
     #[cfg(test)]
     #[must_use]
     pub fn with_config(config: DockerConfig) -> Self {
-        let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
-        Self {
-            clauderon_dir: home.join(".clauderon"),
-            config,
-        }
+        Self { config }
     }
 
     /// Validate a repository mount name
@@ -336,7 +296,7 @@ impl DockerBackend {
 
     /// Clone a repository into a Docker volume.
     ///
-    /// Runs an init container to clone the repo into the volume, similar to K8s init containers.
+    /// Runs an init container to clone the repo into the volume.
     /// Uses the clone-then-branch strategy:
     /// 1. Clone from remote (with base_branch if specified)
     /// 2. Check if target branch exists on remote
@@ -554,7 +514,6 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
         initial_workdir: &Path,
         initial_prompt: &str,
         uid: u32,
-        proxy_config: Option<&DockerProxyConfig>,
         agent: AgentType,
         print_mode: bool,
         dangerous_skip_checks: bool,
@@ -817,163 +776,6 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
             }
         } // end !volume_mode check
 
-        // Add proxy configuration
-        if let Some(proxy) = proxy_config {
-            let port = proxy.session_proxy_port;
-            let clauderon_dir = &proxy.clauderon_dir;
-
-            // Validate required files exist before attempting to mount them
-            let ca_cert_path = clauderon_dir.join("proxy-ca.pem");
-            let talos_config_dir = clauderon_dir.join("talos");
-
-            // CA certificate is required - fail fast if missing
-            if !ca_cert_path.exists() {
-                anyhow::bail!(
-                    "Proxy CA certificate not found at {}. \
-                    Ensure the clauderon daemon is running and initialized.",
-                    ca_cert_path.display()
-                );
-            }
-
-            // Check optional configs
-            let has_talos_config = talos_config_dir.exists();
-
-            if !has_talos_config {
-                tracing::debug!(
-                    "Talosconfig not found at {:?}, skipping mount",
-                    talos_config_dir
-                );
-            }
-
-            let codex_dir = clauderon_dir.join("codex");
-            let codex_auth_path = codex_dir.join("auth.json");
-            let codex_config_path = codex_dir.join("config.toml");
-            if let Err(e) = std::fs::create_dir_all(&codex_dir) {
-                tracing::warn!(
-                    "Failed to create Codex config directory at {:?}: {}",
-                    codex_dir,
-                    e
-                );
-            } else {
-                if !codex_auth_path.exists() {
-                    match dummy_auth_json_string(None) {
-                        Ok(contents) => {
-                            if let Err(e) = std::fs::write(&codex_auth_path, contents) {
-                                tracing::warn!(
-                                    "Failed to write Codex auth.json at {:?}: {}",
-                                    codex_auth_path,
-                                    e
-                                );
-                            }
-                        }
-                        Err(e) => {
-                            tracing::warn!("Failed to build Codex auth.json contents: {}", e);
-                        }
-                    }
-                }
-                if !codex_config_path.exists()
-                    && let Err(e) = std::fs::write(&codex_config_path, dummy_config_toml())
-                {
-                    tracing::warn!(
-                        "Failed to write Codex config.toml at {:?}: {}",
-                        codex_config_path,
-                        e
-                    );
-                }
-            }
-
-            // Add host.docker.internal resolution
-            // Required for Linux and macOS with OrbStack
-            // Harmless on Docker Desktop (flag is ignored if host already exists)
-            args.extend([
-                "--add-host".to_owned(),
-                "host.docker.internal:host-gateway".to_owned(),
-            ]);
-
-            // Proxy environment variables
-            args.extend([
-                "-e".to_owned(),
-                format!("HTTP_PROXY=http://host.docker.internal:{port}"),
-                "-e".to_owned(),
-                format!("HTTPS_PROXY=http://host.docker.internal:{port}"),
-                "-e".to_owned(),
-                "NO_PROXY=localhost,127.0.0.1,host.docker.internal".to_owned(),
-            ]);
-
-            // Set dummy tokens so CLI tools will make requests (proxy replaces with real tokens)
-            args.extend(["-e".to_owned(), "GH_TOKEN=clauderon-proxy".to_owned()]);
-
-            match agent {
-                AgentType::ClaudeCode => {
-                    // Set placeholder OAuth token - Claude Code uses this for auth
-                    // The proxy will intercept API requests and inject the real OAuth token
-                    args.extend([
-                        "-e".to_owned(),
-                        "CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-clauderon-proxy-placeholder"
-                            .to_owned(),
-                    ]);
-                }
-                AgentType::Codex => {
-                    // Codex uses OpenAI API keys (exec supports CODEX_API_KEY, CLI generally uses OPENAI_API_KEY)
-                    args.extend([
-                        "-e".to_owned(),
-                        "OPENAI_API_KEY=sk-openai-clauderon-proxy-placeholder".to_owned(),
-                        "-e".to_owned(),
-                        "CODEX_API_KEY=sk-openai-clauderon-proxy-placeholder".to_owned(),
-                    ]);
-                }
-                AgentType::Gemini => {
-                    // Gemini uses Gemini API key
-                    args.extend([
-                        "-e".to_owned(),
-                        "GEMINI_API_KEY=sk-gemini-clauderon-proxy-placeholder".to_owned(),
-                    ]);
-                }
-            }
-
-            // SSL/TLS environment variables for CA trust
-            args.extend([
-                "-e".to_owned(),
-                "NODE_EXTRA_CA_CERTS=/etc/clauderon/proxy-ca.pem".to_owned(),
-                "-e".to_owned(),
-                "SSL_CERT_FILE=/etc/clauderon/proxy-ca.pem".to_owned(),
-                "-e".to_owned(),
-                "REQUESTS_CA_BUNDLE=/etc/clauderon/proxy-ca.pem".to_owned(),
-            ]);
-
-            // Volume mounts for proxy configs (read-only)
-            // CA certificate is always mounted (required)
-            args.extend([
-                "-v".to_owned(),
-                format!(
-                    "{display}:/etc/clauderon/proxy-ca.pem:ro",
-                    display = ca_cert_path.display()
-                ),
-            ]);
-            if codex_dir.exists() {
-                args.extend([
-                    "-v".to_owned(),
-                    format!(
-                        "{display}:/etc/clauderon/codex:ro",
-                        display = codex_dir.display()
-                    ),
-                ]);
-            }
-
-            // Mount and configure Talos if available
-            if has_talos_config {
-                args.extend([
-                    "-v".to_owned(),
-                    format!(
-                        "{display}:/etc/clauderon/talos:ro",
-                        display = talos_config_dir.display()
-                    ),
-                    "-e".to_owned(),
-                    "TALOSCONFIG=/etc/clauderon/talos/config".to_owned(),
-                ]);
-            }
-        }
-
         // Git user configuration from host
         // Set both AUTHOR and COMMITTER variables so git commits have proper attribution
         if let Some(name) = git_user_name {
@@ -999,17 +801,10 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
         // which would fail with our fake tokens. The env var path skips this validation.
 
         if agent == AgentType::ClaudeCode {
-            // Determine config directory - use proxy clauderon_dir if available, otherwise create temp dir
-            // Note: When proxy is disabled, we create a temp directory for the session config.
+            // Create a temp directory for the session config.
             // These temp directories persist after container deletion and are cleaned up by the OS.
             // This is acceptable since the files are tiny (just .claude.json) and sessions are infrequent.
-            let config_dir = if let Some(proxy) = proxy_config {
-                proxy.clauderon_dir.clone()
-            } else {
-                // Create a temp directory for Claude config when proxy is disabled
-
-                std::env::temp_dir().join(format!("clauderon-{name}"))
-            };
+            let config_dir = std::env::temp_dir().join(format!("clauderon-{name}"));
 
             // Discover plugins from host
             let plugin_discovery = PluginDiscovery::new(
@@ -1097,34 +892,6 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
                     }
                 }
 
-                // Proxy-specific configuration (only when proxy is enabled)
-                if let Some(_proxy) = proxy_config {
-                    // Write managed settings file for proxy environments
-                    // Note: managed-settings.json is only created when proxy is enabled because it's
-                    // part of the proxy infrastructure that requires elevated permissions.
-                    // For non-proxy users, .claude.json with bypassPermissionsModeAccepted is sufficient.
-                    let managed_settings_path = config_dir.join("managed-settings.json");
-                    let managed_settings = r#"{
-  "permissions": {
-    "defaultMode": "bypassPermissions"
-  }
-}"#;
-                    if let Err(e) = std::fs::write(&managed_settings_path, managed_settings) {
-                        tracing::warn!(
-                            "Failed to write managed settings file at {:?}: {}",
-                            managed_settings_path,
-                            e
-                        );
-                    } else {
-                        args.extend([
-                            "-v".to_owned(),
-                            format!(
-                                "{}:/etc/claude-code/managed-settings.json:ro",
-                                managed_settings_path.display()
-                            ),
-                        ]);
-                    }
-                }
             }
         }
 
@@ -1435,10 +1202,8 @@ fi"#,
                 model: None, // Use default model
                 print_mode: false,
                 plan_mode: true, // Default to plan mode
-                session_proxy_port: None,
                 images: vec![],
                 dangerous_skip_checks: false,
-                dangerous_copy_creds: false, // Docker is local, no copy-creds needed
                 session_id: None,
                 initial_workdir: std::path::PathBuf::new(),
                 http_port: None,
@@ -1506,13 +1271,6 @@ impl ExecutionBackend for DockerBackend {
         // This fixes permission issues with Docker named volumes (which are created as root by default)
         self.ensure_cache_volumes_with_ownership(uid, gid).await;
 
-        // Build proxy config dynamically from session-specific port
-        let proxy_config = options
-            .session_proxy_port
-            .map(|session_port| DockerProxyConfig::new(session_port, self.clauderon_dir.clone()));
-
-        let proxy_config_ref = proxy_config.as_ref();
-
         // Read git user configuration from the host
         let (git_user_name, git_user_email) = read_git_user_config().await;
 
@@ -1562,7 +1320,6 @@ impl ExecutionBackend for DockerBackend {
             &options.initial_workdir,
             initial_prompt,
             uid,
-            proxy_config_ref,
             options.agent,
             options.print_mode,
             options.dangerous_skip_checks,
@@ -1703,7 +1460,6 @@ impl ExecutionBackend for DockerBackend {
             can_update_image: true,
             preserves_data_on_recreate: true,
             can_start: true,
-            can_wake: false,
             data_preservation_description: "Your code is safe (mounted from your computer). Only container-local files will be lost.",
         }
     }
@@ -1788,7 +1544,6 @@ mod tests {
             &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
-            None,
             AgentType::ClaudeCode,
             false, // interactive mode
             true,  // dangerous_skip_checks
@@ -1866,7 +1621,6 @@ mod tests {
             &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             uid,
-            None,
             AgentType::ClaudeCode,
             false, // print mode
             true,  // dangerous_skip_checks
@@ -1905,7 +1659,6 @@ mod tests {
             &PathBuf::from("packages/foo"), // subdirectory
             "test prompt",
             1000,
-            None,
             AgentType::ClaudeCode,
             false, // print_mode
             false, // dangerous_skip_checks
@@ -1947,7 +1700,6 @@ mod tests {
             &PathBuf::new(), // empty initial_workdir
             "test prompt",
             1000,
-            None,
             AgentType::ClaudeCode,
             false, // print_mode
             false, // dangerous_skip_checks
@@ -1989,7 +1741,6 @@ mod tests {
             &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
-            None,
             AgentType::ClaudeCode,
             false, // print_mode
             true,  // dangerous_skip_checks
@@ -2092,7 +1843,6 @@ mod tests {
             &PathBuf::new(), // initial_workdir (empty = root)
             prompt_with_quotes,
             1000,
-            None,
             AgentType::ClaudeCode,
             false, // print mode
             true,  // dangerous_skip_checks
@@ -2130,7 +1880,6 @@ mod tests {
             &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
-            None,
             AgentType::ClaudeCode,
             false, // print mode
             true,  // dangerous_skip_checks
@@ -2161,100 +1910,7 @@ mod tests {
         assert_eq!(container_name, "clauderon-my-session");
     }
 
-    /// Test that proxy config adds expected environment variables
-    #[test]
-    fn test_proxy_config_adds_env_vars() {
-        use tempfile::tempdir;
-        let clauderon_dir = tempdir().expect("Failed to create temp dir");
-        let ca_cert_path = clauderon_dir.path().join("proxy-ca.pem");
-        std::fs::write(&ca_cert_path, "dummy cert").expect("Failed to write cert");
-
-        // Create talos directory so it gets mounted
-        let talos_dir = clauderon_dir.path().join("talos");
-        std::fs::create_dir_all(&talos_dir).expect("Failed to create talos dir");
-        std::fs::write(talos_dir.join("config"), "dummy").expect("Failed to write talos config");
-
-        let proxy_config = DockerProxyConfig::new(18100, clauderon_dir.path().to_path_buf());
-        let args = DockerBackend::build_create_args(
-            "test-session",
-            &PathBuf::from("/workspace"),
-            &PathBuf::new(), // initial_workdir (empty = root)
-            "test prompt",
-            1000,
-            Some(&proxy_config),
-            AgentType::ClaudeCode,
-            false, // print mode
-            true,  // dangerous_skip_checks
-            &[],   // no images
-            None,  // git_user_name
-            None,  // git_user_email
-            None,  // session_id
-            None,  // http_port
-            &DockerConfig::default(),
-            None,  // image_override
-            None,  // resource_override
-            None,  // model
-            &[],   // repositories (empty = legacy mode)
-            false, // volume_mode
-            None,  // workspace_volume
-        )
-        .expect("Failed to build args");
-
-        // Should have HTTPS_PROXY
-        let has_https_proxy = args.iter().any(|a| a.contains("HTTPS_PROXY"));
-        assert!(
-            has_https_proxy,
-            "Expected HTTPS_PROXY env var, got: {args:?}"
-        );
-
-        // Should have SSL_CERT_FILE
-        let has_ssl_cert = args.iter().any(|a| a.contains("SSL_CERT_FILE"));
-        assert!(
-            has_ssl_cert,
-            "Expected SSL_CERT_FILE env var, got: {args:?}"
-        );
-    }
-
-    /// Test that proxy config adds volume mounts for configs
-    #[test]
-    fn test_proxy_config_adds_volume_mounts() {
-        use tempfile::tempdir;
-        let clauderon_dir = tempdir().expect("Failed to create temp dir");
-        let ca_cert_path = clauderon_dir.path().join("proxy-ca.pem");
-        std::fs::write(&ca_cert_path, "dummy cert").expect("Failed to write cert");
-
-        let proxy_config = DockerProxyConfig::new(18100, clauderon_dir.path().to_path_buf());
-        let args = DockerBackend::build_create_args(
-            "test-session",
-            &PathBuf::from("/workspace"),
-            &PathBuf::new(), // initial_workdir (empty = root)
-            "test prompt",
-            1000,
-            Some(&proxy_config),
-            AgentType::ClaudeCode,
-            false, // print mode
-            true,  // dangerous_skip_checks
-            &[],   // no images
-            None,  // git_user_name
-            None,  // git_user_email
-            None,  // session_id
-            None,  // http_port
-            &DockerConfig::default(),
-            None,  // image_override
-            None,  // resource_override
-            None,  // model
-            &[],   // repositories (empty = legacy mode)
-            false, // volume_mode
-            None,  // workspace_volume
-        )
-        .expect("Failed to build args");
-
-        // Should have proxy-ca.pem mount
-        let has_ca_mount = args.iter().any(|a| a.contains("proxy-ca.pem"));
-        assert!(has_ca_mount, "Expected proxy-ca.pem mount, got: {args:?}");
-    }
-
-    /// Test that no proxy config doesn't add env vars
+    /// Test that no proxy env vars are added
     #[test]
     fn test_no_proxy_config() {
         let args = DockerBackend::build_create_args(
@@ -2263,7 +1919,6 @@ mod tests {
             &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
-            None, // No proxy config
             AgentType::ClaudeCode,
             false, // print mode
             true,  // dangerous_skip_checks
@@ -2290,55 +1945,6 @@ mod tests {
         );
     }
 
-    /// Test that --add-host is always added for host.docker.internal resolution
-    /// This is required for Linux and macOS with OrbStack
-    #[test]
-    fn test_host_docker_internal_always_added() {
-        use tempfile::tempdir;
-        let clauderon_dir = tempdir().expect("Failed to create temp dir");
-        let ca_cert_path = clauderon_dir.path().join("proxy-ca.pem");
-        std::fs::write(&ca_cert_path, "dummy cert").expect("Failed to write cert");
-
-        let proxy_config = DockerProxyConfig::new(18100, clauderon_dir.path().to_path_buf());
-        let args = DockerBackend::build_create_args(
-            "test-session",
-            &PathBuf::from("/workspace"),
-            &PathBuf::new(), // initial_workdir (empty = root)
-            "test prompt",
-            1000,
-            Some(&proxy_config),
-            AgentType::ClaudeCode,
-            false, // print mode
-            true,  // dangerous_skip_checks
-            &[],   // no images
-            None,  // git_user_name
-            None,  // git_user_email
-            None,  // session_id
-            None,  // http_port
-            &DockerConfig::default(),
-            None,  // image_override
-            None,  // resource_override
-            None,  // model
-            &[],   // repositories (empty = legacy mode)
-            false, // volume_mode
-            None,  // workspace_volume
-        )
-        .expect("Failed to build args");
-
-        // Should have --add-host flag
-        assert!(
-            args.iter().any(|arg| arg == "--add-host"),
-            "Expected --add-host flag, got: {args:?}"
-        );
-
-        // Should have host.docker.internal:host-gateway
-        assert!(
-            args.iter()
-                .any(|arg| arg == "host.docker.internal:host-gateway"),
-            "Expected host.docker.internal:host-gateway, got: {args:?}"
-        );
-    }
-
     /// Test that print mode adds --print --verbose flags
     #[test]
     fn test_print_mode_adds_flags() {
@@ -2348,7 +1954,6 @@ mod tests {
             &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
-            None,
             AgentType::ClaudeCode,
             true, // print mode
             true, // dangerous_skip_checks
@@ -2387,7 +1992,6 @@ mod tests {
             &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
-            None,
             AgentType::ClaudeCode,
             false, // interactive mode
             true,  // dangerous_skip_checks
@@ -2448,7 +2052,6 @@ mod tests {
             &PathBuf::new(), // initial_workdir
             "test prompt",
             1000,
-            None,
             AgentType::ClaudeCode,
             false, // print_mode
             true,  // dangerous_skip_checks
@@ -2508,7 +2111,6 @@ mod tests {
             &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
-            None,
             AgentType::ClaudeCode,
             false, // print_mode
             true,  // dangerous_skip_checks
@@ -2551,7 +2153,6 @@ mod tests {
             &PathBuf::new(),
             "test prompt",
             1000,
-            None,
             AgentType::ClaudeCode,
             false,
             true,
@@ -2596,7 +2197,6 @@ mod tests {
             &PathBuf::new(),
             "test prompt",
             1000,
-            None,
             AgentType::ClaudeCode,
             false,
             true,
@@ -2659,7 +2259,6 @@ mod tests {
             &PathBuf::new(), // initial_workdir
             "test prompt",
             1000,
-            None,
             AgentType::ClaudeCode,
             false, // print_mode
             true,  // dangerous_skip_checks
@@ -2718,7 +2317,6 @@ mod tests {
             &PathBuf::new(), // initial_workdir
             "test prompt",
             1000,
-            None,
             AgentType::ClaudeCode,
             false, // print_mode
             true,  // dangerous_skip_checks
@@ -2767,7 +2365,6 @@ mod tests {
             &PathBuf::new(), // initial_workdir
             "test prompt",
             1000,
-            None,
             AgentType::ClaudeCode,
             false, // print_mode
             true,  // dangerous_skip_checks
@@ -2817,7 +2414,6 @@ mod tests {
             &PathBuf::new(), // initial_workdir
             "test prompt",
             1000,
-            None,
             AgentType::ClaudeCode,
             false, // print_mode
             true,  // dangerous_skip_checks
@@ -2845,16 +2441,15 @@ mod tests {
         );
     }
 
-    /// Test that dangerous_skip_checks works without proxy
+    /// Test that dangerous_skip_checks adds the right flags
     #[test]
-    fn test_dangerous_skip_checks_without_proxy() {
+    fn test_dangerous_skip_checks() {
         let args = DockerBackend::build_create_args(
             "test-session",
             &PathBuf::from("/workspace"),
             &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
-            None, // No proxy config
             AgentType::ClaudeCode,
             false, // print_mode
             true,  // dangerous_skip_checks = true
@@ -2877,14 +2472,14 @@ mod tests {
         let cmd_arg = args.last().unwrap();
         assert!(
             cmd_arg.contains("--dangerously-skip-permissions"),
-            "Flag should be present even without proxy: {cmd_arg}"
+            "Flag should be present: {cmd_arg}"
         );
 
         // Should mount .claude.json with bypassPermissionsModeAccepted
         let has_claude_json = args.iter().any(|a| a.contains(".claude.json"));
         assert!(
             has_claude_json,
-            "Should mount .claude.json even without proxy"
+            "Should mount .claude.json"
         );
 
         // Verify the mount includes the container path
@@ -2904,7 +2499,6 @@ mod tests {
             &PathBuf::new(), // initial_workdir (empty = root)
             "test prompt",
             1000,
-            None, // No proxy config
             AgentType::ClaudeCode,
             false, // print_mode
             false, // dangerous_skip_checks = false
@@ -2943,7 +2537,6 @@ mod tests {
             &PathBuf::from("packages/clauderon"), // subdirectory
             "test prompt",
             1000,
-            None,
             AgentType::ClaudeCode,
             false,             // print_mode
             false,             // dangerous_skip_checks
@@ -2987,7 +2580,6 @@ mod tests {
             &PathBuf::new(), // empty initial_workdir = root
             "test prompt",
             1000,
-            None,
             AgentType::ClaudeCode,
             false,             // print_mode
             false,             // dangerous_skip_checks

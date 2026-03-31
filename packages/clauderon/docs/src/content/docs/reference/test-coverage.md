@@ -36,7 +36,6 @@ description: Comprehensive test coverage analysis mapping all tests to features
 | Build args            | 9     | -dit, non-root, workdir, prefix, attach, print mode |
 | Security              | 5     | Git config sanitization, prompt escaping            |
 | Caching               | 1     | Cargo/sccache volumes                               |
-| Proxy                 | 4     | Env vars, volume mounts, host.docker.internal       |
 | Git worktree          | 6     | Parent .git mount, relative paths, error handling   |
 | Uploads/history       | 4     | Mount, path translation, subdirectory paths         |
 | Dangerous mode        | 2     | Skip checks, claude.json handling                   |
@@ -71,10 +70,9 @@ description: Comprehensive test coverage analysis mapping all tests to features
 | Endpoint                    | Tested | Endpoint                     | Tested |
 | --------------------------- | :----: | ---------------------------- | :----: |
 | `GET /api/sessions`         |   ✅   | `POST .../refresh`           |   ❌   |
-| `POST /api/sessions`        |   ✅   | `POST .../start/wake`        |   ⚠️   |
+| `POST /api/sessions`        |   ✅   | `POST .../start`             |   ⚠️   |
 | `GET /api/sessions/{id}`    |   ✅   | `POST .../recreate/cleanup`  |   ⚠️   |
-| `DELETE /api/sessions/{id}` |   ✅   | `POST .../access-mode`       |   ❌   |
-| `POST .../archive`          |   ✅   | `GET .../history`            |   ❌   |
+| `DELETE /api/sessions/{id}` |   ✅   | `POST .../archive`          |   ✅   | `GET .../history`            |   ❌   |
 | `POST .../unarchive`        |   ✅   | `POST .../upload`            |   ❌   |
 | `POST .../metadata`         |   ✅   | `POST /api/browse-directory` |   ❌   |
 | `GET /api/health`           |   ✅   | `WS /ws/console`             |   ❌   |
