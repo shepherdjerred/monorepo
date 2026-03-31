@@ -604,7 +604,13 @@ export function clauderonCollectBinariesHelper(
 
     const binary = container
       .withExec(["cargo", "build", "--release", "--target", target])
-      .file(`/workspace/target/${target}/release/clauderon`);
+      // Copy binary out of cache mount so .file() can access it
+      .withExec([
+        "cp",
+        `/workspace/target/${target}/release/clauderon`,
+        "/tmp/clauderon",
+      ])
+      .file("/tmp/clauderon");
 
     output = output.withFile(filename, binary);
   }
