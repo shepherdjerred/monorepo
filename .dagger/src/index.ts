@@ -710,6 +710,8 @@ export class Monorepo {
           "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER",
           "aarch64-linux-gnu-gcc",
         )
+        // Don't use mold linker for cross-compilation (it can't find aarch64 ld)
+        .withEnvVariable("CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUSTFLAGS", "")
         .withEnvVariable(
           "PKG_CONFIG_PATH",
           "/usr/lib/aarch64-linux-gnu/pkgconfig",
