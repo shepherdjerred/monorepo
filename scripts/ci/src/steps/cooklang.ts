@@ -31,7 +31,7 @@ export function cooklangReleaseGroup(): BuildkiteGroup {
         key: "cooklang-release-create",
         if: MAIN_ONLY,
         depends_on: "cooklang-push",
-        command: `dagger call cooklang-create-release --artifacts $(dagger call cooklang-build ${COOKLANG_PKG_FLAGS}) --version "$(buildkite-agent meta-data get cooklang_version || echo dev)" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
+        command: `dagger call cooklang-build-and-release ${COOKLANG_PKG_FLAGS} --version "$(buildkite-agent meta-data get cooklang_version || echo dev)" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
         timeout_in_minutes: 10,
         retry: RETRY,
         env: DAGGER_ENV,

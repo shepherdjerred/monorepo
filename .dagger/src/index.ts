@@ -1468,6 +1468,21 @@ export class Monorepo {
     return cooklangPushHelper(dist, version, ghToken, dryrun).stdout();
   }
 
+  /** Build cooklang and create a GitHub release in a single pipeline */
+  @func({ cache: "never" })
+  async cooklangBuildAndRelease(
+    pkgDir: Directory,
+    version: string,
+    ghToken: Secret,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+    dryrun = false,
+  ): Promise<string> {
+    const dist = this.cooklangBuild(pkgDir, depNames, depDirs, tsconfig);
+    return cooklangCreateReleaseHelper(dist, version, ghToken, dryrun).stdout();
+  }
+
   /** Build clauderon for multiple targets and collect binaries into one Directory */
   @func()
   clauderonCollectBinaries(pkgDir: Directory): Directory {
