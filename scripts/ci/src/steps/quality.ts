@@ -8,7 +8,10 @@ import { daggerStep, plainStep } from "../lib/buildkite.ts";
 import type { BuildkiteStep } from "../lib/types.ts";
 
 /** Resolve a path relative to the monorepo root (4 levels up from this file). */
-const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
+const REPO_ROOT = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  "../../../..",
+);
 
 /** Read an ignore file (one entry per line, # comments, blank lines skipped). */
 function readIgnoreFile(path: string): string[] {
@@ -38,7 +41,6 @@ export function prettierStep(): BuildkiteStep {
     key: "prettier",
     daggerCmd: "dagger call prettier --source .",
     timeoutMinutes: 10,
-    softFail: true,
   });
 }
 
@@ -165,9 +167,7 @@ export function migrationGuardStep(): BuildkiteStep {
 export function mergeConflictStep(): BuildkiteStep {
   const ignored = readIgnoreFile(".conflictignore");
   const filterPipe =
-    ignored.length > 0
-      ? ignored.map((p) => `| grep -v '${p}'`).join(" ")
-      : "";
+    ignored.length > 0 ? ignored.map((p) => `| grep -v '${p}'`).join(" ") : "";
   return plainStep({
     label: ":no_entry: Merge Conflict Check",
     key: "merge-conflict-check",

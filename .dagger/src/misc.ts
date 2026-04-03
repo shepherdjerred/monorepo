@@ -89,15 +89,11 @@ export function caddyfileValidateHelper(source: Directory): Container {
       "bun run scripts/generate-caddyfile.ts > /tmp/Caddyfile",
     ])
     .withWorkdir("/workspace")
-    .withExec([
-      "sh",
-      "-c",
-      [
-        `CADDY_URL="https://github.com/caddyserver/caddy/releases/download/v2.9.1/caddy_2.9.1_linux_amd64.tar.gz"`,
-        `curl -fsSL "$CADDY_URL" | tar xz -C /usr/local/bin caddy`,
-        `caddy validate --config /tmp/Caddyfile`,
-      ].join(" && "),
-    ]);
+    .withFile(
+      "/usr/local/bin/caddy",
+      dag.container().from(CADDY_IMAGE).file("/usr/bin/caddy"),
+    )
+    .withExec(["caddy", "validate", "--config", "/tmp/Caddyfile"]);
 }
 
 /** Start a container and verify its health endpoint responds. */
