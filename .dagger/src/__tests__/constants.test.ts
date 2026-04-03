@@ -1,4 +1,5 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
 
 import {
   BUN_IMAGE,
@@ -38,39 +39,38 @@ describe("image constants", () => {
     { name: "PYTHON_IMAGE", value: PYTHON_IMAGE },
   ];
 
-  it.each(images)(
-    "$name contains a version tag (not :latest or :stable)",
-    ({ value }) => {
+  for (const { name, value } of images) {
+    it(`${name} contains a version tag (not :latest or :stable)`, () => {
       // Must contain a colon separating image name from tag
-      expect(value).toContain(":");
+      assert.ok(value.includes(":"));
       const tag = value.split(":").pop()!;
       // Tag must not be "latest" or "stable"
-      expect(tag).not.toBe("latest");
-      expect(tag).not.toBe("stable");
+      assert.notStrictEqual(tag, "latest");
+      assert.notStrictEqual(tag, "stable");
       // Tag should contain at least one digit (version number)
-      expect(tag).toMatch(/\d/);
-    },
-  );
+      assert.match(tag, /\d/);
+    });
+  }
 });
 
 describe("SOURCE_EXCLUDES", () => {
   it("contains .git exclusion", () => {
-    expect(SOURCE_EXCLUDES).toContain(".git");
+    assert.ok(SOURCE_EXCLUDES.includes(".git"));
   });
 
   it("contains node_modules exclusion", () => {
-    expect(SOURCE_EXCLUDES).toContain("**/node_modules");
+    assert.ok(SOURCE_EXCLUDES.includes("**/node_modules"));
   });
 
   it("contains dist exclusion", () => {
-    expect(SOURCE_EXCLUDES).toContain("**/dist");
+    assert.ok(SOURCE_EXCLUDES.includes("**/dist"));
   });
 
   it("contains target exclusion (for Rust/cargo)", () => {
-    expect(SOURCE_EXCLUDES).toContain("**/target");
+    assert.ok(SOURCE_EXCLUDES.includes("**/target"));
   });
 
   it("contains archive exclusion", () => {
-    expect(SOURCE_EXCLUDES).toContain("**/archive");
+    assert.ok(SOURCE_EXCLUDES.includes("**/archive"));
   });
 });

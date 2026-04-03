@@ -1,4 +1,5 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
 
 import {
   formatSummary,
@@ -15,7 +16,8 @@ describe("formatSummary", () => {
       { label: "pkg-b: lint", status: "PASS" },
     ];
     const summary = formatSummary(results, true);
-    expect(summary).toBe(
+    assert.strictEqual(
+      summary,
       "PASS  pkg-a: lint\nPASS  pkg-a: test\nPASS  pkg-b: lint",
     );
   });
@@ -27,7 +29,8 @@ describe("formatSummary", () => {
       { label: "pkg-b: lint", status: "PASS" },
     ];
     const summary = formatSummary(results, true);
-    expect(summary).toBe(
+    assert.strictEqual(
+      summary,
       "PASS  pkg-a: lint\nFAIL  pkg-a: test\nPASS  pkg-b: lint",
     );
   });
@@ -37,7 +40,7 @@ describe("formatSummary", () => {
       { label: "pkg-a: lint", status: "PASS" },
     ];
     const summary = formatSummary(results, false);
-    expect(summary).toContain("SKIP  homelab/ha (no hassToken)");
+    assert.ok(summary.includes("SKIP  homelab/ha (no hassToken)"));
   });
 
   it("does not append SKIP line when hassToken is present", () => {
@@ -45,7 +48,7 @@ describe("formatSummary", () => {
       { label: "pkg-a: lint", status: "PASS" },
     ];
     const summary = formatSummary(results, true);
-    expect(summary).not.toContain("SKIP");
+    assert.ok(!summary.includes("SKIP"));
   });
 });
 
@@ -55,7 +58,7 @@ describe("formatFailureDetails", () => {
       { label: "pkg-a: test", status: "FAIL", error: "assertion failed" },
     ];
     const details = formatFailureDetails(failures);
-    expect(details).toBe("--- pkg-a: test ---\nassertion failed");
+    assert.strictEqual(details, "--- pkg-a: test ---\nassertion failed");
   });
 
   it("formats multiple failures separated by blank lines", () => {
@@ -64,7 +67,8 @@ describe("formatFailureDetails", () => {
       { label: "pkg-b: lint", status: "FAIL", error: "error 2" },
     ];
     const details = formatFailureDetails(failures);
-    expect(details).toBe(
+    assert.strictEqual(
+      details,
       "--- pkg-a: test ---\nerror 1\n\n--- pkg-b: lint ---\nerror 2",
     );
   });
@@ -74,6 +78,6 @@ describe("formatFailureDetails", () => {
       { label: "pkg-a: test", status: "FAIL" },
     ];
     const details = formatFailureDetails(failures);
-    expect(details).toBe("--- pkg-a: test ---\nundefined");
+    assert.strictEqual(details, "--- pkg-a: test ---\nundefined");
   });
 });
