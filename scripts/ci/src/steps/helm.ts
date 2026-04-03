@@ -37,7 +37,7 @@ function helmPushStep(chartName: string): BuildkiteStep {
       [
         `dagger call helm-package --source .`,
         `--chart-name ${chartName}`,
-        `--version "$(buildkite-agent meta-data get release-version || echo 0.0.1)"`,
+        `--version "$(buildkite-agent meta-data get release-version)"`,
         `--chart-museum-username "$CHARTMUSEUM_USERNAME"`,
         `--chart-museum-password env:CHARTMUSEUM_PASSWORD`,
       ].join(" ") + DRYRUN_FLAG,

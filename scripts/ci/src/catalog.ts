@@ -234,8 +234,8 @@ export const ALL_PACKAGES: string[] = [
 
 type ResourceTier = { cpu: string; memory: string };
 
-const HEAVY: ResourceTier = { cpu: "250m", memory: "512Mi" };
-const MEDIUM: ResourceTier = { cpu: "250m", memory: "512Mi" };
+const HEAVY: ResourceTier = { cpu: "1000m", memory: "2048Mi" };
+const MEDIUM: ResourceTier = { cpu: "500m", memory: "1024Mi" };
 const LIGHT: ResourceTier = { cpu: "250m", memory: "512Mi" };
 
 export const PACKAGE_RESOURCES: Record<string, ResourceTier> = {

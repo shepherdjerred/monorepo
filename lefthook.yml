@@ -379,6 +379,13 @@ pre-commit:
               - "packages/*/tsconfig.json"
             run: bash scripts/compliance-check.sh
 
+          # --- Dagger hygiene ---
+          - name: dagger-hygiene
+            glob:
+              - ".dagger/src/**/*.ts"
+              - "scripts/ci/src/**/*.ts"
+            run: bash scripts/check-dagger-hygiene.sh
+
           # --- Quality ratchet ---
           - name: quality-ratchet
             glob: "**/*.{ts,tsx,rs}"

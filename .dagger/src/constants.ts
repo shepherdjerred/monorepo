@@ -1,0 +1,75 @@
+/**
+ * Shared constants used across Dagger module files.
+ *
+ * All image tags, cache volume names, and directory exclusion patterns
+ * live here to avoid duplication and ensure consistency.
+ */
+
+// ---------------------------------------------------------------------------
+// Container images
+// ---------------------------------------------------------------------------
+
+// renovate: datasource=docker depName=oven/bun
+export const BUN_IMAGE = "oven/bun:1.2.17-debian";
+// renovate: datasource=docker depName=rust
+export const RUST_IMAGE = "rust:1.89.0-bookworm";
+// renovate: datasource=docker depName=golang
+export const GO_IMAGE = "golang:1.25.4-bookworm";
+// renovate: datasource=docker depName=mcr.microsoft.com/playwright
+export const PLAYWRIGHT_IMAGE = "mcr.microsoft.com/playwright:v1.58.2-noble";
+// renovate: datasource=docker depName=ghcr.io/realm/swiftlint
+export const SWIFTLINT_IMAGE = "ghcr.io/realm/swiftlint:0.58.2";
+// renovate: datasource=docker depName=alpine
+export const ALPINE_IMAGE = "alpine:3.21";
+// renovate: datasource=docker depName=hashicorp/terraform
+export const TOFU_IMAGE = "ghcr.io/opentofu/opentofu:1.9.0";
+// renovate: datasource=docker depName=zricethezav/gitleaks
+export const GITLEAKS_IMAGE = "zricethezav/gitleaks:v8.22.1";
+// renovate: datasource=docker depName=aquasec/trivy
+export const TRIVY_IMAGE = "aquasec/trivy:0.58.2";
+// renovate: datasource=docker depName=semgrep/semgrep
+export const SEMGREP_IMAGE = "semgrep/semgrep:1.103.0";
+
+// Pinned Bun version for containers that install Bun manually (e.g. Playwright)
+// renovate: datasource=npm depName=bun
+export const BUN_VERSION = "1.2.17";
+
+// renovate: datasource=npm depName=release-please
+export const RELEASE_PLEASE_VERSION = "17.3.0";
+
+// renovate: datasource=npm depName=@anthropic-ai/claude-code
+export const CLAUDE_CODE_VERSION = "2.1.71";
+
+// ---------------------------------------------------------------------------
+// Cache volume names (stable — never include version numbers)
+// ---------------------------------------------------------------------------
+
+export const BUN_CACHE = "bun-install-cache";
+export const ESLINT_CACHE = "eslint-cache";
+export const CARGO_REGISTRY = "cargo-registry";
+export const CARGO_TARGET = "cargo-target";
+export const GO_MOD = "go-mod";
+export const GO_BUILD = "go-build";
+
+// ---------------------------------------------------------------------------
+// Source directory exclusions
+// ---------------------------------------------------------------------------
+
+/** Directories excluded when mounting source into containers. */
+export const SOURCE_EXCLUDES = [
+  "**/node_modules",
+  "**/.eslintcache",
+  "**/dist",
+  "**/target",
+  ".git",
+  "**/.vscode",
+  "**/.idea",
+  "**/coverage",
+  "**/build",
+  "**/.next",
+  "**/.tsbuildinfo",
+  "**/__pycache__",
+  "**/.DS_Store",
+  "**/archive",
+  "**/practice",
+];

@@ -6,31 +6,16 @@
  */
 import { dag, Container, Directory, File, Secret } from "@dagger.io/dagger";
 
-// renovate: datasource=docker depName=alpine
-const ALPINE_IMAGE = "alpine:3.21";
-// renovate: datasource=docker depName=hashicorp/terraform
-const TOFU_IMAGE = "ghcr.io/opentofu/opentofu:1.9.0";
-
-const SOURCE_EXCLUDES = [
-  "**/node_modules",
-  "**/.eslintcache",
-  "**/dist",
-  "**/target",
-  ".git",
-  "**/.vscode",
-  "**/.idea",
-  "**/coverage",
-  "**/build",
-  "**/.next",
-  "**/.tsbuildinfo",
-  "**/__pycache__",
-  "**/.DS_Store",
-  "**/archive",
-];
-
-// renovate: datasource=docker depName=oven/bun
-const BUN_IMAGE = "oven/bun:1.2.17-debian";
-const BUN_CACHE = "bun-install-cache";
+import {
+  ALPINE_IMAGE,
+  TOFU_IMAGE,
+  BUN_IMAGE,
+  BUN_CACHE,
+  RUST_IMAGE,
+  SOURCE_EXCLUDES,
+  RELEASE_PLEASE_VERSION,
+  CLAUDE_CODE_VERSION,
+} from "./constants";
 
 // ---------------------------------------------------------------------------
 // Helm
@@ -162,11 +147,7 @@ export function publishNpmHelper(
 
   return (
     container
-      .withExec([
-        "bash",
-        "-c",
-        "bun install --frozen-lockfile 2>/dev/null || bun install",
-      ])
+      .withExec(["bun", "install", "--frozen-lockfile"])
       // Replace file: refs with actual versions before publishing
       .withExec([
         "sh",
@@ -194,7 +175,7 @@ export function publishNpmHelper(
         "-c",
         dryrun
           ? `echo "DRYRUN: would publish ${pkg} to npm"`
-          : `echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc && bun publish --access public --tag latest`,
+          : `bun publish --access public --tag latest --token "$NPM_TOKEN"`,
       ])
   );
 }
@@ -250,11 +231,7 @@ export function deploySiteHelper(
     container = container.withFile("/workspace/tsconfig.base.json", tsconfig);
   }
 
-  container = container.withExec([
-    "bash",
-    "-c",
-    "bun install --frozen-lockfile 2>/dev/null || bun install",
-  ]);
+  container = container.withExec(["bun", "install", "--frozen-lockfile"]);
 
   // Build workspace deps that need compilation (e.g. astro-opengraph-images).
   // Skip eslint-config (lint-only dep, no dist/ needed for site build).
@@ -262,11 +239,7 @@ export function deploySiteHelper(
   for (const dep of buildDeps) {
     container = container
       .withWorkdir(`/workspace/packages/${dep}`)
-      .withExec([
-        "bash",
-        "-c",
-        "bun install --frozen-lockfile 2>/dev/null || bun install",
-      ])
+      .withExec(["bun", "install", "--frozen-lockfile"])
       .withExec(["bun", "run", "build"]);
   }
 
@@ -340,7 +313,7 @@ export function argoCdSyncHelper(
   return container.withExec([
     "sh",
     "-c",
-    `curl -sf -X POST "${serverUrl}/api/v1/applications/${appName}/sync" -H "Authorization: Bearer $ARGOCD_TOKEN" -H "Content-Type: application/json" || true`,
+    `curl -sf -X POST "${serverUrl}/api/v1/applications/${appName}/sync" -H "Authorization: Bearer $ARGOCD_TOKEN" -H "Content-Type: application/json"`,
   ]);
 }
 
@@ -407,11 +380,7 @@ export function cooklangBuildHelper(
   }
 
   return container
-    .withExec([
-      "bash",
-      "-c",
-      "bun install --frozen-lockfile 2>/dev/null || bun install",
-    ])
+    .withExec(["bun", "install", "--frozen-lockfile"])
     .withExec(["bun", "run", "build"]);
 }
 
@@ -445,12 +414,12 @@ export function cooklangPushHelper(
     "-c",
     `for f in main.js manifest.json styles.css; do
         if [ -f "$f" ]; then
+          existing_sha="$(gh api repos/shepherdjerred/cooklang-obsidian-releases/contents/$f --jq .sha || echo '')"
           gh api repos/shepherdjerred/cooklang-obsidian-releases/contents/$f \
             --method PUT \
             -f message="chore: update $f v${version}" \
             -f content="$(base64 < $f)" \
-            -f sha="$(gh api repos/shepherdjerred/cooklang-obsidian-releases/contents/$f --jq .sha 2>/dev/null || echo '')" \
-            2>/dev/null || true
+            -f sha="$existing_sha"
         fi
       done`,
   ]);
@@ -520,18 +489,25 @@ export function versionCommitBackHelper(
       `DRYRUN: would commit version bump ${version}`,
     ]);
   }
-  return container.withExec([
-    "sh",
-    "-c",
-    `git clone "https://x-access-token:$GH_TOKEN@github.com/shepherdjerred/monorepo.git" /repo && cd /repo && \
+  return container
+    .withExec([
+      "sh",
+      "-c",
+      `printf '#!/bin/sh\\necho "$$GH_TOKEN"\\n' > /usr/local/bin/git-askpass && chmod +x /usr/local/bin/git-askpass`,
+    ])
+    .withEnvVariable("GIT_ASKPASS", "/usr/local/bin/git-askpass")
+    .withExec([
+      "sh",
+      "-c",
+      `git clone https://github.com/shepherdjerred/monorepo.git /repo && cd /repo && \
        echo '${digests}' | jq -r 'to_entries[] | "s|\\(.key).*|\\(.key): \\"\\(.value)\\",|"' | while read -r pattern; do \
          sed -i "$pattern" packages/homelab/src/cdk8s/src/versions.ts; \
        done && \
        git checkout -b "chore/version-bump-${version}" && \
-       git add -A && git commit -m "chore: bump image versions to ${version}" && \
+       git add packages/homelab/src/cdk8s/src/versions.ts && git commit -m "chore: bump image versions to ${version}" && \
        git push origin "chore/version-bump-${version}" && \
        gh pr create --title "chore: bump image versions to ${version}" --body "Auto-generated version bump" --auto`,
-  ]);
+    ]);
 }
 
 // ---------------------------------------------------------------------------
@@ -548,9 +524,6 @@ export function clauderonCollectBinariesHelper(
   pkgDir: Directory,
   targets: ClauderonTarget[],
 ): Directory {
-  // renovate: datasource=docker depName=rust
-  const RUST_IMAGE = "rust:1.89.0-bookworm";
-
   let output = dag.directory();
 
   for (const { target, filename } of targets) {
@@ -622,9 +595,6 @@ export function clauderonCollectBinariesHelper(
 // Release-please
 // ---------------------------------------------------------------------------
 
-// renovate: datasource=npm depName=release-please
-const RELEASE_PLEASE_VERSION = "17.3.0";
-
 /** Run release-please to create release PRs and GitHub releases. */
 export function releasePleaseHelper(
   source: Directory,
@@ -658,7 +628,7 @@ export function releasePleaseHelper(
     "sh",
     "-c",
     [
-      `release-please release-pr --token=$GH_TOKEN --repo-url=shepherdjerred/monorepo --target-branch=main || true`,
+      `release-please release-pr --token=$GH_TOKEN --repo-url=shepherdjerred/monorepo --target-branch=main`,
       `release-please github-release --token=$GH_TOKEN --repo-url=shepherdjerred/monorepo --target-branch=main`,
     ].join(" && "),
   ]);
@@ -697,16 +667,17 @@ export function cooklangCreateReleaseHelper(
   return container.withExec([
     "sh",
     "-c",
-    `gh release create "cooklang-rich-preview-v${version}" /artifacts/* --repo shepherdjerred/monorepo --title "cooklang-rich-preview v${version}" --generate-notes || echo "Release already exists or no version"`,
+    `if gh release view "cooklang-rich-preview-v${version}" --repo shepherdjerred/monorepo >/dev/null 2>&1; then
+  echo "Release cooklang-rich-preview-v${version} already exists, skipping"
+else
+  gh release create "cooklang-rich-preview-v${version}" /artifacts/* --repo shepherdjerred/monorepo --title "cooklang-rich-preview v${version}" --generate-notes
+fi`,
   ]);
 }
 
 // ---------------------------------------------------------------------------
 // Code review
 // ---------------------------------------------------------------------------
-
-// renovate: datasource=npm depName=@anthropic-ai/claude-code
-const CLAUDE_CODE_VERSION = "2.1.71";
 
 /** Run AI code review on a PR. */
 export function codeReviewHelper(
@@ -779,8 +750,6 @@ Be direct and concise. If the PR is trivial (pure merge/rebase with minimal chan
 
 /** Run cargo deny check on the Rust project. */
 export function cargoDenyHelper(pkgDir: Directory): Container {
-  // renovate: datasource=docker depName=rust
-  const RUST_IMAGE = "rust:1.89.0-bookworm";
   return dag
     .container()
     .from(RUST_IMAGE)

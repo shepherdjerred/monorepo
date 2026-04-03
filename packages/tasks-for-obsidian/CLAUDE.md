@@ -27,7 +27,14 @@ If `pod install` fails, check prerequisites:
 
 - Xcode installed with iOS simulator runtimes
 - CocoaPods installed (`gem install cocoapods`)
-- `ios/.xcode.env.local` must point to a valid Node binary — currently hardcoded to mise-managed Node. Update with `echo "export NODE_BINARY=$(mise where node)/bin/node" > ios/.xcode.env.local` if the path is wrong.
+- If Xcode can’t find Node in build phases, create `ios/.xcode.env.local` (untracked) from `ios/.xcode.env.local.example` and set `NODE_BINARY`, e.g. `echo "export NODE_BINARY=$(mise where node)/bin/node" > ios/.xcode.env.local`.
+
+## Xcode Cloud
+
+- Custom dependency bootstrap script: `ios/ci_scripts/ci_post_clone.sh` (installs Node/Bun deps + pods)
+- For monorepo efficiency, set workflow file filters to at least `packages/tasks-for-obsidian/**` and `packages/tasknotes-types/**`
+- Archive action must use a distributable setting (not `None`) to support TestFlight
+- Add a TestFlight post-action with your internal tester group
 
 ## iOS Build Troubleshooting
 
@@ -41,7 +48,7 @@ Try these in order (least to most destructive):
 
 ### Specific Failures
 
-- **"Node not found" during Xcode build phase**: The `ios/.xcode.env.local` file has a hardcoded Node path. Fix: `echo "export NODE_BINARY=$(mise where node)/bin/node" > ios/.xcode.env.local`
+- **"Node not found" during Xcode build phase**: Create/update `ios/.xcode.env.local` with a valid Node path. Fix: `echo "export NODE_BINARY=$(mise where node)/bin/node" > ios/.xcode.env.local`
 - **Pod version conflicts**: `cd ios && pod cache clean --all && pod deintegrate && pod install`
 - **Code signing errors on physical device**: Must be configured in Xcode — open `ios/TasksForObsidian.xcworkspace`, set the development team under Signing & Capabilities for both `TasksForObsidian` and `TasksWidget` targets.
 

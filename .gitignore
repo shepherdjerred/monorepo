@@ -71,3 +71,6 @@ packages/cooklang-for-obsidian/main.js
 obsidian/.obsidian/plugins/*/main.js
 
 **/:memory:
+
+# Xcode local machine-specific Node path (do not commit)
+packages/tasks-for-obsidian/ios/.xcode.env.local

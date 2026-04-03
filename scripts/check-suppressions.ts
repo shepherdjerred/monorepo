@@ -18,6 +18,13 @@ const SUPPRESSION_PATTERNS = [
   // Rust suppressions
   /#\[allow\(/,
   /#!\[allow\(/,
+  // Dagger/CI hygiene patterns (banned in .dagger/src/ and scripts/ci/src/)
+  /\|\| true/,
+  /2>\/dev\/null/,
+  /\|\| bun install/,
+  /x-access-token/,
+  /git add -A/,
+  /--no-exit-code/,
 ];
 
 // Files where suppression patterns are legitimate (config, the script itself, etc.)
@@ -38,8 +45,13 @@ const EXCLUDED_FILES = [
   "packages/birmel/src/music/extractors.ts",
   // Intentional: Sentry ErrorBoundary class types incompatible with React 19
   "packages/discord-plays-pokemon/packages/frontend/src/main.tsx",
-  // Documentation: CLAUDE.md mentions suppression patterns as things to avoid
+  // Documentation: CLAUDE.md files mention suppression patterns as things to avoid
+  "CLAUDE.md",
   "packages/dotfiles/CLAUDE.md",
+  // Contains patterns as search strings
+  "scripts/check-dagger-hygiene.ts",
+  // Uses || true for grep exit code
+  "scripts/quality-ratchet.ts",
 ];
 
 type Finding = {

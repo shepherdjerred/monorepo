@@ -5,30 +5,12 @@
  */
 import { dag, Container, Directory } from "@dagger.io/dagger";
 
-// renovate: datasource=docker depName=oven/bun
-const BUN_IMAGE = "oven/bun:1.2.17-debian";
-
-// renovate: datasource=docker depName=zricethezav/gitleaks
-const GITLEAKS_IMAGE = "zricethezav/gitleaks:v8.22.1";
-
-const BUN_CACHE = "bun-install-cache";
-
-const SOURCE_EXCLUDES = [
-  "**/node_modules",
-  "**/.eslintcache",
-  "**/dist",
-  "**/target",
-  ".git",
-  "**/.vscode",
-  "**/.idea",
-  "**/coverage",
-  "**/build",
-  "**/.next",
-  "**/.tsbuildinfo",
-  "**/__pycache__",
-  "**/.DS_Store",
-  "**/archive",
-];
+import {
+  BUN_IMAGE,
+  GITLEAKS_IMAGE,
+  BUN_CACHE,
+  SOURCE_EXCLUDES,
+} from "./constants";
 
 /**
  * Create a bun container with source mounted, workdir at /workspace.
@@ -61,9 +43,9 @@ export function knipCheckHelper(source: Directory): Container {
     .withExec([
       "bash",
       "-c",
-      'for dir in $(find packages/ -name bun.lock -not -path "*/node_modules/*" -not -path "*/example/*" | xargs -I{} dirname {}); do (cd "$dir" && bun install --frozen-lockfile 2>/dev/null || bun install) || true; done',
+      'for dir in $(find packages/ -name bun.lock -not -path "*/node_modules/*" -not -path "*/example/*" | xargs -I{} dirname {}); do (cd "$dir" && bun install --frozen-lockfile); done',
     ])
-    .withExec(["bunx", "knip", "--no-exit-code", "--no-config-hints"]);
+    .withExec(["bunx", "knip", "--no-config-hints"]);
 }
 
 /** Run gitleaks to detect secrets in the source tree. */
@@ -76,6 +58,14 @@ export function gitleaksCheckHelper(source: Directory): Container {
       exclude: SOURCE_EXCLUDES,
     })
     .withExec(["gitleaks", "detect", "--source", "/workspace", "--no-git"]);
+}
+
+/** Run the dagger hygiene checker and return its output. */
+export function daggerHygieneHelper(source: Directory): Container {
+  return bunContainer(source).withExec([
+    "bun",
+    "scripts/check-dagger-hygiene.ts",
+  ]);
 }
 
 /** Run the suppression check script and return its output. */

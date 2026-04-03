@@ -5,29 +5,7 @@
  */
 import { dag, Container, Directory } from "@dagger.io/dagger";
 
-// renovate: datasource=docker depName=aquasec/trivy
-const TRIVY_IMAGE = "aquasec/trivy:0.58.2";
-
-// renovate: datasource=docker depName=semgrep/semgrep
-const SEMGREP_IMAGE = "semgrep/semgrep:1.103.0";
-
-const SOURCE_EXCLUDES = [
-  "**/node_modules",
-  "**/.eslintcache",
-  "**/dist",
-  "**/target",
-  ".git",
-  "**/.vscode",
-  "**/.idea",
-  "**/coverage",
-  "**/build",
-  "**/.next",
-  "**/.tsbuildinfo",
-  "**/__pycache__",
-  "**/.DS_Store",
-  "**/archive",
-  "**/practice",
-];
+import { TRIVY_IMAGE, SEMGREP_IMAGE, SOURCE_EXCLUDES } from "./constants";
 
 /** Scan the source tree with trivy for vulnerabilities (HIGH, CRITICAL severity). */
 export function trivyScanHelper(source: Directory): Container {

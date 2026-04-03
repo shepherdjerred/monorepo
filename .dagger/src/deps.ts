@@ -7,6 +7,7 @@
  */
 export const WORKSPACE_DEPS: Record<string, string[]> = {
   // Standalone (no workspace deps)
+  "bun-decompile": [],
   "eslint-config": [],
   resume: [],
 

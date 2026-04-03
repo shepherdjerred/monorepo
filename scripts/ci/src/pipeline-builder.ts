@@ -20,6 +20,7 @@ import {
   suppressionCheckStep,
   trivyScanStep,
   semgrepScanStep,
+  daggerHygieneStep,
 } from "./steps/quality.ts";
 import { codeReviewStep } from "./steps/code-review.ts";
 import { releaseStep } from "./steps/release.ts";
@@ -72,6 +73,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
   // --- Quality checks (non-blocking — run in parallel, don't gate releases) ---
   steps.push(prettierStep());
   steps.push(knipCheckStep());
+  steps.push(daggerHygieneStep());
   // TODO: re-enable when Trivy timeout is resolved
   // steps.push(trivyScanStep());
   steps.push(semgrepScanStep());

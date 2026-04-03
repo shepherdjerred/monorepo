@@ -9,11 +9,11 @@ export function safeKey(name: string): string {
 /** Standard retry configuration for CI steps. */
 export const RETRY = {
   automatic: [
-    { exit_status: -1, limit: 0 },
+    { exit_status: -1, limit: 2 },
     { exit_status: 1, limit: 0 },
     { exit_status: 3, limit: 0 },
-    { exit_status: 34, limit: 0 },
-    { exit_status: 255, limit: 0 },
+    { exit_status: 34, limit: 2 },
+    { exit_status: 255, limit: 2 },
   ],
 };
 

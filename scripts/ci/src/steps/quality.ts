@@ -79,6 +79,15 @@ export function trivyScanStep(): BuildkiteStep {
   });
 }
 
+export function daggerHygieneStep(): BuildkiteStep {
+  return daggerStep({
+    label: ":broom: Dagger Hygiene",
+    key: "dagger-hygiene",
+    daggerCmd: "dagger call dagger-hygiene --source .",
+    timeoutMinutes: 10,
+  });
+}
+
 export function semgrepScanStep(): BuildkiteStep {
   return daggerStep({
     label: ":mag: Semgrep Scan",

@@ -26,9 +26,24 @@ packages/
 ├── starlight-karma-bot/     # Discord karma bot
 ├── toolkit/                 # CLI developer tools (fetch, recall, pr, pd, bugsink, grafana)
 ├── webring/                 # Webring component
-scripts/ci/                  # Python CI scripts (uv + Python)
+scripts/ci/                  # TypeScript CI pipeline generator
 archive/                     # Legacy projects (do not modify)
 ```
+
+## Dagger & CI Code — Banned Patterns
+
+These patterns are banned in `.dagger/src/` and `scripts/ci/src/`. Automated checks (`scripts/check-dagger-hygiene.ts`) enforce this in pre-commit and CI. Do not write them.
+
+- `|| true` — never swallow errors silently
+- `2>/dev/null` — never hide stderr
+- `|| bun install` (after `--frozen-lockfile`) — never bypass lockfile enforcement
+- `|| echo` — never convert errors to messages
+- `x-access-token` in URLs — use `GIT_ASKPASS` for git authentication
+- Writing tokens to files (`.npmrc`, etc.) — use `--token` flags or Dagger `Secret` type
+- `git add -A` or `git add .` — always stage specific files by path
+- `--no-exit-code` — never bypass quality gate exit codes
+
+If a command legitimately needs error handling, handle the specific error explicitly (e.g., check existence before creating, parse exit codes) rather than blanket-suppressing all failures.
 
 ## Commands
 
@@ -45,8 +60,8 @@ cd packages/<name> && bunx eslint . --fix
 # CI runs on Buildkite (NOT GitHub Actions)
 # Check CI status via Buildkite CLI or web UI, never `gh run`
 
-# Python CI scripts (release, deploy, etc.)
-cd scripts/ci && uv run python -m ci.<module>
+# CI pipeline generator
+cd scripts/ci && bun run src/main.ts
 ```
 
 ## Development Setup

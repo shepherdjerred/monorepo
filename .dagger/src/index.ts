@@ -20,6 +20,7 @@ import {
   knipCheckHelper,
   gitleaksCheckHelper,
   suppressionCheckHelper,
+  daggerHygieneHelper,
 } from "./quality";
 
 import { trivyScanHelper, semgrepScanHelper } from "./security";
@@ -48,46 +49,21 @@ import {
   cargoDenyHelper,
 } from "./release";
 
-// renovate: datasource=docker depName=oven/bun
-const BUN_IMAGE = "oven/bun:1.2.17-debian";
-// renovate: datasource=docker depName=rust
-const RUST_IMAGE = "rust:1.89.0-bookworm";
-// renovate: datasource=docker depName=golang
-const GO_IMAGE = "golang:1.25.4-bookworm";
-// renovate: datasource=docker depName=mcr.microsoft.com/playwright
-const PLAYWRIGHT_IMAGE = "mcr.microsoft.com/playwright:v1.58.2-noble";
-// renovate: datasource=docker depName=ghcr.io/realm/swiftlint
-const SWIFTLINT_IMAGE = "ghcr.io/realm/swiftlint:0.58.2";
-
-// Pinned Bun version for containers that install Bun manually (e.g. Playwright)
-// renovate: datasource=npm depName=bun
-const BUN_VERSION = "1.2.17";
-
-/** Directories excluded when mounting source into containers. */
-const SOURCE_EXCLUDES = [
-  "**/node_modules",
-  "**/.eslintcache",
-  "**/dist",
-  "**/target",
-  ".git",
-  "**/.vscode",
-  "**/.idea",
-  "**/coverage",
-  "**/build",
-  "**/.next",
-  "**/.tsbuildinfo",
-  "**/__pycache__",
-  "**/.DS_Store",
-  "**/archive",
-];
-
-// Stable cache volume names — never include version numbers
-const BUN_CACHE = "bun-install-cache";
-const ESLINT_CACHE = "eslint-cache";
-const CARGO_REGISTRY = "cargo-registry";
-const CARGO_TARGET = "cargo-target";
-const GO_MOD = "go-mod";
-const GO_BUILD = "go-build";
+import {
+  BUN_IMAGE,
+  RUST_IMAGE,
+  GO_IMAGE,
+  PLAYWRIGHT_IMAGE,
+  SWIFTLINT_IMAGE,
+  BUN_VERSION,
+  SOURCE_EXCLUDES,
+  BUN_CACHE,
+  ESLINT_CACHE,
+  CARGO_REGISTRY,
+  CARGO_TARGET,
+  GO_MOD,
+  GO_BUILD,
+} from "./constants";
 
 @object()
 export class Monorepo {
@@ -154,15 +130,9 @@ export class Monorepo {
       }
     }
 
-    // Per-package lockfile — try frozen install first, fall back to non-frozen
-    // (lockfile may differ between local monorepo context and isolated Dagger container)
     container = container
       .withWorkdir(`/workspace/packages/${pkg}`)
-      .withExec([
-        "bash",
-        "-c",
-        "bun install --frozen-lockfile 2>/dev/null || bun install",
-      ]);
+      .withExec(["bun", "install", "--frozen-lockfile"]);
 
     return container;
   }
@@ -279,95 +249,6 @@ export class Monorepo {
     return this.bunBase(pkgDir, pkg, depNames, depDirs, tsconfig)
       .withWorkdir(`/workspace/packages/${pkg}`)
       .withExec(["bun", "run", "generate"]);
-  }
-
-  /** Run bun run generate for a package and return the workspace with generated files */
-  @func()
-  generate(
-    pkgDir: Directory,
-    pkg: string,
-    depNames: string[] = [],
-    depDirs: Directory[] = [],
-    tsconfig: File | null = null,
-  ): Directory {
-    return this.generateContainer(
-      pkgDir,
-      pkg,
-      depNames,
-      depDirs,
-      tsconfig,
-    ).directory("/workspace");
-  }
-
-  /** Run lint with pre-generated workspace (e.g. after Prisma generate) */
-  @func()
-  async lintWithGenerated(generated: Directory, pkg: string): Promise<string> {
-    return dag
-      .container()
-      .from(BUN_IMAGE)
-      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
-      .withWorkdir(`/workspace/packages/${pkg}`)
-      .withDirectory("/workspace", generated)
-      .withExec([
-        "bash",
-        "-c",
-        "bun install --frozen-lockfile 2>/dev/null || bun install",
-      ])
-      .withMountedCache(
-        `/workspace/packages/${pkg}/.eslintcache`,
-        dag.cacheVolume(ESLINT_CACHE),
-      )
-      .withExec(["bun", "run", "lint"])
-      .stdout();
-  }
-
-  /**
-   * Base container with system deps for running generated workspaces.
-   * Mirrors the apt-get packages from bunBase so tests/typechecks have
-   * the same system tools (python3, make, g++) available.
-   */
-  private generatedBase(generated: Directory, pkg: string): Container {
-    return dag
-      .container()
-      .from(BUN_IMAGE)
-      .withExec(["apt-get", "update", "-qq"])
-      .withExec([
-        "apt-get",
-        "install",
-        "-y",
-        "-qq",
-        "--no-install-recommends",
-        "python3",
-        "make",
-        "g++",
-      ])
-      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
-      .withWorkdir(`/workspace/packages/${pkg}`)
-      .withDirectory("/workspace", generated)
-      .withExec([
-        "bash",
-        "-c",
-        "bun install --frozen-lockfile 2>/dev/null || bun install",
-      ]);
-  }
-
-  /** Run typecheck with pre-generated workspace */
-  @func()
-  async typecheckWithGenerated(
-    generated: Directory,
-    pkg: string,
-  ): Promise<string> {
-    return this.generatedBase(generated, pkg)
-      .withExec(["bun", "run", "typecheck"])
-      .stdout();
-  }
-
-  /** Run test with pre-generated workspace */
-  @func()
-  async testWithGenerated(generated: Directory, pkg: string): Promise<string> {
-    return this.generatedBase(generated, pkg)
-      .withExec(["bun", "run", "test"])
-      .stdout();
   }
 
   // ---------------------------------------------------------------------------
@@ -609,11 +490,7 @@ export class Monorepo {
     // Install deps then set up the final image
     return container
       .withWorkdir(`/workspace/packages/${pkg}`)
-      .withExec([
-        "bash",
-        "-c",
-        "bun install --frozen-lockfile 2>/dev/null || bun install",
-      ])
+      .withExec(["bun", "install", "--frozen-lockfile"])
       .withLabel(
         "org.opencontainers.image.source",
         "https://github.com/shepherdjerred/monorepo",
@@ -806,19 +683,20 @@ export class Monorepo {
   // Playwright tests
   // ---------------------------------------------------------------------------
 
-  /** Run Playwright tests headless in a container */
-  @func()
-  async playwrightTest(
+  /**
+   * Shared Playwright container setup: PLAYWRIGHT_IMAGE + bun install + deps.
+   * Returns a container ready for the divergent test/update steps.
+   */
+  private playwrightBase(
     pkgDir: Directory,
     pkg: string,
     depNames: string[] = [],
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
-  ): Promise<string> {
+  ): Container {
     let container = dag
       .container()
       .from(PLAYWRIGHT_IMAGE)
-      // Install pinned bun on the Playwright image (needs unzip)
       .withExec(["apt-get", "update", "-qq"])
       .withExec([
         "apt-get",
@@ -871,8 +749,20 @@ export class Monorepo {
       .withWorkdir(`/workspace/packages/${pkg}`)
       .withExec(["bun", "install", "--frozen-lockfile"]);
 
+    return container;
+  }
+
+  /** Run Playwright tests headless in a container */
+  @func()
+  async playwrightTest(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Promise<string> {
     return (
-      container
+      this.playwrightBase(pkgDir, pkg, depNames, depDirs, tsconfig)
         // Build the site first — playwright tests run against astro preview which needs dist/
         .withExec(["bunx", "astro", "build"])
         .withExec(["bun", "run", "test"])
@@ -889,62 +779,7 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
   ): Directory {
-    let container = dag
-      .container()
-      .from(PLAYWRIGHT_IMAGE)
-      .withExec(["apt-get", "update", "-qq"])
-      .withExec([
-        "apt-get",
-        "install",
-        "-y",
-        "-qq",
-        "--no-install-recommends",
-        "unzip",
-      ])
-      .withExec([
-        "bash",
-        "-c",
-        `curl -fsSL https://bun.sh/install | bash -s -- bun-v${BUN_VERSION}`,
-      ])
-      .withEnvVariable(
-        "PATH",
-        "/root/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-      )
-      .withEnvVariable("CI", "true")
-      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
-      .withWorkdir(`/workspace/packages/${pkg}`)
-      .withDirectory(`/workspace/packages/${pkg}`, pkgDir, {
-        exclude: SOURCE_EXCLUDES,
-      });
-
-    // Mount deps at correct relative paths
-    for (let i = 0; i < depNames.length; i++) {
-      container = container.withDirectory(
-        `/workspace/packages/${depNames[i]}`,
-        depDirs[i],
-        { exclude: SOURCE_EXCLUDES },
-      );
-    }
-
-    if (tsconfig != null) {
-      container = container.withFile("/workspace/tsconfig.base.json", tsconfig);
-    }
-
-    // Install and build deps first so dist/ exists before target's install resolves file: refs
-    for (const dep of BUILD_TIME_DEPS) {
-      if (depNames.includes(dep)) {
-        container = container
-          .withWorkdir(`/workspace/packages/${dep}`)
-          .withExec(["bun", "install", "--frozen-lockfile"])
-          .withExec(["bun", "run", "build"]);
-      }
-    }
-
-    container = container
-      .withWorkdir(`/workspace/packages/${pkg}`)
-      .withExec(["bun", "install", "--frozen-lockfile"]);
-
-    return container
+    return this.playwrightBase(pkgDir, pkg, depNames, depDirs, tsconfig)
       .withExec(["bunx", "astro", "build"])
       .withExec(["bunx", "playwright", "test", "--update-snapshots"])
       .directory(`/workspace/packages/${pkg}/test`);
@@ -1003,26 +838,7 @@ export class Monorepo {
     source: Directory,
     hassToken: Secret | null = null,
   ): Promise<string> {
-    const tsPackages = [
-      "webring",
-      "bun-decompile",
-      "eslint-config",
-      "resume",
-      "astro-opengraph-images",
-      "cooklang-rich-preview",
-      "birmel",
-      "starlight-karma-bot",
-      "tasknotes-server",
-      "tasknotes-types",
-      "better-skill-capped",
-      "hn-enhancer",
-      "monarch",
-      "discord-plays-pokemon",
-      "tasks-for-obsidian",
-      "toolkit",
-      "sjer.red",
-      "homelab",
-    ];
+    const tsPackages = Object.keys(WORKSPACE_DEPS);
 
     const tsconfig = source.file("tsconfig.base.json");
 
@@ -1262,6 +1078,12 @@ export class Monorepo {
   @func()
   async suppressionCheck(source: Directory): Promise<string> {
     return suppressionCheckHelper(source).stdout();
+  }
+
+  /** Run the dagger hygiene checker to detect banned patterns in CI code */
+  @func()
+  async daggerHygiene(source: Directory): Promise<string> {
+    return daggerHygieneHelper(source).stdout();
   }
 
   // ---------------------------------------------------------------------------
