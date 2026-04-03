@@ -49,14 +49,14 @@ export function shellcheckStep(): BuildkiteStep {
     label: ":shell: Shellcheck",
     key: "shellcheck",
     command: [
-      "source .buildkite/scripts/setup-tools.sh && install_shellcheck",
+      "bash -c 'source .buildkite/scripts/setup-tools.sh && install_shellcheck",
       '&& echo "+++ :shell: Shellcheck"',
       '&& find . -name "*.sh"',
       '-not -path "*/archive/*"',
       '-not -path "*/node_modules/*"',
       '-not -path "*/Pods/*"',
       '-not -path "*/target/*"',
-      "-print0 | xargs -0 shellcheck --severity=warning",
+      "-print0 | xargs -0 shellcheck --severity=warning'",
     ].join(" "),
     timeoutMinutes: 10,
   });
@@ -96,11 +96,11 @@ export function gitleaksCheckStep(): BuildkiteStep {
     label: ":lock: Gitleaks",
     key: "gitleaks-check",
     command: [
-      "source .buildkite/scripts/setup-tools.sh",
-      "install_gitleaks",
-      'echo "+++ :lock: Gitleaks"',
-      "gitleaks detect --source . --no-git",
-    ].join(" && "),
+      "bash -c 'source .buildkite/scripts/setup-tools.sh",
+      "&& install_gitleaks",
+      '&& echo "+++ :lock: Gitleaks"',
+      "&& gitleaks detect --source . --no-git'",
+    ].join(" "),
     timeoutMinutes: 10,
   });
 }

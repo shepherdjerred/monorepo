@@ -20,6 +20,7 @@ AI-maintained knowledge base for the monorepo.
 - [rules_bun2 Architecture](decisions/2026-03-20_rules-bun2-architecture.md) - Monolithic bun install for Bazel: 6 approaches tried, what worked, what failed, and why
 - [Kueue for Buildkite Resource Management](decisions/2026-03-18_kueue-buildkite-resource-management.md) - Why ResourceQuota caused etcd meltdowns and how Kueue replaces it with Job suspension
 - [Dagger Audit: Current vs Plans](decisions/2026-04-02_dagger-audit-current-vs-plans.md) - Full audit of Dagger CI: 27 findings status, lost features, implementation plan
+- [Dagger --source . vs Plain Steps](decisions/2026-04-03_dagger-source-vs-plain-steps.md) - Tradeoff: full-repo copy cost in Dagger vs isolation loss in plain Buildkite steps
 - [1Password Deduplication](decisions/2026-03-08_1password-deduplication.md) - Deduplicating 1Password secret references
 
 ## Plans
@@ -39,6 +40,7 @@ AI-maintained knowledge base for the monorepo.
 
 ## Guides
 
+- [Local Quality Check](guides/2026-04-03_local-quality-check.md) - Full monorepo verification: all linters, tests, builds, and quality gates
 - [Monthly Changelog: March 2026](guides/2026-03-19_monthly-changelog-march.md) - Summary of major changes Feb 19 – Mar 19, 2026
 - [Local CI/Release CLI](guides/2026-03-18_local-ci-cli.md) - Run deploy/release workflows locally without Buildkite
 - [Dotfiles Update](guides/2026-03-08_dotfiles-update.md) - Dotfiles configuration and update guide

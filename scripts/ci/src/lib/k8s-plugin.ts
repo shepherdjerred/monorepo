@@ -1,5 +1,5 @@
 /** CI base image — kept in sync with .buildkite/ci-image/VERSION. */
-const CI_BASE_IMAGE = "ghcr.io/shepherdjerred/ci-base:403";
+const CI_BASE_IMAGE = "ghcr.io/shepherdjerred/ci-base:404";
 
 /** Build the Kubernetes plugin config for a Buildkite step. */
 export function k8sPlugin(

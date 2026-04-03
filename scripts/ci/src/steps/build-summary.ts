@@ -20,88 +20,88 @@ const ALL_IMAGE_KEYS = [...IMAGE_PUSH_TARGETS, ...INFRA_PUSH_TARGETS].map(
 );
 
 function buildSummaryScript(): string {
-  // Use heredoc-style cat to avoid backtick/escaping issues in bash.
-  // Shell variables ($VERSION, $DIGEST) are expanded inside the heredoc.
+  // Buildkite interpolates $VAR in command strings, stripping shell variables.
+  // Use $$ to escape dollar signs so they pass through to bash as literal $.
   const lines: string[] = [
     `set -euo pipefail`,
     `SUMMARY=/tmp/summary.md`,
-    `VERSION=$(buildkite-agent meta-data get release-version --default "unreleased")`,
+    `VERSION=$$(buildkite-agent meta-data get release-version --default "unreleased")`,
     // Start with static header
-    `cat > $SUMMARY << 'HEADER'`,
+    `cat > $$SUMMARY << 'HEADER'`,
     `## :rocket: Build Summary`,
     `HEADER`,
-    `echo "" >> $SUMMARY`,
-    `echo "**Version:** $VERSION" >> $SUMMARY`,
-    `echo "" >> $SUMMARY`,
+    `echo "" >> $$SUMMARY`,
+    `echo "**Version:** $$VERSION" >> $$SUMMARY`,
+    `echo "" >> $$SUMMARY`,
     // Images section
-    `echo "### :docker: Images" >> $SUMMARY`,
-    `echo "" >> $SUMMARY`,
-    `echo "| Image | Digest |" >> $SUMMARY`,
-    `echo "|-------|--------|" >> $SUMMARY`,
+    `echo "### :docker: Images" >> $$SUMMARY`,
+    `echo "" >> $$SUMMARY`,
+    `echo "| Image | Digest |" >> $$SUMMARY`,
+    `echo "|-------|--------|" >> $$SUMMARY`,
   ];
 
   for (const key of ALL_IMAGE_KEYS) {
     lines.push(
-      `DIGEST=$(buildkite-agent meta-data get "digest:${key}" --default "")`,
-      `if [ -n "$DIGEST" ]; then echo "| ${key} | $DIGEST |" >> $SUMMARY; fi`,
+      `DIGEST=$$(buildkite-agent meta-data get "digest:${key}" --default "")`,
+      `if [ -n "$$DIGEST" ]; then echo "| ${key} | $$DIGEST |" >> $$SUMMARY; fi`,
     );
   }
 
   // Helm charts
   lines.push(
-    `echo "" >> $SUMMARY`,
-    `echo "### :helm: Helm Charts" >> $SUMMARY`,
-    `echo "" >> $SUMMARY`,
-    `echo "Published ${String(HELM_CHARTS.length)} charts to [ChartMuseum](https://chartmuseum.sjer.red)" >> $SUMMARY`,
-    `echo "" >> $SUMMARY`,
-    `echo "<details><summary>Chart list</summary>" >> $SUMMARY`,
-    `echo "" >> $SUMMARY`,
+    `echo "" >> $$SUMMARY`,
+    `echo "### :helm: Helm Charts" >> $$SUMMARY`,
+    `echo "" >> $$SUMMARY`,
+    `echo "Published ${String(HELM_CHARTS.length)} charts to [ChartMuseum](https://chartmuseum.sjer.red)" >> $$SUMMARY`,
+    `echo "" >> $$SUMMARY`,
+    `echo "<details><summary>Chart list</summary>" >> $$SUMMARY`,
+    `echo "" >> $$SUMMARY`,
   );
   for (const chart of HELM_CHARTS) {
-    lines.push(`echo "- ${chart}" >> $SUMMARY`);
+    lines.push(`echo "- ${chart}" >> $$SUMMARY`);
   }
-  lines.push(`echo "" >> $SUMMARY`, `echo "</details>" >> $SUMMARY`);
+  lines.push(`echo "" >> $$SUMMARY`, `echo "</details>" >> $$SUMMARY`);
 
   // NPM packages
   lines.push(
-    `echo "" >> $SUMMARY`,
-    `echo "### :npm: NPM Packages" >> $SUMMARY`,
-    `echo "" >> $SUMMARY`,
+    `echo "" >> $$SUMMARY`,
+    `echo "### :npm: NPM Packages" >> $$SUMMARY`,
+    `echo "" >> $$SUMMARY`,
   );
   for (const pkg of NPM_PACKAGES) {
     lines.push(
-      `echo "- [${pkg.name}](https://www.npmjs.com/package/${pkg.name})" >> $SUMMARY`,
+      `echo "- [${pkg.name}](https://www.npmjs.com/package/${pkg.name})" >> $$SUMMARY`,
     );
   }
 
   // Sites
   lines.push(
-    `echo "" >> $SUMMARY`,
-    `echo "### :globe_with_meridians: Sites" >> $SUMMARY`,
-    `echo "" >> $SUMMARY`,
-    `echo "| Site | URL |" >> $SUMMARY`,
-    `echo "|------|-----|" >> $SUMMARY`,
+    `echo "" >> $$SUMMARY`,
+    `echo "### :globe_with_meridians: Sites" >> $$SUMMARY`,
+    `echo "" >> $$SUMMARY`,
+    `echo "| Site | URL |" >> $$SUMMARY`,
+    `echo "|------|-----|" >> $$SUMMARY`,
   );
   for (const site of DEPLOY_SITES) {
     const url =
       site.bucket === "sjer-red"
         ? "https://sjer.red"
         : `https://${site.bucket}.sjer.red`;
-    lines.push(`echo "| ${site.name} | [${url}](${url}) |" >> $SUMMARY`);
+    lines.push(`echo "| ${site.name} | [${url}](${url}) |" >> $$SUMMARY`);
   }
 
   // ArgoCD
   lines.push(
-    `echo "" >> $SUMMARY`,
-    `echo "### :argocd: ArgoCD" >> $SUMMARY`,
-    `echo "" >> $SUMMARY`,
-    `echo "[apps](https://argocd.sjer.red/applications/argocd/apps)" >> $SUMMARY`,
+    `echo "" >> $$SUMMARY`,
+    `echo "### :argocd: ArgoCD" >> $$SUMMARY`,
+    `echo "" >> $$SUMMARY`,
+    `echo "[apps](https://argocd.sjer.red/applications/argocd/apps)" >> $$SUMMARY`,
   );
 
   // Post annotation
   lines.push(
-    `echo "" >> $SUMMARY`,
-    `buildkite-agent annotate --style success --context build-summary < $SUMMARY`,
+    `echo "" >> $$SUMMARY`,
+    `buildkite-agent annotate --style success --context build-summary < $$SUMMARY`,
   );
 
   return lines.join("\n");

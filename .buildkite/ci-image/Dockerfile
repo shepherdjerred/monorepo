@@ -14,7 +14,7 @@ LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorep
 # System essentials only
 RUN apt-get update -qq && \
     apt-get install -y -qq \
-    curl jq git ca-certificates unzip xz-utils && \
+    bash curl jq git ca-certificates unzip xz-utils && \
     rm -rf /var/lib/apt/lists/*
 
 # Node.js (required by Dagger TypeScript SDK runtime)
