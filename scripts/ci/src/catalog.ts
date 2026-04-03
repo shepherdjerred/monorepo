@@ -234,9 +234,11 @@ export const ALL_PACKAGES: string[] = [
 
 type ResourceTier = { cpu: string; memory: string };
 
-const HEAVY: ResourceTier = { cpu: "1000m", memory: "2048Mi" };
-const MEDIUM: ResourceTier = { cpu: "500m", memory: "1024Mi" };
-const LIGHT: ResourceTier = { cpu: "250m", memory: "512Mi" };
+// BK pods are thin dagger CLI wrappers — all compute happens in the remote
+// Dagger engine. Keep requests minimal so more jobs fit within Kueue quota.
+const HEAVY: ResourceTier = { cpu: "250m", memory: "512Mi" };
+const MEDIUM: ResourceTier = { cpu: "150m", memory: "384Mi" };
+const LIGHT: ResourceTier = { cpu: "100m", memory: "256Mi" };
 
 export const PACKAGE_RESOURCES: Record<string, ResourceTier> = {
   clauderon: HEAVY,

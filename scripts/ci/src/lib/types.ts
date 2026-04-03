@@ -24,6 +24,9 @@ export interface BuildkiteStep {
   soft_fail?: boolean;
   env?: Record<string, string>;
   parallelism?: number;
+  concurrency?: number;
+  concurrency_group?: string;
+  artifact_paths?: string[];
 }
 
 /** A Buildkite step group. */

@@ -11,8 +11,8 @@ describe("k8sPlugin", () => {
     const resources = c0["resources"] as Record<string, unknown>;
     const requests = resources["requests"] as Record<string, string>;
 
-    expect(requests["cpu"]).toBe("250m");
-    expect(requests["memory"]).toBe("512Mi");
+    expect(requests["cpu"]).toBe("100m");
+    expect(requests["memory"]).toBe("256Mi");
   });
 
   it("uses custom resources when provided", () => {

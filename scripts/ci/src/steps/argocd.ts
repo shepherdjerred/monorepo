@@ -19,6 +19,8 @@ export function argoCdSyncStep(
     depends_on: dependsOn,
     command: `dagger call argo-cd-sync --app-name ${app} --argo-cd-token env:ARGOCD_AUTH_TOKEN${DRYRUN_FLAG}`,
     timeout_in_minutes: 10,
+    concurrency: 1,
+    concurrency_group: `monorepo/argocd-sync-${app}`,
     retry: RETRY,
     env: DAGGER_ENV,
     plugins: [

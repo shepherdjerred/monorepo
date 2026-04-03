@@ -89,6 +89,25 @@ describe("buildPipeline", () => {
       const waits = pipeline.steps.filter(isWait);
       expect(waits).toHaveLength(0);
     });
+
+    it("includes async quality checks even without main steps", () => {
+      const affected = emptyAffected();
+      affected.packages.add("webring");
+
+      const pipeline = buildPipeline(affected);
+      const steps = pipeline.steps.filter(isStep);
+      for (const key of [
+        "prettier",
+        "knip-check",
+        "dagger-hygiene",
+        "trivy-scan",
+        "semgrep-scan",
+      ]) {
+        const step = steps.find((s) => s.key === key);
+        expect(step).toBeDefined();
+        expect(step?.soft_fail).toBe(true);
+      }
+    });
   });
 
   describe("full build", () => {
@@ -117,10 +136,16 @@ describe("buildPipeline", () => {
       }
     });
 
-    it("includes security scans with soft_fail", () => {
+    it("includes security and quality scans with soft_fail", () => {
       const pipeline = buildPipeline(fullBuild());
       const steps = pipeline.steps.filter(isStep);
-      for (const key of ["semgrep-scan", "trivy-scan"]) {
+      for (const key of [
+        "semgrep-scan",
+        "trivy-scan",
+        "dagger-hygiene",
+        "knip-check",
+        "prettier",
+      ]) {
         const step = steps.find((s) => s.key === key);
         expect(step).toBeDefined();
         expect(step?.soft_fail).toBe(true);
@@ -162,6 +187,52 @@ describe("buildPipeline", () => {
       const pipeline = buildPipeline(fullBuild());
       const steps = pipeline.steps.filter(isStep);
       expect(steps.some((s) => s.key === "version-commit-back")).toBe(true);
+    });
+
+    it("includes build summary step", () => {
+      const pipeline = buildPipeline(fullBuild());
+      const steps = pipeline.steps.filter(isStep);
+      const summary = steps.find((s) => s.key === "build-summary");
+      expect(summary).toBeDefined();
+      expect(summary?.depends_on).toBeDefined();
+    });
+
+    it("deploy steps have concurrency groups", () => {
+      const pipeline = buildPipeline(fullBuild());
+      const allSteps: BuildkiteStep[] = [];
+
+      function collect(steps: unknown[]) {
+        for (const s of steps) {
+          if (isStep(s)) allSteps.push(s);
+          if (
+            typeof s === "object" &&
+            s !== null &&
+            "steps" in s &&
+            Array.isArray((s as Record<string, unknown>)["steps"])
+          ) {
+            collect((s as Record<string, unknown>)["steps"] as unknown[]);
+          }
+        }
+      }
+      collect(pipeline.steps);
+
+      const tofuSteps = allSteps.filter((s) => s.key.startsWith("tofu-"));
+      expect(tofuSteps.length).toBeGreaterThan(0);
+      for (const s of tofuSteps) {
+        expect(s.concurrency).toBe(1);
+        expect(s.concurrency_group).toContain("monorepo/tofu-");
+      }
+
+      const argoSteps = allSteps.filter(
+        (s) =>
+          s.key.startsWith("deploy-argocd") ||
+          s.key.startsWith("homelab-argocd-sync"),
+      );
+      expect(argoSteps.length).toBeGreaterThan(0);
+      for (const s of argoSteps) {
+        expect(s.concurrency).toBe(1);
+        expect(s.concurrency_group).toContain("monorepo/argocd-sync-");
+      }
     });
   });
 
@@ -256,7 +327,11 @@ describe("buildPipeline", () => {
           const obj = s as Record<string, unknown>;
           if (typeof obj["command"] === "string") {
             const cmd = obj["command"] as string;
-            if (!cmd.includes("dagger call") && !cmd.includes("echo ")) {
+            if (
+              !cmd.includes("dagger call") &&
+              !cmd.includes("echo ") &&
+              !cmd.includes("buildkite-agent")
+            ) {
               nonDagger.push(`${obj["key"]}: ${cmd}`);
             }
           }

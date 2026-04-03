@@ -29,6 +29,12 @@ export const GITLEAKS_IMAGE = "zricethezav/gitleaks:v8.22.1";
 export const TRIVY_IMAGE = "aquasec/trivy:0.58.2";
 // renovate: datasource=docker depName=semgrep/semgrep
 export const SEMGREP_IMAGE = "semgrep/semgrep:1.103.0";
+// renovate: datasource=docker depName=koalaman/shellcheck-alpine
+export const SHELLCHECK_IMAGE = "koalaman/shellcheck-alpine:v0.10.0";
+// renovate: datasource=docker depName=maven
+export const MAVEN_IMAGE = "maven:3.9.9-eclipse-temurin-21";
+// renovate: datasource=docker depName=texlive/texlive
+export const TEXLIVE_IMAGE = "texlive/texlive:TL2024-historic";
 
 // Pinned Bun version for containers that install Bun manually (e.g. Playwright)
 // renovate: datasource=npm depName=bun
@@ -40,6 +46,12 @@ export const RELEASE_PLEASE_VERSION = "17.3.0";
 // renovate: datasource=npm depName=@anthropic-ai/claude-code
 export const CLAUDE_CODE_VERSION = "2.1.71";
 
+// renovate: datasource=github-releases depName=golangci/golangci-lint
+export const GOLANGCI_LINT_VERSION = "v2.1.6";
+
+// renovate: datasource=github-releases depName=cli/cli
+export const GH_CLI_VERSION = "2.74.0";
+
 // ---------------------------------------------------------------------------
 // Cache volume names (stable — never include version numbers)
 // ---------------------------------------------------------------------------
@@ -50,6 +62,7 @@ export const CARGO_REGISTRY = "cargo-registry";
 export const CARGO_TARGET = "cargo-target";
 export const GO_MOD = "go-mod";
 export const GO_BUILD = "go-build";
+export const MAVEN_CACHE = "maven-local-repo";
 
 // ---------------------------------------------------------------------------
 // Source directory exclusions

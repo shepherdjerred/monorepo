@@ -4,11 +4,7 @@
  * These are plain functions (not decorated) — the @func() wrappers live in index.ts.
  */
 import { dag, Container, Directory } from "@dagger.io/dagger";
-
-// renovate: datasource=docker depName=maven
-const MAVEN_IMAGE = "maven:3.9.9-eclipse-temurin-21";
-
-const MAVEN_CACHE = "maven-local-repo";
+import { MAVEN_IMAGE, MAVEN_CACHE } from "./constants";
 
 /** Build a Maven project (castle-casters) with `mvn package -DskipTests`. */
 export function mavenBuildHelper(pkgDir: Directory): Container {

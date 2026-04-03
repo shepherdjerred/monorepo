@@ -56,8 +56,8 @@ export function createBuildkiteApp(chart: Chart) {
         {
           type: "Container",
           defaultRequest: {
-            cpu: Quantity.fromString("100m"),
-            memory: Quantity.fromString("128Mi"),
+            cpu: Quantity.fromString("50m"),
+            memory: Quantity.fromString("64Mi"),
           },
         },
       ],

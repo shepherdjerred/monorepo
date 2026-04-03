@@ -49,16 +49,6 @@ const ALLOWLIST: AllowlistEntry[] = [
   },
   {
     file: ".dagger/src/release.ts",
-    patternName: "silent-error-swallow",
-    lineContains: "playwright install",
-  },
-  {
-    file: ".dagger/src/release.ts",
-    patternName: "hidden-stderr",
-    lineContains: "playwright install",
-  },
-  {
-    file: ".dagger/src/release.ts",
     patternName: "hidden-stderr",
     lineContains: "cooklang-obsidian-releases/contents",
   },

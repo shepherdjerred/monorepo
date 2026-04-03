@@ -15,6 +15,7 @@ import {
   SOURCE_EXCLUDES,
   RELEASE_PLEASE_VERSION,
   CLAUDE_CODE_VERSION,
+  GH_CLI_VERSION,
 } from "./constants";
 
 // ---------------------------------------------------------------------------
@@ -199,6 +200,7 @@ export function deploySiteHelper(
   depDirs: Directory[] = [],
   dryrun = false,
   tsconfig: File | null = null,
+  needsPlaywright = false,
 ): Container {
   let container = dag
     .container()
@@ -243,18 +245,22 @@ export function deploySiteHelper(
       .withExec(["bun", "run", "build"]);
   }
 
-  // Install Playwright if the site needs it (e.g. for OG image generation)
-  container = container
-    .withWorkdir(`/workspace/packages/${pkg}`)
-    .withMountedCache(
-      "/root/.cache/ms-playwright",
-      dag.cacheVolume("playwright-cache"),
-    )
-    .withExec([
-      "bash",
-      "-c",
-      "bunx playwright install chromium --with-deps 2>/dev/null || true",
-    ]);
+  // Install Playwright only when the site needs it (e.g. sjer.red for OG image generation)
+  if (needsPlaywright) {
+    container = container
+      .withWorkdir(`/workspace/packages/${pkg}`)
+      .withMountedCache(
+        "/root/.cache/ms-playwright",
+        dag.cacheVolume("playwright-cache"),
+      )
+      .withExec([
+        "bunx",
+        "playwright",
+        "install",
+        "chromium",
+        "--with-deps",
+      ]);
+  }
 
   container = container
     .withSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyId)
@@ -442,7 +448,7 @@ export function clauderonUploadHelper(
     .withExec([
       "sh",
       "-c",
-      "apk add --no-cache curl && curl -fsSL https://github.com/cli/cli/releases/download/v2.74.0/gh_2.74.0_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_2.74.0_linux_amd64/bin/gh",
+      `apk add --no-cache curl && curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
     ])
     .withSecretVariable("GH_TOKEN", ghToken)
     .withWorkdir("/artifacts")
@@ -651,7 +657,7 @@ export function cooklangCreateReleaseHelper(
     .withExec([
       "sh",
       "-c",
-      "apk add --no-cache curl && curl -fsSL https://github.com/cli/cli/releases/download/v2.74.0/gh_2.74.0_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_2.74.0_linux_amd64/bin/gh",
+      `apk add --no-cache curl && curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
     ])
     .withSecretVariable("GH_TOKEN", ghToken)
     .withWorkdir("/artifacts")

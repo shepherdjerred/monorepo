@@ -1,8 +1,9 @@
 ---
 name: cdk8s-abstractions
 description: >-
-  Use when asking about ZFS volumes, TailscaleIngress, container props,
-  Redis construct, or other reusable CDK8s abstractions.
+  Use when asking about ZFS volumes, TailscaleIngress, Tailscale ingress,
+  Funnel public access, container props, Redis construct, or other reusable
+  CDK8s abstractions.
 ---
 
 # CDK8s Abstractions
@@ -76,10 +77,16 @@ metadata: {
 
 ### TailscaleIngress
 
-Creates an Ingress with the Tailscale ingress class.
+Creates an Ingress with the Tailscale ingress class. Services are exposed via the Tailscale Kubernetes operator for secure private network access.
 
 ```typescript
 import { TailscaleIngress } from "../misc/tailscale.ts";
+import { Service } from "cdk8s-plus-31";
+
+const service = new Service(chart, "myapp-service", {
+  selector: deployment,
+  ports: [{ port: 8080 }],
+});
 
 // Basic usage (private Tailscale access)
 new TailscaleIngress(chart, "myapp-ingress", {
@@ -91,13 +98,59 @@ new TailscaleIngress(chart, "myapp-ingress", {
 new TailscaleIngress(chart, "myapp-ingress", {
   service,
   host: "myapp",
-  funnel: true,
+  funnel: true, // Accessible from public internet
 });
 ```
 
+**DNS pattern:** All services follow `{host}.tailnet-1a49.ts.net` (e.g., `sonarr.tailnet-1a49.ts.net`, `argocd.tailnet-1a49.ts.net`).
+
+#### Implementation Details
+
+```typescript
+// From src/cdk8s/src/misc/tailscale.ts
+export class TailscaleIngress extends Construct {
+  constructor(
+    scope: Construct,
+    id: string,
+    props: Partial<IngressProps> & {
+      host: string;
+      funnel?: boolean;
+      service: Service | ServiceObject;
+    },
+  ) {
+    super(scope, id);
+
+    let base: IngressProps = {
+      defaultBackend: IngressBackend.fromService(props.service as Service),
+      tls: [{ hosts: [props.host] }],
+    };
+
+    if (props.funnel) {
+      base = {
+        ...base,
+        metadata: {
+          annotations: {
+            "tailscale.com/funnel": "true",
+          },
+        },
+      };
+    }
+
+    const ingress = new Ingress(scope, `${id}-ingress`, merge({}, base, props));
+
+    // Set ingress class to Tailscale
+    ApiObject.of(ingress).addJsonPatch(
+      JsonPatch.add("/spec/ingressClassName", "tailscale"),
+    );
+  }
+}
+```
+
+TLS is automatically handled by Tailscale — no `secretName` needed in the tls config.
+
 ### createIngress Function
 
-Alternative function-based API for more control:
+Alternative function-based API for ArgoCD applications or when you need more control:
 
 ```typescript
 import { createIngress } from "../misc/tailscale.ts";
@@ -106,11 +159,75 @@ createIngress(
   chart,
   "myapp-ingress", // Ingress name
   "myapp", // Namespace
-  "myapp-service", // Service name
+  "myapp-service", // Service name (string, not object)
   8080, // Port
   ["myapp"], // Hosts
   false, // Funnel enabled
 );
+```
+
+**Signature:**
+
+```typescript
+export function createIngress(
+  chart: Chart,
+  name: string,
+  namespace: string,
+  service: string,
+  port: number,
+  hosts: string[],
+  funnel: boolean,
+): KubeIngress;
+```
+
+### Tailscale Ingress Patterns
+
+**ArgoCD application ingress:**
+
+```typescript
+createIngress(chart, "argocd-ingress", "argocd", "argocd-server", 443, ["argocd"], true);
+```
+
+**Multiple ingresses for same deployment:**
+
+```typescript
+new TailscaleIngress(chart, "myapp-web-ingress", { service: webService, host: "myapp" });
+new TailscaleIngress(chart, "myapp-metrics-ingress", { service: metricsService, host: "myapp-metrics" });
+```
+
+**External service reference:**
+
+```typescript
+new TailscaleIngress(chart, "external-ingress", {
+  service: { name: "external-service", port: 443 } as unknown as Service,
+  host: "external",
+});
+```
+
+### When to Use Funnel
+
+**Use Funnel for:** External webhook receivers, public-facing web apps, GitHub Actions integrations, OAuth callbacks.
+
+**Do NOT use Funnel for:** Internal tools (Sonarr, Radarr), admin dashboards (ArgoCD, Grafana), database connections, sensitive services.
+
+### Tailscale Operator Configuration
+
+```typescript
+// From src/cdk8s/src/resources/argo-applications/tailscale.ts
+const tailscaleValues: HelmValuesForChart<"tailscale-operator"> = {
+  oauth: { clientId: "...", clientSecret: "..." },
+  operatorConfig: { hostname: "homelab-operator" },
+};
+```
+
+### Debugging Tailscale Ingress
+
+```bash
+kubectl get ingress -A
+kubectl describe ingress myapp-ingress -n media
+kubectl logs -n tailscale deployment/tailscale-operator
+tailscale status
+nslookup myapp.tailnet-1a49.ts.net
 ```
 
 ## Container Property Composition

@@ -1,8 +1,10 @@
 ---
 name: zod-patterns
 description: |
-  Zod schema validation - composable schemas, type inference, transforms, refinements, and error handling patterns
-  When user works with Zod, validates data, creates schemas, handles form validation, or mentions z.object/z.string patterns
+  Zod schema validation, type-safe development, and strict TypeScript patterns.
+  When user works with Zod, validates data, creates schemas, handles form validation,
+  mentions z.object/z.string patterns, needs runtime validation, type-safe code,
+  or strict TypeScript configuration.
 ---
 
 # Zod Patterns Agent
@@ -20,14 +22,32 @@ description: |
 ## Installation
 
 ```bash
-# npm/yarn/pnpm
-npm install zod
-
-# Bun
+# Standard Zod v4 (recommended)
 bun add zod
+
+# Minimal bundle for tree-shaking (1.9KB gzipped)
+bun add @zod/mini
 ```
 
 Requires TypeScript 5.5+ with `"strict": true` in tsconfig.
+
+### Using @zod/mini
+
+```typescript
+// Tree-shakable imports (only includes what you use)
+import { z } from "@zod/mini";
+
+// Same API as full Zod
+const UserSchema = z.object({
+  id: z.string(),
+  email: z.string().email(),
+});
+
+// Results in significantly smaller bundles
+// Full Zod: ~5KB | @zod/mini: ~1.9KB (tree-shaken)
+```
+
+For library authors targeting v4: `import { z } from "zod/v4/core";`
 
 ## Basic Usage
 
@@ -701,6 +721,118 @@ const EnvSchema = z.object({
 
 export const env = EnvSchema.parse(process.env);
 ```
+
+## Replacing Common Type Checks with Zod
+
+Prefer Zod validation over `typeof`, `instanceof`, or type guard functions.
+
+### typeof / instanceof / Number checks → Zod
+
+```typescript
+// ❌ Avoid typeof operator
+if (typeof value === "string") { return value.toUpperCase(); }
+
+// ✅ Prefer Zod validation
+const result = z.string().safeParse(value);
+if (result.success) { return result.data.toUpperCase(); }
+
+// ❌ Avoid instanceof
+if (err instanceof Error) { console.log(err.message); }
+
+// ✅ Prefer Zod
+const result = z.instanceof(Error).safeParse(err);
+if (result.success) { console.log(result.data.message); }
+
+// ❌ Avoid Number.isInteger
+if (Number.isInteger(value)) { return value * 2; }
+
+// ✅ Prefer Zod
+const result = z.number().int().safeParse(value);
+if (result.success) { return result.data * 2; }
+```
+
+### Type predicates → Zod
+
+```typescript
+// ❌ Avoid type guard functions
+function isUser(value: unknown): value is User {
+  return typeof value === "object" && value !== null && "email" in value;
+}
+
+// ✅ Prefer Zod schema validation
+const UserSchema = z.object({
+  email: z.string().email(),
+  name: z.string(),
+});
+
+const result = UserSchema.safeParse(value);
+if (result.success) {
+  const user = result.data; // Type-safe!
+}
+```
+
+## Type Assertions Rules
+
+Only `as unknown` and `as const` are allowed — all other `as` casts are banned.
+
+```typescript
+// ❌ Never do this - bypasses type safety
+const user = data as User;
+const id = value as string;
+
+// ✅ Cast to unknown first, then validate
+const data = response as unknown;
+const result = UserSchema.safeParse(data);
+if (result.success) {
+  const user = result.data;
+}
+
+// ✅ Use 'as const' for literal types
+const STATUSES = ["pending", "approved", "rejected"] as const;
+type Status = (typeof STATUSES)[number];
+```
+
+**Why no type assertions?** They bypass TypeScript's type checking, don't perform runtime validation, can cause runtime crashes, and hide bugs instead of catching them. Zod gives you both compile-time AND runtime safety.
+
+## Strict TypeScript Configuration
+
+### tsconfig.json Best Practices
+
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true
+  }
+}
+```
+
+### Use 'type' Instead of 'interface'
+
+```typescript
+// ✅ Prefer type
+type User = {
+  id: string;
+  email: string;
+};
+
+type Admin = User & {
+  permissions: string[];
+};
+
+// ❌ Avoid interface
+interface User {
+  id: string;
+  email: string;
+}
+```
+
+**Why?** Types are more flexible (unions, intersections) and consistent with Zod's inferred types.
 
 ## Best Practices Summary
 

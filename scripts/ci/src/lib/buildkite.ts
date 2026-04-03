@@ -39,6 +39,9 @@ export function daggerStep(opts: {
   cpu?: string;
   memory?: string;
   secrets?: string[];
+  concurrency?: number;
+  concurrencyGroup?: string;
+  artifactPaths?: string[];
 }): BuildkiteStep {
   const step: BuildkiteStep = {
     label: opts.label,
@@ -64,6 +67,15 @@ export function daggerStep(opts: {
   }
   if (opts.softFail !== undefined) {
     step.soft_fail = opts.softFail;
+  }
+  if (opts.concurrency !== undefined) {
+    step.concurrency = opts.concurrency;
+  }
+  if (opts.concurrencyGroup !== undefined) {
+    step.concurrency_group = opts.concurrencyGroup;
+  }
+  if (opts.artifactPaths !== undefined) {
+    step.artifact_paths = opts.artifactPaths;
   }
 
   return step;

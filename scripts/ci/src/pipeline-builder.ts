@@ -37,6 +37,7 @@ import { argoCdSyncStep, argoCdHealthStep } from "./steps/argocd.ts";
 import { clauderonReleaseGroup } from "./steps/clauderon.ts";
 import { cooklangReleaseGroup } from "./steps/cooklang.ts";
 import { versionCommitBackStep } from "./steps/version.ts";
+import { buildSummaryStep } from "./steps/build-summary.ts";
 import { k8sPlugin } from "./lib/k8s-plugin.ts";
 
 export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
@@ -70,6 +71,13 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
   steps.push(gitleaksCheckStep());
   steps.push(suppressionCheckStep());
 
+  // --- Async quality checks (soft_fail, never block anything) ---
+  steps.push(prettierStep());
+  steps.push(knipCheckStep());
+  steps.push(daggerHygieneStep());
+  steps.push(trivyScanStep());
+  steps.push(semgrepScanStep());
+
   // --- Code Review (PRs only) ---
   const prNumber = process.env["BUILDKITE_PULL_REQUEST"] ?? "false";
   if (prNumber !== "false" && prNumber !== "" && prNumber !== undefined) {
@@ -88,14 +96,6 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
   if (hasMainSteps) {
     // Wait for all build/test + blocking quality gates to pass before release steps
     steps.push({ wait: "", if: "build.branch == pipeline.default_branch" });
-
-    // --- Async quality checks (soft_fail, don't block releases) ---
-    // Placed after the wait gate so releases can start without waiting for these.
-    steps.push(prettierStep());
-    steps.push(knipCheckStep());
-    steps.push(daggerHygieneStep());
-    steps.push(trivyScanStep());
-    steps.push(semgrepScanStep());
 
     // Release (always on main when there are releasable changes)
     steps.push(releaseStep());
@@ -184,6 +184,15 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
       }
       steps.push(versionCommitBackStep(vcbDeps));
     }
+
+    // --- Build Summary ---
+    // Collect all terminal step keys so the summary runs last
+    const summaryDeps: string[] = ["release"];
+    if (hasImages) summaryDeps.push(...appPushKeys);
+    if (affected.buildAll || affected.homelabChanged) {
+      summaryDeps.push("homelab-argocd-health");
+    }
+    steps.push(buildSummaryStep(summaryDeps));
   }
 
   return { agents: { queue: "default" }, steps };

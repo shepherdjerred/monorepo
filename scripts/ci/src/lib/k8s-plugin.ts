@@ -31,8 +31,8 @@ export function k8sPlugin(
             image: CI_BASE_IMAGE,
             resources: {
               requests: {
-                cpu: opts.cpu ?? "250m",
-                memory: opts.memory ?? "512Mi",
+                cpu: opts.cpu ?? "100m",
+                memory: opts.memory ?? "256Mi",
               },
             },
             env: [

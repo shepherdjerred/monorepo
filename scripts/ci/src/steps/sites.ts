@@ -35,9 +35,8 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
     `--aws-access-key-id env:SEAWEEDFS_ACCESS_KEY_ID`,
     `--aws-secret-access-key env:SEAWEEDFS_SECRET_ACCESS_KEY`,
     `--tsconfig ./tsconfig.base.json`,
+    site.needsPlaywright ? `--needs-playwright` : "",
   ].filter(Boolean);
-
-  // Note: Playwright tests are handled by per-package steps, not the deploy step.
 
   return {
     label: `:ship: Deploy ${site.name}`,

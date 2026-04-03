@@ -1,8 +1,9 @@
 ---
 name: dagger-helper
 description: |
-  Dagger pipeline development and CI/CD workflow assistance
-  When user works with Dagger, mentions CI/CD pipelines, dagger commands, or .dagger/ directory
+  Dagger pipeline development, CI/CD workflow, and GitOps deployment flow.
+  When user works with Dagger, mentions CI/CD pipelines, dagger commands, .dagger/ directory,
+  deployment flow, how changes get deployed, or GitOps.
 ---
 
 # Dagger Helper Agent
@@ -624,6 +625,105 @@ async birmelPublish(
   });
 }
 ```
+
+## GitOps Deployment Flow
+
+Changes flow through: **GitHub → Dagger → Helm → ChartMuseum → ArgoCD → Cluster**
+
+```text
+Code Change
+    ↓
+GitHub Actions / Buildkite (trigger)
+    ↓
+Dagger Pipeline (build/test)
+    ↓
+CDK8s Build (generate manifests)
+    ↓
+Helm Package (create 24 charts)
+    ↓
+ChartMuseum (store charts)
+    ↓
+ArgoCD Sync (deploy via app-of-apps)
+    ↓
+Kubernetes Cluster
+```
+
+### Pipeline Triggers
+
+| Event          | Pipeline Mode | Actions                      |
+| -------------- | ------------- | ---------------------------- |
+| Push to `main` | Production    | Build, test, publish, deploy |
+| Pull Request   | Development   | Build, test only             |
+
+### CDK8s Build Output
+
+`bun run build` in `src/cdk8s` synthesizes Kubernetes YAML to `src/cdk8s/dist/`:
+
+```text
+src/cdk8s/dist/
+├── apps.k8s.yaml       # ArgoCD applications (app-of-apps)
+├── media.k8s.yaml      # Media namespace resources
+├── home.k8s.yaml       # Home namespace resources
+├── postal.k8s.yaml     # Postal namespace resources
+└── ...                 # Other namespace charts
+```
+
+### Helm Charts
+
+All 24 charts are listed in `.dagger/src/helm.ts` as `HELM_CHARTS`. Chart version format: `{chartname}-1.0.0-{github_run_number}.tgz`. Published to ChartMuseum at `https://chartmuseum.tailnet-1a49.ts.net`.
+
+### ArgoCD Sync and Rollback
+
+After Helm charts are published, the pipeline syncs the `apps` ArgoCD application (app-of-apps):
+
+```bash
+# Force ArgoCD sync
+argocd app sync apps
+# Or via API
+curl -X POST https://argocd.tailnet-1a49.ts.net/api/v1/applications/apps/sync \
+  -H "Authorization: Bearer $ARGOCD_AUTH_TOKEN"
+
+# Check status
+argocd app get apps
+argocd app list
+argocd app get media  # Check specific namespace app
+
+# Rollback
+argocd app rollback media <revision>
+```
+
+Rollback is also available via ArgoCD UI at `https://argocd.tailnet-1a49.ts.net` → History and Rollback.
+
+### GitHub Actions Workflow
+
+From `.github/workflows/ci.yml`:
+
+```yaml
+jobs:
+  build:
+    runs-on: homelab-runner-set
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Dagger Pipeline
+        run: |
+          dagger call ci \
+            --source . \
+            --argocd-token env:ARGOCD_AUTH_TOKEN \
+            --ghcr-username ${{ github.actor }} \
+            --ghcr-password env:GHCR_TOKEN \
+            --chart-version ${{ github.run_number }} \
+            --env ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
+```
+
+### GitOps Key Files
+
+- `.github/workflows/ci.yml` - GitHub Actions workflow
+- `.dagger/src/index.ts` - Main Dagger pipeline
+- `.dagger/src/cdk8s.ts` - CDK8s build functions
+- `.dagger/src/helm.ts` - Helm packaging and publishing (HELM_CHARTS list)
+- `.dagger/src/argocd.ts` - ArgoCD sync function
+- `src/cdk8s/helm/{chartname}/Chart.yaml` - Helm chart definitions
+- `src/cdk8s/src/main.ts` - CDK8s entry point
 
 ## Reference Files
 

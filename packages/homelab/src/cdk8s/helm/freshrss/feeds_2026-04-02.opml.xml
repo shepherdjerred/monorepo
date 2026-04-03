@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml xmlns:frss="https://freshrss.org/opml" version="2.0">
+  <head>
+    <title>FreshRSS</title>
+    <dateCreated>Thu, 02 Apr 2026 20:15:19 -0700</dateCreated>
+  </head>
+  <body>
+    <outline text="Uncategorized">
+      <outline text="Andreas Kling" type="rss" xmlUrl="https://awesomekling.github.io/feed.xml" htmlUrl="https://awesomekling.github.io/" description="I like computers!"/>
+      <outline text="Bartosz Ciechanowski" type="rss" xmlUrl="https://ciechanow.ski/atom.xml" htmlUrl="https://ciechanow.ski/" description="Recent content on Bartosz Ciechanowski"/>
+      <outline text="bookbear express" type="rss" xmlUrl="https://www.avabear.xyz/feed" htmlUrl="https://www.avabear.xyz/" description="help-self"/>
+      <outline text="brr" type="rss" xmlUrl="https://brr.fyi/feed.xml" htmlUrl="https://brr.fyi/" description="Observations on US Antarctic infrastructure. Anecdotes from daily life for USAP support staff. Focused on McMurdo Station and Amundsen-Scott South Pole Station."/>
+      <outline text="Drew DeVault's blog" type="rss" xmlUrl="https://drewdevault.com/blog/index.xml" htmlUrl="https://drewdevault.com/" description="Recent content in Blogs on Drew DeVault's blog"/>
+      <outline text="Eli Bendersky's website" type="rss" xmlUrl="https://eli.thegreenplace.net/feeds/all.atom.xml" htmlUrl="https://eli.thegreenplace.net/"/>
+      <outline text="Escaping Flatland" type="rss" xmlUrl="https://www.henrikkarlsson.xyz/feed" htmlUrl="https://www.henrikkarlsson.xyz/" description="I write essays about relationships, thought, and agency. I hang with our kids. We live on a pine covered island in the Baltic Sea. That's about it."/>
+      <outline text="Explained from First Principles" type="rss" xmlUrl="https://explained-from-first-principles.com/feed.xml" htmlUrl="https://explained-from-first-principles.com/" description="Explained from First Principles is a technology, science, and philosophy blog for curious people."/>
+      <outline text="Factorio Blog" type="rss" xmlUrl="https://www.factorio.com/blog/rss" htmlUrl="https://www.factorio.com/"/>
+      <outline text="fasterthanli.me" type="rss" xmlUrl="https://fasterthanli.me/index.xml" htmlUrl="https://fasterthanli.me/" description="amos likes to tinker"/>
+      <outline text="https://danluu.com/atom.xml" type="rss" xmlUrl="https://danluu.com/atom.xml" htmlUrl="https://danluu.com/atom/index.xml" description="Recent content on"/>
+      <outline text="jakelazaroff.com" type="rss" xmlUrl="https://jakelazaroff.com/rss.xml" htmlUrl="https://jakelazaroff.com/" description="Just a programmer trying to make a home for myself on the WWW."/>
+      <outline text="Jerred's Blog" type="rss" xmlUrl="https://sjer.red/rss.xml" htmlUrl="https://sjer.red/" description="My personal blog"/>
+      <outline text="Joel on Software" type="rss" xmlUrl="https://www.joelonsoftware.com/feed/" htmlUrl="https://www.joelonsoftware.com/"/>
+      <outline text="Julia Evans" type="rss" xmlUrl="https://jvns.ca/atom.xml" htmlUrl="http://jvns.ca/"/>
+      <outline text="Kalzumeus Software" type="rss" xmlUrl="https://www.kalzumeus.com/feed/articles/" htmlUrl="https://www.kalzumeus.com/" description="Patrick McKenzie (patio11) blogs on software development, marketing, and general business topics"/>
+      <outline text="Krebs on Security" type="rss" xmlUrl="https://krebsonsecurity.com/feed/" htmlUrl="https://krebsonsecurity.com/" description="In-depth security news and investigation"/>
+      <outline text="Ludicity" type="rss" xmlUrl="https://ludic.mataroa.blog/rss/" htmlUrl="https://ludic.mataroa.blog/" description="&lt;blockquote&gt;&#13;&#10;&#13;&#10;&quot;While I'm deeply sympathetic, the author should be discussing their issues with a therapist rather than spreading this on the internet.&quot;&#13;&#10;&lt;/blockquote&gt;&#13;&#10;&#13;&#10;I'm also trying out Unoffice Hours, where anyone can book time with me.&#13;&#10;&lt;ol&gt;&#13;&#10;&lt;li&gt;If you're just a reader that wants to chat about whatever, you can grab me at this link. Don't pick crazy hours for yourself — you'll oversleep and have booked my calendar for no reason!&lt;/li&gt;&#13;&#10;&lt;li&gt;If you want to chat and might buy consulting one day, you can use this link, which is exactly the same as the previous link but with more availability. It's just a social call, so it's honour system rules on not using it to sneak extra time from my calendar.&lt;/li&gt;&#13;&#10;&lt;li&gt;If you live in Melbourne, this final link straight-up arranges an in-person meeting at a nice coffee place.&lt;/li&gt;&#13;&#10;&lt;/ol&gt;&#13;&#10;&#13;&#10;I read all mail without exception, and love getting it. I may not respond, but I'll always read! You can reach me at: ludicity.hackernews@gmail.com.&#13;&#10;&#13;&#10;My podcast, &quot;Does A Frog Have Scorpion Nature&quot;, where I talk to people I like, and sometimes find blog post inspiration.&#13;&#10;&#13;&#10;You can also catch me on Mastodon.&#13;&#10;&#13;&#10;Liberapay | Patreon to support me writing taking time off to write amidst the difficulty of launching a business.&#13;&#10;&#13;&#10;I looked at some code in late 2024 which was so hideous that I rage-quit my job on the spot and started an IT consultancy, Hermit Tech. We sell the voice of reason to companies, especially on data-related issues. You can always book time with us to talk about your problems! I've worked with some readers before and everyone had a good time. We have some bold, innovative technology, such as not lying, explaining things clearly, and listening to people."/>
+      <outline text="LWN.net featured content" type="rss" xmlUrl="https://lwn.net/headlines/features_full?key=b082e216d8a86421" htmlUrl="https://lwn.net/Articles/" description="This subscriber-only feed contains the full text of&#13;&#10;all feature articles (those containing LWN original content and posted as&#13;&#10;standalone items) found on the site."/>
+      <outline text="LWN.net front-page content, full text" type="rss" xmlUrl="https://lwn.net/headlines/full_text?key=b082e216d8a86421" htmlUrl="https://lwn.net/Articles/" description="This subscriber-only feed contains the full text of&#13;&#10;all items posted on the LWN front page, with the exception of the&#13;&#10;Weekly Edition." frss:priority="hidden"/>
+      <outline text="LWN.net Weekly Edition, full text" type="rss" xmlUrl="https://lwn.net/headlines/full_weekly?key=b082e216d8a86421" htmlUrl="https://lwn.net/Articles/" description="This subscriber-only feed contains the full text of&#10;all items posted on the LWN front page, with the exception of the&#10;Weekly Edition."/>
+      <outline text="OlegWock blog" type="rss" xmlUrl="https://sinja.io/rss" htmlUrl="https://sinja.io/" description="OlegWock blog"/>
+      <outline text="Peter Norvig" type="rss" xmlUrl="https://norvig.com/rss-feed.xml" htmlUrl="http://www.norvig.com/" description="Articles by Peter Norvig"/>
+      <outline text="samwho.dev" type="rss" xmlUrl="https://samwho.dev/rss.xml" htmlUrl="https://samwho.dev/" description="Personal website of Sam Rose."/>
+      <outline text="seangoedecke.com RSS feed" type="rss" xmlUrl="https://www.seangoedecke.com/rss.xml" htmlUrl="https://seangoedecke.com/" description="Sean Goedecke's personal blog"/>
+      <outline text="Simon Willison's Weblog: Entries" type="rss" xmlUrl="https://simonwillison.net/atom/entries/" htmlUrl="http://simonwillison.net/"/>
+      <outline text="Useful Fictions" type="rss" xmlUrl="https://usefulfictions.substack.com/feed" htmlUrl="https://usefulfictions.substack.com/" description="all models are wrong, but some are useful"/>
+    </outline>
+  </body>
+</opml>

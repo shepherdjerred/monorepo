@@ -29,6 +29,8 @@ function tofuStackStep(stack: string): BuildkiteStep {
         .filter(Boolean)
         .join(" ") + DRYRUN_FLAG,
     timeout_in_minutes: 15,
+    concurrency: 1,
+    concurrency_group: `monorepo/tofu-${stack}`,
     retry: RETRY,
     env: DAGGER_ENV,
     plugins: [

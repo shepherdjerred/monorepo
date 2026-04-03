@@ -55,7 +55,9 @@ import {
   GO_IMAGE,
   PLAYWRIGHT_IMAGE,
   SWIFTLINT_IMAGE,
+  SHELLCHECK_IMAGE,
   BUN_VERSION,
+  GOLANGCI_LINT_VERSION,
   SOURCE_EXCLUDES,
   BUN_CACHE,
   ESLINT_CACHE,
@@ -632,7 +634,7 @@ export class Monorepo {
       .withExec([
         "go",
         "install",
-        "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest",
+        "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}",
       ])
       .withExec(["golangci-lint", "run", "./..."])
       .stdout();
@@ -809,7 +811,7 @@ export class Monorepo {
   async shellcheck(source: Directory): Promise<string> {
     return dag
       .container()
-      .from("koalaman/shellcheck-alpine:stable")
+      .from(SHELLCHECK_IMAGE)
       .withWorkdir("/workspace")
       .withDirectory("/workspace", source, {
         include: ["**/*.sh"],
@@ -942,7 +944,7 @@ export class Monorepo {
           .withExec([
             "go",
             "install",
-            "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest",
+            "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}",
           ])
           .withExec(["golangci-lint", "run", "./..."]),
       ),
@@ -1212,6 +1214,7 @@ export class Monorepo {
     depDirs: Directory[] = [],
     dryrun = false,
     tsconfig: File | null = null,
+    needsPlaywright = false,
   ): Promise<string> {
     return deploySiteHelper(
       pkgDir,
@@ -1227,6 +1230,7 @@ export class Monorepo {
       depDirs,
       dryrun,
       tsconfig,
+      needsPlaywright,
     ).stdout();
   }
 

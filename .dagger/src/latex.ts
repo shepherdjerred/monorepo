@@ -4,9 +4,7 @@
  * These are plain functions (not decorated) — the @func() wrappers live in index.ts.
  */
 import { dag, Container, Directory } from "@dagger.io/dagger";
-
-// renovate: datasource=docker depName=texlive/texlive
-const TEXLIVE_IMAGE = "texlive/texlive:TL2024-historic";
+import { TEXLIVE_IMAGE } from "./constants";
 
 /** Build a LaTeX resume (packages/resume) with xelatex. */
 export function latexBuildHelper(pkgDir: Directory): Container {
