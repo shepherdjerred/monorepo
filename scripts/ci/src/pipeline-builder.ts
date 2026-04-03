@@ -22,6 +22,7 @@ import {
   semgrepScanStep,
   daggerHygieneStep,
   caddyfileValidateStep,
+  lockfileCheckStep,
   envVarNamesStep,
   migrationGuardStep,
   mergeConflictStep,
@@ -85,6 +86,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
 
   // --- Quality gates (blocking — must pass before releases) ---
   const blockingGates = [
+    lockfileCheckStep(),
     shellcheckStep(),
     qualityRatchetStep(),
     complianceCheckStep(),

@@ -1,53 +1,20 @@
 /**
- * Miscellaneous helper functions (prettier, shellcheck, mkdocs, caddyfile, smokeTest).
+ * Miscellaneous helper functions (mkdocs, caddyfile, smokeTest).
  *
  * These are plain functions (not decorated) — the @func() wrappers live in index.ts.
  */
-import { dag, Container, Directory } from "@dagger.io/dagger";
+import { dag, Container, Directory, File } from "@dagger.io/dagger";
 
 import {
   BUN_IMAGE,
-  SHELLCHECK_IMAGE,
+  CADDY_BUILDER_IMAGE,
   CADDY_IMAGE,
   PYTHON_IMAGE,
   BUN_CACHE,
+  GO_BUILD,
+  GO_MOD,
   SOURCE_EXCLUDES,
 } from "./constants";
-
-/** Run prettier check across the repo. */
-export function prettierHelper(source: Directory): Container {
-  return dag
-    .container()
-    .from(BUN_IMAGE)
-    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
-    .withWorkdir("/workspace")
-    .withDirectory("/workspace", source, {
-      exclude: SOURCE_EXCLUDES,
-    })
-    .withExec(["bunx", "prettier", "--check", "."]);
-}
-
-/** Run shellcheck on all shell scripts. */
-export function shellcheckHelper(source: Directory): Container {
-  return dag
-    .container()
-    .from(SHELLCHECK_IMAGE)
-    .withWorkdir("/workspace")
-    .withDirectory("/workspace", source, {
-      include: ["**/*.sh"],
-      exclude: [
-        "**/archive/**",
-        "**/node_modules/**",
-        "**/Pods/**",
-        "**/target/**",
-      ],
-    })
-    .withExec([
-      "sh",
-      "-c",
-      "find /workspace -name '*.sh' -print0 | xargs -0 shellcheck --severity=warning",
-    ]);
-}
 
 /** Build MkDocs documentation site and return the built site/ directory. */
 export function mkdocsBuildHelper(source: Directory): Directory {
@@ -72,6 +39,22 @@ export function mkdocsBuildHelper(source: Directory): Directory {
     .directory("/workspace/site");
 }
 
+/** Build custom Caddy binary with s3-proxy plugin, using cached Go modules. */
+function caddyS3ProxyBinary(): File {
+  return dag
+    .container()
+    .from(CADDY_BUILDER_IMAGE)
+    .withMountedCache("/go/pkg/mod", dag.cacheVolume(GO_MOD))
+    .withMountedCache("/root/.cache/go-build", dag.cacheVolume(GO_BUILD))
+    .withExec([
+      "xcaddy",
+      "build",
+      "--with",
+      "github.com/lindenlab/caddy-s3-proxy",
+    ])
+    .file("/usr/bin/caddy");
+}
+
 /** Generate and validate the Caddyfile for S3 static sites. */
 export function caddyfileValidateHelper(source: Directory): Container {
   return dag
@@ -89,13 +72,7 @@ export function caddyfileValidateHelper(source: Directory): Container {
       "bun run scripts/generate-caddyfile.ts > /tmp/Caddyfile",
     ])
     .withWorkdir("/workspace")
-    .withFile(
-      "/usr/local/bin/caddy",
-      source
-        .directory("packages/homelab/src/caddy-s3proxy")
-        .dockerBuild()
-        .file("/usr/bin/caddy"),
-    )
+    .withFile("/usr/local/bin/caddy", caddyS3ProxyBinary())
     .withExec(["caddy", "validate", "--config", "/tmp/Caddyfile"]);
 }
 

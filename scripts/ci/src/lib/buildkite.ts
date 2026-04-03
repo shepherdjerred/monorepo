@@ -41,6 +41,7 @@ export function plainStep(opts: {
   timeoutMinutes?: number;
   dependsOn?: string | string[];
   softFail?: boolean;
+  artifactPaths?: string[];
 }): BuildkiteStep {
   const step: BuildkiteStep = {
     label: opts.label,
@@ -56,6 +57,9 @@ export function plainStep(opts: {
   }
   if (opts.softFail !== undefined) {
     step.soft_fail = opts.softFail;
+  }
+  if (opts.artifactPaths !== undefined) {
+    step.artifact_paths = opts.artifactPaths;
   }
 
   return step;

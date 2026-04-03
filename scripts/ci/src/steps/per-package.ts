@@ -173,16 +173,12 @@ function rustPackageGroup(sk: string): BuildkiteGroup {
         `dagger call rust-fmt --pkg-dir ./packages/clauderon`,
         resources,
       ),
-      {
-        // soft_fail: clauderon clippy requires frontend/docs build artifacts not yet wired in CI
-        ...daggerCallStep(
-          `:mag: Clippy`,
-          `clippy-${sk}`,
-          `dagger call rust-clippy --pkg-dir ./packages/clauderon`,
-          resources,
-        ),
-        soft_fail: true,
-      },
+      daggerCallStep(
+        `:mag: Clippy`,
+        `clippy-${sk}`,
+        `dagger call rust-clippy --pkg-dir ./packages/clauderon`,
+        resources,
+      ),
       daggerCallStep(
         `:test_tube: Test`,
         `test-${sk}`,

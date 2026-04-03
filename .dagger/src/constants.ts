@@ -23,20 +23,15 @@ export const SWIFTLINT_IMAGE = "ghcr.io/realm/swiftlint:0.58.2";
 export const ALPINE_IMAGE = "alpine:3.21";
 // renovate: datasource=docker depName=hashicorp/terraform
 export const TOFU_IMAGE = "ghcr.io/opentofu/opentofu:1.9.0";
-// renovate: datasource=docker depName=zricethezav/gitleaks
-export const GITLEAKS_IMAGE = "zricethezav/gitleaks:v8.22.1";
-// renovate: datasource=docker depName=aquasec/trivy
-export const TRIVY_IMAGE = "aquasec/trivy:0.58.2";
-// renovate: datasource=docker depName=semgrep/semgrep
-export const SEMGREP_IMAGE = "semgrep/semgrep:1.103.0";
-// renovate: datasource=docker depName=koalaman/shellcheck-alpine
-export const SHELLCHECK_IMAGE = "koalaman/shellcheck-alpine:v0.10.0";
 // renovate: datasource=docker depName=maven
 export const MAVEN_IMAGE = "maven:3.9.9-eclipse-temurin-21";
 // renovate: datasource=docker depName=texlive/texlive
 export const TEXLIVE_IMAGE = "texlive/texlive:TL2024-historic";
 // renovate: datasource=docker depName=caddy
 export const CADDY_IMAGE = "caddy:2.9.1-alpine";
+// renovate: datasource=docker depName=caddy
+export const CADDY_BUILDER_IMAGE =
+  "caddy:2-builder-alpine@sha256:17a3a99c747d2124b9e9a6f434905b2869d67d9fc278b00f3deba5f4a69254bc";
 // renovate: datasource=docker depName=python
 export const PYTHON_IMAGE = "python:3.13-slim";
 

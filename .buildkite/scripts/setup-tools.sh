@@ -33,6 +33,15 @@ GH_VERSION="2.72.0"
 # renovate: datasource=github-releases depName=rust-lang/rustup versioning=semver
 RUSTUP_VERSION="1.28.2"
 
+# renovate: datasource=github-releases depName=gitleaks/gitleaks
+GITLEAKS_VERSION="8.22.1"
+
+# renovate: datasource=github-releases depName=aquasecurity/trivy
+TRIVY_VERSION="0.58.2"
+
+# renovate: datasource=pypi depName=semgrep
+SEMGREP_VERSION="1.103.0"
+
 
 install_base() {
     if command -v jq &>/dev/null && command -v gcc &>/dev/null; then
@@ -138,6 +147,39 @@ install_shellcheck() {
     curl -fsSL "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | tar xJ -C /tmp
     cp /tmp/shellcheck-v${SHELLCHECK_VERSION}/shellcheck /usr/local/bin/shellcheck
     chmod +x /usr/local/bin/shellcheck
+}
+
+install_gitleaks() {
+    if command -v gitleaks &>/dev/null; then
+        echo "--- :lock: gitleaks already installed, skipping"
+        return
+    fi
+    echo "--- :lock: Installing gitleaks ${GITLEAKS_VERSION}"
+    curl -fsSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar xz -C /tmp
+    cp /tmp/gitleaks /usr/local/bin/gitleaks
+    chmod +x /usr/local/bin/gitleaks
+}
+
+install_trivy() {
+    if command -v trivy &>/dev/null; then
+        echo "--- :shield: trivy already installed, skipping"
+        return
+    fi
+    echo "--- :shield: Installing trivy ${TRIVY_VERSION}"
+    curl -fsSL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" | tar xz -C /tmp
+    cp /tmp/trivy /usr/local/bin/trivy
+    chmod +x /usr/local/bin/trivy
+}
+
+install_semgrep() {
+    if command -v semgrep &>/dev/null; then
+        echo "--- :mag: semgrep already installed, skipping"
+        return
+    fi
+    echo "--- :mag: Installing semgrep ${SEMGREP_VERSION}"
+    install_uv
+    uv tool install "semgrep==${SEMGREP_VERSION}"
+    export PATH="$HOME/.local/bin:$PATH"
 }
 
 install_rust() {

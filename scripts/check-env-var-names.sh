@@ -3,71 +3,49 @@ set -eu
 
 # Banned env var patterns → canonical replacement
 # Uses case-insensitive substring matching to catch reintroduction of old names.
-# Format: PATTERN:CANONICAL_NAME
 #
 # See: packages/docs/decisions/2026-03-27_env-var-naming-convention.md
-BANNED=(
-  "GRAFANA_SERVER:GRAFANA_URL"
-  "GRAFANA_TOKEN:GRAFANA_API_KEY"
-  "PAGERDUTY_API_KEY:PAGERDUTY_TOKEN"
-  "PAGERDUTY_API_TOKEN:PAGERDUTY_TOKEN"
-  "RIOT_API_TOKEN:RIOT_API_KEY"
-  "BUGSINK_API_TOKEN:BUGSINK_TOKEN"
-  "CF_ACCOUNT_ID:CLOUDFLARE_ACCOUNT_ID"
-  "CF_R2_ACCESS:CLOUDFLARE_R2_ACCESS_KEY_ID"
-  "CF_R2_SECRET:CLOUDFLARE_R2_SECRET_ACCESS_KEY"
-  "TS_AUTH_KEY:TS_AUTHKEY"
+
+# --- File discovery (NUL-delimited to handle spaces in paths) ---
+FILES_CMD=(git ls-files -z --
+  '*.ts' '*.rs' '*.py' '*.fish' '*.tmpl' '*.yaml' '*.yml'
+  '*.env' '*.md' '*.sh' '*.swift'
+  ':!:archive/' ':!:practice/' ':!:.dagger/' ':!:.build/' ':!:**/generated/*'
 )
 
-# These need special handling due to substring overlap with valid names
-# GITHUB_TOKEN: valid in TOFU_GITHUB_TOKEN, comments explaining migration, MCP server requirements
-# ARGOCD_TOKEN: valid in ARGOCD_AUTH_TOKEN, Python variable argocd_token
+# Files to exclude from all pattern matches
+EXCLUDE_PATTERN='check-env-var-names\.sh|env-var-naming-convention\.md|packages/clauderon/'
+
+# --- Bulk check: all simple banned patterns in one grep pass ---
+BANNED_REGEX='GRAFANA_SERVER|GRAFANA_TOKEN|PAGERDUTY_API_KEY|PAGERDUTY_API_TOKEN|RIOT_API_TOKEN|BUGSINK_API_TOKEN|CF_ACCOUNT_ID|CF_R2_ACCESS|CF_R2_SECRET|TS_AUTH_KEY'
+
+# Pattern → canonical name pairs (parallel arrays for bash 3 compat)
+PATTERNS=(GRAFANA_SERVER GRAFANA_TOKEN PAGERDUTY_API_KEY PAGERDUTY_API_TOKEN RIOT_API_TOKEN BUGSINK_API_TOKEN CF_ACCOUNT_ID CF_R2_ACCESS CF_R2_SECRET TS_AUTH_KEY)
+CANONICALS=(GRAFANA_URL GRAFANA_API_KEY PAGERDUTY_TOKEN PAGERDUTY_TOKEN RIOT_API_KEY BUGSINK_TOKEN CLOUDFLARE_ACCOUNT_ID CLOUDFLARE_R2_ACCESS_KEY_ID CLOUDFLARE_R2_SECRET_ACCESS_KEY TS_AUTHKEY)
 
 ERRORS=0
 
-for entry in "${BANNED[@]}"; do
-  PATTERN="${entry%%:*}"
-  CANONICAL="${entry##*:}"
+# Single grep pass for all simple banned patterns
+MATCHES=$("${FILES_CMD[@]}" | xargs -0 grep -niE "${BANNED_REGEX}" | grep -vE "${EXCLUDE_PATTERN}" || true)
 
-  # Case-insensitive substring match across staged files
-  MATCHES=$(grep -ni "${PATTERN}" "$@" \
-    | grep -v 'archive/' \
-    | grep -v 'practice/' \
-    | grep -v 'generated/imports/' \
-    | grep -v 'check-env-var-names.sh' \
-    | grep -v 'env-var-naming-convention.md' \
-    | grep -v 'packages/clauderon/' \
-    || true)
+if [ -n "$MATCHES" ]; then
+  while IFS= read -r line; do
+    for i in "${!PATTERNS[@]}"; do
+      if echo "$line" | grep -qi "${PATTERNS[$i]}"; then
+        echo "FAIL: Found banned pattern '${PATTERNS[$i]}' (use '${CANONICALS[$i]}' instead):"
+        echo "  $line"
+        echo ""
+        ERRORS=$((ERRORS+1))
+        break
+      fi
+    done
+  done <<< "$MATCHES"
+fi
 
-  if [ -n "$MATCHES" ]; then
-    echo "FAIL: Found banned pattern '${PATTERN}' (use '${CANONICAL}' instead):"
-    echo "$MATCHES"
-    echo ""
-    ERRORS=$((ERRORS+1))
-  fi
-done
+# --- Special case: GITHUB_TOKEN (exact env var name, not substrings like TOFU_GITHUB_TOKEN) ---
+GITHUB_EXCLUDE='TOFU_GITHUB_TOKEN|GLANCE_TEST_|@modelcontextprotocol|server-github expects|mcp-gateway|YOUR_GITHUB_TOKEN|env:GITHUB_TOKEN|CHANGELOG\.md|plans/|dot_claude/skills/|GITHUB_TOKEN_URL'
 
-# GITHUB_TOKEN check: match the exact env var name, not substrings like TOFU_GITHUB_TOKEN
-# or Python variable names, or MCP server requirements
-GITHUB_MATCHES=$(grep -n 'GITHUB_TOKEN' "$@" \
-  | grep -v 'archive/' \
-  | grep -v 'practice/' \
-  | grep -v 'generated/imports/' \
-  | grep -v 'check-env-var-names.sh' \
-  | grep -v 'env-var-naming-convention.md' \
-  | grep -v 'packages/clauderon/' \
-  | grep -v 'TOFU_GITHUB_TOKEN' \
-  | grep -v 'GLANCE_TEST_' \
-  | grep -v '@modelcontextprotocol' \
-  | grep -v 'server-github expects' \
-  | grep -v 'mcp-gateway' \
-  | grep -v 'YOUR_GITHUB_TOKEN' \
-  | grep -v 'env:GITHUB_TOKEN' \
-  | grep -v 'CHANGELOG.md' \
-  | grep -v 'plans/' \
-  | grep -v 'dot_claude/skills/' \
-  | grep -v 'GITHUB_TOKEN_URL' \
-  || true)
+GITHUB_MATCHES=$("${FILES_CMD[@]}" | xargs -0 grep -n 'GITHUB_TOKEN' | grep -vE "${EXCLUDE_PATTERN}" | grep -vE "${GITHUB_EXCLUDE}" || true)
 
 if [ -n "$GITHUB_MATCHES" ]; then
   echo "FAIL: Found banned pattern 'GITHUB_TOKEN' (use 'GH_TOKEN' instead):"
@@ -76,6 +54,7 @@ if [ -n "$GITHUB_MATCHES" ]; then
   ERRORS=$((ERRORS+1))
 fi
 
+# --- Result ---
 if [ "$ERRORS" -gt 0 ]; then
   echo "Found $ERRORS banned env var pattern(s). See above for details."
   exit 1

@@ -461,6 +461,7 @@ describe("buildPipeline", () => {
       const pipeline = buildPipeline(fullBuild());
       /** Steps that intentionally run directly on the agent (no Dagger). */
       const PLAIN_STEP_KEYS = new Set([
+        "lockfile-check",
         "quality-ratchet",
         "compliance-check",
         "env-var-names",

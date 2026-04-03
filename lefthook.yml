@@ -63,6 +63,16 @@ pre-commit:
                   glob: "**/package.json"
                   run: bun install --frozen-lockfile
 
+                # --- prettier (repo-wide, staged files) ---
+                - name: prettier
+                  glob: "**/*.{ts,tsx,js,jsx,json,yaml,yml,md,css,astro,html,graphql}"
+                  exclude:
+                    - "archive/**"
+                    - "**/node_modules/**"
+                    - "**/generated/**"
+                    - "**/.dagger/**"
+                  run: bunx prettier --check {staged_files}
+
                 # --- eslint per package (staged files only) ---
                 - name: eslint-birmel
                   root: "packages/birmel/"
@@ -70,21 +80,9 @@ pre-commit:
                   run: bunx eslint --fix {staged_files}
                   stage_fixed: true
 
-                - name: eslint-bun-decompile
-                  root: "packages/bun-decompile/"
-                  glob: "packages/bun-decompile/**/*.{ts,tsx,js,jsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
                 - name: eslint-eslint-config
                   root: "packages/eslint-config/"
                   glob: "packages/eslint-config/**/*.{ts,tsx,js,jsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-tools
-                  root: "packages/tools/"
-                  glob: "packages/tools/**/*.{ts,tsx,js,jsx}"
                   run: bunx eslint --fix {staged_files}
                   stage_fixed: true
 
@@ -111,11 +109,6 @@ pre-commit:
                   glob: "packages/clauderon/mobile/**/*.{ts,tsx}"
                   run: bunx eslint --fix {staged_files}
                   stage_fixed: true
-
-                - name: prettier-mobile
-                  root: "packages/clauderon/mobile/"
-                  glob: "packages/clauderon/mobile/**/*.{ts,tsx}"
-                  run: bunx prettier --check {staged_files}
 
                 - name: eslint-docs
                   root: "packages/clauderon/docs/"
@@ -153,21 +146,11 @@ pre-commit:
                   run: bunx eslint --fix {staged_files}
                   stage_fixed: true
 
-                - name: prettier-starlight-karma-bot
-                  root: "packages/starlight-karma-bot/"
-                  glob: "packages/starlight-karma-bot/**/*.{ts,tsx,js,jsx}"
-                  run: bunx prettier --check {staged_files}
-
                 - name: eslint-scout-for-lol
                   root: "packages/scout-for-lol/"
                   glob: "packages/scout-for-lol/**/*.{ts,tsx,js,jsx,astro}"
                   run: bunx eslint --fix {staged_files}
                   stage_fixed: true
-
-                - name: prettier-scout-for-lol
-                  root: "packages/scout-for-lol/"
-                  glob: "packages/scout-for-lol/**/*.{ts,tsx,js,jsx}"
-                  run: bunx prettier --check {staged_files}
 
                 - name: eslint-discord-plays-pokemon-common
                   root: "packages/discord-plays-pokemon/packages/common/"
@@ -190,6 +173,54 @@ pre-commit:
                 - name: eslint-homelab
                   root: "packages/homelab/"
                   glob: "packages/homelab/**/*.{ts,tsx,js,jsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-cooklang-rich-preview
+                  root: "packages/cooklang-rich-preview/"
+                  glob: "packages/cooklang-rich-preview/**/*.{ts,tsx,js,jsx,astro}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-hn-enhancer
+                  root: "packages/hn-enhancer/"
+                  glob: "packages/hn-enhancer/**/*.{ts,tsx,js,jsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-monarch
+                  root: "packages/monarch/"
+                  glob: "packages/monarch/**/*.{ts,tsx,js,jsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-tasknotes-server
+                  root: "packages/tasknotes-server/"
+                  glob: "packages/tasknotes-server/**/*.{ts,tsx,js,jsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-tasknotes-types
+                  root: "packages/tasknotes-types/"
+                  glob: "packages/tasknotes-types/**/*.{ts,tsx,js,jsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-tasks-for-obsidian
+                  root: "packages/tasks-for-obsidian/"
+                  glob: "packages/tasks-for-obsidian/**/*.{ts,tsx,js,jsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-toolkit
+                  root: "packages/toolkit/"
+                  glob: "packages/toolkit/**/*.{ts,tsx,js,jsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-leetcode
+                  root: "packages/leetcode/"
+                  glob: "packages/leetcode/**/*.{ts,tsx,js,jsx}"
                   run: bunx eslint --fix {staged_files}
                   stage_fixed: true
 
@@ -262,19 +293,9 @@ pre-commit:
             glob: "packages/birmel/**/*.{ts,tsx}"
             run: bunx prisma generate && bun run test
 
-          - name: bun-decompile-typecheck
-            root: "packages/bun-decompile/"
-            glob: "packages/bun-decompile/**/*.{ts,tsx}"
-            run: bun run typecheck
-
           - name: eslint-config-typecheck
             root: "packages/eslint-config/"
             glob: "packages/eslint-config/**/*.{ts,tsx}"
-            run: bun run typecheck
-
-          - name: tools-typecheck
-            root: "packages/tools/"
-            glob: "packages/tools/**/*.{ts,tsx}"
             run: bun run typecheck
 
           - name: web-shared-typecheck
@@ -305,6 +326,71 @@ pre-commit:
           - name: mobile-test
             root: "packages/clauderon/mobile/"
             glob: "packages/clauderon/mobile/**/*.{ts,tsx}"
+            run: bun run test
+
+          - name: astro-opengraph-images-test
+            root: "packages/astro-opengraph-images/"
+            glob: "packages/astro-opengraph-images/**/*.{ts,tsx}"
+            run: bun run test
+
+          - name: better-skill-capped-test
+            root: "packages/better-skill-capped/"
+            glob: "packages/better-skill-capped/**/*.{ts,tsx}"
+            run: bun run test
+
+          - name: eslint-config-test
+            root: "packages/eslint-config/"
+            glob: "packages/eslint-config/**/*.{ts,tsx}"
+            run: bun run test
+
+          - name: hn-enhancer-test
+            root: "packages/hn-enhancer/"
+            glob: "packages/hn-enhancer/**/*.{ts,tsx}"
+            run: bun run test
+
+          - name: monarch-test
+            root: "packages/monarch/"
+            glob: "packages/monarch/**/*.{ts,tsx}"
+            run: bun run test
+
+          - name: scout-for-lol-test
+            root: "packages/scout-for-lol/"
+            glob: "packages/scout-for-lol/**/*.{ts,tsx}"
+            run: bunx prisma generate && bun run test
+
+          - name: tasknotes-server-test
+            root: "packages/tasknotes-server/"
+            glob: "packages/tasknotes-server/**/*.{ts,tsx}"
+            run: bun run test
+
+          - name: tasks-for-obsidian-test
+            root: "packages/tasks-for-obsidian/"
+            glob: "packages/tasks-for-obsidian/**/*.{ts,tsx}"
+            run: bun run test
+
+          - name: webring-test
+            root: "packages/webring/"
+            glob: "packages/webring/**/*.{ts,tsx}"
+            run: bun run test
+
+          - name: homelab-test
+            root: "packages/homelab/"
+            glob: "packages/homelab/**/*.{ts,tsx}"
+            run: bun run test
+
+          - name: discord-plays-pokemon-test
+            root: "packages/discord-plays-pokemon/"
+            glob: "packages/discord-plays-pokemon/**/*.{ts,tsx}"
+            run: bun run test
+
+          - name: web-client-test
+            root: "packages/clauderon/web/client/"
+            glob: "packages/clauderon/web/client/**/*.{ts,tsx}"
+            run: bun run test
+
+          - name: web-frontend-test
+            root: "packages/clauderon/web/frontend/"
+            glob: "packages/clauderon/web/frontend/**/*.{ts,tsx}"
             run: bun run test
 
           - name: astro-opengraph-images-typecheck
@@ -347,6 +433,51 @@ pre-commit:
             glob: "packages/homelab/**/*.{ts,tsx}"
             run: bun run typecheck
 
+          - name: cooklang-rich-preview-typecheck
+            root: "packages/cooklang-rich-preview/"
+            glob: "packages/cooklang-rich-preview/**/*.{ts,tsx,astro}"
+            run: bun run typecheck
+
+          - name: hn-enhancer-typecheck
+            root: "packages/hn-enhancer/"
+            glob: "packages/hn-enhancer/**/*.{ts,tsx}"
+            run: bun run typecheck
+
+          - name: monarch-typecheck
+            root: "packages/monarch/"
+            glob: "packages/monarch/**/*.{ts,tsx}"
+            run: bun run typecheck
+
+          - name: tasknotes-server-typecheck
+            root: "packages/tasknotes-server/"
+            glob: "packages/tasknotes-server/**/*.{ts,tsx}"
+            run: bun run typecheck
+
+          - name: tasknotes-types-typecheck
+            root: "packages/tasknotes-types/"
+            glob: "packages/tasknotes-types/**/*.{ts,tsx}"
+            run: bun run typecheck
+
+          - name: tasks-for-obsidian-typecheck
+            root: "packages/tasks-for-obsidian/"
+            glob: "packages/tasks-for-obsidian/**/*.{ts,tsx}"
+            run: bun run typecheck
+
+          - name: toolkit-typecheck
+            root: "packages/toolkit/"
+            glob: "packages/toolkit/**/*.{ts,tsx}"
+            run: bun run typecheck
+
+          - name: leetcode-typecheck
+            root: "packages/leetcode/"
+            glob: "packages/leetcode/**/*.{ts,tsx}"
+            run: bun run typecheck
+
+          - name: clauderon-docs-typecheck
+            root: "packages/clauderon/docs/"
+            glob: "packages/clauderon/docs/**/*.{ts,tsx,astro}"
+            run: bun run typecheck
+
           # --- Swift (Glance) ---
           - name: glance-build
             root: "packages/glance/GlanceApp/"
@@ -359,6 +490,54 @@ pre-commit:
             env:
               DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
             run: swift test 2>&1
+
+          # --- Go (terraform-provider-asuswrt) ---
+          - name: go-build
+            root: "packages/terraform-provider-asuswrt/"
+            glob: "packages/terraform-provider-asuswrt/**/*.go"
+            run: go build ./...
+
+          - name: go-test
+            root: "packages/terraform-provider-asuswrt/"
+            glob: "packages/terraform-provider-asuswrt/**/*.go"
+            run: go test ./...
+
+          - name: go-lint
+            root: "packages/terraform-provider-asuswrt/"
+            glob: "packages/terraform-provider-asuswrt/**/*.go"
+            run: golangci-lint run
+
+          # --- Java (castle-casters) ---
+          - name: maven-build
+            root: "packages/castle-casters/"
+            glob: "packages/castle-casters/**/*.java"
+            run: mvn -q compile
+
+          - name: maven-test
+            root: "packages/castle-casters/"
+            glob: "packages/castle-casters/**/*.java"
+            run: mvn -q test
+
+          # --- HA (homelab) ---
+          - name: ha-lint
+            root: "packages/homelab/src/ha/"
+            glob:
+              - "packages/homelab/src/ha/src/**/*.ts"
+              - "packages/homelab/src/ha/eslint.config.ts"
+            run: bun run lint
+
+          - name: ha-typecheck
+            root: "packages/homelab/src/ha/"
+            glob:
+              - "packages/homelab/src/ha/src/**/*.ts"
+              - "packages/homelab/src/ha/tsconfig.json"
+            run: bun run typecheck
+
+          # --- Astro check ---
+          - name: sjer-red-astro-check
+            root: "packages/sjer.red/"
+            glob: "packages/sjer.red/**/*.{ts,tsx,astro}"
+            run: bunx astro check
 
           - name: full-typecheck
             glob: "tsconfig.base.json"

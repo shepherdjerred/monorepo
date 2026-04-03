@@ -7,4 +7,4 @@ install_bun
 
 echo "+++ :art: Prettier formatting check"
 bun install --frozen-lockfile
-bunx prettier --check 'packages/**/*.{ts,tsx,js,jsx,json,css,md}'
+bunx prettier --check .

@@ -16,14 +16,6 @@ import {
   func,
 } from "@dagger.io/dagger";
 
-import {
-  knipCheckHelper,
-  gitleaksCheckHelper,
-  suppressionCheckHelper,
-} from "./quality";
-
-import { trivyScanHelper, semgrepScanHelper } from "./security";
-
 import { mavenBuildHelper, mavenTestHelper, mavenCoverageHelper } from "./java";
 
 import { latexBuildHelper } from "./latex";
@@ -83,8 +75,6 @@ import { playwrightTestHelper, playwrightUpdateHelper } from "./playwright";
 import { ciAllHelper } from "./ci";
 
 import {
-  prettierHelper,
-  shellcheckHelper,
   mkdocsBuildHelper,
   caddyfileValidateHelper,
   smokeTestHelper,
@@ -459,22 +449,6 @@ export class Monorepo {
   }
 
   // ---------------------------------------------------------------------------
-  // Quality gates
-  // ---------------------------------------------------------------------------
-
-  /** Run prettier check across the repo */
-  @func()
-  async prettier(source: Directory): Promise<string> {
-    return prettierHelper(source).stdout();
-  }
-
-  /** Run shellcheck on all shell scripts */
-  @func()
-  async shellcheck(source: Directory): Promise<string> {
-    return shellcheckHelper(source).stdout();
-  }
-
-  // ---------------------------------------------------------------------------
   // Full CI validation
   // ---------------------------------------------------------------------------
 
@@ -485,48 +459,6 @@ export class Monorepo {
     hassToken: Secret | null = null,
   ): Promise<string> {
     return ciAllHelper(source, hassToken);
-  }
-
-  // ---------------------------------------------------------------------------
-  // Quality gates (repo-wide)
-  // ---------------------------------------------------------------------------
-
-  // quality-ratchet, compliance-check, dagger-hygiene, env-var-names,
-  // migration-guard, merge-conflict-check, large-file-check run as plain
-  // Buildkite steps (only need bash/bun on the agent, no Dagger container).
-
-  /** Run knip to detect unused exports and dependencies */
-  @func()
-  async knipCheck(source: Directory): Promise<string> {
-    return knipCheckHelper(source).stdout();
-  }
-
-  /** Run gitleaks to detect secrets in the source tree */
-  @func()
-  async gitleaksCheck(source: Directory): Promise<string> {
-    return gitleaksCheckHelper(source).stdout();
-  }
-
-  /** Run the suppression check across the repo */
-  @func()
-  async suppressionCheck(source: Directory): Promise<string> {
-    return suppressionCheckHelper(source).stdout();
-  }
-
-  // ---------------------------------------------------------------------------
-  // Security scanning
-  // ---------------------------------------------------------------------------
-
-  /** Run trivy to scan for high and critical vulnerabilities */
-  @func()
-  async trivyScan(source: Directory): Promise<string> {
-    return trivyScanHelper(source).stdout();
-  }
-
-  /** Run semgrep to scan for code quality and security issues */
-  @func()
-  async semgrepScan(source: Directory): Promise<string> {
-    return semgrepScanHelper(source).stdout();
   }
 
   // ---------------------------------------------------------------------------

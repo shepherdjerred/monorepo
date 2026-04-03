@@ -9,14 +9,9 @@ import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 const MAIN_ONLY = "build.branch == pipeline.default_branch";
 const PR_ONLY = "build.branch != pipeline.default_branch";
 
-function tofuStackStep(
-  stack: string,
-  homelabPkgKey?: string,
-): BuildkiteStep {
+function tofuStackStep(stack: string, homelabPkgKey?: string): BuildkiteStep {
   const label = TOFU_STACK_LABELS[stack] ?? stack;
-  const dependsOn = homelabPkgKey
-    ? ["release", homelabPkgKey]
-    : "release";
+  const dependsOn = homelabPkgKey ? ["release", homelabPkgKey] : "release";
   return {
     label: `:terraform: Apply ${label}`,
     key: `tofu-${stack}`,

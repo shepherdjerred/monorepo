@@ -29,9 +29,7 @@ const TARGETS: BuildTarget[] = [
   },
 ];
 
-export function clauderonReleaseGroup(
-  pkgKey?: string,
-): BuildkiteGroup {
+export function clauderonReleaseGroup(pkgKey?: string): BuildkiteGroup {
   const dependsOn = pkgKey ? ["release", pkgKey] : ["release"];
   const buildSteps: BuildkiteStep[] = TARGETS.map((t) => ({
     label: `:rust: Build clauderon (${t.label})`,

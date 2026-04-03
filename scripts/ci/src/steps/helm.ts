@@ -54,9 +54,7 @@ export function homelabHelmGroup(
   dependsOn: string[],
   homelabPkgKey?: string,
 ): BuildkiteGroup {
-  const synthDeps = homelabPkgKey
-    ? [...dependsOn, homelabPkgKey]
-    : dependsOn;
+  const synthDeps = homelabPkgKey ? [...dependsOn, homelabPkgKey] : dependsOn;
   return {
     group: ":helm: Homelab Helm",
     key: "homelab-helm-push",

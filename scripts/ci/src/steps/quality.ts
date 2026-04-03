@@ -23,12 +23,12 @@ function readIgnoreFile(path: string): string[] {
     .filter((l) => l.length > 0 && !l.startsWith("#"));
 }
 
-/** Wraps a dagger command to tee output and annotate the build page on failure. */
-function annotatedScanCmd(daggerCmd: string, context: string): string {
+/** Wraps a command to tee output and annotate the build page on failure. */
+function annotatedScanCmd(cmd: string, context: string): string {
   const outFile = `/tmp/${context}.txt`;
   return [
     `set -o pipefail`,
-    `${daggerCmd} 2>&1 | tee ${outFile}`,
+    `${cmd} 2>&1 | tee ${outFile}`,
     `status=$?`,
     `if [ $status -ne 0 ] && [ -s ${outFile} ]; then buildkite-agent annotate --style warning --context ${context} < ${outFile}; fi`,
     `exit $status`,
@@ -36,19 +36,28 @@ function annotatedScanCmd(daggerCmd: string, context: string): string {
 }
 
 export function prettierStep(): BuildkiteStep {
-  return daggerStep({
+  return plainStep({
     label: ":art: Prettier",
     key: "prettier",
-    daggerCmd: "dagger call prettier --source .",
+    command: "bash .buildkite/scripts/prettier.sh",
     timeoutMinutes: 10,
   });
 }
 
 export function shellcheckStep(): BuildkiteStep {
-  return daggerStep({
+  return plainStep({
     label: ":shell: Shellcheck",
     key: "shellcheck",
-    daggerCmd: "dagger call shellcheck --source .",
+    command: [
+      "source .buildkite/scripts/setup-tools.sh && install_shellcheck",
+      '&& echo "+++ :shell: Shellcheck"',
+      '&& find . -name "*.sh"',
+      '-not -path "*/archive/*"',
+      '-not -path "*/node_modules/*"',
+      '-not -path "*/Pods/*"',
+      '-not -path "*/target/*"',
+      "-print0 | xargs -0 shellcheck --severity=warning",
+    ].join(" "),
     timeoutMinutes: 10,
   });
 }
@@ -72,10 +81,10 @@ export function complianceCheckStep(): BuildkiteStep {
 }
 
 export function knipCheckStep(): BuildkiteStep {
-  return daggerStep({
+  return plainStep({
     label: ":scissors: Knip",
     key: "knip-check",
-    daggerCmd: annotatedScanCmd("dagger call knip-check --source .", "knip"),
+    command: annotatedScanCmd("bash .buildkite/scripts/knip-check.sh", "knip"),
     timeoutMinutes: 10,
     softFail: true,
     artifactPaths: ["/tmp/knip.txt"],
@@ -83,28 +92,34 @@ export function knipCheckStep(): BuildkiteStep {
 }
 
 export function gitleaksCheckStep(): BuildkiteStep {
-  return daggerStep({
+  return plainStep({
     label: ":lock: Gitleaks",
     key: "gitleaks-check",
-    daggerCmd: "dagger call gitleaks-check --source .",
+    command: [
+      "source .buildkite/scripts/setup-tools.sh",
+      "install_gitleaks",
+      'echo "+++ :lock: Gitleaks"',
+      "gitleaks detect --source . --no-git",
+    ].join(" && "),
     timeoutMinutes: 10,
   });
 }
 
 export function suppressionCheckStep(): BuildkiteStep {
-  return daggerStep({
+  return plainStep({
     label: ":no_entry_sign: Suppression Check",
     key: "suppression-check",
-    daggerCmd: "dagger call suppression-check --source .",
+    command:
+      'echo "+++ :no_entry_sign: Suppression Check" && bun scripts/check-suppressions.ts --ci',
     timeoutMinutes: 10,
   });
 }
 
 export function trivyScanStep(): BuildkiteStep {
-  return daggerStep({
+  return plainStep({
     label: ":shield: Trivy Scan",
     key: "trivy-scan",
-    daggerCmd: annotatedScanCmd("dagger call trivy-scan --source .", "trivy"),
+    command: annotatedScanCmd("bash .buildkite/scripts/trivy-scan.sh", "trivy"),
     timeoutMinutes: 15,
     softFail: true,
     artifactPaths: ["/tmp/trivy.txt"],
@@ -122,11 +137,11 @@ export function daggerHygieneStep(): BuildkiteStep {
 }
 
 export function semgrepScanStep(): BuildkiteStep {
-  return daggerStep({
+  return plainStep({
     label: ":mag: Semgrep Scan",
     key: "semgrep-scan",
-    daggerCmd: annotatedScanCmd(
-      "dagger call semgrep-scan --source .",
+    command: annotatedScanCmd(
+      "bash .buildkite/scripts/semgrep-scan.sh",
       "semgrep",
     ),
     timeoutMinutes: 15,
@@ -135,18 +150,22 @@ export function semgrepScanStep(): BuildkiteStep {
   });
 }
 
+/** Plain step: only needs bun (in ci-base). Validates lockfile is up to date. */
+export function lockfileCheckStep(): BuildkiteStep {
+  return plainStep({
+    label: ":lock: Lockfile Check",
+    key: "lockfile-check",
+    command: "bun install --frozen-lockfile",
+    timeoutMinutes: 5,
+  });
+}
+
 /** Plain step: only needs bash+grep+git (in ci-base). Validates env var naming conventions. */
 export function envVarNamesStep(): BuildkiteStep {
   return plainStep({
     label: ":label: Env Var Names",
     key: "env-var-names",
-    command: [
-      "files=$(git ls-files --",
-      "'*.ts' '*.rs' '*.py' '*.fish' '*.tmpl' '*.yaml' '*.yml'",
-      "'*.env' '*.md' '*.sh' '*.swift'",
-      "':!:archive/' ':!:practice/' ':!:.dagger/' ':!:.build/' ':!:**/generated/*')",
-      "&& bash scripts/check-env-var-names.sh $files",
-    ].join(" "),
+    command: "bash scripts/check-env-var-names.sh",
   });
 }
 
