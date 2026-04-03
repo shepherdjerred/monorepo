@@ -85,7 +85,10 @@ function isAllowlisted(
     if (!file.includes(entry.file)) return false;
     if (entry.patternName !== "*" && entry.patternName !== patternName)
       return false;
-    if (entry.lineContains !== undefined && !lineContent.includes(entry.lineContains))
+    if (
+      entry.lineContains !== undefined &&
+      !lineContent.includes(entry.lineContains)
+    )
       return false;
     return true;
   });

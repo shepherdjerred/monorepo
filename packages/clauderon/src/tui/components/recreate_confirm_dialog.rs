@@ -262,9 +262,7 @@ fn get_state_display(state: &ResourceState) -> &'static str {
 fn get_state_color(state: &ResourceState) -> Color {
     match state {
         ResourceState::Healthy => Color::Green,
-        ResourceState::Stopped | ResourceState::Pending => {
-            Color::Yellow
-        }
+        ResourceState::Stopped | ResourceState::Pending => Color::Yellow,
         ResourceState::Missing => Color::LightYellow,
         ResourceState::Error { .. }
         | ResourceState::CrashLoop

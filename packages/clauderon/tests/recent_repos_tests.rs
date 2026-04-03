@@ -116,16 +116,16 @@ async fn test_recent_repo_tracked_on_session_create() {
             "Test prompt".to_owned(),
             BackendType::Zellij,
             AgentType::ClaudeCode,
-            None,                  // model
-            true,                  // dangerous_skip_checks
-            false,                 // print_mode
-            false,                 // plan_mode
-            vec![],                // images
-            None,                  // container_image
-            None,                  // pull_policy
-            None,                  // cpu_limit
-            None,                  // memory_limit
-            None,                  // storage_class
+            None,   // model
+            true,   // dangerous_skip_checks
+            false,  // print_mode
+            false,  // plan_mode
+            vec![], // images
+            None,   // container_image
+            None,   // pull_policy
+            None,   // cpu_limit
+            None,   // memory_limit
+            None,   // storage_class
         )
         .await
         .expect("Failed to create session");

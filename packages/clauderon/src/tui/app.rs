@@ -695,10 +695,7 @@ impl CreateDialogState {
     fn update_skip_checks_for_backend(&mut self) {
         // Docker and AiSandbox benefit from skipping checks (isolated environments)
         // Zellij runs locally so checks are more important
-        self.skip_checks = matches!(
-            self.backend,
-            BackendType::Docker | BackendType::AiSandbox
-        );
+        self.skip_checks = matches!(self.backend, BackendType::Docker | BackendType::AiSandbox);
     }
 
     /// Cycle through backends: Zellij → Docker → AiSandbox → Zellij, auto-adjusting skip_checks
@@ -1827,10 +1824,7 @@ impl App {
             .ok_or_else(|| anyhow::anyhow!("No session selected"))?;
 
         // Docker sessions support PTY attachment
-        if !matches!(
-            session.backend,
-            crate::core::BackendType::Docker
-        ) {
+        if !matches!(session.backend, crate::core::BackendType::Docker) {
             return Err(anyhow::anyhow!(
                 "PTY attachment only supported for Docker sessions"
             ));
@@ -2048,10 +2042,8 @@ impl App {
             .sessions
             .iter()
             .filter(|s| {
-                matches!(
-                    s.backend,
-                    BackendType::Docker
-                ) && s.backend_id.is_some()
+                matches!(s.backend, BackendType::Docker)
+                    && s.backend_id.is_some()
                     && s.status != SessionStatus::Archived
             })
             .collect();
@@ -2104,10 +2096,8 @@ impl App {
             .sessions
             .iter()
             .filter(|s| {
-                matches!(
-                    s.backend,
-                    BackendType::Docker
-                ) && s.backend_id.is_some()
+                matches!(s.backend, BackendType::Docker)
+                    && s.backend_id.is_some()
                     && s.status != SessionStatus::Archived
             })
             .collect();

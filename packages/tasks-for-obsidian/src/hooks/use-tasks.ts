@@ -59,7 +59,7 @@ export function useTasks() {
     () =>
       taskList
         .filter((t) => isActiveStatus(t.status) && isUpcoming(t.due))
-        .toSorted((a, b) => {
+        .sort((a, b) => {
           if (!a.due || !b.due) return 0;
           return new Date(a.due).getTime() - new Date(b.due).getTime();
         }),
@@ -73,7 +73,7 @@ export function useTasks() {
         names.add(p);
       }
     }
-    return [...names].toSorted();
+    return [...names].sort();
   }, [taskList]);
 
   const tagNames = useMemo(() => {
@@ -83,7 +83,7 @@ export function useTasks() {
         names.add(tag);
       }
     }
-    return [...names].toSorted();
+    return [...names].sort();
   }, [taskList]);
 
   const contextNames = useMemo(() => {
@@ -93,7 +93,7 @@ export function useTasks() {
         names.add(c);
       }
     }
-    return [...names].toSorted();
+    return [...names].sort();
   }, [taskList]);
 
   const toggleTask = useCallback((id: TaskId) => ctx.toggleStatus(id), [ctx]);

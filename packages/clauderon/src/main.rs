@@ -155,7 +155,6 @@ ENVIRONMENT:
         /// Env: CLAUDERON_FEATURE_ENABLE_EXPERIMENTAL_MODELS
         #[arg(long, help_heading = "Feature Flags")]
         enable_experimental_models: Option<bool>,
-
     },
 
     /// Launch the terminal UI
@@ -514,8 +513,7 @@ async fn main() -> anyhow::Result<()> {
 
             let port = if http_port > 0 { Some(http_port) } else { None };
             let dev_mode = dev || std::env::var("CLAUDERON_DEV").is_ok();
-            api::server::run_daemon_with_http(port, dev_mode, flags, server_config)
-                .await?;
+            api::server::run_daemon_with_http(port, dev_mode, flags, server_config).await?;
         }
         Commands::Tui => {
             tui::run().await?;
@@ -967,4 +965,3 @@ fn print_env_detailed(name: &str, description: &str, default: Option<&str>) {
     println!("    {name:<30} [{status}]");
     println!("        {description}");
 }
-

@@ -49,7 +49,7 @@ export function TimeReportScreen(_props: Props) {
         totalMinutes,
       });
     }
-    return result.toSorted((a, b) => b.totalMinutes - a.totalMinutes);
+    return result.sort((a, b) => b.totalMinutes - a.totalMinutes);
   }, [summary, taskList]);
 
   if (items.length === 0) {

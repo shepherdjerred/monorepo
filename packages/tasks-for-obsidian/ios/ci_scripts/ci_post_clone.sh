@@ -35,7 +35,9 @@ fi
 
 echo "[ci_post_clone] Installing JS dependencies in $PKG_DIR"
 cd "$PKG_DIR"
-bun install --frozen-lockfile
+# React Native + CocoaPods expect a physical node_modules tree.
+# Bun's isolated linker can omit it on clean CI workers, so force hoisted mode.
+bun install --frozen-lockfile --linker hoisted
 
 echo "[ci_post_clone] Installing CocoaPods dependencies"
 cd "$PKG_DIR/ios"

@@ -1,5 +1,5 @@
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import path from "node:path";
 import { z } from "zod";
 import { EMBEDDING_DIM } from "./config.ts";
 
@@ -153,7 +153,7 @@ export class EmbeddingClient {
       );
     }
 
-    const scriptPath = join(tmpdir(), "toolkit-embed-server.py");
+    const scriptPath = path.join(tmpdir(), "toolkit-embed-server.py");
     await Bun.write(scriptPath, EMBED_SERVER_SCRIPT);
     this.proc = Bun.spawn(["uv", "run", scriptPath], {
       stdin: "pipe",

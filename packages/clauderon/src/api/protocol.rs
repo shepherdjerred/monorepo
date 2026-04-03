@@ -96,7 +96,6 @@ pub enum Request {
         id: String,
     },
 
-
     /// Recreate a session (delete and recreate backend)
     RecreateSession {
         /// Session ID to recreate.

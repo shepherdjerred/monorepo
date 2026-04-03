@@ -26,8 +26,8 @@ export function useLabels(): Labels {
       }
     }
     return {
-      contexts: [...contextSet].toSorted(),
-      tags: [...tagSet].toSorted(),
+      contexts: [...contextSet].sort(),
+      tags: [...tagSet].sort(),
     };
   }, [tasks]);
 }

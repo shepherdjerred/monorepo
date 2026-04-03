@@ -145,4 +145,3 @@ pub fn gh_authenticated() -> bool {
         .map(|o| o.status.success())
         .unwrap_or(false)
 }
-

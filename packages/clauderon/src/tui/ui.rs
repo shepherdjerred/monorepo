@@ -295,7 +295,9 @@ fn render_help(frame: &mut Frame<'_>, app: &App, area: Rect) {
             ];
 
             match session.backend {
-                BackendType::Zellij | BackendType::AiSandbox => vec![("Ctrl+O, d", "Detach from session")],
+                BackendType::Zellij | BackendType::AiSandbox => {
+                    vec![("Ctrl+O, d", "Detach from session")]
+                }
                 BackendType::Docker => container_hints,
             }
         },

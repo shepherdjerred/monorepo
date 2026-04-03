@@ -57,7 +57,6 @@ impl ImagePullPolicy {
             Self::Never => Some("never"),
         }
     }
-
 }
 
 /// Container resource limits in normalized format.
@@ -296,6 +295,11 @@ fn validate_image_name(image: &str) -> anyhow::Result<()> {
 /// Creates a known_marketplaces.json file with container-adjusted paths that point to
 /// the mounted plugin directories. Plugin files themselves are mounted read-only from
 /// the host, so this only generates the configuration metadata.
+///
+/// # Errors
+///
+/// Returns an error if the plugins directory cannot be created or the configuration
+/// file cannot be written.
 pub fn generate_plugin_config(
     clauderon_dir: &std::path::Path,
     plugin_manifest: &crate::plugins::PluginManifest,

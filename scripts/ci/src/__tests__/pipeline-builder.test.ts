@@ -120,9 +120,11 @@ describe("buildPipeline", () => {
     it("includes security scans with soft_fail", () => {
       const pipeline = buildPipeline(fullBuild());
       const steps = pipeline.steps.filter(isStep);
-      const semgrep = steps.find((s) => s.key === "semgrep-scan");
-      expect(semgrep).toBeDefined();
-      expect(semgrep?.soft_fail).toBe(true);
+      for (const key of ["semgrep-scan", "trivy-scan"]) {
+        const step = steps.find((s) => s.key === key);
+        expect(step).toBeDefined();
+        expect(step?.soft_fail).toBe(true);
+      }
     });
 
     it("includes release track with wait gate", () => {

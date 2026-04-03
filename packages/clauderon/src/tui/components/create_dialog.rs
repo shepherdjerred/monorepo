@@ -186,11 +186,7 @@ pub fn render(frame: &mut Frame<'_>, app: &App, area: Rect) {
     let backend_options: Vec<(&str, bool, bool)> = vec![
         ("Zellij", dialog.backend == BackendType::Zellij, true),
         ("Docker", dialog.backend == BackendType::Docker, true),
-        (
-            "AI Sandbox",
-            dialog.backend == BackendType::AiSandbox,
-            true,
-        ),
+        ("AI Sandbox", dialog.backend == BackendType::AiSandbox, true),
     ];
 
     render_backend_field(

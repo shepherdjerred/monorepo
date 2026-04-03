@@ -70,14 +70,6 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
   steps.push(gitleaksCheckStep());
   steps.push(suppressionCheckStep());
 
-  // --- Quality checks (non-blocking — run in parallel, don't gate releases) ---
-  steps.push(prettierStep());
-  steps.push(knipCheckStep());
-  steps.push(daggerHygieneStep());
-  // TODO: re-enable when Trivy timeout is resolved
-  // steps.push(trivyScanStep());
-  steps.push(semgrepScanStep());
-
   // --- Code Review (PRs only) ---
   const prNumber = process.env["BUILDKITE_PULL_REQUEST"] ?? "false";
   if (prNumber !== "false" && prNumber !== "" && prNumber !== undefined) {
@@ -94,8 +86,16 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     affected.cooklangChanged;
 
   if (hasMainSteps) {
-    // Wait for all build/test to pass before release steps
+    // Wait for all build/test + blocking quality gates to pass before release steps
     steps.push({ wait: "", if: "build.branch == pipeline.default_branch" });
+
+    // --- Async quality checks (soft_fail, don't block releases) ---
+    // Placed after the wait gate so releases can start without waiting for these.
+    steps.push(prettierStep());
+    steps.push(knipCheckStep());
+    steps.push(daggerHygieneStep());
+    steps.push(trivyScanStep());
+    steps.push(semgrepScanStep());
 
     // Release (always on main when there are releasable changes)
     steps.push(releaseStep());

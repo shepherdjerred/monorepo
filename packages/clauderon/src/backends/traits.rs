@@ -233,7 +233,6 @@ pub struct CreateOptions {
     /// When false (default), bind mounts
     /// local worktrees directly.
     pub volume_mode: bool,
-
 }
 
 /// Trait for execution backends (Zellij, Docker, etc.)
@@ -321,7 +320,6 @@ pub trait ExecutionBackend: Send + Sync {
     async fn start(&self, _id: &str) -> anyhow::Result<()> {
         anyhow::bail!("This backend does not support starting stopped resources")
     }
-
 }
 
 /// Deprecated alias for [`ExecutionBackend`].

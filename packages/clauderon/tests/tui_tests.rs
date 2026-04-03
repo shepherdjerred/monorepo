@@ -171,7 +171,7 @@ fn test_create_dialog_focus_cycle() {
         CreateDialogFocus::SkipChecks,
         CreateDialogFocus::PlanMode,
         CreateDialogFocus::Buttons,
-        CreateDialogFocus::Prompt,  // Back to start
+        CreateDialogFocus::Prompt, // Back to start
     ];
 
     for expected_focus in focuses {
@@ -184,10 +184,11 @@ fn test_create_dialog_focus_cycle() {
             CreateDialogFocus::Agent => CreateDialogFocus::Model,
             CreateDialogFocus::Model => CreateDialogFocus::SkipChecks,
             CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
-            CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
+            CreateDialogFocus::PlanMode | CreateDialogFocus::StorageClass => {
+                CreateDialogFocus::Buttons
+            }
             CreateDialogFocus::ContainerImage => CreateDialogFocus::PullPolicy,
             CreateDialogFocus::PullPolicy => CreateDialogFocus::StorageClass,
-            CreateDialogFocus::StorageClass => CreateDialogFocus::Buttons,
             CreateDialogFocus::Buttons => CreateDialogFocus::Prompt,
         };
         assert_eq!(app.create_dialog.focus, expected_focus);
@@ -1388,4 +1389,3 @@ fn test_render_signal_menu_without_panic() {
     // Should render without panicking
     terminal.draw(|frame| ui::render(frame, &app)).unwrap();
 }
-

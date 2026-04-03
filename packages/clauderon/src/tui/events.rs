@@ -342,10 +342,10 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 CreateDialogFocus::Agent => CreateDialogFocus::Model,
                 CreateDialogFocus::Model => CreateDialogFocus::SkipChecks,
                 CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
-                CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
-                CreateDialogFocus::ContainerImage => CreateDialogFocus::Buttons,
-                CreateDialogFocus::PullPolicy => CreateDialogFocus::Buttons,
-                CreateDialogFocus::StorageClass => CreateDialogFocus::Buttons,
+                CreateDialogFocus::PlanMode
+                | CreateDialogFocus::ContainerImage
+                | CreateDialogFocus::PullPolicy
+                | CreateDialogFocus::StorageClass => CreateDialogFocus::Buttons,
                 CreateDialogFocus::Buttons => CreateDialogFocus::Prompt,
             };
         }
@@ -359,10 +359,10 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                 CreateDialogFocus::Model => CreateDialogFocus::Agent,
                 CreateDialogFocus::SkipChecks => CreateDialogFocus::Model,
                 CreateDialogFocus::PlanMode => CreateDialogFocus::SkipChecks,
-                CreateDialogFocus::ContainerImage => CreateDialogFocus::PlanMode,
-                CreateDialogFocus::PullPolicy => CreateDialogFocus::PlanMode,
-                CreateDialogFocus::StorageClass => CreateDialogFocus::PlanMode,
-                CreateDialogFocus::Buttons => CreateDialogFocus::PlanMode,
+                CreateDialogFocus::ContainerImage
+                | CreateDialogFocus::PullPolicy
+                | CreateDialogFocus::StorageClass
+                | CreateDialogFocus::Buttons => CreateDialogFocus::PlanMode,
             };
         }
         KeyCode::Enter => match app.create_dialog.focus {
@@ -512,10 +512,10 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     CreateDialogFocus::Model => CreateDialogFocus::Agent,
                     CreateDialogFocus::SkipChecks => CreateDialogFocus::Model,
                     CreateDialogFocus::PlanMode => CreateDialogFocus::SkipChecks,
-                    CreateDialogFocus::ContainerImage => CreateDialogFocus::PlanMode,
-                    CreateDialogFocus::PullPolicy => CreateDialogFocus::PlanMode,
-                    CreateDialogFocus::StorageClass => CreateDialogFocus::PlanMode,
-                    CreateDialogFocus::Buttons => CreateDialogFocus::PlanMode,
+                    CreateDialogFocus::ContainerImage
+                    | CreateDialogFocus::PullPolicy
+                    | CreateDialogFocus::StorageClass
+                    | CreateDialogFocus::Buttons => CreateDialogFocus::PlanMode,
                 };
             }
         }
@@ -547,10 +547,10 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
                     CreateDialogFocus::Agent => CreateDialogFocus::Model,
                     CreateDialogFocus::Model => CreateDialogFocus::SkipChecks,
                     CreateDialogFocus::SkipChecks => CreateDialogFocus::PlanMode,
-                    CreateDialogFocus::PlanMode => CreateDialogFocus::Buttons,
-                    CreateDialogFocus::ContainerImage => CreateDialogFocus::Buttons,
-                    CreateDialogFocus::PullPolicy => CreateDialogFocus::Buttons,
-                    CreateDialogFocus::StorageClass => CreateDialogFocus::Buttons,
+                    CreateDialogFocus::PlanMode
+                    | CreateDialogFocus::ContainerImage
+                    | CreateDialogFocus::PullPolicy
+                    | CreateDialogFocus::StorageClass => CreateDialogFocus::Buttons,
                     CreateDialogFocus::Buttons => CreateDialogFocus::Prompt,
                 };
             }
@@ -950,7 +950,6 @@ async fn handle_recreate_confirm_key(app: &mut App, key: KeyEvent) -> anyhow::Re
                 app.close_recreate_dialog();
             }
         }
-        KeyCode::Char('w' | 'W') => {}
         KeyCode::Char('r' | 'R') => {
             // Recreate action
             if let Some(health) = app.get_recreate_session_health().cloned()

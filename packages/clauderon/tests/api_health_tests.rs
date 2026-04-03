@@ -352,4 +352,3 @@ fn test_zellij_always_data_safe() {
 
     assert!(report.data_safe);
 }
-

@@ -355,8 +355,9 @@ impl ConsoleManager {
 
         let session = match backend {
             BackendType::Docker => ConsoleSession::spawn_docker(backend_id).await?,
-            BackendType::Zellij => ConsoleSession::spawn_zellij(backend_id).await?,
-            BackendType::AiSandbox => ConsoleSession::spawn_zellij(backend_id).await?,
+            BackendType::Zellij | BackendType::AiSandbox => {
+                ConsoleSession::spawn_zellij(backend_id).await?
+            }
         };
 
         let session = Arc::new(session);

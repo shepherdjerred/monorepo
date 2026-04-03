@@ -5,9 +5,9 @@ use tracing::instrument;
 
 use super::container_config::{DockerConfig, ImageConfig, ResourceLimits};
 use super::traits::ExecutionBackend;
+use crate::backends::container_config::generate_plugin_config;
 use crate::core::AgentType;
 use crate::plugins::{PluginDiscovery, PluginManifest};
-use crate::backends::container_config::generate_plugin_config;
 
 /// Sanitize git config value to prevent environment variable injection
 ///
@@ -891,7 +891,6 @@ echo "Git setup complete: branch ${{BRANCH_NAME}}"
                         }
                     }
                 }
-
             }
         }
 
@@ -2477,10 +2476,7 @@ mod tests {
 
         // Should mount .claude.json with bypassPermissionsModeAccepted
         let has_claude_json = args.iter().any(|a| a.contains(".claude.json"));
-        assert!(
-            has_claude_json,
-            "Should mount .claude.json"
-        );
+        assert!(has_claude_json, "Should mount .claude.json");
 
         // Verify the mount includes the container path
         let claude_json_mount = args.iter().find(|a| a.contains(".claude.json")).unwrap();

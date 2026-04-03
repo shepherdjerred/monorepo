@@ -195,7 +195,9 @@ impl GitOperations for GitBackend {
                 .await?;
             if !fallback.status.success() {
                 let fallback_stderr = String::from_utf8_lossy(&fallback.stderr);
-                anyhow::bail!("Failed to checkout branch '{branch_name}': {stderr} / {fallback_stderr}");
+                anyhow::bail!(
+                    "Failed to checkout branch '{branch_name}': {stderr} / {fallback_stderr}"
+                );
             }
         }
 
@@ -276,7 +278,9 @@ impl GitOperations for GitBackend {
             Ok(None)
         } else {
             // No staged clone available, fall back to inline clone
-            let result = self.clone_local(source_repo, target_path, branch_name).await;
+            let result = self
+                .clone_local(source_repo, target_path, branch_name)
+                .await;
 
             // Spawn background replenish for next time
             let source = source_repo.to_path_buf();

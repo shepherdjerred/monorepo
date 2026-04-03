@@ -16,6 +16,6 @@ export function useProjects(): ProjectName[] {
         }
       }
     }
-    return [...projectSet].toSorted();
+    return [...projectSet].sort();
   }, [tasks]);
 }

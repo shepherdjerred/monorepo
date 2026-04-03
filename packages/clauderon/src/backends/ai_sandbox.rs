@@ -171,12 +171,14 @@ impl ExecutionBackend for AiSandboxBackend {
 
         let status = tokio::time::timeout(timeout_duration, child.wait())
             .await
-            .map_err(|_| {
+            .map_err(|_elapsed| {
                 // Kill the hung process before returning the error
                 let _ = child.start_kill();
-                anyhow::anyhow!("Timed out waiting for 'zellij attach --create-background' ({}s)", timeout_duration.as_secs())
-            })?
-            ?;
+                anyhow::anyhow!(
+                    "Timed out waiting for 'zellij attach --create-background' ({}s)",
+                    timeout_duration.as_secs()
+                )
+            })??;
 
         if !status.success() {
             tracing::error!(
@@ -185,7 +187,10 @@ impl ExecutionBackend for AiSandboxBackend {
                 exit_code = ?status.code(),
                 "Failed to create Zellij session for AI Sandbox"
             );
-            anyhow::bail!("Failed to create Zellij session (exit code: {:?})", status.code());
+            anyhow::bail!(
+                "Failed to create Zellij session (exit code: {:?})",
+                status.code()
+            );
         }
 
         // Wait for session plugins to initialize before sending actions
@@ -212,8 +217,12 @@ impl ExecutionBackend for AiSandboxBackend {
                 .output(),
         )
         .await
-        .map_err(|_| anyhow::anyhow!("Timed out waiting for 'zellij action new-pane' ({}s)", timeout_duration.as_secs()))?
-        ?;
+        .map_err(|_elapsed| {
+            anyhow::anyhow!(
+                "Timed out waiting for 'zellij action new-pane' ({}s)",
+                timeout_duration.as_secs()
+            )
+        })??;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
@@ -405,7 +414,10 @@ mod tests {
         assert_eq!(args[2], "my-session");
     }
 
-    fn make_test_repo(mount_name: &str, is_primary: bool) -> crate::core::session::SessionRepository {
+    fn make_test_repo(
+        mount_name: &str,
+        is_primary: bool,
+    ) -> crate::core::session::SessionRepository {
         crate::core::session::SessionRepository {
             repo_path: PathBuf::from("/tmp/repo"),
             subdirectory: PathBuf::new(),
@@ -422,9 +434,7 @@ mod tests {
         repos: &[crate::core::session::SessionRepository],
     ) -> Option<String> {
         if repos.len() > 1 {
-            Some(
-                "Multi-repository sessions are not supported for AI Sandbox backend.".to_owned(),
-            )
+            Some("Multi-repository sessions are not supported for AI Sandbox backend.".to_owned())
         } else {
             None
         }

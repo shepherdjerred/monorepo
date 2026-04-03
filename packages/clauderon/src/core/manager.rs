@@ -7,8 +7,8 @@ use tracing::instrument;
 use uuid::Uuid;
 
 use crate::backends::{
-    DockerBackend, ExecutionBackend, GitBackend, GitOperations, ImageConfig, ImagePullPolicy,
-    AiSandboxBackend, ResourceLimits, ZellijBackend,
+    AiSandboxBackend, DockerBackend, ExecutionBackend, GitBackend, GitOperations, ImageConfig,
+    ImagePullPolicy, ResourceLimits, ZellijBackend,
 };
 
 use crate::core::console_manager::ConsoleManager;
@@ -274,7 +274,6 @@ impl SessionManager {
 
     /// Validate that the requested backend is enabled via feature flags
     fn validate_backend_enabled(&self, _backend: BackendType) -> anyhow::Result<()> {
-
         Ok(())
     }
 
@@ -283,7 +282,6 @@ impl SessionManager {
     pub fn console_manager(&self) -> Arc<ConsoleManager> {
         Arc::clone(&self.console_manager)
     }
-
 
     /// Get reference to feature flags
     ///
@@ -1152,7 +1150,10 @@ impl SessionManager {
                                     .create_worktree(&git_root, &worktree_path, &branch_name)
                                     .await?;
 
-                                Ok::<(PathBuf, Option<String>), anyhow::Error>((worktree_path, warning))
+                                Ok::<(PathBuf, Option<String>), anyhow::Error>((
+                                    worktree_path,
+                                    warning,
+                                ))
                             }
                         },
                     )
@@ -1175,10 +1176,11 @@ impl SessionManager {
 
                 // Clone-based setup for backends that manage their own repo
                 let mut created = Vec::new();
-                for (git_root, _subdirectory, mount_name, _is_primary, _base_branch) in &repos_for_task {
-                    let clone_path = crate::utils::paths::worktree_path(&format!(
-                        "{full_name}-{mount_name}"
-                    ));
+                for (git_root, _subdirectory, mount_name, _is_primary, _base_branch) in
+                    &repos_for_task
+                {
+                    let clone_path =
+                        crate::utils::paths::worktree_path(&format!("{full_name}-{mount_name}"));
 
                     tracing::info!(
                         session_id = %session_id,
@@ -1191,9 +1193,7 @@ impl SessionManager {
                     self.git
                         .claim_or_clone(git_root, &clone_path, &full_name)
                         .await
-                        .with_context(|| {
-                            format!("Failed to clone repository '{mount_name}'")
-                        })?;
+                        .with_context(|| format!("Failed to clone repository '{mount_name}'"))?;
 
                     created.push(clone_path);
                 }
@@ -2447,7 +2447,9 @@ impl SessionManager {
                 let result = if manages_own_repo {
                     self.git.delete_clone(&repo.worktree_path).await
                 } else {
-                    self.git.delete_worktree(&repo.repo_path, &repo.worktree_path).await
+                    self.git
+                        .delete_worktree(&repo.repo_path, &repo.worktree_path)
+                        .await
                 };
                 if let Err(e) = result {
                     tracing::warn!(
@@ -2801,7 +2803,6 @@ impl SessionManager {
                             }
                         }
                     }
-
                 }
             }
         }
@@ -2863,7 +2864,7 @@ impl SessionManager {
             model: session.model_cli_flag().map(str::to_string),
             print_mode: false, // Never use print mode for recreation
             plan_mode: false,  // Don't enter plan mode - session already has context
-            images: vec![], // No images for recreation
+            images: vec![],    // No images for recreation
             dangerous_skip_checks: session.dangerous_skip_checks,
             session_id: Some(session.id),
             initial_workdir: session.subdirectory.clone(),
@@ -3623,7 +3624,9 @@ impl SessionManager {
                 }
             }
             BackendType::AiSandbox => {
-                anyhow::bail!("Send prompt is not supported for AI Sandbox sessions - attach directly instead");
+                anyhow::bail!(
+                    "Send prompt is not supported for AI Sandbox sessions - attach directly instead"
+                );
             }
         }
 
@@ -3643,7 +3646,6 @@ impl SessionManager {
     /// Returns an error if status cannot be determined.
     pub async fn get_system_status(&self) -> anyhow::Result<crate::api::protocol::SystemStatus> {
         use crate::api::protocol::SystemStatus;
-
 
         // Try to fetch Claude Code usage if OAuth token is available
         let oauth_token = std::env::var("CLAUDE_CODE_OAUTH_TOKEN").ok();
@@ -3723,9 +3725,7 @@ impl SessionManager {
             None
         };
 
-        Ok(SystemStatus {
-            claude_usage,
-        })
+        Ok(SystemStatus { claude_usage })
     }
 
     /// Fetch Claude Code usage data from Claude.ai API
@@ -3837,5 +3837,4 @@ impl SessionManager {
 
         Ok(usage)
     }
-
 }

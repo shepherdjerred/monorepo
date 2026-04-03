@@ -241,5 +241,3 @@ pub async fn install_hooks_in_container(container_name: &str) -> Result<()> {
 
     Ok(())
 }
-
-

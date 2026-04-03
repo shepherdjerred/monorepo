@@ -86,7 +86,7 @@ export function applyFilter(
 export function applySort(tasks: readonly Task[], sort: SortConfig): Task[] {
   const dir = sort.direction === "asc" ? 1 : -1;
 
-  return [...tasks].toSorted((a, b) => {
+  return [...tasks].sort((a, b) => {
     switch (sort.field) {
       case "dueDate": {
         if (!a.due && !b.due) return 0;

@@ -10,28 +10,25 @@ const daggerSrc = `${repoRoot}/.dagger/src`;
 
 describe("constant duplication", () => {
   it("SOURCE_EXCLUDES is defined in exactly one file", () => {
-    const result = execSync(
-      `grep -rl 'const SOURCE_EXCLUDES' ${daggerSrc}`,
-      { encoding: "utf-8" },
-    );
+    const result = execSync(`grep -rl 'const SOURCE_EXCLUDES' ${daggerSrc}`, {
+      encoding: "utf-8",
+    });
     const files = result.trim().split("\n").filter(Boolean);
     expect(files).toHaveLength(1);
   });
 
   it("BUN_IMAGE is defined in exactly one file", () => {
-    const result = execSync(
-      `grep -rl 'const BUN_IMAGE' ${daggerSrc}`,
-      { encoding: "utf-8" },
-    );
+    const result = execSync(`grep -rl 'const BUN_IMAGE' ${daggerSrc}`, {
+      encoding: "utf-8",
+    });
     const files = result.trim().split("\n").filter(Boolean);
     expect(files).toHaveLength(1);
   });
 
   it("BUN_CACHE is defined in exactly one file", () => {
-    const result = execSync(
-      `grep -rl 'const BUN_CACHE' ${daggerSrc}`,
-      { encoding: "utf-8" },
-    );
+    const result = execSync(`grep -rl 'const BUN_CACHE' ${daggerSrc}`, {
+      encoding: "utf-8",
+    });
     const files = result.trim().split("\n").filter(Boolean);
     expect(files).toHaveLength(1);
   });
@@ -42,7 +39,8 @@ describe("resource tiers", () => {
     const catalogPath = `${repoRoot}/scripts/ci/src/catalog.ts`;
     const content = readFileSync(catalogPath, "utf-8");
 
-    const tierPattern = /const (HEAVY|MEDIUM|LIGHT):\s*ResourceTier\s*=\s*(\{[^}]+\})/g;
+    const tierPattern =
+      /const (HEAVY|MEDIUM|LIGHT):\s*ResourceTier\s*=\s*(\{[^}]+\})/g;
     const tiers: Record<string, string> = {};
 
     let match: RegExpExecArray | null;
