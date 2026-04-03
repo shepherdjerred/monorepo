@@ -91,9 +91,9 @@ export function caddyfileValidateHelper(source: Directory): Container {
     .withWorkdir("/workspace")
     .withFile(
       "/usr/local/bin/caddy",
-      dag
-        .container()
-        .build(source.directory("packages/homelab/src/caddy-s3proxy"))
+      source
+        .directory("packages/homelab/src/caddy-s3proxy")
+        .dockerBuild()
         .file("/usr/bin/caddy"),
     )
     .withExec(["caddy", "validate", "--config", "/tmp/Caddyfile"]);

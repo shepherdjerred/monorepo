@@ -212,7 +212,7 @@ describe("buildPipeline", () => {
       }
     });
 
-    it("image push steps depend on release and their own package build", () => {
+    it("smoke tests gate image pushes (smoke before push)", () => {
       const pipeline = buildPipeline(fullBuild());
       const allSteps: BuildkiteStep[] = [];
 
@@ -231,18 +231,44 @@ describe("buildPipeline", () => {
       }
       collect(pipeline.steps);
 
-      const pushSteps = allSteps.filter((s) => s.key.startsWith("push-"));
-      expect(pushSteps.length).toBeGreaterThan(0);
-      for (const s of pushSteps) {
+      // Smoke tests depend on release + pkg key
+      const smokeSteps = allSteps.filter((s) => s.key.startsWith("smoke-"));
+      expect(smokeSteps.length).toBeGreaterThan(0);
+      for (const s of smokeSteps) {
         const deps = Array.isArray(s.depends_on)
           ? s.depends_on
           : [s.depends_on];
         expect(deps).toContain("release");
-        // Each push step should have at least one pkg-* dependency
         const hasPkgDep = deps.some(
           (d) => typeof d === "string" && d.startsWith("pkg-"),
         );
         expect(hasPkgDep).toBe(true);
+      }
+
+      // Push steps with smoke tests depend on their smoke step
+      for (const smoke of smokeSteps) {
+        const imgName = smoke.key.replace("smoke-", "");
+        const push = allSteps.find((s) => s.key === `push-${imgName}`);
+        expect(push).toBeDefined();
+        const pushDeps = Array.isArray(push?.depends_on)
+          ? push?.depends_on
+          : [push?.depends_on];
+        expect(pushDeps).toContain(smoke.key);
+      }
+
+      // Push steps without smoke tests depend on release + pkg key
+      const smokeNames = new Set(
+        smokeSteps.map((s) => s.key.replace("smoke-", "")),
+      );
+      const pushOnly = allSteps.filter(
+        (s) =>
+          s.key.startsWith("push-") && !smokeNames.has(s.key.replace("push-", "")),
+      );
+      for (const s of pushOnly) {
+        const deps = Array.isArray(s.depends_on)
+          ? s.depends_on
+          : [s.depends_on];
+        expect(deps).toContain("release");
       }
     });
 

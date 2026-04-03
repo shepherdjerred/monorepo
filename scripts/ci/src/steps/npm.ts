@@ -25,7 +25,11 @@ function npmPublishStep(
     ]
       .filter(Boolean)
       .join(" ") + DRYRUN_FLAG;
-  const pkgKey = pkgKeyMap?.get(pkg.name);
+  // Look up the build group key by package name first, then by the
+  // top-level package directory (handles nested packages like helm-types
+  // which lives under packages/homelab/src/helm-types).
+  const parentPkg = pkg.dir.replace("packages/", "").split("/")[0] ?? "";
+  const pkgKey = pkgKeyMap?.get(pkg.name) ?? pkgKeyMap?.get(parentPkg);
   const dependsOn = pkgKey ? ["release", pkgKey] : ["release"];
   return {
     label: `:npm: Publish ${pkg.name}`,

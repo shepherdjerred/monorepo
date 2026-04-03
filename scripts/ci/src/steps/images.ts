@@ -81,7 +81,10 @@ const SMOKE_TEST_TARGETS: Record<string, { port: number; healthPath: string }> =
     "tasknotes-server": { port: 8000, healthPath: "/" },
   };
 
-function smokeTestStep(img: ImageTarget): BuildkiteStep | null {
+function smokeTestStep(
+  img: ImageTarget,
+  dependsOn: string | string[],
+): BuildkiteStep | null {
   const cfg = SMOKE_TEST_TARGETS[img.name];
   if (!cfg) return null;
   const pkg = img.package ?? img.name;
@@ -102,12 +105,11 @@ function smokeTestStep(img: ImageTarget): BuildkiteStep | null {
     label: `:heartbeat: Smoke ${img.name}`,
     key: `smoke-${safeKey(img.name)}`,
     if: MAIN_ONLY,
-    depends_on: `push-${safeKey(img.name)}`,
+    depends_on: dependsOn,
     command: cmd,
     timeout_in_minutes: 5,
     retry: RETRY,
     env: DAGGER_ENV,
-    soft_fail: true,
     plugins: [
       k8sPlugin({
         cpu: "100m",
@@ -125,10 +127,16 @@ export function publishImagesWithSmokeGroup(
   for (const img of images) {
     const pkg = img.package ?? img.name;
     const pkgKey = pkgKeyMap?.get(pkg);
-    const deps = pkgKey ? ["release", pkgKey] : "release";
-    steps.push(imagePushStep(img, deps));
-    const smoke = smokeTestStep(img);
-    if (smoke) steps.push(smoke);
+    const releaseDeps: string[] = pkgKey ? ["release", pkgKey] : ["release"];
+    const smoke = smokeTestStep(img, releaseDeps);
+    if (smoke) {
+      // Smoke test runs first (builds image locally), push depends on smoke passing
+      steps.push(smoke);
+      steps.push(imagePushStep(img, `smoke-${safeKey(img.name)}`));
+    } else {
+      // No smoke test — push depends directly on release + pkg
+      steps.push(imagePushStep(img, releaseDeps));
+    }
   }
   return {
     group: ":package: Publish Images",
