@@ -20,13 +20,18 @@ const ALL_IMAGE_KEYS = [...IMAGE_PUSH_TARGETS, ...INFRA_PUSH_TARGETS].map(
 );
 
 function buildSummaryScript(): string {
+  // Use heredoc-style cat to avoid backtick/escaping issues in bash.
+  // Shell variables ($VERSION, $DIGEST) are expanded inside the heredoc.
   const lines: string[] = [
     `set -euo pipefail`,
     `SUMMARY=/tmp/summary.md`,
     `VERSION=$(buildkite-agent meta-data get release-version --default "unreleased")`,
-    `echo "## :rocket: Build Summary" > $SUMMARY`,
+    // Start with static header
+    `cat > $SUMMARY << 'HEADER'`,
+    `## :rocket: Build Summary`,
+    `HEADER`,
     `echo "" >> $SUMMARY`,
-    `echo "**Version:** \`$VERSION\`" >> $SUMMARY`,
+    `echo "**Version:** $VERSION" >> $SUMMARY`,
     `echo "" >> $SUMMARY`,
     // Images section
     `echo "### :docker: Images" >> $SUMMARY`,
@@ -38,7 +43,7 @@ function buildSummaryScript(): string {
   for (const key of ALL_IMAGE_KEYS) {
     lines.push(
       `DIGEST=$(buildkite-agent meta-data get "digest:${key}" --default "")`,
-      `if [ -n "$DIGEST" ]; then echo "| [\`${key}\`](https://ghcr.io/${key}) | \`\${DIGEST:0:12}\` |" >> $SUMMARY; fi`,
+      `if [ -n "$DIGEST" ]; then echo "| ${key} | $DIGEST |" >> $SUMMARY; fi`,
     );
   }
 
@@ -53,7 +58,7 @@ function buildSummaryScript(): string {
     `echo "" >> $SUMMARY`,
   );
   for (const chart of HELM_CHARTS) {
-    lines.push(`echo "- \`${chart}\`" >> $SUMMARY`);
+    lines.push(`echo "- ${chart}" >> $SUMMARY`);
   }
   lines.push(`echo "" >> $SUMMARY`, `echo "</details>" >> $SUMMARY`);
 
@@ -65,7 +70,7 @@ function buildSummaryScript(): string {
   );
   for (const pkg of NPM_PACKAGES) {
     lines.push(
-      `echo "- [\`${pkg.name}\`](https://www.npmjs.com/package/${pkg.name})" >> $SUMMARY`,
+      `echo "- [${pkg.name}](https://www.npmjs.com/package/${pkg.name})" >> $SUMMARY`,
     );
   }
 

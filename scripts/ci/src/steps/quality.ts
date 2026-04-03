@@ -8,6 +8,7 @@ import type { BuildkiteStep } from "../lib/types.ts";
 function annotatedScanCmd(daggerCmd: string, context: string): string {
   const outFile = `/tmp/${context}.txt`;
   return [
+    `set -o pipefail`,
     `${daggerCmd} 2>&1 | tee ${outFile}`,
     `status=$?`,
     `if [ $status -ne 0 ] && [ -s ${outFile} ]; then buildkite-agent annotate --style warning --context ${context} < ${outFile}; fi`,
