@@ -68,11 +68,11 @@ description: Comprehensive test coverage analysis mapping all tests to features
 ## API Endpoint Coverage
 
 | Endpoint                    | Tested | Endpoint                     | Tested |
-| --------------------------- | :----: | ---------------------------- | :----: |
+| --------------------------- | :----: | ---------------------------- | :----: | ----------------- | --- |
 | `GET /api/sessions`         |   ✅   | `POST .../refresh`           |   ❌   |
 | `POST /api/sessions`        |   ✅   | `POST .../start`             |   ⚠️   |
 | `GET /api/sessions/{id}`    |   ✅   | `POST .../recreate/cleanup`  |   ⚠️   |
-| `DELETE /api/sessions/{id}` |   ✅   | `POST .../archive`          |   ✅   | `GET .../history`            |   ❌   |
+| `DELETE /api/sessions/{id}` |   ✅   | `POST .../archive`           |   ✅   | `GET .../history` | ❌  |
 | `POST .../unarchive`        |   ✅   | `POST .../upload`            |   ❌   |
 | `POST .../metadata`         |   ✅   | `POST /api/browse-directory` |   ❌   |
 | `GET /api/health`           |   ✅   | `WS /ws/console`             |   ❌   |

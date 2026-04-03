@@ -69,12 +69,9 @@ async function main() {
         const slug = slugBatch[i];
         const vec = vectors[i];
         const text = textBatch[i];
-        if (slug === undefined || vec === undefined || text === undefined) continue;
-        searchDb.addVector(
-          slug,
-          new Float32Array(vec),
-          text,
-        );
+        if (slug === undefined || vec === undefined || text === undefined)
+          continue;
+        searchDb.addVector(slug, new Float32Array(vec), text);
         vectorsIndexed++;
       }
     } catch (err) {

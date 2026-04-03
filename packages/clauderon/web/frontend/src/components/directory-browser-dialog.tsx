@@ -35,15 +35,17 @@ export function DirectoryBrowserDialog({
           setError(response.error);
         }
       } catch (error_) {
-        setError(error_ instanceof Error ? error_.message : "Failed to browse directory");
+        setError(
+          error_ instanceof Error
+            ? error_.message
+            : "Failed to browse directory",
+        );
       } finally {
         setIsLoading(false);
       }
     },
     [client],
   );
-
-  ;  
 
   const handleNavigateToParent = () => {
     if (parentPath != null && parentPath.length > 0) {

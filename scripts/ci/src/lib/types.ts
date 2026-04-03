@@ -27,6 +27,8 @@ export interface BuildkiteStep {
   concurrency?: number;
   concurrency_group?: string;
   artifact_paths?: string[];
+  allow_dependency_failure?: boolean;
+  priority?: number;
 }
 
 /** A Buildkite step group. */

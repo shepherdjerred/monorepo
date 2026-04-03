@@ -730,25 +730,37 @@ Prefer Zod validation over `typeof`, `instanceof`, or type guard functions.
 
 ```typescript
 // ❌ Avoid typeof operator
-if (typeof value === "string") { return value.toUpperCase(); }
+if (typeof value === "string") {
+  return value.toUpperCase();
+}
 
 // ✅ Prefer Zod validation
 const result = z.string().safeParse(value);
-if (result.success) { return result.data.toUpperCase(); }
+if (result.success) {
+  return result.data.toUpperCase();
+}
 
 // ❌ Avoid instanceof
-if (err instanceof Error) { console.log(err.message); }
+if (err instanceof Error) {
+  console.log(err.message);
+}
 
 // ✅ Prefer Zod
 const result = z.instanceof(Error).safeParse(err);
-if (result.success) { console.log(result.data.message); }
+if (result.success) {
+  console.log(result.data.message);
+}
 
 // ❌ Avoid Number.isInteger
-if (Number.isInteger(value)) { return value * 2; }
+if (Number.isInteger(value)) {
+  return value * 2;
+}
 
 // ✅ Prefer Zod
 const result = z.number().int().safeParse(value);
-if (result.success) { return result.data * 2; }
+if (result.success) {
+  return result.data * 2;
+}
 ```
 
 ### Type predicates → Zod

@@ -41,7 +41,5 @@ export function formatSummary(
 
 /** Extract failures from results and build the error details string. */
 export function formatFailureDetails(failures: CheckResult[]): string {
-  return failures
-    .map((f) => `--- ${f.label} ---\n${f.error}`)
-    .join("\n\n");
+  return failures.map((f) => `--- ${f.label} ---\n${f.error}`).join("\n\n");
 }

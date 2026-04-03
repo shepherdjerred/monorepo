@@ -37,6 +37,7 @@ function imagePushStep(
     depends_on: dependsOn,
     command: cmd,
     timeout_in_minutes: 15,
+    priority: 1,
     retry: RETRY,
     env: DAGGER_ENV,
     plugins: [

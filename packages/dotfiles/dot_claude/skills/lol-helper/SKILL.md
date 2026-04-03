@@ -690,7 +690,7 @@ const api = new LolApi({
 - [Riot Games DevRel - Summoner Names to Riot ID](https://www.riotgames.com/en/DevRel/summoner-names-to-riot-id)
 - [Riot Games DevRel - PUUIDs](https://www.riotgames.com/en/DevRel/player-universally-unique-identifiers-and-a-new-security-layer)
 - [League of Legends Wiki - Terminology](https://wiki.leagueoflegends.com/en-us/Terminology)
-- [League of Legends Fandom - Terminology](https://leagueoflegends.fandom.com/wiki/Terminology_(League_of_Legends))
+- [League of Legends Fandom - Terminology](<https://leagueoflegends.fandom.com/wiki/Terminology_(League_of_Legends)>)
 - [League of Legends Wiki - Champion Classes](https://wiki.leagueoflegends.com/en-us/Champion_classes)
 - [League of Legends Wiki - Ranked Game](https://wiki.leagueoflegends.com/en-us/Ranked_game)
 - [Riot Support - Ranked Tiers, Divisions, and Queues](https://support-leagueoflegends.riotgames.com/hc/en-us/articles/4406004330643-Ranked-Tiers-Divisions-and-Queues)

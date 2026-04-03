@@ -158,9 +158,7 @@ export function AgentModelSelector({
             ))}
           </select>
         </div>
-
       </div>
-
     </>
   );
 }

@@ -131,7 +131,6 @@ export function AdvancedContainerSettings({
             />
           </div>
         </div>
-
       </div>
     </details>
   );

@@ -113,6 +113,7 @@ export function buildSummaryStep(dependsOn: string[]): BuildkiteStep {
     key: "build-summary",
     if: MAIN_ONLY,
     depends_on: dependsOn,
+    allow_dependency_failure: true,
     command: buildSummaryScript(),
     timeout_in_minutes: 5,
     retry: RETRY,

@@ -1,5 +1,5 @@
-const CSRF_TOKEN = process.env['CSRF_TOKEN']!;
-const LEETCODE_SESSION = process.env['LEETCODE_SESSION']!;
+const CSRF_TOKEN = process.env["CSRF_TOKEN"]!;
+const LEETCODE_SESSION = process.env["LEETCODE_SESSION"]!;
 
 if (!CSRF_TOKEN || !LEETCODE_SESSION) {
   console.error("Missing CSRF_TOKEN or LEETCODE_SESSION in .env");

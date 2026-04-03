@@ -185,14 +185,28 @@ export function createIngress(
 **ArgoCD application ingress:**
 
 ```typescript
-createIngress(chart, "argocd-ingress", "argocd", "argocd-server", 443, ["argocd"], true);
+createIngress(
+  chart,
+  "argocd-ingress",
+  "argocd",
+  "argocd-server",
+  443,
+  ["argocd"],
+  true,
+);
 ```
 
 **Multiple ingresses for same deployment:**
 
 ```typescript
-new TailscaleIngress(chart, "myapp-web-ingress", { service: webService, host: "myapp" });
-new TailscaleIngress(chart, "myapp-metrics-ingress", { service: metricsService, host: "myapp-metrics" });
+new TailscaleIngress(chart, "myapp-web-ingress", {
+  service: webService,
+  host: "myapp",
+});
+new TailscaleIngress(chart, "myapp-metrics-ingress", {
+  service: metricsService,
+  host: "myapp-metrics",
+});
 ```
 
 **External service reference:**

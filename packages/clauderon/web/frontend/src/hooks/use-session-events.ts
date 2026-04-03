@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import type { EventsClient} from "@clauderon/client";
+import type { EventsClient } from "@clauderon/client";
 import { type SessionEvent } from "@clauderon/client";
 
 /**
@@ -9,8 +9,6 @@ export function useSessionEvents(onEvent: (event: SessionEvent) => void) {
   const clientRef = useRef<EventsClient | null>(null);
   const onEventRef = useRef(onEvent);
   onEventRef.current = onEvent;
-
-  ;
 
   return clientRef.current;
 }

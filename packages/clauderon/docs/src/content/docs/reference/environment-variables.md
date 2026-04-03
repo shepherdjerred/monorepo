@@ -16,13 +16,13 @@ description: Complete environment variable reference
 
 Set to `1`, `true`, `yes`, or `on` to enable:
 
-| Variable                                       | Description                   |
-| ---------------------------------------------- | ----------------------------- |
-| `CLAUDERON_FEATURE_ENABLE_WEBAUTHN_AUTH`       | Passwordless authentication   |
-| `CLAUDERON_FEATURE_ENABLE_AI_METADATA`         | AI-generated session titles   |
-| `CLAUDERON_FEATURE_ENABLE_AUTO_RECONCILE`      | Auto-reconcile on startup     |
-| `CLAUDERON_FEATURE_ENABLE_USAGE_TRACKING`      | Claude usage tracking         |
-| `CLAUDERON_FEATURE_ENABLE_EXPERIMENTAL_MODELS` | Codex, Gemini models          |
+| Variable                                       | Description                 |
+| ---------------------------------------------- | --------------------------- |
+| `CLAUDERON_FEATURE_ENABLE_WEBAUTHN_AUTH`       | Passwordless authentication |
+| `CLAUDERON_FEATURE_ENABLE_AI_METADATA`         | AI-generated session titles |
+| `CLAUDERON_FEATURE_ENABLE_AUTO_RECONCILE`      | Auto-reconcile on startup   |
+| `CLAUDERON_FEATURE_ENABLE_USAGE_TRACKING`      | Claude usage tracking       |
+| `CLAUDERON_FEATURE_ENABLE_EXPERIMENTAL_MODELS` | Codex, Gemini models        |
 
 ## Session Environment (set inside containers)
 

@@ -288,10 +288,9 @@ export const SKIP_PACKAGES: Set<string> = new Set([
   "docs",
   "dotfiles",
   "fonts",
-  "leetcode",
   "macos-cross-compiler",
-  "glance",
-  "tips",
+  "glance", // Swift/macOS — needs Xcode, CI is Linux
+  "tips", // Swift/macOS — needs Xcode, CI is Linux
 ]);
 
 /** Packages that need `bun run generate` before lint/typecheck/test (Prisma). */

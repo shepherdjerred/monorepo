@@ -21,6 +21,7 @@ export function argoCdSyncStep(
     timeout_in_minutes: 10,
     concurrency: 1,
     concurrency_group: `monorepo/argocd-sync-${app}`,
+    priority: 1,
     retry: RETRY,
     env: DAGGER_ENV,
     plugins: [
@@ -45,6 +46,7 @@ export function argoCdHealthStep(
     depends_on: dependsOn,
     command: `dagger call argo-cd-health-wait --app-name ${app} --argo-cd-token env:ARGOCD_AUTH_TOKEN --timeout-secs 300${DRYRUN_FLAG}`,
     timeout_in_minutes: 10,
+    priority: 1,
     retry: RETRY,
     env: DAGGER_ENV,
     plugins: [

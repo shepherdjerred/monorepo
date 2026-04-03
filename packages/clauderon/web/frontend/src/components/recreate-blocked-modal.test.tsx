@@ -13,8 +13,7 @@ function createMockHealthReport(
     state: { type: "Stopped" },
     available_actions: [], // Empty = blocked
     description: "Cannot recreate: data would be lost",
-    details:
-      "Uncommitted work and conversation history would be lost.",
+    details: "Uncommitted work and conversation history would be lost.",
     data_safe: false,
     ...overrides,
   };
@@ -74,5 +73,4 @@ describe("RecreateBlockedModal backend-specific blocking", () => {
     });
     expect(report.available_actions.length).toBeGreaterThan(0);
   });
-
 });

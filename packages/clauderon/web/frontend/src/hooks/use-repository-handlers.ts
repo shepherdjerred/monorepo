@@ -19,9 +19,7 @@ const DEFAULT_REPO: RepositoryEntry = {
 
 export function useRepositoryHandlers() {
   const [multiRepoEnabled, setMultiRepoEnabled] = useState(false);
-  const [repositories, setRepositories] = useState([
-    DEFAULT_REPO,
-  ]);
+  const [repositories, setRepositories] = useState([DEFAULT_REPO]);
 
   const handleRepoPathChange = (id: string, newPath: string) => {
     setRepositories((repos) =>

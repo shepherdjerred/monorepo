@@ -2,39 +2,39 @@
 
 ## Command Step — All Fields
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `command` / `commands` | `string \| string[]` | — | Shell command(s) to run |
-| `label` | `string` | — | Display label (supports emoji) |
-| `key` / `identifier` | `string` | — | Unique step ID (cannot be UUID pattern) |
-| `agents` | `map` | — | Agent tag targeting (e.g., `queue: default`) |
-| `artifact_paths` | `string \| string[]` | — | Glob paths for artifact upload |
-| `branches` | `string` | — | Branch pattern (e.g., `"main stable/*"`) |
-| `cancel_on_build_failing` | `boolean` | `false` | Cancel job when build marked failing |
-| `concurrency` | `integer` | — | Max concurrent jobs (requires `concurrency_group`) |
-| `concurrency_group` | `string` | — | Org-wide concurrency label |
-| `concurrency_method` | `string` | `ordered` | `ordered` (FIFO) or `eager` |
-| `depends_on` | `string \| string[]` | — | Step key(s) to depend on |
-| `allow_dependency_failure` | `boolean` | `false` | Run even if deps fail |
-| `env` | `map` | — | Step environment variables |
-| `secrets` | `string[] \| map` | — | Buildkite Secrets (names or env→secret map) |
-| `if` | `string` | — | Boolean expression; omits when false |
-| `if_changed` | `string \| object` | — | Glob; omits if no matching files changed |
-| `image` | `string` | — | Container image (agent-stack-k8s, experimental) |
-| `matrix` | `string[] \| object` | — | Matrix expansion |
-| `parallelism` | `integer` | — | Number of parallel copies |
-| `plugins` | `array` | — | Plugin configurations |
-| `priority` | `integer` | — | Job priority (higher = first) |
-| `retry` | `object` | — | `{automatic, manual}` retry config |
-| `skip` | `boolean \| string` | — | Skip step (string = reason, max 70 chars) |
-| `soft_fail` | `boolean \| array` | — | `true` or `[{exit_status: N}]` |
-| `timeout_in_minutes` | `integer` | — | Max runtime |
+| Field                      | Type                 | Default   | Description                                        |
+| -------------------------- | -------------------- | --------- | -------------------------------------------------- |
+| `command` / `commands`     | `string \| string[]` | —         | Shell command(s) to run                            |
+| `label`                    | `string`             | —         | Display label (supports emoji)                     |
+| `key` / `identifier`       | `string`             | —         | Unique step ID (cannot be UUID pattern)            |
+| `agents`                   | `map`                | —         | Agent tag targeting (e.g., `queue: default`)       |
+| `artifact_paths`           | `string \| string[]` | —         | Glob paths for artifact upload                     |
+| `branches`                 | `string`             | —         | Branch pattern (e.g., `"main stable/*"`)           |
+| `cancel_on_build_failing`  | `boolean`            | `false`   | Cancel job when build marked failing               |
+| `concurrency`              | `integer`            | —         | Max concurrent jobs (requires `concurrency_group`) |
+| `concurrency_group`        | `string`             | —         | Org-wide concurrency label                         |
+| `concurrency_method`       | `string`             | `ordered` | `ordered` (FIFO) or `eager`                        |
+| `depends_on`               | `string \| string[]` | —         | Step key(s) to depend on                           |
+| `allow_dependency_failure` | `boolean`            | `false`   | Run even if deps fail                              |
+| `env`                      | `map`                | —         | Step environment variables                         |
+| `secrets`                  | `string[] \| map`    | —         | Buildkite Secrets (names or env→secret map)        |
+| `if`                       | `string`             | —         | Boolean expression; omits when false               |
+| `if_changed`               | `string \| object`   | —         | Glob; omits if no matching files changed           |
+| `image`                    | `string`             | —         | Container image (agent-stack-k8s, experimental)    |
+| `matrix`                   | `string[] \| object` | —         | Matrix expansion                                   |
+| `parallelism`              | `integer`            | —         | Number of parallel copies                          |
+| `plugins`                  | `array`              | —         | Plugin configurations                              |
+| `priority`                 | `integer`            | —         | Job priority (higher = first)                      |
+| `retry`                    | `object`             | —         | `{automatic, manual}` retry config                 |
+| `skip`                     | `boolean \| string`  | —         | Skip step (string = reason, max 70 chars)          |
+| `soft_fail`                | `boolean \| array`   | —         | `true` or `[{exit_status: N}]`                     |
+| `timeout_in_minutes`       | `integer`            | —         | Max runtime                                        |
 
 ## Wait Step
 
 ```yaml
-- wait: ~                    # Explicit null recommended
-  continue_on_failure: true  # Proceed after failure (NOT after cancellation)
+- wait: ~ # Explicit null recommended
+  continue_on_failure: true # Proceed after failure (NOT after cancellation)
   if: build.branch == "main"
   key: "deploy-gate"
 ```
@@ -49,7 +49,7 @@ Creates **implicit dependencies** — subsequent steps wait for unblock.
 
 ```yaml
 - block: ":rocket: Deploy?"
-  blocked_state: passed        # passed | failed | running
+  blocked_state: passed # passed | failed | running
   allowed_teams: ["deployers"]
   fields:
     - text: "Version"
@@ -59,7 +59,8 @@ Creates **implicit dependencies** — subsequent steps wait for unblock.
       format: "[0-9]+\\.[0-9]+\\.[0-9]+"
     - select: "Environment"
       key: "env"
-      options: [{ label: "Staging", value: "stg" }, { label: "Prod", value: "prod" }]
+      options:
+        [{ label: "Staging", value: "stg" }, { label: "Prod", value: "prod" }]
       multiple: false
 ```
 
@@ -81,8 +82,8 @@ Same as block but **no implicit dependencies** — other steps run while waiting
 
 ```yaml
 - trigger: "deploy-pipeline"
-  async: true                    # true: fire-and-forget
-  soft_fail: true                # Triggered build failure won't fail parent
+  async: true # true: fire-and-forget
+  soft_fail: true # Triggered build failure won't fail parent
   build:
     message: "${BUILDKITE_MESSAGE}"
     commit: "${BUILDKITE_COMMIT}"
@@ -112,22 +113,24 @@ Same as block but **no implicit dependencies** — other steps run while waiting
 ## Retry Configuration
 
 ### Automatic
+
 ```yaml
 retry:
   automatic:
-    - exit_status: -1          # Agent lost
+    - exit_status: -1 # Agent lost
       limit: 2
-    - exit_status: [1, 2, 3]   # Specific codes
+    - exit_status: [1, 2, 3] # Specific codes
       limit: 1
-    - exit_status: "*"          # All non-zero (1-255)
+    - exit_status: "*" # All non-zero (1-255)
       signal: SIGKILL
       signal_reason: agent_stop
-      limit: 3                  # Max 10
+      limit: 3 # Max 10
 ```
 
-Fields: `exit_status` (int/int[]/"*"), `signal` (string/"*"), `signal_reason` (none/cancel/agent_stop/agent_refused/agent_incompatible/process_run_error/signature_rejected/stack_error), `limit` (default 2, max 10). Each rule tracks independently.
+Fields: `exit_status` (int/int[]/"_"), `signal` (string/"_"), `signal_reason` (none/cancel/agent_stop/agent_refused/agent_incompatible/process_run_error/signature_rejected/stack_error), `limit` (default 2, max 10). Each rule tracks independently.
 
 ### Manual
+
 ```yaml
 retry:
   manual:
@@ -139,6 +142,7 @@ retry:
 ## Matrix Builds
 
 ### Single Dimension
+
 ```yaml
 - label: "Test {{matrix}}"
   command: "test.sh {{matrix}}"
@@ -146,6 +150,7 @@ retry:
 ```
 
 ### Multi-Dimensional
+
 ```yaml
 - label: "{{matrix.os}}/{{matrix.arch}}"
   command: "build.sh"
@@ -156,7 +161,7 @@ retry:
     adjustments:
       - with: { os: "darwin", arch: "arm64" }
         soft_fail: true
-      - with: { os: "linux", arch: "riscv" }  # New combo
+      - with: { os: "linux", arch: "riscv" } # New combo
 ```
 
 **Limits**: 6 dimensions, 25 elements/dim, 128 bytes/element, 12 adjustments, 50 jobs/matrix. Incompatible with `parallelism` on same step. Cannot use matrix values in `key` or `concurrency_group`.
@@ -165,15 +170,15 @@ retry:
 
 Build-level (`notify` at same level as `steps`) or step-level (`notify` inside step).
 
-| Type | Build | Step |
-|------|:-----:|:----:|
-| Slack | yes | yes |
-| Email | yes | no |
-| GitHub commit status | yes | yes |
-| GitHub check | yes | yes |
-| PagerDuty change event | yes | no |
-| Webhook | yes | no |
-| Basecamp Campfire | yes | yes |
+| Type                   | Build | Step |
+| ---------------------- | :---: | :--: |
+| Slack                  |  yes  | yes  |
+| Email                  |  yes  |  no  |
+| GitHub commit status   |  yes  | yes  |
+| GitHub check           |  yes  | yes  |
+| PagerDuty change event |  yes  |  no  |
+| Webhook                |  yes  |  no  |
+| Basecamp Campfire      |  yes  | yes  |
 
 ```yaml
 # Slack
@@ -184,13 +189,13 @@ notify:
       message: "Build failed on ${BUILDKITE_BRANCH}"
     if: build.state == "failed"
 
-# First failure / recovery
+  # First failure / recovery
   - slack: "#builds"
     if: build.branch == "main" && pipeline.started_failing
   - slack: "#builds"
     if: build.branch == "main" && pipeline.started_passing
 
-# GitHub commit status
+  # GitHub commit status
   - github_commit_status:
       context: "ci/tests"
 
@@ -206,7 +211,7 @@ steps:
             annotations:
               - path: "src/main.js"
                 start_line: 15
-                annotation_level: "warning"  # notice | warning | failure
+                annotation_level: "warning" # notice | warning | failure
                 message: "Missing semicolon"
 ```
 
@@ -228,15 +233,15 @@ build.pull_request.labels includes "deploy"
 build.creator.teams includes "platform"
 ```
 
-Variables: `build.*` (branch, commit, message, source, tag, pull_request.*, merge_queue.*, author.*, creator.*, env(), id, number, state), `pipeline.*` (default_branch, id, repository, slug), `organization.*` (id, slug), `step.*` (notifications only).
+Variables: `build.*` (branch, commit, message, source, tag, pull_request._, merge_queue._, author._, creator._, env(), id, number, state), `pipeline.*` (default_branch, id, repository, slug), `organization.*` (id, slug), `step.*` (notifications only).
 
 ## Concurrency
 
 ```yaml
 - command: "deploy.sh"
   concurrency: 1
-  concurrency_group: "app/deploy"  # Org-wide
-  concurrency_method: ordered      # ordered (default, FIFO) | eager
+  concurrency_group: "app/deploy" # Org-wide
+  concurrency_method: ordered # ordered (default, FIFO) | eager
 
 # Concurrency gates pattern:
 - command: "start-gate"

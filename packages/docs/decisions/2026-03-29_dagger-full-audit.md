@@ -21,13 +21,13 @@ The Dagger setup was built incrementally with many hacks: silent error swallowin
 
 ## Findings Summary
 
-| Tier | Category | Count | Severity |
-|------|----------|-------|----------|
-| 1 | Correctness & Security Bugs | 6 | **Critical** |
-| 2 | Silent Failures (error swallowing) | 8 | **High** |
-| 3 | Dead Code & Duplication | 8 | **Medium** |
-| 4 | Overengineering & Design | 5 | **Low** |
-| | **Total findings** | **27** | |
+| Tier | Category                           | Count  | Severity     |
+| ---- | ---------------------------------- | ------ | ------------ |
+| 1    | Correctness & Security Bugs        | 6      | **Critical** |
+| 2    | Silent Failures (error swallowing) | 8      | **High**     |
+| 3    | Dead Code & Duplication            | 8      | **Medium**   |
+| 4    | Overengineering & Design           | 5      | **Low**      |
+|      | **Total findings**                 | **27** |              |
 
 ---
 
@@ -228,16 +228,17 @@ Every `|| true` below hides a failure mode. Each removal is a separate testable 
 
 ## Implementation Sequence
 
-| Phase | Scope | Risk |
-|-------|-------|------|
-| 1 | Fix correctness/security: lockfile enforcement, token handling, `git add`, flag mismatch | High |
-| 2 | Remove all `|| true` error swallowing, fix knip, version fallback, retry config | Medium |
-| 3 | Delete dead code, create shared constants, delete stale `simulate-ci.ts`, fix cooklang triple-build | Low |
-| 4 | Refactor `ciAll()`, `deploySite`, dep mounting patterns | Low |
+| Phase | Scope                                                                                               | Risk |
+| ----- | --------------------------------------------------------------------------------------------------- | ---- | ---------------------------------------------------------------- | ------ |
+| 1     | Fix correctness/security: lockfile enforcement, token handling, `git add`, flag mismatch            | High |
+| 2     | Remove all `                                                                                        |      | true` error swallowing, fix knip, version fallback, retry config | Medium |
+| 3     | Delete dead code, create shared constants, delete stale `simulate-ci.ts`, fix cooklang triple-build | Low  |
+| 4     | Refactor `ciAll()`, `deploySite`, dep mounting patterns                                             | Low  |
 
 ## Verification
 
 After each phase:
+
 1. `dagger functions` — all functions listed without error
 2. `dagger call lint --pkg-dir ./packages/webring --pkg webring --tsconfig ./tsconfig.base.json` — works
 3. Pipeline generator produces valid YAML: `cd scripts/ci && bun run src/index.ts`

@@ -36,9 +36,7 @@ export function MergePrDialog({
   const initialMethod =
     session.pr_default_merge_method ?? session.pr_merge_methods?.[0];
 
-  const [selectedMethod, setSelectedMethod] = useState(
-    initialMethod,
-  );
+  const [selectedMethod, setSelectedMethod] = useState(initialMethod);
   const [deleteBranch, setDeleteBranch] = useState(
     session.pr_delete_branch_on_merge ?? false,
   );

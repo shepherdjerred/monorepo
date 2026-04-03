@@ -99,11 +99,11 @@ clauderon cache size               # check usage
 
 ## Resource Usage Targets
 
-| Component         | CPU      | Memory    | Disk      |
-| ----------------- | -------- | --------- | --------- |
-| clauderon daemon  | <5% idle | 50-100MB  | Minimal   |
-| Docker container  | Varies   | 512MB-8GB | Repo size |
-| Database          | <1%      | 10-20MB   | 10-100MB  |
+| Component        | CPU      | Memory    | Disk      |
+| ---------------- | -------- | --------- | --------- |
+| clauderon daemon | <5% idle | 50-100MB  | Minimal   |
+| Docker container | Varies   | 512MB-8GB | Repo size |
+| Database         | <1%      | 10-20MB   | 10-100MB  |
 
 ## Troubleshooting
 

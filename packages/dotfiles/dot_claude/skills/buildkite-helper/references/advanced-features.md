@@ -5,6 +5,7 @@
 BuildKite Test Engine collects, analyzes, and visualizes test results across CI runs.
 
 ### Key Features
+
 - **Flaky test detection & quarantine**: Identify and quarantine flaky tests to prevent blocking builds
 - **Test ownership**: Assign team ownership to tests
 - **Test suites**: Organize with state tracking, tags, labels, saved views
@@ -33,6 +34,7 @@ bktec --test-cmd "my-runner {{testExamples}}" \
 ```
 
 Features (v2.1.0):
+
 - Custom test runner support (any runner accepting file path args)
 - Split slow pytest files by individual example
 - Tag filters for selective test execution
@@ -42,6 +44,7 @@ Features (v2.1.0):
 Managed artifact/package hosting integrated into CI/CD.
 
 ### Supported Ecosystems (15+)
+
 - **Linux**: Alpine (apk), Debian (deb), Red Hat (rpm)
 - **Container/Helm**: OCI, Helm (OCI-based and standard)
 - **Languages**: JavaScript (npm), Python (PyPI), Ruby (gems), Java (Maven/Gradle), NuGet (.NET), Terraform
@@ -49,6 +52,7 @@ Managed artifact/package hosting integrated into CI/CD.
 - **Generic**: Files
 
 ### Features
+
 - **Private storage link**: Store packages in your own S3 or GCS (preview)
 - **Migration tools**: Import from JFrog Artifactory, Cloudsmith, Packagecloud
 - **Security**: OIDC authentication, permissions management, SLSA provenance
@@ -68,6 +72,7 @@ Organizational units grouping agents and queues for isolation.
 ## Security
 
 ### Buildkite Secrets
+
 Access-controlled secrets with policies. Agent v3.81+ supports `buildkite-agent secret get`.
 
 ```yaml
@@ -79,19 +84,25 @@ secrets:
 ```
 
 ### OIDC
+
 Native OIDC support for AWS and Azure — no static credentials needed:
+
 ```bash
 OIDC_TOKEN=$(buildkite-agent oidc request-token --audience "https://sts.amazonaws.com")
 ```
+
 Tokens auto-redacted from build logs (agent v3.104+).
 
 ### Signed Pipelines
+
 Pipeline step signing to prevent tampering. Configure via `signing-jwks-file` and `verification-jwks-file` agent config.
 
 ### Audit Log
+
 Enterprise feature. GraphQL API: `auditEvent` query with `AuditEvent`, `AuditActor`, `AuditSubject` objects. Tracks web UI, REST API, and agent API actions.
 
 ### Agent Security Options
+
 ```ini
 no-command-eval=true           # Block arbitrary commands (only scripts)
 no-plugins=true                # Disable plugins
@@ -103,34 +114,41 @@ allowed-plugins=^org/.*        # Regex allowlist
 ## Recent Features (2025-2026)
 
 ### AI/Agentic
+
 - **MCP Server**: Prompt injection protection (invisible char filtering, control sequence stripping, HTML sanitization, LLM delimiter neutralization). `list_builds` no longer requires `pipeline_slug`. `--max-log-bytes` flag (default 100MB). Per-user rate limiting at 50 req/min.
 - **Agentic Workflows**: Top-level platform capability for AI-powered CI.
 
 ### Build UI
+
 - **Job-scoped annotations** (v3.112+): `buildkite-agent annotate --scope job`. Jobs show annotation indicators.
 - **Run durations on canvas nodes**: Steps display duration directly.
 - **Collapsed group steps**: Groups collapsed by default; auto-expand on failure. Press G to toggle.
 - **Case-sensitive log search**: Toggle in job log search bar.
 
 ### Security & Auth
+
 - **API token expiry**: 1d, 7d, 30d, 90d, 1y, custom, never. Email 3 days before expiry.
 - **CLI OAuth auth** (v3.32.0+): `bk auth login`. Tokens in OS keychain (no plaintext).
 - **OIDC token auto-redaction** (v3.104+): Automatic log redaction via Job API.
 
 ### SDK & Multi-Cloud
+
 - **Buildkite SDK**: C# support (v0.8.0, NuGet). Also JS/TS, Python, Go, Ruby. Type-safe pipeline definitions.
 - **GCP + Azure plugin support**: `secrets`, `cache`, `docker-cache`, `docker-image-push` plugins. New `azure-login` plugin.
 
 ### Dynamic Pipelines
+
 - **`if_changed`**: Path-based conditional step generation (agent-applied, not upload-time).
 - **Buildkite SDK preview**: Programmatic pipeline definition (alternative to YAML).
 
 ### Platform
+
 - **Step state: canceled**: Returns `state: "canceled"` instead of errored (distinguishable from timeouts).
 - **Service quotas dashboard**: Org Settings > Quotas.
 - **Elastic CI Stack → K8s migration**: Comprehensive docs for ECR auth, hooks, secrets, Docker daemon.
 - **CircleCI pipeline converter**: Translate CircleCI workflows to BuildKite.
 
 ### Test Engine
+
 - **bktec v2.1.0**: Custom runner support, split slow files by example, tag filters.
 - **Saved views**: Quick-access filtered views on Suite Summary page.

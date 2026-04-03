@@ -42,9 +42,18 @@ async function findPackageJsons(dir: string, depth = 0): Promise<string[]> {
     for (const entry of entries) {
       if (
         entry.isDirectory() &&
-        !["node_modules", "dist", "build", ".git", "target", "archive"].includes(entry.name)
+        ![
+          "node_modules",
+          "dist",
+          "build",
+          ".git",
+          "target",
+          "archive",
+        ].includes(entry.name)
       ) {
-        results.push(...(await findPackageJsons(join(dir, entry.name), depth + 1)));
+        results.push(
+          ...(await findPackageJsons(join(dir, entry.name), depth + 1)),
+        );
       }
     }
   }
@@ -60,7 +69,9 @@ function extractWorkspaceDeps(
   for (const section of ["dependencies", "devDependencies"]) {
     const depsObj = pkg[section];
     if (typeof depsObj !== "object" || depsObj === null) continue;
-    for (const [name, version] of Object.entries(depsObj as Record<string, string>)) {
+    for (const [name, version] of Object.entries(
+      depsObj as Record<string, string>,
+    )) {
       if (
         typeof version === "string" &&
         (version.startsWith("workspace:") || version.startsWith("file:"))
@@ -164,7 +175,9 @@ async function main() {
   }
 
   if (issues > 0) {
-    console.error(`\n${issues} issue(s) found. Update .dagger/src/deps.ts manually.`);
+    console.error(
+      `\n${issues} issue(s) found. Update .dagger/src/deps.ts manually.`,
+    );
     if (checkMode) process.exit(1);
   } else {
     console.log("deps.ts is consistent with package.json workspace deps");

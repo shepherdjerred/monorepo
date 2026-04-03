@@ -69,12 +69,12 @@ description: Comprehensive tracking of feature implementation across platforms a
 
 ### Health & Recovery
 
-| Feature                                      | TUI | Web | Mobile |
-| -------------------------------------------- | :-: | :-: | :----: |
-| Health status per session                    | ✅  | ✅  |   ❌   |
-| Health actions (Start/Recreate/Cleanup)      | ✅  | ✅  |   ❌   |
-| Data safety indicator                        | ✅  | ✅  |   ❌   |
-| Retry reconciliation                         | ✅  | ❌  |   ❌   |
+| Feature                                 | TUI | Web | Mobile |
+| --------------------------------------- | :-: | :-: | :----: |
+| Health status per session               | ✅  | ✅  |   ❌   |
+| Health actions (Start/Recreate/Cleanup) | ✅  | ✅  |   ❌   |
+| Data safety indicator                   | ✅  | ✅  |   ❌   |
+| Retry reconciliation                    | ✅  | ❌  |   ❌   |
 
 ### Settings & Authentication
 

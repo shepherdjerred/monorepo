@@ -9,6 +9,7 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   // Standalone (no workspace deps)
   "bun-decompile": [],
   "eslint-config": [],
+  leetcode: [],
   resume: [],
 
   // eslint-config only
@@ -39,7 +40,11 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   "clauderon/mobile": ["eslint-config"],
   "clauderon/web/shared": ["eslint-config"],
   "clauderon/web/client": ["eslint-config", "clauderon/web/shared"],
-  "clauderon/web/frontend": ["eslint-config", "clauderon/web/client", "clauderon/web/shared"],
+  "clauderon/web/frontend": [
+    "eslint-config",
+    "clauderon/web/client",
+    "clauderon/web/shared",
+  ],
 
   // Nested workspace packages (sub-packages are inside parent dir)
   "discord-plays-pokemon": ["eslint-config"],

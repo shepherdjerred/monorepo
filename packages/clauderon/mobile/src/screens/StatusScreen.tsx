@@ -128,7 +128,6 @@ export function StatusScreen(_props: StatusScreenProps) {
           </Text>
         </View>
       )}
-
     </ScrollView>
   );
 }

@@ -76,16 +76,7 @@ export function CreateSessionScreen({ navigation }: CreateSessionScreenProps) {
     } finally {
       setIsSubmitting(false);
     }
-  }, [
-    repoPath,
-    initialPrompt,
-    backend,
-    agent,
-    planMode,
-    skipChecks,
-    createSession,
-    navigation,
-  ]);
+  }, [repoPath, initialPrompt, backend, agent, planMode, skipChecks, createSession, navigation]);
 
   const handleRepoSelect = useCallback((path: string) => {
     setRepoPath(path);

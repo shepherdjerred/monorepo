@@ -92,9 +92,9 @@ describe("StartupHealthModal helpers", () => {
     });
 
     test("returns Data Lost for data lost state", () => {
-      expect(getHealthLabel({ type: "DataLost", reason: "Volume deleted" })).toBe(
-        "Data Lost",
-      );
+      expect(
+        getHealthLabel({ type: "DataLost", reason: "Volume deleted" }),
+      ).toBe("Data Lost");
     });
 
     test("returns Worktree Missing for worktree missing state", () => {
@@ -129,9 +129,9 @@ describe("StartupHealthModal helpers", () => {
       );
       expect(getHealthColor({ type: "CrashLoop" })).toBe(redColor);
       expect(getHealthColor({ type: "DeletedExternally" })).toBe(redColor);
-      expect(getHealthColor({ type: "DataLost", reason: "Volume deleted" })).toBe(
-        redColor,
-      );
+      expect(
+        getHealthColor({ type: "DataLost", reason: "Volume deleted" }),
+      ).toBe(redColor);
       expect(getHealthColor({ type: "WorktreeMissing" })).toBe(redColor);
     });
 

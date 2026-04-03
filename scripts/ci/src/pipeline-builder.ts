@@ -22,6 +22,10 @@ import {
   semgrepScanStep,
   daggerHygieneStep,
   caddyfileValidateStep,
+  envVarNamesStep,
+  migrationGuardStep,
+  mergeConflictStep,
+  largeFileStep,
 } from "./steps/quality.ts";
 import { codeReviewStep } from "./steps/code-review.ts";
 import { releaseStep } from "./steps/release.ts";
@@ -31,7 +35,11 @@ import {
   allPushKeys,
 } from "./steps/images.ts";
 import { publishNpmGroup } from "./steps/npm.ts";
-import { deploySitesGroup, filterSites, mkdocsDeployStep } from "./steps/sites.ts";
+import {
+  deploySitesGroup,
+  filterSites,
+  mkdocsDeployStep,
+} from "./steps/sites.ts";
 import { homelabHelmGroup } from "./steps/helm.ts";
 import { homelabTofuGroup, homelabTofuPlanGroup } from "./steps/tofu.ts";
 import { argoCdSyncStep, argoCdHealthStep } from "./steps/argocd.ts";
@@ -60,28 +68,46 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     ? ALL_PACKAGES.slice().sort()
     : [...affected.packages].sort();
 
+  // Collect keys that the release step must wait for
+  const releaseDeps: string[] = [];
+
   for (const pkg of packages) {
     const group = perPackageSteps(pkg);
-    if (group) steps.push(group);
+    if (group) {
+      steps.push(group);
+      releaseDeps.push(group.key);
+    }
   }
 
   // --- Quality gates (blocking — must pass before releases) ---
-  steps.push(shellcheckStep());
-  steps.push(qualityRatchetStep());
-  steps.push(complianceCheckStep());
-  steps.push(gitleaksCheckStep());
-  steps.push(suppressionCheckStep());
+  const blockingGates = [
+    shellcheckStep(),
+    qualityRatchetStep(),
+    complianceCheckStep(),
+    gitleaksCheckStep(),
+    suppressionCheckStep(),
+    envVarNamesStep(),
+    migrationGuardStep(),
+    mergeConflictStep(),
+    largeFileStep(),
+  ];
+  for (const gate of blockingGates) {
+    steps.push(gate);
+    releaseDeps.push(gate.key);
+  }
 
-  // --- Async quality checks (soft_fail, never block anything) ---
+  // --- Async quality checks (soft_fail, run in parallel with release track) ---
   steps.push(prettierStep());
   steps.push(knipCheckStep());
   steps.push(daggerHygieneStep());
   steps.push(trivyScanStep());
   steps.push(semgrepScanStep());
 
-  // --- Caddyfile validation (only when homelab changes) ---
+  // --- Caddyfile validation (blocking, only when homelab changes) ---
   if (affected.buildAll || affected.homelabChanged) {
-    steps.push(caddyfileValidateStep());
+    const caddyStep = caddyfileValidateStep();
+    steps.push(caddyStep);
+    releaseDeps.push(caddyStep.key);
   }
 
   // --- Code Review (PRs only) ---
@@ -100,11 +126,9 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     affected.cooklangChanged;
 
   if (hasMainSteps) {
-    // Wait for all build/test + blocking quality gates to pass before release steps
-    steps.push({ wait: "", if: "build.branch == pipeline.default_branch" });
-
-    // Release (always on main when there are releasable changes)
-    steps.push(releaseStep());
+    // Release depends only on per-package builds + blocking quality gates.
+    // Async checks (trivy, semgrep, knip, prettier, dagger-hygiene) run in parallel.
+    steps.push(releaseStep(releaseDeps));
 
     // --- Publish app images (with smoke tests for images that have health endpoints) ---
     const hasImages = affected.buildAll || affected.hasImagePackages.size > 0;
@@ -138,10 +162,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     }
 
     // --- MkDocs deploy (discord-plays-pokemon docs, needs Python not Bun) ---
-    if (
-      affected.buildAll ||
-      affected.packages.has("discord-plays-pokemon")
-    ) {
+    if (affected.buildAll || affected.packages.has("discord-plays-pokemon")) {
       const deployDeps = appPushKeys.length > 0 ? appPushKeys : ["release"];
       steps.push(mkdocsDeployStep(deployDeps));
     }

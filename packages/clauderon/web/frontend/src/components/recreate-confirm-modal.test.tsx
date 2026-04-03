@@ -224,5 +224,4 @@ describe("RecreateConfirmModal data safety", () => {
     });
     expect(report.data_safe).toBe(true);
   });
-
 });

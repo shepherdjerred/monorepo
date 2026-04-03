@@ -32,6 +32,7 @@ description: Where clauderon stores configuration and data
 
 - **Backup:** Copy while daemon is stopped
 - **Reset:** Delete to start fresh (loses session history)
+
 ## Temporary Files
 
 Location: `$TMPDIR` or `/tmp`, prefix `clauderon-`. Cleaned on daemon shutdown.

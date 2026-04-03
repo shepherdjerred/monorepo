@@ -6,7 +6,8 @@ import type { MergeMethod } from "@clauderon/shared";
 export function useCreateSession() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (request: CreateSessionRequest) => apiClient.createSession(request),
+    mutationFn: (request: CreateSessionRequest) =>
+      apiClient.createSession(request),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["sessions"] });
     },
@@ -89,8 +90,15 @@ export function useCleanupSession() {
 export function useUpdateSessionMetadata() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, title, description }: { id: string; title?: string; description?: string }) =>
-      apiClient.updateSessionMetadata(id, title, description),
+    mutationFn: ({
+      id,
+      title,
+      description,
+    }: {
+      id: string;
+      title?: string;
+      description?: string;
+    }) => apiClient.updateSessionMetadata(id, title, description),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["sessions"] });
     },
@@ -110,8 +118,15 @@ export function useRegenerateMetadata() {
 export function useMergePr() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, method, deleteBranch }: { id: string; method: MergeMethod; deleteBranch: boolean }) =>
-      apiClient.mergePr(id, method, deleteBranch),
+    mutationFn: ({
+      id,
+      method,
+      deleteBranch,
+    }: {
+      id: string;
+      method: MergeMethod;
+      deleteBranch: boolean;
+    }) => apiClient.mergePr(id, method, deleteBranch),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["sessions"] });
     },

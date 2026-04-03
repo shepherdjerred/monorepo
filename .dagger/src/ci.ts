@@ -12,10 +12,7 @@ import { WORKSPACE_DEPS } from "./deps";
 
 import { bunBaseContainer, rustBaseContainer, goBaseContainer } from "./base";
 
-import {
-  formatSummary,
-  formatFailureDetails,
-} from "./ci-format";
+import { formatSummary, formatFailureDetails } from "./ci-format";
 
 import type { CheckResult } from "./ci-format";
 
@@ -58,9 +55,7 @@ export async function ciAllHelper(
   const dirsFor = (pkg: string) => {
     const pkgDir = source.directory(`packages/${pkg}`);
     const deps = WORKSPACE_DEPS[pkg] ?? [];
-    const depDirs = deps.map((d: string) =>
-      source.directory(`packages/${d}`),
-    );
+    const depDirs = deps.map((d: string) => source.directory(`packages/${d}`));
     return { pkgDir, depNames: deps, depDirs };
   };
 

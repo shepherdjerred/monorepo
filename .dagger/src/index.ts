@@ -23,6 +23,10 @@ import {
   gitleaksCheckHelper,
   suppressionCheckHelper,
   daggerHygieneHelper,
+  envVarNamesHelper,
+  migrationGuardHelper,
+  mergeConflictHelper,
+  largeFileCheckHelper,
 } from "./quality";
 
 import { trivyScanHelper, semgrepScanHelper } from "./security";
@@ -63,7 +67,12 @@ import { astroCheckHelper, astroBuildHelper, viteBuildHelper } from "./astro";
 
 import { buildImageHelper, pushImageHelper } from "./image";
 
-import { rustFmtHelper, rustClippyHelper, rustTestHelper, rustBuildHelper } from "./rust";
+import {
+  rustFmtHelper,
+  rustClippyHelper,
+  rustTestHelper,
+  rustBuildHelper,
+} from "./rust";
 
 import { goBuildHelper, goTestHelper, goLintHelper } from "./golang";
 
@@ -143,7 +152,13 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
   ): Promise<string> {
-    return generateAndLintHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout();
+    return generateAndLintHelper(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      tsconfig,
+    ).stdout();
   }
 
   /** Generate then typecheck — chains on the same container */
@@ -155,7 +170,13 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
   ): Promise<string> {
-    return generateAndTypecheckHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout();
+    return generateAndTypecheckHelper(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      tsconfig,
+    ).stdout();
   }
 
   /** Generate then test — chains on the same container */
@@ -167,7 +188,13 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
   ): Promise<string> {
-    return generateAndTestHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout();
+    return generateAndTestHelper(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      tsconfig,
+    ).stdout();
   }
 
   // ---------------------------------------------------------------------------
@@ -185,7 +212,15 @@ export class Monorepo {
     homelabTsconfig: File | null = null,
     hassBaseUrl: string = "https://homeassistant.sjer.red",
   ): Directory {
-    return haGenerateHelper(pkgDir, hassToken, depNames, depDirs, tsconfig, homelabTsconfig, hassBaseUrl);
+    return haGenerateHelper(
+      pkgDir,
+      hassToken,
+      depNames,
+      depDirs,
+      tsconfig,
+      homelabTsconfig,
+      hassBaseUrl,
+    );
   }
 
   /** Generate HA types then lint homelab/src/ha */
@@ -198,7 +233,14 @@ export class Monorepo {
     tsconfig: File | null = null,
     homelabTsconfig: File | null = null,
   ): Promise<string> {
-    return haLintHelper(pkgDir, hassToken, depNames, depDirs, tsconfig, homelabTsconfig).stdout();
+    return haLintHelper(
+      pkgDir,
+      hassToken,
+      depNames,
+      depDirs,
+      tsconfig,
+      homelabTsconfig,
+    ).stdout();
   }
 
   /** Generate HA types then typecheck homelab/src/ha */
@@ -211,7 +253,14 @@ export class Monorepo {
     tsconfig: File | null = null,
     homelabTsconfig: File | null = null,
   ): Promise<string> {
-    return haTypecheckHelper(pkgDir, hassToken, depNames, depDirs, tsconfig, homelabTsconfig).stdout();
+    return haTypecheckHelper(
+      pkgDir,
+      hassToken,
+      depNames,
+      depDirs,
+      tsconfig,
+      homelabTsconfig,
+    ).stdout();
   }
 
   // ---------------------------------------------------------------------------
@@ -291,7 +340,17 @@ export class Monorepo {
     version: string = "dev",
     gitSha: string = "unknown",
   ): Promise<string> {
-    return pushImageHelper(pkgDir, pkg, tag, registryUsername, registryPassword, depNames, depDirs, version, gitSha);
+    return pushImageHelper(
+      pkgDir,
+      pkg,
+      tag,
+      registryUsername,
+      registryPassword,
+      depNames,
+      depDirs,
+      version,
+      gitSha,
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -385,7 +444,13 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
   ): Promise<string> {
-    return playwrightTestHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout();
+    return playwrightTestHelper(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      tsconfig,
+    ).stdout();
   }
 
   /** Generate/update Playwright snapshot baselines. Returns the snapshots directory. */
@@ -467,6 +532,30 @@ export class Monorepo {
   @func()
   async daggerHygiene(source: Directory): Promise<string> {
     return daggerHygieneHelper(source).stdout();
+  }
+
+  /** Validate env var naming conventions across the source tree */
+  @func()
+  async envVarNames(source: Directory): Promise<string> {
+    return envVarNamesHelper(source).stdout();
+  }
+
+  /** Guard against package exclusions from workspace scripts */
+  @func()
+  async migrationGuard(source: Directory): Promise<string> {
+    return migrationGuardHelper(source).stdout();
+  }
+
+  /** Detect unresolved merge conflict markers in source files */
+  @func()
+  async mergeConflictCheck(source: Directory): Promise<string> {
+    return mergeConflictHelper(source).stdout();
+  }
+
+  /** Detect files exceeding 5MB in the source tree */
+  @func()
+  async largeFileCheck(source: Directory): Promise<string> {
+    return largeFileCheckHelper(source).stdout();
   }
 
   // ---------------------------------------------------------------------------

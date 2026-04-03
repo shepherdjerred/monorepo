@@ -16,7 +16,13 @@ export function homelabSynthHelper(
   depDirs: Directory[] = [],
   tsconfig: File | null = null,
 ): Directory {
-  return bunBaseContainer(pkgDir, "homelab/src/cdk8s", depNames, depDirs, tsconfig)
+  return bunBaseContainer(
+    pkgDir,
+    "homelab/src/cdk8s",
+    depNames,
+    depDirs,
+    tsconfig,
+  )
     .withExec(["bun", "run", "build"])
     .directory("/workspace/packages/homelab/src/cdk8s/dist");
 }

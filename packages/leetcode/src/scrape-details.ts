@@ -126,7 +126,7 @@ async function main() {
         continue;
       }
 
-      const question = (result.data as Record<string, unknown>)?.['question'];
+      const question = (result.data as Record<string, unknown>)?.["question"];
       if (!question) {
         console.log(
           `[${timestamp()}] [${current}/${total}] ${slug} — null response (premium?)`,

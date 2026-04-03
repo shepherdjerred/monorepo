@@ -152,13 +152,57 @@ describe("buildPipeline", () => {
       }
     });
 
-    it("includes release track with wait gate", () => {
+    it("release step depends on per-package groups and blocking gates (no wait steps)", () => {
       const pipeline = buildPipeline(fullBuild());
-      const waits = pipeline.steps.filter(isWait);
-      expect(waits.length).toBeGreaterThan(0);
 
+      // No wait steps — release uses explicit depends_on
+      const waits = pipeline.steps.filter(isWait);
+      expect(waits).toHaveLength(0);
+
+      // Release step exists with depends_on
       const steps = pipeline.steps.filter(isStep);
-      expect(steps.some((s) => s.key === "release")).toBe(true);
+      const release = steps.find((s) => s.key === "release");
+      expect(release).toBeDefined();
+      expect(Array.isArray(release?.depends_on)).toBe(true);
+      const deps = release?.depends_on;
+      expect(Array.isArray(deps) ? deps : []).not.toHaveLength(0);
+
+      // depends_on includes per-package group keys
+      const pkgGroups = pipeline.steps
+        .filter(isGroup)
+        .filter((g) => g.key.startsWith("pkg-"));
+      for (const g of pkgGroups) {
+        expect(Array.isArray(deps) ? deps : []).toContain(g.key);
+      }
+
+      // depends_on includes blocking quality gate keys
+      const blockingGateKeys = [
+        "shellcheck",
+        "quality-ratchet",
+        "compliance-check",
+        "gitleaks-check",
+        "suppression-check",
+        "env-var-names",
+        "migration-guard",
+        "merge-conflict-check",
+        "large-file-check",
+        "caddyfile-validate",
+      ];
+      for (const key of blockingGateKeys) {
+        expect(Array.isArray(deps) ? deps : []).toContain(key);
+      }
+
+      // depends_on does NOT include async (soft_fail) check keys
+      const asyncKeys = [
+        "prettier",
+        "knip-check",
+        "dagger-hygiene",
+        "trivy-scan",
+        "semgrep-scan",
+      ];
+      for (const key of asyncKeys) {
+        expect(Array.isArray(deps) ? deps : []).not.toContain(key);
+      }
     });
 
     it("includes image publish, npm, clauderon, cooklang, and sites groups", () => {
@@ -189,12 +233,13 @@ describe("buildPipeline", () => {
       expect(steps.some((s) => s.key === "version-commit-back")).toBe(true);
     });
 
-    it("includes build summary step", () => {
+    it("includes build summary step with allow_dependency_failure", () => {
       const pipeline = buildPipeline(fullBuild());
       const steps = pipeline.steps.filter(isStep);
       const summary = steps.find((s) => s.key === "build-summary");
       expect(summary).toBeDefined();
       expect(summary?.depends_on).toBeDefined();
+      expect(summary?.allow_dependency_failure).toBe(true);
     });
 
     it("deploy steps have concurrency groups", () => {

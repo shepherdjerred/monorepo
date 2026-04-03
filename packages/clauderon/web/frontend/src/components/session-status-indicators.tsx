@@ -132,7 +132,6 @@ export function SessionStatusIndicators({ session }: { session: Session }) {
           </Tooltip>
         </TooltipProvider>
       )}
-
     </div>
   );
 }

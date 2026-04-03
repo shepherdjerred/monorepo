@@ -42,6 +42,8 @@ export function daggerStep(opts: {
   concurrency?: number;
   concurrencyGroup?: string;
   artifactPaths?: string[];
+  allowDependencyFailure?: boolean;
+  priority?: number;
 }): BuildkiteStep {
   const step: BuildkiteStep = {
     label: opts.label,
@@ -76,6 +78,12 @@ export function daggerStep(opts: {
   }
   if (opts.artifactPaths !== undefined) {
     step.artifact_paths = opts.artifactPaths;
+  }
+  if (opts.allowDependencyFailure !== undefined) {
+    step.allow_dependency_failure = opts.allowDependencyFailure;
+  }
+  if (opts.priority !== undefined) {
+    step.priority = opts.priority;
   }
 
   return step;

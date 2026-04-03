@@ -96,9 +96,7 @@ export function RepositoryEntryForm({
       <div className="space-y-2">
         <Label htmlFor={`base-branch-${repo.id}`} className="text-sm">
           Base Branch{" "}
-          <span className="text-xs text-muted-foreground">
-            (optional)
-          </span>
+          <span className="text-xs text-muted-foreground">(optional)</span>
         </Label>
         <input
           type="text"
@@ -112,8 +110,8 @@ export function RepositoryEntryForm({
           maxLength={128}
         />
         <p className="text-xs text-muted-foreground">
-          Branch to clone from for clone-based backends.
-          Leave empty for default branch.
+          Branch to clone from for clone-based backends. Leave empty for default
+          branch.
         </p>
       </div>
 

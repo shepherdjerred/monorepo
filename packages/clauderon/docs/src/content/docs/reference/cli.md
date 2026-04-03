@@ -35,13 +35,13 @@ clauderon daemon [OPTIONS]
 
 **Feature Flags:**
 
-| Flag                           | Default | Description                                      |
-| ------------------------------ | ------- | ------------------------------------------------ |
-| `--enable-webauthn-auth`       | `false` | WebAuthn passwordless authentication for web UI  |
-| `--enable-ai-metadata`         | `true`  | AI-generated session titles from prompts         |
-| `--enable-auto-reconcile`      | `true`  | Sync database with backends on startup           |
-| `--enable-usage-tracking`      | `false` | Track Claude API usage per session               |
-| `--enable-experimental-models` | `false` | Enable experimental AI models (Codex, Gemini)    |
+| Flag                           | Default | Description                                     |
+| ------------------------------ | ------- | ----------------------------------------------- |
+| `--enable-webauthn-auth`       | `false` | WebAuthn passwordless authentication for web UI |
+| `--enable-ai-metadata`         | `true`  | AI-generated session titles from prompts        |
+| `--enable-auto-reconcile`      | `true`  | Sync database with backends on startup          |
+| `--enable-usage-tracking`      | `false` | Track Claude API usage per session              |
+| `--enable-experimental-models` | `false` | Enable experimental AI models (Codex, Gemini)   |
 
 See [Feature Flags Reference](/reference/feature-flags/) for detailed documentation.
 

@@ -14,5 +14,6 @@ export function versionCommitBackStep(dependsOn: string[]): BuildkiteStep {
     timeoutMinutes: 10,
     condition: MAIN_ONLY,
     dependsOn,
+    priority: 1,
   });
 }

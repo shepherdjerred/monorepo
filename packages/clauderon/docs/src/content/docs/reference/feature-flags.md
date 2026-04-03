@@ -14,10 +14,10 @@ Loaded at daemon startup. Require restart to change.
 
 ## Available Flags
 
-| Flag                         | Default | Description                                                  |
-| ---------------------------- | ------- | ------------------------------------------------------------ |
-| `enable_webauthn_auth`       | `false` | WebAuthn passwordless authentication                         |
-| `enable_ai_metadata`         | `true`  | AI-generated session titles from prompts                     |
+| Flag                         | Default | Description                                 |
+| ---------------------------- | ------- | ------------------------------------------- |
+| `enable_webauthn_auth`       | `false` | WebAuthn passwordless authentication        |
+| `enable_ai_metadata`         | `true`  | AI-generated session titles from prompts    |
 | `enable_auto_reconcile`      | `true`  | Auto-sync database with backends on startup |
 | `enable_usage_tracking`      | `false` | Track Claude API usage per session          |
 | `enable_experimental_models` | `false` | Enable Codex/Gemini models                  |

@@ -20,7 +20,7 @@ plugins:
         serviceAccountName: ci-controller
         priorityClassName: batch-low
         containers:
-          - name: container-0           # Default container name
+          - name: container-0 # Default container name
             image: "ghcr.io/org/ci-base:latest"
             resources:
               requests:
@@ -53,15 +53,15 @@ plugins:
 plugins:
   - kubernetes:
       checkout:
-        cloneFlags: "--depth=100"       # Shallow clone
-        fetchFlags: "--depth=100"       # Shallow fetch
-        skip: true                      # Skip checkout entirely
+        cloneFlags: "--depth=100" # Shallow clone
+        fetchFlags: "--depth=100" # Shallow fetch
+        skip: true # Skip checkout entirely
       gitMirrors:
         volume:
           name: buildkite-git-mirrors
           persistentVolumeClaim:
             claimName: buildkite-git-mirrors
-        lockTimeout: 300                # Seconds to wait for mirror lock
+        lockTimeout: 300 # Seconds to wait for mirror lock
 ```
 
 Git mirrors provide a shared read-only cache of repositories, significantly speeding up checkouts for large repos.
@@ -72,15 +72,15 @@ Git mirrors provide a shared read-only cache of repositories, significantly spee
 # Via environment from Kubernetes secrets
 envFrom:
   - secretRef:
-      name: ci-secrets              # All keys become env vars
+      name: ci-secrets # All keys become env vars
   - secretRef:
       name: argocd-token
-      optional: true                # Don't fail if secret missing
+      optional: true # Don't fail if secret missing
 
 # Via Buildkite Secrets (agent v3.81+)
 secrets:
-  - GH_TOKEN                       # Secret name = env var name
-  - name: CUSTOM_NAME              # Custom env var mapping
+  - GH_TOKEN # Secret name = env var name
+  - name: CUSTOM_NAME # Custom env var mapping
     secret: buildkite-secret-name
 ```
 
@@ -90,11 +90,11 @@ Never write tokens to files or embed in URLs. Use `--token` flags or Dagger `Sec
 
 ### Resource Tiers (this monorepo)
 
-| Tier | CPU | Memory | Used For |
-|------|-----|--------|----------|
-| Heavy | 1000m | 2Gi | homelab, scout-for-lol |
-| Medium | 500m | 1Gi | birmel |
-| Default | 250m | 512Mi | Everything else |
+| Tier    | CPU   | Memory | Used For               |
+| ------- | ----- | ------ | ---------------------- |
+| Heavy   | 1000m | 2Gi    | homelab, scout-for-lol |
+| Medium  | 500m  | 1Gi    | birmel                 |
+| Default | 250m  | 512Mi  | Everything else        |
 
 ### Kueue Integration
 
@@ -115,11 +115,12 @@ spec:
             - name: memory
               nominalQuota: "64Gi"
   preemption:
-    withinClusterQueue: Never        # Running jobs never suspended
-  queueingStrategy: StrictFIFO       # Suspended jobs unsuspended in order
+    withinClusterQueue: Never # Running jobs never suspended
+  queueingStrategy: StrictFIFO # Suspended jobs unsuspended in order
 ```
 
 Benefits over ResourceQuota:
+
 - Elastic concurrency (jobs sized by actual resource requests)
 - FIFO ordering for suspended jobs
 - No etcd event storms from quota admission failures
@@ -133,8 +134,8 @@ Key values from this monorepo's deployment:
 agentStackSecret: buildkite-agent-token
 config:
   queue: default
-  max-in-flight: 20                  # Max concurrent pods
-  empty-job-grace-period: "5m"       # Keep pods alive briefly for reuse
+  max-in-flight: 20 # Max concurrent pods
+  empty-job-grace-period: "5m" # Keep pods alive briefly for reuse
   default-checkout-params:
     gitMirrors:
       volume:
@@ -150,6 +151,7 @@ config:
 ## Container Build Strategies
 
 agent-stack-k8s supports multiple container build approaches:
+
 - **BuildKit** (recommended) — rootless, efficient layer caching
 - **Kaniko** — in-cluster builds without Docker daemon
 - **Buildah** — OCI-compliant, daemonless
@@ -178,6 +180,7 @@ plugins:
 ## Observability
 
 This monorepo has a Grafana dashboard tracking:
+
 - Kueue admitted/pending workloads
 - Quota usage (CPU/memory)
 - Actual vs requested resources per pod

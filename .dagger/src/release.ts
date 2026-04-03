@@ -303,13 +303,7 @@ export function deploySiteHelper(
         "/root/.cache/ms-playwright",
         dag.cacheVolume("playwright-cache"),
       )
-      .withExec([
-        "bunx",
-        "playwright",
-        "install",
-        "chromium",
-        "--with-deps",
-      ]);
+      .withExec(["bunx", "playwright", "install", "chromium", "--with-deps"]);
   }
 
   container = container

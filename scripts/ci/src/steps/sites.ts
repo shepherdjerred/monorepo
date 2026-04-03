@@ -72,16 +72,23 @@ export function mkdocsDeployStep(dependsOn: string[]): BuildkiteStep {
     key: "deploy-discord-plays-pokemon-docs",
     if: MAIN_ONLY,
     depends_on: dependsOn,
-    command: [
-      // Step 1: Build with mkdocs (Python container), export built site to local path
-      `dagger call mkdocs-build --source . export --path /tmp/mkdocs-site`,
-      // Step 2: Deploy built site via deploy-site (awscli inside Dagger container)
-      `dagger call deploy-site --pkg-dir /tmp/mkdocs-site --pkg discord-plays-pokemon --build-cmd "true" --bucket discord-plays-pokemon-docs --dist-subdir . --target seaweedfs --aws-access-key-id env:SEAWEEDFS_ACCESS_KEY_ID --aws-secret-access-key env:SEAWEEDFS_SECRET_ACCESS_KEY`,
-    ].join(" && ") + DRYRUN_FLAG,
+    command:
+      [
+        // Step 1: Build with mkdocs (Python container), export built site to local path
+        `dagger call mkdocs-build --source . export --path /tmp/mkdocs-site`,
+        // Step 2: Deploy built site via deploy-site (awscli inside Dagger container)
+        `dagger call deploy-site --pkg-dir /tmp/mkdocs-site --pkg discord-plays-pokemon --build-cmd "true" --bucket discord-plays-pokemon-docs --dist-subdir . --target seaweedfs --aws-access-key-id env:SEAWEEDFS_ACCESS_KEY_ID --aws-secret-access-key env:SEAWEEDFS_SECRET_ACCESS_KEY`,
+      ].join(" && ") + DRYRUN_FLAG,
     timeout_in_minutes: 15,
     retry: RETRY,
     env: DAGGER_ENV,
-    plugins: [k8sPlugin({ cpu: "250m", memory: "512Mi", secrets: ["buildkite-argocd-token"] })],
+    plugins: [
+      k8sPlugin({
+        cpu: "250m",
+        memory: "512Mi",
+        secrets: ["buildkite-argocd-token"],
+      }),
+    ],
   };
 }
 

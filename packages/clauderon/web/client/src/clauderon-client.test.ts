@@ -279,7 +279,6 @@ describe("ClauderonClient - createSession and session actions", () => {
 
     expect(repos).toEqual(mockRepos);
   });
-
 });
 
 describe("ClauderonClient - error handling and health", () => {

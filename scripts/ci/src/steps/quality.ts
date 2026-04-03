@@ -117,6 +117,42 @@ export function semgrepScanStep(): BuildkiteStep {
   });
 }
 
+export function envVarNamesStep(): BuildkiteStep {
+  return daggerStep({
+    label: ":label: Env Var Names",
+    key: "env-var-names",
+    daggerCmd: "dagger call env-var-names --source .",
+    timeoutMinutes: 10,
+  });
+}
+
+export function migrationGuardStep(): BuildkiteStep {
+  return daggerStep({
+    label: ":shield: Migration Guard",
+    key: "migration-guard",
+    daggerCmd: "dagger call migration-guard --source .",
+    timeoutMinutes: 10,
+  });
+}
+
+export function mergeConflictStep(): BuildkiteStep {
+  return daggerStep({
+    label: ":no_entry: Merge Conflict Check",
+    key: "merge-conflict-check",
+    daggerCmd: "dagger call merge-conflict-check --source .",
+    timeoutMinutes: 5,
+  });
+}
+
+export function largeFileStep(): BuildkiteStep {
+  return daggerStep({
+    label: ":warning: Large File Check",
+    key: "large-file-check",
+    daggerCmd: "dagger call large-file-check --source .",
+    timeoutMinutes: 5,
+  });
+}
+
 export function caddyfileValidateStep(): BuildkiteStep {
   return daggerStep({
     label: ":globe_with_meridians: Caddyfile Validate",

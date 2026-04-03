@@ -36,27 +36,27 @@ Plugin hooks are shell scripts (or any executable with v3.85.0+ polyglot support
 
 ### Agent Lifecycle (self-hosted only)
 
-| Hook | When |
-|------|------|
-| `agent-startup` | Before agent registers (v3.42.0+) |
-| `agent-shutdown` | When agent shuts down |
+| Hook             | When                              |
+| ---------------- | --------------------------------- |
+| `agent-startup`  | Before agent registers (v3.42.0+) |
+| `agent-shutdown` | When agent shuts down             |
 
 ### Job Lifecycle (execution order)
 
-| # | Hook | Scopes | Description |
-|---|------|--------|-------------|
-| 1 | `pre-bootstrap` | Agent | Before job starts. Exit 0 = permit, non-zero = reject |
-| 2 | `environment` | Agent, Plugin (non-vendored) | Export secrets/config. Runs before all other job hooks |
-| 3 | `pre-checkout` | Agent, Plugin (non-vendored) | Before git checkout |
-| 4 | `checkout` | Plugin (non-vendored), Agent | Override default checkout. Only first one runs |
-| 5 | `post-checkout` | Agent, Repository, Plugin (non-vendored) | After checkout completes |
-| 6 | `environment` | Plugin (vendored) | Vendored plugin env hooks run after checkout |
-| 7 | `pre-command` | Agent, Repository, Plugin (all) | Before build command |
-| 8 | `command` | Plugin (all), Repository, Agent | Override default command. Only first one runs |
-| 9 | `post-command` | Agent, Repository, Plugin (all) | After command completes |
-| 10 | `pre-artifact` | Agent, Repository, Plugin (all) | Before artifact upload (if paths defined) |
-| 11 | `post-artifact` | Agent, Repository, Plugin (all) | After artifact upload |
-| 12 | `pre-exit` | Agent, Repository, Plugin (all) | Cleanup. Exit code replaces job exit code |
+| #   | Hook            | Scopes                                   | Description                                            |
+| --- | --------------- | ---------------------------------------- | ------------------------------------------------------ |
+| 1   | `pre-bootstrap` | Agent                                    | Before job starts. Exit 0 = permit, non-zero = reject  |
+| 2   | `environment`   | Agent, Plugin (non-vendored)             | Export secrets/config. Runs before all other job hooks |
+| 3   | `pre-checkout`  | Agent, Plugin (non-vendored)             | Before git checkout                                    |
+| 4   | `checkout`      | Plugin (non-vendored), Agent             | Override default checkout. Only first one runs         |
+| 5   | `post-checkout` | Agent, Repository, Plugin (non-vendored) | After checkout completes                               |
+| 6   | `environment`   | Plugin (vendored)                        | Vendored plugin env hooks run after checkout           |
+| 7   | `pre-command`   | Agent, Repository, Plugin (all)          | Before build command                                   |
+| 8   | `command`       | Plugin (all), Repository, Agent          | Override default command. Only first one runs          |
+| 9   | `post-command`  | Agent, Repository, Plugin (all)          | After command completes                                |
+| 10  | `pre-artifact`  | Agent, Repository, Plugin (all)          | Before artifact upload (if paths defined)              |
+| 11  | `post-artifact` | Agent, Repository, Plugin (all)          | After artifact upload                                  |
+| 12  | `pre-exit`      | Agent, Repository, Plugin (all)          | Cleanup. Exit code replaces job exit code              |
 
 ### Hook Scopes
 
@@ -73,6 +73,7 @@ Plugin hooks are shell scripts (or any executable with v3.85.0+ polyglot support
 ### Polyglot Hooks (v3.85.0+)
 
 Hooks can be any executable (Python, Ruby, Go, Rust, etc.):
+
 - Interpreted: must have valid shebang (`#!/usr/bin/env python3`)
 - Binary: must be executable by agent user
 - Extra env vars: `BUILDKITE_HOOK_PHASE`, `BUILDKITE_HOOK_PATH`, `BUILDKITE_HOOK_SCOPE`
@@ -81,6 +82,7 @@ Hooks can be any executable (Python, Ruby, Go, Rust, etc.):
 ## Artifacts
 
 ### Upload
+
 ```bash
 # From step config
 artifact_paths: "dist/**/*;coverage/**/*"
@@ -94,6 +96,7 @@ buildkite-agent artifact upload "pkg/*" "s3://my-bucket/builds/${BUILDKITE_BUILD
 ```
 
 ### Download
+
 ```bash
 buildkite-agent artifact download "dist/*" ./local/
 buildkite-agent artifact download "report.html" . --step "build-step"
@@ -101,6 +104,7 @@ buildkite-agent artifact download "*" . --build "build-uuid"
 ```
 
 ### Embed in Annotations
+
 ```bash
 buildkite-agent artifact upload "screenshot.png"
 echo '<img src="artifact://screenshot.png" height=250>' | buildkite-agent annotate --style info
@@ -108,4 +112,5 @@ echo '<a href="artifact://coverage/index.html">Coverage Report</a>' | buildkite-
 ```
 
 ### Storage Backends
+
 Default: Buildkite-managed storage. Custom: S3 (`s3://bucket/path`), GCS (`gs://bucket/path`). Configure via `BUILDKITE_ARTIFACT_UPLOAD_DESTINATION` or `artifact_upload_destination` agent config.

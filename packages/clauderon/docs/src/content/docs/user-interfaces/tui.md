@@ -79,13 +79,13 @@ Image selection, volume mode, resource limits, network mode.
 
 Press `h` on a session:
 
-| State      | Actions                           |
-| ---------- | --------------------------------- |
+| State     | Actions                           |
+| --------- | --------------------------------- |
 | Healthy   | Recreate, Cleanup                 |
 | Stopped   | Start, Recreate, Cleanup          |
 | Error     | Recreate, Recreate Fresh, Cleanup |
-| Missing    | Recreate, Recreate Fresh, Cleanup |
-| CrashLoop  | Recreate Fresh, Cleanup           |
+| Missing   | Recreate, Recreate Fresh, Cleanup |
+| CrashLoop | Recreate Fresh, Cleanup           |
 
 Data preservation: ✅ preserves data, ⚠️ fresh start (committed only), ❌ destructive.
 

@@ -26,9 +26,21 @@ import { toast } from "sonner";
 import { Plus, RefreshCw, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { type FilterStatus, toFilterStatus, getConfirmDialogTitle, getConfirmDialogDescription, getConfirmDialogLabel, TAB_TRIGGER_CLASS } from "./session-list-helpers.ts";
+import {
+  type FilterStatus,
+  toFilterStatus,
+  getConfirmDialogTitle,
+  getConfirmDialogDescription,
+  getConfirmDialogLabel,
+  TAB_TRIGGER_CLASS,
+} from "./session-list-helpers.ts";
 
 // Initialize filter from URL parameter
 function getInitialFilter(): FilterStatus {
@@ -468,9 +480,15 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
             }
           }}
           startSession={(id: string) => startSessionMutation.mutateAsync(id)}
-          recreateSession={async (id: string) => { await recreateSessionMutation.mutateAsync(id); }}
-          refreshSession={(id: string) => refreshSessionMutation.mutateAsync(id)}
-          cleanupSession={(id: string) => cleanupSessionMutation.mutateAsync(id)}
+          recreateSession={async (id: string) => {
+            await recreateSessionMutation.mutateAsync(id);
+          }}
+          refreshSession={(id: string) =>
+            refreshSessionMutation.mutateAsync(id)
+          }
+          cleanupSession={(id: string) =>
+            cleanupSessionMutation.mutateAsync(id)
+          }
         />
       )}
 

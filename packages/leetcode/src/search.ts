@@ -23,7 +23,8 @@ function parseArgs() {
     if (arg === "--semantic") mode = "semantic";
     else if (arg === "--keyword") mode = "keyword";
     else if (arg === "--hybrid") mode = "hybrid";
-    else if (arg === "--limit" && args[i + 1]) limit = parseInt(args[++i] ?? "10");
+    else if (arg === "--limit" && args[i + 1])
+      limit = parseInt(args[++i] ?? "10");
     else queryParts.push(arg);
   }
 
@@ -87,7 +88,10 @@ async function main() {
       const embedResult = await embedder.embed([query]);
       const queryVector = embedResult[0];
       if (queryVector) {
-        vectorResults = searchDb.vectorSearch(new Float32Array(queryVector), 30);
+        vectorResults = searchDb.vectorSearch(
+          new Float32Array(queryVector),
+          30,
+        );
       }
     }
 
@@ -97,7 +101,10 @@ async function main() {
     for (let i = 0; i < fts.length; i++) {
       const ftsItem = fts[i];
       if (!ftsItem) continue;
-      scores.set(ftsItem.slug, (scores.get(ftsItem.slug) ?? 0) + 1 / (K + i + 1));
+      scores.set(
+        ftsItem.slug,
+        (scores.get(ftsItem.slug) ?? 0) + 1 / (K + i + 1),
+      );
     }
     for (let i = 0; i < vectorResults.length; i++) {
       const vecItem = vectorResults[i];

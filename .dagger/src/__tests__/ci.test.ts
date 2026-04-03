@@ -1,10 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
-import {
-  formatSummary,
-  formatFailureDetails,
-} from "../ci-format";
+import { formatSummary, formatFailureDetails } from "../ci-format";
 
 import type { CheckResult } from "../ci-format";
 
@@ -36,17 +33,13 @@ describe("formatSummary", () => {
   });
 
   it("appends SKIP line when hassToken is not present", () => {
-    const results: CheckResult[] = [
-      { label: "pkg-a: lint", status: "PASS" },
-    ];
+    const results: CheckResult[] = [{ label: "pkg-a: lint", status: "PASS" }];
     const summary = formatSummary(results, false);
     assert.ok(summary.includes("SKIP  homelab/ha (no hassToken)"));
   });
 
   it("does not append SKIP line when hassToken is present", () => {
-    const results: CheckResult[] = [
-      { label: "pkg-a: lint", status: "PASS" },
-    ];
+    const results: CheckResult[] = [{ label: "pkg-a: lint", status: "PASS" }];
     const summary = formatSummary(results, true);
     assert.ok(!summary.includes("SKIP"));
   });
@@ -74,9 +67,7 @@ describe("formatFailureDetails", () => {
   });
 
   it("handles undefined error messages", () => {
-    const failures: CheckResult[] = [
-      { label: "pkg-a: test", status: "FAIL" },
-    ];
+    const failures: CheckResult[] = [{ label: "pkg-a: test", status: "FAIL" }];
     const details = formatFailureDetails(failures);
     assert.strictEqual(details, "--- pkg-a: test ---\nundefined");
   });

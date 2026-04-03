@@ -16,6 +16,7 @@ BuildKite is a CI/CD platform where builds run on your own infrastructure via ag
 ## Pipeline YAML Quick Reference
 
 ### Command Step
+
 ```yaml
 steps:
   - label: ":test_tube: Tests"
@@ -37,17 +38,19 @@ steps:
 ```
 
 ### Wait Step
+
 ```yaml
-- wait: ~                          # Waits for all previous steps
+- wait: ~ # Waits for all previous steps
 - wait: ~
-  continue_on_failure: true        # Proceed even if prior steps failed
+  continue_on_failure: true # Proceed even if prior steps failed
 ```
 
 ### Block Step (creates implicit dependencies)
+
 ```yaml
 - block: ":rocket: Deploy?"
   prompt: "Ready to deploy?"
-  blocked_state: passed            # passed | failed | running
+  blocked_state: passed # passed | failed | running
   fields:
     - select: "Region"
       key: "region"
@@ -57,6 +60,7 @@ steps:
 ```
 
 ### Input Step (no implicit dependencies)
+
 ```yaml
 - input: "Release info"
   fields:
@@ -66,10 +70,11 @@ steps:
 ```
 
 ### Trigger Step
+
 ```yaml
 - trigger: "deploy-pipeline"
   label: ":rocket: Deploy"
-  async: true                      # Don't wait for triggered build
+  async: true # Don't wait for triggered build
   build:
     branch: "${BUILDKITE_BRANCH}"
     commit: "${BUILDKITE_COMMIT}"
@@ -78,6 +83,7 @@ steps:
 ```
 
 ### Group Step
+
 ```yaml
 - group: ":lock: Security"
   key: "security"
@@ -105,18 +111,21 @@ echo '{"steps": [{"command": "test.sh"}]}' | buildkite-agent pipeline upload
 ## Step Configuration
 
 ### Dependencies
+
 ```yaml
 - command: "build.sh"
   key: "build"
 - command: "test.sh"
-  depends_on: "build"              # Single dependency
+  depends_on: "build" # Single dependency
 - command: "deploy.sh"
-  depends_on: ["build", "test"]    # Multiple dependencies
-  allow_dependency_failure: true    # Run even if deps fail
+  depends_on: ["build", "test"] # Multiple dependencies
+  allow_dependency_failure: true # Run even if deps fail
 ```
 
 ### Conditionals (`if`)
+
 C-like expressions evaluated at **upload time** (not runtime):
+
 ```yaml
 - command: "deploy.sh"
   if: build.branch == pipeline.default_branch
@@ -131,34 +140,38 @@ C-like expressions evaluated at **upload time** (not runtime):
 Operators: `==`, `!=`, `=~`, `!~`, `||`, `&&`, `includes`, `!`. Variables: `build.*` (branch, commit, message, source, tag, pull_request, env()), `pipeline.*`, `organization.*`.
 
 ### Retry
+
 ```yaml
 retry:
   automatic:
-    - exit_status: -1              # Agent lost/timeout
+    - exit_status: -1 # Agent lost/timeout
       limit: 2
-    - exit_status: "*"             # Any non-zero (1-255)
+    - exit_status: "*" # Any non-zero (1-255)
       limit: 1
   manual:
     permit_on_passed: true
 ```
-Auto retry: `exit_status` (int/array/"*"), `signal`, `signal_reason`, `limit` (max 10).
+
+Auto retry: `exit_status` (int/array/"\*"), `signal`, `signal_reason`, `limit` (max 10).
 
 ### Concurrency
+
 ```yaml
 - command: "deploy.sh"
   concurrency: 1
-  concurrency_group: "app/deploy"  # Org-wide scope
-  concurrency_method: ordered      # ordered (FIFO) | eager
+  concurrency_group: "app/deploy" # Org-wide scope
+  concurrency_method: ordered # ordered (FIFO) | eager
 ```
 
 ### Other
+
 ```yaml
-skip: "Temporarily disabled"       # Skip with reason (max 70 chars)
-soft_fail: true                    # All non-zero exits are soft failures
-priority: 1                        # Higher = dispatched first
+skip: "Temporarily disabled" # Skip with reason (max 70 chars)
+soft_fail: true # All non-zero exits are soft failures
+priority: 1 # Higher = dispatched first
 timeout_in_minutes: 30
-parallelism: 5                     # Run N parallel copies
-matrix: ["linux", "darwin"]        # Expand step per value
+parallelism: 5 # Run N parallel copies
+matrix: ["linux", "darwin"] # Expand step per value
 ```
 
 ## buildkite-agent CLI
@@ -191,28 +204,28 @@ buildkite-agent step update "label" "New Label"
 
 ## Environment Variables (Key Subset)
 
-| Variable | Description |
-|----------|-------------|
-| `BUILDKITE_BRANCH` | Branch being built |
-| `BUILDKITE_COMMIT` | Git commit SHA |
-| `BUILDKITE_MESSAGE` | Build message (commit msg) |
-| `BUILDKITE_BUILD_NUMBER` | Build number (monotonic) |
-| `BUILDKITE_BUILD_URL` | URL to build on Buildkite |
-| `BUILDKITE_BUILD_ID` | Build UUID |
-| `BUILDKITE_JOB_ID` | Job UUID |
-| `BUILDKITE_PIPELINE_SLUG` | Pipeline slug |
-| `BUILDKITE_ORGANIZATION_SLUG` | Organization slug |
-| `BUILDKITE_PULL_REQUEST` | PR number or `false` |
-| `BUILDKITE_PULL_REQUEST_BASE_BRANCH` | PR target branch or `""` |
-| `BUILDKITE_TAG` | Tag name (if tag build) |
-| `BUILDKITE_SOURCE` | `webhook`, `api`, `ui`, `trigger_job`, `schedule` |
-| `BUILDKITE_PARALLEL_JOB` | Parallel job index (0-based) |
-| `BUILDKITE_PARALLEL_JOB_COUNT` | Total parallel jobs |
-| `BUILDKITE_RETRY_COUNT` | Times job has been retried |
-| `BUILDKITE_STEP_KEY` | User-defined step key |
-| `BUILDKITE_AGENT_ACCESS_TOKEN` | Agent session token |
-| `BUILDKITE_TRIGGERED_FROM_BUILD_ID` | Parent build UUID |
-| `BUILDKITE_REPO` | Repository URL |
+| Variable                             | Description                                       |
+| ------------------------------------ | ------------------------------------------------- |
+| `BUILDKITE_BRANCH`                   | Branch being built                                |
+| `BUILDKITE_COMMIT`                   | Git commit SHA                                    |
+| `BUILDKITE_MESSAGE`                  | Build message (commit msg)                        |
+| `BUILDKITE_BUILD_NUMBER`             | Build number (monotonic)                          |
+| `BUILDKITE_BUILD_URL`                | URL to build on Buildkite                         |
+| `BUILDKITE_BUILD_ID`                 | Build UUID                                        |
+| `BUILDKITE_JOB_ID`                   | Job UUID                                          |
+| `BUILDKITE_PIPELINE_SLUG`            | Pipeline slug                                     |
+| `BUILDKITE_ORGANIZATION_SLUG`        | Organization slug                                 |
+| `BUILDKITE_PULL_REQUEST`             | PR number or `false`                              |
+| `BUILDKITE_PULL_REQUEST_BASE_BRANCH` | PR target branch or `""`                          |
+| `BUILDKITE_TAG`                      | Tag name (if tag build)                           |
+| `BUILDKITE_SOURCE`                   | `webhook`, `api`, `ui`, `trigger_job`, `schedule` |
+| `BUILDKITE_PARALLEL_JOB`             | Parallel job index (0-based)                      |
+| `BUILDKITE_PARALLEL_JOB_COUNT`       | Total parallel jobs                               |
+| `BUILDKITE_RETRY_COUNT`              | Times job has been retried                        |
+| `BUILDKITE_STEP_KEY`                 | User-defined step key                             |
+| `BUILDKITE_AGENT_ACCESS_TOKEN`       | Agent session token                               |
+| `BUILDKITE_TRIGGERED_FROM_BUILD_ID`  | Parent build UUID                                 |
+| `BUILDKITE_REPO`                     | Repository URL                                    |
 
 Variable precedence (lowest→highest): pipeline env → build env → step env → standard vars → agent env → hook exports. Use `$$VAR` to escape upload-time interpolation.
 
@@ -242,6 +255,7 @@ plugins:
 ## This Monorepo's CI Patterns
 
 **Key files:**
+
 - `.buildkite/pipeline.yml` — Bootstrap: single step runs TypeScript generator
 - `scripts/ci/src/main.ts` — Pipeline generator entry (change detection → build → JSON)
 - `scripts/ci/src/change-detection.ts` — Queries BuildKite API for last green build, git diff
@@ -250,6 +264,7 @@ plugins:
 - `scripts/ci/src/catalog.ts` — Registry of 13 images, 4 npm pkgs, 7 sites, 29 Helm charts
 
 **Patterns:**
+
 - All CI work via `dagger call` (lint, typecheck, test, push-image, helm-package, etc.)
 - Resource tiers: heavy (1000m/2Gi), medium (500m/1Gi), default (250m/512Mi)
 - Dagger engine: remote `tcp://dagger-engine.dagger.svc.cluster.local:8080`

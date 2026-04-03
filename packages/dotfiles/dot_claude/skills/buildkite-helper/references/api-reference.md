@@ -5,18 +5,22 @@
 **Base URL**: `https://api.buildkite.com/v2`
 
 ### Authentication
+
 ```bash
 curl -H "Authorization: Bearer $BUILDKITE_API_TOKEN" \
   https://api.buildkite.com/v2/user
 ```
+
 Tokens: https://buildkite.com/user/api-access-tokens. Scoped to orgs and permissions. Now support expiry dates.
 
 ### Pagination
+
 Via `Link` header with `next`, `prev`, `first`, `last`. Params: `page` (default 1), `per_page` (default 30, max 100).
 
 ### Key Endpoints
 
 **Pipelines:**
+
 ```
 GET    /v2/organizations/{org}/pipelines
 GET    /v2/organizations/{org}/pipelines/{slug}
@@ -26,6 +30,7 @@ DELETE /v2/organizations/{org}/pipelines/{slug}
 ```
 
 **Builds:**
+
 ```
 GET    /v2/builds                                              # All builds
 GET    /v2/organizations/{org}/pipelines/{pipeline}/builds     # Pipeline builds
@@ -38,6 +43,7 @@ PUT    .../builds/{n}/rebuild                                  # Rebuild
 Filter: `?state=passed`, `?branch=main`, `?created_from=2024-01-01`, `?meta_data[key]=value`
 
 **Jobs:**
+
 ```
 PUT    .../jobs/{id}/retry         # Retry
 PUT    .../jobs/{id}/unblock       # Unblock (block/input steps)
@@ -46,6 +52,7 @@ GET    .../jobs/{id}/env           # Job environment
 ```
 
 **Artifacts:**
+
 ```
 GET    .../builds/{n}/artifacts     # List for build
 GET    .../jobs/{id}/artifacts      # List for job
@@ -53,6 +60,7 @@ GET    .../artifacts/{id}/download  # Download
 ```
 
 **Annotations:**
+
 ```
 GET    .../builds/{n}/annotations
 POST   .../builds/{n}/annotations
@@ -60,6 +68,7 @@ DELETE .../builds/{n}/annotations/{uuid}
 ```
 
 **Agents:**
+
 ```
 GET    /v2/organizations/{org}/agents
 PUT    .../agents/{id}/stop
@@ -70,6 +79,7 @@ PUT    .../agents/{id}/resume
 Also: Teams, Clusters, Queues, Agent Tokens, Pipeline Templates, Rules — all with full CRUD.
 
 ### Client Libraries
+
 Go: `go-buildkite`, Python: `pybuildkite`, Ruby: `buildkit` (Shopify), Java: `buildkite-api-client`, Swift: `buildkite-swift`, PHP: `buildkite-php`, PowerShell: `PSBuildkite`.
 
 ## GraphQL API
