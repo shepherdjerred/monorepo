@@ -6,17 +6,20 @@
     ".": {
       "bun": "./src/index.ts",
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "default": "./src/index.ts"
     },
     "./rules": {
       "bun": "./src/rules/index.ts",
       "types": "./dist/rules/index.d.ts",
-      "import": "./dist/rules/index.js"
+      "import": "./dist/rules/index.js",
+      "default": "./src/rules/index.ts"
     },
     "./configs/*": {
       "bun": "./src/configs/*.ts",
       "types": "./dist/configs/*.d.ts",
-      "import": "./dist/configs/*.js"
+      "import": "./dist/configs/*.js",
+      "default": "./src/configs/*.ts"
     }
   },
   "files": [

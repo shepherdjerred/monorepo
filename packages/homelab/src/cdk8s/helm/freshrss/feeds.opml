@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head>
+    <title>Tech Stack RSS Feeds</title>
+    <dateCreated>Wed, 02 Apr 2026 00:00:00 +0000</dateCreated>
+  </head>
+  <body>
+    <outline text="Runtimes &amp; Languages">
+      <outline text="Bun Releases" type="rss" xmlUrl="https://github.com/oven-sh/bun/releases.atom" htmlUrl="https://github.com/oven-sh/bun"/>
+      <outline text="Rust Blog" type="rss" xmlUrl="https://blog.rust-lang.org/feed.xml" htmlUrl="https://blog.rust-lang.org/"/>
+      <outline text="TypeScript" type="rss" xmlUrl="https://devblogs.microsoft.com/typescript/feed/" htmlUrl="https://devblogs.microsoft.com/typescript/" description="The official blog of the TypeScript team."/>
+      <outline text="The Go Blog" type="rss" xmlUrl="https://go.dev/blog/feed.atom"/>
+    </outline>
+    <outline text="Web Frameworks">
+      <outline text="The Astro Blog" type="rss" xmlUrl="https://astro.build/rss.xml" htmlUrl="https://astro.build/" description="News and updates about Astro."/>
+      <outline text="Astro Releases" type="rss" xmlUrl="https://github.com/withastro/astro/releases.atom" htmlUrl="https://github.com/withastro/astro"/>
+      <outline text="React Blog" type="rss" xmlUrl="https://react.dev/feed.xml" htmlUrl="https://react.dev/"/>
+      <outline text="React Releases" type="rss" xmlUrl="https://github.com/facebook/react/releases.atom" htmlUrl="https://github.com/facebook/react"/>
+      <outline text="Hono Releases" type="rss" xmlUrl="https://github.com/honojs/hono/releases.atom" htmlUrl="https://github.com/honojs/hono"/>
+      <outline text="Vite" type="rss" xmlUrl="https://vite.dev/blog.rss" htmlUrl="https://vite.dev/blog" description="Next Generation Frontend Tooling"/>
+      <outline text="Vite Releases" type="rss" xmlUrl="https://github.com/vitejs/vite/releases.atom" htmlUrl="https://github.com/vitejs/vite"/>
+    </outline>
+    <outline text="Infrastructure &amp; DevOps">
+      <outline text="Kubernetes Blog" type="rss" xmlUrl="https://kubernetes.io/feed.xml" htmlUrl="https://kubernetes.io/"/>
+      <outline text="Dagger Releases" type="rss" xmlUrl="https://github.com/dagger/dagger/releases.atom" htmlUrl="https://github.com/dagger/dagger"/>
+      <outline text="ArgoCD Releases" type="rss" xmlUrl="https://github.com/argoproj/argo-cd/releases.atom" htmlUrl="https://github.com/argoproj/argo-cd"/>
+      <outline text="Helm Blog" type="rss" xmlUrl="https://helm.sh/blog/index.xml" htmlUrl="https://helm.sh/blog/"/>
+      <outline text="OpenTofu Blog" type="rss" xmlUrl="https://opentofu.org/blog/rss.xml" htmlUrl="https://opentofu.org/blog/"/>
+      <outline text="OpenTofu Releases" type="rss" xmlUrl="https://github.com/opentofu/opentofu/releases.atom" htmlUrl="https://github.com/opentofu/opentofu"/>
+      <outline text="Talos Linux Releases" type="rss" xmlUrl="https://github.com/siderolabs/talos/releases.atom" htmlUrl="https://github.com/siderolabs/talos"/>
+      <outline text="Tailscale Blog" type="rss" xmlUrl="https://tailscale.com/blog/index.xml" htmlUrl="https://tailscale.com/blog/"/>
+      <outline text="Cloudflare Blog" type="rss" xmlUrl="https://blog.cloudflare.com/rss/" htmlUrl="https://blog.cloudflare.com/"/>
+      <outline text="Velero Releases" type="rss" xmlUrl="https://github.com/vmware-tanzu/velero/releases.atom" htmlUrl="https://github.com/vmware-tanzu/velero"/>
+      <outline text="CDK8s Releases" type="rss" xmlUrl="https://github.com/cdk8s-team/cdk8s/releases.atom" htmlUrl="https://github.com/cdk8s-team/cdk8s"/>
+      <outline text="Kyverno Releases" type="rss" xmlUrl="https://github.com/kyverno/kyverno/releases.atom" htmlUrl="https://github.com/kyverno/kyverno"/>
+      <outline text="Cert-Manager Releases" type="rss" xmlUrl="https://github.com/cert-manager/cert-manager/releases.atom" htmlUrl="https://github.com/cert-manager/cert-manager"/>
+      <outline text="hadolint Releases" type="rss" xmlUrl="https://github.com/hadolint/hadolint/releases.atom" htmlUrl="https://github.com/hadolint/hadolint"/>
+      <outline text="kube-linter Releases" type="rss" xmlUrl="https://github.com/stackrox/kube-linter/releases.atom" htmlUrl="https://github.com/stackrox/kube-linter"/>
+      <outline text="actionlint Releases" type="rss" xmlUrl="https://github.com/rhysd/actionlint/releases.atom" htmlUrl="https://github.com/rhysd/actionlint"/>
+    </outline>
+    <outline text="Databases &amp; Storage">
+      <outline text="Prisma Blog" type="rss" xmlUrl="https://www.prisma.io/blog/rss.xml" htmlUrl="https://www.prisma.io/blog/"/>
+      <outline text="SeaweedFS Releases" type="rss" xmlUrl="https://github.com/seaweedfs/seaweedfs/releases.atom" htmlUrl="https://github.com/seaweedfs/seaweedfs"/>
+      <outline text="Redis Blog" type="rss" xmlUrl="https://redis.io/feed/" htmlUrl="https://redis.io/blog/"/>
+      <outline text="Redis Releases" type="rss" xmlUrl="https://github.com/redis/redis/releases.atom" htmlUrl="https://github.com/redis/redis"/>
+      <outline text="ClickHouse Blog" type="rss" xmlUrl="https://clickhouse.com/rss.xml" htmlUrl="https://clickhouse.com/blog/"/>
+      <outline text="LanceDB Releases" type="rss" xmlUrl="https://github.com/lancedb/lancedb/releases.atom" htmlUrl="https://github.com/lancedb/lancedb"/>
+    </outline>
+    <outline text="Observability">
+      <outline text="Grafana Blog" type="rss" xmlUrl="https://grafana.com/blog/index.xml" htmlUrl="https://grafana.com/blog/"/>
+      <outline text="Prometheus Blog" type="rss" xmlUrl="https://prometheus.io/blog/feed.xml" htmlUrl="https://prometheus.io/blog/"/>
+      <outline text="Loki Releases" type="rss" xmlUrl="https://github.com/grafana/loki/releases.atom" htmlUrl="https://github.com/grafana/loki"/>
+      <outline text="Tempo Releases" type="rss" xmlUrl="https://github.com/grafana/tempo/releases.atom" htmlUrl="https://github.com/grafana/tempo"/>
+      <outline text="Sentry Blog" type="rss" xmlUrl="https://blog.sentry.io/feed.xml" htmlUrl="https://blog.sentry.io/"/>
+      <outline text="OpenTelemetry Blog" type="rss" xmlUrl="https://opentelemetry.io/blog/index.xml" htmlUrl="https://opentelemetry.io/blog/"/>
+      <outline text="OpenTelemetry Collector Releases" type="rss" xmlUrl="https://github.com/open-telemetry/opentelemetry-collector/releases.atom" htmlUrl="https://github.com/open-telemetry/opentelemetry-collector"/>
+    </outline>
+    <outline text="AI &amp; ML">
+      <outline text="OpenAI Blog" type="rss" xmlUrl="https://openai.com/blog/rss.xml" htmlUrl="https://openai.com/blog/"/>
+      <outline text="Vercel AI SDK Releases" type="rss" xmlUrl="https://github.com/vercel/ai/releases.atom" htmlUrl="https://github.com/vercel/ai"/>
+      <outline text="Google AI Blog" type="rss" xmlUrl="https://blog.google/technology/ai/rss/" htmlUrl="https://blog.google/technology/ai/"/>
+    </outline>
+    <outline text="CLI &amp; Dev Tools">
+      <outline text="Neovim Releases" type="rss" xmlUrl="https://github.com/neovim/neovim/releases.atom" htmlUrl="https://github.com/neovim/neovim"/>
+      <outline text="Fish Shell Releases" type="rss" xmlUrl="https://github.com/fish-shell/fish-shell/releases.atom" htmlUrl="https://github.com/fish-shell/fish-shell"/>
+      <outline text="Zellij Releases" type="rss" xmlUrl="https://github.com/zellij-org/zellij/releases.atom" htmlUrl="https://github.com/zellij-org/zellij"/>
+      <outline text="Starship Releases" type="rss" xmlUrl="https://github.com/starship/starship/releases.atom" htmlUrl="https://github.com/starship/starship"/>
+      <outline text="Chezmoi Releases" type="rss" xmlUrl="https://github.com/twpayne/chezmoi/releases.atom" htmlUrl="https://github.com/twpayne/chezmoi"/>
+      <outline text="Atuin Releases" type="rss" xmlUrl="https://github.com/atuinsh/atuin/releases.atom" htmlUrl="https://github.com/atuinsh/atuin"/>
+      <outline text="mise Releases" type="rss" xmlUrl="https://github.com/jdx/mise/releases.atom" htmlUrl="https://github.com/jdx/mise"/>
+      <outline text="ripgrep Releases" type="rss" xmlUrl="https://github.com/BurntSushi/ripgrep/releases.atom" htmlUrl="https://github.com/BurntSushi/ripgrep"/>
+      <outline text="fd Releases" type="rss" xmlUrl="https://github.com/sharkdp/fd/releases.atom" htmlUrl="https://github.com/sharkdp/fd"/>
+      <outline text="bat Releases" type="rss" xmlUrl="https://github.com/sharkdp/bat/releases.atom" htmlUrl="https://github.com/sharkdp/bat"/>
+      <outline text="eza Releases" type="rss" xmlUrl="https://github.com/eza-community/eza/releases.atom" htmlUrl="https://github.com/eza-community/eza"/>
+      <outline text="delta Releases" type="rss" xmlUrl="https://github.com/dandavison/delta/releases.atom" htmlUrl="https://github.com/dandavison/delta"/>
+      <outline text="Ghostty Releases" type="rss" xmlUrl="https://github.com/ghostty-org/ghostty/releases.atom" htmlUrl="https://github.com/ghostty-org/ghostty"/>
+      <outline text="Lefthook Releases" type="rss" xmlUrl="https://github.com/evilmartians/lefthook/releases.atom" htmlUrl="https://github.com/evilmartians/lefthook"/>
+      <outline text="btop Releases" type="rss" xmlUrl="https://github.com/aristocratos/btop/releases.atom" htmlUrl="https://github.com/aristocratos/btop"/>
+      <outline text="difftastic Releases" type="rss" xmlUrl="https://github.com/Wilfred/difftastic/releases.atom" htmlUrl="https://github.com/Wilfred/difftastic"/>
+      <outline text="hyperfine Releases" type="rss" xmlUrl="https://github.com/sharkdp/hyperfine/releases.atom" htmlUrl="https://github.com/sharkdp/hyperfine"/>
+      <outline text="jq Releases" type="rss" xmlUrl="https://github.com/jqlang/jq/releases.atom" htmlUrl="https://github.com/jqlang/jq"/>
+      <outline text="yq Releases" type="rss" xmlUrl="https://github.com/mikefarah/yq/releases.atom" htmlUrl="https://github.com/mikefarah/yq"/>
+      <outline text="ov Releases" type="rss" xmlUrl="https://github.com/noborus/ov/releases.atom" htmlUrl="https://github.com/noborus/ov"/>
+      <outline text="rclone Releases" type="rss" xmlUrl="https://github.com/rclone/rclone/releases.atom" htmlUrl="https://github.com/rclone/rclone"/>
+      <outline text="vivid Releases" type="rss" xmlUrl="https://github.com/sharkdp/vivid/releases.atom" htmlUrl="https://github.com/sharkdp/vivid"/>
+      <outline text="yt-dlp Releases" type="rss" xmlUrl="https://github.com/yt-dlp/yt-dlp/releases.atom" htmlUrl="https://github.com/yt-dlp/yt-dlp"/>
+      <outline text="carapace Releases" type="rss" xmlUrl="https://github.com/carapace-sh/carapace-bin/releases.atom" htmlUrl="https://github.com/carapace-sh/carapace-bin"/>
+      <outline text="gomplate Releases" type="rss" xmlUrl="https://github.com/hairyhenderson/gomplate/releases.atom" htmlUrl="https://github.com/hairyhenderson/gomplate"/>
+      <outline text="watchman Releases" type="rss" xmlUrl="https://github.com/facebook/watchman/releases.atom" htmlUrl="https://github.com/facebook/watchman"/>
+      <outline text="shfmt Releases" type="rss" xmlUrl="https://github.com/mvdan/sh/releases.atom" htmlUrl="https://github.com/mvdan/sh"/>
+      <outline text="catppuccin/whiskers Releases" type="rss" xmlUrl="https://github.com/catppuccin/whiskers/releases.atom" htmlUrl="https://github.com/catppuccin/whiskers"/>
+      <outline text="git Releases" type="rss" xmlUrl="https://github.com/git/git/releases.atom" htmlUrl="https://github.com/git/git"/>
+      <outline text="GitHub CLI Releases" type="rss" xmlUrl="https://github.com/cli/cli/releases.atom" htmlUrl="https://github.com/cli/cli"/>
+      <outline text="Homebrew Blog" type="rss" xmlUrl="https://brew.sh/feed.xml" htmlUrl="https://brew.sh/"/>
+    </outline>
+    <outline text="Libraries">
+      <outline text="Zod Releases" type="rss" xmlUrl="https://github.com/colinhacks/zod/releases.atom" htmlUrl="https://github.com/colinhacks/zod"/>
+      <outline text="tRPC Releases" type="rss" xmlUrl="https://github.com/trpc/trpc/releases.atom" htmlUrl="https://github.com/trpc/trpc"/>
+      <outline text="TanStack Query Releases" type="rss" xmlUrl="https://github.com/TanStack/query/releases.atom" htmlUrl="https://github.com/TanStack/query"/>
+      <outline text="Discord.js Releases" type="rss" xmlUrl="https://github.com/discordjs/discord.js/releases.atom" htmlUrl="https://github.com/discordjs/discord.js"/>
+      <outline text="Satori Releases" type="rss" xmlUrl="https://github.com/vercel/satori/releases.atom" htmlUrl="https://github.com/vercel/satori"/>
+      <outline text="Radix UI Releases" type="rss" xmlUrl="https://github.com/radix-ui/primitives/releases.atom" htmlUrl="https://github.com/radix-ui/primitives"/>
+      <outline text="Tailwind CSS Releases" type="rss" xmlUrl="https://github.com/tailwindlabs/tailwindcss/releases.atom" htmlUrl="https://github.com/tailwindlabs/tailwindcss"/>
+      <outline text="ts-pattern Releases" type="rss" xmlUrl="https://github.com/gvergnaud/ts-pattern/releases.atom" htmlUrl="https://github.com/gvergnaud/ts-pattern"/>
+      <outline text="remeda Releases" type="rss" xmlUrl="https://github.com/remeda/remeda/releases.atom" htmlUrl="https://github.com/remeda/remeda"/>
+    </outline>
+    <outline text="Mobile &amp; Desktop">
+      <outline text="React Native Releases" type="rss" xmlUrl="https://github.com/facebook/react-native/releases.atom" htmlUrl="https://github.com/facebook/react-native"/>
+      <outline text="Tauri Releases" type="rss" xmlUrl="https://github.com/tauri-apps/tauri/releases.atom" htmlUrl="https://github.com/tauri-apps/tauri"/>
+    </outline>
+    <outline text="Rust Ecosystem">
+      <outline text="Tokio Releases" type="rss" xmlUrl="https://github.com/tokio-rs/tokio/releases.atom" htmlUrl="https://github.com/tokio-rs/tokio"/>
+      <outline text="Axum Releases" type="rss" xmlUrl="https://github.com/tokio-rs/axum/releases.atom" htmlUrl="https://github.com/tokio-rs/axum"/>
+      <outline text="SQLx Releases" type="rss" xmlUrl="https://github.com/launchbadge/sqlx/releases.atom" htmlUrl="https://github.com/launchbadge/sqlx"/>
+      <outline text="Ratatui Releases" type="rss" xmlUrl="https://github.com/ratatui/ratatui/releases.atom" htmlUrl="https://github.com/ratatui/ratatui"/>
+      <outline text="bacon Releases" type="rss" xmlUrl="https://github.com/Canop/bacon/releases.atom" htmlUrl="https://github.com/Canop/bacon"/>
+      <outline text="cargo-nextest Releases" type="rss" xmlUrl="https://github.com/nextest-rs/nextest/releases.atom" htmlUrl="https://github.com/nextest-rs/nextest"/>
+      <outline text="mold Releases" type="rss" xmlUrl="https://github.com/rui314/mold/releases.atom" htmlUrl="https://github.com/rui314/mold"/>
+    </outline>
+    <outline text="CI &amp; Platform">
+      <outline text="Docker Blog" type="rss" xmlUrl="https://www.docker.com/blog/feed/" htmlUrl="https://www.docker.com/blog/"/>
+      <outline text="GitHub Blog" type="rss" xmlUrl="https://github.blog/feed/" htmlUrl="https://github.blog/"/>
+      <outline text="AWS Blog" type="rss" xmlUrl="https://aws.amazon.com/blogs/aws/feed/" htmlUrl="https://aws.amazon.com/blogs/aws/"/>
+      <outline text="Buildkite Changelog" type="rss" xmlUrl="https://buildkite.com/changelog.atom" htmlUrl="https://buildkite.com/changelog"/>
+    </outline>
+    <outline text="Security">
+      <outline text="Gitleaks Releases" type="rss" xmlUrl="https://github.com/gitleaks/gitleaks/releases.atom" htmlUrl="https://github.com/gitleaks/gitleaks"/>
+      <outline text="Trivy Releases" type="rss" xmlUrl="https://github.com/aquasecurity/trivy/releases.atom" htmlUrl="https://github.com/aquasecurity/trivy"/>
+      <outline text="Semgrep Releases" type="rss" xmlUrl="https://github.com/semgrep/semgrep/releases.atom" htmlUrl="https://github.com/semgrep/semgrep"/>
+    </outline>
+    <outline text="Desktop Apps">
+      <outline text="Raycast Blog" type="rss" xmlUrl="https://www.raycast.com/blog/rss.xml" htmlUrl="https://www.raycast.com/blog/"/>
+      <outline text="OrbStack Blog" type="rss" xmlUrl="https://orbstack.dev/blog/atom.xml" htmlUrl="https://orbstack.dev/blog/"/>
+      <outline text="NetNewsWire Releases" type="rss" xmlUrl="https://github.com/Ranchero-Software/NetNewsWire/releases.atom" htmlUrl="https://github.com/Ranchero-Software/NetNewsWire"/>
+      <outline text="IINA Releases" type="rss" xmlUrl="https://github.com/iina/iina/releases.atom" htmlUrl="https://github.com/iina/iina"/>
+      <outline text="Anki Releases" type="rss" xmlUrl="https://github.com/ankitects/anki/releases.atom" htmlUrl="https://github.com/ankitects/anki"/>
+      <outline text="Syncthing Releases" type="rss" xmlUrl="https://github.com/syncthing/syncthing/releases.atom" htmlUrl="https://github.com/syncthing/syncthing"/>
+      <outline text="Discord Blog" type="rss" xmlUrl="https://discord.com/blog/rss.xml" htmlUrl="https://discord.com/blog"/>
+      <outline text="Kagi Blog" type="rss" xmlUrl="https://blog.kagi.com/rss.xml" htmlUrl="https://blog.kagi.com/"/>
+      <outline text="Mozilla Blog" type="rss" xmlUrl="https://blog.mozilla.org/en/feed/" htmlUrl="https://blog.mozilla.org/"/>
+      <outline text="Keka Releases" type="rss" xmlUrl="https://github.com/aonez/Keka/releases.atom" htmlUrl="https://github.com/aonez/Keka"/>
+      <outline text="LinearMouse Releases" type="rss" xmlUrl="https://github.com/linearmouse/linearmouse/releases.atom" htmlUrl="https://github.com/linearmouse/linearmouse"/>
+      <outline text="MailMate Blog" type="rss" xmlUrl="https://blog.freron.com/feed.xml" htmlUrl="https://blog.freron.com/"/>
+      <outline text="Catppuccin Releases" type="rss" xmlUrl="https://github.com/catppuccin/catppuccin/releases.atom" htmlUrl="https://github.com/catppuccin/catppuccin"/>
+    </outline>
+    <outline text="Other">
+      <outline text="1Password Blog" type="rss" xmlUrl="https://blog.1password.com/rss.xml" htmlUrl="https://blog.1password.com/"/>
+      <outline text="Obsidian Blog" type="rss" xmlUrl="https://obsidian.md/feed.xml" htmlUrl="https://obsidian.md/"/>
+      <outline text="Obsidian Releases" type="rss" xmlUrl="https://github.com/obsidianmd/obsidian-releases/releases.atom" htmlUrl="https://github.com/obsidianmd/obsidian-releases"/>
+      <outline text="Typst Releases" type="rss" xmlUrl="https://github.com/typst/typst/releases.atom" htmlUrl="https://github.com/typst/typst"/>
+      <outline text="Plausible Blog" type="rss" xmlUrl="https://plausible.io/blog/feed.xml" htmlUrl="https://plausible.io/blog/"/>
+      <outline text="FreshRSS Releases" type="rss" xmlUrl="https://github.com/FreshRSS/FreshRSS/releases.atom" htmlUrl="https://github.com/FreshRSS/FreshRSS"/>
+      <outline text="Sublime Text Blog" type="rss" xmlUrl="https://www.sublimetext.com/blog/feed" htmlUrl="https://www.sublimetext.com/blog/"/>
+      <outline text="Home Assistant" type="rss" xmlUrl="https://www.home-assistant.io/atom.xml" htmlUrl="https://www.home-assistant.io/"/>
+      <outline text="Cursor Blog" type="rss" xmlUrl="https://cursor.com/atom.xml" htmlUrl="https://cursor.com/" description="Compiled notes from the team"/>
+      <outline text="Visual Studio Code" type="rss" xmlUrl="https://code.visualstudio.com/feed.xml" htmlUrl="https://code.visualstudio.com/"/>
+      <outline text="Total TypeScript" type="rss" xmlUrl="https://www.totaltypescript.com/rss.xml" htmlUrl="https://www.totaltypescript.com/" description="Learn how to use TypeScript to level-up your applications as a web developer."/>
+      <outline text="IntelliJ IDEA Blog" type="rss" xmlUrl="https://blog.jetbrains.com/idea/feed/" htmlUrl="https://blog.jetbrains.com/" description="Developer Tools for Professionals and Teams"/>
+      <outline text="Factorio Blog" type="rss" xmlUrl="https://www.factorio.com/blog/rss" htmlUrl="https://www.factorio.com/"/>
+    </outline>
+    <outline text="Blogs">
+      <outline text="Andreas Kling" type="rss" xmlUrl="https://awesomekling.github.io/feed.xml" htmlUrl="https://awesomekling.github.io/" description="I like computers!"/>
+      <outline text="Bartosz Ciechanowski" type="rss" xmlUrl="https://ciechanow.ski/atom.xml" htmlUrl="https://ciechanow.ski/"/>
+      <outline text="bookbear express" type="rss" xmlUrl="https://www.avabear.xyz/feed" htmlUrl="https://www.avabear.xyz/"/>
+      <outline text="brr" type="rss" xmlUrl="https://brr.fyi/feed.xml" htmlUrl="https://brr.fyi/" description="Observations on US Antarctic infrastructure."/>
+      <outline text="Drew DeVault" type="rss" xmlUrl="https://drewdevault.com/blog/index.xml" htmlUrl="https://drewdevault.com/"/>
+      <outline text="Eli Bendersky" type="rss" xmlUrl="https://eli.thegreenplace.net/feeds/all.atom.xml" htmlUrl="https://eli.thegreenplace.net/"/>
+      <outline text="Escaping Flatland" type="rss" xmlUrl="https://www.henrikkarlsson.xyz/feed" htmlUrl="https://www.henrikkarlsson.xyz/"/>
+      <outline text="Explained from First Principles" type="rss" xmlUrl="https://explained-from-first-principles.com/feed.xml" htmlUrl="https://explained-from-first-principles.com/"/>
+      <outline text="fasterthanli.me" type="rss" xmlUrl="https://fasterthanli.me/index.xml" htmlUrl="https://fasterthanli.me/" description="amos likes to tinker"/>
+      <outline text="Dan Luu" type="rss" xmlUrl="https://danluu.com/atom.xml" htmlUrl="https://danluu.com/atom/index.xml"/>
+      <outline text="Jake Lazaroff" type="rss" xmlUrl="https://jakelazaroff.com/rss.xml" htmlUrl="https://jakelazaroff.com/"/>
+      <outline text="Jerred's Blog" type="rss" xmlUrl="https://sjer.red/rss.xml" htmlUrl="https://sjer.red/" description="My personal blog"/>
+      <outline text="Joel on Software" type="rss" xmlUrl="https://www.joelonsoftware.com/feed/" htmlUrl="https://www.joelonsoftware.com/"/>
+      <outline text="Julia Evans" type="rss" xmlUrl="https://jvns.ca/atom.xml" htmlUrl="http://jvns.ca/"/>
+      <outline text="Kalzumeus Software" type="rss" xmlUrl="https://www.kalzumeus.com/feed/articles/" htmlUrl="https://www.kalzumeus.com/" description="Patrick McKenzie (patio11)"/>
+      <outline text="Krebs on Security" type="rss" xmlUrl="https://krebsonsecurity.com/feed/" htmlUrl="https://krebsonsecurity.com/" description="In-depth security news and investigation"/>
+      <outline text="Ludicity" type="rss" xmlUrl="https://ludic.mataroa.blog/rss/" htmlUrl="https://ludic.mataroa.blog/"/>
+      <outline text="LWN.net featured content" type="rss" xmlUrl="https://lwn.net/headlines/features_full?key=b082e216d8a86421" htmlUrl="https://lwn.net/Articles/"/>
+      <outline text="LWN.net Weekly Edition" type="rss" xmlUrl="https://lwn.net/headlines/full_weekly?key=b082e216d8a86421" htmlUrl="https://lwn.net/Articles/"/>
+      <outline text="OlegWock" type="rss" xmlUrl="https://sinja.io/rss" htmlUrl="https://sinja.io/"/>
+      <outline text="Peter Norvig" type="rss" xmlUrl="https://norvig.com/rss-feed.xml" htmlUrl="http://www.norvig.com/"/>
+      <outline text="samwho.dev" type="rss" xmlUrl="https://samwho.dev/rss.xml" htmlUrl="https://samwho.dev/"/>
+      <outline text="Sean Goedecke" type="rss" xmlUrl="https://www.seangoedecke.com/rss.xml" htmlUrl="https://seangoedecke.com/"/>
+      <outline text="Simon Willison" type="rss" xmlUrl="https://simonwillison.net/atom/entries/" htmlUrl="http://simonwillison.net/"/>
+      <outline text="Useful Fictions" type="rss" xmlUrl="https://usefulfictions.substack.com/feed" htmlUrl="https://usefulfictions.substack.com/"/>
+    </outline>
+  </body>
+</opml>

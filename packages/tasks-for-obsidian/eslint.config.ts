@@ -32,6 +32,8 @@ export default [
   {
     rules: {
       "no-console": "off",
+      // Hermes doesn't support Array#toSorted()
+      "unicorn/no-array-sort": "off",
       // TODO: move color literals to theme constants and inline styles to StyleSheet
       "react-native/no-color-literals": "off",
       "react-native/no-inline-styles": "off",
