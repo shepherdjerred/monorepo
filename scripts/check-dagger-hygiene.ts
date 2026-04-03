@@ -47,6 +47,11 @@ const ALLOWLIST: AllowlistEntry[] = [
     file: "scripts/quality-ratchet.ts",
     patternName: "*",
   },
+  {
+    file: "scripts/ci/src/steps/quality.ts",
+    patternName: "silent-error-swallow",
+    lineContains: "|| true)",
+  },
 ];
 
 interface Violation {

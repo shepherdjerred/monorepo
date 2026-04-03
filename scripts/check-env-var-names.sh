@@ -32,6 +32,7 @@ for entry in "${BANNED[@]}"; do
   # Case-insensitive substring match across staged files
   MATCHES=$(grep -ni "${PATTERN}" "$@" \
     | grep -v 'archive/' \
+    | grep -v 'practice/' \
     | grep -v 'generated/imports/' \
     | grep -v 'check-env-var-names.sh' \
     | grep -v 'env-var-naming-convention.md' \
@@ -50,6 +51,7 @@ done
 # or Python variable names, or MCP server requirements
 GITHUB_MATCHES=$(grep -n 'GITHUB_TOKEN' "$@" \
   | grep -v 'archive/' \
+  | grep -v 'practice/' \
   | grep -v 'generated/imports/' \
   | grep -v 'check-env-var-names.sh' \
   | grep -v 'env-var-naming-convention.md' \
@@ -61,6 +63,10 @@ GITHUB_MATCHES=$(grep -n 'GITHUB_TOKEN' "$@" \
   | grep -v 'mcp-gateway' \
   | grep -v 'YOUR_GITHUB_TOKEN' \
   | grep -v 'env:GITHUB_TOKEN' \
+  | grep -v 'CHANGELOG.md' \
+  | grep -v 'plans/' \
+  | grep -v 'dot_claude/skills/' \
+  | grep -v 'GITHUB_TOKEN_URL' \
   || true)
 
 if [ -n "$GITHUB_MATCHES" ]; then

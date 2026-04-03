@@ -18,10 +18,9 @@ func ParseDHCPStaticList(raw string) []DHCPStaticEntry {
 		return nil
 	}
 
-	var entries []DHCPStaticEntry
-
 	// Split on '<' to get entries; first element is empty.
 	parts := strings.Split(raw, "<")
+	entries := make([]DHCPStaticEntry, 0, len(parts))
 	for _, part := range parts {
 		if part == "" {
 			continue
@@ -116,9 +115,8 @@ func ParseVTSRuleList(raw string) []PortForwardEntry {
 		return nil
 	}
 
-	var entries []PortForwardEntry
-
 	parts := strings.Split(raw, "<")
+	entries := make([]PortForwardEntry, 0, len(parts))
 	for _, part := range parts {
 		if part == "" {
 			continue

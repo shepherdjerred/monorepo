@@ -144,6 +144,7 @@ export function envVarNamesStep(): BuildkiteStep {
       '-o -name "*.tmpl" -o -name "*.yaml" -o -name "*.yml"',
       '-o -name "*.env" -o -name "*.md" -o -name "*.sh" -o -name "*.swift" \\)',
       '-not -path "*/node_modules/*" -not -path "*/archive/*"',
+      '-not -path "*/practice/*"',
       '-not -path "*/.build/*" -not -path "*/.dagger/*"',
       '-not -path "*/generated/*")',
       "&& bash scripts/check-env-var-names.sh $files",

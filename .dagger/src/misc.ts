@@ -82,6 +82,7 @@ export function caddyfileValidateHelper(source: Directory): Container {
     .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES })
     .withExec(["bun", "install", "--frozen-lockfile"])
     .withWorkdir("/workspace/packages/homelab/src/cdk8s")
+    .withExec(["bun", "install", "--frozen-lockfile"])
     .withExec([
       "sh",
       "-c",
