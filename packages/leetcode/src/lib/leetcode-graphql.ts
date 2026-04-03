@@ -1,5 +1,5 @@
-const CSRF_TOKEN = process.env.CSRF_TOKEN!;
-const LEETCODE_SESSION = process.env.LEETCODE_SESSION!;
+const CSRF_TOKEN = process.env['CSRF_TOKEN']!;
+const LEETCODE_SESSION = process.env['LEETCODE_SESSION']!;
 
 if (!CSRF_TOKEN || !LEETCODE_SESSION) {
   console.error("Missing CSRF_TOKEN or LEETCODE_SESSION in .env");
@@ -60,7 +60,6 @@ export class LeetCodeClient {
     await this.rateLimit();
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      const start = performance.now();
       let resp: Response;
       try {
         resp = await fetch("https://leetcode.com/graphql/", {
@@ -82,8 +81,6 @@ export class LeetCodeClient {
           `Network error after ${maxRetries + 1} attempts: ${msg}`,
         );
       }
-
-      const elapsed = Math.round(performance.now() - start);
 
       if (resp.status === 200) {
         const json = (await resp.json()) as QueryResult<T>;

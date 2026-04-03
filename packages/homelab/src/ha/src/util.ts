@@ -260,17 +260,14 @@ export function startRoombaWithVerification(
 /**
  * Wraps a media object as the `media` parameter for `play_media`.
  *
- * The generated types from @digital-alchemy/type-writer incorrectly declare
- * `media` as `string`, but Home Assistant expects an object with
- * `media_content_id` and `media_content_type`. Passing a JSON string causes
- * HA's `_promote_media_fields()` to skip field promotion, failing schema
- * validation and leaving the websocket promise permanently pending.
+ * Home Assistant expects an object with `media_content_id` and
+ * `media_content_type`. The local generated types now declare the correct
+ * object shape for the `media` parameter.
  */
 export function mediaParam(media: {
   media_content_id: string;
   media_content_type: string;
-}): string {
-  // @ts-expect-error HA expects object but generated types say string
+}): { media_content_id: string; media_content_type: string } {
   return media;
 }
 

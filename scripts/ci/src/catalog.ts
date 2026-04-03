@@ -124,6 +124,27 @@ export const DEPLOY_SITES: DeploySite[] = [
     buildCmd: "bun run astro build",
     distDir: "packages/cooklang-rich-preview/dist",
   },
+  {
+    bucket: "scout-frontend",
+    name: "scout-for-lol frontend",
+    buildDir: "packages/scout-for-lol/packages/frontend",
+    buildCmd: "bun run build",
+    distDir: "packages/scout-for-lol/packages/frontend/dist",
+  },
+  {
+    bucket: "better-skill-capped",
+    name: "better-skill-capped",
+    buildDir: "packages/better-skill-capped",
+    buildCmd: "bun run build",
+    distDir: "packages/better-skill-capped/dist",
+  },
+  {
+    bucket: "discord-plays-pokemon-docs",
+    name: "discord-plays-pokemon docs",
+    buildDir: "packages/discord-plays-pokemon",
+    buildCmd: "", // custom build via mkdocs, not bun
+    distDir: "packages/discord-plays-pokemon/site",
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -181,6 +202,9 @@ export const PACKAGE_TO_SITE: Record<string, string> = {
   clauderon: "clauderon",
   webring: "webring",
   "cooklang-rich-preview": "cook",
+  "scout-for-lol": "scout-frontend",
+  "better-skill-capped": "better-skill-capped",
+  "discord-plays-pokemon": "discord-plays-pokemon-docs",
 };
 
 // ---------------------------------------------------------------------------

@@ -63,6 +63,7 @@ export function extractConstraints(html: string): string | null {
   const match = html.match(
     /<strong>Constraints:<\/strong>\s*<\/p>\s*<ul>([\s\S]*?)<\/ul>/i,
   );
-  if (!match) return null;
-  return htmlToText(match[1]);
+  const captured = match?.[1];
+  if (!captured) return null;
+  return htmlToText(captured);
 }

@@ -138,7 +138,6 @@ function main() {
   const insertAll = db.transaction(() => {
     for (const file of files) {
       try {
-        const raw = Bun.file(join(PROBLEMS_DIR, file)).json() as unknown;
         // Bun.file().json() returns a promise in some contexts, but in sync transaction we need sync read
         const text = require("fs").readFileSync(
           join(PROBLEMS_DIR, file),
@@ -146,23 +145,23 @@ function main() {
         );
         const q = JSON.parse(text) as Record<string, unknown>;
 
-        const questionId = Number(q.questionId);
-        const frontendId = String(q.questionFrontendId ?? "");
-        const title = String(q.title ?? "");
-        const slug = String(q.titleSlug ?? "");
-        const difficulty = String(q.difficulty ?? "");
-        const paidOnly = q.isPaidOnly ? 1 : 0;
-        const likes = Number(q.likes ?? 0);
-        const dislikes = Number(q.dislikes ?? 0);
-        const content = q.content ? String(q.content) : null;
-        const hints = q.hints ? JSON.stringify(q.hints) : null;
-        const exampleTestcases = q.exampleTestcaseList
-          ? JSON.stringify(q.exampleTestcaseList)
+        const questionId = Number(q['questionId']);
+        const frontendId = String(q['questionFrontendId'] ?? "");
+        const title = String(q['title'] ?? "");
+        const slug = String(q['titleSlug'] ?? "");
+        const difficulty = String(q['difficulty'] ?? "");
+        const paidOnly = q['isPaidOnly'] ? 1 : 0;
+        const likes = Number(q['likes'] ?? 0);
+        const dislikes = Number(q['dislikes'] ?? 0);
+        const content = q['content'] ? String(q['content']) : null;
+        const hints = q['hints'] ? JSON.stringify(q['hints']) : null;
+        const exampleTestcases = q['exampleTestcaseList']
+          ? JSON.stringify(q['exampleTestcaseList'])
           : null;
-        const metaData = q.metaData ? String(q.metaData) : null;
-        const stats = q.stats ? String(q.stats) : null;
-        const similarQuestions = q.similarQuestions
-          ? String(q.similarQuestions)
+        const metaData = q['metaData'] ? String(q['metaData']) : null;
+        const stats = q['stats'] ? String(q['stats']) : null;
+        const similarQuestions = q['similarQuestions']
+          ? String(q['similarQuestions'])
           : null;
 
         insertProblem.run(
@@ -184,7 +183,7 @@ function main() {
         );
 
         // Topic tags
-        const topicTags = q.topicTags as Array<{
+        const topicTags = q['topicTags'] as Array<{
           name: string;
           slug: string;
         }> | null;
@@ -197,7 +196,7 @@ function main() {
         }
 
         // Code snippets
-        const snippets = q.codeSnippets as Array<{
+        const snippets = q['codeSnippets'] as Array<{
           lang: string;
           langSlug: string;
           code: string;
@@ -209,7 +208,7 @@ function main() {
         }
 
         // Editorial
-        const solution = q.solution as {
+        const solution = q['solution'] as {
           content: string | null;
           canSeeDetail: boolean;
           paidOnly: boolean;
@@ -224,9 +223,9 @@ function main() {
         }
 
         // Company tags
-        if (q.companyTagStatsV2 && typeof q.companyTagStatsV2 === "string") {
+        if (q['companyTagStatsV2'] && typeof q['companyTagStatsV2'] === "string") {
           try {
-            const companyData = JSON.parse(q.companyTagStatsV2) as Record<
+            const companyData = JSON.parse(q['companyTagStatsV2']) as Record<
               string,
               Array<{
                 taggedByAdmin: boolean;

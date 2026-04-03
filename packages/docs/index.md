@@ -19,6 +19,7 @@ AI-maintained knowledge base for the monorepo.
 - [Env Var Naming Convention](decisions/2026-03-27_env-var-naming-convention.md) - Canonical env var names, 1Password field = K8s key = env var convention, banned names linter
 - [rules_bun2 Architecture](decisions/2026-03-20_rules-bun2-architecture.md) - Monolithic bun install for Bazel: 6 approaches tried, what worked, what failed, and why
 - [Kueue for Buildkite Resource Management](decisions/2026-03-18_kueue-buildkite-resource-management.md) - Why ResourceQuota caused etcd meltdowns and how Kueue replaces it with Job suspension
+- [Dagger Audit: Current vs Plans](decisions/2026-04-02_dagger-audit-current-vs-plans.md) - Full audit of Dagger CI: 27 findings status, lost features, implementation plan
 - [1Password Deduplication](decisions/2026-03-08_1password-deduplication.md) - Deduplicating 1Password secret references
 
 ## Plans

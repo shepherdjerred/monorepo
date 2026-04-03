@@ -66,10 +66,14 @@ async function main() {
     try {
       const vectors = await embedder.embed(textBatch);
       for (let i = 0; i < vectors.length; i++) {
+        const slug = slugBatch[i];
+        const vec = vectors[i];
+        const text = textBatch[i];
+        if (slug === undefined || vec === undefined || text === undefined) continue;
         searchDb.addVector(
-          slugBatch[i],
-          new Float32Array(vectors[i]),
-          textBatch[i],
+          slug,
+          new Float32Array(vec),
+          text,
         );
         vectorsIndexed++;
       }

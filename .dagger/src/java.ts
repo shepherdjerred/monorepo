@@ -42,3 +42,21 @@ export function mavenTestHelper(pkgDir: Directory): Container {
       "-Dmaven.wagon.http.readTimeout=30000",
     ]);
 }
+
+/** Run `mvn verify` to trigger JaCoCo coverage report generation. */
+export function mavenCoverageHelper(pkgDir: Directory): Container {
+  return dag
+    .container()
+    .from(MAVEN_IMAGE)
+    .withMountedCache("/root/.m2/repository", dag.cacheVolume(MAVEN_CACHE))
+    .withWorkdir("/workspace")
+    .withDirectory("/workspace", pkgDir, {
+      exclude: [".git", "target"],
+    })
+    .withExec([
+      "mvn",
+      "verify",
+      "-Dmaven.wagon.http.connectionTimeout=10000",
+      "-Dmaven.wagon.http.readTimeout=30000",
+    ]);
+}

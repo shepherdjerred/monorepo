@@ -43,10 +43,51 @@ function tofuStackStep(stack: string): BuildkiteStep {
   };
 }
 
+function tofuPlanStep(stack: string): BuildkiteStep {
+  const label = TOFU_STACK_LABELS[stack] ?? stack;
+  return {
+    label: `:terraform: Plan ${label}`,
+    key: `tofu-plan-${stack}`,
+    command:
+      [
+        `dagger call tofu-plan --source . --stack ${stack}`,
+        `--aws-access-key-id env:SEAWEEDFS_ACCESS_KEY_ID`,
+        `--aws-secret-access-key env:SEAWEEDFS_SECRET_ACCESS_KEY`,
+        `--gh-token env:TOFU_GITHUB_TOKEN`,
+        `--cloudflare-account-id env:CLOUDFLARE_ACCOUNT_ID`,
+        stack === "cloudflare"
+          ? `--cloudflare-api-token env:CLOUDFLARE_API_TOKEN`
+          : "",
+      ]
+        .filter(Boolean)
+        .join(" ") + DRYRUN_FLAG,
+    timeout_in_minutes: 15,
+    concurrency: 1,
+    concurrency_group: `monorepo/tofu-plan-${stack}`,
+    retry: RETRY,
+    env: DAGGER_ENV,
+    plugins: [
+      k8sPlugin({
+        cpu: "250m",
+        memory: "512Mi",
+        secrets: ["buildkite-argocd-token"],
+      }),
+    ],
+  };
+}
+
 export function homelabTofuGroup(): BuildkiteGroup {
   return {
     group: ":terraform: Homelab Tofu",
     key: "homelab-tofu",
     steps: TOFU_STACKS.map(tofuStackStep),
+  };
+}
+
+export function homelabTofuPlanGroup(): BuildkiteGroup {
+  return {
+    group: ":terraform: Homelab Tofu Plan",
+    key: "homelab-tofu-plan",
+    steps: TOFU_STACKS.map(tofuPlanStep),
   };
 }

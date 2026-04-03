@@ -67,6 +67,68 @@ export function homelabImagesGroup(): BuildkiteGroup {
   };
 }
 
+/** Images that expose a health endpoint suitable for smoke testing. */
+const SMOKE_TEST_TARGETS: Record<string, { port: number; healthPath: string }> =
+  {
+    birmel: { port: 8000, healthPath: "/" },
+    "scout-for-lol": { port: 8000, healthPath: "/" },
+    "starlight-karma-bot": { port: 8000, healthPath: "/" },
+    "discord-plays-pokemon": { port: 8000, healthPath: "/" },
+    "tasknotes-server": { port: 8000, healthPath: "/" },
+  };
+
+function smokeTestStep(img: ImageTarget): BuildkiteStep | null {
+  const cfg = SMOKE_TEST_TARGETS[img.name];
+  if (!cfg) return null;
+  const pkg = img.package ?? img.name;
+  const deps = WORKSPACE_DEPS[pkg] ?? [];
+  const depFlags = deps
+    .flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`])
+    .join(" ");
+  const cmd = [
+    `dagger call smoke-test`,
+    `--image '(build-image --pkg-dir ./packages/${pkg} --pkg ${img.name} ${depFlags})'`,
+    `--port ${cfg.port}`,
+    `--health-path ${cfg.healthPath}`,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return {
+    label: `:heartbeat: Smoke ${img.name}`,
+    key: `smoke-${safeKey(img.name)}`,
+    if: MAIN_ONLY,
+    depends_on: `push-${safeKey(img.name)}`,
+    command: cmd,
+    timeout_in_minutes: 5,
+    retry: RETRY,
+    env: DAGGER_ENV,
+    soft_fail: true,
+    plugins: [
+      k8sPlugin({
+        cpu: "100m",
+        memory: "256Mi",
+      }),
+    ],
+  };
+}
+
+export function publishImagesWithSmokeGroup(
+  images: readonly ImageTarget[] = IMAGE_PUSH_TARGETS,
+): BuildkiteGroup {
+  const steps: BuildkiteStep[] = [];
+  for (const img of images) {
+    steps.push(imagePushStep(img));
+    const smoke = smokeTestStep(img);
+    if (smoke) steps.push(smoke);
+  }
+  return {
+    group: ":package: Publish Images",
+    key: "publish-images",
+    steps,
+  };
+}
+
 export function allPushKeys(images: readonly ImageTarget[]): string[] {
   return images.map((img) => `push-${safeKey(img.name)}`);
 }

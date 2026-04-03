@@ -121,9 +121,12 @@ export class SearchDb {
     const { slugs, vectors } = this.loadVectorCache();
     const results: VectorResult[] = [];
     for (let i = 0; i < vectors.length; i++) {
+      const slug = slugs[i];
+      const vec = vectors[i];
+      if (slug === undefined || vec === undefined) continue;
       results.push({
-        slug: slugs[i],
-        score: dotProduct(queryVector, vectors[i]),
+        slug,
+        score: dotProduct(queryVector, vec),
       });
     }
     results.sort((a, b) => b.score - a.score);
@@ -153,7 +156,7 @@ export class SearchDb {
 function dotProduct(a: Float32Array, b: Float32Array): number {
   let sum = 0;
   for (let i = 0; i < a.length; i++) {
-    sum += a[i] * b[i];
+    sum += (a[i] ?? 0) * (b[i] ?? 0);
   }
   return sum;
 }

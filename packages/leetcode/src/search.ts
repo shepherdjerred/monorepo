@@ -18,11 +18,13 @@ function parseArgs() {
   const queryParts: string[] = [];
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === "--semantic") mode = "semantic";
-    else if (args[i] === "--keyword") mode = "keyword";
-    else if (args[i] === "--hybrid") mode = "hybrid";
-    else if (args[i] === "--limit" && args[i + 1]) limit = parseInt(args[++i]);
-    else queryParts.push(args[i]);
+    const arg = args[i];
+    if (arg === undefined) continue;
+    if (arg === "--semantic") mode = "semantic";
+    else if (arg === "--keyword") mode = "keyword";
+    else if (arg === "--hybrid") mode = "hybrid";
+    else if (arg === "--limit" && args[i + 1]) limit = parseInt(args[++i] ?? "10");
+    else queryParts.push(arg);
   }
 
   const query = queryParts.join(" ");
@@ -58,7 +60,12 @@ async function main() {
       console.error("Embedding model not available. Use --keyword mode.");
       process.exit(1);
     }
-    const [queryVector] = await embedder.embed([query]);
+    const embedResult = await embedder.embed([query]);
+    const queryVector = embedResult[0];
+    if (!queryVector) {
+      console.error("Failed to generate embedding for query.");
+      process.exit(1);
+    }
     const vectorResults = searchDb.vectorSearch(
       new Float32Array(queryVector),
       limit,
@@ -77,20 +84,27 @@ async function main() {
     let vectorResults: Array<{ slug: string; score: number }> = [];
 
     if (await embedder.isAvailable()) {
-      const [queryVector] = await embedder.embed([query]);
-      vectorResults = searchDb.vectorSearch(new Float32Array(queryVector), 30);
+      const embedResult = await embedder.embed([query]);
+      const queryVector = embedResult[0];
+      if (queryVector) {
+        vectorResults = searchDb.vectorSearch(new Float32Array(queryVector), 30);
+      }
     }
 
     // RRF merge (k=60)
     const K = 60;
     const scores = new Map<string, number>();
     for (let i = 0; i < fts.length; i++) {
-      scores.set(fts[i].slug, (scores.get(fts[i].slug) ?? 0) + 1 / (K + i + 1));
+      const ftsItem = fts[i];
+      if (!ftsItem) continue;
+      scores.set(ftsItem.slug, (scores.get(ftsItem.slug) ?? 0) + 1 / (K + i + 1));
     }
     for (let i = 0; i < vectorResults.length; i++) {
+      const vecItem = vectorResults[i];
+      if (!vecItem) continue;
       scores.set(
-        vectorResults[i].slug,
-        (scores.get(vectorResults[i].slug) ?? 0) + 1 / (K + i + 1),
+        vecItem.slug,
+        (scores.get(vecItem.slug) ?? 0) + 1 / (K + i + 1),
       );
     }
 
@@ -135,6 +149,7 @@ async function main() {
     console.log(`\n${results.length} results for "${query}" (${mode} mode):\n`);
     for (let i = 0; i < results.length; i++) {
       const r = results[i];
+      if (!r) continue;
       const dc =
         r.difficulty === "Easy"
           ? "\x1b[32m"

@@ -115,6 +115,56 @@ export function tofuApplyHelper(
   return container.withExec(["tofu", "apply", "-auto-approve", "-input=false"]);
 }
 
+/** Run tofu init + plan on a stack (read-only — exit code 2 means changes detected). */
+export function tofuPlanHelper(
+  source: Directory,
+  stack: string,
+  awsAccessKeyId: Secret,
+  awsSecretAccessKey: Secret,
+  ghToken: Secret,
+  cloudflareAccountId: Secret | null = null,
+  cloudflareApiToken: Secret | null = null,
+  dryrun = false,
+): Container {
+  let container = dag
+    .container()
+    .from(TOFU_IMAGE)
+    .withWorkdir("/workspace")
+    .withDirectory(
+      "/workspace",
+      source.directory(`packages/homelab/src/tofu/${stack}`),
+    )
+    .withSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyId)
+    .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey)
+    .withSecretVariable("GH_TOKEN", ghToken);
+
+  if (cloudflareAccountId != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_cloudflare_account_id",
+      cloudflareAccountId,
+    );
+  }
+
+  if (cloudflareApiToken != null) {
+    container = container.withSecretVariable(
+      "CLOUDFLARE_API_TOKEN",
+      cloudflareApiToken,
+    );
+  }
+
+  container = container.withExec(["tofu", "init", "-input=false"]);
+
+  if (dryrun) {
+    return container.withExec(["echo", "DRYRUN: would run tofu plan"]);
+  }
+  // -detailed-exitcode: exit 0 = no changes, exit 2 = changes detected (not an error)
+  return container.withExec([
+    "sh",
+    "-c",
+    `tofu plan -input=false -detailed-exitcode; rc=$?; if [ $rc -eq 2 ]; then echo "Changes detected"; exit 0; elif [ $rc -ne 0 ]; then exit $rc; fi`,
+  ]);
+}
+
 // ---------------------------------------------------------------------------
 // NPM publish
 // ---------------------------------------------------------------------------

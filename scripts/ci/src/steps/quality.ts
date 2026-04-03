@@ -116,3 +116,12 @@ export function semgrepScanStep(): BuildkiteStep {
     artifactPaths: ["/tmp/semgrep.txt"],
   });
 }
+
+export function caddyfileValidateStep(): BuildkiteStep {
+  return daggerStep({
+    label: ":globe_with_meridians: Caddyfile Validate",
+    key: "caddyfile-validate",
+    daggerCmd: "dagger call caddyfile-validate --source .",
+    timeoutMinutes: 10,
+  });
+}

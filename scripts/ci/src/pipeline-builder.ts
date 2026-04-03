@@ -21,18 +21,19 @@ import {
   trivyScanStep,
   semgrepScanStep,
   daggerHygieneStep,
+  caddyfileValidateStep,
 } from "./steps/quality.ts";
 import { codeReviewStep } from "./steps/code-review.ts";
 import { releaseStep } from "./steps/release.ts";
 import {
-  publishImagesGroup,
+  publishImagesWithSmokeGroup,
   homelabImagesGroup,
   allPushKeys,
 } from "./steps/images.ts";
 import { publishNpmGroup } from "./steps/npm.ts";
 import { deploySitesGroup, filterSites } from "./steps/sites.ts";
 import { homelabHelmGroup } from "./steps/helm.ts";
-import { homelabTofuGroup } from "./steps/tofu.ts";
+import { homelabTofuGroup, homelabTofuPlanGroup } from "./steps/tofu.ts";
 import { argoCdSyncStep, argoCdHealthStep } from "./steps/argocd.ts";
 import { clauderonReleaseGroup } from "./steps/clauderon.ts";
 import { cooklangReleaseGroup } from "./steps/cooklang.ts";
@@ -78,6 +79,11 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
   steps.push(trivyScanStep());
   steps.push(semgrepScanStep());
 
+  // --- Caddyfile validation (only when homelab changes) ---
+  if (affected.buildAll || affected.homelabChanged) {
+    steps.push(caddyfileValidateStep());
+  }
+
   // --- Code Review (PRs only) ---
   const prNumber = process.env["BUILDKITE_PULL_REQUEST"] ?? "false";
   if (prNumber !== "false" && prNumber !== "" && prNumber !== undefined) {
@@ -100,11 +106,11 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     // Release (always on main when there are releasable changes)
     steps.push(releaseStep());
 
-    // --- Publish app images ---
+    // --- Publish app images (with smoke tests for images that have health endpoints) ---
     const hasImages = affected.buildAll || affected.hasImagePackages.size > 0;
     let appPushKeys: string[] = [];
     if (hasImages) {
-      steps.push(publishImagesGroup(IMAGE_PUSH_TARGETS));
+      steps.push(publishImagesWithSmokeGroup(IMAGE_PUSH_TARGETS));
       appPushKeys = allPushKeys(IMAGE_PUSH_TARGETS);
     }
 
@@ -134,6 +140,11 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     // --- Deploy ArgoCD sync (for app images) ---
     if (hasImages) {
       steps.push(argoCdSyncStep(appPushKeys));
+    }
+
+    // --- Homelab Tofu Plan (runs on PRs for early feedback) ---
+    if (affected.buildAll || affected.homelabChanged) {
+      steps.push(homelabTofuPlanGroup());
     }
 
     // --- Homelab release track ---

@@ -35,6 +35,10 @@ export const SHELLCHECK_IMAGE = "koalaman/shellcheck-alpine:v0.10.0";
 export const MAVEN_IMAGE = "maven:3.9.9-eclipse-temurin-21";
 // renovate: datasource=docker depName=texlive/texlive
 export const TEXLIVE_IMAGE = "texlive/texlive:TL2024-historic";
+// renovate: datasource=docker depName=caddy
+export const CADDY_IMAGE = "caddy:2.9.1-alpine";
+// renovate: datasource=docker depName=python
+export const PYTHON_IMAGE = "python:3.13-slim";
 
 // Pinned Bun version for containers that install Bun manually (e.g. Playwright)
 // renovate: datasource=npm depName=bun
