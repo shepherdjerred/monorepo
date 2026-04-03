@@ -42,6 +42,17 @@ function formatRelativeTime(isoTimestamp: string): string {
   return date.toLocaleDateString();
 }
 
+// Format display with subdirectory
+function formatRepoDisplay(repo: RecentRepoDto): string {
+  const repoName = extractRepoName(repo.repo_path);
+
+  if (!repo.subdirectory || repo.subdirectory === "") {
+    return repoName;
+  }
+
+  return `${repoName} › ${repo.subdirectory}`;
+}
+
 export function RepositoryPathSelector({
   value,
   onChange,
@@ -54,18 +65,6 @@ export function RepositoryPathSelector({
   });
   const [showDropdown, setShowDropdown] = useState(false);
   const [showBrowser, setShowBrowser] = useState(false);
-
-  // Fetch recent repos on mount
-  // Format display with subdirectory
-  const formatRepoDisplay = (repo: RecentRepoDto): string => {
-    const repoName = extractRepoName(repo.repo_path);
-
-    if (!repo.subdirectory || repo.subdirectory === "") {
-      return repoName;
-    }
-
-    return `${repoName} › ${repo.subdirectory}`;
-  };
 
   const handleSelectRecentRepo = (repo: RecentRepoDto) => {
     // Combine repo_path and subdirectory to get full path

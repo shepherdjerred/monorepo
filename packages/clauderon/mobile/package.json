@@ -47,6 +47,7 @@
     "@react-native/metro-config": "0.83.1",
     "@react-native/typescript-config": "0.83.1",
     "@rnx-kit/jest-preset": "^0.1.17",
+    "@shepherdjerred/eslint-config": "file:../../eslint-config",
     "@types/react": "~19.2.7",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/react-test-renderer": "^19.1.0",

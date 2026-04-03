@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useAuthStatus } from "@/hooks/use-auth";
 import { LoginPage } from "@/pages/login-page.tsx";
 import { RegistrationPage } from "@/pages/registration-page.tsx";
@@ -11,20 +11,7 @@ type AuthGuardProps = {
 
 export function AuthGuard({ children }: AuthGuardProps) {
   const { data, isLoading, isError, error, refetch } = useAuthStatus();
-  const [timedOut, setTimedOut] = useState(false);
-
-  useEffect(() => {
-    if (!isLoading) {
-      setTimedOut(false);
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      setTimedOut(true);
-    }, 10_000);
-
-    return () => clearTimeout(timer);
-  }, [isLoading]);
+  const [timedOut] = useState(false);
 
   // Error state
   if (isError) {

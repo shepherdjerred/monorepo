@@ -9,11 +9,11 @@ Sentry.init({
 
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc } from "firebase/firestore/lite";
-import { writeFileSync, mkdirSync } from "node:fs";
-import { dirname } from "node:path";
+import path from "node:path";
 import { createHash, createHmac } from "node:crypto";
+import { z } from "zod/v4";
 
-interface S3UploadConfig {
+type S3UploadConfig = {
   accessKeyId: string;
   secretAccessKey: string;
   sessionToken?: string;
@@ -22,7 +22,7 @@ interface S3UploadConfig {
   key: string;
   region: string;
   forcePathStyle: boolean;
-}
+};
 
 function sha256Hex(value: string | Uint8Array): string {
   return createHash("sha256").update(value).digest("hex");
@@ -33,7 +33,7 @@ function hmacSha256(key: Uint8Array | string, value: string): Buffer {
 }
 
 function formatAmzDate(date: Date): string {
-  return date.toISOString().replace(/[:-]|\.\d{3}/g, "");
+  return date.toISOString().replaceAll(/[:-]|\.\d{3}/g, "");
 }
 
 function toDateStamp(amzDate: string): string {
@@ -81,12 +81,12 @@ async function uploadToS3(config: S3UploadConfig, body: string): Promise<void> {
     "x-amz-date": amzDate,
   };
 
-  if (config.sessionToken) {
+  if (config.sessionToken !== undefined && config.sessionToken !== "") {
     headers["x-amz-security-token"] = config.sessionToken;
   }
 
-  const sortedHeaderEntries = Object.entries(headers).sort(([left], [right]) =>
-    left.localeCompare(right),
+  const sortedHeaderEntries = Object.entries(headers).toSorted(
+    ([left], [right]) => left.localeCompare(right),
   );
   const canonicalHeaders = sortedHeaderEntries
     .map(([key, value]) => `${key}:${value}\n`)
@@ -152,6 +152,7 @@ async function main() {
   const s3Bucket = Bun.env["S3_BUCKET_NAME"];
 
   const firebaseConfig = {
+    // eslint-disable-next-line no-secrets/no-secrets -- public Firebase web API key, client-side safe
     apiKey: "AIzaSyAgHWuN2OEx5R827dHlKO9HsOuBwZ017n0",
     authDomain: "sc-site-a8f24.firebaseapp.com",
     databaseURL: "https://sc-site-a8f24.firebaseio.com",
@@ -165,11 +166,9 @@ async function main() {
   const db = getFirestore(app);
   const docRef = doc(db, "content-location/lol-content-location");
   const docSnap = await getDoc(docRef);
-  const data = docSnap.data() as { dumpUrl: string } | undefined;
-  const url = data?.dumpUrl;
-  if (!url) {
-    throw new Error("dumpUrl not found in Firestore document");
-  }
+  const firestoreSchema = z.object({ dumpUrl: z.string() });
+  const data = firestoreSchema.parse(docSnap.data());
+  const url = data.dumpUrl;
 
   console.log(`Found manifest URL: ${url}`);
   const jsonResponse = await fetch(url);

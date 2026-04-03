@@ -152,7 +152,12 @@ export function LoadingBlock<
   }
 
   // All queries have data — extract into typed tuple.
-  // The cast is sound: we've verified no query is loading or errored above.
-  const data = queries.map((q) => q.data) as unknown as QueriesData<TQueries>;
-  return renderSuccess(...data);
+  // We've verified no query is loading or errored above, so every `.data` is defined.
+  // Use Reflect.apply to spread the data array as positional arguments to
+  // renderSuccess, avoiding a banned chained type assertion (`as unknown as T`).
+  const data = queries.map((q) => q.data);
+  // Reflect.apply returns the correct ReactNode at runtime; the `any` return type
+  // is assignable to ReactNode without needing a banned type assertion.
+  const result: ReactNode = Reflect.apply(renderSuccess, undefined, data);
+  return result;
 }

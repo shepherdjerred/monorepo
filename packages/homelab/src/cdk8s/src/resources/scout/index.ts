@@ -94,8 +94,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
       ),
       key: "DISCORD_TOKEN",
     }),
-    // TODO: rename to RIOT_API_KEY after container rebuild (code change in packages/scout-for-lol)
-    RIOT_API_TOKEN: EnvValue.fromSecretValue({
+    RIOT_API_KEY: EnvValue.fromSecretValue({
       secret: Secret.fromSecretName(
         chart,
         "riot-api-key-secret",

@@ -6,7 +6,7 @@ export function useSessions() {
   return useQuery<Session[]>({
     queryKey: ["sessions"],
     queryFn: () => apiClient.listSessions(),
-    staleTime: 5_000,
+    staleTime: 5000,
     refetchInterval: 30_000,
   });
 }

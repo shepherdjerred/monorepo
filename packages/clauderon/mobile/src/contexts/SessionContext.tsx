@@ -23,7 +23,7 @@ const SessionContext = createContext<SessionContextValue | null>(null);
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const { daemonUrl } = useSettings();
-  const [sessions, setSessions] = useState<Map<string, Session>>(new Map());
+  const [sessions, setSessions] = useState(new Map<string, Session>());
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 

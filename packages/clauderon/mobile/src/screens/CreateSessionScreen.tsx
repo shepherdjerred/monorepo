@@ -39,8 +39,8 @@ export function CreateSessionScreen({ navigation }: CreateSessionScreenProps) {
 
   const [repoPath, setRepoPath] = useState("");
   const [initialPrompt, setInitialPrompt] = useState("");
-  const [backend, setBackend] = useState<BackendType>(BackendType.Docker);
-  const [agent, setAgent] = useState<AgentType>(AgentType.ClaudeCode);
+  const [backend, setBackend] = useState(BackendType.Docker);
+  const [agent, setAgent] = useState(AgentType.ClaudeCode);
   const [planMode, setPlanMode] = useState(true);
   const [skipChecks, setSkipChecks] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);

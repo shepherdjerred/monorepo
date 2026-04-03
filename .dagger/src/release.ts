@@ -470,7 +470,14 @@ export function cooklangPushHelper(
     "-c",
     `for f in main.js manifest.json styles.css; do
         if [ -f "$f" ]; then
-          existing_sha="$(gh api repos/shepherdjerred/cooklang-obsidian-releases/contents/$f --jq .sha || echo '')"
+          # Get existing SHA — 404 means file is new (no SHA needed), other errors are real failures
+          existing_sha=""
+          http_code="$(gh api repos/shepherdjerred/cooklang-obsidian-releases/contents/$f --jq .sha 2>&1)" && existing_sha="$http_code" || {
+            case "$http_code" in
+              *"404"*|*"Not Found"*) existing_sha="" ;;
+              *) echo "Failed to check $f: $http_code" >&2; exit 1 ;;
+            esac
+          }
           gh api repos/shepherdjerred/cooklang-obsidian-releases/contents/$f \
             --method PUT \
             -f message="chore: update $f v${version}" \

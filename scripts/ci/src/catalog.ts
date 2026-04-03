@@ -107,7 +107,7 @@ export const DEPLOY_SITES: DeploySite[] = [
     bucket: "resume",
     name: "resume",
     buildDir: "packages/resume",
-    buildCmd: "",
+    buildCmd: "true", // pre-built by latexBuild Dagger function; deploy syncs existing files
     distDir: "packages/resume",
   },
   {
@@ -138,13 +138,8 @@ export const DEPLOY_SITES: DeploySite[] = [
     buildCmd: "bun run build",
     distDir: "packages/better-skill-capped/dist",
   },
-  {
-    bucket: "discord-plays-pokemon-docs",
-    name: "discord-plays-pokemon docs",
-    buildDir: "packages/discord-plays-pokemon",
-    buildCmd: "", // custom build via mkdocs, not bun
-    distDir: "packages/discord-plays-pokemon/site",
-  },
+  // discord-plays-pokemon docs uses MkDocs (Python), not bun — deployed via
+  // a dedicated mkdocs-build-and-deploy step, not the generic deploy-site function.
 ];
 
 // ---------------------------------------------------------------------------
@@ -204,7 +199,7 @@ export const PACKAGE_TO_SITE: Record<string, string> = {
   "cooklang-rich-preview": "cook",
   "scout-for-lol": "scout-frontend",
   "better-skill-capped": "better-skill-capped",
-  "discord-plays-pokemon": "discord-plays-pokemon-docs",
+  // discord-plays-pokemon docs deployed via dedicated mkdocs step, not deploy-site
 };
 
 // ---------------------------------------------------------------------------

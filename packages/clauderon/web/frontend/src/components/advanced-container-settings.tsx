@@ -1,6 +1,6 @@
 import type { SessionModel } from "@clauderon/client";
 import type { AgentType } from "@clauderon/shared";
-import { BackendType } from "@clauderon/shared";
+import type { BackendType } from "@clauderon/shared";
 import { Label } from "@/components/ui/label";
 
 export type SessionFormData = {

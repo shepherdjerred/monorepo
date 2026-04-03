@@ -1,7 +1,6 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import type { Session, SessionHealthReport } from "@clauderon/client";
-import { SessionStatus } from "@clauderon/shared";
-import type { MergeMethod } from "@clauderon/shared";
+import { SessionStatus, type MergeMethod } from "@clauderon/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { SessionCard } from "./session-card.tsx";
 import { ThemeToggle } from "./theme-toggle.tsx";
@@ -27,21 +26,73 @@ import { toast } from "sonner";
 import { Plus, RefreshCw, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  type FilterStatus,
-  toFilterStatus,
-  getConfirmDialogTitle,
-  getConfirmDialogDescription,
-  getConfirmDialogLabel,
-  TAB_TRIGGER_CLASS,
-} from "./session-list-helpers.ts";
+import { type FilterStatus, toFilterStatus, getConfirmDialogTitle, getConfirmDialogDescription, getConfirmDialogLabel, TAB_TRIGGER_CLASS } from "./session-list-helpers.ts";
+
+// Initialize filter from URL parameter
+function getInitialFilter(): FilterStatus {
+  const params = new URLSearchParams(globalThis.location.search);
+  const tabParam = params.get("tab");
+  if (tabParam != null && tabParam.length > 0) {
+    const filterStatus = toFilterStatus(tabParam);
+    if (filterStatus != null) {
+      return filterStatus;
+    }
+  }
+  return "all";
+}
+
+// Format time since last refresh for display
+function getTimeSinceRefresh(lastRefreshTime: Date): string {
+  const seconds = Math.floor((Date.now() - lastRefreshTime.getTime()) / 1000);
+  if (seconds < 5) {
+    return "just now";
+  }
+  if (seconds < 60) {
+    return `${String(seconds)}s ago`;
+  }
+  const minutes = Math.floor(seconds / 60);
+  return `${String(minutes)}m ago`;
+}
+
+const GRID_STYLE = {
+  gridTemplateColumns: "repeat(auto-fill, minmax(min(350px, 100%), 1fr))",
+  gridAutoFlow: "dense",
+} as const;
+
+function SessionListSkeleton() {
+  return (
+    <div className="grid gap-4 auto-rows-auto" style={GRID_STYLE}>
+      {[1, 2, 3].map((i) => (
+        <Card key={i} className="border-2">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-4 w-4" />
+              <Skeleton className="h-6 w-48 flex-1" />
+              <Skeleton className="h-5 w-16" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-4 w-full mb-2" />
+            <Skeleton className="h-4 w-3/4 mb-3" />
+            <div className="flex gap-4">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+          </CardContent>
+          <CardFooter className="border-t-2 pt-4">
+            <div className="flex gap-2">
+              <Skeleton className="h-10 w-10" />
+              <Skeleton className="h-10 w-10" />
+              <Skeleton className="h-10 w-10" />
+            </div>
+          </CardFooter>
+        </Card>
+      ))}
+    </div>
+  );
+}
 
 type SessionListProps = {
   onAttach: (session: Session) => void;
@@ -97,19 +148,6 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   );
   useSessionEvents(handleEvent);
 
-  // Initialize filter from URL parameter
-  const getInitialFilter = (): FilterStatus => {
-    const params = new URLSearchParams(globalThis.location.search);
-    const tabParam = params.get("tab");
-    if (tabParam != null && tabParam.length > 0) {
-      const filterStatus = toFilterStatus(tabParam);
-      if (filterStatus != null) {
-        return filterStatus;
-      }
-    }
-    return "all";
-  };
-
   const [filter, setFilter] = useState<FilterStatus>(getInitialFilter);
   const [confirmDialog, setConfirmDialog] = useState<{
     type: "archive" | "unarchive" | "delete" | "refresh";
@@ -117,7 +155,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   } | null>(null);
   const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
-  const [lastRefreshTime, setLastRefreshTime] = useState<Date>(new Date());
+  const [lastRefreshTime] = useState(new Date());
   const [, _setTickCounter] = useState(0); // Force re-render for time display
 
   // Health modal state
@@ -149,55 +187,12 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
     }
   }, [sessions, filter]);
 
-  // Track last refresh time from query updates
-  useEffect(() => {
-    if (sessionsQuery.dataUpdatedAt > 0) {
-      setLastRefreshTime(new Date(sessionsQuery.dataUpdatedAt));
-    }
-  }, [sessionsQuery.dataUpdatedAt]);
-
-  // Tick counter for "Xs ago" display
-  useEffect(() => {
-    const interval = setInterval(() => {
-      _setTickCounter((c) => c + 1);
-    }, 5_000);
-    return () => {
-      clearInterval(interval);
-    };
-  }, []);
-
-  // Sync filter to URL query param
-  useEffect(() => {
-    const params = new URLSearchParams(globalThis.location.search);
-    if (filter === "all") {
-      params.delete("tab");
-    } else {
-      params.set("tab", filter);
-    }
-    const query = params.toString();
-    const newUrl = query.length > 0 ? `?${query}` : globalThis.location.pathname;
-    globalThis.history.replaceState(null, "", newUrl);
-  }, [filter]);
-
   // Compute unhealthy sessions for the startup modal
   const unhealthySessions = useMemo(() => {
     return [...healthReports.values()].filter(
       (report) => report.state.type !== "Healthy",
     );
   }, [healthReports]);
-
-  // Format last refresh time for display
-  const getTimeSinceRefresh = (): string => {
-    const seconds = Math.floor((Date.now() - lastRefreshTime.getTime()) / 1000);
-    if (seconds < 5) {
-      return "just now";
-    }
-    if (seconds < 60) {
-      return `${String(seconds)}s ago`;
-    }
-    const minutes = Math.floor(seconds / 60);
-    return `${String(minutes)}m ago`;
-  };
 
   const handleEdit = (session: Session) => {
     setEditingSession(session);
@@ -299,7 +294,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
           <div className="flex items-center gap-2 px-3 py-1 border-2 border-primary bg-background text-xs font-mono">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
             <span className="text-muted-foreground">
-              Auto-refresh: {getTimeSinceRefresh()}
+              Auto-refresh: {getTimeSinceRefresh(lastRefreshTime)}
             </span>
           </div>
           <ThemeToggle />
@@ -383,55 +378,14 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
         )}
 
         {isLoading ? (
-          <div
-            className="grid gap-4 auto-rows-auto"
-            style={{
-              gridTemplateColumns:
-                "repeat(auto-fill, minmax(min(350px, 100%), 1fr))",
-              gridAutoFlow: "dense",
-            }}
-          >
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="border-2">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2">
-                    <Skeleton className="h-4 w-4" />
-                    <Skeleton className="h-6 w-48 flex-1" />
-                    <Skeleton className="h-5 w-16" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-4 w-full mb-2" />
-                  <Skeleton className="h-4 w-3/4 mb-3" />
-                  <div className="flex gap-4">
-                    <Skeleton className="h-3 w-20" />
-                    <Skeleton className="h-3 w-24" />
-                  </div>
-                </CardContent>
-                <CardFooter className="border-t-2 pt-4">
-                  <div className="flex gap-2">
-                    <Skeleton className="h-10 w-10" />
-                    <Skeleton className="h-10 w-10" />
-                    <Skeleton className="h-10 w-10" />
-                  </div>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
+          <SessionListSkeleton />
         ) : filteredSessions.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
             <p className="text-lg mb-2 font-semibold">No sessions found</p>
             <p className="text-sm">Create a new session to get started</p>
           </div>
         ) : (
-          <div
-            className="grid gap-4 auto-rows-auto"
-            style={{
-              gridTemplateColumns:
-                "repeat(auto-fill, minmax(min(350px, 100%), 1fr))",
-              gridAutoFlow: "dense",
-            }}
-          >
+          <div className="grid gap-4 auto-rows-auto" style={GRID_STYLE}>
             {filteredSessions.map((session) => {
               const healthReport = getSessionHealth(session.id);
               return (
@@ -514,7 +468,7 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
             }
           }}
           startSession={(id: string) => startSessionMutation.mutateAsync(id)}
-          recreateSession={(id: string) => recreateSessionMutation.mutateAsync(id).then(() => {})}
+          recreateSession={async (id: string) => { await recreateSessionMutation.mutateAsync(id); }}
           refreshSession={(id: string) => refreshSessionMutation.mutateAsync(id)}
           cleanupSession={(id: string) => cleanupSessionMutation.mutateAsync(id)}
         />

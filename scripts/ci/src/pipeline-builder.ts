@@ -31,7 +31,7 @@ import {
   allPushKeys,
 } from "./steps/images.ts";
 import { publishNpmGroup } from "./steps/npm.ts";
-import { deploySitesGroup, filterSites } from "./steps/sites.ts";
+import { deploySitesGroup, filterSites, mkdocsDeployStep } from "./steps/sites.ts";
 import { homelabHelmGroup } from "./steps/helm.ts";
 import { homelabTofuGroup, homelabTofuPlanGroup } from "./steps/tofu.ts";
 import { argoCdSyncStep, argoCdHealthStep } from "./steps/argocd.ts";
@@ -135,6 +135,15 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
       );
       const deployDeps = appPushKeys.length > 0 ? appPushKeys : ["release"];
       steps.push(deploySitesGroup(sitesToDeploy, deployDeps));
+    }
+
+    // --- MkDocs deploy (discord-plays-pokemon docs, needs Python not Bun) ---
+    if (
+      affected.buildAll ||
+      affected.packages.has("discord-plays-pokemon")
+    ) {
+      const deployDeps = appPushKeys.length > 0 ? appPushKeys : ["release"];
+      steps.push(mkdocsDeployStep(deployDeps));
     }
 
     // --- Deploy ArgoCD sync (for app images) ---

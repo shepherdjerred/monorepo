@@ -2,10 +2,11 @@
   "name": "better-skill-capped-fetcher",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "fetch": "bun run src/index.ts",
-    "lint": "cd .. && bunx eslint fetcher",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
@@ -19,6 +20,7 @@
   },
   "dependencies": {
     "@sentry/node": "^10.0.0",
-    "firebase": "^12.5.0"
+    "firebase": "^12.5.0",
+    "zod": "^4.3.6"
   }
 }

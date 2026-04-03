@@ -19,7 +19,7 @@ const DEFAULT_REPO: RepositoryEntry = {
 
 export function useRepositoryHandlers() {
   const [multiRepoEnabled, setMultiRepoEnabled] = useState(false);
-  const [repositories, setRepositories] = useState<RepositoryEntry[]>([
+  const [repositories, setRepositories] = useState([
     DEFAULT_REPO,
   ]);
 

@@ -14,7 +14,7 @@ export function useAuthStatus() {
           error instanceof Error &&
           error.message.includes("Authentication not enabled")
         ) {
-          return { requires_auth: false, has_users: false } as AuthStatus;
+          return { requires_auth: false, has_users: false };
         }
         throw error;
       }

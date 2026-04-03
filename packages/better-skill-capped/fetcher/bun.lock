@@ -7,6 +7,7 @@
       "dependencies": {
         "@sentry/node": "^10.0.0",
         "firebase": "^12.5.0",
+        "zod": "^4.3.6",
       },
       "devDependencies": {
         "@shepherdjerred/eslint-config": "file:../../eslint-config",

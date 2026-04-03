@@ -28,7 +28,7 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
     `dagger call deploy-site --pkg-dir ./${site.buildDir}`,
     `--pkg ${pkgPath}`,
     depFlags,
-    `--build-cmd "${site.buildCmd || "true"}"`,
+    `--build-cmd "${site.buildCmd}"`,
     `--bucket ${site.bucket}`,
     `--dist-subdir ${distSubdir}`,
     `--target seaweedfs`,
@@ -59,6 +59,29 @@ export function deploySitesGroup(
     group: ":ship: Deploy Sites",
     key: "deploy-sites",
     steps: sites.map((s) => deploySiteStep(s, dependsOn)),
+  };
+}
+
+/**
+ * MkDocs docs deploy — uses mkdocs-build (Python), then aws s3 sync.
+ * Separate from deploySiteStep because it needs a Python container, not Bun.
+ */
+export function mkdocsDeployStep(dependsOn: string[]): BuildkiteStep {
+  return {
+    label: ":book: Deploy discord-plays-pokemon docs",
+    key: "deploy-discord-plays-pokemon-docs",
+    if: MAIN_ONLY,
+    depends_on: dependsOn,
+    command: [
+      // Build with mkdocs (Python container inside Dagger)
+      `dagger call mkdocs-build --source . export --path /tmp/mkdocs-site`,
+      // Deploy built site to S3
+      `aws s3 sync /tmp/mkdocs-site s3://discord-plays-pokemon-docs --endpoint-url https://seaweedfs.sjer.red --delete`,
+    ].join(" && ") + DRYRUN_FLAG,
+    timeout_in_minutes: 15,
+    retry: RETRY,
+    env: DAGGER_ENV,
+    plugins: [k8sPlugin({ cpu: "250m", memory: "512Mi", secrets: ["buildkite-argocd-token"] })],
   };
 }
 

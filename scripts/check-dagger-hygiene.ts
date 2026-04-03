@@ -47,16 +47,6 @@ const ALLOWLIST: AllowlistEntry[] = [
     file: "scripts/quality-ratchet.ts",
     patternName: "*",
   },
-  {
-    file: ".dagger/src/release.ts",
-    patternName: "hidden-stderr",
-    lineContains: "cooklang-obsidian-releases/contents",
-  },
-  {
-    file: ".dagger/src/release.ts",
-    patternName: "error-to-message",
-    lineContains: "cooklang-obsidian-releases/contents",
-  },
 ];
 
 interface Violation {

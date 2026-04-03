@@ -26,7 +26,7 @@ export function useSessionHistory(
     },
     enabled: sessionId != null,
     refetchInterval: pollingInterval,
-    staleTime: 1_000,
+    staleTime: 1000,
   });
 
   if (query.data == null) {

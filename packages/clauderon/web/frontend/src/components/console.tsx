@@ -21,7 +21,7 @@ export function Console({
   const { client, isConnected } = useConsole(sessionId);
   const [error, setError] = useState<string | null>(null);
   const errorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [errorKey] = useState<number>(0);
+  const [errorKey] = useState(0);
 
   // Set Sentry context for this session
   // Dismiss error function

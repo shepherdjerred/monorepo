@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { X, Folder, FolderOpen, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiClient } from "@/lib/api-client";
@@ -34,8 +34,8 @@ export function DirectoryBrowserDialog({
         if (response.error) {
           setError(response.error);
         }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to browse directory");
+      } catch (error_) {
+        setError(error_ instanceof Error ? error_.message : "Failed to browse directory");
       } finally {
         setIsLoading(false);
       }
@@ -43,9 +43,7 @@ export function DirectoryBrowserDialog({
     [client],
   );
 
-  useEffect(() => {
-    void fetchDirectory(currentPath);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  ;  
 
   const handleNavigateToParent = () => {
     if (parentPath != null && parentPath.length > 0) {
