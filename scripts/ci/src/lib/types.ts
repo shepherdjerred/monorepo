@@ -9,6 +9,7 @@ export interface AffectedPackages {
   resumeChanged: boolean;
   hasImagePackages: Set<string>;
   hasSitePackages: Set<string>;
+  hasNpmPackages: Set<string>;
 }
 
 /** A single Buildkite step. */

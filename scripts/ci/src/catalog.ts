@@ -142,6 +142,20 @@ export const DEPLOY_SITES: DeploySite[] = [
   // a dedicated mkdocs-build-and-deploy step, not the generic deploy-site function.
 ];
 
+/** Derived from NPM_PACKAGES — workspace packages whose changes should trigger npm publishes. */
+export const PACKAGES_WITH_NPM: Set<string> = new Set(
+  NPM_PACKAGES.map(
+    (pkg) => pkg.dir.replace("packages/", "").split("/")[0] ?? pkg.name,
+  ),
+);
+
+/** Maps workspace package name to the NpmPackage names it triggers. */
+export const PACKAGE_TO_NPM: Record<string, string[]> = {};
+for (const pkg of NPM_PACKAGES) {
+  const ws = pkg.dir.replace("packages/", "").split("/")[0] ?? pkg.name;
+  (PACKAGE_TO_NPM[ws] ??= []).push(pkg.name);
+}
+
 // ---------------------------------------------------------------------------
 // OpenTofu stacks
 // ---------------------------------------------------------------------------

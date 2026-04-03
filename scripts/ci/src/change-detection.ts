@@ -6,6 +6,7 @@
 import {
   ALL_PACKAGES,
   PACKAGES_WITH_IMAGES,
+  PACKAGES_WITH_NPM,
   PACKAGE_TO_SITE,
 } from "./catalog.ts";
 import type { AffectedPackages } from "./lib/types.ts";
@@ -304,6 +305,7 @@ export async function detectChanges(): Promise<AffectedPackages> {
       resumeChanged: true,
       hasImagePackages: new Set(PACKAGES_WITH_IMAGES),
       hasSitePackages: new Set(Object.keys(PACKAGE_TO_SITE)),
+      hasNpmPackages: new Set(PACKAGES_WITH_NPM),
     };
   }
 
@@ -328,6 +330,7 @@ export async function detectChanges(): Promise<AffectedPackages> {
       resumeChanged: false,
       hasImagePackages: new Set(),
       hasSitePackages: new Set(),
+      hasNpmPackages: new Set(),
     };
   }
 
@@ -342,12 +345,16 @@ export async function detectChanges(): Promise<AffectedPackages> {
 
   const hasImagePackages = new Set<string>();
   const hasSitePackages = new Set<string>();
+  const hasNpmPackages = new Set<string>();
   for (const pkg of allAffected) {
     if (PACKAGES_WITH_IMAGES.has(pkg)) {
       hasImagePackages.add(pkg);
     }
     if (pkg in PACKAGE_TO_SITE) {
       hasSitePackages.add(pkg);
+    }
+    if (PACKAGES_WITH_NPM.has(pkg)) {
+      hasNpmPackages.add(pkg);
     }
   }
 
@@ -361,6 +368,7 @@ export async function detectChanges(): Promise<AffectedPackages> {
     resumeChanged: allAffected.has("resume"),
     hasImagePackages,
     hasSitePackages,
+    hasNpmPackages,
   };
 }
 

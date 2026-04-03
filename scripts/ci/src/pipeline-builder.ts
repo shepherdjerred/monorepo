@@ -34,7 +34,7 @@ import {
   homelabImagesGroup,
   allPushKeys,
 } from "./steps/images.ts";
-import { publishNpmGroup } from "./steps/npm.ts";
+import { publishNpmGroup, filterNpmPackages } from "./steps/npm.ts";
 import {
   deploySitesGroup,
   filterSites,
@@ -125,6 +125,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     affected.buildAll ||
     affected.hasImagePackages.size > 0 ||
     affected.hasSitePackages.size > 0 ||
+    affected.hasNpmPackages.size > 0 ||
     affected.homelabChanged ||
     affected.clauderonChanged ||
     affected.cooklangChanged;
@@ -152,7 +153,15 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     }
 
     // --- Publish NPM packages ---
-    steps.push(publishNpmGroup(pkgKeyMap));
+    if (affected.buildAll || affected.hasNpmPackages.size > 0) {
+      const npmToPublish = filterNpmPackages(
+        affected.hasNpmPackages,
+        affected.buildAll,
+      );
+      if (npmToPublish.length > 0) {
+        steps.push(publishNpmGroup(npmToPublish, pkgKeyMap));
+      }
+    }
 
     // --- Clauderon Release ---
     if (affected.buildAll || affected.clauderonChanged) {
@@ -161,9 +170,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
 
     // --- Cooklang Release ---
     if (affected.buildAll || affected.cooklangChanged) {
-      steps.push(
-        cooklangReleaseGroup(pkgKeyMap.get("cooklang-rich-preview")),
-      );
+      steps.push(cooklangReleaseGroup(pkgKeyMap.get("cooklang-rich-preview")));
     }
 
     // --- Deploy sites ---
@@ -177,14 +184,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
 
     // --- MkDocs deploy (discord-plays-pokemon docs, needs Python not Bun) ---
     if (affected.buildAll || affected.packages.has("discord-plays-pokemon")) {
-      steps.push(
-        mkdocsDeployStep(scopedDeps("discord-plays-pokemon")),
-      );
-    }
-
-    // --- Deploy ArgoCD sync (for app images) ---
-    if (hasImages) {
-      steps.push(argoCdSyncStep(appPushKeys));
+      steps.push(mkdocsDeployStep(scopedDeps("discord-plays-pokemon")));
     }
 
     // --- Homelab Tofu Plan (runs on PRs for early feedback) ---
@@ -205,23 +205,28 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
 
       // Homelab Tofu: 3 parallel stacks
       steps.push(homelabTofuGroup(homelabPkgKey));
+    }
 
-      // Homelab ArgoCD sync (depends on helm push + all tofu stacks)
-      const argocdDeps = [
-        "homelab-helm-push",
-        ...TOFU_STACKS.map((s) => `tofu-${s}`),
-      ];
+    // --- Unified ArgoCD sync (depends on whatever upstream steps ran) ---
+    const needsArgoSync =
+      hasImages || affected.buildAll || affected.homelabChanged;
+    if (needsArgoSync) {
+      const argocdDeps: string[] = [];
+      if (hasImages) {
+        argocdDeps.push(...appPushKeys);
+      }
+      if (affected.buildAll || affected.homelabChanged) {
+        argocdDeps.push(
+          "homelab-helm-push",
+          ...TOFU_STACKS.map((s) => `tofu-${s}`),
+        );
+      }
       steps.push(
-        argoCdSyncStep(argocdDeps, {
-          key: "homelab-argocd-sync",
-          app: "apps",
-        }),
+        argoCdSyncStep(argocdDeps, { key: "deploy-argocd", app: "apps" }),
       );
-
-      // Wait for ArgoCD healthy
       steps.push(
-        argoCdHealthStep("homelab-argocd-sync", {
-          key: "homelab-argocd-health",
+        argoCdHealthStep("deploy-argocd", {
+          key: "argocd-health",
           app: "apps",
         }),
       );
@@ -247,8 +252,8 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     // Collect all terminal step keys so the summary runs last
     const summaryDeps: string[] = ["release"];
     if (hasImages) summaryDeps.push(...appPushKeys);
-    if (affected.buildAll || affected.homelabChanged) {
-      summaryDeps.push("homelab-argocd-health");
+    if (needsArgoSync) {
+      summaryDeps.push("argocd-health");
     }
     steps.push(buildSummaryStep(summaryDeps));
   }

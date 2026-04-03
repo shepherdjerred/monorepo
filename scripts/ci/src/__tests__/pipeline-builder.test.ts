@@ -5,6 +5,7 @@ import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 import {
   ALL_PACKAGES,
   PACKAGES_WITH_IMAGES,
+  PACKAGES_WITH_NPM,
   PACKAGE_TO_SITE,
   SKIP_PACKAGES,
 } from "../catalog.ts";
@@ -20,6 +21,7 @@ function emptyAffected(): AffectedPackages {
     resumeChanged: false,
     hasImagePackages: new Set(),
     hasSitePackages: new Set(),
+    hasNpmPackages: new Set(),
   };
 }
 
@@ -34,6 +36,7 @@ function fullBuild(): AffectedPackages {
     resumeChanged: true,
     hasImagePackages: new Set(PACKAGES_WITH_IMAGES),
     hasSitePackages: new Set(Object.keys(PACKAGE_TO_SITE)),
+    hasNpmPackages: new Set(PACKAGES_WITH_NPM),
   };
 }
 
@@ -262,7 +265,8 @@ describe("buildPipeline", () => {
       );
       const pushOnly = allSteps.filter(
         (s) =>
-          s.key.startsWith("push-") && !smokeNames.has(s.key.replace("push-", "")),
+          s.key.startsWith("push-") &&
+          !smokeNames.has(s.key.replace("push-", "")),
       );
       for (const s of pushOnly) {
         const deps = Array.isArray(s.depends_on)
@@ -291,9 +295,7 @@ describe("buildPipeline", () => {
       }
       collect(pipeline.steps);
 
-      const planSteps = allSteps.filter((s) =>
-        s.key.startsWith("tofu-plan-"),
-      );
+      const planSteps = allSteps.filter((s) => s.key.startsWith("tofu-plan-"));
       expect(planSteps.length).toBeGreaterThan(0);
       for (const s of planSteps) {
         expect(s.if).toBe("build.branch != pipeline.default_branch");
@@ -363,10 +365,8 @@ describe("buildPipeline", () => {
         expect(s.concurrency_group).toContain("monorepo/tofu-");
       }
 
-      const argoSteps = allSteps.filter(
-        (s) =>
-          s.key.startsWith("deploy-argocd") ||
-          s.key.startsWith("homelab-argocd-sync"),
+      const argoSteps = allSteps.filter((s) =>
+        s.key.startsWith("deploy-argocd"),
       );
       expect(argoSteps.length).toBeGreaterThan(0);
       for (const s of argoSteps) {
@@ -468,6 +468,13 @@ describe("buildPipeline", () => {
         "dagger-hygiene",
         "merge-conflict-check",
         "large-file-check",
+        "prettier",
+        "shellcheck",
+        "knip-check",
+        "gitleaks-check",
+        "suppression-check",
+        "trivy-scan",
+        "semgrep-scan",
       ]);
       const nonDagger: string[] = [];
 

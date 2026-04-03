@@ -1,7 +1,8 @@
 /**
  * NPM publish step generators.
  */
-import { NPM_PACKAGES } from "../catalog.ts";
+import { NPM_PACKAGES, PACKAGE_TO_NPM } from "../catalog.ts";
+import type { NpmPackage } from "../catalog.ts";
 import { safeKey, RETRY, DAGGER_ENV, DRYRUN_FLAG } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
@@ -45,12 +46,28 @@ function npmPublishStep(
   };
 }
 
+export function filterNpmPackages(
+  affectedNpmPackages: Set<string>,
+  buildAll: boolean,
+): NpmPackage[] {
+  if (buildAll) return NPM_PACKAGES;
+  const npmNames = new Set<string>();
+  for (const pkg of affectedNpmPackages) {
+    const names = PACKAGE_TO_NPM[pkg];
+    if (names) {
+      for (const n of names) npmNames.add(n);
+    }
+  }
+  return NPM_PACKAGES.filter((p) => npmNames.has(p.name));
+}
+
 export function publishNpmGroup(
+  packages: NpmPackage[],
   pkgKeyMap?: Map<string, string>,
 ): BuildkiteGroup {
   return {
     group: ":npm: Publish NPM",
     key: "publish-npm",
-    steps: NPM_PACKAGES.map((pkg) => npmPublishStep(pkg, pkgKeyMap)),
+    steps: packages.map((pkg) => npmPublishStep(pkg, pkgKeyMap)),
   };
 }
