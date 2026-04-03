@@ -54,12 +54,19 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
 
 export function deploySitesGroup(
   sites: DeploySite[],
-  dependsOn: string[],
+  pkgKeyMap?: Map<string, string>,
 ): BuildkiteGroup {
   return {
     group: ":ship: Deploy Sites",
     key: "deploy-sites",
-    steps: sites.map((s) => deploySiteStep(s, dependsOn)),
+    steps: sites.map((s) => {
+      // Resolve the package name from the build dir (e.g. "packages/sjer.red" → "sjer.red")
+      const pkg = s.buildDir.replace("packages/", "").split("/")[0] ?? "";
+      const pkgKey = pkgKeyMap?.get(pkg);
+      const deps = ["release"];
+      if (pkgKey) deps.push(pkgKey);
+      return deploySiteStep(s, deps);
+    }),
   };
 }
 

@@ -50,12 +50,18 @@ function helmPushStep(chartName: string): BuildkiteStep {
   };
 }
 
-export function homelabHelmGroup(dependsOn: string[]): BuildkiteGroup {
+export function homelabHelmGroup(
+  dependsOn: string[],
+  homelabPkgKey?: string,
+): BuildkiteGroup {
+  const synthDeps = homelabPkgKey
+    ? [...dependsOn, homelabPkgKey]
+    : dependsOn;
   return {
     group: ":helm: Homelab Helm",
     key: "homelab-helm-push",
     steps: [
-      cdk8sSynthStep(dependsOn),
+      cdk8sSynthStep(synthDeps),
       ...HELM_CHARTS.map((chart) => helmPushStep(chart)),
     ],
   };

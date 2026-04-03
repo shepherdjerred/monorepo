@@ -29,12 +29,15 @@ const TARGETS: BuildTarget[] = [
   },
 ];
 
-export function clauderonReleaseGroup(): BuildkiteGroup {
+export function clauderonReleaseGroup(
+  pkgKey?: string,
+): BuildkiteGroup {
+  const dependsOn = pkgKey ? ["release", pkgKey] : ["release"];
   const buildSteps: BuildkiteStep[] = TARGETS.map((t) => ({
     label: `:rust: Build clauderon (${t.label})`,
     key: t.key,
     if: MAIN_ONLY,
-    depends_on: "release",
+    depends_on: dependsOn,
     command: `dagger call rust-build --pkg-dir ./packages/clauderon --target ${t.target}`,
     timeout_in_minutes: 20,
     priority: 1,

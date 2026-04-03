@@ -91,7 +91,10 @@ export function caddyfileValidateHelper(source: Directory): Container {
     .withWorkdir("/workspace")
     .withFile(
       "/usr/local/bin/caddy",
-      dag.container().from(CADDY_IMAGE).file("/usr/bin/caddy"),
+      dag
+        .container()
+        .build(source.directory("packages/homelab/src/caddy-s3proxy"))
+        .file("/usr/bin/caddy"),
     )
     .withExec(["caddy", "validate", "--config", "/tmp/Caddyfile"]);
 }

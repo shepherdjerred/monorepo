@@ -135,20 +135,16 @@ export function semgrepScanStep(): BuildkiteStep {
   });
 }
 
-/** Plain step: only needs bash+grep (in ci-base). Validates env var naming conventions. */
+/** Plain step: only needs bash+grep+git (in ci-base). Validates env var naming conventions. */
 export function envVarNamesStep(): BuildkiteStep {
   return plainStep({
     label: ":label: Env Var Names",
     key: "env-var-names",
     command: [
-      "files=$(find . -type f",
-      '\\( -name "*.ts" -o -name "*.rs" -o -name "*.py" -o -name "*.fish"',
-      '-o -name "*.tmpl" -o -name "*.yaml" -o -name "*.yml"',
-      '-o -name "*.env" -o -name "*.md" -o -name "*.sh" -o -name "*.swift" \\)',
-      '-not -path "*/node_modules/*" -not -path "*/archive/*"',
-      '-not -path "*/practice/*"',
-      '-not -path "*/.build/*" -not -path "*/.dagger/*"',
-      '-not -path "*/generated/*")',
+      "files=$(git ls-files --",
+      "'*.ts' '*.rs' '*.py' '*.fish' '*.tmpl' '*.yaml' '*.yml'",
+      "'*.env' '*.md' '*.sh' '*.swift'",
+      "':!:archive/' ':!:practice/' ':!:.dagger/' ':!:.build/' ':!:**/generated/*')",
       "&& bash scripts/check-env-var-names.sh $files",
     ].join(" "),
   });

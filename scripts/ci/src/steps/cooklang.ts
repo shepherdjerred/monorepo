@@ -14,7 +14,8 @@ const MAIN_ONLY = "build.branch == pipeline.default_branch";
 const COOKLANG_PKG_FLAGS =
   "--pkg-dir ./packages/cooklang-rich-preview --dep-names eslint-config --dep-dirs ./packages/eslint-config --tsconfig ./tsconfig.base.json";
 
-export function cooklangReleaseGroup(): BuildkiteGroup {
+export function cooklangReleaseGroup(pkgKey?: string): BuildkiteGroup {
+  const dependsOn = pkgKey ? ["release", pkgKey] : ["release"];
   return {
     group: ":cook: Cooklang Release",
     key: "cooklang-release",
@@ -23,7 +24,7 @@ export function cooklangReleaseGroup(): BuildkiteGroup {
         label: ":cook: Build cooklang",
         key: "cooklang-build",
         if: MAIN_ONLY,
-        depends_on: "release",
+        depends_on: dependsOn,
         command: [
           `dagger call cooklang-build ${COOKLANG_PKG_FLAGS} export --path /tmp/cooklang-dist`,
           `buildkite-agent artifact upload "/tmp/cooklang-dist/**/*"`,

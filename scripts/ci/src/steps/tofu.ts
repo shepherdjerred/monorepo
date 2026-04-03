@@ -7,14 +7,21 @@ import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 
 const MAIN_ONLY = "build.branch == pipeline.default_branch";
+const PR_ONLY = "build.branch != pipeline.default_branch";
 
-function tofuStackStep(stack: string): BuildkiteStep {
+function tofuStackStep(
+  stack: string,
+  homelabPkgKey?: string,
+): BuildkiteStep {
   const label = TOFU_STACK_LABELS[stack] ?? stack;
+  const dependsOn = homelabPkgKey
+    ? ["release", homelabPkgKey]
+    : "release";
   return {
     label: `:terraform: Apply ${label}`,
     key: `tofu-${stack}`,
     if: MAIN_ONLY,
-    depends_on: "release",
+    depends_on: dependsOn,
     command:
       [
         `dagger call tofu-apply --source . --stack ${stack}`,
@@ -49,6 +56,7 @@ function tofuPlanStep(stack: string): BuildkiteStep {
   return {
     label: `:terraform: Plan ${label}`,
     key: `tofu-plan-${stack}`,
+    if: PR_ONLY,
     command:
       [
         `dagger call tofu-plan --source . --stack ${stack}`,
@@ -77,11 +85,11 @@ function tofuPlanStep(stack: string): BuildkiteStep {
   };
 }
 
-export function homelabTofuGroup(): BuildkiteGroup {
+export function homelabTofuGroup(homelabPkgKey?: string): BuildkiteGroup {
   return {
     group: ":terraform: Homelab Tofu",
     key: "homelab-tofu",
-    steps: TOFU_STACKS.map(tofuStackStep),
+    steps: TOFU_STACKS.map((stack) => tofuStackStep(stack, homelabPkgKey)),
   };
 }
 

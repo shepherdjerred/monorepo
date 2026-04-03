@@ -96,6 +96,7 @@ describe("buildPipeline", () => {
 
       const pipeline = buildPipeline(affected);
       const steps = pipeline.steps.filter(isStep);
+      // All async checks should be present
       for (const key of [
         "prettier",
         "knip-check",
@@ -103,9 +104,16 @@ describe("buildPipeline", () => {
         "trivy-scan",
         "semgrep-scan",
       ]) {
-        const step = steps.find((s) => s.key === key);
-        expect(step).toBeDefined();
-        expect(step?.soft_fail).toBe(true);
+        expect(steps.find((s) => s.key === key)).toBeDefined();
+      }
+      // These specific checks should be soft_fail
+      for (const key of [
+        "knip-check",
+        "dagger-hygiene",
+        "trivy-scan",
+        "semgrep-scan",
+      ]) {
+        expect(steps.find((s) => s.key === key)?.soft_fail).toBe(true);
       }
     });
   });
@@ -144,7 +152,6 @@ describe("buildPipeline", () => {
         "trivy-scan",
         "dagger-hygiene",
         "knip-check",
-        "prettier",
       ]) {
         const step = steps.find((s) => s.key === key);
         expect(step).toBeDefined();
@@ -152,7 +159,7 @@ describe("buildPipeline", () => {
       }
     });
 
-    it("release step depends on per-package groups and blocking gates (no wait steps)", () => {
+    it("release step depends only on quality gates, not per-package builds", () => {
       const pipeline = buildPipeline(fullBuild());
 
       // No wait steps — release uses explicit depends_on
@@ -167,12 +174,12 @@ describe("buildPipeline", () => {
       const deps = release?.depends_on;
       expect(Array.isArray(deps) ? deps : []).not.toHaveLength(0);
 
-      // depends_on includes per-package group keys
+      // depends_on does NOT include per-package group keys
       const pkgGroups = pipeline.steps
         .filter(isGroup)
         .filter((g) => g.key.startsWith("pkg-"));
       for (const g of pkgGroups) {
-        expect(Array.isArray(deps) ? deps : []).toContain(g.key);
+        expect(Array.isArray(deps) ? deps : []).not.toContain(g.key);
       }
 
       // depends_on includes blocking quality gate keys
@@ -202,6 +209,68 @@ describe("buildPipeline", () => {
       ];
       for (const key of asyncKeys) {
         expect(Array.isArray(deps) ? deps : []).not.toContain(key);
+      }
+    });
+
+    it("image push steps depend on release and their own package build", () => {
+      const pipeline = buildPipeline(fullBuild());
+      const allSteps: BuildkiteStep[] = [];
+
+      function collect(steps: unknown[]) {
+        for (const s of steps) {
+          if (isStep(s)) allSteps.push(s);
+          if (
+            typeof s === "object" &&
+            s !== null &&
+            "steps" in s &&
+            Array.isArray((s as Record<string, unknown>)["steps"])
+          ) {
+            collect((s as Record<string, unknown>)["steps"] as unknown[]);
+          }
+        }
+      }
+      collect(pipeline.steps);
+
+      const pushSteps = allSteps.filter((s) => s.key.startsWith("push-"));
+      expect(pushSteps.length).toBeGreaterThan(0);
+      for (const s of pushSteps) {
+        const deps = Array.isArray(s.depends_on)
+          ? s.depends_on
+          : [s.depends_on];
+        expect(deps).toContain("release");
+        // Each push step should have at least one pkg-* dependency
+        const hasPkgDep = deps.some(
+          (d) => typeof d === "string" && d.startsWith("pkg-"),
+        );
+        expect(hasPkgDep).toBe(true);
+      }
+    });
+
+    it("tofu plan steps are PR-only", () => {
+      const pipeline = buildPipeline(fullBuild());
+      const allSteps: BuildkiteStep[] = [];
+
+      function collect(steps: unknown[]) {
+        for (const s of steps) {
+          if (isStep(s)) allSteps.push(s);
+          if (
+            typeof s === "object" &&
+            s !== null &&
+            "steps" in s &&
+            Array.isArray((s as Record<string, unknown>)["steps"])
+          ) {
+            collect((s as Record<string, unknown>)["steps"] as unknown[]);
+          }
+        }
+      }
+      collect(pipeline.steps);
+
+      const planSteps = allSteps.filter((s) =>
+        s.key.startsWith("tofu-plan-"),
+      );
+      expect(planSteps.length).toBeGreaterThan(0);
+      for (const s of planSteps) {
+        expect(s.if).toBe("build.branch != pipeline.default_branch");
       }
     });
 

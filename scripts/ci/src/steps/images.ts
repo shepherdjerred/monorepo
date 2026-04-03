@@ -12,7 +12,7 @@ const MAIN_ONLY = "build.branch == pipeline.default_branch";
 
 function imagePushStep(
   img: ImageTarget,
-  dependsOn: string = "release",
+  dependsOn: string | string[] = "release",
 ): BuildkiteStep {
   const pkg = img.package ?? img.name;
   const deps = WORKSPACE_DEPS[pkg] ?? [];
@@ -60,11 +60,14 @@ export function publishImagesGroup(
   };
 }
 
-export function homelabImagesGroup(): BuildkiteGroup {
+export function homelabImagesGroup(homelabPkgKey?: string): BuildkiteGroup {
   return {
     group: ":kubernetes: Homelab Images",
     key: "homelab-images",
-    steps: INFRA_PUSH_TARGETS.map((img) => imagePushStep(img)),
+    steps: INFRA_PUSH_TARGETS.map((img) => {
+      const deps = homelabPkgKey ? ["release", homelabPkgKey] : "release";
+      return imagePushStep(img, deps);
+    }),
   };
 }
 
@@ -116,10 +119,14 @@ function smokeTestStep(img: ImageTarget): BuildkiteStep | null {
 
 export function publishImagesWithSmokeGroup(
   images: readonly ImageTarget[] = IMAGE_PUSH_TARGETS,
+  pkgKeyMap?: Map<string, string>,
 ): BuildkiteGroup {
   const steps: BuildkiteStep[] = [];
   for (const img of images) {
-    steps.push(imagePushStep(img));
+    const pkg = img.package ?? img.name;
+    const pkgKey = pkgKeyMap?.get(pkg);
+    const deps = pkgKey ? ["release", pkgKey] : "release";
+    steps.push(imagePushStep(img, deps));
     const smoke = smokeTestStep(img);
     if (smoke) steps.push(smoke);
   }

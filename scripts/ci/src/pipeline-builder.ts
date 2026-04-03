@@ -68,14 +68,18 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     ? ALL_PACKAGES.slice().sort()
     : [...affected.packages].sort();
 
-  // Collect keys that the release step must wait for
+  // Map package name → build group key (e.g. "birmel" → "pkg-birmel")
+  // Used to scope downstream steps to their own package build only.
+  const pkgKeyMap = new Map<string, string>();
+
+  // Release depends only on repo-wide quality gates, NOT per-package builds.
   const releaseDeps: string[] = [];
 
   for (const pkg of packages) {
     const group = perPackageSteps(pkg);
     if (group) {
       steps.push(group);
-      releaseDeps.push(group.key);
+      pkgKeyMap.set(pkg, group.key);
     }
   }
 
@@ -126,29 +130,40 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     affected.cooklangChanged;
 
   if (hasMainSteps) {
-    // Release depends only on per-package builds + blocking quality gates.
+    // Release depends only on repo-wide quality gates.
+    // Per-package builds gate their own downstream steps, not release.
     // Async checks (trivy, semgrep, knip, prettier, dagger-hygiene) run in parallel.
     steps.push(releaseStep(releaseDeps));
+
+    // Helper: build deps array scoped to release + a specific package build
+    const scopedDeps = (pkg: string, extra: string[] = []): string[] => {
+      const deps = ["release", ...extra];
+      const pkgKey = pkgKeyMap.get(pkg);
+      if (pkgKey) deps.push(pkgKey);
+      return deps;
+    };
 
     // --- Publish app images (with smoke tests for images that have health endpoints) ---
     const hasImages = affected.buildAll || affected.hasImagePackages.size > 0;
     let appPushKeys: string[] = [];
     if (hasImages) {
-      steps.push(publishImagesWithSmokeGroup(IMAGE_PUSH_TARGETS));
+      steps.push(publishImagesWithSmokeGroup(IMAGE_PUSH_TARGETS, pkgKeyMap));
       appPushKeys = allPushKeys(IMAGE_PUSH_TARGETS);
     }
 
     // --- Publish NPM packages ---
-    steps.push(publishNpmGroup());
+    steps.push(publishNpmGroup(pkgKeyMap));
 
     // --- Clauderon Release ---
     if (affected.buildAll || affected.clauderonChanged) {
-      steps.push(clauderonReleaseGroup());
+      steps.push(clauderonReleaseGroup(pkgKeyMap.get("clauderon")));
     }
 
     // --- Cooklang Release ---
     if (affected.buildAll || affected.cooklangChanged) {
-      steps.push(cooklangReleaseGroup());
+      steps.push(
+        cooklangReleaseGroup(pkgKeyMap.get("cooklang-rich-preview")),
+      );
     }
 
     // --- Deploy sites ---
@@ -157,14 +172,14 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
         affected.hasSitePackages,
         affected.buildAll,
       );
-      const deployDeps = appPushKeys.length > 0 ? appPushKeys : ["release"];
-      steps.push(deploySitesGroup(sitesToDeploy, deployDeps));
+      steps.push(deploySitesGroup(sitesToDeploy, pkgKeyMap));
     }
 
     // --- MkDocs deploy (discord-plays-pokemon docs, needs Python not Bun) ---
     if (affected.buildAll || affected.packages.has("discord-plays-pokemon")) {
-      const deployDeps = appPushKeys.length > 0 ? appPushKeys : ["release"];
-      steps.push(mkdocsDeployStep(deployDeps));
+      steps.push(
+        mkdocsDeployStep(scopedDeps("discord-plays-pokemon")),
+      );
     }
 
     // --- Deploy ArgoCD sync (for app images) ---
@@ -179,15 +194,17 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
 
     // --- Homelab release track ---
     if (affected.buildAll || affected.homelabChanged) {
+      const homelabPkgKey = pkgKeyMap.get("homelab");
+
       // Homelab infra images (4 parallel)
-      steps.push(homelabImagesGroup());
+      steps.push(homelabImagesGroup(homelabPkgKey));
       const infraPushKeys = allPushKeys(INFRA_PUSH_TARGETS);
 
       // Homelab Helm: cdk8s build -> helm chart push
-      steps.push(homelabHelmGroup(infraPushKeys));
+      steps.push(homelabHelmGroup(infraPushKeys, homelabPkgKey));
 
       // Homelab Tofu: 3 parallel stacks
-      steps.push(homelabTofuGroup());
+      steps.push(homelabTofuGroup(homelabPkgKey));
 
       // Homelab ArgoCD sync (depends on helm push + all tofu stacks)
       const argocdDeps = [

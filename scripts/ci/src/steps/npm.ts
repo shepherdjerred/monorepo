@@ -9,7 +9,10 @@ import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
 
 const MAIN_ONLY = "build.branch == pipeline.default_branch";
 
-function npmPublishStep(pkg: { name: string; dir: string }): BuildkiteStep {
+function npmPublishStep(
+  pkg: { name: string; dir: string },
+  pkgKeyMap?: Map<string, string>,
+): BuildkiteStep {
   const deps = WORKSPACE_DEPS[pkg.name] ?? [];
   const depFlags = deps
     .flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`])
@@ -22,11 +25,13 @@ function npmPublishStep(pkg: { name: string; dir: string }): BuildkiteStep {
     ]
       .filter(Boolean)
       .join(" ") + DRYRUN_FLAG;
+  const pkgKey = pkgKeyMap?.get(pkg.name);
+  const dependsOn = pkgKey ? ["release", pkgKey] : ["release"];
   return {
     label: `:npm: Publish ${pkg.name}`,
     key: `npm-${safeKey(pkg.name)}`,
     if: MAIN_ONLY,
-    depends_on: "release",
+    depends_on: dependsOn,
     command: cmd,
     timeout_in_minutes: 10,
     priority: 1,
@@ -36,10 +41,12 @@ function npmPublishStep(pkg: { name: string; dir: string }): BuildkiteStep {
   };
 }
 
-export function publishNpmGroup(): BuildkiteGroup {
+export function publishNpmGroup(
+  pkgKeyMap?: Map<string, string>,
+): BuildkiteGroup {
   return {
     group: ":npm: Publish NPM",
     key: "publish-npm",
-    steps: NPM_PACKAGES.map(npmPublishStep),
+    steps: NPM_PACKAGES.map((pkg) => npmPublishStep(pkg, pkgKeyMap)),
   };
 }
