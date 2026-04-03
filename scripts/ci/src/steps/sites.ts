@@ -45,6 +45,7 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
     depends_on: dependsOn,
     command: args.join(" ") + DRYRUN_FLAG,
     timeout_in_minutes: 15,
+    priority: 1,
     retry: RETRY,
     env: DAGGER_ENV,
     plugins: [k8sPlugin({ cpu, memory, secrets: ["buildkite-argocd-token"] })],
@@ -80,6 +81,7 @@ export function mkdocsDeployStep(dependsOn: string[]): BuildkiteStep {
         `dagger call deploy-site --pkg-dir /tmp/mkdocs-site --pkg discord-plays-pokemon --build-cmd "true" --bucket discord-plays-pokemon-docs --dist-subdir . --target seaweedfs --aws-access-key-id env:SEAWEEDFS_ACCESS_KEY_ID --aws-secret-access-key env:SEAWEEDFS_SECRET_ACCESS_KEY`,
       ].join(" && ") + DRYRUN_FLAG,
     timeout_in_minutes: 15,
+    priority: 1,
     retry: RETRY,
     env: DAGGER_ENV,
     plugins: [

@@ -6,11 +6,10 @@
     "packages/discord-plays-pokemon/packages/frontend/src/main.tsx": 1,
     "packages/scout-for-lol/packages/backend/src/testing/discord-mocks.ts": 2,
     "packages/scout-for-lol/packages/backend/src/testing/riot-mocks.ts": 1,
-    "packages/toolkit/src/daemon/watch.ts": 1
+    "packages/toolkit/src/daemon/watch.ts": 1,
+    "packages/better-skill-capped/fetcher/src/index.ts": 1
   },
-  "ts-suppressions": {
-    "packages/homelab/src/ha/src/util.ts": 1
-  },
+  "ts-suppressions": {},
   "rust-allow": {},
   "prettier-ignore": {},
   "hermeticity-exempt": {},

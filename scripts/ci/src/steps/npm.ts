@@ -29,6 +29,7 @@ function npmPublishStep(pkg: { name: string; dir: string }): BuildkiteStep {
     depends_on: "release",
     command: cmd,
     timeout_in_minutes: 10,
+    priority: 1,
     retry: RETRY,
     env: DAGGER_ENV,
     plugins: [k8sPlugin({ cpu: "250m", memory: "512Mi" })],

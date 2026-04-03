@@ -31,6 +31,7 @@ function tofuStackStep(stack: string): BuildkiteStep {
     timeout_in_minutes: 15,
     concurrency: 1,
     concurrency_group: `monorepo/tofu-${stack}`,
+    priority: 1,
     retry: RETRY,
     env: DAGGER_ENV,
     plugins: [

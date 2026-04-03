@@ -30,6 +30,7 @@ packages/scout-for-lol/packages/frontend/public/emulatorjs/
 # Generated
 packages/clauderon/mobile/src/types/generated/
 packages/clauderon/web/shared/src/generated/
+.dagger/sdk/
 
 # Coverage
 coverage/

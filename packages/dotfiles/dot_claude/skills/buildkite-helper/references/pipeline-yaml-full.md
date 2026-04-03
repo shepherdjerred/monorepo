@@ -233,7 +233,7 @@ build.pull_request.labels includes "deploy"
 build.creator.teams includes "platform"
 ```
 
-Variables: `build.*` (branch, commit, message, source, tag, pull_request._, merge_queue._, author._, creator._, env(), id, number, state), `pipeline.*` (default_branch, id, repository, slug), `organization.*` (id, slug), `step.*` (notifications only).
+Variables: `build.*` (branch, commit, message, source, tag, pull*request.*, merge*queue.*, author._, creator._, env(), id, number, state), `pipeline.*` (default_branch, id, repository, slug), `organization.*` (id, slug), `step.*` (notifications only).
 
 ## Concurrency
 

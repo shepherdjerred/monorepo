@@ -157,6 +157,61 @@ async function addTsDisableComments() {
 }
 
 /**
+ * Service field type overrides — the type-writer generates incorrect types for
+ * some service parameters. Each entry maps a service method to a field whose
+ * type should be replaced.
+ */
+const SERVICE_FIELD_OVERRIDES: Record<
+  string,
+  { field: string; correctType: string }
+> = {
+  play_media: {
+    field: "media",
+    correctType: "{ media_content_id: string; media_content_type: string }",
+  },
+};
+
+/**
+ * Post-process services.mts to fix incorrect generated types
+ */
+async function postProcessServices() {
+  console.log("🔄 Post-processing services.mts...");
+
+  const servicesPath = "src/hass/services.mts";
+
+  try {
+    let content = await Bun.file(servicesPath).text();
+
+    for (const [method, override] of Object.entries(SERVICE_FIELD_OVERRIDES)) {
+      // Match the field declaration inside the service method's service_data.
+      // The generated structure is: `method_name: (\n  service_data?: {\n  ...\n  field: string;`
+      // Use a non-greedy match from the method name to the specific field.
+      const pattern = new RegExp(
+        String.raw`(${method}:\s*\([\s\S]*?)${override.field}:\s*string;`,
+      );
+
+      if (pattern.test(content)) {
+        content = content.replace(
+          pattern,
+          `$1${override.field}: ${override.correctType};`,
+        );
+        console.log(`✅ Updated ${override.field} type in ${method} service`);
+      } else {
+        console.log(
+          `⚠️  Could not find ${override.field}: string in ${method} service`,
+        );
+      }
+    }
+
+    await Bun.write(servicesPath, content);
+    console.log("✅ Services post-processing completed");
+  } catch (error) {
+    console.error("❌ Failed to post-process services:", error);
+    process.exit(1);
+  }
+}
+
+/**
  * Post-process registry.mts to convert state strings to unions
  */
 async function postProcessRegistry() {
@@ -202,12 +257,13 @@ async function postProcessRegistry() {
 async function validateProcessing() {
   console.log("🔄 Validating post-processing...");
 
+  let allValid = true;
+
+  // Validate registry
   const registryPath = "src/hass/registry.mts";
 
   try {
-    const content = await Bun.file(registryPath).text();
-
-    let allValid = true;
+    const registryContent = await Bun.file(registryPath).text();
 
     for (const [entityId, states] of Object.entries(ENTITY_STATE_MAPPINGS)) {
       const unionType = states.map((state) => `"${state}"`).join(" | ");
@@ -216,22 +272,43 @@ async function validateProcessing() {
         "s",
       );
 
-      if (expectedPattern.test(content)) {
+      if (expectedPattern.test(registryContent)) {
         console.log(`✅ ${entityId} state type is correct`);
       } else {
         console.log(`❌ ${entityId} state type validation failed`);
         allValid = false;
       }
     }
+  } catch (error) {
+    console.error("❌ Failed to validate registry:", error);
+    process.exit(1);
+  }
 
-    if (allValid) {
-      console.log("✅ All validations passed");
-    } else {
-      console.log("❌ Some validations failed");
-      process.exit(1);
+  // Validate services
+  const servicesPath = "src/hass/services.mts";
+
+  try {
+    const servicesContent = await Bun.file(servicesPath).text();
+
+    for (const [method, override] of Object.entries(SERVICE_FIELD_OVERRIDES)) {
+      if (
+        servicesContent.includes(`${override.field}: ${override.correctType};`)
+      ) {
+        console.log(`✅ ${method}.${override.field} type is correct`);
+      } else {
+        console.log(`❌ ${method}.${override.field} type validation failed`);
+        allValid = false;
+      }
     }
   } catch (error) {
-    console.error("❌ Failed to validate processing:", error);
+    console.error("❌ Failed to validate services:", error);
+    process.exit(1);
+  }
+
+  if (allValid) {
+    console.log("✅ All validations passed");
+  } else {
+    console.log("❌ Some validations failed");
     process.exit(1);
   }
 }
@@ -263,8 +340,9 @@ async function main() {
   // Step 2: Add TypeScript disable comments to generated files
   await addTsDisableComments();
 
-  // Step 3: Post-process registry
+  // Step 3: Post-process generated files
   await postProcessRegistry();
+  await postProcessServices();
 
   // Step 4: Validate processing
   await validateProcessing();

@@ -25,7 +25,7 @@ export function goLintHelper(pkgDir: Directory): Container {
     .withExec([
       "go",
       "install",
-      "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}",
+      `github.com/golangci/golangci-lint/v2/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}`,
     ])
     .withExec(["golangci-lint", "run", "./..."]);
 }

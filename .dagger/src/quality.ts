@@ -118,11 +118,11 @@ export function largeFileCheckHelper(source: Directory): Container {
     "bash",
     "-c",
     [
-      'large=$(find /workspace -type f -size +5M',
+      "large=$(find /workspace -type f -size +5M",
       '-not -path "*/node_modules/*" -not -path "*/.git/*"',
       '-not -path "*/.build/*" -not -path "*/.dagger/*"',
       '-not -path "*/archive/*"',
-      '-exec ls -lh {} \\; 2>/dev/null || true)',
+      "-exec ls -lh {} \\; 2>/dev/null || true)",
       '&& if [ -n "$large" ]; then echo "Files exceed 5MB limit:" && echo "$large" && exit 1; fi',
     ].join(" "),
   ]);

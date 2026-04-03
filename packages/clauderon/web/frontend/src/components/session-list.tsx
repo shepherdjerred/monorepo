@@ -209,15 +209,12 @@ export function SessionList({ onAttach, onCreateNew }: SessionListProps) {
   const handleEdit = (session: Session) => {
     setEditingSession(session);
   };
-
   const handleArchive = (session: Session) => {
     setConfirmDialog({ type: "archive", session });
   };
-
   const handleUnarchive = (session: Session) => {
     setConfirmDialog({ type: "unarchive", session });
   };
-
   const handleDelete = (session: Session) => {
     setConfirmDialog({ type: "delete", session });
   };

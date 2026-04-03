@@ -81,11 +81,13 @@ export function caddyfileValidateHelper(source: Directory): Container {
     .withWorkdir("/workspace")
     .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES })
     .withExec(["bun", "install", "--frozen-lockfile"])
+    .withWorkdir("/workspace/packages/homelab/src/cdk8s")
     .withExec([
       "sh",
       "-c",
-      "bun run packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts > /tmp/Caddyfile",
+      "bun run scripts/generate-caddyfile.ts > /tmp/Caddyfile",
     ])
+    .withWorkdir("/workspace")
     .withExec([
       "sh",
       "-c",
