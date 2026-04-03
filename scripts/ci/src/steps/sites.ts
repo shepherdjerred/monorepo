@@ -63,7 +63,7 @@ export function deploySitesGroup(
       // Resolve the package name from the build dir (e.g. "packages/sjer.red" → "sjer.red")
       const pkg = s.buildDir.replace("packages/", "").split("/")[0] ?? "";
       const pkgKey = pkgKeyMap?.get(pkg);
-      const deps = ["release"];
+      const deps = ["quality-gate"];
       if (pkgKey) deps.push(pkgKey);
       return deploySiteStep(s, deps);
     }),

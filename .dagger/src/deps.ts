@@ -7,7 +7,6 @@
  */
 export const WORKSPACE_DEPS: Record<string, string[]> = {
   // Standalone (no workspace deps)
-  "bun-decompile": [],
   "eslint-config": [],
   leetcode: [],
   resume: [],
@@ -18,6 +17,7 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   toolkit: ["eslint-config"],
   "hn-enhancer": ["eslint-config"],
   monarch: ["eslint-config"],
+  "cooklang-for-obsidian": ["eslint-config"],
   "cooklang-rich-preview": ["eslint-config"],
   "better-skill-capped": ["eslint-config"],
   birmel: ["eslint-config"],

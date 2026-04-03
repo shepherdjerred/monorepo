@@ -15,10 +15,6 @@
     { "type": "style", "section": "Style", "hidden": true }
   ],
   "packages": {
-    "packages/bun-decompile": {
-      "release-type": "node",
-      "package-name": "@shepherdjerred/bun-decompile"
-    },
     "packages/clauderon": {
       "release-type": "rust",
       "package-name": "clauderon",

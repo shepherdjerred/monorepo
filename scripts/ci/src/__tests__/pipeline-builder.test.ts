@@ -234,18 +234,15 @@ describe("buildPipeline", () => {
       }
       collect(pipeline.steps);
 
-      // Smoke tests depend on release + pkg key
+      // Smoke tests depend on their build step
       const smokeSteps = allSteps.filter((s) => s.key.startsWith("smoke-"));
       expect(smokeSteps.length).toBeGreaterThan(0);
       for (const s of smokeSteps) {
         const deps = Array.isArray(s.depends_on)
           ? s.depends_on
           : [s.depends_on];
-        expect(deps).toContain("release");
-        const hasPkgDep = deps.some(
-          (d) => typeof d === "string" && d.startsWith("pkg-"),
-        );
-        expect(hasPkgDep).toBe(true);
+        const imgName = s.key.replace("smoke-", "");
+        expect(deps).toContain(`build-${imgName}`);
       }
 
       // Push steps with smoke tests depend on their smoke step
@@ -259,7 +256,7 @@ describe("buildPipeline", () => {
         expect(pushDeps).toContain(smoke.key);
       }
 
-      // Push steps without smoke tests depend on release + pkg key
+      // Push steps without smoke tests depend on their build step
       const smokeNames = new Set(
         smokeSteps.map((s) => s.key.replace("smoke-", "")),
       );
@@ -272,7 +269,8 @@ describe("buildPipeline", () => {
         const deps = Array.isArray(s.depends_on)
           ? s.depends_on
           : [s.depends_on];
-        expect(deps).toContain("release");
+        const imgName = s.key.replace("push-", "");
+        expect(deps).toContain(`build-${imgName}`);
       }
     });
 
@@ -302,14 +300,15 @@ describe("buildPipeline", () => {
       }
     });
 
-    it("includes image publish, npm, clauderon, cooklang, and sites groups", () => {
+    it("includes image build/push, npm, clauderon, cooklang, and sites groups", () => {
       const pipeline = buildPipeline(fullBuild());
       const groups = pipeline.steps.filter(isGroup);
       const groupKeys = groups.map((g) => g.key);
 
-      expect(groupKeys).toContain("publish-images");
+      expect(groupKeys).toContain("build-images");
+      expect(groupKeys).toContain("push-images");
       expect(groupKeys).toContain("publish-npm");
-      expect(groupKeys).toContain("clauderon-release");
+      expect(groupKeys).toContain("clauderon-build");
       expect(groupKeys).toContain("cooklang-release");
       expect(groupKeys).toContain("deploy-sites");
     });
@@ -319,7 +318,8 @@ describe("buildPipeline", () => {
       const groups = pipeline.steps.filter(isGroup);
       const groupKeys = groups.map((g) => g.key);
 
-      expect(groupKeys).toContain("homelab-images");
+      expect(groupKeys).toContain("build-homelab-images");
+      expect(groupKeys).toContain("push-homelab-images");
       expect(groupKeys).toContain("homelab-helm-push");
       expect(groupKeys).toContain("homelab-tofu");
     });
@@ -386,10 +386,11 @@ describe("buildPipeline", () => {
       const groups = pipeline.steps.filter(isGroup);
       const groupKeys = groups.map((g) => g.key);
 
-      expect(groupKeys).toContain("homelab-images");
+      expect(groupKeys).toContain("build-homelab-images");
+      expect(groupKeys).toContain("push-homelab-images");
       expect(groupKeys).toContain("homelab-helm-push");
       expect(groupKeys).toContain("homelab-tofu");
-      expect(groupKeys).not.toContain("clauderon-release");
+      expect(groupKeys).not.toContain("clauderon-build");
       expect(groupKeys).not.toContain("cooklang-release");
     });
   });

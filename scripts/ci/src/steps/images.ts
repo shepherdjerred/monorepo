@@ -1,5 +1,8 @@
 /**
- * Image push step generators.
+ * Image build and push step generators.
+ *
+ * Build steps (build-phase) warm the Dagger cache and run smoke tests.
+ * Push steps (release-phase) publish to GHCR, reusing the cached build.
  */
 import type { ImageTarget } from "../catalog.ts";
 import { IMAGE_PUSH_TARGETS, INFRA_PUSH_TARGETS } from "../catalog.ts";
@@ -10,19 +13,109 @@ import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
 
 const MAIN_ONLY = "build.branch == pipeline.default_branch";
 
-function imagePushStep(
-  img: ImageTarget,
-  dependsOn: string | string[] = "release",
-): BuildkiteStep {
-  const pkg = img.package ?? img.name;
+function depFlags(pkg: string): string {
   const deps = WORKSPACE_DEPS[pkg] ?? [];
-  const depFlags = deps
+  return deps
     .flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`])
     .join(" ");
+}
+
+// ---------------------------------------------------------------------------
+// Build steps (build phase — depends on quality-gate)
+// ---------------------------------------------------------------------------
+
+function imageBuildStep(
+  img: ImageTarget,
+  dependsOn: string | string[] = "quality-gate",
+): BuildkiteStep {
+  const pkg = img.package ?? img.name;
+  const flags = depFlags(pkg);
+  const cmd = [
+    `dagger call build-image --pkg-dir ./packages/${pkg} --pkg ${img.name}`,
+    flags,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return {
+    label: `:docker: Build ${img.name}`,
+    key: `build-${safeKey(img.name)}`,
+    if: MAIN_ONLY,
+    depends_on: dependsOn,
+    command: cmd,
+    timeout_in_minutes: 15,
+    priority: 1,
+    retry: RETRY,
+    env: DAGGER_ENV,
+    plugins: [
+      k8sPlugin({
+        cpu: "250m",
+        memory: "512Mi",
+      }),
+    ],
+  };
+}
+
+/** Images that expose a health endpoint suitable for smoke testing. */
+const SMOKE_TEST_TARGETS: Record<string, { port: number; healthPath: string }> =
+  {
+    birmel: { port: 8000, healthPath: "/" },
+    "scout-for-lol": { port: 8000, healthPath: "/" },
+    "starlight-karma-bot": { port: 8000, healthPath: "/" },
+    "discord-plays-pokemon": { port: 8000, healthPath: "/" },
+    "tasknotes-server": { port: 8000, healthPath: "/" },
+  };
+
+function smokeTestStep(
+  img: ImageTarget,
+  dependsOn: string | string[],
+): BuildkiteStep | null {
+  const cfg = SMOKE_TEST_TARGETS[img.name];
+  if (!cfg) return null;
+  const pkg = img.package ?? img.name;
+  const flags = depFlags(pkg);
+  const cmd = [
+    `dagger call smoke-test`,
+    `--image '(build-image --pkg-dir ./packages/${pkg} --pkg ${img.name} ${flags})'`,
+    `--port ${cfg.port}`,
+    `--health-path ${cfg.healthPath}`,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return {
+    label: `:heartbeat: Smoke ${img.name}`,
+    key: `smoke-${safeKey(img.name)}`,
+    if: MAIN_ONLY,
+    depends_on: dependsOn,
+    command: cmd,
+    timeout_in_minutes: 5,
+    retry: RETRY,
+    env: DAGGER_ENV,
+    plugins: [
+      k8sPlugin({
+        cpu: "100m",
+        memory: "256Mi",
+      }),
+    ],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Push steps (release phase — depends on build/smoke completing)
+// ---------------------------------------------------------------------------
+
+function imagePushStep(
+  img: ImageTarget,
+  dependsOn: string | string[],
+): BuildkiteStep {
+  const pkg = img.package ?? img.name;
+  const flags = depFlags(pkg);
   const cmd = [
     `DIGEST=$(dagger call push-image --pkg-dir ./packages/${pkg} --pkg ${img.name}`,
-    depFlags,
-    `--tag ghcr.io/${img.versionKey}:latest`,
+    flags,
+    `--tags ghcr.io/${img.versionKey}:$BUILDKITE_BUILD_NUMBER`,
+    `--tags ghcr.io/${img.versionKey}:latest`,
     `--registry-username shepherdjerred`,
     `--registry-password env:GH_TOKEN)`,
     `&& if [ -n "$DIGEST" ]; then buildkite-agent meta-data set "digest:${img.versionKey}" "$DIGEST"; else echo "WARN: empty digest for ${img.name}"; fi`,
@@ -50,76 +143,11 @@ function imagePushStep(
   };
 }
 
-export function publishImagesGroup(
-  images: readonly ImageTarget[] = IMAGE_PUSH_TARGETS,
-): BuildkiteGroup {
-  return {
-    group: ":package: Publish Images",
-    key: "publish-images",
-    steps: images.map((img) => imagePushStep(img)),
-  };
-}
+// ---------------------------------------------------------------------------
+// Build-phase groups (build + smoke tests)
+// ---------------------------------------------------------------------------
 
-export function homelabImagesGroup(homelabPkgKey?: string): BuildkiteGroup {
-  return {
-    group: ":kubernetes: Homelab Images",
-    key: "homelab-images",
-    steps: INFRA_PUSH_TARGETS.map((img) => {
-      const deps = homelabPkgKey ? ["release", homelabPkgKey] : "release";
-      return imagePushStep(img, deps);
-    }),
-  };
-}
-
-/** Images that expose a health endpoint suitable for smoke testing. */
-const SMOKE_TEST_TARGETS: Record<string, { port: number; healthPath: string }> =
-  {
-    birmel: { port: 8000, healthPath: "/" },
-    "scout-for-lol": { port: 8000, healthPath: "/" },
-    "starlight-karma-bot": { port: 8000, healthPath: "/" },
-    "discord-plays-pokemon": { port: 8000, healthPath: "/" },
-    "tasknotes-server": { port: 8000, healthPath: "/" },
-  };
-
-function smokeTestStep(
-  img: ImageTarget,
-  dependsOn: string | string[],
-): BuildkiteStep | null {
-  const cfg = SMOKE_TEST_TARGETS[img.name];
-  if (!cfg) return null;
-  const pkg = img.package ?? img.name;
-  const deps = WORKSPACE_DEPS[pkg] ?? [];
-  const depFlags = deps
-    .flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`])
-    .join(" ");
-  const cmd = [
-    `dagger call smoke-test`,
-    `--image '(build-image --pkg-dir ./packages/${pkg} --pkg ${img.name} ${depFlags})'`,
-    `--port ${cfg.port}`,
-    `--health-path ${cfg.healthPath}`,
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  return {
-    label: `:heartbeat: Smoke ${img.name}`,
-    key: `smoke-${safeKey(img.name)}`,
-    if: MAIN_ONLY,
-    depends_on: dependsOn,
-    command: cmd,
-    timeout_in_minutes: 5,
-    retry: RETRY,
-    env: DAGGER_ENV,
-    plugins: [
-      k8sPlugin({
-        cpu: "100m",
-        memory: "256Mi",
-      }),
-    ],
-  };
-}
-
-export function publishImagesWithSmokeGroup(
+export function buildImagesWithSmokeGroup(
   images: readonly ImageTarget[] = IMAGE_PUSH_TARGETS,
   pkgKeyMap?: Map<string, string>,
 ): BuildkiteGroup {
@@ -127,24 +155,78 @@ export function publishImagesWithSmokeGroup(
   for (const img of images) {
     const pkg = img.package ?? img.name;
     const pkgKey = pkgKeyMap?.get(pkg);
-    const releaseDeps: string[] = pkgKey ? ["release", pkgKey] : ["release"];
-    const smoke = smokeTestStep(img, releaseDeps);
+    const buildDeps: string[] = pkgKey
+      ? ["quality-gate", pkgKey]
+      : ["quality-gate"];
+
+    const build = imageBuildStep(img, buildDeps);
+    steps.push(build);
+
+    const smoke = smokeTestStep(img, `build-${safeKey(img.name)}`);
     if (smoke) {
-      // Smoke test runs first (builds image locally), push depends on smoke passing
       steps.push(smoke);
-      steps.push(imagePushStep(img, `smoke-${safeKey(img.name)}`));
-    } else {
-      // No smoke test — push depends directly on release + pkg
-      steps.push(imagePushStep(img, releaseDeps));
     }
   }
   return {
-    group: ":package: Publish Images",
-    key: "publish-images",
+    group: ":package: Build Images",
+    key: "build-images",
     steps,
   };
 }
 
+export function homelabImagesBuildGroup(
+  homelabPkgKey?: string,
+): BuildkiteGroup {
+  const buildDeps = homelabPkgKey
+    ? ["quality-gate", homelabPkgKey]
+    : ["quality-gate"];
+  return {
+    group: ":kubernetes: Build Homelab Images",
+    key: "build-homelab-images",
+    steps: INFRA_PUSH_TARGETS.map((img) => imageBuildStep(img, buildDeps)),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Push-phase groups (push only, depends on build/smoke completing)
+// ---------------------------------------------------------------------------
+
+export function pushImagesGroup(
+  images: readonly ImageTarget[] = IMAGE_PUSH_TARGETS,
+): BuildkiteGroup {
+  const steps: BuildkiteStep[] = [];
+  for (const img of images) {
+    const smoke = SMOKE_TEST_TARGETS[img.name];
+    const pushDep = smoke
+      ? `smoke-${safeKey(img.name)}`
+      : `build-${safeKey(img.name)}`;
+    steps.push(imagePushStep(img, pushDep));
+  }
+  return {
+    group: ":package: Push Images",
+    key: "push-images",
+    steps,
+  };
+}
+
+export function homelabImagesPushGroup(): BuildkiteGroup {
+  return {
+    group: ":kubernetes: Push Homelab Images",
+    key: "push-homelab-images",
+    steps: INFRA_PUSH_TARGETS.map((img) =>
+      imagePushStep(img, `build-${safeKey(img.name)}`),
+    ),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Key helpers for downstream dependency wiring
+// ---------------------------------------------------------------------------
+
 export function allPushKeys(images: readonly ImageTarget[]): string[] {
   return images.map((img) => `push-${safeKey(img.name)}`);
+}
+
+export function allBuildKeys(images: readonly ImageTarget[]): string[] {
+  return images.map((img) => `build-${safeKey(img.name)}`);
 }

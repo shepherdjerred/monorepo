@@ -1,5 +1,8 @@
 /**
- * Clauderon release step generators (Rust binary build + upload).
+ * Clauderon step generators (Rust binary build + upload).
+ *
+ * Build steps run in the build phase (depends on quality-gate).
+ * Upload step runs in the release phase (depends on release + build keys).
  */
 import { RETRY, DAGGER_ENV, DRYRUN_FLAG } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
@@ -29,8 +32,8 @@ const TARGETS: BuildTarget[] = [
   },
 ];
 
-export function clauderonReleaseGroup(pkgKey?: string): BuildkiteGroup {
-  const dependsOn = pkgKey ? ["release", pkgKey] : ["release"];
+export function clauderonBuildGroup(pkgKey?: string): BuildkiteGroup {
+  const dependsOn = pkgKey ? ["quality-gate", pkgKey] : ["quality-gate"];
   const buildSteps: BuildkiteStep[] = TARGETS.map((t) => ({
     label: `:rust: Build clauderon (${t.label})`,
     key: t.key,
@@ -44,22 +47,24 @@ export function clauderonReleaseGroup(pkgKey?: string): BuildkiteGroup {
     plugins: [k8sPlugin({ cpu: "250m", memory: "512Mi", secrets: [] })],
   }));
 
-  const uploadStep: BuildkiteStep = {
+  return {
+    group: ":rust: Clauderon Build",
+    key: "clauderon-build",
+    steps: buildSteps,
+  };
+}
+
+export function clauderonUploadStep(): BuildkiteStep {
+  return {
     label: ":rust: Upload clauderon binaries",
     key: "clauderon-upload",
     if: MAIN_ONLY,
-    depends_on: TARGETS.map((t) => t.key),
+    depends_on: ["release", ...TARGETS.map((t) => t.key)],
     command: `dagger call clauderon-build-and-upload --pkg-dir ./packages/clauderon --version "$(buildkite-agent meta-data get clauderon_version)" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
     timeout_in_minutes: 10,
     priority: 1,
     retry: RETRY,
     env: DAGGER_ENV,
     plugins: [k8sPlugin({ cpu: "250m", memory: "512Mi" })],
-  };
-
-  return {
-    group: ":rust: Clauderon Release",
-    key: "clauderon-release",
-    steps: [...buildSteps, uploadStep],
   };
 }

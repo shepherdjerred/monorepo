@@ -11,7 +11,9 @@ const PR_ONLY = "build.branch != pipeline.default_branch";
 
 function tofuStackStep(stack: string, homelabPkgKey?: string): BuildkiteStep {
   const label = TOFU_STACK_LABELS[stack] ?? stack;
-  const dependsOn = homelabPkgKey ? ["release", homelabPkgKey] : "release";
+  const dependsOn = homelabPkgKey
+    ? ["quality-gate", homelabPkgKey]
+    : "quality-gate";
   return {
     label: `:terraform: Apply ${label}`,
     key: `tofu-${stack}`,

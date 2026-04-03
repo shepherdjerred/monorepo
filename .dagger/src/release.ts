@@ -400,7 +400,7 @@ export function argoCdHealthWaitHelper(
 // Cooklang
 // ---------------------------------------------------------------------------
 
-/** Build cooklang-rich-preview artifacts. */
+/** Build cooklang-for-obsidian plugin artifacts. */
 export function cooklangBuildHelper(
   pkgDir: Directory,
   depNames: string[] = [],
@@ -411,8 +411,8 @@ export function cooklangBuildHelper(
     .container()
     .from(BUN_IMAGE)
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
-    .withWorkdir("/workspace/packages/cooklang-rich-preview")
-    .withDirectory("/workspace/packages/cooklang-rich-preview", pkgDir, {
+    .withWorkdir("/workspace/packages/cooklang-for-obsidian")
+    .withDirectory("/workspace/packages/cooklang-for-obsidian", pkgDir, {
       exclude: SOURCE_EXCLUDES,
     });
 

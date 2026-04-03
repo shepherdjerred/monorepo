@@ -55,11 +55,11 @@ export function buildImageHelper(
     .withEntrypoint(["bun", "run", "src/index.ts"]);
 }
 
-/** Push a built image to a registry. Returns the published image digest. */
-export function pushImageHelper(
+/** Push a built image to a registry under one or more tags. Returns the digest of the first tag published. */
+export async function pushImageHelper(
   pkgDir: Directory,
   pkg: string,
-  tag: string,
+  tags: string[],
   registryUsername: string,
   registryPassword: Secret,
   depNames: string[] = [],
@@ -67,6 +67,9 @@ export function pushImageHelper(
   version: string = "dev",
   gitSha: string = "unknown",
 ): Promise<string> {
+  if (tags.length === 0) {
+    throw new Error("pushImageHelper requires at least one tag");
+  }
   const image = buildImageHelper(
     pkgDir,
     pkg,
@@ -74,8 +77,11 @@ export function pushImageHelper(
     depDirs,
     version,
     gitSha,
-  );
-  return image
-    .withRegistryAuth("ghcr.io", registryUsername, registryPassword)
-    .publish(tag);
+  ).withRegistryAuth("ghcr.io", registryUsername, registryPassword);
+
+  const digest = await image.publish(tags[0]);
+  for (const tag of tags.slice(1)) {
+    await image.publish(tag);
+  }
+  return digest;
 }

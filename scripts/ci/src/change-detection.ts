@@ -363,7 +363,9 @@ export async function detectChanges(): Promise<AffectedPackages> {
     buildAll: false,
     homelabChanged: allAffected.has("homelab"),
     clauderonChanged: allAffected.has("clauderon"),
-    cooklangChanged: allAffected.has("cooklang-rich-preview"),
+    cooklangChanged:
+      allAffected.has("cooklang-rich-preview") ||
+      allAffected.has("cooklang-for-obsidian"),
     castleCastersChanged: allAffected.has("castle-casters"),
     resumeChanged: allAffected.has("resume"),
     hasImagePackages,

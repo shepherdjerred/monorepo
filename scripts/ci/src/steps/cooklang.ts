@@ -12,10 +12,10 @@ import type { BuildkiteGroup } from "../lib/types.ts";
 const MAIN_ONLY = "build.branch == pipeline.default_branch";
 
 const COOKLANG_PKG_FLAGS =
-  "--pkg-dir ./packages/cooklang-rich-preview --dep-names eslint-config --dep-dirs ./packages/eslint-config --tsconfig ./tsconfig.base.json";
+  "--pkg-dir ./packages/cooklang-for-obsidian --dep-names eslint-config --dep-dirs ./packages/eslint-config --tsconfig ./tsconfig.base.json";
 
 export function cooklangReleaseGroup(pkgKey?: string): BuildkiteGroup {
-  const dependsOn = pkgKey ? ["release", pkgKey] : ["release"];
+  const dependsOn = pkgKey ? ["quality-gate", pkgKey] : ["quality-gate"];
   return {
     group: ":cook: Cooklang Release",
     key: "cooklang-release",
@@ -39,7 +39,7 @@ export function cooklangReleaseGroup(pkgKey?: string): BuildkiteGroup {
         label: ":cook: Push cooklang artifacts",
         key: "cooklang-push",
         if: MAIN_ONLY,
-        depends_on: "cooklang-build",
+        depends_on: ["cooklang-build", "release"],
         command: [
           `buildkite-agent artifact download "/tmp/cooklang-dist/**/*" /tmp/cooklang-dist`,
           `dagger call cooklang-push --source /tmp/cooklang-dist --version "$(buildkite-agent meta-data get cooklang_version)" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
@@ -54,7 +54,7 @@ export function cooklangReleaseGroup(pkgKey?: string): BuildkiteGroup {
         label: ":cook: Create cooklang release",
         key: "cooklang-release-create",
         if: MAIN_ONLY,
-        depends_on: "cooklang-build",
+        depends_on: ["cooklang-build", "release"],
         command: [
           `buildkite-agent artifact download "/tmp/cooklang-dist/**/*" /tmp/cooklang-dist`,
           `dagger call cooklang-create-release --artifacts /tmp/cooklang-dist --version "$(buildkite-agent meta-data get cooklang_version)" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,

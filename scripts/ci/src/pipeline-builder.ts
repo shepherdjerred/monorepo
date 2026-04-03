@@ -31,8 +31,10 @@ import {
 import { codeReviewStep } from "./steps/code-review.ts";
 import { releaseStep } from "./steps/release.ts";
 import {
-  publishImagesWithSmokeGroup,
-  homelabImagesGroup,
+  buildImagesWithSmokeGroup,
+  pushImagesGroup,
+  homelabImagesBuildGroup,
+  homelabImagesPushGroup,
   allPushKeys,
 } from "./steps/images.ts";
 import { publishNpmGroup, filterNpmPackages } from "./steps/npm.ts";
@@ -41,10 +43,10 @@ import {
   filterSites,
   mkdocsDeployStep,
 } from "./steps/sites.ts";
-import { homelabHelmGroup } from "./steps/helm.ts";
+import { cdk8sSynthStep, homelabHelmGroup } from "./steps/helm.ts";
 import { homelabTofuGroup, homelabTofuPlanGroup } from "./steps/tofu.ts";
 import { argoCdSyncStep, argoCdHealthStep } from "./steps/argocd.ts";
-import { clauderonReleaseGroup } from "./steps/clauderon.ts";
+import { clauderonBuildGroup, clauderonUploadStep } from "./steps/clauderon.ts";
 import { cooklangReleaseGroup } from "./steps/cooklang.ts";
 import { versionCommitBackStep } from "./steps/version.ts";
 import { buildSummaryStep } from "./steps/build-summary.ts";
@@ -133,25 +135,77 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     affected.cooklangChanged;
 
   if (hasMainSteps) {
-    // Release depends only on repo-wide quality gates.
-    // Per-package builds gate their own downstream steps, not release.
-    // Async checks (trivy, semgrep, knip, prettier, dagger-hygiene) run in parallel.
+    // Quality gate: lightweight step that passes once all blocking checks pass.
+    // Downstream steps that don't need release metadata depend on this instead.
+    steps.push({
+      label: ":shield: Quality Gate",
+      key: "quality-gate",
+      command: "echo 'All quality gates passed'",
+      depends_on: releaseDeps,
+      plugins: [k8sPlugin()],
+    });
+
+    // Release-please runs in parallel with quality-gate (same deps).
+    // Only steps that consume release metadata depend on "release".
     steps.push(releaseStep(releaseDeps));
 
-    // Helper: build deps array scoped to release + a specific package build
+    // Helper: build deps array scoped to quality-gate + a specific package build
     const scopedDeps = (pkg: string, extra: string[] = []): string[] => {
-      const deps = ["release", ...extra];
+      const deps = ["quality-gate", ...extra];
       const pkgKey = pkgKeyMap.get(pkg);
       if (pkgKey) deps.push(pkgKey);
       return deps;
     };
 
-    // --- Publish app images (with smoke tests for images that have health endpoints) ---
+    // =======================================================================
+    // BUILD PHASE — depends on quality-gate, runs before release
+    // =======================================================================
+
     const hasImages = affected.buildAll || affected.hasImagePackages.size > 0;
+
+    // --- Build app images + smoke tests ---
+    if (hasImages) {
+      steps.push(buildImagesWithSmokeGroup(IMAGE_PUSH_TARGETS, pkgKeyMap));
+    }
+
+    // --- Build homelab infra images ---
+    if (affected.buildAll || affected.homelabChanged) {
+      steps.push(homelabImagesBuildGroup(pkgKeyMap.get("homelab")));
+    }
+
+    // --- Build clauderon binaries ---
+    if (affected.buildAll || affected.clauderonChanged) {
+      steps.push(clauderonBuildGroup(pkgKeyMap.get("clauderon")));
+    }
+
+    // --- Build cdk8s manifests ---
+    if (affected.buildAll || affected.homelabChanged) {
+      const homelabPkgKey = pkgKeyMap.get("homelab");
+      const synthDeps = homelabPkgKey
+        ? ["quality-gate", homelabPkgKey]
+        : ["quality-gate"];
+      steps.push(cdk8sSynthStep(synthDeps));
+    }
+
+    // =======================================================================
+    // RELEASE PHASE — depends on release + build keys
+    // =======================================================================
+
+    // --- Push app images ---
     let appPushKeys: string[] = [];
     if (hasImages) {
-      steps.push(publishImagesWithSmokeGroup(IMAGE_PUSH_TARGETS, pkgKeyMap));
+      steps.push(pushImagesGroup(IMAGE_PUSH_TARGETS));
       appPushKeys = allPushKeys(IMAGE_PUSH_TARGETS);
+    }
+
+    // --- Push homelab infra images ---
+    if (affected.buildAll || affected.homelabChanged) {
+      steps.push(homelabImagesPushGroup());
+    }
+
+    // --- Upload clauderon binaries ---
+    if (affected.buildAll || affected.clauderonChanged) {
+      steps.push(clauderonUploadStep());
     }
 
     // --- Publish NPM packages ---
@@ -165,14 +219,9 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
       }
     }
 
-    // --- Clauderon Release ---
-    if (affected.buildAll || affected.clauderonChanged) {
-      steps.push(clauderonReleaseGroup(pkgKeyMap.get("clauderon")));
-    }
-
     // --- Cooklang Release ---
     if (affected.buildAll || affected.cooklangChanged) {
-      steps.push(cooklangReleaseGroup(pkgKeyMap.get("cooklang-rich-preview")));
+      steps.push(cooklangReleaseGroup(pkgKeyMap.get("cooklang-for-obsidian")));
     }
 
     // --- Deploy sites ---
@@ -194,19 +243,13 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
       steps.push(homelabTofuPlanGroup());
     }
 
-    // --- Homelab release track ---
+    // --- Homelab Helm + Tofu release track ---
     if (affected.buildAll || affected.homelabChanged) {
-      const homelabPkgKey = pkgKeyMap.get("homelab");
-
-      // Homelab infra images (4 parallel)
-      steps.push(homelabImagesGroup(homelabPkgKey));
-      const infraPushKeys = allPushKeys(INFRA_PUSH_TARGETS);
-
-      // Homelab Helm: cdk8s build -> helm chart push
-      steps.push(homelabHelmGroup(infraPushKeys, homelabPkgKey));
+      // Helm charts (push only — cdk8s synth already ran in build phase)
+      steps.push(homelabHelmGroup());
 
       // Homelab Tofu: 3 parallel stacks
-      steps.push(homelabTofuGroup(homelabPkgKey));
+      steps.push(homelabTofuGroup(pkgKeyMap.get("homelab")));
     }
 
     // --- Unified ArgoCD sync (depends on whatever upstream steps ran) ---
@@ -240,7 +283,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
       affected.hasImagePackages.size > 0 ||
       affected.homelabChanged
     ) {
-      const vcbDeps: string[] = [];
+      const vcbDeps: string[] = ["release"];
       if (hasImages) {
         vcbDeps.push(...appPushKeys);
       }

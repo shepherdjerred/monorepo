@@ -310,12 +310,12 @@ export class Monorepo {
     return buildImageHelper(pkgDir, pkg, depNames, depDirs, version, gitSha);
   }
 
-  /** Push a built image to a registry */
+  /** Push a built image to a registry under one or more tags. Returns digest of the first tag. */
   @func({ cache: "never" })
   async pushImage(
     pkgDir: Directory,
     pkg: string,
-    tag: string,
+    tags: string[],
     registryUsername: string,
     registryPassword: Secret,
     depNames: string[] = [],
@@ -326,7 +326,7 @@ export class Monorepo {
     return pushImageHelper(
       pkgDir,
       pkg,
-      tag,
+      tags,
       registryUsername,
       registryPassword,
       depNames,
@@ -660,7 +660,7 @@ export class Monorepo {
     ).stdout();
   }
 
-  /** Build cooklang-rich-preview artifacts and return the dist directory */
+  /** Build cooklang-for-obsidian plugin and return artifacts (main.js, manifest.json, styles.css) */
   @func()
   cooklangBuild(
     pkgDir: Directory,
@@ -669,7 +669,7 @@ export class Monorepo {
     tsconfig: File | null = null,
   ): Directory {
     return cooklangBuildHelper(pkgDir, depNames, depDirs, tsconfig).directory(
-      "/workspace/packages/cooklang-rich-preview/dist",
+      "/workspace/packages/cooklang-for-obsidian",
     );
   }
 

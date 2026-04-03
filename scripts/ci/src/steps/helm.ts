@@ -1,5 +1,8 @@
 /**
  * Homelab Helm chart step generators.
+ *
+ * cdk8sSynthStep runs in the build phase (generates K8s manifests).
+ * Helm push steps run in the release phase (package + push charts).
  */
 import { HELM_CHARTS } from "../catalog.ts";
 import { RETRY, DAGGER_ENV, DRYRUN_FLAG } from "../lib/buildkite.ts";
@@ -9,7 +12,7 @@ import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
 
 const MAIN_ONLY = "build.branch == pipeline.default_branch";
 
-function cdk8sSynthStep(dependsOn: string[]): BuildkiteStep {
+export function cdk8sSynthStep(dependsOn: string[]): BuildkiteStep {
   const deps = WORKSPACE_DEPS["homelab/src/cdk8s"] ?? [];
   const depFlags = deps
     .flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`])
@@ -33,7 +36,7 @@ function helmPushStep(chartName: string): BuildkiteStep {
     label: `:helm: Push ${chartName}`,
     key: `helm-push-${chartName}`,
     if: MAIN_ONLY,
-    depends_on: "homelab-cdk8s",
+    depends_on: ["homelab-cdk8s", "release"],
     command:
       [
         `dagger call helm-package --source .`,
@@ -50,17 +53,10 @@ function helmPushStep(chartName: string): BuildkiteStep {
   };
 }
 
-export function homelabHelmGroup(
-  dependsOn: string[],
-  homelabPkgKey?: string,
-): BuildkiteGroup {
-  const synthDeps = homelabPkgKey ? [...dependsOn, homelabPkgKey] : dependsOn;
+export function homelabHelmGroup(): BuildkiteGroup {
   return {
     group: ":helm: Homelab Helm",
     key: "homelab-helm-push",
-    steps: [
-      cdk8sSynthStep(synthDeps),
-      ...HELM_CHARTS.map((chart) => helmPushStep(chart)),
-    ],
+    steps: HELM_CHARTS.map((chart) => helmPushStep(chart)),
   };
 }

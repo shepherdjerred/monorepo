@@ -1,0 +1,243 @@
+/* Cooklang Recipe Plugin Styles */
+
+.cook-recipe {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--size-4-4);
+}
+
+/* Metadata Card */
+.cook-metadata-card {
+  background: var(--background-secondary);
+  border-radius: var(--radius-m);
+  padding: var(--size-4-4) var(--size-4-6);
+  margin-bottom: var(--size-4-4);
+}
+
+.cook-title {
+  margin: 0 0 var(--size-4-2) 0;
+  font-size: var(--font-ui-large);
+  color: var(--text-normal);
+}
+
+.cook-description {
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 0 0 var(--size-4-3) 0;
+}
+
+.cook-info-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-2);
+  margin-bottom: var(--size-4-3);
+}
+
+.cook-info-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--size-4-1);
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  padding: var(--size-2-2) var(--size-4-2);
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
+}
+
+.cook-info-icon {
+  font-size: 14px;
+}
+
+.cook-source-link {
+  font-size: var(--font-ui-small);
+  color: var(--text-accent);
+  display: block;
+  margin-bottom: var(--size-2-2);
+}
+
+.cook-source,
+.cook-author {
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: var(--size-2-2);
+}
+
+.cook-tags {
+  display: flex;
+  gap: var(--size-4-1);
+  margin-top: var(--size-4-2);
+}
+
+.cook-tag {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border-radius: var(--radius-s);
+  padding: var(--size-2-1) var(--size-4-2);
+  font-size: var(--font-ui-smaller);
+}
+
+/* Image */
+.cook-image-wrapper {
+  margin-bottom: var(--size-4-4);
+  border-radius: var(--radius-m);
+  overflow: hidden;
+}
+
+.cook-image {
+  width: 100%;
+  height: auto;
+  max-height: 400px;
+  object-fit: cover;
+  display: block;
+}
+
+/* Sections */
+.cook-section {
+  margin-bottom: var(--size-4-6);
+}
+
+.cook-section-header {
+  color: var(--text-normal);
+  border-bottom: 2px solid var(--background-modifier-border);
+  padding-bottom: var(--size-2-2);
+  margin-bottom: var(--size-4-3);
+}
+
+/* Ingredients List */
+.cook-ingredients-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.cook-ingredient-item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--size-4-2);
+  padding: var(--size-2-3) 0;
+  border-bottom: 1px solid var(--background-modifier-border-hover);
+}
+
+.cook-ingredient-item.cook-checked {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+.cook-checkbox {
+  flex-shrink: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.cook-quantity {
+  color: var(--text-accent);
+  font-weight: var(--font-semibold);
+  white-space: nowrap;
+}
+
+.cook-ingredient-name {
+  color: var(--text-normal);
+}
+
+.cook-ingredient-extra {
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+
+.cook-ingredient-subheader {
+  list-style: none;
+  padding: var(--size-4-2) 0 var(--size-2-2) 0;
+  margin-top: var(--size-4-2);
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Directions */
+.cook-directions {
+  counter-reset: none;
+}
+
+.cook-direction-step {
+  display: flex;
+  gap: var(--size-4-3);
+  margin-bottom: var(--size-4-4);
+}
+
+.cook-step-number {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-semibold);
+  margin-top: 2px;
+}
+
+.cook-step-content {
+  flex: 1;
+}
+
+.cook-step-content p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Inline tokens */
+.cook-inline-ingredient {
+  color: var(--text-accent);
+  font-weight: var(--font-medium);
+}
+
+.cook-inline-qty {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+.cook-inline-cookware {
+  color: var(--color-purple);
+  font-weight: var(--font-medium);
+}
+
+.cook-inline-timer {
+  color: var(--color-orange);
+  font-weight: var(--font-semibold);
+  background: var(--background-secondary);
+  padding: 1px var(--size-2-2);
+  border-radius: var(--radius-s);
+}
+
+/* Editor container */
+.cook-editor-container {
+  height: 100%;
+}
+
+.cook-editor-container .cm-editor {
+  height: 100%;
+}
+
+/* Preview container */
+.cook-preview-container {
+  overflow-y: auto;
+  height: 100%;
+  padding: var(--size-4-2);
+}
+
+/* Nutrition section */
+.cook-section:has(.cook-section-header) {
+  /* Nutrition gets a subtle background */
+}
+
+/* Generic step text */
+.cook-step {
+  line-height: 1.6;
+  margin-bottom: var(--size-4-2);
+}

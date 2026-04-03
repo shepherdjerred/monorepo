@@ -236,6 +236,7 @@ export const ALL_PACKAGES: string[] = [
   "birmel",
   "castle-casters",
   "clauderon",
+  "cooklang-for-obsidian",
   "cooklang-rich-preview",
   "discord-plays-pokemon",
   "docs",
