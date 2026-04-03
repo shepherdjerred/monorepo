@@ -63,8 +63,8 @@ export function deploySitesGroup(
 }
 
 /**
- * MkDocs docs deploy — uses mkdocs-build (Python), then aws s3 sync.
- * Separate from deploySiteStep because it needs a Python container, not Bun.
+ * MkDocs docs deploy — build with mkdocs (Python), export, then deploy via deploy-site (awscli inside Dagger).
+ * Two-step pipeline: mkdocs-build produces the site/, then deploy-site syncs to S3.
  */
 export function mkdocsDeployStep(dependsOn: string[]): BuildkiteStep {
   return {
@@ -73,10 +73,10 @@ export function mkdocsDeployStep(dependsOn: string[]): BuildkiteStep {
     if: MAIN_ONLY,
     depends_on: dependsOn,
     command: [
-      // Build with mkdocs (Python container inside Dagger)
+      // Step 1: Build with mkdocs (Python container), export built site to local path
       `dagger call mkdocs-build --source . export --path /tmp/mkdocs-site`,
-      // Deploy built site to S3
-      `aws s3 sync /tmp/mkdocs-site s3://discord-plays-pokemon-docs --endpoint-url https://seaweedfs.sjer.red --delete`,
+      // Step 2: Deploy built site via deploy-site (awscli inside Dagger container)
+      `dagger call deploy-site --pkg-dir /tmp/mkdocs-site --pkg discord-plays-pokemon --build-cmd "true" --bucket discord-plays-pokemon-docs --dist-subdir . --target seaweedfs --aws-access-key-id env:SEAWEEDFS_ACCESS_KEY_ID --aws-secret-access-key env:SEAWEEDFS_SECRET_ACCESS_KEY`,
     ].join(" && ") + DRYRUN_FLAG,
     timeout_in_minutes: 15,
     retry: RETRY,

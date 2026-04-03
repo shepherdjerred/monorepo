@@ -166,36 +166,42 @@ async function main() {
   const db = getFirestore(app);
   const docRef = doc(db, "content-location/lol-content-location");
   const docSnap = await getDoc(docRef);
-  const firestoreSchema = z.object({ dumpUrl: z.string() });
-  const data = firestoreSchema.parse(docSnap.data());
+  const FirestoreDoc = z.object({ dumpUrl: z.string() });
+  const data = FirestoreDoc.parse(docSnap.data());
   const url = data.dumpUrl;
 
-  console.log(`Found manifest URL: ${url}`);
+  console.warn(`Found manifest URL: ${url}`);
   const jsonResponse = await fetch(url);
-  const jsonContent = await jsonResponse.json();
+  const jsonContent: unknown = await jsonResponse.json();
   const jsonString = JSON.stringify(jsonContent);
 
-  // Ensure directory exists
-  mkdirSync(dirname(outputPath), { recursive: true });
+  // Ensure directory exists and write to filesystem
+  const outputDir = path.dirname(outputPath);
+  await Bun.$`mkdir -p ${outputDir}`;
+  await Bun.write(outputPath, jsonString);
+  console.warn(`Manifest saved to ${outputPath}`);
 
-  // Write to filesystem
-  writeFileSync(outputPath, jsonString);
-  console.log(`Manifest saved to ${outputPath}`);
-
-  if (s3Bucket) {
+  if (s3Bucket !== undefined && s3Bucket !== "") {
     const accessKeyId = Bun.env["AWS_ACCESS_KEY_ID"];
     const secretAccessKey = Bun.env["AWS_SECRET_ACCESS_KEY"];
     const endpoint = Bun.env["S3_ENDPOINT"];
     const region = Bun.env["S3_REGION"] ?? Bun.env["AWS_REGION"] ?? "us-east-1";
 
-    if (!accessKeyId || !secretAccessKey || !endpoint) {
+    if (
+      accessKeyId === undefined ||
+      accessKeyId === "" ||
+      secretAccessKey === undefined ||
+      secretAccessKey === "" ||
+      endpoint === undefined ||
+      endpoint === ""
+    ) {
       throw new Error("Missing S3 credentials or endpoint for upload");
     }
 
     const key = Bun.env["S3_KEY"] ?? "data/manifest.json";
     const forcePathStyle = parseBool(Bun.env["S3_FORCE_PATH_STYLE"], true);
 
-    console.log(`Uploading manifest to s3://${s3Bucket}/${key}`);
+    console.warn(`Uploading manifest to s3://${s3Bucket}/${key}`);
     const sessionToken = Bun.env["AWS_SESSION_TOKEN"];
     await uploadToS3(
       {
@@ -210,14 +216,18 @@ async function main() {
       },
       jsonString,
     );
-    console.log("Manifest uploaded to S3");
+    console.warn("Manifest uploaded to S3");
   } else {
-    console.log("Skipping S3 upload: S3_BUCKET_NAME not set");
+    console.warn("Skipping S3 upload: S3_BUCKET_NAME not set");
   }
 }
 
-main().catch((error: unknown) => {
-  console.error("Failed to fetch manifest:", error);
-  Sentry.captureException(error);
-  process.exit(1);
-});
+void (async () => {
+  try {
+    await main();
+  } catch (error: unknown) {
+    console.error("Failed to fetch manifest:", error);
+    Sentry.captureException(error);
+    process.exit(1);
+  }
+})();
