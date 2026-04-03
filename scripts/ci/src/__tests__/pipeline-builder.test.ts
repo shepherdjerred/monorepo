@@ -362,8 +362,18 @@ describe("buildPipeline", () => {
       expect(missing).toEqual([]);
     });
 
-    it("all commands use dagger call (no shell script bypasses)", () => {
+    it("all commands use dagger call or are known plain steps", () => {
       const pipeline = buildPipeline(fullBuild());
+      /** Steps that intentionally run directly on the agent (no Dagger). */
+      const PLAIN_STEP_KEYS = new Set([
+        "quality-ratchet",
+        "compliance-check",
+        "env-var-names",
+        "migration-guard",
+        "dagger-hygiene",
+        "merge-conflict-check",
+        "large-file-check",
+      ]);
       const nonDagger: string[] = [];
 
       function check(steps: unknown[]) {
@@ -372,12 +382,14 @@ describe("buildPipeline", () => {
           const obj = s as Record<string, unknown>;
           if (typeof obj["command"] === "string") {
             const cmd = obj["command"] as string;
+            const key = obj["key"];
             if (
               !cmd.includes("dagger call") &&
               !cmd.includes("echo ") &&
-              !cmd.includes("buildkite-agent")
+              !cmd.includes("buildkite-agent") &&
+              !(typeof key === "string" && PLAIN_STEP_KEYS.has(key))
             ) {
-              nonDagger.push(`${obj["key"]}: ${cmd}`);
+              nonDagger.push(`${key}: ${cmd}`);
             }
           }
           if (Array.isArray(obj["steps"])) check(obj["steps"] as unknown[]);

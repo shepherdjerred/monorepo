@@ -45,8 +45,10 @@ describe("resource tiers", () => {
 
     let match: RegExpExecArray | null;
     while ((match = tierPattern.exec(content)) !== null) {
-      // Normalize whitespace for comparison
-      tiers[match[1]] = match[2].replace(/\s+/g, " ").trim();
+      const name = match[1];
+      const value = match[2];
+      if (name === undefined || value === undefined) continue;
+      tiers[name] = value.replace(/\s+/g, " ").trim();
     }
 
     expect(Object.keys(tiers)).toHaveLength(3);
@@ -77,11 +79,11 @@ describe("image tags", () => {
       .trim()
       .split("\n")
       .filter(Boolean)
-      .map((line) => {
+      .flatMap((line) => {
         const match = /"([^"]+)"/.exec(line);
-        return match ? match[1] : "";
-      })
-      .filter(Boolean);
+        const value = match?.[1];
+        return value !== undefined ? [value] : [];
+      });
   }
 
   it("no image constant uses :latest", () => {
