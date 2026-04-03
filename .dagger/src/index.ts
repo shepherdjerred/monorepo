@@ -17,16 +17,9 @@ import {
 } from "@dagger.io/dagger";
 
 import {
-  qualityRatchetHelper,
-  complianceCheckHelper,
   knipCheckHelper,
   gitleaksCheckHelper,
   suppressionCheckHelper,
-  daggerHygieneHelper,
-  envVarNamesHelper,
-  migrationGuardHelper,
-  mergeConflictHelper,
-  largeFileCheckHelper,
 } from "./quality";
 
 import { trivyScanHelper, semgrepScanHelper } from "./security";
@@ -498,17 +491,9 @@ export class Monorepo {
   // Quality gates (repo-wide)
   // ---------------------------------------------------------------------------
 
-  /** Run the quality ratchet check across the repo */
-  @func()
-  async qualityRatchet(source: Directory): Promise<string> {
-    return qualityRatchetHelper(source).stdout();
-  }
-
-  /** Run the compliance check across the repo */
-  @func()
-  async complianceCheck(source: Directory): Promise<string> {
-    return complianceCheckHelper(source).stdout();
-  }
+  // quality-ratchet, compliance-check, dagger-hygiene, env-var-names,
+  // migration-guard, merge-conflict-check, large-file-check run as plain
+  // Buildkite steps (only need bash/bun on the agent, no Dagger container).
 
   /** Run knip to detect unused exports and dependencies */
   @func()
@@ -526,36 +511,6 @@ export class Monorepo {
   @func()
   async suppressionCheck(source: Directory): Promise<string> {
     return suppressionCheckHelper(source).stdout();
-  }
-
-  /** Run the dagger hygiene checker to detect banned patterns in CI code */
-  @func()
-  async daggerHygiene(source: Directory): Promise<string> {
-    return daggerHygieneHelper(source).stdout();
-  }
-
-  /** Validate env var naming conventions across the source tree */
-  @func()
-  async envVarNames(source: Directory): Promise<string> {
-    return envVarNamesHelper(source).stdout();
-  }
-
-  /** Guard against package exclusions from workspace scripts */
-  @func()
-  async migrationGuard(source: Directory): Promise<string> {
-    return migrationGuardHelper(source).stdout();
-  }
-
-  /** Detect unresolved merge conflict markers in source files */
-  @func()
-  async mergeConflictCheck(source: Directory): Promise<string> {
-    return mergeConflictHelper(source).stdout();
-  }
-
-  /** Detect files exceeding 5MB in the source tree */
-  @func()
-  async largeFileCheck(source: Directory): Promise<string> {
-    return largeFileCheckHelper(source).stdout();
   }
 
   // ---------------------------------------------------------------------------

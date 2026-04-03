@@ -27,6 +27,40 @@ export const DAGGER_ENV: Record<string, string> = {
   DAGGER_PROGRESS: "dots",
 };
 
+/**
+ * Create a plain Buildkite step that runs directly on the CI agent pod.
+ *
+ * Use for checks that only need bash/bun/git (all in ci-base image) and
+ * operate on the repo checkout. Avoids the overhead of copying the entire
+ * repo into a Dagger container when no specialized toolchain is needed.
+ */
+export function plainStep(opts: {
+  label: string;
+  key: string;
+  command: string;
+  timeoutMinutes?: number;
+  dependsOn?: string | string[];
+  softFail?: boolean;
+}): BuildkiteStep {
+  const step: BuildkiteStep = {
+    label: opts.label,
+    key: opts.key,
+    command: opts.command,
+    timeout_in_minutes: opts.timeoutMinutes ?? 10,
+    retry: RETRY,
+    plugins: [k8sPlugin()],
+  };
+
+  if (opts.dependsOn !== undefined) {
+    step.depends_on = opts.dependsOn;
+  }
+  if (opts.softFail !== undefined) {
+    step.soft_fail = opts.softFail;
+  }
+
+  return step;
+}
+
 /** Create a basic Buildkite step using dagger call. */
 export function daggerStep(opts: {
   label: string;

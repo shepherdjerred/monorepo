@@ -1,0 +1,5 @@
+# Toolkit conflict detection library (contains markers as test patterns)
+packages/toolkit/src/lib/git/conflicts.ts
+
+# CI quality step contains conflict markers as grep patterns
+scripts/ci/src/steps/quality.ts

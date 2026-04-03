@@ -1,8 +1,24 @@
 /**
  * Quality gate step generators: prettier, shellcheck, compliance, ratchet, knip, gitleaks.
  */
-import { daggerStep } from "../lib/buildkite.ts";
+import { readFileSync, existsSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import { daggerStep, plainStep } from "../lib/buildkite.ts";
 import type { BuildkiteStep } from "../lib/types.ts";
+
+/** Resolve a path relative to the monorepo root (4 levels up from this file). */
+const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
+
+/** Read an ignore file (one entry per line, # comments, blank lines skipped). */
+function readIgnoreFile(path: string): string[] {
+  const fullPath = resolve(REPO_ROOT, path);
+  if (!existsSync(fullPath)) return [];
+  return readFileSync(fullPath, "utf-8")
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0 && !l.startsWith("#"));
+}
 
 /** Wraps a dagger command to tee output and annotate the build page on failure. */
 function annotatedScanCmd(daggerCmd: string, context: string): string {
@@ -35,21 +51,21 @@ export function shellcheckStep(): BuildkiteStep {
   });
 }
 
+/** Plain step: only needs bun (in ci-base). Reads .quality-baseline.json and counts suppressions. */
 export function qualityRatchetStep(): BuildkiteStep {
-  return daggerStep({
+  return plainStep({
     label: ":chart_with_upwards_trend: Quality Ratchet",
     key: "quality-ratchet",
-    daggerCmd: "dagger call quality-ratchet --source .",
-    timeoutMinutes: 10,
+    command: "bun scripts/quality-ratchet.ts",
   });
 }
 
+/** Plain step: only needs bash (in ci-base). Checks all packages have required scripts. */
 export function complianceCheckStep(): BuildkiteStep {
-  return daggerStep({
+  return plainStep({
     label: ":clipboard: Compliance Check",
     key: "compliance-check",
-    daggerCmd: "dagger call compliance-check --source .",
-    timeoutMinutes: 10,
+    command: "bash scripts/compliance-check.sh",
   });
 }
 
@@ -93,12 +109,12 @@ export function trivyScanStep(): BuildkiteStep {
   });
 }
 
+/** Plain step: only needs bun (in ci-base). Greps for banned patterns in CI code. */
 export function daggerHygieneStep(): BuildkiteStep {
-  return daggerStep({
+  return plainStep({
     label: ":broom: Dagger Hygiene",
     key: "dagger-hygiene",
-    daggerCmd: "dagger call dagger-hygiene --source .",
-    timeoutMinutes: 10,
+    command: "bun scripts/check-dagger-hygiene.ts",
     softFail: true,
   });
 }
@@ -117,38 +133,73 @@ export function semgrepScanStep(): BuildkiteStep {
   });
 }
 
+/** Plain step: only needs bash+grep (in ci-base). Validates env var naming conventions. */
 export function envVarNamesStep(): BuildkiteStep {
-  return daggerStep({
+  return plainStep({
     label: ":label: Env Var Names",
     key: "env-var-names",
-    daggerCmd: "dagger call env-var-names --source .",
-    timeoutMinutes: 10,
+    command: [
+      "files=$(find . -type f",
+      '\\( -name "*.ts" -o -name "*.rs" -o -name "*.py" -o -name "*.fish"',
+      '-o -name "*.tmpl" -o -name "*.yaml" -o -name "*.yml"',
+      '-o -name "*.env" -o -name "*.md" -o -name "*.sh" -o -name "*.swift" \\)',
+      '-not -path "*/node_modules/*" -not -path "*/archive/*"',
+      '-not -path "*/.build/*" -not -path "*/.dagger/*"',
+      '-not -path "*/generated/*")',
+      "&& bash scripts/check-env-var-names.sh $files",
+    ].join(" "),
   });
 }
 
+/** Plain step: only needs bun (in ci-base). Guards against package exclusions. */
 export function migrationGuardStep(): BuildkiteStep {
-  return daggerStep({
+  return plainStep({
     label: ":shield: Migration Guard",
     key: "migration-guard",
-    daggerCmd: "dagger call migration-guard --source .",
-    timeoutMinutes: 10,
+    command: "bun scripts/guard-no-package-exclusions.ts",
   });
 }
 
+/** Plain step: only needs grep (in ci-base). Detects unresolved merge conflict markers. */
 export function mergeConflictStep(): BuildkiteStep {
-  return daggerStep({
+  const ignored = readIgnoreFile(".conflictignore");
+  const filterPipe =
+    ignored.length > 0
+      ? ignored.map((p) => `| grep -v '${p}'`).join(" ")
+      : "";
+  return plainStep({
     label: ":no_entry: Merge Conflict Check",
     key: "merge-conflict-check",
-    daggerCmd: "dagger call merge-conflict-check --source .",
+    command: [
+      "files=$(grep -rl '<<<<<<< \\|>>>>>>> '",
+      "--include='*.ts' --include='*.tsx' --include='*.rs'",
+      "--include='*.json' --include='*.yaml' --include='*.yml'",
+      "--include='*.md' --include='*.sh'",
+      "--exclude-dir=node_modules --exclude-dir=.dagger",
+      `--exclude=lefthook.yml . ${filterPipe} || true)`,
+      '&& if [ -n "$files" ]; then echo "Merge conflict markers found:" && echo "$files" && exit 1; fi',
+    ].join(" "),
     timeoutMinutes: 5,
   });
 }
 
+/** Plain step: only needs find (in ci-base). Detects files exceeding 5MB. */
 export function largeFileStep(): BuildkiteStep {
-  return daggerStep({
+  const ignoreExclusions = readIgnoreFile(".largeignore").map(
+    (p) => `-not -path "./${p}"`,
+  );
+  return plainStep({
     label: ":warning: Large File Check",
     key: "large-file-check",
-    daggerCmd: "dagger call large-file-check --source .",
+    command: [
+      "large=$(find . -type f -size +5M",
+      '-not -path "*/node_modules/*" -not -path "*/.git/*"',
+      '-not -path "*/.build/*" -not -path "*/.dagger/*"',
+      '-not -path "*/archive/*"',
+      ...ignoreExclusions,
+      "-exec ls -lh {} +)",
+      '&& if [ -n "$large" ]; then echo "Files exceed 5MB limit:" && echo "$large" && exit 1; fi',
+    ].join(" "),
     timeoutMinutes: 5,
   });
 }
