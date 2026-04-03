@@ -80,3 +80,9 @@ packages/tasks-for-obsidian/ios/Pods/
 
 # iOS build output (regenerated at build time)
 packages/tasks-for-obsidian/ios/build/
+
+# Large binary files that should not be committed
+*.db
+*.sqlite
+*.sqlite3
+MODULE.bazel.lock

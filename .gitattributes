@@ -1,0 +1,13 @@
+# Binary files — prevent bad diffs
+*.data binary
+*.wasm binary
+*.mp4 binary
+*.zip binary
+*.db binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.tar.gz binary
+*.7z binary
