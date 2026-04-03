@@ -48,3 +48,4 @@ AI-maintained knowledge base for the monorepo.
 ## Other
 
 - [Network Policy Gaps](2026-03-15_network-policy-gaps.md) - Kubernetes network policy analysis
+- [Dagger CI Three-Era Audit](2026-03-29_dagger-ci-three-era-audit.md) - Comprehensive comparison of Dagger CI across pre-monorepo, pre-Bazel, and current eras

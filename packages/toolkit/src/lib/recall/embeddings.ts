@@ -1,3 +1,5 @@
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { z } from "zod";
 import { EMBEDDING_DIM } from "./config.ts";
 
@@ -44,6 +46,10 @@ function getStdinWriter(proc: ReturnType<typeof Bun.spawn>): StdinWriter {
 }
 
 const EMBED_SERVER_SCRIPT = `
+# /// script
+# dependencies = ["mlx-embedding-models", "transformers<5", "einops", "numpy"]
+# ///
+
 import sys, os, json, warnings
 
 # Suppress all non-JSON output that would corrupt the protocol
@@ -55,12 +61,7 @@ warnings.filterwarnings("ignore")
 _stderr = sys.stderr
 sys.stderr = open(os.devnull, "w")
 
-try:
-    from mlx_embedding_models.embedding import EmbeddingModel
-except ImportError:
-    sys.stderr = _stderr
-    print(json.dumps({"error": "mlx-embedding-models not installed. Run: pip install mlx-embedding-models"}), flush=True)
-    sys.exit(1)
+from mlx_embedding_models.embedding import EmbeddingModel
 
 model = EmbeddingModel.from_registry("bge-m3")
 sys.stderr = _stderr
@@ -118,57 +119,16 @@ export class EmbeddingClient {
 
   async isAvailable(): Promise<boolean> {
     if (this.available != null) return this.available;
-
     try {
-      const check = Bun.spawn(
-        ["python3", "-c", "import mlx_embedding_models"],
-        {
-          stdout: "pipe",
-          stderr: "pipe",
-        },
-      );
+      const check = Bun.spawn(["uv", "--version"], {
+        stdout: "pipe",
+        stderr: "pipe",
+      });
       await check.exited;
-
-      if (check.exitCode === 0) {
-        this.available = true;
-        return true;
-      }
-
-      // Auto-install
-      console.error(
-        "[embeddings] mlx-embedding-models not found, installing...",
-      );
-      const install = Bun.spawn(
-        [
-          "python3",
-          "-m",
-          "pip",
-          "install",
-          "--user",
-          "mlx-embedding-models",
-          "transformers<5",
-          "einops",
-        ],
-        {
-          stdout: "inherit",
-          stderr: "inherit",
-        },
-      );
-      await install.exited;
-
-      if (install.exitCode === 0) {
-        console.error("[embeddings] installed successfully");
-        this.available = true;
-      } else {
-        console.error(
-          "[embeddings] install failed, falling back to keyword search",
-        );
-        this.available = false;
-      }
+      this.available = check.exitCode === 0;
     } catch {
       this.available = false;
     }
-
     return this.available;
   }
 
@@ -189,11 +149,13 @@ export class EmbeddingClient {
 
     if (!(await this.isAvailable())) {
       throw new Error(
-        "MLX embeddings not available. Install with: pip install mlx-embedding-models",
+        "uv is required for embeddings. Install from https://docs.astral.sh/uv/",
       );
     }
 
-    this.proc = Bun.spawn(["python3", "-c", EMBED_SERVER_SCRIPT], {
+    const scriptPath = join(tmpdir(), "toolkit-embed-server.py");
+    await Bun.write(scriptPath, EMBED_SERVER_SCRIPT);
+    this.proc = Bun.spawn(["uv", "run", scriptPath], {
       stdin: "pipe",
       stdout: "pipe",
       stderr: "pipe",
@@ -206,7 +168,8 @@ export class EmbeddingClient {
     }
     this.reader = getReader(stdout);
 
-    const firstLine = await this.readLine();
+    // Long timeout: first run may install deps via uv
+    const firstLine = await this.readLine(300_000);
     if (firstLine == null) {
       throw new Error("Embedding server did not start");
     }
