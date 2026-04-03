@@ -120,9 +120,9 @@ describe("buildPipeline", () => {
     it("includes security scans with soft_fail", () => {
       const pipeline = buildPipeline(fullBuild());
       const steps = pipeline.steps.filter(isStep);
-      const trivy = steps.find((s) => s.key === "trivy-scan");
-      expect(trivy).toBeDefined();
-      expect(trivy?.soft_fail).toBe(true);
+      const semgrep = steps.find((s) => s.key === "semgrep-scan");
+      expect(semgrep).toBeDefined();
+      expect(semgrep?.soft_fail).toBe(true);
     });
 
     it("includes release track with wait gate", () => {
@@ -152,7 +152,7 @@ describe("buildPipeline", () => {
       const groupKeys = groups.map((g) => g.key);
 
       expect(groupKeys).toContain("homelab-images");
-      expect(groupKeys).toContain("homelab-helm");
+      expect(groupKeys).toContain("homelab-helm-push");
       expect(groupKeys).toContain("homelab-tofu");
     });
 
@@ -174,7 +174,7 @@ describe("buildPipeline", () => {
       const groupKeys = groups.map((g) => g.key);
 
       expect(groupKeys).toContain("homelab-images");
-      expect(groupKeys).toContain("homelab-helm");
+      expect(groupKeys).toContain("homelab-helm-push");
       expect(groupKeys).toContain("homelab-tofu");
       expect(groupKeys).not.toContain("clauderon-release");
       expect(groupKeys).not.toContain("cooklang-release");

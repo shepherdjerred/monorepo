@@ -2021,7 +2021,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-safe-area-context (5.6.2):
+  - react-native-safe-area-context (5.7.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2039,8 +2039,8 @@ PODS:
     - React-graphics
     - React-ImageManager
     - React-jsi
-    - react-native-safe-area-context/common (= 5.6.2)
-    - react-native-safe-area-context/fabric (= 5.6.2)
+    - react-native-safe-area-context/common (= 5.7.0)
+    - react-native-safe-area-context/fabric (= 5.7.0)
     - React-NativeModulesApple
     - React-RCTFabric
     - React-renderercss
@@ -2051,7 +2051,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-safe-area-context/common (5.6.2):
+  - react-native-safe-area-context/common (5.7.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2079,7 +2079,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-safe-area-context/fabric (5.6.2):
+  - react-native-safe-area-context/fabric (5.7.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2721,7 +2721,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNGestureHandler (2.30.0):
+  - RNGestureHandler (2.30.1):
     - boost
     - DoubleConversion
     - fast_float
@@ -2777,7 +2777,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNReactNativeHapticFeedback (2.3.3):
+  - RNReactNativeHapticFeedback (2.3.4):
     - boost
     - DoubleConversion
     - fast_float
@@ -3013,7 +3013,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNSentry (8.1.0):
+  - RNSentry (8.6.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -3040,7 +3040,7 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - Sentry (= 9.4.1)
+    - Sentry (= 9.8.0)
     - SocketRocket
     - Yoga
   - RNSound (0.13.0):
@@ -3099,9 +3099,9 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - Sentry (9.4.1):
-    - Sentry/Core (= 9.4.1)
-  - Sentry/Core (9.4.1)
+  - Sentry (9.8.0):
+    - Sentry/Core (= 9.8.0)
+  - Sentry/Core (9.8.0)
   - SocketRocket (0.7.1)
   - Yoga (0.0.0)
 
@@ -3447,7 +3447,7 @@ SPEC CHECKSUMS:
   react-native-ios-utilities: 2881513015f4f1fa550d8b4c344c594805249340
   react-native-menu: 8d2c831a735c9e6528c28b26ca14e57591d87e14
   react-native-netinfo: 57447b5a45c98808f8eae292cf641f3d91d13830
-  react-native-safe-area-context: c00143b4823773bba23f2f19f85663ae89ceb460
+  react-native-safe-area-context: befb5404eb8a16fdc07fa2bebab3568ecabcbb8a
   React-NativeModulesApple: a2c3d2cbec893956a5b3e4060322db2984fff75b
   React-networking: 3f98bd96893a294376e7e03730947a08d474c380
   React-oscompat: 80166b66da22e7af7fad94474e9997bd52d4c8c6
@@ -3479,22 +3479,22 @@ SPEC CHECKSUMS:
   React-utils: 8ab26781c2f5c2f7fafb2022c8ab39d39f231b80
   React-webperformancenativemodule: 7953b7fe519f76fa595111fe18ff3d5de131bfe9
   ReactAppDependencyProvider: 0eb286cc274abb059ee601b862ebddac2e681d01
-  ReactCodegen: 58ae606353193cfc0b777a04edf8ba728921d070
+  ReactCodegen: 3d48510bcef445f6403c0004047d4d9cbb915435
   ReactCommon: ac934cb340aee91282ecd6f273a26d24d4c55cae
   RNCAsyncStorage: 29f0230e1a25f36c20b05f65e2eb8958d6526e82
   RNDateTimePicker: 97a86d7c8b51f2d51f694a9dddfe5996dfd9a407
-  RNGestureHandler: cd4be101cfa17ea6bbd438710caa02e286a84381
+  RNGestureHandler: b407c25a3f51d22dd7430e6b530f753f112b7e77
   RNKeychain: a2c134ab796272c3d605e035ab727591000b30f3
-  RNReactNativeHapticFeedback: be4f1b4bf0398c30b59b76ed92ecb0a2ff3a69c6
-  RNReanimated: b82e526f0f81f69e4d9324cbd054eee494ea47fb
+  RNReactNativeHapticFeedback: 43181767a132b77676b6a58b7ed852928e0d4862
+  RNReanimated: 9584a0e858e678d4859eb139b2e67fd92115cfb0
   RNScreens: ffbb0296608eb3560de641a711bbdb663ed1f6b4
-  RNSentry: da4ba484e4e15c50975993dfa2dea9aeb50f863b
+  RNSentry: 78a618b07695da5dfd28f7251fb3130d36d5320d
   RNSound: 6ee1c02e43f7af31e318f25672c1064c3ced6020
   RNVectorIcons: 791f13226ec4a3fd13062eda9e892159f0981fae
-  Sentry: 990a381d8592207a52e7be654b31a27738c3a6a8
+  Sentry: 88746bf877eff714bc45315a39ad1d1efea2cdda
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 5456bb010373068fc92221140921b09d126b116e
 
-PODFILE CHECKSUM: 995e78252aaaa36c31f74e58df9d9cc989bceeed
+PODFILE CHECKSUM: ffed745033febe2de160d990c6ea9a8d5e14ec92
 
 COCOAPODS: 1.16.2

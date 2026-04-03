@@ -16,6 +16,6 @@
     "astro": "^5.4.3",
     "@astrojs/check": "^0.9.4",
     "typescript": "^5.8.2",
-    "webring": "../"
+    "webring": "file:../"
   }
 }

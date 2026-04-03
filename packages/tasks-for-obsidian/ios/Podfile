@@ -30,5 +30,18 @@ target 'TasksForObsidian' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |build_configuration|
+        # Xcode 26 treats some pod header/module combinations as errors.
+        build_configuration.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+
+        # fmt 11.0.2 fails with consteval checks under Apple Clang in Xcode 26
+        # when built as C++20. Keep fmt on C++17 only.
+        if target.name == 'fmt'
+          build_configuration.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'gnu++17'
+        end
+      end
+    end
   end
 end
