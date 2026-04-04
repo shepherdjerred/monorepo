@@ -35,8 +35,8 @@ const BANNED_PATTERNS: BannedPattern[] = [
   { name: "quality-gate-bypass", pattern: String.raw`--no-exit-code` },
 ];
 
-const SEARCH_PATHS = [".dagger/src/", "scripts/ci/src/"];
-const FILE_INCLUDE = "*.ts";
+const SEARCH_PATHS = [".dagger/src/", "scripts/ci/src/", ".buildkite/scripts/"];
+const FILE_INCLUDES = ["*.ts", "*.sh"];
 
 const ALLOWLIST: AllowlistEntry[] = [
   {
@@ -84,8 +84,9 @@ async function scanPattern(banned: BannedPattern): Promise<Violation[]> {
 
   // grep -rnE returns file:line_number:line_content
   // Exit code 1 means no matches — not an error
+  const includeFlags = FILE_INCLUDES.flatMap((g) => ["--include", g]);
   const result =
-    await $`grep -rnE -e ${banned.pattern} ${SEARCH_PATHS} --include ${FILE_INCLUDE} 2>/dev/null || true`.text();
+    await $`grep -rnE -e ${banned.pattern} ${SEARCH_PATHS} ${includeFlags} 2>/dev/null || true`.text();
 
   for (const line of result.split("\n")) {
     if (line.trim() === "") continue;

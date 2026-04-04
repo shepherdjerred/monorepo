@@ -3,6 +3,7 @@
  *
  * cdk8sSynthStep runs in the build phase (generates K8s manifests).
  * Helm push steps run in the release phase (package + push charts).
+ * Synth output is passed via Buildkite artifacts (same pattern as cooklang).
  */
 import { HELM_CHARTS } from "../catalog.ts";
 import { RETRY, DAGGER_ENV, DRYRUN_FLAG } from "../lib/buildkite.ts";
@@ -11,6 +12,8 @@ import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
 
 const MAIN_ONLY = "build.branch == pipeline.default_branch";
+
+const CDK8S_ARTIFACT_PATH = "tmp/cdk8s-dist";
 
 export function cdk8sSynthStep(dependsOn: string[]): BuildkiteStep {
   const deps = WORKSPACE_DEPS["homelab/src/cdk8s"] ?? [];
@@ -22,7 +25,10 @@ export function cdk8sSynthStep(dependsOn: string[]): BuildkiteStep {
     key: "homelab-cdk8s",
     if: MAIN_ONLY,
     depends_on: dependsOn,
-    command: `dagger call homelab-synth --pkg-dir ./packages/homelab/src/cdk8s ${depFlags} --tsconfig ./tsconfig.base.json`,
+    command: [
+      `dagger call homelab-synth --pkg-dir ./packages/homelab/src/cdk8s ${depFlags} --tsconfig ./tsconfig.base.json export --path ${CDK8S_ARTIFACT_PATH}`,
+      `buildkite-agent artifact upload "${CDK8S_ARTIFACT_PATH}/**/*"`,
+    ].join(" && "),
     timeout_in_minutes: 15,
     priority: 1,
     retry: RETRY,
@@ -39,13 +45,17 @@ function helmPushStep(chartName: string): BuildkiteStep {
     depends_on: ["homelab-cdk8s"],
     command:
       [
-        `dagger call helm-package --source .`,
-        `--chart-name ${chartName}`,
-        // Semver prerelease: 2.0.0-BUILD. ArgoCD ~2.0.0-0 auto-updates to latest.
-        `--version "2.0.0-$BUILDKITE_BUILD_NUMBER"`,
-        `--chart-museum-username "$CHARTMUSEUM_USERNAME"`,
-        `--chart-museum-password env:CHARTMUSEUM_PASSWORD`,
-      ].join(" ") + DRYRUN_FLAG,
+        `mkdir -p ${CDK8S_ARTIFACT_PATH} && buildkite-agent artifact download "${CDK8S_ARTIFACT_PATH}/**/*" .`,
+        [
+          `dagger call helm-package --source .`,
+          `--cdk8s-dist ${CDK8S_ARTIFACT_PATH}`,
+          `--chart-name ${chartName}`,
+          // Semver prerelease: 2.0.0-BUILD. ArgoCD ~2.0.0-0 auto-updates to latest.
+          `--version "2.0.0-$BUILDKITE_BUILD_NUMBER"`,
+          `--chart-museum-username "$CHARTMUSEUM_USERNAME"`,
+          `--chart-museum-password env:CHARTMUSEUM_PASSWORD`,
+        ].join(" "),
+      ].join(" && ") + DRYRUN_FLAG,
     timeout_in_minutes: 10,
     priority: 1,
     retry: RETRY,

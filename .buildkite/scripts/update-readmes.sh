@@ -28,7 +28,11 @@ git config --global user.name "github-actions[bot]"
 git config --global user.email "github-actions[bot]@users.noreply.github.com"
 git config --global core.hooksPath /dev/null
 
-git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git"
+GIT_ASKPASS_SCRIPT="$(mktemp)"
+printf '#!/bin/sh\necho "%s"\n' "${GH_TOKEN}" > "${GIT_ASKPASS_SCRIPT}"
+chmod +x "${GIT_ASKPASS_SCRIPT}"
+export GIT_ASKPASS="${GIT_ASKPASS_SCRIPT}"
+git remote set-url origin "https://git@github.com/${REPO}.git"
 
 # Regenerate README content (cog blocks call Codex CLI).
 # Existing _summary.md files are reused as cache; Codex is only called for missing ones.

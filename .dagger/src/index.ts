@@ -529,6 +529,7 @@ export class Monorepo {
   @func({ cache: "never" })
   async helmPackage(
     source: Directory,
+    cdk8sDist: Directory,
     chartName: string,
     version: string,
     chartMuseumUsername: string,
@@ -537,6 +538,7 @@ export class Monorepo {
   ): Promise<string> {
     return helmPackageHelper(
       source,
+      cdk8sDist,
       chartName,
       version,
       chartMuseumUsername,

@@ -27,6 +27,7 @@ import { rustBaseContainer } from "./base";
 /** Package a single Helm chart and push it to ChartMuseum. */
 export function helmPackageHelper(
   source: Directory,
+  cdk8sDist: Directory,
   chartName: string,
   version: string,
   chartMuseumUsername: string,
@@ -42,11 +43,11 @@ export function helmPackageHelper(
       "/chart",
       source.directory(`packages/homelab/src/cdk8s/helm/${chartName}`),
     )
-    // Copy CDK8s manifest into templates/ if it exists
+    .withDirectory("/cdk8s-dist", cdk8sDist)
     .withExec([
       "sh",
       "-c",
-      `if [ -f /cdk8s-dist/${chartName}.k8s.yaml ]; then mkdir -p templates && cp /cdk8s-dist/${chartName}.k8s.yaml templates/; fi`,
+      `mkdir -p templates && cp /cdk8s-dist/${chartName}.k8s.yaml templates/`,
     ])
     .withExec([
       "sh",

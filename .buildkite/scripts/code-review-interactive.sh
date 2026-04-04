@@ -11,7 +11,7 @@ install_gh
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
 CLAUDE_CODE_VERSION="2.1.71"
 echo "--- :robot_face: Installing Claude Code CLI ${CLAUDE_CODE_VERSION}"
-bun add -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" > /dev/null 2>&1
+bun add -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
 claude --version
 
 # Validate required env vars
