@@ -253,22 +253,34 @@ export function publishNpmHelper(
     container = container.withExec(["bun", "run", "build"]);
   }
 
-  return container.withSecretVariable("NPM_TOKEN", npmToken).withExec([
+  // Read name/version before the publish step so we can check npm
+  container = container.withExec([
     "sh",
     "-c",
-    dryrun
-      ? `echo "DRYRUN: would publish ${pkg} to npm"`
-      : [
-          // Check if current version is already on npm; skip if so
-          `PKG_NAME=$(node -e "process.stdout.write(JSON.parse(require('fs').readFileSync('package.json','utf8')).name)")`,
-          `PKG_VER=$(node -e "process.stdout.write(JSON.parse(require('fs').readFileSync('package.json','utf8')).version)")`,
-          `if npm view "$PKG_NAME@$PKG_VER" version > /dev/null 2>&1; then`,
-          `  echo "Version $PKG_VER of $PKG_NAME already published — skipping"`,
-          `else`,
-          `  bun publish --access public --tag latest --token "$NPM_TOKEN"`,
-          `fi`,
-        ].join("\n"),
+    'cat package.json | bun -e \'const p=JSON.parse(await Bun.stdin.text()); Bun.write("/tmp/pkg-name", p.name); Bun.write("/tmp/pkg-ver", p.version)\'',
   ]);
+
+  if (dryrun) {
+    return container.withExec([
+      "sh",
+      "-c",
+      `echo "DRYRUN: would publish ${pkg} to npm"`,
+    ]);
+  }
+
+  return container
+    .withSecretVariable("NPM_TOKEN", npmToken)
+    .withExec([
+      "sh",
+      "-c",
+      [
+        `PKG_NAME=$(cat /tmp/pkg-name)`,
+        `PKG_VER=$(cat /tmp/pkg-ver)`,
+        `if npm view "$PKG_NAME@$PKG_VER" version; then`,
+        `echo "Version $PKG_VER of $PKG_NAME already published — skipping"`,
+        `else bun publish --access public --tag latest --token "$NPM_TOKEN"; fi`,
+      ].join("\n"),
+    ]);
 }
 
 // ---------------------------------------------------------------------------

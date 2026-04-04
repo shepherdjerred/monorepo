@@ -249,9 +249,9 @@ export function extractVersionsStep(): BuildkiteStep {
     label: ":label: Extract Versions",
     key: "extract-versions",
     command: [
-      `RELEASE_VERSION=$(bun -e 'process.stdout.write(JSON.parse(require("fs").readFileSync(".release-please-manifest.json","utf8"))["packages/homelab/src/helm-types"])')`,
-      `CLAUDERON_VERSION=$(bun -e 'process.stdout.write(JSON.parse(require("fs").readFileSync(".release-please-manifest.json","utf8"))["packages/clauderon"])')`,
-      `COOKLANG_VERSION=$(bun -e 'process.stdout.write(JSON.parse(require("fs").readFileSync("packages/cooklang-rich-preview/package.json","utf8")).version)')`,
+      `RELEASE_VERSION=$(jq -r '.["packages/homelab/src/helm-types"]' .release-please-manifest.json)`,
+      `CLAUDERON_VERSION=$(jq -r '.["packages/clauderon"]' .release-please-manifest.json)`,
+      `COOKLANG_VERSION=$(jq -r '.version' packages/cooklang-rich-preview/package.json)`,
       `buildkite-agent meta-data set release-version "$RELEASE_VERSION"`,
       `buildkite-agent meta-data set clauderon_version "$CLAUDERON_VERSION"`,
       `buildkite-agent meta-data set cooklang_version "$COOKLANG_VERSION"`,

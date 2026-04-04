@@ -21,7 +21,10 @@ export function Lane({ lane }: { lane: Lane }) {
   const image =
     environment === "bun"
       ? images[lane]
-      : new URL(`assets/${lane}.png`, import.meta.url).href;
+      : (() => {
+          const assetPath = `assets/${lane}.png`;
+          return new URL(assetPath, import.meta.url).href;
+        })();
   return (
     <span style={{ width: "20rem", display: "flex", justifyContent: "center" }}>
       <div style={{ width: "8rem", height: "8rem", display: "flex" }}>
