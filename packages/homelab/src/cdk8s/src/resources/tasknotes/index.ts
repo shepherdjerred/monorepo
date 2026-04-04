@@ -106,6 +106,22 @@ export function createTasknotesDeployment(chart: Chart) {
           ),
           key: "AUTH_TOKEN",
         }),
+
+        // Sentry / Bugsink error reporting
+        SENTRY_ENABLED: EnvValue.fromValue("true"),
+        SENTRY_DSN: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "tasknotes-sentry-dsn-secret",
+            onePasswordItem.name,
+          ),
+          key: "SENTRY_DSN",
+        }),
+        SENTRY_ENVIRONMENT: EnvValue.fromValue("production"),
+        SENTRY_RELEASE: EnvValue.fromValue(
+          versions["shepherdjerred/tasknotes-server"].split("@")[0] ??
+            versions["shepherdjerred/tasknotes-server"],
+        ),
       },
     }),
   );

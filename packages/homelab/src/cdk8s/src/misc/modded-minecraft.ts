@@ -51,6 +51,7 @@ export function createModdedMinecraftApp(
   });
 
   const minecraftValues: HelmValuesForChart<"minecraft"> = {
+    replicaCount: 0,
     workloadAsStatefulSet: true,
     strategyType: "RollingUpdate",
     serviceAnnotations: {

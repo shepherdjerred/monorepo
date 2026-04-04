@@ -18,8 +18,10 @@ import { AppNavigator } from "./src/navigation/AppNavigator";
 import { initFeedback } from "./src/lib/feedback";
 
 Sentry.init({
-  dsn: "", // Provide your Sentry DSN to enable crash reporting
+  dsn: "https://af299d1967744476b01584b14d811556@bugsink.sjer.red/10",
   enabled: !__DEV__,
+  // Disable tracing - Bugsink does not support performance monitoring
+  tracesSampleRate: 0,
 });
 
 function ThemedApp() {

@@ -16,6 +16,7 @@ const HEALTH_POLL_INTERVAL = 30_000;
 
 type SyncContextValue = {
   isConnected: boolean;
+  isAuthenticated: boolean;
   isSyncing: boolean;
   lastSyncTime: Date | null;
   connectionError: string | null;
@@ -28,6 +29,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   const client = useApiClient();
   const { refreshTasks } = useTaskContext();
   const [isConnected, setIsConnected] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const [connectionError, setConnectionError] = useState<string | null>(null);
@@ -37,6 +39,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   const checkHealth = useCallback(async () => {
     if (!client) {
       setIsConnected(false);
+      setIsAuthenticated(false);
       setConnectionError("API URL not configured");
       return;
     }
@@ -44,8 +47,10 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     if (result.ok) {
       setIsConnected(true);
       setConnectionError(null);
+      setIsAuthenticated(result.value.authenticated !== false);
     } else {
       setIsConnected(false);
+      setIsAuthenticated(false);
       setConnectionError(result.error.message);
     }
   }, [client]);
@@ -98,12 +103,20 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<SyncContextValue>(
     () => ({
       isConnected,
+      isAuthenticated,
       isSyncing,
       lastSyncTime,
       connectionError,
       syncNow,
     }),
-    [isConnected, isSyncing, lastSyncTime, connectionError, syncNow],
+    [
+      isConnected,
+      isAuthenticated,
+      isSyncing,
+      lastSyncTime,
+      connectionError,
+      syncNow,
+    ],
   );
 
   return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>;

@@ -104,7 +104,13 @@ export function baseConfig(
         "no-secrets": noSecrets,
       },
       rules: {
-        "no-secrets/no-secrets": ["error", { tolerance: 4.5 }],
+        "no-secrets/no-secrets": [
+          "error",
+          {
+            tolerance: 4.5,
+            ignoreContent: ["vaults/[a-z0-9]+/items/[a-z0-9-]+"],
+          },
+        ],
       },
     },
     {

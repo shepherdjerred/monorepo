@@ -12,9 +12,9 @@ import { useSync } from "../../hooks/use-sync";
 const BANNER_HEIGHT = 24;
 
 export function ConnectionBanner() {
-  const { isConnected, isSyncing } = useSync();
+  const { isConnected, isAuthenticated, isSyncing } = useSync();
   const insets = useSafeAreaInsets();
-  const visible = !isConnected || isSyncing;
+  const visible = !isConnected || !isAuthenticated || isSyncing;
 
   const totalHeight = BANNER_HEIGHT + insets.top;
   const height = useSharedValue(visible ? totalHeight : 0);
@@ -31,8 +31,18 @@ export function ConnectionBanner() {
     overflow: "hidden" as const,
   }));
 
-  const message = isConnected ? "Syncing..." : "No connection";
-  const backgroundColor = isConnected ? "#f59e0b" : "#ef4444";
+  let message: string;
+  let backgroundColor: string;
+  if (!isConnected) {
+    message = "No connection";
+    backgroundColor = "#ef4444";
+  } else if (isAuthenticated) {
+    message = "Syncing...";
+    backgroundColor = "#f59e0b";
+  } else {
+    message = "Invalid auth token — check Settings";
+    backgroundColor = "#ef4444";
+  }
 
   return (
     <Animated.View

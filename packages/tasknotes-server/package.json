@@ -11,12 +11,13 @@
     "lint": "bunx eslint . --max-warnings=0"
   },
   "dependencies": {
+    "@sentry/bun": "^10.47.0",
+    "gray-matter": "^4",
     "hono": "^4",
     "prom-client": "^15",
     "tasknotes-types": "file:../tasknotes-types",
-    "zod": "^3.24",
-    "gray-matter": "^4",
-    "yaml": "^2"
+    "yaml": "^2",
+    "zod": "^3.24"
   },
   "devDependencies": {
     "@shepherdjerred/eslint-config": "file:../eslint-config",

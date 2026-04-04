@@ -59,6 +59,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
   });
 
   const minecraftValues: HelmValuesForChart<"minecraft"> = {
+    replicaCount: 0,
     // Deploy as StatefulSet for mc-router auto-scaling support
     workloadAsStatefulSet: true,
     strategyType: "RollingUpdate",

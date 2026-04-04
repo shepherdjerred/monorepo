@@ -120,6 +120,11 @@ export function createBetterSkillCappedFetcher(chart: Chart) {
                         },
                       },
                     },
+                    {
+                      name: "SENTRY_DSN",
+                      value:
+                        "https://34fcb766ca0f49499b001635c5cc5cb2@bugsink.sjer.red/3",
+                    },
                   ],
                   volumeMounts: [
                     {

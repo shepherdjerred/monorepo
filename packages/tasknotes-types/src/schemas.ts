@@ -293,5 +293,6 @@ export const HealthStatusSchema = z.object({
   status: z.enum(["ok", "error"]),
   version: z.string().optional(),
   uptime: z.number().optional(),
+  authenticated: z.boolean().optional(),
 });
 export type HealthStatus = z.infer<typeof HealthStatusSchema>;

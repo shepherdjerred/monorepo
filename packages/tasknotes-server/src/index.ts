@@ -1,3 +1,4 @@
+import "./sentry.ts";
 import { Hono } from "hono";
 
 import { config } from "./config.ts";

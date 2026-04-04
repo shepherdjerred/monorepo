@@ -159,6 +159,7 @@ export const HealthStatusSchema = z
     status: z.enum(["ok", "error"]),
     version: z.string().optional(),
     uptime: z.number().optional(),
+    authenticated: z.boolean().optional(),
   })
   .transform((raw): HealthStatus => raw);
 
