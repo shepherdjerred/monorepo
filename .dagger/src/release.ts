@@ -253,15 +253,22 @@ export function publishNpmHelper(
     container = container.withExec(["bun", "run", "build"]);
   }
 
-  return container
-    .withSecretVariable("NPM_TOKEN", npmToken)
-    .withExec([
-      "sh",
-      "-c",
-      dryrun
-        ? `echo "DRYRUN: would publish ${pkg} to npm"`
-        : `bun publish --access public --tag latest --token "$NPM_TOKEN"`,
-    ]);
+  return container.withSecretVariable("NPM_TOKEN", npmToken).withExec([
+    "sh",
+    "-c",
+    dryrun
+      ? `echo "DRYRUN: would publish ${pkg} to npm"`
+      : [
+          // Check if current version is already on npm; skip if so
+          `PKG_NAME=$(node -e "process.stdout.write(JSON.parse(require('fs').readFileSync('package.json','utf8')).name)")`,
+          `PKG_VER=$(node -e "process.stdout.write(JSON.parse(require('fs').readFileSync('package.json','utf8')).version)")`,
+          `if npm view "$PKG_NAME@$PKG_VER" version > /dev/null 2>&1; then`,
+          `  echo "Version $PKG_VER of $PKG_NAME already published — skipping"`,
+          `else`,
+          `  bun publish --access public --tag latest --token "$NPM_TOKEN"`,
+          `fi`,
+        ].join("\n"),
+  ]);
 }
 
 // ---------------------------------------------------------------------------
@@ -368,6 +375,50 @@ export function deploySiteHelper(
     "s3",
     "sync",
     distSubdir,
+    `s3://${bucket}/`,
+    "--endpoint-url",
+    endpoint,
+    "--delete",
+  ]);
+}
+
+/** Deploy a pre-built static site directory to S3. No bun install or build step. */
+export function deployStaticSiteHelper(
+  siteDir: Directory,
+  bucket: string,
+  target: string,
+  awsAccessKeyId: Secret,
+  awsSecretAccessKey: Secret,
+  dryrun = false,
+): Container {
+  const endpoint =
+    target === "r2"
+      ? "https://r2.cloudflarestorage.com"
+      : "https://seaweedfs.sjer.red";
+
+  let container = dag
+    .container()
+    .from(ALPINE_IMAGE)
+    .withExec(["apk", "add", "--no-cache", "aws-cli"])
+    .withDirectory("/site", siteDir)
+    .withWorkdir("/site")
+    .withSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyId)
+    .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey)
+    .withEnvVariable("AWS_DEFAULT_REGION", "us-east-1")
+    .withEnvVariable("AWS_REQUEST_CHECKSUM_CALCULATION", "WHEN_REQUIRED")
+    .withEnvVariable("AWS_RESPONSE_CHECKSUM_VALIDATION", "WHEN_REQUIRED");
+
+  if (dryrun) {
+    return container.withExec([
+      "echo",
+      `DRYRUN: would sync /site to s3://${bucket}/ via ${endpoint}`,
+    ]);
+  }
+  return container.withExec([
+    "aws",
+    "s3",
+    "sync",
+    ".",
     `s3://${bucket}/`,
     "--endpoint-url",
     endpoint,

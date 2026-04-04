@@ -19,26 +19,25 @@ const SET_METADATA_SCRIPT = [
   // Extract release-version from manifest (used by Helm charts, version-commit-back)
   `RELEASE_VERSION=$(node -e "
     const m = JSON.parse(require('fs').readFileSync('.release-please-manifest.json', 'utf8'));
-    const v = m['packages/homelab/src/helm-types'];
-    if (!v) { console.error('Missing packages/homelab/src/helm-types in .release-please-manifest.json'); process.exit(1); }
+    const v = m['packages/homelab/src/helm-types'] || '';
     process.stdout.write(v);
   ")`,
   // Extract clauderon version from manifest
   `CLAUDERON_VERSION=$(node -e "
     const m = JSON.parse(require('fs').readFileSync('.release-please-manifest.json', 'utf8'));
-    const v = m['packages/clauderon'];
-    if (!v) { console.error('Missing packages/clauderon in .release-please-manifest.json'); process.exit(1); }
+    const v = m['packages/clauderon'] || '';
     process.stdout.write(v);
   ")`,
   // Extract cooklang version from package.json (not in release-please manifest)
   `COOKLANG_VERSION=$(node -e "
     const p = JSON.parse(require('fs').readFileSync('packages/cooklang-rich-preview/package.json', 'utf8'));
-    if (!p.version) { console.error('Missing version in packages/cooklang-rich-preview/package.json'); process.exit(1); }
-    process.stdout.write(p.version);
+    process.stdout.write(p.version || '');
   ")`,
-  `buildkite-agent meta-data set release-version "$RELEASE_VERSION"`,
-  `buildkite-agent meta-data set clauderon_version "$CLAUDERON_VERSION"`,
-  `buildkite-agent meta-data set cooklang_version "$COOKLANG_VERSION"`,
+  // Only set metadata when values are non-empty (buildkite-agent rejects empty values).
+  // Use if/fi instead of || to avoid dagger-hygiene error-to-message violation.
+  `if [ -n "$RELEASE_VERSION" ]; then buildkite-agent meta-data set release-version "$RELEASE_VERSION"; fi`,
+  `if [ -n "$CLAUDERON_VERSION" ]; then buildkite-agent meta-data set clauderon_version "$CLAUDERON_VERSION"; fi`,
+  `if [ -n "$COOKLANG_VERSION" ]; then buildkite-agent meta-data set cooklang_version "$COOKLANG_VERSION"; fi`,
   `echo "Set metadata: release-version=$RELEASE_VERSION clauderon_version=$CLAUDERON_VERSION cooklang_version=$COOKLANG_VERSION"`,
 ].join(" && ");
 

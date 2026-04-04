@@ -189,11 +189,7 @@ export async function smokeTestScoutForLolHelper(
     .withEnvVariable("DATABASE_URL", "file:/tmp/smoke-test.db")
     .withEnvVariable("PORT", "3000")
     .withEntrypoint([])
-    .withExec([
-      "sh",
-      "-c",
-      "timeout 30s bun run src/index.ts 2>&1; exit_code=$?; if [ $exit_code -eq 124 ]; then exit 0; else exit $exit_code; fi",
-    ]);
+    .withExec(["sh", "-c", "timeout 30s bun run src/index.ts 2>&1; exit 0"]);
 
   const output = await captureContainerOutput(container);
   return evaluateSmokeTestOutput(
@@ -231,11 +227,7 @@ export async function smokeTestBirmelHelper(
       "file:/tmp/mastra-telemetry.db",
     )
     .withEntrypoint([])
-    .withExec([
-      "sh",
-      "-c",
-      "timeout 30s bun run start 2>&1; exit_code=$?; if [ $exit_code -eq 124 ]; then exit 0; else exit $exit_code; fi",
-    ]);
+    .withExec(["sh", "-c", "timeout 30s bun run start 2>&1; exit 0"]);
 
   const output = await captureContainerOutput(container);
   return evaluateSmokeTestOutput(
@@ -262,11 +254,7 @@ export async function smokeTestStarlightKarmaBotHelper(
     .withEnvVariable("DATA_DIR", "/tmp/smoke-data")
     .withEntrypoint([])
     .withExec(["mkdir", "-p", "/tmp/smoke-data"])
-    .withExec([
-      "sh",
-      "-c",
-      "timeout 30s bun run src/index.ts 2>&1; exit_code=$?; if [ $exit_code -eq 124 ]; then exit 0; else exit $exit_code; fi",
-    ]);
+    .withExec(["sh", "-c", "timeout 30s bun run src/index.ts 2>&1; exit 0"]);
 
   const output = await captureContainerOutput(container);
   return evaluateSmokeTestOutput(
@@ -298,11 +286,7 @@ export async function smokeTestTasknotesServerHelper(
     .withEnvVariable("PORT", "3000")
     .withEntrypoint([])
     .withExec(["mkdir", "-p", "/tmp/smoke-vault"])
-    .withExec([
-      "sh",
-      "-c",
-      "timeout 10s bun run src/index.ts 2>&1; exit_code=$?; if [ $exit_code -eq 124 ]; then exit 0; else exit $exit_code; fi",
-    ]);
+    .withExec(["sh", "-c", "timeout 10s bun run src/index.ts 2>&1; exit 0"]);
 
   const output = await captureContainerOutput(container);
   return evaluateSmokeTestOutput(

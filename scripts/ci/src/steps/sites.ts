@@ -87,8 +87,8 @@ export function mkdocsDeployStep(dependsOn: string[]): BuildkiteStep {
       [
         // Step 1: Build with mkdocs (Python container), export built site to local path
         `dagger call mkdocs-build --source . export --path /tmp/mkdocs-site`,
-        // Step 2: Deploy built site via deploy-site (awscli inside Dagger container)
-        `dagger call deploy-site --pkg-dir /tmp/mkdocs-site --pkg discord-plays-pokemon --build-cmd "true" --bucket discord-plays-pokemon-docs --dist-subdir . --target seaweedfs --aws-access-key-id env:SEAWEEDFS_ACCESS_KEY_ID --aws-secret-access-key env:SEAWEEDFS_SECRET_ACCESS_KEY`,
+        // Step 2: Deploy pre-built HTML via deploy-static-site (no bun install needed)
+        `dagger call deploy-static-site --site-dir /tmp/mkdocs-site --bucket discord-plays-pokemon-docs --target seaweedfs --aws-access-key-id env:SEAWEEDFS_ACCESS_KEY_ID --aws-secret-access-key env:SEAWEEDFS_SECRET_ACCESS_KEY`,
       ].join(" && ") + DRYRUN_FLAG,
     timeout_in_minutes: 15,
     priority: 1,

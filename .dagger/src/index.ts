@@ -26,6 +26,7 @@ import {
   tofuPlanHelper,
   publishNpmHelper,
   deploySiteHelper,
+  deployStaticSiteHelper,
   argoCdSyncHelper,
   argoCdHealthWaitHelper,
   cooklangBuildHelper,
@@ -652,6 +653,26 @@ export class Monorepo {
     ).stdout();
   }
 
+  /** Deploy a pre-built static site directory to S3 (no bun install or build) */
+  @func({ cache: "never" })
+  async deployStaticSite(
+    siteDir: Directory,
+    bucket: string,
+    target: string,
+    awsAccessKeyId: Secret,
+    awsSecretAccessKey: Secret,
+    dryrun = false,
+  ): Promise<string> {
+    return deployStaticSiteHelper(
+      siteDir,
+      bucket,
+      target,
+      awsAccessKeyId,
+      awsSecretAccessKey,
+      dryrun,
+    ).stdout();
+  }
+
   /** Trigger an ArgoCD sync for an application */
   @func({ cache: "never" })
   async argoCdSync(
@@ -898,7 +919,13 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
   ): Promise<string> {
-    return smokeTestStarlightKarmaBotHelper(pkgDir, pkg, depNames, depDirs, tsconfig);
+    return smokeTestStarlightKarmaBotHelper(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      tsconfig,
+    );
   }
 
   /** Smoke test tasknotes-server: install deps, verify server starts and listens */
@@ -910,6 +937,12 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
   ): Promise<string> {
-    return smokeTestTasknotesServerHelper(pkgDir, pkg, depNames, depDirs, tsconfig);
+    return smokeTestTasknotesServerHelper(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      tsconfig,
+    );
   }
 }

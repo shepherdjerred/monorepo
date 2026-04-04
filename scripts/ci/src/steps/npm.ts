@@ -38,7 +38,9 @@ function npmPublishStep(
   // which lives under packages/homelab/src/helm-types).
   const parentPkg = pkg.dir.replace("packages/", "").split("/")[0] ?? "";
   const pkgKey = pkgKeyMap?.get(pkg.name) ?? pkgKeyMap?.get(parentPkg);
-  const dependsOn = pkgKey ? ["quality-gate", pkgKey] : ["quality-gate"];
+  const dependsOn = pkgKey
+    ? ["quality-gate", "release", pkgKey]
+    : ["quality-gate", "release"];
   return {
     label: `:npm: Publish ${pkg.name}`,
     key: `npm-${safeKey(pkg.name)}`,
