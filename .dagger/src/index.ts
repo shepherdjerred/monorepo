@@ -43,6 +43,7 @@ import {
   lintHelper,
   typecheckHelper,
   testHelper,
+  buildHelper,
   generateAndLintHelper,
   generateAndTypecheckHelper,
   generateAndTestHelper,
@@ -78,6 +79,10 @@ import {
   mkdocsBuildHelper,
   caddyfileValidateHelper,
   smokeTestHelper,
+  smokeTestScoutForLolHelper,
+  smokeTestBirmelHelper,
+  smokeTestStarlightKarmaBotHelper,
+  smokeTestTasknotesServerHelper,
 } from "./misc";
 
 @object()
@@ -120,6 +125,18 @@ export class Monorepo {
     tsconfig: File | null = null,
   ): Promise<string> {
     return testHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout();
+  }
+
+  /** Run the build script on a package. Returns the Container so dist/ can be exported via CLI chaining. */
+  @func()
+  buildPackage(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Container {
+    return buildHelper(pkgDir, pkg, depNames, depDirs, tsconfig);
   }
 
   // ---------------------------------------------------------------------------
@@ -584,6 +601,8 @@ export class Monorepo {
     depNames: string[] = [],
     depDirs: Directory[] = [],
     dryrun = false,
+    tsconfig: File | null = null,
+    preBuiltDist: Directory | null = null,
   ): Promise<string> {
     return publishNpmHelper(
       pkgDir,
@@ -592,6 +611,8 @@ export class Monorepo {
       depNames,
       depDirs,
       dryrun,
+      tsconfig,
+      preBuiltDist,
     ).stdout();
   }
 
@@ -838,5 +859,33 @@ export class Monorepo {
     timeoutSeconds: number = 30,
   ): Promise<string> {
     return smokeTestHelper(image, port, healthPath, timeoutSeconds).stdout();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Per-package smoke tests
+  // ---------------------------------------------------------------------------
+
+  /** Smoke test scout-for-lol: config, HTTP server, expected Discord auth failure */
+  @func()
+  async smokeTestScoutForLol(image: Container): Promise<string> {
+    return smokeTestScoutForLolHelper(image);
+  }
+
+  /** Smoke test birmel: config, Discord login attempt, expected auth failure */
+  @func()
+  async smokeTestBirmel(image: Container): Promise<string> {
+    return smokeTestBirmelHelper(image);
+  }
+
+  /** Smoke test starlight-karma-bot: config, server start, expected auth failure */
+  @func()
+  async smokeTestStarlightKarmaBot(image: Container): Promise<string> {
+    return smokeTestStarlightKarmaBotHelper(image);
+  }
+
+  /** Smoke test tasknotes-server: server starts and listens */
+  @func()
+  async smokeTestTasknotesServer(image: Container): Promise<string> {
+    return smokeTestTasknotesServerHelper(image);
   }
 }

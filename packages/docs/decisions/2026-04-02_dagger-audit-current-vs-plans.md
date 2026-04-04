@@ -347,8 +347,8 @@ async lint(pkgDir: Directory, pkg: string, ...): Promise<string> {
 
 **Phase 3 (lost features):**
 
-1. `cd scripts/ci && bun run src/main.ts | jq '.steps[] | select(.label | test("scout-frontend"))' ` — scout frontend deploy step exists
-2. `cd scripts/ci && bun run src/main.ts | jq '.steps[] | select(.label | test("mkdocs"))' ` — docs deploy step exists
+1. `cd scripts/ci && bun run src/main.ts | jq '.steps[] | select(.label | test("scout-frontend"))'` — scout frontend deploy step exists
+2. `cd scripts/ci && bun run src/main.ts | jq '.steps[] | select(.label | test("mkdocs"))'` — docs deploy step exists
 3. `dagger call maven-coverage --pkg-dir ./packages/castle-casters` — produces coverage report
 4. `dagger call caddyfile-validate --source .` — passes
 

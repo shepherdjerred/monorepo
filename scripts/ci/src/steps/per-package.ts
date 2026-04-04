@@ -8,6 +8,7 @@ import {
   ASTRO_PACKAGES,
   SKIP_PACKAGES,
   PLAYWRIGHT_PACKAGES,
+  NPM_BUILD_PACKAGES,
 } from "../catalog.ts";
 import { safeKey, RETRY, DAGGER_ENV } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
@@ -135,6 +136,26 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
         resources,
       ),
     );
+
+    // Build helm-types (nested NPM package under homelab)
+    const htPkg = "homelab/src/helm-types";
+    const htFlags = daggerPkgFlags(htPkg);
+    const htDistPath = `/workspace/packages/${htPkg}/dist`;
+    const htArtifactDir = `/tmp/dist-helm-types`;
+    const htBuildCmd = [
+      `dagger call build-package ${htFlags}`,
+      `directory --path ${htDistPath}`,
+      `export --path ${htArtifactDir}`,
+      `&& buildkite-agent artifact upload "${htArtifactDir}/**/*"`,
+    ].join(" ");
+    steps.push(
+      daggerCallStep(
+        `:building_construction: Build helm-types`,
+        `build-helm-types`,
+        htBuildCmd,
+        resources,
+      ),
+    );
   }
 
   if (ASTRO_PACKAGES.has(pkg)) {
@@ -149,6 +170,26 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
         `:building_construction: Astro Build`,
         `astro-build-${sk}`,
         `dagger call astro-build ${pf}`,
+        resources,
+      ),
+    );
+  }
+
+  // NPM-publishable packages: build and export dist/ as Buildkite artifact
+  if (NPM_BUILD_PACKAGES.has(pkg)) {
+    const distPath = `/workspace/packages/${pkg}/dist`;
+    const artifactDir = `/tmp/dist-${pkg}`;
+    const buildCmd = [
+      `dagger call build-package ${pf}`,
+      `directory --path ${distPath}`,
+      `export --path ${artifactDir}`,
+      `&& buildkite-agent artifact upload "${artifactDir}/**/*"`,
+    ].join(" ");
+    steps.push(
+      daggerCallStep(
+        `:building_construction: Build`,
+        `build-${sk}`,
+        buildCmd,
         resources,
       ),
     );

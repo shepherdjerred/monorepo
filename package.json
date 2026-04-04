@@ -6,7 +6,12 @@
     "test": "bun run scripts/run-package-script.ts test",
     "typecheck": "bun run scripts/run-package-script.ts typecheck",
     "lint": "bun run scripts/run-package-script.ts lint",
+    "markdownlint": "markdownlint-cli2 '**/*.md'",
+    "markdownlint:fix": "markdownlint-cli2 --fix '**/*.md'",
     "guard:migration": "bun run scripts/guard-no-package-exclusions.ts",
     "prepare": "git rev-parse --git-dir > /dev/null 2>&1 && lefthook install || true"
+  },
+  "devDependencies": {
+    "markdownlint-cli2": "^0.20.0"
   }
 }

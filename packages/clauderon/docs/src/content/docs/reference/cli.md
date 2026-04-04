@@ -131,17 +131,18 @@ clauderon tui
 ![clauderon tui Help](../../../assets/screenshots/cli/clauderon-tui-help.svg)
 
 **Keyboard shortcuts:**
-| Key | Action |
-|-----|--------|
-| `n` | Create new session |
-| `Enter` | Attach to session |
-| `a` | Archive session |
-| `u` | Unarchive session |
-| `d` | Delete session |
-| `j` / `k` | Navigate down/up |
-| `g` / `G` | Go to first/last |
-| `r` | Refresh list |
-| `q` | Quit |
+
+| Key       | Action             |
+| --------- | ------------------ |
+| `n`       | Create new session |
+| `Enter`   | Attach to session  |
+| `a`       | Archive session    |
+| `u`       | Unarchive session  |
+| `d`       | Delete session     |
+| `j` / `k` | Navigate down/up   |
+| `g` / `G` | Go to first/last   |
+| `r`       | Refresh list       |
+| `q`       | Quit               |
 
 ---
 

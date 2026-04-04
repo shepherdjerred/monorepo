@@ -21,7 +21,10 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
     .join(" ");
 
   // Compute dist subdir relative to package dir
-  const distSubdir = site.distDir.replace(site.buildDir + "/", "") || ".";
+  const distSubdir =
+    site.distDir === site.buildDir
+      ? "."
+      : site.distDir.replace(site.buildDir + "/", "");
 
   // Build dagger call command for deploy-site
   const args = [

@@ -18,14 +18,20 @@ function npmPublishStep(
   const depFlags = deps
     .flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`])
     .join(" ");
-  const cmd =
+  // Download pre-built dist/ artifact from per-package build step, then publish
+  const artifactDir = `/tmp/dist-${pkg.name}`;
+  const cmd = [
+    `buildkite-agent artifact download "${artifactDir}/**/*" .`,
     [
       `dagger call publish-npm --pkg-dir ./${pkg.dir} --pkg ${pkg.name}`,
       depFlags,
       `--npm-token env:NPM_TOKEN`,
+      `--tsconfig ./tsconfig.base.json`,
+      `--pre-built-dist ${artifactDir}`,
     ]
       .filter(Boolean)
-      .join(" ") + DRYRUN_FLAG;
+      .join(" ") + DRYRUN_FLAG,
+  ].join(" && ");
   // Look up the build group key by package name first, then by the
   // top-level package directory (handles nested packages like helm-types
   // which lives under packages/homelab/src/helm-types).

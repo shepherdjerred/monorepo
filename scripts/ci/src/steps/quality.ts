@@ -44,6 +44,15 @@ export function prettierStep(): BuildkiteStep {
   });
 }
 
+export function markdownlintStep(): BuildkiteStep {
+  return plainStep({
+    label: ":pencil: Markdownlint",
+    key: "markdownlint",
+    command: 'echo "+++ :pencil: Markdownlint" && bun run markdownlint',
+    timeoutMinutes: 10,
+  });
+}
+
 export function shellcheckStep(): BuildkiteStep {
   return plainStep({
     label: ":shell: Shellcheck",

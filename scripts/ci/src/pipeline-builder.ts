@@ -12,6 +12,7 @@ import type { PipelineStep, BuildkitePipeline } from "./lib/types.ts";
 import { perPackageSteps } from "./steps/per-package.ts";
 import {
   prettierStep,
+  markdownlintStep,
   shellcheckStep,
   qualityRatchetStep,
   complianceCheckStep,
@@ -106,6 +107,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
 
   // --- Async quality checks (soft_fail, run in parallel with release track) ---
   steps.push(prettierStep());
+  steps.push(markdownlintStep());
   steps.push(knipCheckStep());
   steps.push(daggerHygieneStep());
   steps.push(trivyScanStep());

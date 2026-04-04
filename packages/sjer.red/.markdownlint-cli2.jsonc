@@ -1,8 +1,0 @@
-{
-  "config": {
-    "line-length": {
-      "line_length": "disabled",
-    },
-  },
-  "ignores": ["test-results/**", "playwright-report/**", "_summary.md"],
-}

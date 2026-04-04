@@ -40,6 +40,21 @@ export function typecheckHelper(
   ]);
 }
 
+/** Run the build script on a bun container (validates compilation). */
+export function buildHelper(
+  pkgDir: Directory,
+  pkg: string,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  tsconfig: File | null = null,
+): Container {
+  return bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig).withExec([
+    "bun",
+    "run",
+    "build",
+  ]);
+}
+
 /** Run the test script on a bun container. */
 export function testHelper(
   pkgDir: Directory,

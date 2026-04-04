@@ -158,7 +158,7 @@ const ALLOWED_COMMANDS = [
 ];
 ```
 
-**Critical security note**: Commands are parsed as argv tokens, not matched with regex. Shell metacharacters (`;|&$\`()><\n`) in any argument cause immediate rejection. This prevents injection attacks like `gh pr view 123; rm -rf /`.
+**Critical security note**: Commands are parsed as argv tokens, not matched with regex. Shell metacharacters (`;|&$\`()><\n`) in any argument cause immediate rejection. This prevents injection attacks like`gh pr view 123; rm -rf /`.
 
 ### Tier 3: Approval Queue (Everything Else)
 

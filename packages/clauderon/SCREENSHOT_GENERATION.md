@@ -92,6 +92,7 @@ Generate PNG screenshots from the real web application using Playwright:
    ```
 
 4. **Run screenshot tests** (in terminal 3):
+
    ```bash
    cd web/frontend
    export PATH="$HOME/.bun/bin:$PATH"

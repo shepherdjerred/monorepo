@@ -149,6 +149,17 @@ export const PACKAGES_WITH_NPM: Set<string> = new Set(
   ),
 );
 
+/**
+ * Top-level NPM packages that should get a per-package build step.
+ * Excludes nested packages (e.g. helm-types under homelab) where the
+ * workspace root doesn't have its own build script.
+ */
+export const NPM_BUILD_PACKAGES: Set<string> = new Set(
+  NPM_PACKAGES.filter((pkg) => !pkg.dir.includes("/src/")).map((pkg) =>
+    pkg.dir.replace("packages/", ""),
+  ),
+);
+
 /** Maps workspace package name to the NpmPackage names it triggers. */
 export const PACKAGE_TO_NPM: Record<string, string[]> = {};
 for (const pkg of NPM_PACKAGES) {

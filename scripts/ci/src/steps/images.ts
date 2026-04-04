@@ -56,29 +56,30 @@ function imageBuildStep(
   };
 }
 
-/** Images that expose a health endpoint suitable for smoke testing. */
-const SMOKE_TEST_TARGETS: Record<string, { port: number; healthPath: string }> =
-  {
-    birmel: { port: 8000, healthPath: "/" },
-    "scout-for-lol": { port: 8000, healthPath: "/" },
-    "starlight-karma-bot": { port: 8000, healthPath: "/" },
-    "discord-plays-pokemon": { port: 8000, healthPath: "/" },
-    "tasknotes-server": { port: 8000, healthPath: "/" },
-  };
+/**
+ * Per-package smoke test Dagger function names (kebab-case, as called via CLI).
+ * Each maps to a dedicated @func() in index.ts that runs package-specific
+ * startup verification with dummy env vars and log pattern checking.
+ */
+const SMOKE_TEST_FUNCTIONS: Record<string, string> = {
+  birmel: "smoke-test-birmel",
+  "scout-for-lol": "smoke-test-scout-for-lol",
+  "starlight-karma-bot": "smoke-test-starlight-karma-bot",
+  "tasknotes-server": "smoke-test-tasknotes-server",
+};
 
 function smokeTestStep(
   img: ImageTarget,
   dependsOn: string | string[],
 ): BuildkiteStep | null {
-  const cfg = SMOKE_TEST_TARGETS[img.name];
-  if (!cfg) return null;
+  const daggerFn = SMOKE_TEST_FUNCTIONS[img.name];
+  if (!daggerFn) return null;
   const pkg = img.package ?? img.name;
   const flags = depFlags(pkg);
   const cmd = [
-    `dagger call smoke-test`,
-    `--image '(build-image --pkg-dir ./packages/${pkg} --pkg ${img.name} ${flags})'`,
-    `--port ${cfg.port}`,
-    `--health-path ${cfg.healthPath}`,
+    `dagger call ${daggerFn}`,
+    `--image build-image --pkg-dir ./packages/${pkg} --pkg ${img.name}`,
+    flags,
   ]
     .filter(Boolean)
     .join(" ");
@@ -196,7 +197,7 @@ export function pushImagesGroup(
 ): BuildkiteGroup {
   const steps: BuildkiteStep[] = [];
   for (const img of images) {
-    const smoke = SMOKE_TEST_TARGETS[img.name];
+    const smoke = SMOKE_TEST_FUNCTIONS[img.name];
     const pushDep = smoke
       ? `smoke-${safeKey(img.name)}`
       : `build-${safeKey(img.name)}`;

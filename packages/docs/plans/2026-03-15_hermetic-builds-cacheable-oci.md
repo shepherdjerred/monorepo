@@ -159,6 +159,7 @@ Update each BUILD.bazel to use `bun_build` instead of `vite_build`. Start with t
 1. **`packages/hn-enhancer/BUILD.bazel`** (simplest — no workspace deps, minimal config)
    - Replace `load("//tools/bazel:vite_build.bzl", "vite_build")` → add `"bun_build"` to existing rules_bun load
    - Replace `vite_build(name = "vite_build")` with:
+
      ```python
      bun_build(
          name = "vite_build",

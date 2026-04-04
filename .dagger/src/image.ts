@@ -51,7 +51,6 @@ export function buildImageHelper(
     .withLabel("org.opencontainers.image.revision", gitSha)
     .withEnvVariable("VERSION", version)
     .withEnvVariable("GIT_SHA", gitSha)
-    .withExposedPort(8000)
     .withEntrypoint(["bun", "run", "src/index.ts"]);
 }
 

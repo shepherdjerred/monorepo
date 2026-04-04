@@ -18,6 +18,8 @@ import {
   GH_CLI_VERSION,
 } from "./constants";
 
+import { rustBaseContainer } from "./base";
+
 // ---------------------------------------------------------------------------
 // Helm
 // ---------------------------------------------------------------------------
@@ -169,7 +171,11 @@ export function tofuPlanHelper(
 // NPM publish
 // ---------------------------------------------------------------------------
 
-/** Publish an npm package via bun publish. */
+/**
+ * Publish an npm package via bun publish.
+ * Accepts a pre-built dist directory (from per-package build step artifact)
+ * to avoid rebuilding.
+ */
 export function publishNpmHelper(
   pkgDir: Directory,
   pkg: string,
@@ -177,6 +183,8 @@ export function publishNpmHelper(
   depNames: string[] = [],
   depDirs: Directory[] = [],
   dryrun = false,
+  tsconfig: File | null = null,
+  preBuiltDist: Directory | null = null,
 ): Container {
   let container = dag
     .container()
@@ -196,14 +204,28 @@ export function publishNpmHelper(
     );
   }
 
-  return (
-    container
+  if (tsconfig != null) {
+    container = container.withFile("/workspace/tsconfig.base.json", tsconfig);
+  }
+
+  container = container.withExec(["bun", "install", "--frozen-lockfile"]);
+
+  // Build workspace deps that need compilation
+  const buildDeps = depNames.filter((d) => d !== "eslint-config");
+  for (const dep of buildDeps) {
+    container = container
+      .withWorkdir(`/workspace/packages/${dep}`)
       .withExec(["bun", "install", "--frozen-lockfile"])
-      // Replace file: refs with actual versions before publishing
-      .withExec([
-        "sh",
-        "-c",
-        `cd /workspace/packages/${pkg} && node -e '
+      .withExec(["bun", "run", "build"]);
+  }
+
+  container = container.withWorkdir(`/workspace/packages/${pkg}`);
+
+  // Replace file: refs with actual versions before publishing
+  container = container.withExec([
+    "sh",
+    "-c",
+    `cd /workspace/packages/${pkg} && node -e '
         const fs = require("fs");
         const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
         for (const [depType, deps] of [["dependencies", pkg.dependencies || {}], ["devDependencies", pkg.devDependencies || {}]]) {
@@ -219,16 +241,27 @@ export function publishNpmHelper(
         }
         fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\\n");
       '`,
-      ])
-      .withSecretVariable("NPM_TOKEN", npmToken)
-      .withExec([
-        "sh",
-        "-c",
-        dryrun
-          ? `echo "DRYRUN: would publish ${pkg} to npm"`
-          : `bun publish --access public --tag latest --token "$NPM_TOKEN"`,
-      ])
-  );
+  ]);
+
+  // Mount pre-built dist from upstream build step, or build from source
+  if (preBuiltDist != null) {
+    container = container.withDirectory(
+      `/workspace/packages/${pkg}/dist`,
+      preBuiltDist,
+    );
+  } else {
+    container = container.withExec(["bun", "run", "build"]);
+  }
+
+  return container
+    .withSecretVariable("NPM_TOKEN", npmToken)
+    .withExec([
+      "sh",
+      "-c",
+      dryrun
+        ? `echo "DRYRUN: would publish ${pkg} to npm"`
+        : `bun publish --access public --tag latest --token "$NPM_TOKEN"`,
+    ]);
 }
 
 // ---------------------------------------------------------------------------
@@ -584,34 +617,12 @@ export function clauderonCollectBinariesHelper(
   let output = dag.directory();
 
   for (const { target, filename } of targets) {
-    let container = dag
-      .container()
-      .from(RUST_IMAGE)
-      .withExec(["dpkg", "--add-architecture", "arm64"])
-      .withExec(["apt-get", "update", "-qq"])
-      .withExec([
-        "apt-get",
-        "install",
-        "-y",
-        "-qq",
-        "--no-install-recommends",
-        "clang",
-        "libssl-dev",
-        "libssl-dev:arm64",
-        "pkg-config",
-        "gcc-aarch64-linux-gnu",
-      ])
-      .withMountedCache(
-        "/usr/local/cargo/registry",
-        dag.cacheVolume("cargo-registry"),
-      )
-      .withMountedCache("/usr/local/cargo/git", dag.cacheVolume("cargo-git"))
-      .withMountedCache("/workspace/target", dag.cacheVolume("cargo-target"))
-      .withWorkdir("/workspace")
-      .withDirectory("/workspace", pkgDir, {
-        exclude: ["target", "node_modules", ".git"],
-      })
-      .withExec(["rustup", "target", "add", target]);
+    let container = rustBaseContainer(pkgDir).withExec([
+      "rustup",
+      "target",
+      "add",
+      target,
+    ]);
 
     // Cross-compilation setup for aarch64
     if (target === "aarch64-unknown-linux-gnu") {

@@ -1,0 +1,44 @@
+{
+  "config": {
+    "line-length": false,
+    "no-inline-html": false,
+    "code-block-style": false,
+    "no-duplicate-heading": {
+      "siblings_only": true
+    },
+    "no-bare-urls": false,
+    "no-alt-text": false,
+    "no-empty-links": false,
+    "first-line-heading": false,
+    "single-title": false,
+    "heading-increment": false,
+    "no-emphasis-as-heading": false,
+    "no-trailing-punctuation": false,
+    "ol-prefix": false,
+    "commands-show-output": false,
+    "emphasis-style": false,
+    "fenced-code-language": false,
+    "link-fragments": false
+  },
+  "ignores": [
+    "archive/**",
+    "**/node_modules/**",
+    "**/generated/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/.build/**",
+    "**/target/**",
+    "**/Pods/**",
+    "**/test-results/**",
+    "**/playwright-report/**",
+    "**/_summary.md",
+    "**/ai_dev_log/**",
+    "**/CHANGELOG.md",
+    "packages/discord-plays-pokemon/packages/frontend/public/emulatorjs/**",
+    "packages/tips/**",
+    "packages/glance/**",
+    "practice/**",
+    "**/.terraform/**",
+    "packages/dotfiles/dot_claude/skills/**"
+  ]
+}

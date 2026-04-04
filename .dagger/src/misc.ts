@@ -21,6 +21,15 @@ export function mkdocsBuildHelper(source: Directory): Directory {
   return dag
     .container()
     .from(PYTHON_IMAGE)
+    .withExec(["apt-get", "update", "-qq"])
+    .withExec([
+      "apt-get",
+      "install",
+      "-y",
+      "-qq",
+      "--no-install-recommends",
+      "pngquant",
+    ])
     .withExec([
       "pip",
       "install",
@@ -106,4 +115,179 @@ export function smokeTestHelper(
         `exit 1`,
       ].join("\n"),
     ]);
+}
+
+// ---------------------------------------------------------------------------
+// Per-package smoke tests — restore comprehensive startup verification
+// ---------------------------------------------------------------------------
+
+/**
+ * Evaluate smoke test output against expected startup and failure patterns.
+ * For services that require external auth (Discord, Riot API), we expect
+ * both successful startup patterns AND auth failure patterns.
+ */
+function evaluateSmokeTestOutput(
+  output: string,
+  successPatterns: string[],
+  failurePatterns: string[],
+): string {
+  const hasSuccess = successPatterns.some((p) =>
+    output.toLowerCase().includes(p.toLowerCase()),
+  );
+  const hasFailure = failurePatterns.some((p) =>
+    output.toLowerCase().includes(p.toLowerCase()),
+  );
+
+  if (failurePatterns.length === 0) {
+    // No auth dependency — just check startup succeeded
+    if (hasSuccess) {
+      return `✅ Smoke test passed: started successfully.\n\nOutput snippet: ${output.slice(0, 500)}`;
+    }
+    return `❌ Smoke test failed: unexpected behavior.\nOutput:\n${output}`;
+  }
+
+  if (hasSuccess && hasFailure) {
+    return `✅ Smoke test passed: started successfully, failed as expected on auth.\n\nOutput snippet: ${output.slice(0, 500)}`;
+  } else if (hasSuccess) {
+    return `⚠️ Smoke test partial: started but didn't fail as expected.\nOutput:\n${output.slice(0, 500)}`;
+  }
+  return `❌ Smoke test failed: unexpected behavior.\nOutput:\n${output}`;
+}
+
+/** Capture stdout from a container, falling back to stderr. */
+async function captureContainerOutput(container: Container): Promise<string> {
+  try {
+    return await container.stdout();
+  } catch (error) {
+    try {
+      return await container.stderr();
+    } catch {
+      throw new Error(
+        `Could not capture container output. Error: ${String(error)}`,
+      );
+    }
+  }
+}
+
+/**
+ * Smoke test scout-for-lol backend image.
+ * Verifies: config loads, HTTP server starts, Discord auth fails as expected.
+ */
+export async function smokeTestScoutForLolHelper(
+  image: Container,
+): Promise<string> {
+  const container = image
+    .withEnvVariable("DISCORD_TOKEN", "smoke-test-dummy")
+    .withEnvVariable("APPLICATION_ID", "000000000000000000")
+    .withEnvVariable("RIOT_API_KEY", "smoke-test-dummy")
+    .withEnvVariable("DATABASE_URL", "file:/tmp/smoke-test.db")
+    .withEnvVariable("PORT", "3000")
+    .withEntrypoint([])
+    .withExec([
+      "sh",
+      "-c",
+      "timeout 30s bun run src/index.ts 2>&1; exit_code=$?; if [ $exit_code -eq 124 ]; then exit 0; else exit $exit_code; fi",
+    ]);
+
+  const output = await captureContainerOutput(container);
+  return evaluateSmokeTestOutput(
+    output,
+    [
+      "Starting HTTP server",
+      "Starting Scout for LoL",
+      "Configuration loaded",
+      "Starting Discord bot",
+    ],
+    ["401", "TokenInvalid", "Unauthorized", "Invalid token"],
+  );
+}
+
+/**
+ * Smoke test birmel Discord bot image.
+ * Verifies: config loads, Discord client attempts login, auth fails as expected.
+ */
+export async function smokeTestBirmelHelper(image: Container): Promise<string> {
+  const container = image
+    .withEnvVariable("DISCORD_TOKEN", "smoke-test-dummy")
+    .withEnvVariable("DISCORD_CLIENT_ID", "smoke-test-dummy")
+    .withEnvVariable("ANTHROPIC_API_KEY", "smoke-test-dummy")
+    .withEnvVariable("OPENAI_API_KEY", "smoke-test-dummy")
+    .withEnvVariable("DATABASE_URL", "file:/tmp/smoke-test.db")
+    .withEnvVariable("MASTRA_MEMORY_DB_PATH", "file:/tmp/mastra-memory.db")
+    .withEnvVariable(
+      "MASTRA_TELEMETRY_DB_PATH",
+      "file:/tmp/mastra-telemetry.db",
+    )
+    .withEntrypoint([])
+    .withExec([
+      "sh",
+      "-c",
+      "timeout 30s bun run start 2>&1; exit_code=$?; if [ $exit_code -eq 124 ]; then exit 0; else exit $exit_code; fi",
+    ]);
+
+  const output = await captureContainerOutput(container);
+  return evaluateSmokeTestOutput(
+    output,
+    ["Starting Birmel", "Configuration loaded", "Logging in", "Discord"],
+    ["TokenInvalid", "401", "Unauthorized", "Invalid token"],
+  );
+}
+
+/**
+ * Smoke test starlight-karma-bot image.
+ * Verifies: config loads, server starts, Discord auth fails as expected.
+ */
+export async function smokeTestStarlightKarmaBotHelper(
+  image: Container,
+): Promise<string> {
+  const container = image
+    .withEnvVariable("DISCORD_TOKEN", "smoke-test-dummy")
+    .withEnvVariable("APPLICATION_ID", "000000000000000000")
+    .withEnvVariable("DATA_DIR", "/tmp/smoke-data")
+    .withEntrypoint([])
+    .withExec(["mkdir", "-p", "/tmp/smoke-data"])
+    .withExec([
+      "sh",
+      "-c",
+      "timeout 30s bun run src/index.ts 2>&1; exit_code=$?; if [ $exit_code -eq 124 ]; then exit 0; else exit $exit_code; fi",
+    ]);
+
+  const output = await captureContainerOutput(container);
+  return evaluateSmokeTestOutput(
+    output,
+    [
+      "Starting Starlight Karma Bot",
+      "Starlight Karma Bot is now ready",
+      "Sentry initialized",
+    ],
+    ["TokenInvalid", "401", "Unauthorized", "Invalid token"],
+  );
+}
+
+/**
+ * Smoke test tasknotes-server image.
+ * Verifies: server starts and listens on the configured port.
+ * No external auth required — server starts fully with defaults.
+ */
+export async function smokeTestTasknotesServerHelper(
+  image: Container,
+): Promise<string> {
+  const container = image
+    .withEnvVariable("VAULT_PATH", "/tmp/smoke-vault")
+    .withEnvVariable("AUTH_TOKEN", "smoke-test-token")
+    .withEnvVariable("PORT", "3000")
+    .withEntrypoint([])
+    .withExec(["mkdir", "-p", "/tmp/smoke-vault"])
+    .withExec([
+      "sh",
+      "-c",
+      "timeout 10s bun run src/index.ts 2>&1; exit_code=$?; if [ $exit_code -eq 124 ]; then exit 0; else exit $exit_code; fi",
+    ]);
+
+  const output = await captureContainerOutput(container);
+  return evaluateSmokeTestOutput(
+    output,
+    ["listening", "3000", "started", "ready"],
+    [], // no external auth — server starts fully
+  );
 }

@@ -109,9 +109,11 @@ export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
 1. Install Xcode from the Mac App Store
 2. Open Xcode and accept the license agreement
 3. Install Command Line Tools:
+
    ```bash
    xcode-select --install
    ```
+
 4. Configure Command Line Tools path:
    - Open Xcode → Settings → Locations
    - Select the latest version in "Command Line Tools" dropdown
@@ -161,6 +163,7 @@ bundle install
    - SDK Platforms tab: Android 16 (Baklava) - API 36 (optional, latest)
    - SDK Tools tab: Android SDK Build-Tools 35.0.0
 4. Configure environment variables in `~/.zshrc`:
+
    ```bash
    export ANDROID_HOME=$HOME/Library/Android/sdk
    export PATH=$PATH:$ANDROID_HOME/emulator

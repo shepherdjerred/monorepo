@@ -73,6 +73,15 @@ pre-commit:
                     - "**/.dagger/**"
                   run: bunx prettier --check {staged_files}
 
+                # --- markdownlint (repo-wide, staged files) ---
+                - name: markdownlint
+                  glob: "**/*.md"
+                  exclude:
+                    - "archive/**"
+                    - "**/node_modules/**"
+                    - "**/generated/**"
+                  run: bunx markdownlint-cli2 {staged_files}
+
                 # --- eslint per package (staged files only) ---
                 - name: eslint-birmel
                   root: "packages/birmel/"

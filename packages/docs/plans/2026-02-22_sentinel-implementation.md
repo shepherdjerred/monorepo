@@ -517,10 +517,12 @@ End-to-end: Deploy to K8s, trigger a CI check via cron, verify agent investigate
 
 1. **Atomic claim query** — use `$queryRawUnsafe` with single `UPDATE ... WHERE id = (SELECT ...) RETURNING *` instead of separate SELECT + UPDATE
 2. **WAL mode + busy_timeout** — add to database init:
+
    ```typescript
    await prisma.$executeRawUnsafe("PRAGMA journal_mode = WAL;");
    await prisma.$executeRawUnsafe("PRAGMA busy_timeout = 5000;");
    ```
+
 3. **Dead letter recovery on startup** — sweep stuck `running` jobs: reset to `pending` (if retries left) or `failed`
 4. **Wall-clock timeout** — wrap agent sessions in `AbortController` with configurable `maxDurationMs`
 5. **Phase 2 stub** — worker processes jobs by logging "would process job X" and marking complete. No Agent SDK until Phase 3.
@@ -570,7 +572,7 @@ End-to-end: Deploy to K8s, trigger a CI check via cron, verify agent investigate
 4. **Restrict `WebFetch`/`WebSearch`** — consider domain allowlists per agent (optional, Phase 4+)
 5. **GITHUB_TOKEN minimal scopes** — `repo:status`, `public_repo`, `actions:read`, `contents:read`. Consider GitHub App for fine-grained permissions.
 6. **Approval embeds show full raw toolInput** — never truncate security-critical data
-7. **Secret redaction in JSONL** (Phase 5+) — regex scrubbing for `Bearer `, `sk-`, `ghp_`, `AKIA` patterns before writing
+7. **Secret redaction in JSONL** (Phase 5+) — regex scrubbing for `Bearer`, `sk-`, `ghp_`, `AKIA` patterns before writing
 
 ### Deployment Amendments (Section 11)
 
