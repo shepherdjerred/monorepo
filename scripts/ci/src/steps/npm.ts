@@ -18,8 +18,9 @@ function npmPublishStep(
   const depFlags = deps
     .flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`])
     .join(" ");
-  // Download pre-built dist/ artifact from per-package build step, then publish
-  const artifactDir = `/tmp/dist-${pkg.name}`;
+  // Download pre-built dist/ artifact from per-package build step, then publish.
+  // Buildkite artifact paths are relative — use tmp/ (no leading /) to match uploads.
+  const artifactDir = `tmp/dist-${pkg.name}`;
   const cmd = [
     `buildkite-agent artifact download "${artifactDir}/**/*" .`,
     [

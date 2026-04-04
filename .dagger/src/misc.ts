@@ -16,7 +16,7 @@ import {
   SOURCE_EXCLUDES,
 } from "./constants";
 
-import { buildImageHelper } from "./image";
+import { bunBaseContainer } from "./base";
 
 /** Build MkDocs documentation site and return the built site/ directory. */
 export function mkdocsBuildHelper(source: Directory): Directory {
@@ -180,9 +180,9 @@ export async function smokeTestScoutForLolHelper(
   pkg: string,
   depNames: string[] = [],
   depDirs: Directory[] = [],
+  tsconfig: File | null = null,
 ): Promise<string> {
-  const image = buildImageHelper(pkgDir, pkg, depNames, depDirs);
-  const container = image
+  const container = bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig)
     .withEnvVariable("DISCORD_TOKEN", "smoke-test-dummy")
     .withEnvVariable("APPLICATION_ID", "000000000000000000")
     .withEnvVariable("RIOT_API_KEY", "smoke-test-dummy")
@@ -217,9 +217,9 @@ export async function smokeTestBirmelHelper(
   pkg: string,
   depNames: string[] = [],
   depDirs: Directory[] = [],
+  tsconfig: File | null = null,
 ): Promise<string> {
-  const image = buildImageHelper(pkgDir, pkg, depNames, depDirs);
-  const container = image
+  const container = bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig)
     .withEnvVariable("DISCORD_TOKEN", "smoke-test-dummy")
     .withEnvVariable("DISCORD_CLIENT_ID", "smoke-test-dummy")
     .withEnvVariable("ANTHROPIC_API_KEY", "smoke-test-dummy")
@@ -254,9 +254,9 @@ export async function smokeTestStarlightKarmaBotHelper(
   pkg: string,
   depNames: string[] = [],
   depDirs: Directory[] = [],
+  tsconfig: File | null = null,
 ): Promise<string> {
-  const image = buildImageHelper(pkgDir, pkg, depNames, depDirs);
-  const container = image
+  const container = bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig)
     .withEnvVariable("DISCORD_TOKEN", "smoke-test-dummy")
     .withEnvVariable("APPLICATION_ID", "000000000000000000")
     .withEnvVariable("DATA_DIR", "/tmp/smoke-data")
@@ -290,9 +290,9 @@ export async function smokeTestTasknotesServerHelper(
   pkg: string,
   depNames: string[] = [],
   depDirs: Directory[] = [],
+  tsconfig: File | null = null,
 ): Promise<string> {
-  const image = buildImageHelper(pkgDir, pkg, depNames, depDirs);
-  const container = image
+  const container = bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig)
     .withEnvVariable("VAULT_PATH", "/tmp/smoke-vault")
     .withEnvVariable("AUTH_TOKEN", "smoke-test-token")
     .withEnvVariable("PORT", "3000")

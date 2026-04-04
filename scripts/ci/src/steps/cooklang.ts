@@ -26,8 +26,8 @@ export function cooklangReleaseGroup(pkgKey?: string): BuildkiteGroup {
         if: MAIN_ONLY,
         depends_on: dependsOn,
         command: [
-          `dagger call cooklang-build ${COOKLANG_PKG_FLAGS} export --path /tmp/cooklang-dist`,
-          `buildkite-agent artifact upload "/tmp/cooklang-dist/**/*"`,
+          `dagger call cooklang-build ${COOKLANG_PKG_FLAGS} export --path tmp/cooklang-dist`,
+          `buildkite-agent artifact upload "tmp/cooklang-dist/**/*"`,
         ].join(" && "),
         timeout_in_minutes: 15,
         priority: 1,
@@ -41,8 +41,8 @@ export function cooklangReleaseGroup(pkgKey?: string): BuildkiteGroup {
         if: MAIN_ONLY,
         depends_on: ["cooklang-build", "release"],
         command: [
-          `buildkite-agent artifact download "/tmp/cooklang-dist/**/*" /tmp/cooklang-dist`,
-          `dagger call cooklang-push --source /tmp/cooklang-dist --version "$(buildkite-agent meta-data get cooklang_version)" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
+          `buildkite-agent artifact download "tmp/cooklang-dist/**/*" tmp/cooklang-dist`,
+          `dagger call cooklang-push --source tmp/cooklang-dist --version "$(buildkite-agent meta-data get cooklang_version)" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
         ].join(" && "),
         timeout_in_minutes: 10,
         priority: 1,
@@ -56,8 +56,8 @@ export function cooklangReleaseGroup(pkgKey?: string): BuildkiteGroup {
         if: MAIN_ONLY,
         depends_on: ["cooklang-build", "release"],
         command: [
-          `buildkite-agent artifact download "/tmp/cooklang-dist/**/*" /tmp/cooklang-dist`,
-          `dagger call cooklang-create-release --artifacts /tmp/cooklang-dist --version "$(buildkite-agent meta-data get cooklang_version)" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
+          `buildkite-agent artifact download "tmp/cooklang-dist/**/*" tmp/cooklang-dist`,
+          `dagger call cooklang-create-release --artifacts tmp/cooklang-dist --version "$(buildkite-agent meta-data get cooklang_version)" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
         ].join(" && "),
         timeout_in_minutes: 10,
         priority: 1,

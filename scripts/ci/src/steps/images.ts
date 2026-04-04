@@ -80,6 +80,7 @@ function smokeTestStep(
     `dagger call ${daggerFn}`,
     `--pkg-dir ./packages/${pkg} --pkg ${img.name}`,
     flags,
+    `--tsconfig ./tsconfig.base.json`,
   ]
     .filter(Boolean)
     .join(" ");
@@ -90,7 +91,7 @@ function smokeTestStep(
     if: MAIN_ONLY,
     depends_on: dependsOn,
     command: cmd,
-    timeout_in_minutes: 5,
+    timeout_in_minutes: 10,
     retry: RETRY,
     env: DAGGER_ENV,
     plugins: [

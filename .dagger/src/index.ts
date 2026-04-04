@@ -865,47 +865,51 @@ export class Monorepo {
   // Per-package smoke tests
   // ---------------------------------------------------------------------------
 
-  /** Smoke test scout-for-lol: build image, then verify config, HTTP server, expected Discord auth failure */
+  /** Smoke test scout-for-lol: install deps, verify config, HTTP server, expected Discord auth failure */
   @func()
   async smokeTestScoutForLol(
     pkgDir: Directory,
     pkg: string,
     depNames: string[] = [],
     depDirs: Directory[] = [],
+    tsconfig: File | null = null,
   ): Promise<string> {
-    return smokeTestScoutForLolHelper(pkgDir, pkg, depNames, depDirs);
+    return smokeTestScoutForLolHelper(pkgDir, pkg, depNames, depDirs, tsconfig);
   }
 
-  /** Smoke test birmel: build image, then verify config, Discord login attempt, expected auth failure */
+  /** Smoke test birmel: install deps, verify config, Discord login attempt, expected auth failure */
   @func()
   async smokeTestBirmel(
     pkgDir: Directory,
     pkg: string,
     depNames: string[] = [],
     depDirs: Directory[] = [],
+    tsconfig: File | null = null,
   ): Promise<string> {
-    return smokeTestBirmelHelper(pkgDir, pkg, depNames, depDirs);
+    return smokeTestBirmelHelper(pkgDir, pkg, depNames, depDirs, tsconfig);
   }
 
-  /** Smoke test starlight-karma-bot: build image, then verify config, server start, expected auth failure */
+  /** Smoke test starlight-karma-bot: install deps, verify config, server start, expected auth failure */
   @func()
   async smokeTestStarlightKarmaBot(
     pkgDir: Directory,
     pkg: string,
     depNames: string[] = [],
     depDirs: Directory[] = [],
+    tsconfig: File | null = null,
   ): Promise<string> {
-    return smokeTestStarlightKarmaBotHelper(pkgDir, pkg, depNames, depDirs);
+    return smokeTestStarlightKarmaBotHelper(pkgDir, pkg, depNames, depDirs, tsconfig);
   }
 
-  /** Smoke test tasknotes-server: build image, then verify server starts and listens */
+  /** Smoke test tasknotes-server: install deps, verify server starts and listens */
   @func()
   async smokeTestTasknotesServer(
     pkgDir: Directory,
     pkg: string,
     depNames: string[] = [],
     depDirs: Directory[] = [],
+    tsconfig: File | null = null,
   ): Promise<string> {
-    return smokeTestTasknotesServerHelper(pkgDir, pkg, depNames, depDirs);
+    return smokeTestTasknotesServerHelper(pkgDir, pkg, depNames, depDirs, tsconfig);
   }
 }

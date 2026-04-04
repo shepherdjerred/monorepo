@@ -141,7 +141,7 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
     const htPkg = "homelab/src/helm-types";
     const htFlags = daggerPkgFlags(htPkg);
     const htDistPath = `/workspace/packages/${htPkg}/dist`;
-    const htArtifactDir = `/tmp/dist-helm-types`;
+    const htArtifactDir = `tmp/dist-helm-types`;
     const htBuildCmd = [
       `dagger call build-package ${htFlags}`,
       `directory --path ${htDistPath}`,
@@ -178,7 +178,7 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
   // NPM-publishable packages: build and export dist/ as Buildkite artifact
   if (NPM_BUILD_PACKAGES.has(pkg)) {
     const distPath = `/workspace/packages/${pkg}/dist`;
-    const artifactDir = `/tmp/dist-${pkg}`;
+    const artifactDir = `tmp/dist-${pkg}`;
     const buildCmd = [
       `dagger call build-package ${pf}`,
       `directory --path ${distPath}`,
