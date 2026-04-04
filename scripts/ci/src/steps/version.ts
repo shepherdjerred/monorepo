@@ -10,11 +10,7 @@ export function versionCommitBackStep(dependsOn: string[]): BuildkiteStep {
   return daggerStep({
     label: ":bookmark: Version Commit-Back",
     key: "version-commit-back",
-    daggerCmd: [
-      `RELEASE_VER=$(buildkite-agent meta-data get release-version --default "")`,
-      `if [ -z "$RELEASE_VER" ]; then echo "No release version — skipping version commit-back"; exit 0; fi`,
-      `dagger call version-commit-back --digests "$(buildkite-agent meta-data get image-digests --default "")" --version "$RELEASE_VER" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
-    ].join(" && "),
+    daggerCmd: `dagger call version-commit-back --digests "$(buildkite-agent meta-data get image-digests)" --version "$(buildkite-agent meta-data get release-version)" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
     timeoutMinutes: 10,
     condition: MAIN_ONLY,
     dependsOn,

@@ -32,11 +32,11 @@ function tofuStackStep(stack: string, homelabPkgKey?: string): BuildkiteStep {
       ]
         .filter(Boolean)
         .join(" ") + DRYRUN_FLAG,
-    timeout_in_minutes: 15,
+    timeout_in_minutes: stack === "github" ? 2 : 15,
     concurrency: 1,
     concurrency_group: `monorepo/tofu-${stack}`,
     priority: 1,
-    retry: RETRY,
+    retry: stack === "github" ? {} : RETRY,
     env: DAGGER_ENV,
     plugins: [
       k8sPlugin({

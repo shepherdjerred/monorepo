@@ -238,3 +238,25 @@ export function caddyfileValidateStep(): BuildkiteStep {
     timeoutMinutes: 10,
   });
 }
+
+/**
+ * Extract version metadata from repo files and set as Buildkite metadata.
+ * Fast plain step — reads .release-please-manifest.json and package.json.
+ * No Dagger, no release-please dependency.
+ */
+export function extractVersionsStep(): BuildkiteStep {
+  return plainStep({
+    label: ":label: Extract Versions",
+    key: "extract-versions",
+    command: [
+      `RELEASE_VERSION=$(bun -e 'process.stdout.write(JSON.parse(require("fs").readFileSync(".release-please-manifest.json","utf8"))["packages/homelab/src/helm-types"])')`,
+      `CLAUDERON_VERSION=$(bun -e 'process.stdout.write(JSON.parse(require("fs").readFileSync(".release-please-manifest.json","utf8"))["packages/clauderon"])')`,
+      `COOKLANG_VERSION=$(bun -e 'process.stdout.write(JSON.parse(require("fs").readFileSync("packages/cooklang-rich-preview/package.json","utf8")).version)')`,
+      `buildkite-agent meta-data set release-version "$RELEASE_VERSION"`,
+      `buildkite-agent meta-data set clauderon_version "$CLAUDERON_VERSION"`,
+      `buildkite-agent meta-data set cooklang_version "$COOKLANG_VERSION"`,
+      `echo "Versions: release=$RELEASE_VERSION clauderon=$CLAUDERON_VERSION cooklang=$COOKLANG_VERSION"`,
+    ].join(" && "),
+    timeoutMinutes: 2,
+  });
+}

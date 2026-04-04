@@ -15,6 +15,7 @@ import {
   markdownlintStep,
   shellcheckStep,
   qualityRatchetStep,
+  extractVersionsStep,
   complianceCheckStep,
   knipCheckStep,
   gitleaksCheckStep,
@@ -30,7 +31,7 @@ import {
   largeFileStep,
 } from "./steps/quality.ts";
 import { codeReviewStep } from "./steps/code-review.ts";
-import { releaseStep } from "./steps/release.ts";
+import { releasePleaseStep } from "./steps/release.ts";
 import {
   buildImagesWithSmokeGroup,
   pushImagesGroup,
@@ -147,9 +148,15 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
       plugins: [k8sPlugin()],
     });
 
-    // Release-please runs in parallel with quality-gate (same deps).
-    // Only steps that consume release metadata depend on "release".
-    steps.push(releaseStep(releaseDeps));
+    // Extract versions from repo files — fast, no Dagger.
+    // Downstream steps that need version metadata depend on this.
+    const extractVersions = extractVersionsStep();
+    extractVersions.depends_on = "quality-gate";
+    steps.push(extractVersions);
+
+    // Release-please: creates/updates version bump PRs and GitHub releases.
+    // Fire-and-forget — nothing depends on it.
+    steps.push(releasePleaseStep(releaseDeps));
 
     // Helper: build deps array scoped to quality-gate + a specific package build
     const scopedDeps = (pkg: string, extra: string[] = []): string[] => {
@@ -285,7 +292,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
       affected.hasImagePackages.size > 0 ||
       affected.homelabChanged
     ) {
-      const vcbDeps: string[] = ["release"];
+      const vcbDeps: string[] = ["extract-versions"];
       if (hasImages) {
         vcbDeps.push(...appPushKeys);
       }
@@ -297,7 +304,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
 
     // --- Build Summary ---
     // Collect all terminal step keys so the summary runs last
-    const summaryDeps: string[] = ["release"];
+    const summaryDeps: string[] = ["extract-versions"];
     if (hasImages) summaryDeps.push(...appPushKeys);
     if (needsArgoSync) {
       summaryDeps.push("argocd-health");
