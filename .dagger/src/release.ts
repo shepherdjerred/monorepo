@@ -627,38 +627,65 @@ export function versionCommitBackHelper(
 ): Container {
   const container = dag
     .container()
-    .from(ALPINE_IMAGE)
+    .from(BUN_IMAGE)
+    .withExec(["apt-get", "update", "-qq"])
+    .withExec([
+      "apt-get",
+      "install",
+      "-y",
+      "-qq",
+      "--no-install-recommends",
+      "git",
+    ])
     .withExec([
       "sh",
       "-c",
-      "apk add --no-cache git jq sed curl && curl -fsSL https://github.com/cli/cli/releases/download/v2.74.0/gh_2.74.0_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_2.74.0_linux_amd64/bin/gh",
+      `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
     ])
     .withSecretVariable("GH_TOKEN", ghToken);
 
   if (dryrun) {
     return container.withExec([
       "echo",
-      `DRYRUN: would commit version bump ${version}`,
+      `DRYRUN: would commit version bump ${version} with digests: ${digests}`,
     ]);
   }
+
+  // Parse digests JSON into "key=digest" args for the update script
+  const digestArgs = digests.trim()
+    ? (() => {
+        try {
+          const parsed = JSON.parse(digests);
+          return Object.entries(parsed)
+            .filter(([, v]) => typeof v === "string" && v !== "")
+            .map(([k, v]) => `"${k}=${v}"`)
+            .join(" ");
+        } catch {
+          return "";
+        }
+      })()
+    : "";
+
   return container
     .withExec([
       "sh",
       "-c",
-      `printf '#!/bin/sh\\necho "$$GH_TOKEN"\\n' > /usr/local/bin/git-askpass && chmod +x /usr/local/bin/git-askpass`,
+      `printf '#!/bin/sh\\necho "$GH_TOKEN"\\n' > /usr/local/bin/git-askpass && chmod +x /usr/local/bin/git-askpass`,
     ])
     .withEnvVariable("GIT_ASKPASS", "/usr/local/bin/git-askpass")
     .withExec([
       "sh",
       "-c",
-      `git clone https://github.com/shepherdjerred/monorepo.git /repo && cd /repo && \
-       echo '${digests}' | jq -r 'to_entries[] | "s|\\(.key).*|\\(.key): \\"\\(.value)\\",|"' | while read -r pattern; do \
-         sed -i "$pattern" packages/homelab/src/cdk8s/src/versions.ts; \
-       done && \
-       git checkout -b "chore/version-bump-${version}" && \
-       git add packages/homelab/src/cdk8s/src/versions.ts && git commit -m "chore: bump image versions to ${version}" && \
-       git push origin "chore/version-bump-${version}" && \
-       gh pr create --title "chore: bump image versions to ${version}" --body "Auto-generated version bump" --auto`,
+      [
+        `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
+        `cd /repo`,
+        `bun run .buildkite/scripts/update-versions.ts packages/homelab/src/cdk8s/src/versions.ts "${version}" ${digestArgs}`,
+        `git checkout -b "chore/version-bump-${version}"`,
+        `git add packages/homelab/src/cdk8s/src/versions.ts`,
+        `git commit -m "chore: bump image versions to ${version}"`,
+        `git push origin "chore/version-bump-${version}"`,
+        `gh pr create --title "chore: bump image versions to ${version}" --body "Auto-generated version bump" --auto`,
+      ].join(" && "),
     ]);
 }
 
