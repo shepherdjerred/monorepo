@@ -262,12 +262,17 @@ export function publishNpmHelper(
     ]);
   }
 
+  // bun publish reads auth from npm_config_//registry.npmjs.org/:_authToken env var
   return container
-    .withSecretVariable("NPM_TOKEN", npmToken)
+    .withSecretVariable("npm_config_//registry.npmjs.org/:_authToken", npmToken)
     .withExec([
-      "sh",
-      "-c",
-      `bun publish --access public --tag ${tag} --tolerate-republish --token "$NPM_TOKEN"`,
+      "bun",
+      "publish",
+      "--access",
+      "public",
+      "--tag",
+      tag,
+      "--tolerate-republish",
     ]);
 }
 
