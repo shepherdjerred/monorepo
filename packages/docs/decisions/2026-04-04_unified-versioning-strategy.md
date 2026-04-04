@@ -7,11 +7,11 @@
 
 Between February and April 2026, our CI versioning went through three eras:
 
-| Era | Period            | Example Helm   | Example Docker  | Status                                |
-| --- | ----------------- | -------------- | --------------- | ------------------------------------- |
-| 1   | through ~Feb 15   | `1.0.0-3599`   | `1.0.0-2958`    | Correct                               |
-| 2   | ~Feb 22 -- Mar 15 | `1.1.464`      | `1.1.152`       | Broken -- lost semver prerelease prefix |
-| 3   | late Mar--present | `695`          | `695`           | Broken -- bare build number, no prefix  |
+| Era | Period            | Example Helm | Example Docker | Status                                  |
+| --- | ----------------- | ------------ | -------------- | --------------------------------------- |
+| 1   | through ~Feb 15   | `1.0.0-3599` | `1.0.0-2958`   | Correct                                 |
+| 2   | ~Feb 22 -- Mar 15 | `1.1.464`    | `1.1.152`      | Broken -- lost semver prerelease prefix |
+| 3   | late Mar--present | `695`        | `695`          | Broken -- bare build number, no prefix  |
 
 Era 2 broke when the `1.0.0-` prerelease prefix was replaced with a `1.x.` minor/patch scheme.
 Era 3 broke further when the prefix was removed entirely.
@@ -29,18 +29,18 @@ for npm packages.
 
 ### Version Formats
 
-| Artifact            | Format                      | Example              | Why                                                                           |
-| ------------------- | --------------------------- | -------------------- | ----------------------------------------------------------------------------- |
-| Docker images       | `2.0.0-BUILD` + `:latest`  | `2.0.0-695`          | Valid semver; `@sha256:` digest provides immutability                          |
-| Helm charts         | `2.0.0-BUILD`              | `2.0.0-695`          | ArgoCD `~2.0.0-0` tilde range auto-updates to latest prerelease              |
-| NPM (prod)          | semver via release-please   | `0.1.0`              | Standard npm versioning; Renovate manages downstream consumers               |
-| NPM (dev)           | `0.0.0-dev.BUILD`          | `0.0.0-dev.695`      | `dev` dist-tag; `npm install pkg` still gets stable, `pkg@dev` gets dev      |
-| Clauderon (prod)    | semver via release-please   | `0.1.0`              | GitHub Release with proper semver tag                                        |
-| Clauderon (dev)     | `0.0.0-dev.BUILD`          | `0.0.0-dev.695`      | GitHub pre-release; only built when clauderon code changes                   |
-| Cooklang            | `2.0.0-BUILD`              | `2.0.0-695`          | Same as Helm/Docker for consistency                                          |
-| versions.ts entries | `2.0.0-BUILD@sha256:...`   | `2.0.0-695@sha256:…` | Matches Docker tag format; only Docker images updated (Renovate handles npm) |
-| Static sites        | none                        | N/A                  | Latest version always deployed; no versioning needed                         |
-| Tofu infrastructure | none                        | N/A                  | Stateful infrastructure; no artifact versioning                              |
+| Artifact            | Format                    | Example              | Why                                                                          |
+| ------------------- | ------------------------- | -------------------- | ---------------------------------------------------------------------------- |
+| Docker images       | `2.0.0-BUILD` + `:latest` | `2.0.0-695`          | Valid semver; `@sha256:` digest provides immutability                        |
+| Helm charts         | `2.0.0-BUILD`             | `2.0.0-695`          | ArgoCD `~2.0.0-0` tilde range auto-updates to latest prerelease              |
+| NPM (prod)          | semver via release-please | `0.1.0`              | Standard npm versioning; Renovate manages downstream consumers               |
+| NPM (dev)           | `0.0.0-dev.BUILD`         | `0.0.0-dev.695`      | `dev` dist-tag; `npm install pkg` still gets stable, `pkg@dev` gets dev      |
+| Clauderon (prod)    | semver via release-please | `0.1.0`              | GitHub Release with proper semver tag                                        |
+| Clauderon (dev)     | `0.0.0-dev.BUILD`         | `0.0.0-dev.695`      | GitHub pre-release; only built when clauderon code changes                   |
+| Cooklang            | `2.0.0-BUILD`             | `2.0.0-695`          | Same as Helm/Docker for consistency                                          |
+| versions.ts entries | `2.0.0-BUILD@sha256:...`  | `2.0.0-695@sha256:…` | Matches Docker tag format; only Docker images updated (Renovate handles npm) |
+| Static sites        | none                      | N/A                  | Latest version always deployed; no versioning needed                         |
+| Tofu infrastructure | none                      | N/A                  | Stateful infrastructure; no artifact versioning                              |
 
 ### Why `2.0.0-BUILD`
 

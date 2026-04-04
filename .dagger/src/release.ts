@@ -265,13 +265,9 @@ export function publishNpmHelper(
   return container
     .withSecretVariable("NPM_TOKEN", npmToken)
     .withExec([
-      "bun",
-      "publish",
-      "--access",
-      "public",
-      "--tag",
-      tag,
-      "--tolerate-republish",
+      "sh",
+      "-c",
+      `bun publish --access public --tag ${tag} --tolerate-republish --token "$NPM_TOKEN"`,
     ]);
 }
 

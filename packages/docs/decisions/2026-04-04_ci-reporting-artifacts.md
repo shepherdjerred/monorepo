@@ -8,23 +8,23 @@ The CI pipeline (Buildkite + Dagger) has basic pass/fail reporting but is missin
 
 ### What EXISTS today
 
-| Feature | Details |
-|---------|---------|
-| NPM dist/ artifacts | Uploaded via `buildkite-agent artifact upload` for publishable packages |
+| Feature                  | Details                                                                            |
+| ------------------------ | ---------------------------------------------------------------------------------- |
+| NPM dist/ artifacts      | Uploaded via `buildkite-agent artifact upload` for publishable packages            |
 | Quality gate annotations | Knip, Trivy, Semgrep warnings annotated on build page (`annotatedScanCmd` pattern) |
-| Build summary annotation | Success annotation showing images, helm charts, npm packages, deployed sites |
-| Image digest metadata | SHA256 digests stored via `buildkite-agent meta-data set` |
-| Scanner text artifacts | Knip/Trivy/Semgrep text output uploaded as artifacts |
+| Build summary annotation | Success annotation showing images, helm charts, npm packages, deployed sites       |
+| Image digest metadata    | SHA256 digests stored via `buildkite-agent meta-data set`                          |
+| Scanner text artifacts   | Knip/Trivy/Semgrep text output uploaded as artifacts                               |
 
 ### What's MISSING
 
-| Feature | Details |
-|---------|---------|
-| Test coverage | No `--coverage` flag, no collection, no reporting |
-| Structured test results | No JUnit XML, no Buildkite Test Analytics |
-| Structured lint reports | ESLint output is stdout only |
-| Typecheck error annotations | tsc errors only in step logs |
-| Java/Maven coverage | `mavenCoverage()` exists in Dagger but is never called |
+| Feature                     | Details                                                |
+| --------------------------- | ------------------------------------------------------ |
+| Test coverage               | No `--coverage` flag, no collection, no reporting      |
+| Structured test results     | No JUnit XML, no Buildkite Test Analytics              |
+| Structured lint reports     | ESLint output is stdout only                           |
+| Typecheck error annotations | tsc errors only in step logs                           |
+| Java/Maven coverage         | `mavenCoverage()` exists in Dagger but is never called |
 
 ### Key Constraint
 
@@ -43,11 +43,13 @@ All build work runs inside Dagger containers. Files must be extracted via Dagger
 Enables Buildkite Test Analytics (flaky detection, trend analysis, per-test timing).
 
 **1A. Add `test:ci` scripts** to all packages with tests:
+
 ```json
 "test:ci": "bun test --bail --coverage --reporter=junit --reporter-outfile=./junit.xml"
 ```
 
 **1B. New Dagger function `testReports`** (`.dagger/src/typescript.ts` + `index.ts`):
+
 - `testWithReportsHelper` runs `bun run test:ci`, returns Container
 - `@func() testReports()` returns a clean Directory with only junit.xml + coverage/
 
@@ -64,10 +66,12 @@ testReports(pkgDir: Directory, pkg: string, ...): Directory {
 Also add `generateAndTestReports` for Prisma packages.
 
 **1C. Update pipeline generator** (`scripts/ci/src/steps/per-package.ts`):
+
 - Test steps: `dagger call test-reports ... export --path tmp/test-reports-${sk} && buildkite-agent artifact upload`
 - Extend `daggerCallStep()` to accept extra plugins and `artifact_paths`
 
 **1D. Buildkite Test Analytics** — add `test-collector` plugin to test steps:
+
 ```yaml
 plugins:
   - test-collector#v1.10.1:
@@ -110,11 +114,11 @@ Same `annotatedScanCmd` wrapping as Phase 3, applied to typecheck steps.
 
 ## What's NOT worth doing
 
-| Item | Reason |
-|------|--------|
-| Build timing tracking | Buildkite already shows per-step duration natively |
-| Artifact size tracking | No current pain point |
-| SBOM generation | No compliance requirement |
+| Item                   | Reason                                             |
+| ---------------------- | -------------------------------------------------- |
+| Build timing tracking  | Buildkite already shows per-step duration natively |
+| Artifact size tracking | No current pain point                              |
+| SBOM generation        | No compliance requirement                          |
 
 ## Critical Files
 
