@@ -341,7 +341,12 @@ export function deploySiteHelper(
 
   container = container
     .withSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyId)
-    .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey);
+    .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey)
+    // SeaweedFS S3 requires s3v4 signing; pin the region to avoid mismatches
+    // with newer AWS CLI versions that use CRT-based signing.
+    .withEnvVariable("AWS_DEFAULT_REGION", "us-east-1")
+    .withEnvVariable("AWS_REQUEST_CHECKSUM_CALCULATION", "WHEN_REQUIRED")
+    .withEnvVariable("AWS_RESPONSE_CHECKSUM_VALIDATION", "WHEN_REQUIRED");
 
   if (buildCmd) {
     container = container.withExec(["sh", "-c", buildCmd]);
