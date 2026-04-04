@@ -127,8 +127,8 @@ export const DEPLOY_SITES: DeploySite[] = [
   {
     bucket: "scout-frontend",
     name: "scout-for-lol frontend",
-    buildDir: "packages/scout-for-lol/packages/frontend",
-    buildCmd: "bun run build",
+    buildDir: "packages/scout-for-lol",
+    buildCmd: "bun run --filter='./packages/frontend' build",
     distDir: "packages/scout-for-lol/packages/frontend/dist",
   },
   {
