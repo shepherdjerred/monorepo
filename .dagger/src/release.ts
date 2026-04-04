@@ -273,7 +273,7 @@ export function publishNpmHelper(
     .withExec([
       "sh",
       "-c",
-      `PKG_NAME=$(cat /tmp/pkg-name); PKG_VER=$(cat /tmp/pkg-ver); if npm view "$PKG_NAME@$PKG_VER" version; then echo "Version $PKG_VER of $PKG_NAME already published — skipping"; else bun publish --access public --tag latest --token "$NPM_TOKEN"; fi`,
+      `PKG_NAME=$(cat /tmp/pkg-name); PKG_VER=$(cat /tmp/pkg-ver); if bunx npm view "$PKG_NAME@$PKG_VER" version; then echo "Version $PKG_VER of $PKG_NAME already published — skipping"; else bun publish --access public --tag latest --token "$NPM_TOKEN"; fi`,
     ]);
 }
 
@@ -610,7 +610,7 @@ export function clauderonUploadHelper(
   return container.withExec([
     "sh",
     "-c",
-    `gh release upload "clauderon-v${version}" /artifacts/* --repo shepherdjerred/monorepo --clobber`,
+    `if ! gh release view "clauderon-v${version}" --repo shepherdjerred/monorepo; then echo "Release clauderon-v${version} does not exist — skipping upload"; exit 0; fi; gh release upload "clauderon-v${version}" /artifacts/* --repo shepherdjerred/monorepo --clobber`,
   ]);
 }
 
