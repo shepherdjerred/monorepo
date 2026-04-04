@@ -262,23 +262,15 @@ export function publishNpmHelper(
     ]);
   }
 
-  // Write .npmrc with auth token from Dagger Secret (ephemeral container, never committed).
-  // bun publish has no --token flag and env var names with // are invalid.
+  // Write .npmrc in project dir and publish in same sh -c so the token is available.
+  // bun publish has no --token flag; env var names with // are invalid.
+  // Ephemeral Dagger container — .npmrc never committed.
   return container
     .withSecretVariable("NPM_TOKEN", npmToken)
     .withExec([
       "sh",
       "-c",
-      `echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > /root/.npmrc`,
-    ])
-    .withExec([
-      "bun",
-      "publish",
-      "--access",
-      "public",
-      "--tag",
-      tag,
-      "--tolerate-republish",
+      `echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc && bun publish --access public --tag ${tag} --tolerate-republish`,
     ]);
 }
 
