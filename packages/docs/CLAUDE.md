@@ -26,13 +26,13 @@ docs/
 
 ## Where to Put New Docs
 
-| Type | Directory | Examples |
-|------|-----------|----------|
-| System design, how components fit together | `architecture/` | Service architecture, data flow, package relationships |
-| Reusable patterns across the codebase | `patterns/` | ESLint config patterns, testing conventions, naming rules |
-| "We decided X because Y" | `decisions/` | Technology choices, audits, tradeoff analyses |
-| "How to do X" or operational knowledge | `guides/` | Deployment runbooks, health audits, research notes, changelogs |
-| "We plan to build X" (future/in-progress) | `plans/` | Implementation plans, feature proposals, migration plans |
+| Type                                       | Directory       | Examples                                                       |
+| ------------------------------------------ | --------------- | -------------------------------------------------------------- |
+| System design, how components fit together | `architecture/` | Service architecture, data flow, package relationships         |
+| Reusable patterns across the codebase      | `patterns/`     | ESLint config patterns, testing conventions, naming rules      |
+| "We decided X because Y"                   | `decisions/`    | Technology choices, audits, tradeoff analyses                  |
+| "How to do X" or operational knowledge     | `guides/`       | Deployment runbooks, health audits, research notes, changelogs |
+| "We plan to build X" (future/in-progress)  | `plans/`        | Implementation plans, feature proposals, migration plans       |
 
 **When in doubt:** If it records a choice and its reasoning, it's a decision. If it describes steps to follow, it's a guide. If it describes something to build, it's a plan.
 

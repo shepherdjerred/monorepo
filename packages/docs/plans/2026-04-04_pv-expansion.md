@@ -4,13 +4,13 @@
 
 Kubelet stats showed several PVs near capacity:
 
-| Volume | Usage Before | Capacity Before |
-|--------|-------------|-----------------|
-| `plex-tv-hdd-pvc` (media) | 97.5% (3994/4096 Gi) | 4 Ti |
-| Prometheus TSDB | 91.6% (99/108 Gi) | 128 Gi |
-| `syncthing-data` | 84.7% (54/64 Gi) | 64 Gi |
-| Loki storage | 66.3% (42/64 Gi) | 64 Gi |
-| Tempo storage | low | 32 Gi |
+| Volume                    | Usage Before         | Capacity Before |
+| ------------------------- | -------------------- | --------------- |
+| `plex-tv-hdd-pvc` (media) | 97.5% (3994/4096 Gi) | 4 Ti            |
+| Prometheus TSDB           | 91.6% (99/108 Gi)    | 128 Gi          |
+| `syncthing-data`          | 84.7% (54/64 Gi)     | 64 Gi           |
+| Loki storage              | 66.3% (42/64 Gi)     | 64 Gi           |
+| Tempo storage             | low                  | 32 Gi           |
 
 Prometheus was at 92% but `retentionSize: "120GB"` was keeping it in check — effectively capping actual retention below the configured 180 days. All others were trending toward their limits.
 
@@ -20,22 +20,22 @@ Prometheus was at 92% but `retentionSize: "120GB"` was keeping it in check — e
 
 All done via `kubectl patch pvc` — OpenEBS ZFS CSI driver expanded online with no downtime.
 
-| PVC | Namespace | Pool | Before | After |
-|-----|-----------|------|--------|-------|
-| `plex-tv-hdd-pvc` | media | zfspv-pool-hdd | 4 Ti | 6 Ti |
-| `syncthing-data` | syncthing | zfspv-pool-nvme | 64 Gi | 96 Gi |
+| PVC                                                     | Namespace  | Pool            | Before | After  |
+| ------------------------------------------------------- | ---------- | --------------- | ------ | ------ |
+| `plex-tv-hdd-pvc`                                       | media      | zfspv-pool-hdd  | 4 Ti   | 6 Ti   |
+| `syncthing-data`                                        | syncthing  | zfspv-pool-nvme | 64 Gi  | 96 Gi  |
 | `prometheus-prometheus-kube-prometheus-prometheus-db-*` | prometheus | zfspv-pool-nvme | 128 Gi | 256 Gi |
-| `storage-loki-0` | loki | zfspv-pool-nvme | 64 Gi | 128 Gi |
-| `storage-tempo-0` | tempo | zfspv-pool-nvme | 32 Gi | 64 Gi |
+| `storage-loki-0`                                        | loki       | zfspv-pool-nvme | 64 Gi  | 128 Gi |
+| `storage-tempo-0`                                       | tempo      | zfspv-pool-nvme | 32 Gi  | 64 Gi  |
 
 ### Retention Changes
 
-| Service | Setting | Before | After | Method |
-|---------|---------|--------|-------|--------|
-| Prometheus | `retention` | 180d | 365d | Patched Prometheus CR (operator reconciled) |
-| Prometheus | `retentionSize` | 120GB | 240GB | Patched Prometheus CR |
-| Loki | `retention_period` | 30d | 90d | Patched ConfigMap `loki`, restarted StatefulSet |
-| Tempo | `block_retention` | 168h | 720h (30d) | Patched ConfigMap `tempo`, restarted StatefulSet |
+| Service    | Setting            | Before | After      | Method                                           |
+| ---------- | ------------------ | ------ | ---------- | ------------------------------------------------ |
+| Prometheus | `retention`        | 180d   | 365d       | Patched Prometheus CR (operator reconciled)      |
+| Prometheus | `retentionSize`    | 120GB  | 240GB      | Patched Prometheus CR                            |
+| Loki       | `retention_period` | 30d    | 90d        | Patched ConfigMap `loki`, restarted StatefulSet  |
+| Tempo      | `block_retention`  | 168h   | 720h (30d) | Patched ConfigMap `tempo`, restarted StatefulSet |
 
 ### Code Changes (cdk8s source)
 
@@ -51,10 +51,10 @@ Patched `valuesObject` on ArgoCD Applications for loki, tempo, and prometheus to
 
 ## ZFS Pool Headroom After Expansion
 
-| Pool | Free Before | New Allocation | Free After (approx) |
-|------|-------------|----------------|---------------------|
-| zfspv-pool-hdd | 6.8 Ti | +2 Ti (TV) | ~4.8 Ti |
-| zfspv-pool-nvme | 1.1 Ti | +256 Gi (total) | ~0.85 Ti |
+| Pool            | Free Before | New Allocation  | Free After (approx) |
+| --------------- | ----------- | --------------- | ------------------- |
+| zfspv-pool-hdd  | 6.8 Ti      | +2 Ti (TV)      | ~4.8 Ti             |
+| zfspv-pool-nvme | 1.1 Ti      | +256 Gi (total) | ~0.85 Ti            |
 
 ## Procedure Notes
 
