@@ -17,9 +17,10 @@ if (typeof Bun !== "undefined") {
     Object.fromEntries(
       await Promise.all(
         TierSchema.options.map(async (tier): Promise<[Tier, string]> => {
+          const assetPrefix = "assets/Rank=";
           const image = await Bun.file(
             new URL(
-              `assets/Rank=${tier.charAt(0).toUpperCase() + tier.slice(1)}.png`,
+              `${assetPrefix}${tier.charAt(0).toUpperCase() + tier.slice(1)}.png`,
               import.meta.url,
             ),
           ).arrayBuffer();
@@ -48,8 +49,9 @@ export function RankedBadge({
     .with("bun", () => `data:image/png;base64,${images[newRank.tier]}`)
     .with("browser", () => {
       // Construct the import path for Vite to handle at build time
+      const assetPrefix = "assets/Rank=";
       return new URL(
-        `assets/Rank=${newRank.tier.charAt(0).toUpperCase() + newRank.tier.slice(1)}.png`,
+        `${assetPrefix}${newRank.tier.charAt(0).toUpperCase() + newRank.tier.slice(1)}.png`,
         import.meta.url,
       ).href;
     })
