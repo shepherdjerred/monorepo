@@ -67,37 +67,37 @@ Layer 5 (final)
 
 ### Tier 1: Critical
 
-| # | Issue | File:Line |
-|---|-------|-----------|
-| 1 | ArgoCD `--timeout-secs` should be `--timeout-seconds` (param mismatch) | `argocd.ts:47` vs `index.ts:671` |
-| 2 | Single-quote injection: `echo '${digests}'` breaks if JSON has `'` | `release.ts:593` |
-| 3 | No depNames/depDirs length validation (6 files) | `base.ts:59`, `image.ts:34`, +4 |
-| 4 | CDK8s lint/typecheck/test never run in CI | `homelab.ts`, `per-package.ts` |
+| #   | Issue                                                                  | File:Line                        |
+| --- | ---------------------------------------------------------------------- | -------------------------------- |
+| 1   | ArgoCD `--timeout-secs` should be `--timeout-seconds` (param mismatch) | `argocd.ts:47` vs `index.ts:671` |
+| 2   | Single-quote injection: `echo '${digests}'` breaks if JSON has `'`     | `release.ts:593`                 |
+| 3   | No depNames/depDirs length validation (6 files)                        | `base.ts:59`, `image.ts:34`, +4  |
+| 4   | CDK8s lint/typecheck/test never run in CI                              | `homelab.ts`, `per-package.ts`   |
 
 ### Tier 2: High
 
-| # | Issue | File:Line |
-|---|-------|-----------|
-| 5-6 | cargoDenyHelper: missing 2 caches + wrong mount order | `release.ts:820-833` |
-| 7 | Hardcoded `v2.74.0` instead of `GH_CLI_VERSION` constant | `release.ts:483,572` |
-| 8 | CADDY_BUILDER_IMAGE missing Renovate annotation | `constants.ts:33` |
-| 9 | Silent catch swallows all errors (not just ENOENT) | `release.ts:238` |
-| 10 | ~8 packages missing from WORKSPACE_DEPS | `deps.ts` |
-| 11 | tasknotes pattern `"3000"` matches error messages | `misc.ts:290` |
-| 12 | Cooklang double-build (per-package + cooklang-build) | `cooklang.ts:23-37` |
-| 13 | ci.ts missing homelabTsconfig mount for HA generation | `ci.ts:177-182` |
+| #   | Issue                                                    | File:Line            |
+| --- | -------------------------------------------------------- | -------------------- |
+| 5-6 | cargoDenyHelper: missing 2 caches + wrong mount order    | `release.ts:820-833` |
+| 7   | Hardcoded `v2.74.0` instead of `GH_CLI_VERSION` constant | `release.ts:483,572` |
+| 8   | CADDY_BUILDER_IMAGE missing Renovate annotation          | `constants.ts:33`    |
+| 9   | Silent catch swallows all errors (not just ENOENT)       | `release.ts:238`     |
+| 10  | ~8 packages missing from WORKSPACE_DEPS                  | `deps.ts`            |
+| 11  | tasknotes pattern `"3000"` matches error messages        | `misc.ts:290`        |
+| 12  | Cooklang double-build (per-package + cooklang-build)     | `cooklang.ts:23-37`  |
+| 13  | ci.ts missing homelabTsconfig mount for HA generation    | `ci.ts:177-182`      |
 
 ### Tier 3: Medium
 
-| # | Issue | File:Line |
-|---|-------|-----------|
-| 14 | Shell values interpolated without escaping | `release.ts:54,399,428` |
-| 15 | `formatFailureDetails` prints `"undefined"` | `ci-format.ts:44` |
-| 16 | `lefthook.yml` has banned patterns (not scanned) | `lefthook.yml:40` |
-| 17 | 11 duplicate dryrun echo branches | `release.ts` (11 locs) |
-| 18 | Multi-tag push: no rollback on partial failure | `image.ts:81-84` |
-| 19 | Fragile sed for aarch64 cross-compilation | `rust.ts:66-70` |
-| 20 | `check()` catch assumes Error type | `ci.ts:33` |
+| #   | Issue                                            | File:Line               |
+| --- | ------------------------------------------------ | ----------------------- |
+| 14  | Shell values interpolated without escaping       | `release.ts:54,399,428` |
+| 15  | `formatFailureDetails` prints `"undefined"`      | `ci-format.ts:44`       |
+| 16  | `lefthook.yml` has banned patterns (not scanned) | `lefthook.yml:40`       |
+| 17  | 11 duplicate dryrun echo branches                | `release.ts` (11 locs)  |
+| 18  | Multi-tag push: no rollback on partial failure   | `image.ts:81-84`        |
+| 19  | Fragile sed for aarch64 cross-compilation        | `rust.ts:66-70`         |
+| 20  | `check()` catch assumes Error type               | `ci.ts:33`              |
 
 ### Agent False Positives (verified NOT bugs)
 
@@ -146,105 +146,127 @@ All 8 sites configured in `catalog.ts:88-143`. Pipeline steps exist in `sites.ts
 ### Layer 0: Independent fixes (all parallel)
 
 **A1: ArgoCD parameter name mismatch**
+
 - File: `scripts/ci/src/steps/argocd.ts:47`
 - Change: `--timeout-secs` → `--timeout-seconds`
 - Size: 1 line
 
 **A2: depNames/depDirs length validation**
+
 - Files: `.dagger/src/base.ts:59`, `image.ts:34`, `playwright.ts:57`, `release.ts:199,307,457`
 - Change: Add `if (depNames.length !== depDirs.length) throw new Error(...)` before each loop
 - Size: ~18 lines (3 lines × 6 locations)
 
 **A3: Renovate annotation on CADDY_BUILDER_IMAGE**
+
 - File: `.dagger/src/constants.ts:33`
 - Change: Add `// renovate: datasource=docker depName=caddy` above the constant
 - Size: 1 line
 
 **A4: Add missing packages to deps.ts**
+
 - File: `.dagger/src/deps.ts`
 - Change: Add entries for birmel, glance, homelab (root), leetcode, monarch, resume, tips, toolkit
 - Requires: Read each package's package.json to determine workspace dependencies
 - Size: ~16 lines (2 lines per package)
 
 **A5: Tighten tasknotes smoke test pattern**
+
 - File: `.dagger/src/misc.ts:290`
 - Change: Replace `"3000"` with `"listening on port 3000"` or `"listening on 3000"`
 - Size: 1 line
 
 **A6: Eliminate cooklang double-build**
+
 - File: `scripts/ci/src/steps/cooklang.ts:23-37`
 - Change: Have cooklang-build step depend on per-package build and skip redundant compilation, OR remove cooklang-for-obsidian from per-package build steps (add to SKIP_PACKAGES for build, keep for lint/typecheck/test)
 - Size: ~15 lines
 
 **A7: Mount homelabTsconfig in ci.ts**
+
 - File: `.dagger/src/ci.ts:177-182`
 - Change: After `bunBaseContainer()` call, mount homelabTsconfig at `/workspace/packages/homelab/tsconfig.base.json` (match pattern from homelab.ts:51-56)
 - Requires: Extract homelabTsconfig from source directory
 - Size: ~6 lines
 
 **A8: formatFailureDetails undefined handling**
+
 - File: `.dagger/src/ci-format.ts:44`
 - Change: `f.error` → `f.error ?? "No error details available"`
 - Size: 1 line
 
 **A9: Rewrite lefthook large-file check**
+
 - File: `lefthook.yml:40`
 - Change: Replace `wc -c < "$f" 2>/dev/null || echo 0` with `wc -c < "$f"` (fail fast) or `stat`-based approach
 - Size: ~5 lines
 
 **A10: check() catch handle non-Error types**
+
 - File: `.dagger/src/ci.ts:33`
 - Change: `(e: Error)` → `(e: unknown)` and use `e instanceof Error ? e.message : String(e)`
 - Size: ~3 lines
 
 **A11: Centralize resolveDeps**
+
 - File: `scripts/ci/src/lib/buildkite.ts` (add new export)
-- Change: Add `resolveDeps(baseKey, pkgKey?, extras?)` helper. Update callers in steps/*.ts.
+- Change: Add `resolveDeps(baseKey, pkgKey?, extras?)` helper. Update callers in steps/\*.ts.
 - Size: ~20 lines new + ~10 lines changed across callers
 
 **A12: K8s plugin resource presets**
+
 - File: `scripts/ci/src/lib/k8s-plugin.ts`
 - Change: Add `K8S_LIGHT`, `K8S_MEDIUM`, `K8S_HEAVY` preset objects. Replace inline resource specs.
 - Size: ~15 lines new + ~20 lines simplified across callers
 
 **A13: Verify frontend deploys**
+
 - Action: Read DRYRUN_FLAG value. If it adds `--dryrun`, trace where it's set. Check SeaweedFS secrets. Check recent main-branch build logs.
 - Size: Investigation → 0 lines if working, or fix DRYRUN_FLAG if blocking
 
 ### Layer 1: release.ts bug fixes (before refactor)
 
 **B1: Fix digests single-quote injection**
+
 - File: `.dagger/src/release.ts:593`
 - Change: Replace `echo '${digests}'` with base64 encoding:
+
   ```
   echo '${Buffer.from(digests).toString("base64")}' | base64 -d | jq ...
   ```
+
 - Size: ~8 lines
 
 **B2: Fix cargoDenyHelper caches + mount order**
+
 - File: `.dagger/src/release.ts:820-833`
 - Change: (1) Move cache mounts before `.withDirectory()`. (2) Add `cargo-git` and `target` cache volumes.
 - Size: ~10 lines
 
 **B3: Use GH_CLI_VERSION constant**
+
 - File: `.dagger/src/release.ts:483,572`
 - Change: Replace literal `v2.74.0` with `v${GH_CLI_VERSION}`
 - Size: 2 lines
 
 **B4: Narrow silent catch**
+
 - File: `.dagger/src/release.ts:238`
 - Change: Rethrow if not file-not-found:
+
   ```typescript
   catch(e) {
     if (e instanceof Error && (e.message.includes("ENOENT") || e.message.includes("no such file"))) continue;
     throw e;
   }
   ```
+
 - Size: ~5 lines
 
 ### Layer 2: Refactor release.ts
 
 **C1: Split release.ts into 9 modules + extract helpers**
+
 - Source: `.dagger/src/release.ts` (834 lines)
 - Target files:
   - `.dagger/src/release-helm.ts` — `helmPackageHelper()` (lines 28-69)
@@ -265,27 +287,32 @@ All 8 sites configured in `catalog.ts:88-143`. Pipeline steps exist in `sites.ts
 ### Layer 3: New features (parallel)
 
 **D1: CDK8s validation helpers + CI wiring**
+
 - New helpers in `.dagger/src/homelab.ts`: `homelabCdk8sLintHelper`, `TypecheckHelper`, `TestHelper`
 - New @func() wrappers in `.dagger/src/index.ts`
 - Wire into `scripts/ci/src/steps/per-package.ts` alongside existing HA steps
 - Size: ~80 lines new
 
 **D2: Wire Bun test coverage into CI**
+
 - Modify `.dagger/src/typescript.ts` testHelper: add optional `coverage` parameter
 - Add coverage step variant in `scripts/ci/src/steps/per-package.ts`
 - Add Buildkite artifact upload for coverage reports
 - Size: ~30 lines
 
 **D3: Wire Java/JaCoCo coverage into CI**
+
 - Add CI step in `scripts/ci/src/steps/per-package.ts`: `dagger call maven-coverage --pkg-dir ./packages/castle-casters`
 - Size: ~15 lines
 
 **D4: Tofu scheduled drift detection**
+
 - Add scheduled pipeline trigger (Buildkite cron or `.buildkite/pipeline-drift.yml`)
 - Runs `tofu plan` on all 3 stacks periodically, reports via annotation
 - Size: ~40 lines
 
 **D5: Tofu PR plan annotations**
+
 - Modify `scripts/ci/src/steps/tofu.ts` tofuPlanStep: capture plan output
 - Add Buildkite annotation with plan diff
 - Size: ~25 lines
@@ -315,14 +342,14 @@ Size: ~400 lines across 4 test files
 
 ## Summary
 
-| Layer | Tasks | Total scope | Parallelism |
-|-------|-------|-------------|-------------|
-| 0 | 13 independent fixes | ~100 lines changed | All parallel |
-| 1 | 4 release.ts bug fixes | ~25 lines changed | All parallel |
-| 2 | 1 large refactor | ~834 lines moved, ~80 lines new/changed | Sequential |
-| 3 | 5 new features | ~190 lines new | All parallel |
-| 4 | 1 test suite | ~400 lines new | Sequential |
-| 5 | 1 verification | 0 lines | Sequential |
-| **Total** | **25 tasks** | **~800 lines new/changed + 834 lines moved** | |
+| Layer     | Tasks                  | Total scope                                  | Parallelism  |
+| --------- | ---------------------- | -------------------------------------------- | ------------ |
+| 0         | 13 independent fixes   | ~100 lines changed                           | All parallel |
+| 1         | 4 release.ts bug fixes | ~25 lines changed                            | All parallel |
+| 2         | 1 large refactor       | ~834 lines moved, ~80 lines new/changed      | Sequential   |
+| 3         | 5 new features         | ~190 lines new                               | All parallel |
+| 4         | 1 test suite           | ~400 lines new                               | Sequential   |
+| 5         | 1 verification         | 0 lines                                      | Sequential   |
+| **Total** | **25 tasks**           | **~800 lines new/changed + 834 lines moved** |              |
 
 Desktop/Tauri builds: skipped.
