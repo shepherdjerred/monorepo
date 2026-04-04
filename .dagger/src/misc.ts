@@ -3,7 +3,13 @@
  *
  * These are plain functions (not decorated) — the @func() wrappers live in index.ts.
  */
-import { dag, Container, Directory, File } from "@dagger.io/dagger";
+import {
+  dag,
+  Container,
+  Directory,
+  ExecError,
+  File,
+} from "@dagger.io/dagger";
 
 import {
   BUN_IMAGE,
@@ -124,50 +130,38 @@ export function smokeTestHelper(
 // ---------------------------------------------------------------------------
 
 /**
- * Evaluate smoke test output against expected startup and failure patterns.
- * For services that require external auth (Discord, Riot API), we expect
- * both successful startup patterns AND auth failure patterns.
+ * Run a smoke test container and determine pass/fail from its exit code.
+ *
+ * - Exit 0 or 124 (timeout) → pass (service ran)
+ * - Non-zero + expected auth/connection failure in output → pass
+ * - Non-zero + unexpected failure → throw (fail fast)
  */
-function evaluateSmokeTestOutput(
-  output: string,
-  successPatterns: string[],
-  failurePatterns: string[],
-): string {
-  const hasSuccess = successPatterns.some((p) =>
-    output.toLowerCase().includes(p.toLowerCase()),
-  );
-  const hasFailure = failurePatterns.some((p) =>
-    output.toLowerCase().includes(p.toLowerCase()),
-  );
-
-  if (failurePatterns.length === 0) {
-    // No auth dependency — just check startup succeeded
-    if (hasSuccess) {
-      return `✅ Smoke test passed: started successfully.\n\nOutput snippet: ${output.slice(0, 500)}`;
-    }
-    return `❌ Smoke test failed: unexpected behavior.\nOutput:\n${output}`;
-  }
-
-  if (hasSuccess && hasFailure) {
-    return `✅ Smoke test passed: started successfully, failed as expected on auth.\n\nOutput snippet: ${output.slice(0, 500)}`;
-  } else if (hasSuccess) {
-    return `⚠️ Smoke test partial: started but didn't fail as expected.\nOutput:\n${output.slice(0, 500)}`;
-  }
-  return `❌ Smoke test failed: unexpected behavior.\nOutput:\n${output}`;
-}
-
-/** Capture stdout from a container, falling back to stderr. */
-async function captureContainerOutput(container: Container): Promise<string> {
+async function runSmokeTest(
+  container: Container,
+  expectedFailurePatterns: string[],
+): Promise<string> {
   try {
-    return await container.stdout();
+    const output = await container.stdout();
+    return `✅ Smoke test passed: process exited cleanly.\n\nOutput: ${output.slice(0, 500)}`;
   } catch (error) {
-    try {
-      return await container.stderr();
-    } catch {
-      throw new Error(
-        `Could not capture container output. Error: ${String(error)}`,
-      );
+    if (!(error instanceof ExecError)) throw error;
+
+    if (error.exitCode === 124) {
+      return "✅ Smoke test passed: service ran until timeout.";
     }
+
+    const combined = `${error.stdout}\n${error.stderr}`.toLowerCase();
+    const isExpected = expectedFailurePatterns.some((p) =>
+      combined.includes(p.toLowerCase()),
+    );
+
+    if (isExpected) {
+      return "✅ Smoke test passed: failed with expected auth error.";
+    }
+
+    throw new Error(
+      `Smoke test failed (exit code ${error.exitCode}).\n\nstdout:\n${error.stdout}\n\nstderr:\n${error.stderr}`,
+    );
   }
 }
 
@@ -188,20 +182,18 @@ export async function smokeTestScoutForLolHelper(
     .withEnvVariable("RIOT_API_KEY", "smoke-test-dummy")
     .withEnvVariable("DATABASE_URL", "file:/tmp/smoke-test.db")
     .withEnvVariable("PORT", "3000")
+    .withEnvVariable("VERSION", "0.0.0-smoke")
+    .withEnvVariable("GIT_SHA", "smoke-test")
     .withEntrypoint([])
-    .withExec(["sh", "-c", "timeout 30s bun run src/index.ts 2>&1; exit 0"]);
+    .withWorkdir("/workspace/packages/scout-for-lol/packages/backend")
+    .withExec(["sh", "-c", "timeout 30s bun run src/index.ts 2>&1"]);
 
-  const output = await captureContainerOutput(container);
-  return evaluateSmokeTestOutput(
-    output,
-    [
-      "Starting HTTP server",
-      "Starting Scout for LoL",
-      "Configuration loaded",
-      "Starting Discord bot",
-    ],
-    ["401", "TokenInvalid", "Unauthorized", "Invalid token"],
-  );
+  return runSmokeTest(container, [
+    "401",
+    "TokenInvalid",
+    "Unauthorized",
+    "Invalid token",
+  ]);
 }
 
 /**
@@ -227,14 +219,14 @@ export async function smokeTestBirmelHelper(
       "file:/tmp/mastra-telemetry.db",
     )
     .withEntrypoint([])
-    .withExec(["sh", "-c", "timeout 30s bun run start 2>&1; exit 0"]);
+    .withExec(["sh", "-c", "timeout 30s bun run start 2>&1"]);
 
-  const output = await captureContainerOutput(container);
-  return evaluateSmokeTestOutput(
-    output,
-    ["Starting Birmel", "Configuration loaded", "Logging in", "Discord"],
-    ["TokenInvalid", "401", "Unauthorized", "Invalid token"],
-  );
+  return runSmokeTest(container, [
+    "TokenInvalid",
+    "401",
+    "Unauthorized",
+    "Invalid token",
+  ]);
 }
 
 /**
@@ -252,20 +244,18 @@ export async function smokeTestStarlightKarmaBotHelper(
     .withEnvVariable("DISCORD_TOKEN", "smoke-test-dummy")
     .withEnvVariable("APPLICATION_ID", "000000000000000000")
     .withEnvVariable("DATA_DIR", "/tmp/smoke-data")
+    .withEnvVariable("VERSION", "0.0.0-smoke")
+    .withEnvVariable("GIT_SHA", "smoke-test")
     .withEntrypoint([])
     .withExec(["mkdir", "-p", "/tmp/smoke-data"])
-    .withExec(["sh", "-c", "timeout 30s bun run src/index.ts 2>&1; exit 0"]);
+    .withExec(["sh", "-c", "timeout 30s bun run src/index.ts 2>&1"]);
 
-  const output = await captureContainerOutput(container);
-  return evaluateSmokeTestOutput(
-    output,
-    [
-      "Starting Starlight Karma Bot",
-      "Starlight Karma Bot is now ready",
-      "Sentry initialized",
-    ],
-    ["TokenInvalid", "401", "Unauthorized", "Invalid token"],
-  );
+  return runSmokeTest(container, [
+    "TokenInvalid",
+    "401",
+    "Unauthorized",
+    "Invalid token",
+  ]);
 }
 
 /**
@@ -286,12 +276,7 @@ export async function smokeTestTasknotesServerHelper(
     .withEnvVariable("PORT", "3000")
     .withEntrypoint([])
     .withExec(["mkdir", "-p", "/tmp/smoke-vault"])
-    .withExec(["sh", "-c", "timeout 10s bun run src/index.ts 2>&1; exit 0"]);
+    .withExec(["sh", "-c", "timeout 10s bun run src/index.ts 2>&1"]);
 
-  const output = await captureContainerOutput(container);
-  return evaluateSmokeTestOutput(
-    output,
-    ["listening", "3000", "started", "ready"],
-    [], // no external auth — server starts fully
-  );
+  return runSmokeTest(container, []);
 }
