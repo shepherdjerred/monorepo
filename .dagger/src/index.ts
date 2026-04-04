@@ -547,6 +547,40 @@ export class Monorepo {
     ).stdout();
   }
 
+  /**
+   * Synth cdk8s manifests and package a Helm chart in one call.
+   * Eliminates Buildkite artifact transfer — Dagger caches the synth output.
+   */
+  @func({ cache: "never" })
+  async helmSynthAndPackage(
+    source: Directory,
+    synthPkgDir: Directory,
+    synthDepNames: string[] = [],
+    synthDepDirs: Directory[] = [],
+    tsconfig: File | null = null,
+    chartName: string,
+    version: string,
+    chartMuseumUsername: string,
+    chartMuseumPassword: Secret,
+    dryrun = false,
+  ): Promise<string> {
+    const cdk8sDist = homelabSynthHelper(
+      synthPkgDir,
+      synthDepNames,
+      synthDepDirs,
+      tsconfig,
+    );
+    return helmPackageHelper(
+      source,
+      cdk8sDist,
+      chartName,
+      version,
+      chartMuseumUsername,
+      chartMuseumPassword,
+      dryrun,
+    ).stdout();
+  }
+
   /** Run tofu init + apply on an infrastructure stack */
   @func({ cache: "never" })
   async tofuApply(

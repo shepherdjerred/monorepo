@@ -1,9 +1,9 @@
 /**
  * Cooklang release step generators.
  *
- * Build once, then push + release as separate steps reusing the build output.
- * The build step exports artifacts to a Buildkite artifact path; push and release
- * consume them. This avoids rebuilding cooklang 3 times.
+ * Uses combined Dagger functions (cooklang-build-and-push, cooklang-build-and-release)
+ * that build + publish in a single call. Dagger caches the build output.
+ * No Buildkite artifact transfer.
  */
 import { RETRY, DAGGER_ENV, DRYRUN_FLAG } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
@@ -21,30 +21,12 @@ export function cooklangReleaseGroup(pkgKey?: string): BuildkiteGroup {
     key: "cooklang-release",
     steps: [
       {
-        label: ":cook: Build cooklang",
-        key: "cooklang-build",
-        if: MAIN_ONLY,
-        depends_on: dependsOn,
-        command: [
-          `dagger call cooklang-build ${COOKLANG_PKG_FLAGS} export --path tmp/cooklang-dist`,
-          `buildkite-agent artifact upload "tmp/cooklang-dist/**/*"`,
-        ].join(" && "),
-        timeout_in_minutes: 15,
-        priority: 1,
-        retry: RETRY,
-        env: DAGGER_ENV,
-        plugins: [k8sPlugin({ cpu: "250m", memory: "512Mi" })],
-      },
-      {
         label: ":cook: Push cooklang artifacts",
         key: "cooklang-push",
         if: MAIN_ONLY,
-        depends_on: ["cooklang-build"],
-        command: [
-          `mkdir -p tmp/cooklang-dist && buildkite-agent artifact download "tmp/cooklang-dist/**/*" tmp/cooklang-dist`,
-          `dagger call cooklang-push --source tmp/cooklang-dist --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
-        ].join(" && "),
-        timeout_in_minutes: 10,
+        depends_on: dependsOn,
+        command: `dagger call cooklang-build-and-push ${COOKLANG_PKG_FLAGS} --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
+        timeout_in_minutes: 15,
         priority: 1,
         retry: RETRY,
         env: DAGGER_ENV,
@@ -54,12 +36,9 @@ export function cooklangReleaseGroup(pkgKey?: string): BuildkiteGroup {
         label: ":cook: Create cooklang release",
         key: "cooklang-release-create",
         if: MAIN_ONLY,
-        depends_on: ["cooklang-build"],
-        command: [
-          `mkdir -p tmp/cooklang-dist && buildkite-agent artifact download "tmp/cooklang-dist/**/*" tmp/cooklang-dist`,
-          `dagger call cooklang-create-release --artifacts tmp/cooklang-dist --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
-        ].join(" && "),
-        timeout_in_minutes: 10,
+        depends_on: dependsOn,
+        command: `dagger call cooklang-build-and-release ${COOKLANG_PKG_FLAGS} --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
+        timeout_in_minutes: 15,
         priority: 1,
         retry: RETRY,
         env: DAGGER_ENV,
