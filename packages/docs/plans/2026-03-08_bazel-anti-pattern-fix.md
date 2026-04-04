@@ -323,13 +323,13 @@ A new `sh_test` target that catches structural anti-patterns in BUILD.bazel and 
 **Checks to implement:**
 
 | Check                               | What it catches     | How                                                                                         |
-| ----------------------------------- | ------------------- | ------------------------------------------------------------------------------------------- | ------------------- | ---------- | --- | ------------------------------------------------------------------------- |
+| ----------------------------------- | ------------------- | ------------------------------------------------------------------------------------------- |
 | Test files in library srcs          | Issue 16 recurrence | `grep -r 'bun_library' BUILD.bazel` files, then verify globs have `exclude.*test`           |
 | Manual tags without comments        | Issue 26 recurrence | For each `tags = [.*"manual"` in BUILD.bazel, verify preceding line has `# Manual:` comment |
 | `readlink -f` in shell scripts/bzl  | Issue 2 recurrence  | `grep -rn 'readlink -f' tools/` — must be zero                                              |
 | `python3` in runner scripts         | Issue 7 recurrence  | `grep -rn 'python3' tools/bazel/*_runner.sh` — must be zero                                 |
 | `bun-types` instead of `@types/bun` | Issue 30 recurrence | `grep -rn 'bun-types' packages/*/BUILD.bazel` — must be zero                                |
-| `                                   |                     | true` in Prisma generate                                                                    | Issue 21 recurrence | `grep -n ' |     | true' tools/rules_bun/bun/private/bun_prisma_generate.bzl` — must be zero |
+| `\|\| true` in Prisma generate      | Issue 21 recurrence | `grep -n '\|\| true' tools/rules_bun/bun/private/bun_prisma_generate.bzl` — must be zero    |
 | `/usr/local/bin` in .bzl PATH       | Issue 11 recurrence | `grep -rn '/usr/local/bin' tools/**/*.bzl` — must be zero                                   |
 | Missing `npm_translate_lock` entry  | Issue 15 recurrence | Compare workspace package.json files vs MODULE.bazel data list                              |
 

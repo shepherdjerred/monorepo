@@ -228,12 +228,12 @@ Every `|| true` below hides a failure mode. Each removal is a separate testable 
 
 ## Implementation Sequence
 
-| Phase | Scope                                                                                               | Risk |
-| ----- | --------------------------------------------------------------------------------------------------- | ---- | ---------------------------------------------------------------- | ------ |
-| 1     | Fix correctness/security: lockfile enforcement, token handling, `git add`, flag mismatch            | High |
-| 2     | Remove all `                                                                                        |      | true` error swallowing, fix knip, version fallback, retry config | Medium |
-| 3     | Delete dead code, create shared constants, delete stale `simulate-ci.ts`, fix cooklang triple-build | Low  |
-| 4     | Refactor `ciAll()`, `deploySite`, dep mounting patterns                                             | Low  |
+| Phase | Scope                                                                                               | Risk   |
+| ----- | --------------------------------------------------------------------------------------------------- | ------ |
+| 1     | Fix correctness/security: lockfile enforcement, token handling, `git add`, flag mismatch            | High   |
+| 2     | Remove all `\|\| true` error swallowing, fix knip, version fallback, retry config                   | Medium |
+| 3     | Delete dead code, create shared constants, delete stale `simulate-ci.ts`, fix cooklang triple-build | Low    |
+| 4     | Refactor `ciAll()`, `deploySite`, dep mounting patterns                                             | Low    |
 
 ## Verification
 
