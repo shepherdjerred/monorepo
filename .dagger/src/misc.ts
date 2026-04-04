@@ -3,13 +3,7 @@
  *
  * These are plain functions (not decorated) — the @func() wrappers live in index.ts.
  */
-import {
-  dag,
-  Container,
-  Directory,
-  ExecError,
-  File,
-} from "@dagger.io/dagger";
+import { dag, Container, Directory, File } from "@dagger.io/dagger";
 
 import {
   BUN_IMAGE,
@@ -144,13 +138,20 @@ async function runSmokeTest(
     const output = await container.stdout();
     return `✅ Smoke test passed: process exited cleanly.\n\nOutput: ${output.slice(0, 500)}`;
   } catch (error) {
-    if (!(error instanceof ExecError)) throw error;
+    // Dagger throws errors with exitCode/stdout/stderr for non-zero exits.
+    // ExecError is not exported from the SDK, so check error shape with runtime validation.
+    if (!(error instanceof Error)) throw error;
+    const exitCode = "exitCode" in error ? Number(error.exitCode) : undefined;
+    const stdout = "stdout" in error ? String(error.stdout) : "";
+    const stderr = "stderr" in error ? String(error.stderr) : "";
 
-    if (error.exitCode === 124) {
+    if (exitCode === undefined) throw error;
+
+    if (exitCode === 124) {
       return "✅ Smoke test passed: service ran until timeout.";
     }
 
-    const combined = `${error.stdout}\n${error.stderr}`.toLowerCase();
+    const combined = `${stdout}\n${stderr}`.toLowerCase();
     const isExpected = expectedFailurePatterns.some((p) =>
       combined.includes(p.toLowerCase()),
     );
