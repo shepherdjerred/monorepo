@@ -65,7 +65,7 @@ pre-commit:
 
                 # --- prettier (repo-wide, staged files) ---
                 - name: prettier
-                  glob: "**/*.{ts,tsx,js,jsx,json,yaml,yml,md,css,astro,html,graphql}"
+                  glob: "**/*.{ts,tsx,js,jsx,json,jsonc,yaml,yml,md,css,astro,html,graphql}"
                   exclude:
                     - "archive/**"
                     - "**/node_modules/**"

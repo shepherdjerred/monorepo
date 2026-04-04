@@ -78,7 +78,7 @@ function smokeTestStep(
   const flags = depFlags(pkg);
   const cmd = [
     `dagger call ${daggerFn}`,
-    `--image build-image --pkg-dir ./packages/${pkg} --pkg ${img.name}`,
+    `--pkg-dir ./packages/${pkg} --pkg ${img.name}`,
     flags,
   ]
     .filter(Boolean)

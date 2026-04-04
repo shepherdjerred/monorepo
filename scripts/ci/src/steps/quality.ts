@@ -48,7 +48,8 @@ export function markdownlintStep(): BuildkiteStep {
   return plainStep({
     label: ":pencil: Markdownlint",
     key: "markdownlint",
-    command: 'echo "+++ :pencil: Markdownlint" && bun run markdownlint',
+    command:
+      'bun install --frozen-lockfile && echo "+++ :pencil: Markdownlint" && bun run markdownlint',
     timeoutMinutes: 10,
   });
 }

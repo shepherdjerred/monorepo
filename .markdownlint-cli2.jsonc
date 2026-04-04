@@ -4,7 +4,7 @@
     "no-inline-html": false,
     "code-block-style": false,
     "no-duplicate-heading": {
-      "siblings_only": true
+      "siblings_only": true,
     },
     "no-bare-urls": false,
     "no-alt-text": false,
@@ -18,7 +18,7 @@
     "commands-show-output": false,
     "emphasis-style": false,
     "fenced-code-language": false,
-    "link-fragments": false
+    "link-fragments": false,
   },
   "ignores": [
     "archive/**",
@@ -39,6 +39,6 @@
     "packages/glance/**",
     "practice/**",
     "**/.terraform/**",
-    "packages/dotfiles/dot_claude/skills/**"
-  ]
+    "packages/dotfiles/dot_claude/skills/**",
+  ],
 }

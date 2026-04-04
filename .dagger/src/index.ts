@@ -689,9 +689,9 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
   ): Directory {
-    return cooklangBuildHelper(pkgDir, depNames, depDirs, tsconfig).directory(
-      "/workspace/packages/cooklang-for-obsidian",
-    );
+    return cooklangBuildHelper(pkgDir, depNames, depDirs, tsconfig)
+      .directory("/workspace/packages/cooklang-for-obsidian")
+      .withoutDirectory("node_modules");
   }
 
   /** Push cooklang artifacts to GitHub repository */
@@ -865,27 +865,47 @@ export class Monorepo {
   // Per-package smoke tests
   // ---------------------------------------------------------------------------
 
-  /** Smoke test scout-for-lol: config, HTTP server, expected Discord auth failure */
+  /** Smoke test scout-for-lol: build image, then verify config, HTTP server, expected Discord auth failure */
   @func()
-  async smokeTestScoutForLol(image: Container): Promise<string> {
-    return smokeTestScoutForLolHelper(image);
+  async smokeTestScoutForLol(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+  ): Promise<string> {
+    return smokeTestScoutForLolHelper(pkgDir, pkg, depNames, depDirs);
   }
 
-  /** Smoke test birmel: config, Discord login attempt, expected auth failure */
+  /** Smoke test birmel: build image, then verify config, Discord login attempt, expected auth failure */
   @func()
-  async smokeTestBirmel(image: Container): Promise<string> {
-    return smokeTestBirmelHelper(image);
+  async smokeTestBirmel(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+  ): Promise<string> {
+    return smokeTestBirmelHelper(pkgDir, pkg, depNames, depDirs);
   }
 
-  /** Smoke test starlight-karma-bot: config, server start, expected auth failure */
+  /** Smoke test starlight-karma-bot: build image, then verify config, server start, expected auth failure */
   @func()
-  async smokeTestStarlightKarmaBot(image: Container): Promise<string> {
-    return smokeTestStarlightKarmaBotHelper(image);
+  async smokeTestStarlightKarmaBot(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+  ): Promise<string> {
+    return smokeTestStarlightKarmaBotHelper(pkgDir, pkg, depNames, depDirs);
   }
 
-  /** Smoke test tasknotes-server: server starts and listens */
+  /** Smoke test tasknotes-server: build image, then verify server starts and listens */
   @func()
-  async smokeTestTasknotesServer(image: Container): Promise<string> {
-    return smokeTestTasknotesServerHelper(image);
+  async smokeTestTasknotesServer(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+  ): Promise<string> {
+    return smokeTestTasknotesServerHelper(pkgDir, pkg, depNames, depDirs);
   }
 }

@@ -25,7 +25,7 @@ AWSCLI_VERSION="2.27.22"
 OPENTOFU_VERSION="1.9.1"
 
 # renovate: datasource=github-releases depName=oven-sh/bun
-BUN_VERSION="1.3.9"
+BUN_VERSION="1.3.11"
 
 # renovate: datasource=github-releases depName=cli/cli
 GH_VERSION="2.72.0"
@@ -37,7 +37,7 @@ RUSTUP_VERSION="1.28.2"
 GITLEAKS_VERSION="8.22.1"
 
 # renovate: datasource=github-releases depName=aquasecurity/trivy
-TRIVY_VERSION="0.58.2"
+TRIVY_VERSION="0.69.3"
 
 # renovate: datasource=pypi depName=semgrep
 SEMGREP_VERSION="1.103.0"
@@ -178,7 +178,7 @@ install_semgrep() {
     fi
     echo "--- :mag: Installing semgrep ${SEMGREP_VERSION}"
     install_uv
-    uv tool install "semgrep==${SEMGREP_VERSION}"
+    uv tool install --python 3.12 "semgrep==${SEMGREP_VERSION}"
     export PATH="$HOME/.local/bin:$PATH"
 }
 

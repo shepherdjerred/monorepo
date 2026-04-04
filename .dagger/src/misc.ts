@@ -16,6 +16,8 @@ import {
   SOURCE_EXCLUDES,
 } from "./constants";
 
+import { buildImageHelper } from "./image";
+
 /** Build MkDocs documentation site and return the built site/ directory. */
 export function mkdocsBuildHelper(source: Directory): Directory {
   return dag
@@ -174,8 +176,12 @@ async function captureContainerOutput(container: Container): Promise<string> {
  * Verifies: config loads, HTTP server starts, Discord auth fails as expected.
  */
 export async function smokeTestScoutForLolHelper(
-  image: Container,
+  pkgDir: Directory,
+  pkg: string,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
 ): Promise<string> {
+  const image = buildImageHelper(pkgDir, pkg, depNames, depDirs);
   const container = image
     .withEnvVariable("DISCORD_TOKEN", "smoke-test-dummy")
     .withEnvVariable("APPLICATION_ID", "000000000000000000")
@@ -206,7 +212,13 @@ export async function smokeTestScoutForLolHelper(
  * Smoke test birmel Discord bot image.
  * Verifies: config loads, Discord client attempts login, auth fails as expected.
  */
-export async function smokeTestBirmelHelper(image: Container): Promise<string> {
+export async function smokeTestBirmelHelper(
+  pkgDir: Directory,
+  pkg: string,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+): Promise<string> {
+  const image = buildImageHelper(pkgDir, pkg, depNames, depDirs);
   const container = image
     .withEnvVariable("DISCORD_TOKEN", "smoke-test-dummy")
     .withEnvVariable("DISCORD_CLIENT_ID", "smoke-test-dummy")
@@ -238,8 +250,12 @@ export async function smokeTestBirmelHelper(image: Container): Promise<string> {
  * Verifies: config loads, server starts, Discord auth fails as expected.
  */
 export async function smokeTestStarlightKarmaBotHelper(
-  image: Container,
+  pkgDir: Directory,
+  pkg: string,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
 ): Promise<string> {
+  const image = buildImageHelper(pkgDir, pkg, depNames, depDirs);
   const container = image
     .withEnvVariable("DISCORD_TOKEN", "smoke-test-dummy")
     .withEnvVariable("APPLICATION_ID", "000000000000000000")
@@ -270,8 +286,12 @@ export async function smokeTestStarlightKarmaBotHelper(
  * No external auth required — server starts fully with defaults.
  */
 export async function smokeTestTasknotesServerHelper(
-  image: Container,
+  pkgDir: Directory,
+  pkg: string,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
 ): Promise<string> {
+  const image = buildImageHelper(pkgDir, pkg, depNames, depDirs);
   const container = image
     .withEnvVariable("VAULT_PATH", "/tmp/smoke-vault")
     .withEnvVariable("AUTH_TOKEN", "smoke-test-token")
