@@ -41,7 +41,7 @@ export function cooklangReleaseGroup(pkgKey?: string): BuildkiteGroup {
         if: MAIN_ONLY,
         depends_on: ["cooklang-build", "extract-versions"],
         command: [
-          `buildkite-agent artifact download "tmp/cooklang-dist/**/*" tmp/cooklang-dist`,
+          `mkdir -p tmp/cooklang-dist && buildkite-agent artifact download "tmp/cooklang-dist/**/*" tmp/cooklang-dist`,
           `dagger call cooklang-push --source tmp/cooklang-dist --version "$(buildkite-agent meta-data get cooklang_version)" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
         ].join(" && "),
         timeout_in_minutes: 10,
@@ -56,7 +56,7 @@ export function cooklangReleaseGroup(pkgKey?: string): BuildkiteGroup {
         if: MAIN_ONLY,
         depends_on: ["cooklang-build", "extract-versions"],
         command: [
-          `buildkite-agent artifact download "tmp/cooklang-dist/**/*" tmp/cooklang-dist`,
+          `mkdir -p tmp/cooklang-dist && buildkite-agent artifact download "tmp/cooklang-dist/**/*" tmp/cooklang-dist`,
           `dagger call cooklang-create-release --artifacts tmp/cooklang-dist --version "$(buildkite-agent meta-data get cooklang_version)" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
         ].join(" && "),
         timeout_in_minutes: 10,

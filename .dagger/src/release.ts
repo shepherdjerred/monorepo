@@ -273,13 +273,7 @@ export function publishNpmHelper(
     .withExec([
       "sh",
       "-c",
-      [
-        `PKG_NAME=$(cat /tmp/pkg-name)`,
-        `PKG_VER=$(cat /tmp/pkg-ver)`,
-        `if npm view "$PKG_NAME@$PKG_VER" version; then`,
-        `echo "Version $PKG_VER of $PKG_NAME already published — skipping"`,
-        `else bun publish --access public --tag latest --token "$NPM_TOKEN"; fi`,
-      ].join("\n"),
+      `PKG_NAME=$(cat /tmp/pkg-name); PKG_VER=$(cat /tmp/pkg-ver); if npm view "$PKG_NAME@$PKG_VER" version; then echo "Version $PKG_VER of $PKG_NAME already published — skipping"; else bun publish --access public --tag latest --token "$NPM_TOKEN"; fi`,
     ]);
 }
 
