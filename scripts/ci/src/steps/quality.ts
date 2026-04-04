@@ -250,7 +250,7 @@ export function extractVersionsStep(): BuildkiteStep {
     key: "extract-versions",
     command: [
       `CLAUDERON_VERSION=$$(jq -r '.["packages/clauderon"]' .release-please-manifest.json)`,
-      `COOKLANG_VERSION=$$(jq -r '.version' packages/cooklang-rich-preview/package.json)`,
+      `COOKLANG_VERSION=$$(jq -r '.version' packages/cooklang-for-obsidian/package.json)`,
       `buildkite-agent meta-data set clauderon_version "$$CLAUDERON_VERSION"`,
       `buildkite-agent meta-data set cooklang_version "$$COOKLANG_VERSION"`,
       `echo "Versions: clauderon=$$CLAUDERON_VERSION cooklang=$$COOKLANG_VERSION"`,
