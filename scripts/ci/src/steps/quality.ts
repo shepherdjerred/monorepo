@@ -249,7 +249,9 @@ export function extractVersionsStep(): BuildkiteStep {
     label: ":label: Extract Versions",
     key: "extract-versions",
     command: [
+      `echo "DEBUG: pwd=$(pwd) manifest=$(ls -la .release-please-manifest.json 2>&1) content=$(cat .release-please-manifest.json | head -c 200)"`,
       `RELEASE_VERSION=$(jq -r '.["packages/homelab/src/helm-types"]' .release-please-manifest.json)`,
+      `echo "DEBUG: RELEASE_VERSION=[$RELEASE_VERSION]"`,
       `CLAUDERON_VERSION=$(jq -r '.["packages/clauderon"]' .release-please-manifest.json)`,
       `COOKLANG_VERSION=$(jq -r '.version' packages/cooklang-rich-preview/package.json)`,
       `buildkite-agent meta-data set release-version "$RELEASE_VERSION"`,
