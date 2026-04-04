@@ -292,7 +292,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
       affected.hasImagePackages.size > 0 ||
       affected.homelabChanged
     ) {
-      const vcbDeps: string[] = ["extract-versions"];
+      const vcbDeps: string[] = ["quality-gate"];
       if (hasImages) {
         vcbDeps.push(...appPushKeys);
       }
@@ -304,7 +304,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
 
     // --- Build Summary ---
     // Collect all terminal step keys so the summary runs last
-    const summaryDeps: string[] = ["extract-versions"];
+    const summaryDeps: string[] = ["quality-gate"];
     if (hasImages) summaryDeps.push(...appPushKeys);
     if (needsArgoSync) {
       summaryDeps.push("argocd-health");

@@ -797,11 +797,7 @@ export function cooklangCreateReleaseHelper(
   return container.withExec([
     "sh",
     "-c",
-    `if gh release view "cooklang-rich-preview-v${version}" --repo shepherdjerred/monorepo >/dev/null 2>&1; then
-  echo "Release cooklang-rich-preview-v${version} already exists, skipping"
-else
-  gh release create "cooklang-rich-preview-v${version}" /artifacts/* --repo shepherdjerred/monorepo --title "cooklang-rich-preview v${version}" --generate-notes
-fi`,
+    `if gh release view "cooklang-rich-preview-v${version}" --repo shepherdjerred/monorepo; then echo "Release cooklang-rich-preview-v${version} already exists, skipping"; else gh release create "cooklang-rich-preview-v${version}" /artifacts/* --repo shepherdjerred/monorepo --title "cooklang-rich-preview v${version}" --generate-notes; fi`,
   ]);
 }
 

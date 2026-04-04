@@ -25,7 +25,7 @@ function buildSummaryScript(): string {
   const lines: string[] = [
     `set -euo pipefail`,
     `SUMMARY=/tmp/summary.md`,
-    `VERSION=$$(buildkite-agent meta-data get release-version --default "unreleased")`,
+    `VERSION="$$BUILDKITE_BUILD_NUMBER"`,
     // Start with static header
     `cat > $$SUMMARY << 'HEADER'`,
     `## :rocket: Build Summary`,

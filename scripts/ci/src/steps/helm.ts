@@ -36,12 +36,12 @@ function helmPushStep(chartName: string): BuildkiteStep {
     label: `:helm: Push ${chartName}`,
     key: `helm-push-${chartName}`,
     if: MAIN_ONLY,
-    depends_on: ["homelab-cdk8s", "extract-versions"],
+    depends_on: ["homelab-cdk8s"],
     command:
       [
         `dagger call helm-package --source .`,
         `--chart-name ${chartName}`,
-        `--version "$(buildkite-agent meta-data get release-version)"`,
+        `--version "$BUILDKITE_BUILD_NUMBER"`,
         `--chart-museum-username "$CHARTMUSEUM_USERNAME"`,
         `--chart-museum-password env:CHARTMUSEUM_PASSWORD`,
       ].join(" ") + DRYRUN_FLAG,
