@@ -60,7 +60,11 @@ export function clauderonUploadStep(): BuildkiteStep {
     key: "clauderon-upload",
     if: MAIN_ONLY,
     depends_on: ["release", ...TARGETS.map((t) => t.key)],
-    command: `dagger call clauderon-build-and-upload --pkg-dir ./packages/clauderon --version "$(buildkite-agent meta-data get clauderon_version)" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
+    command: [
+      `CLAUD_VER=$(buildkite-agent meta-data get clauderon_version --default "")`,
+      `if [ -z "$CLAUD_VER" ]; then echo "No clauderon version set — skipping upload"; exit 0; fi`,
+      `dagger call clauderon-build-and-upload --pkg-dir ./packages/clauderon --version "$CLAUD_VER" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
+    ].join(" && "),
     timeout_in_minutes: 10,
     priority: 1,
     retry: RETRY,

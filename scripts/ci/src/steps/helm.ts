@@ -37,14 +37,18 @@ function helmPushStep(chartName: string): BuildkiteStep {
     key: `helm-push-${chartName}`,
     if: MAIN_ONLY,
     depends_on: ["homelab-cdk8s", "release"],
-    command:
+    command: [
+      // Skip if release-please didn't set a version (no release needed)
+      `RELEASE_VER=$(buildkite-agent meta-data get release-version --default "")`,
+      `if [ -z "$RELEASE_VER" ]; then echo "No release version set — skipping helm push for ${chartName}"; exit 0; fi`,
       [
         `dagger call helm-package --source .`,
         `--chart-name ${chartName}`,
-        `--version "$(buildkite-agent meta-data get release-version)"`,
+        `--version "$RELEASE_VER"`,
         `--chart-museum-username "$CHARTMUSEUM_USERNAME"`,
         `--chart-museum-password env:CHARTMUSEUM_PASSWORD`,
       ].join(" ") + DRYRUN_FLAG,
+    ].join(" && "),
     timeout_in_minutes: 10,
     priority: 1,
     retry: RETRY,
