@@ -10,7 +10,7 @@
 // ---------------------------------------------------------------------------
 
 // renovate: datasource=docker depName=oven/bun
-export const BUN_IMAGE = "oven/bun:1.3.11-debian";
+export const BUN_IMAGE = "oven/bun:1.3.11";
 // renovate: datasource=docker depName=rust
 export const RUST_IMAGE = "rust:1.89.0-bookworm";
 // renovate: datasource=docker depName=golang
