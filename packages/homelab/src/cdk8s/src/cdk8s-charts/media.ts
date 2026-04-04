@@ -22,7 +22,7 @@ export function createMediaChart(app: App) {
 
   // Shared volumes for media stack
   const tvVolume = new ZfsSataVolume(chart, "plex-tv-hdd-pvc", {
-    storage: Size.tebibytes(4),
+    storage: Size.tebibytes(6),
   });
   const downloadsVolume = new ZfsSataVolume(chart, "qbittorrent-hdd-pvc", {
     storage: Size.tebibytes(1),

@@ -20,6 +20,7 @@ AI-maintained knowledge base for the monorepo.
 - [rules_bun2 Architecture](decisions/2026-03-20_rules-bun2-architecture.md) - Monolithic bun install for Bazel: 6 approaches tried, what worked, what failed, and why
 - [Kueue for Buildkite Resource Management](decisions/2026-03-18_kueue-buildkite-resource-management.md) - Why ResourceQuota caused etcd meltdowns and how Kueue replaces it with Job suspension
 - [Dagger Audit: Current vs Plans](decisions/2026-04-02_dagger-audit-current-vs-plans.md) - Full audit of Dagger CI: 27 findings status, lost features, implementation plan
+- [CI Reporting & Artifact Collection](decisions/2026-04-04_ci-reporting-artifacts.md) - Audit of what CI collects today vs what's missing; phased plan for test analytics, coverage, lint annotations
 - [Dagger --source . vs Plain Steps](decisions/2026-04-03_dagger-source-vs-plain-steps.md) - Tradeoff: full-repo copy cost in Dagger vs isolation loss in plain Buildkite steps
 - [1Password Deduplication](decisions/2026-03-08_1password-deduplication.md) - Deduplicating 1Password secret references
 

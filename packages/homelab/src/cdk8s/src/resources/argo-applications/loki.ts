@@ -249,7 +249,7 @@ export function createLokiApp(chart: Chart) {
       },
       persistence: {
         storageClass: NVME_STORAGE_CLASS,
-        size: Size.gibibytes(64).asString(),
+        size: Size.gibibytes(128).asString(),
         labels: {
           "velero.io/backup": "enabled",
         },
@@ -283,7 +283,7 @@ export function createLokiApp(chart: Chart) {
         enabled: true,
       },
       limits_config: {
-        retention_period: "30d",
+        retention_period: "90d",
         allow_structured_metadata: true, // Required for OTLP ingestion
       },
       storage: {
