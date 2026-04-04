@@ -137,22 +137,15 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
       ),
     );
 
-    // Build helm-types (nested NPM package under homelab)
+    // Build helm-types (nested NPM package under homelab).
+    // No artifact upload — npm publish rebuilds via Dagger cache.
     const htPkg = "homelab/src/helm-types";
     const htFlags = daggerPkgFlags(htPkg);
-    const htDistPath = `/workspace/packages/${htPkg}/dist`;
-    const htArtifactDir = `tmp/dist-helm-types`;
-    const htBuildCmd = [
-      `dagger call build-package ${htFlags}`,
-      `directory --path ${htDistPath}`,
-      `export --path ${htArtifactDir}`,
-      `&& buildkite-agent artifact upload "${htArtifactDir}/**/*"`,
-    ].join(" ");
     steps.push(
       daggerCallStep(
         `:building_construction: Build helm-types`,
         `build-helm-types`,
-        htBuildCmd,
+        `dagger call build-package ${htFlags}`,
         resources,
       ),
     );
@@ -175,21 +168,14 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
     );
   }
 
-  // NPM-publishable packages: build and export dist/ as Buildkite artifact
+  // NPM-publishable packages: build to warm Dagger cache (npm publish rebuilds via cache hit).
+  // No Buildkite artifact upload — Dagger caching handles build output transfer.
   if (NPM_BUILD_PACKAGES.has(pkg)) {
-    const distPath = `/workspace/packages/${pkg}/dist`;
-    const artifactDir = `tmp/dist-${pkg}`;
-    const buildCmd = [
-      `dagger call build-package ${pf}`,
-      `directory --path ${distPath}`,
-      `export --path ${artifactDir}`,
-      `&& buildkite-agent artifact upload "${artifactDir}/**/*"`,
-    ].join(" ");
     steps.push(
       daggerCallStep(
         `:building_construction: Build`,
         `build-${sk}`,
-        buildCmd,
+        `dagger call build-package ${pf}`,
         resources,
       ),
     );

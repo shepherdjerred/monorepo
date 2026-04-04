@@ -15,7 +15,6 @@ import {
   markdownlintStep,
   shellcheckStep,
   qualityRatchetStep,
-  extractVersionsStep,
   complianceCheckStep,
   knipCheckStep,
   gitleaksCheckStep,
@@ -147,12 +146,6 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
       depends_on: releaseDeps,
       plugins: [k8sPlugin()],
     });
-
-    // Extract versions from repo files — fast, no Dagger.
-    // Downstream steps that need version metadata depend on this.
-    const extractVersions = extractVersionsStep();
-    extractVersions.depends_on = "quality-gate";
-    steps.push(extractVersions);
 
     // Release-please: creates/updates version bump PRs and GitHub releases.
     // Fire-and-forget — nothing depends on it.

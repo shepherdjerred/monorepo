@@ -593,7 +593,7 @@ export class Monorepo {
     ).stdout();
   }
 
-  /** Publish an npm package via bun publish */
+  /** Publish an npm package. Set devVersion for dev releases (--tag dev), leave empty for prod (--tag latest). */
   @func({ cache: "never" })
   async publishNpm(
     pkgDir: Directory,
@@ -603,7 +603,7 @@ export class Monorepo {
     depDirs: Directory[] = [],
     dryrun = false,
     tsconfig: File | null = null,
-    preBuiltDist: Directory | null = null,
+    devVersion: string = "",
   ): Promise<string> {
     return publishNpmHelper(
       pkgDir,
@@ -613,7 +613,7 @@ export class Monorepo {
       depDirs,
       dryrun,
       tsconfig,
-      preBuiltDist,
+      devVersion,
     ).stdout();
   }
 

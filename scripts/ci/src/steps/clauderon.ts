@@ -54,13 +54,19 @@ export function clauderonBuildGroup(pkgKey?: string): BuildkiteGroup {
   };
 }
 
+/**
+ * Upload clauderon binaries as a dev pre-release.
+ * Uses 0.0.0-dev.BUILD version with --prerelease flag.
+ * Only runs when clauderon code changes (Rust cross-compilation is slow).
+ * Prod releases happen when release-please creates a real GitHub release.
+ */
 export function clauderonUploadStep(): BuildkiteStep {
   return {
     label: ":rust: Upload clauderon binaries",
     key: "clauderon-upload",
     if: MAIN_ONLY,
-    depends_on: ["extract-versions", ...TARGETS.map((t) => t.key)],
-    command: `dagger call clauderon-build-and-upload --pkg-dir ./packages/clauderon --version "$(buildkite-agent meta-data get clauderon_version)" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
+    depends_on: [...TARGETS.map((t) => t.key)],
+    command: `dagger call clauderon-build-and-upload --pkg-dir ./packages/clauderon --version "0.0.0-dev.$BUILDKITE_BUILD_NUMBER" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
     timeout_in_minutes: 10,
     priority: 1,
     retry: RETRY,

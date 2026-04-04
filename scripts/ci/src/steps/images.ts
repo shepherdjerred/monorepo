@@ -116,7 +116,8 @@ function imagePushStep(
   const cmd = [
     `DIGEST=$(dagger call push-image --pkg-dir ./packages/${pkg} --pkg ${img.name}`,
     flags,
-    `--tags ghcr.io/${img.versionKey}:$BUILDKITE_BUILD_NUMBER`,
+    // Version format: 2.0.0-BUILD (semver prerelease). See decisions/2026-04-04_unified-versioning-strategy.md
+    `--tags ghcr.io/${img.versionKey}:2.0.0-$BUILDKITE_BUILD_NUMBER`,
     `--tags ghcr.io/${img.versionKey}:latest`,
     `--registry-username shepherdjerred`,
     `--registry-password env:GH_TOKEN)`,

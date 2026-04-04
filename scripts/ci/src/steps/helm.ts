@@ -41,7 +41,8 @@ function helmPushStep(chartName: string): BuildkiteStep {
       [
         `dagger call helm-package --source .`,
         `--chart-name ${chartName}`,
-        `--version "$BUILDKITE_BUILD_NUMBER"`,
+        // Semver prerelease: 2.0.0-BUILD. ArgoCD ~2.0.0-0 auto-updates to latest.
+        `--version "2.0.0-$BUILDKITE_BUILD_NUMBER"`,
         `--chart-museum-username "$CHARTMUSEUM_USERNAME"`,
         `--chart-museum-password env:CHARTMUSEUM_PASSWORD`,
       ].join(" ") + DRYRUN_FLAG,

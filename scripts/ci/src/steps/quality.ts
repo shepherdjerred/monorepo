@@ -239,20 +239,5 @@ export function caddyfileValidateStep(): BuildkiteStep {
   });
 }
 
-/**
- * Extract version metadata from repo files and set as Buildkite metadata.
- * Fast plain step — reads .release-please-manifest.json and package.json.
- * No Dagger, no release-please dependency.
- */
-export function extractVersionsStep(): BuildkiteStep {
-  return plainStep({
-    label: ":label: Extract Versions",
-    key: "extract-versions",
-    command: [
-      `CLAUDERON_VERSION=$$(jq -r '.["packages/clauderon"]' .release-please-manifest.json)`,
-      `buildkite-agent meta-data set clauderon_version "$$CLAUDERON_VERSION"`,
-      `echo "Versions: clauderon=$$CLAUDERON_VERSION"`,
-    ].join(" && "),
-    timeoutMinutes: 2,
-  });
-}
+// extract-versions step removed — all artifacts now use $BUILDKITE_BUILD_NUMBER
+// or Dagger-internal version resolution. See decisions/2026-04-04_unified-versioning-strategy.md

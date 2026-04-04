@@ -176,6 +176,16 @@ export function tofuPlanHelper(
  * Accepts a pre-built dist directory (from per-package build step artifact)
  * to avoid rebuilding.
  */
+/**
+ * Build and publish an npm package.
+ *
+ * Two modes:
+ * - Dev release (devVersion set): writes devVersion to package.json, publishes with --tag dev
+ * - Prod release (devVersion empty): publishes with version from package.json, --tag latest
+ *
+ * Always builds from source via Dagger caching (no Buildkite artifact transfer).
+ * See decisions/2026-04-04_unified-versioning-strategy.md
+ */
 export function publishNpmHelper(
   pkgDir: Directory,
   pkg: string,
@@ -184,7 +194,7 @@ export function publishNpmHelper(
   depDirs: Directory[] = [],
   dryrun = false,
   tsconfig: File | null = null,
-  preBuiltDist: Directory | null = null,
+  devVersion: string = "",
 ): Container {
   let container = dag
     .container()
@@ -195,7 +205,6 @@ export function publishNpmHelper(
       exclude: SOURCE_EXCLUDES,
     });
 
-  // Mount deps at correct relative paths for file: protocol resolution
   for (let i = 0; i < depNames.length; i++) {
     container = container.withDirectory(
       `/workspace/packages/${depNames[i]}`,
@@ -225,55 +234,44 @@ export function publishNpmHelper(
   container = container.withExec([
     "sh",
     "-c",
-    `cd /workspace/packages/${pkg} && node -e '
-        const fs = require("fs");
-        const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
-        for (const [depType, deps] of [["dependencies", pkg.dependencies || {}], ["devDependencies", pkg.devDependencies || {}]]) {
-          for (const [name, ver] of Object.entries(deps)) {
-            if (typeof ver === "string" && ver.startsWith("file:")) {
-              const depPath = ver.replace("file:", "");
-              try {
-                const depPkg = JSON.parse(fs.readFileSync(depPath + "/package.json", "utf8"));
-                deps[name] = "^" + depPkg.version;
-              } catch(e) { /* skip if dep not found */ }
-            }
-          }
-        }
-        fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\\n");
-      '`,
+    [
+      `cd /workspace/packages/${pkg}`,
+      `bun -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync("package.json","utf8")); for(const [,deps] of [["dependencies",p.dependencies||{}],["devDependencies",p.devDependencies||{}]]) { for(const [name,ver] of Object.entries(deps)) { if(typeof ver==="string"&&ver.startsWith("file:")) { try { const d=JSON.parse(fs.readFileSync(ver.replace("file:","")+"/package.json","utf8")); deps[name]="^"+d.version } catch {} } } } fs.writeFileSync("package.json",JSON.stringify(p,null,2)+"\\n")'`,
+    ].join(" && "),
   ]);
 
-  // Mount pre-built dist from upstream build step, or build from source
-  if (preBuiltDist != null) {
-    container = container.withDirectory(
-      `/workspace/packages/${pkg}/dist`,
-      preBuiltDist,
-    );
-  } else {
-    container = container.withExec(["bun", "run", "build"]);
+  // For dev releases, write the dev version to package.json (ephemeral, never committed)
+  if (devVersion !== "") {
+    container = container.withExec([
+      "sh",
+      "-c",
+      `bun -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync("package.json","utf8")); p.version="${devVersion}"; fs.writeFileSync("package.json",JSON.stringify(p,null,2)+"\\n")'`,
+    ]);
   }
 
-  // Read name/version before the publish step so we can check npm
-  container = container.withExec([
-    "sh",
-    "-c",
-    'cat package.json | bun -e \'const p=JSON.parse(await Bun.stdin.text()); Bun.write("/tmp/pkg-name", p.name); Bun.write("/tmp/pkg-ver", p.version)\'',
-  ]);
+  // Build from source (Dagger caches this across runs)
+  container = container.withExec(["bun", "run", "build"]);
+
+  const tag = devVersion !== "" ? "dev" : "latest";
 
   if (dryrun) {
     return container.withExec([
       "sh",
       "-c",
-      `echo "DRYRUN: would publish ${pkg} to npm"`,
+      `echo "DRYRUN: would publish ${pkg} to npm with --tag ${tag}"`,
     ]);
   }
 
   return container
     .withSecretVariable("NPM_TOKEN", npmToken)
     .withExec([
-      "sh",
-      "-c",
-      `PKG_NAME=$(cat /tmp/pkg-name); PKG_VER=$(cat /tmp/pkg-ver); if bunx npm view "$PKG_NAME@$PKG_VER" version; then echo "Version $PKG_VER of $PKG_NAME already published — skipping"; else bun publish --access public --tag latest --token "$NPM_TOKEN"; fi`,
+      "bun",
+      "publish",
+      "--access",
+      "public",
+      "--tag",
+      tag,
+      "--tolerate-republish",
     ]);
 }
 
@@ -605,6 +603,15 @@ export function clauderonUploadHelper(
       "sh",
       "-c",
       `echo "DRYRUN: would upload clauderon-v${version}" && ls -la /artifacts/`,
+    ]);
+  }
+  // Dev releases (0.0.0-dev.*): create a prerelease. Prod releases: upload to existing release.
+  const isDev = version.includes("dev");
+  if (isDev) {
+    return container.withExec([
+      "sh",
+      "-c",
+      `gh release create "clauderon-v${version}" /artifacts/* --repo shepherdjerred/monorepo --title "clauderon v${version}" --prerelease --notes "Dev build"`,
     ]);
   }
   return container.withExec([
