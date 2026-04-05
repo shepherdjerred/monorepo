@@ -25,4 +25,14 @@ paths = [
   '''packages/discord-plays-pokemon/README\.md''',
   # Google Maps API key (restricted to specific referrer, public-facing)
   '''packages/better-skill-capped/fetcher/src/''',
+  # Patch files — git object hashes falsely flagged as sourcegraph-access-token
+  '''patches/satori@.*\.patch$''',
+  '''packages/.*/patches/satori@.*\.patch$''',
+  # Skill/reference docs — example curl commands and API key placeholders
+  '''packages/dotfiles/dot_claude/skills/tailscale-helper/references/''',
+  '''packages/dotfiles/dot_claude/skills/grafana-helper/SKILL\.md''',
+  # Cloudflare operator Helm chart URL contains "apikey" substring
+  '''packages/homelab/src/cdk8s/src/resources/argo-applications/cloudflare-operator\.ts''',
+  # CI step key "smoke-test-discord-plays-pokemon" falsely flagged as discord-client-secret
+  '''scripts/ci/src/steps/images\.ts''',
 ]
