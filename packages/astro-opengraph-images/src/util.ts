@@ -23,7 +23,10 @@ export async function getFilePath({
   let target: string = path.join(dir, page, "index.html");
 
   if (!(await fileExists(target))) {
-    target = path.join(dir, page.slice(0, -1) + ".html");
+    target = path.join(
+      dir,
+      (page.endsWith("/") ? page.slice(0, -1) : page) + ".html"
+    );
   }
 
   return target;
