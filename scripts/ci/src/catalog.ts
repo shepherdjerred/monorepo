@@ -249,6 +249,7 @@ export const HELM_CHARTS: string[] = [
   "bugsink",
   "dns-audit",
   "tasknotes",
+  "windmill-db",
 ];
 
 // ---------------------------------------------------------------------------

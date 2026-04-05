@@ -1,0 +1,6 @@
+apiVersion: v2
+name: windmill-db
+description: Windmill PostgreSQL database
+type: application
+version: "$version"
+appVersion: "$appVersion"

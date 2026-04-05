@@ -134,6 +134,8 @@ const versions = {
   "bitnamilegacy/kubectl/kyverno": "1.31",
   // renovate: datasource=helm registryUrl=https://vmware-tanzu.github.io/helm-charts versioning=semver
   velero: "11.3.2",
+  // renovate: datasource=helm registryUrl=https://windmill-labs.github.io/windmill-helm-charts/ versioning=semver
+  windmill: "4.0.124",
   // renovate: datasource=helm registryUrl=https://kyverno.github.io/kyverno versioning=semver
   kyverno: "3.6.2",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
