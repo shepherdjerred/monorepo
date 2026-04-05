@@ -1,6 +1,6 @@
 {
   "type": "module",
-  "packageManager": "npm@10.8.2",
+  "packageManager": "npm@10.9.5",
   "dagger": {
     "runtime": "node"
   },
