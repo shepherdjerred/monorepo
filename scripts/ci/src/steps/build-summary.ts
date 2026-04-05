@@ -8,6 +8,7 @@ import {
   HELM_CHARTS,
   NPM_PACKAGES,
   DEPLOY_SITES,
+  EXTRA_DEPLOY_SITES,
 } from "../catalog.ts";
 import { RETRY, DAGGER_ENV } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
@@ -43,22 +44,36 @@ function buildSummaryScript(): string {
   for (const key of ALL_IMAGE_KEYS) {
     lines.push(
       `DIGEST=$$(buildkite-agent meta-data get "digest:${key}" --default "")`,
-      `if [ -n "$$DIGEST" ]; then echo "| ${key} | $$DIGEST |" >> $$SUMMARY; fi`,
+      `if [ -n "$$DIGEST" ]; then echo "| ${key} | \`$$DIGEST\` |" >> $$SUMMARY; else echo "| ${key} | :x: _not pushed_ |" >> $$SUMMARY; fi`,
     );
   }
 
-  // Helm charts
+  // Helm charts — check per-chart metadata to report actual push status
   lines.push(
     `echo "" >> $$SUMMARY`,
     `echo "### :helm: Helm Charts" >> $$SUMMARY`,
     `echo "" >> $$SUMMARY`,
-    `echo "Published ${String(HELM_CHARTS.length)} charts to [ChartMuseum](https://chartmuseum.sjer.red)" >> $$SUMMARY`,
+    `HELM_OK=0`,
+    `HELM_FAIL=0`,
+  );
+  for (const chart of HELM_CHARTS) {
+    lines.push(
+      `HELM_STATUS=$$(buildkite-agent meta-data get "helm-pushed:${chart}" --default "")`,
+      `if [ "$$HELM_STATUS" = "1" ]; then HELM_OK=$$((HELM_OK + 1)); else HELM_FAIL=$$((HELM_FAIL + 1)); fi`,
+    );
+  }
+  lines.push(
+    `echo "Published $$HELM_OK / ${String(HELM_CHARTS.length)} charts to [ChartMuseum](https://chartmuseum.sjer.red)" >> $$SUMMARY`,
+    `if [ "$$HELM_FAIL" -gt 0 ]; then echo "" >> $$SUMMARY; echo ":warning: $$HELM_FAIL chart(s) failed to push" >> $$SUMMARY; fi`,
     `echo "" >> $$SUMMARY`,
     `echo "<details><summary>Chart list</summary>" >> $$SUMMARY`,
     `echo "" >> $$SUMMARY`,
   );
   for (const chart of HELM_CHARTS) {
-    lines.push(`echo "- ${chart}" >> $$SUMMARY`);
+    lines.push(
+      `HELM_STATUS=$$(buildkite-agent meta-data get "helm-pushed:${chart}" --default "")`,
+      `if [ "$$HELM_STATUS" = "1" ]; then echo "- :white_check_mark: ${chart}" >> $$SUMMARY; else echo "- :x: ${chart}" >> $$SUMMARY; fi`,
+    );
   }
   lines.push(`echo "" >> $$SUMMARY`, `echo "</details>" >> $$SUMMARY`);
 
@@ -83,11 +98,14 @@ function buildSummaryScript(): string {
     `echo "|------|-----|" >> $$SUMMARY`,
   );
   for (const site of DEPLOY_SITES) {
-    const url =
-      site.bucket === "sjer-red"
-        ? "https://sjer.red"
-        : `https://${site.bucket}.sjer.red`;
-    lines.push(`echo "| ${site.name} | [${url}](${url}) |" >> $$SUMMARY`);
+    lines.push(
+      `echo "| ${site.name} | [${site.url}](${site.url}) |" >> $$SUMMARY`,
+    );
+  }
+  for (const site of EXTRA_DEPLOY_SITES) {
+    lines.push(
+      `echo "| ${site.name} | [${site.url}](${site.url}) |" >> $$SUMMARY`,
+    );
   }
 
   // ArgoCD

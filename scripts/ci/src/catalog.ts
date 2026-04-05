@@ -78,6 +78,7 @@ export const NPM_PACKAGES: NpmPackage[] = [
 export interface DeploySite {
   bucket: string;
   name: string;
+  url: string;
   buildDir: string;
   buildCmd: string;
   distDir: string;
@@ -89,6 +90,7 @@ export const DEPLOY_SITES: DeploySite[] = [
   {
     bucket: "sjer-red",
     name: "sjer.red",
+    url: "https://sjer.red",
     buildDir: "packages/sjer.red",
     buildCmd: "bun run astro build",
     distDir: "packages/sjer.red/dist",
@@ -98,6 +100,7 @@ export const DEPLOY_SITES: DeploySite[] = [
   {
     bucket: "clauderon",
     name: "clauderon docs",
+    url: "https://clauderon.com",
     buildDir: "packages/clauderon/docs",
     buildCmd: "bun run astro build",
     distDir: "packages/clauderon/docs/dist",
@@ -106,6 +109,7 @@ export const DEPLOY_SITES: DeploySite[] = [
   {
     bucket: "resume",
     name: "resume",
+    url: "https://resume.sjer.red",
     buildDir: "packages/resume",
     buildCmd: "true", // pre-built by latexBuild Dagger function; deploy syncs existing files
     distDir: "packages/resume",
@@ -113,6 +117,7 @@ export const DEPLOY_SITES: DeploySite[] = [
   {
     bucket: "webring",
     name: "webring",
+    url: "https://webring.sjer.red",
     buildDir: "packages/webring",
     buildCmd: "bun run typedoc",
     distDir: "packages/webring/docs",
@@ -120,6 +125,7 @@ export const DEPLOY_SITES: DeploySite[] = [
   {
     bucket: "cook",
     name: "cooklang-rich-preview",
+    url: "https://cook.sjer.red",
     buildDir: "packages/cooklang-rich-preview",
     buildCmd: "bun run astro build",
     distDir: "packages/cooklang-rich-preview/dist",
@@ -127,6 +133,7 @@ export const DEPLOY_SITES: DeploySite[] = [
   {
     bucket: "scout-frontend",
     name: "scout-for-lol frontend",
+    url: "https://scout-for-lol.com",
     buildDir: "packages/scout-for-lol",
     buildCmd: "bun run --filter='./packages/frontend' build",
     distDir: "packages/scout-for-lol/packages/frontend/dist",
@@ -134,12 +141,26 @@ export const DEPLOY_SITES: DeploySite[] = [
   {
     bucket: "better-skill-capped",
     name: "better-skill-capped",
+    url: "https://better-skill-capped.com",
     buildDir: "packages/better-skill-capped",
     buildCmd: "bun run build",
     distDir: "packages/better-skill-capped/dist",
   },
   // discord-plays-pokemon docs uses MkDocs (Python), not bun — deployed via
   // a dedicated mkdocs-build-and-deploy step, not the generic deploy-site function.
+];
+
+// Sites deployed via non-standard mechanisms (not the generic deploy-site function).
+export interface ExtraDeploySite {
+  name: string;
+  url: string;
+}
+
+export const EXTRA_DEPLOY_SITES: ExtraDeploySite[] = [
+  {
+    name: "discord-plays-pokemon docs",
+    url: "https://discord-plays-pokemon.com",
+  },
 ];
 
 /** Derived from NPM_PACKAGES — workspace packages whose changes should trigger npm publishes. */

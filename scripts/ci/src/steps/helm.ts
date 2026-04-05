@@ -70,7 +70,9 @@ function helmPushStep(chartName: string): BuildkiteStep {
         `--chart-museum-password env:CHARTMUSEUM_PASSWORD`,
       ]
         .filter(Boolean)
-        .join(" ") + DRYRUN_FLAG,
+        .join(" ") +
+      DRYRUN_FLAG +
+      ` && buildkite-agent meta-data set "helm-pushed:${chartName}" "1"`,
     timeout_in_minutes: 10,
     priority: 1,
     retry: RETRY,

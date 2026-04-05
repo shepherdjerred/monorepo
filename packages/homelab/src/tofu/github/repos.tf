@@ -47,7 +47,7 @@ resource "github_repository" "dagger" {
 resource "github_repository" "discord_plays_pokemon" {
   name                   = "discord-plays-pokemon"
   description            = "Twitch Plays Pokémon, but for Discord"
-  homepage_url           = "https://docs.discord-plays-pokemon.com/"
+  homepage_url           = "https://discord-plays-pokemon.com/"
   visibility             = "public"
   has_issues             = true
   has_projects           = false
@@ -133,7 +133,7 @@ resource "github_branch_protection" "monorepo_main" {
 resource "github_repository" "scout_for_lol" {
   name                   = "scout-for-lol"
   description            = "Create match reports for League of Legends"
-  homepage_url           = "http://scout-for-lol.com"
+  homepage_url           = "https://scout-for-lol.com"
   visibility             = "public"
   has_issues             = true
   has_projects           = false
