@@ -240,7 +240,7 @@ async function readWorkspaceDeps(): Promise<Map<string, Set<string>>> {
       // Non-JS packages (Rust, Go, Java, docs, etc.) don't have package.json
       // — they have no workspace deps, which is correct.
       const isFileNotFound =
-        e instanceof Error && e.message.includes("No such file");
+        e instanceof Error && e.message.includes("no such file");
       if (isFileNotFound) {
         deps.set(pkg, new Set());
       } else {
