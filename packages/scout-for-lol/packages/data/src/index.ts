@@ -101,6 +101,7 @@ export * from "./league/raw-perks.schema.ts";
 export * from "./league/raw-challenges.schema.ts";
 export * from "./league/raw-timeline.schema.ts";
 export * from "./league/raw-summoner-league.schema.ts";
+export * from "./league/raw-current-game-info.schema.ts";
 export { getExampleMatch, type AnyMatch } from "./example/example.ts";
 export * from "./data-dragon/version.ts";
 export * from "./data-dragon/summoner.ts";

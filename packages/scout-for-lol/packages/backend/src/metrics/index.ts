@@ -198,6 +198,39 @@ export const matchHistoryPollingSkipsTotal = new Counter({
 });
 
 // =======================
+// Pre-match Detection Metrics
+// =======================
+
+/**
+ * Total number of pre-match game detections
+ */
+export const prematchDetectionsTotal = new Counter({
+  name: "prematch_detections_total",
+  help: "Total pre-match game detections",
+  labelNames: ["status"] as const, // "detected", "already_tracked"
+  registers: [registry],
+});
+
+/**
+ * Number of games currently being tracked as active
+ */
+export const prematchActiveGamesGauge = new Gauge({
+  name: "prematch_active_games",
+  help: "Number of games currently being tracked as active",
+  registers: [registry],
+});
+
+/**
+ * Total number of pre-match polling runs skipped due to mutex lock
+ */
+export const prematchPollingSkipsTotal = new Counter({
+  name: "prematch_polling_skips_total",
+  help: "Total pre-match polling runs skipped due to mutex lock",
+  labelNames: ["reason"] as const,
+  registers: [registry],
+});
+
+// =======================
 // Usage & Growth Metrics
 // =======================
 
