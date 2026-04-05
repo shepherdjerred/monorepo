@@ -97,20 +97,22 @@ function homelabSubPackageBase(
     );
   }
 
-  return container
-    .withWorkdir("/workspace/packages/homelab")
-    .withExec(["bun", "install", "--frozen-lockfile"])
-    // Sub-packages have their own deps not in the root workspace
-    .withWorkdir(`/workspace/packages/homelab/src/${subPackage}`)
-    .withExec(["bun", "install", "--frozen-lockfile"])
-    .withLabel(
-      "org.opencontainers.image.source",
-      "https://github.com/shepherdjerred/monorepo",
-    )
-    .withLabel("org.opencontainers.image.version", version)
-    .withLabel("org.opencontainers.image.revision", gitSha)
-    .withEnvVariable("VERSION", version)
-    .withEnvVariable("GIT_SHA", gitSha);
+  return (
+    container
+      .withWorkdir("/workspace/packages/homelab")
+      .withExec(["bun", "install", "--frozen-lockfile"])
+      // Sub-packages have their own deps not in the root workspace
+      .withWorkdir(`/workspace/packages/homelab/src/${subPackage}`)
+      .withExec(["bun", "install", "--frozen-lockfile"])
+      .withLabel(
+        "org.opencontainers.image.source",
+        "https://github.com/shepherdjerred/monorepo",
+      )
+      .withLabel("org.opencontainers.image.version", version)
+      .withLabel("org.opencontainers.image.revision", gitSha)
+      .withEnvVariable("VERSION", version)
+      .withEnvVariable("GIT_SHA", gitSha)
+  );
 }
 
 /**
@@ -151,24 +153,26 @@ export function buildHomelabImageHelper(
     );
   }
 
-  return container
-    .withWorkdir("/workspace/packages/homelab")
-    .withExec(["bun", "install", "--frozen-lockfile"])
-    // Sub-packages have their own deps not in the root workspace.
-    // --ignore-scripts avoids better-sqlite3 native compilation failure
-    // (transitive dep from @digital-alchemy, not actually used at runtime).
-    .withWorkdir("/workspace/packages/homelab/src/ha")
-    .withExec(["bun", "install", "--frozen-lockfile", "--ignore-scripts"])
-    .withLabel(
-      "org.opencontainers.image.source",
-      "https://github.com/shepherdjerred/monorepo",
-    )
-    .withLabel("org.opencontainers.image.version", version)
-    .withLabel("org.opencontainers.image.revision", gitSha)
-    .withEnvVariable("VERSION", version)
-    .withEnvVariable("GIT_SHA", gitSha)
-    .withExposedPort(9090)
-    .withEntrypoint(["bun", "src/main.ts"]);
+  return (
+    container
+      .withWorkdir("/workspace/packages/homelab")
+      .withExec(["bun", "install", "--frozen-lockfile"])
+      // Sub-packages have their own deps not in the root workspace.
+      // --ignore-scripts avoids better-sqlite3 native compilation failure
+      // (transitive dep from @digital-alchemy, not actually used at runtime).
+      .withWorkdir("/workspace/packages/homelab/src/ha")
+      .withExec(["bun", "install", "--frozen-lockfile", "--ignore-scripts"])
+      .withLabel(
+        "org.opencontainers.image.source",
+        "https://github.com/shepherdjerred/monorepo",
+      )
+      .withLabel("org.opencontainers.image.version", version)
+      .withLabel("org.opencontainers.image.revision", gitSha)
+      .withEnvVariable("VERSION", version)
+      .withEnvVariable("GIT_SHA", gitSha)
+      .withExposedPort(9090)
+      .withEntrypoint(["bun", "src/main.ts"])
+  );
 }
 
 /**
@@ -184,12 +188,16 @@ export function buildDepsSummaryImageHelper(
   gitSha: string = "unknown",
 ): Container {
   // Get helm binary from the official helm image
-  const helmBinary = dag
-    .container()
-    .from(HELM_IMAGE)
-    .file("/usr/bin/helm");
+  const helmBinary = dag.container().from(HELM_IMAGE).file("/usr/bin/helm");
 
-  return homelabSubPackageBase(pkgDir, "deps-email", depNames, depDirs, version, gitSha)
+  return homelabSubPackageBase(
+    pkgDir,
+    "deps-email",
+    depNames,
+    depDirs,
+    version,
+    gitSha,
+  )
     .withFile("/usr/local/bin/helm", helmBinary)
     .withEntrypoint(["bun", "run", "src/main.ts"]);
 }
@@ -230,7 +238,12 @@ export function buildCaddyS3ProxyImageHelper(
   const caddyBinary = dag
     .container()
     .from(CADDY_BUILDER_IMAGE)
-    .withExec(["xcaddy", "build", "--with", "github.com/lindenlab/caddy-s3-proxy"])
+    .withExec([
+      "xcaddy",
+      "build",
+      "--with",
+      "github.com/lindenlab/caddy-s3-proxy",
+    ])
     .file("/usr/bin/caddy");
 
   // Stage 2: Runtime image with the custom binary
@@ -286,8 +299,19 @@ export async function pushHomelabImageHelper(
   version: string = "dev",
   gitSha: string = "unknown",
 ): Promise<string> {
-  const container = buildHomelabImageHelper(pkgDir, depNames, depDirs, version, gitSha);
-  return pushContainerHelper(container, tags, registryUsername, registryPassword);
+  const container = buildHomelabImageHelper(
+    pkgDir,
+    depNames,
+    depDirs,
+    version,
+    gitSha,
+  );
+  return pushContainerHelper(
+    container,
+    tags,
+    registryUsername,
+    registryPassword,
+  );
 }
 
 /** Push a dependency-summary image to a registry. */
@@ -301,8 +325,19 @@ export async function pushDepsSummaryImageHelper(
   version: string = "dev",
   gitSha: string = "unknown",
 ): Promise<string> {
-  const container = buildDepsSummaryImageHelper(pkgDir, depNames, depDirs, version, gitSha);
-  return pushContainerHelper(container, tags, registryUsername, registryPassword);
+  const container = buildDepsSummaryImageHelper(
+    pkgDir,
+    depNames,
+    depDirs,
+    version,
+    gitSha,
+  );
+  return pushContainerHelper(
+    container,
+    tags,
+    registryUsername,
+    registryPassword,
+  );
 }
 
 /** Push a dns-audit image to a registry. */
@@ -314,7 +349,12 @@ export async function pushDnsAuditImageHelper(
   gitSha: string = "unknown",
 ): Promise<string> {
   const container = buildDnsAuditImageHelper(version, gitSha);
-  return pushContainerHelper(container, tags, registryUsername, registryPassword);
+  return pushContainerHelper(
+    container,
+    tags,
+    registryUsername,
+    registryPassword,
+  );
 }
 
 /** Push a caddy-s3proxy image to a registry. */
@@ -326,7 +366,12 @@ export async function pushCaddyS3ProxyImageHelper(
   gitSha: string = "unknown",
 ): Promise<string> {
   const container = buildCaddyS3ProxyImageHelper(version, gitSha);
-  return pushContainerHelper(container, tags, registryUsername, registryPassword);
+  return pushContainerHelper(
+    container,
+    tags,
+    registryUsername,
+    registryPassword,
+  );
 }
 
 /** Push a built image to a registry under one or more tags. Returns the digest of the first tag published. */

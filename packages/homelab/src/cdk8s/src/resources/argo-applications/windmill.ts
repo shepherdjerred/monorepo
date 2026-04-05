@@ -11,6 +11,11 @@ import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/ser
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
+// The windmill-db-url secret is created by a PostSync Job in the windmill-db chart.
+// It reads the postgres-operator auto-generated credentials and builds the full DATABASE_URL.
+const DB_URL_SECRET_NAME = "windmill-db-url";
+const DB_URL_SECRET_KEY = "url";
+
 const WINDMILL_NAMESPACE = "windmill";
 
 export function createWindmillApp(chart: Chart) {
@@ -21,16 +26,6 @@ export function createWindmillApp(chart: Chart) {
         "pod-security.kubernetes.io/audit": "restricted",
         "pod-security.kubernetes.io/warn": "restricted",
       },
-    },
-  });
-
-  // 1Password: DATABASE_URL for Windmill to connect to PostgreSQL
-  const dbCredentials = new OnePasswordItem(chart, "windmill-db-credentials", {
-    spec: {
-      itemPath: vaultItemPath("windmill-credentials"),
-    },
-    metadata: {
-      namespace: WINDMILL_NAMESPACE,
     },
   });
 
@@ -183,8 +178,8 @@ export function createWindmillApp(chart: Chart) {
       baseProtocol: "https",
       appReplicas: 1,
       extraReplicas: 1,
-      databaseUrlSecretName: dbCredentials.name,
-      databaseUrlSecretKey: "database-url",
+      databaseUrlSecretName: DB_URL_SECRET_NAME,
+      databaseUrlSecretKey: DB_URL_SECRET_KEY,
       rustLog: "info",
       workerGroups: [
         {
@@ -264,8 +259,7 @@ export function createWindmillApp(chart: Chart) {
       revisionHistoryLimit: 5,
       project: "default",
       source: {
-        repoUrl:
-          "https://windmill-labs.github.io/windmill-helm-charts/",
+        repoUrl: "https://windmill-labs.github.io/windmill-helm-charts/",
         chart: "windmill",
         targetRevision: versions.windmill,
         helm: {

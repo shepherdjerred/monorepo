@@ -32,7 +32,10 @@ function imageBuildStep(
   const buildFn = img.buildFn ?? "build-image";
 
   // Custom build functions that need no local source (built from upstream images only)
-  const NO_SOURCE_BUILDS = new Set(["build-dns-audit-image", "build-caddy-s-3-proxy-image"]);
+  const NO_SOURCE_BUILDS = new Set([
+    "build-dns-audit-image",
+    "build-caddy-s-3-proxy-image",
+  ]);
 
   const flags = depFlags(pkg);
   let cmd: string;
@@ -165,7 +168,10 @@ function imagePushStep(
     `--registry-password env:GH_TOKEN`,
   ].join(" ");
 
-  const NO_SOURCE_PUSHES = new Set(["push-dns-audit-image", "push-caddy-s-3-proxy-image"]);
+  const NO_SOURCE_PUSHES = new Set([
+    "push-dns-audit-image",
+    "push-caddy-s-3-proxy-image",
+  ]);
   const flags = depFlags(pkg);
 
   let pushCall: string;

@@ -396,7 +396,13 @@ export class Monorepo {
     version: string = "dev",
     gitSha: string = "unknown",
   ): Container {
-    return buildDepsSummaryImageHelper(pkgDir, depNames, depDirs, version, gitSha);
+    return buildDepsSummaryImageHelper(
+      pkgDir,
+      depNames,
+      depDirs,
+      version,
+      gitSha,
+    );
   }
 
   /** Build the dns-audit image (Python + checkdmarc) */
