@@ -196,7 +196,7 @@ const versions = {
     "v2.0.0@sha256:cd5f75e1399073669b13b4151cc603332a825324d0b8f13dfc9de9112a3c68a1",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "clickhouse/clickhouse-server":
-    "25.12-alpine@sha256:ae97f08909c80322db2a22cc10b33de16f949b5b4bc369b5b8de8bdfcad67e50",
+    "25.12-alpine@sha256:b86ee095d78e0a5509056b11b99160abd6ced1d82e841565015ef66fd7fea177",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "tbxark/mcp-proxy":
     "v0.43.2@sha256:1c43164a910a4f74a3ce48d95cb2ef792de8d467296555e63944fa798f0a44bd",
