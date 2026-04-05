@@ -16,7 +16,7 @@
     "@astrojs/starlight": "^0.38.0",
     "astro": "^5.1.1",
     "sharp": "^0.34.0",
-    "typescript": "^5.7.2"
+    "typescript": "^6"
   },
   "devDependencies": {
     "@shepherdjerred/eslint-config": "file:../../eslint-config",

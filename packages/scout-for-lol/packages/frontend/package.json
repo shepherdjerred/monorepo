@@ -54,7 +54,7 @@
     "@types/react-dom": "^19.1.9",
     "bun-types": "latest",
     "eslint": "^9.39.2",
-    "typescript": "^5.9.3"
+    "typescript": "^6"
   },
   "description": "Web frontend for Scout for League of Legends",
   "keywords": [

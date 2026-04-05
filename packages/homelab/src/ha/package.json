@@ -34,7 +34,7 @@
     "@types/bun": "^1.3.10",
     "eslint": "^9.39.2",
     "jiti": "^2.6.1",
-    "typescript": "^5.9.3"
+    "typescript": "^6"
   },
   "patchedDependencies": {
     "@digital-alchemy/type-writer@25.10.12": "patches/@digital-alchemy%2Ftype-writer@25.10.12.patch"

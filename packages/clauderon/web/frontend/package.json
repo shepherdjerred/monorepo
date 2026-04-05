@@ -52,7 +52,7 @@
     "eslint-plugin-react": "^7.37.5",
     "postcss": "^8.5.8",
     "tailwindcss": "^4.1.18",
-    "typescript": "^5.9.3",
+    "typescript": "^6",
     "vite": "^7.3.0"
   }
 }

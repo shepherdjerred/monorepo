@@ -16,6 +16,6 @@
     "astro-opengraph-images": "link:../../",
     "astro-seo": "^0.8.4",
     "react": "^19.0.0",
-    "typescript": "^5.8.2"
+    "typescript": "^6"
   }
 }

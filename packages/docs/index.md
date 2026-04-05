@@ -25,6 +25,7 @@ AI-maintained knowledge base for the monorepo.
 - [Kueue for Buildkite Resource Management](decisions/2026-03-18_kueue-buildkite-resource-management.md) - Why ResourceQuota caused etcd meltdowns and how Kueue replaces it with Job suspension
 - [Dagger Disk Write Amplification](decisions/2026-02-23_dagger-disk-write-amplification.md) - Identified disk I/O issue from full-monorepo source copies
 - [1Password Deduplication](decisions/2026-03-08_1password-deduplication.md) - Deduplicating 1Password secret references
+- [Renovate HA Manager Disabled](decisions/2026-04-05_renovate-homeassistant-manager-disabled.md) - Disabled homeassistant-manifest manager (no HA integrations); re-enable if adding HA custom components
 
 ## Plans
 

@@ -21,7 +21,7 @@
     "@types/react": "^19.1.13",
     "bun-types": "latest",
     "eslint": "^9.39.2",
-    "typescript": "^5.9.3"
+    "typescript": "^6"
   },
   "peerDependencies": {
     "react": "^19.0.0"

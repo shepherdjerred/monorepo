@@ -47,6 +47,6 @@
     "bun-types": "latest",
     "eslint": "^9.30.1",
     "jiti": "^2.6.1",
-    "typescript": "^5"
+    "typescript": "^6"
   }
 }

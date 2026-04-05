@@ -3,6 +3,9 @@
   "automerge": true,
   "automergeStrategy": "rebase",
   "extends": ["config:recommended"],
+  "homeassistant-manifest": {
+    "enabled": false
+  },
   "customManagers": [
     {
       "customType": "regex",

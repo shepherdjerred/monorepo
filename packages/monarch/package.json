@@ -24,7 +24,7 @@
     "bun-types": "^1.3.5",
     "eslint": "^9.39.2",
     "jiti": "^2.6.1",
-    "typescript": "^5.7.2"
+    "typescript": "^6"
   },
   "author": "Jerred Shepherd",
   "license": "GPL-3.0",

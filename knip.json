@@ -34,7 +34,7 @@
       "project": ["src/**/*.ts"]
     },
     "packages/homelab/src/cdk8s": {
-      "entry": ["src/app.ts", "scripts/**/*.ts"],
+      "entry": ["src/app.ts", "src/**/*.ts", "scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
     },
     "packages/homelab/src/ha": {
@@ -46,7 +46,7 @@
       "project": ["src/**/*.ts"]
     },
     "packages/homelab/src/helm-types": {
-      "entry": ["src/index.ts", "src/cli.ts"],
+      "entry": ["src/**/*.ts"],
       "project": ["src/**/*.ts"]
     },
     "packages/discord-plays-pokemon/packages/backend": {
@@ -62,7 +62,7 @@
       "project": ["src/**/*.{ts,tsx}", "*.ts"]
     },
     "packages/scout-for-lol/packages/backend": {
-      "entry": ["src/index.ts"],
+      "entry": ["src/index.ts", "scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
     },
     "packages/scout-for-lol/packages/data": {
@@ -74,7 +74,7 @@
       "project": ["src/**/*.{ts,tsx}", "*.ts"]
     },
     "packages/scout-for-lol/packages/frontend": {
-      "entry": ["astro.config.ts", "src/**/*.tsx"],
+      "entry": ["astro.config.ts", "src/**/*.tsx", "src/*-stub.ts"],
       "project": ["src/**/*.{ts,tsx,astro}", "*.ts"]
     },
     "packages/scout-for-lol/packages/desktop": {
@@ -102,9 +102,44 @@
     "packages/clauderon/docs": {
       "entry": ["astro.config.mjs", "src/**/*.{ts,tsx,astro,mdx}"],
       "project": ["src/**/*.{ts,tsx,astro,mdx}", "*.mjs"]
+    },
+    "packages/cooklang-rich-preview": {
+      "entry": ["astro.config.mjs", "src/**/*.astro"],
+      "project": ["src/**/*.{ts,tsx,astro}", "*.ts"]
+    },
+    "packages/hn-enhancer": {
+      "entry": ["src/background/index.ts", "src/content/index.ts", "src/popup/popup.ts", "vite.config.ts"],
+      "project": ["src/**/*.ts", "*.ts"]
+    },
+    "packages/monarch": {
+      "entry": ["src/index.ts", "src/lib/*/classify.ts", "scripts/**/*.ts"],
+      "project": ["src/**/*.ts", "scripts/**/*.ts"]
+    },
+    "packages/leetcode": {
+      "entry": ["src/**/*.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/toolkit": {
+      "entry": ["src/**/*.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/tasknotes-server": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/tasknotes-types": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/homelab": {
+      "entry": ["scripts/**/*.ts", "eslint.config.ts"],
+      "project": ["scripts/**/*.ts", "eslint.config.ts"]
     }
   },
+  "ignoreExportsUsedInFile": true,
   "ignore": [
+    "**/eslint.config.ts",
+    "**/postcss.config.ts",
     "**/generated/**",
     "**/dist/**",
     "archive/**",
@@ -118,6 +153,12 @@
     "packages/fonts/**",
     "packages/anki/**",
     "packages/webring/example/**",
+    "packages/cooklang-for-obsidian/**",
+    "packages/tasks-for-obsidian/**",
+    "packages/bun-decompile/**",
+    "packages/scout-for-lol/scripts/**",
+    "packages/docs/**",
+    "poc/**",
     "scripts/**"
   ]
 }

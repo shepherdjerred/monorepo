@@ -17,7 +17,7 @@
     "esbuild": "^0.28.0",
     "obsidian": "latest",
     "eslint": "^9.22.0",
-    "typescript": "^5.7.0"
+    "typescript": "^6"
   },
   "dependencies": {
     "chevrotain": "^11.1.2"
