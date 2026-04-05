@@ -27,7 +27,7 @@ function BanIcon({ ban }: { ban: LoadingScreenBan }) {
         opacity: 0.7,
       }}
     >
-      {champImage ? (
+      {champImage !== undefined && champImage.length > 0 ? (
         <img
           src={champImage}
           alt=""

@@ -71,9 +71,14 @@ export function ArenaLayout({ data }: { data: LoadingScreenData }) {
   // Arrange in 4 rows x 2 columns
   const rows: ArenaTeam[][] = [];
   for (let i = 0; i < teams.length; i += 2) {
-    const row: ArenaTeam[] = [teams[i]!];
-    if (i + 1 < teams.length) {
-      row.push(teams[i + 1]!);
+    const first = teams[i];
+    if (first === undefined) {
+      continue;
+    }
+    const row: ArenaTeam[] = [first];
+    const second = teams[i + 1];
+    if (second !== undefined) {
+      row.push(second);
     }
     rows.push(row);
   }

@@ -54,7 +54,7 @@ function SummonerSpells({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-      {spell1Img && (
+      {spell1Img !== undefined && (
         <img
           src={spell1Img}
           alt=""
@@ -66,7 +66,7 @@ function SummonerSpells({
           }}
         />
       )}
-      {spell2Img && (
+      {spell2Img !== undefined && (
         <img
           src={spell2Img}
           alt=""
@@ -89,12 +89,14 @@ function RuneIcons({
   keystoneRuneId: number | undefined;
   secondaryTreeId: number | undefined;
 }) {
-  const keystoneInfo = keystoneRuneId
-    ? getRuneInfo(keystoneRuneId)
-    : undefined;
-  const secondaryInfo = secondaryTreeId
-    ? getRuneTreeInfo(secondaryTreeId)
-    : undefined;
+  const keystoneInfo =
+    keystoneRuneId === undefined
+      ? undefined
+      : getRuneInfo(keystoneRuneId);
+  const secondaryInfo =
+    secondaryTreeId === undefined
+      ? undefined
+      : getRuneTreeInfo(secondaryTreeId);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
