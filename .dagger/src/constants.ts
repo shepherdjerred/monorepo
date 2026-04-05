@@ -34,6 +34,10 @@ export const CADDY_BUILDER_IMAGE =
   "caddy:2-builder-alpine@sha256:17a3a99c747d2124b9e9a6f434905b2869d67d9fc278b00f3deba5f4a69254bc";
 // renovate: datasource=docker depName=python
 export const PYTHON_IMAGE = "python:3.13-slim";
+// renovate: datasource=docker depName=python
+export const PYTHON_ALPINE_IMAGE = "python:3.14-alpine";
+// renovate: datasource=docker depName=alpine/helm
+export const HELM_IMAGE = "alpine/helm:3.16.4";
 
 // Pinned Bun version for containers that install Bun manually (e.g. Playwright)
 // renovate: datasource=npm depName=bun

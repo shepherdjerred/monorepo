@@ -66,8 +66,8 @@ export const INFRA_PUSH_TARGETS: ImageTarget[] = [
     name: "caddy-s3proxy",
     package: "homelab",
     versionKey: "shepherdjerred/caddy-s3proxy",
-    buildFn: "build-caddy-s3-proxy-image",
-    pushFn: "push-caddy-s3-proxy-image",
+    buildFn: "build-caddy-s-3-proxy-image",
+    pushFn: "push-caddy-s-3-proxy-image",
   },
 ];
 

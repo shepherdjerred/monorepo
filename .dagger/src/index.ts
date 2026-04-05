@@ -52,7 +52,18 @@ import {
 
 import { astroCheckHelper, astroBuildHelper, viteBuildHelper } from "./astro";
 
-import { buildImageHelper, pushImageHelper } from "./image";
+import {
+  buildImageHelper,
+  pushImageHelper,
+  buildHomelabImageHelper,
+  buildDepsSummaryImageHelper,
+  buildDnsAuditImageHelper,
+  buildCaddyS3ProxyImageHelper,
+  pushHomelabImageHelper,
+  pushDepsSummaryImageHelper,
+  pushDnsAuditImageHelper,
+  pushCaddyS3ProxyImageHelper,
+} from "./image";
 
 import {
   rustFmtHelper,
@@ -84,6 +95,12 @@ import {
   smokeTestBirmelHelper,
   smokeTestStarlightKarmaBotHelper,
   smokeTestTasknotesServerHelper,
+  smokeTestHomelabHelper,
+  smokeTestDepsSummaryHelper,
+  smokeTestDnsAuditHelper,
+  smokeTestCaddyS3ProxyHelper,
+  smokeTestDiscordPlaysPokemonHelper,
+  smokeTestBetterSkillCappedFetcherHelper,
 } from "./misc";
 
 @object()
@@ -349,6 +366,136 @@ export class Monorepo {
       registryPassword,
       depNames,
       depDirs,
+      version,
+      gitSha,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Homelab sub-package image operations
+  // ---------------------------------------------------------------------------
+
+  /** Build the homelab HA automation image (Bun + native deps) */
+  @func()
+  buildHomelabImage(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Container {
+    return buildHomelabImageHelper(pkgDir, depNames, depDirs, version, gitSha);
+  }
+
+  /** Build the dependency-summary image (Bun + helm binary) */
+  @func()
+  buildDepsSummaryImage(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Container {
+    return buildDepsSummaryImageHelper(pkgDir, depNames, depDirs, version, gitSha);
+  }
+
+  /** Build the dns-audit image (Python + checkdmarc) */
+  @func()
+  buildDnsAuditImage(
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Container {
+    return buildDnsAuditImageHelper(version, gitSha);
+  }
+
+  /** Build the caddy-s3proxy image (custom Caddy build with S3 proxy plugin) */
+  @func()
+  buildCaddyS3ProxyImage(
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Container {
+    return buildCaddyS3ProxyImageHelper(version, gitSha);
+  }
+
+  /** Push a homelab HA image to a registry. Returns digest. */
+  @func({ cache: "never" })
+  async pushHomelabImage(
+    pkgDir: Directory,
+    tags: string[],
+    registryUsername: string,
+    registryPassword: Secret,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Promise<string> {
+    return pushHomelabImageHelper(
+      pkgDir,
+      tags,
+      registryUsername,
+      registryPassword,
+      depNames,
+      depDirs,
+      version,
+      gitSha,
+    );
+  }
+
+  /** Push a dependency-summary image to a registry. Returns digest. */
+  @func({ cache: "never" })
+  async pushDepsSummaryImage(
+    pkgDir: Directory,
+    tags: string[],
+    registryUsername: string,
+    registryPassword: Secret,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Promise<string> {
+    return pushDepsSummaryImageHelper(
+      pkgDir,
+      tags,
+      registryUsername,
+      registryPassword,
+      depNames,
+      depDirs,
+      version,
+      gitSha,
+    );
+  }
+
+  /** Push a dns-audit image to a registry. Returns digest. */
+  @func({ cache: "never" })
+  async pushDnsAuditImage(
+    tags: string[],
+    registryUsername: string,
+    registryPassword: Secret,
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Promise<string> {
+    return pushDnsAuditImageHelper(
+      tags,
+      registryUsername,
+      registryPassword,
+      version,
+      gitSha,
+    );
+  }
+
+  /** Push a caddy-s3proxy image to a registry. Returns digest. */
+  @func({ cache: "never" })
+  async pushCaddyS3ProxyImage(
+    tags: string[],
+    registryUsername: string,
+    registryPassword: Secret,
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Promise<string> {
+    return pushCaddyS3ProxyImageHelper(
+      tags,
+      registryUsername,
+      registryPassword,
       version,
       gitSha,
     );
@@ -974,6 +1121,74 @@ export class Monorepo {
     tsconfig: File | null = null,
   ): Promise<string> {
     return smokeTestTasknotesServerHelper(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      tsconfig,
+    );
+  }
+
+  /** Smoke test homelab HA: boots app, expects ECONNREFUSED to HA */
+  @func()
+  async smokeTestHomelab(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+  ): Promise<string> {
+    return smokeTestHomelabHelper(pkgDir, depNames, depDirs);
+  }
+
+  /** Smoke test dependency-summary: boots app, expects clone/API failure */
+  @func()
+  async smokeTestDepsSummary(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+  ): Promise<string> {
+    return smokeTestDepsSummaryHelper(pkgDir, depNames, depDirs);
+  }
+
+  /** Smoke test dns-audit: verifies Python + checkdmarc installed */
+  @func()
+  async smokeTestDnsAudit(): Promise<string> {
+    return smokeTestDnsAuditHelper();
+  }
+
+  /** Smoke test caddy-s3proxy: verifies custom Caddy binary works */
+  @func()
+  async smokeTestCaddyS3Proxy(): Promise<string> {
+    return smokeTestCaddyS3ProxyHelper();
+  }
+
+  /** Smoke test discord-plays-pokemon: boots app, expects Discord auth failure */
+  @func()
+  async smokeTestDiscordPlaysPokemon(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Promise<string> {
+    return smokeTestDiscordPlaysPokemonHelper(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      tsconfig,
+    );
+  }
+
+  /** Smoke test better-skill-capped-fetcher: boots app, expects Firebase auth failure */
+  @func()
+  async smokeTestBetterSkillCappedFetcher(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Promise<string> {
+    return smokeTestBetterSkillCappedFetcherHelper(
       pkgDir,
       pkg,
       depNames,

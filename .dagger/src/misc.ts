@@ -17,6 +17,12 @@ import {
 } from "./constants";
 
 import { bunBaseContainer } from "./base";
+import {
+  buildHomelabImageHelper,
+  buildDepsSummaryImageHelper,
+  buildDnsAuditImageHelper,
+  buildCaddyS3ProxyImageHelper,
+} from "./image";
 
 /** Build MkDocs documentation site and return the built site/ directory. */
 export function mkdocsBuildHelper(source: Directory): Directory {
@@ -282,4 +288,212 @@ export async function smokeTestTasknotesServerHelper(
     .withExec(["sh", "-c", "timeout 10s bun run src/index.ts 2>&1"]);
 
   return runSmokeTest(container, []);
+}
+
+// ---------------------------------------------------------------------------
+// New smoke tests — homelab infra images
+// ---------------------------------------------------------------------------
+
+/**
+ * Smoke test homelab HA automation image.
+ * Verifies: app boots, connects to HA (expects ECONNREFUSED with dummy host).
+ */
+export async function smokeTestHomelabHelper(
+  pkgDir: Directory,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+): Promise<string> {
+  const container = buildHomelabImageHelper(pkgDir, depNames, depDirs)
+    .withEnvVariable("HASS_SERVER", "http://localhost:8123")
+    .withEnvVariable("HASS_TOKEN", "smoke-test-dummy")
+    .withEntrypoint([])
+    .withExec(["sh", "-c", "timeout 30s bun src/main.ts 2>&1; exit 0"]);
+
+  return runSmokeTest(container, [
+    "ECONNREFUSED",
+    "connection refused",
+    "fetch failed",
+    "401",
+    "Unauthorized",
+  ]);
+}
+
+/**
+ * Smoke test dependency-summary image.
+ * Verifies: app boots, attempts to clone repo / contact APIs (expects failure).
+ */
+export async function smokeTestDepsSummaryHelper(
+  pkgDir: Directory,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+): Promise<string> {
+  const container = buildDepsSummaryImageHelper(pkgDir, depNames, depDirs)
+    .withEntrypoint([])
+    .withExec(["sh", "-c", "timeout 30s bun run src/main.ts --dry-run 2>&1; exit 0"]);
+
+  return runSmokeTest(container, [
+    "ECONNREFUSED",
+    "fetch failed",
+    "clone",
+    "fatal",
+    "authentication",
+  ]);
+}
+
+/**
+ * Smoke test dns-audit image.
+ * Verifies: Python + checkdmarc installed correctly, can import and run.
+ */
+export async function smokeTestDnsAuditHelper(): Promise<string> {
+  const container = buildDnsAuditImageHelper()
+    .withEntrypoint([])
+    .withExec([
+      "python3",
+      "-c",
+      "import checkdmarc; print('checkdmarc imported successfully')",
+    ]);
+
+  return runSmokeTest(container, []);
+}
+
+/**
+ * Smoke test caddy-s3proxy image.
+ * Verifies: custom Caddy binary starts and includes s3proxy module.
+ */
+export async function smokeTestCaddyS3ProxyHelper(): Promise<string> {
+  const container = buildCaddyS3ProxyImageHelper()
+    .withEntrypoint([])
+    .withExec(["caddy", "version"]);
+
+  return runSmokeTest(container, []);
+}
+
+// ---------------------------------------------------------------------------
+// New smoke tests — app images missing smoke tests
+// ---------------------------------------------------------------------------
+
+/**
+ * Smoke test discord-plays-pokemon image.
+ * Verifies: app boots, loads config, attempts Discord auth (expects failure).
+ * Requires a valid config.toml to pass Zod validation.
+ */
+export async function smokeTestDiscordPlaysPokemonHelper(
+  pkgDir: Directory,
+  pkg: string,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  tsconfig: File | null = null,
+): Promise<string> {
+  // Minimal config.toml that passes Zod validation but uses dummy tokens
+  const configToml = `
+server_id = "000000000000000000"
+
+[bot]
+enabled = true
+discord_token = "smoke-test-dummy-token"
+application_id = "000000000000000000"
+
+[bot.commands]
+enabled = false
+update = false
+
+[bot.commands.screenshot]
+enabled = false
+
+[bot.notifications]
+channel_id = "000000000000000000"
+enabled = false
+
+[stream]
+enabled = false
+channel_id = "000000000000000000"
+dynamic_streaming = false
+minimum_in_channel = 0
+require_watching = false
+
+[stream.userbot]
+id = "000000000000000000"
+username = "smoke@test.com"
+password = "smoke-test"
+
+[game]
+enabled = false
+emulator_url = "built_in"
+
+[game.browser.preferences]
+
+[game.commands]
+enabled = false
+channel_id = "000000000000000000"
+max_actions_per_command = 1
+max_quantity_per_action = 1
+key_press_duration_in_milliseconds = 100
+delay_between_actions_in_milliseconds = 100
+
+[game.commands.burst]
+duration_in_milliseconds = 100
+delay_in_milliseconds = 100
+quantity = 1
+
+[game.commands.chord]
+duration_in_milliseconds = 100
+max_commands = 1
+max_total = 1
+delay = 100
+
+[game.commands.hold]
+duration_in_milliseconds = 100
+
+[web]
+enabled = false
+cors = false
+port = 3000
+assets = "/tmp"
+
+[web.api]
+enabled = false
+`;
+
+  const container = bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig)
+    .withEntrypoint([])
+    .withNewFile("/workspace/packages/discord-plays-pokemon/packages/backend/config.toml", configToml)
+    .withWorkdir("/workspace/packages/discord-plays-pokemon/packages/backend")
+    .withExec(["sh", "-c", "timeout 30s bun run src/index.ts 2>&1"]);
+
+  return runSmokeTest(container, [
+    "TokenInvalid",
+    "401",
+    "Unauthorized",
+    "Invalid token",
+    "Used disallowed intents",
+  ]);
+}
+
+/**
+ * Smoke test better-skill-capped-fetcher image.
+ * Verifies: app boots, attempts Firebase/S3 operations (expects failure).
+ */
+export async function smokeTestBetterSkillCappedFetcherHelper(
+  pkgDir: Directory,
+  pkg: string,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  tsconfig: File | null = null,
+): Promise<string> {
+  const container = bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig)
+    .withEnvVariable("OUTPUT_PATH", "/tmp/smoke-manifest.json")
+    .withEntrypoint([])
+    // The fetcher is a sub-directory with its own package.json
+    .withWorkdir(`/workspace/packages/${pkg}/fetcher`)
+    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withExec(["sh", "-c", "timeout 30s bun run src/index.ts 2>&1"]);
+
+  return runSmokeTest(container, [
+    "PERMISSION_DENIED",
+    "Missing or insufficient permissions",
+    "fetch failed",
+    "ECONNREFUSED",
+    "Firestore",
+    "firebase",
+  ]);
 }

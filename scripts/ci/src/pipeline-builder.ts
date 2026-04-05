@@ -7,6 +7,7 @@ import {
   INFRA_PUSH_TARGETS,
   TOFU_STACKS,
 } from "./catalog.ts";
+import type { ImageTarget } from "./catalog.ts";
 import type { AffectedPackages } from "./lib/types.ts";
 import type { PipelineStep, BuildkitePipeline } from "./lib/types.ts";
 import { perPackageSteps } from "./steps/per-package.ts";
@@ -34,8 +35,6 @@ import { releasePleaseStep } from "./steps/release.ts";
 import {
   buildImagesWithSmokeGroup,
   pushImagesGroup,
-  homelabImagesBuildGroup,
-  homelabImagesPushGroup,
   allPushKeys,
 } from "./steps/images.ts";
 import { publishNpmGroup, filterNpmPackages } from "./steps/npm.ts";
@@ -163,16 +162,23 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     // BUILD PHASE — depends on quality-gate, runs before release
     // =======================================================================
 
-    const hasImages = affected.buildAll || affected.hasImagePackages.size > 0;
-
-    // --- Build app images + smoke tests ---
-    if (hasImages) {
-      steps.push(buildImagesWithSmokeGroup(IMAGE_PUSH_TARGETS, pkgKeyMap));
+    // Determine which images need building based on what changed
+    const imagesToBuild: ImageTarget[] = [];
+    if (affected.buildAll) {
+      imagesToBuild.push(...IMAGE_PUSH_TARGETS, ...INFRA_PUSH_TARGETS);
+    } else {
+      if (affected.hasImagePackages.size > 0) {
+        imagesToBuild.push(...IMAGE_PUSH_TARGETS);
+      }
+      if (affected.homelabChanged) {
+        imagesToBuild.push(...INFRA_PUSH_TARGETS);
+      }
     }
+    const hasImages = imagesToBuild.length > 0;
 
-    // --- Build homelab infra images ---
-    if (affected.buildAll || affected.homelabChanged) {
-      steps.push(homelabImagesBuildGroup(pkgKeyMap.get("homelab")));
+    // --- Build all images + smoke tests ---
+    if (hasImages) {
+      steps.push(buildImagesWithSmokeGroup(imagesToBuild, pkgKeyMap));
     }
 
     // --- Build clauderon binaries ---
@@ -193,16 +199,11 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     // RELEASE PHASE — depends on release + build keys
     // =======================================================================
 
-    // --- Push app images ---
-    let appPushKeys: string[] = [];
+    // --- Push all images ---
+    let imagePushKeys: string[] = [];
     if (hasImages) {
-      steps.push(pushImagesGroup(IMAGE_PUSH_TARGETS));
-      appPushKeys = allPushKeys(IMAGE_PUSH_TARGETS);
-    }
-
-    // --- Push homelab infra images ---
-    if (affected.buildAll || affected.homelabChanged) {
-      steps.push(homelabImagesPushGroup());
+      steps.push(pushImagesGroup(imagesToBuild));
+      imagePushKeys = allPushKeys(imagesToBuild);
     }
 
     // --- Upload clauderon binaries ---
@@ -260,7 +261,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     if (needsArgoSync) {
       const argocdDeps: string[] = [];
       if (hasImages) {
-        argocdDeps.push(...appPushKeys);
+        argocdDeps.push(...imagePushKeys);
       }
       if (affected.buildAll || affected.homelabChanged) {
         argocdDeps.push(
@@ -280,25 +281,15 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     }
 
     // --- Version Commit-Back ---
-    if (
-      affected.buildAll ||
-      affected.hasImagePackages.size > 0 ||
-      affected.homelabChanged
-    ) {
-      const vcbDeps: string[] = ["quality-gate"];
-      if (hasImages) {
-        vcbDeps.push(...appPushKeys);
-      }
-      if (affected.buildAll || affected.homelabChanged) {
-        vcbDeps.push(...allPushKeys(INFRA_PUSH_TARGETS));
-      }
+    if (hasImages) {
+      const vcbDeps: string[] = ["quality-gate", ...imagePushKeys];
       steps.push(versionCommitBackStep(vcbDeps));
     }
 
     // --- Build Summary ---
     // Collect all terminal step keys so the summary runs last
     const summaryDeps: string[] = ["quality-gate"];
-    if (hasImages) summaryDeps.push(...appPushKeys);
+    if (hasImages) summaryDeps.push(...imagePushKeys);
     if (needsArgoSync) {
       summaryDeps.push("argocd-health");
     }

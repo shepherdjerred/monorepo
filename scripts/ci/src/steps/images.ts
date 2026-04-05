@@ -29,13 +29,29 @@ function imageBuildStep(
   dependsOn: string | string[] = "quality-gate",
 ): BuildkiteStep {
   const pkg = img.package ?? img.name;
+  const buildFn = img.buildFn ?? "build-image";
+
+  // Custom build functions that need no local source (built from upstream images only)
+  const NO_SOURCE_BUILDS = new Set(["build-dns-audit-image", "build-caddy-s-3-proxy-image"]);
+
   const flags = depFlags(pkg);
-  const cmd = [
-    `dagger call build-image --pkg-dir ./packages/${pkg} --pkg ${img.name}`,
-    flags,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  let cmd: string;
+  if (img.buildFn && NO_SOURCE_BUILDS.has(buildFn)) {
+    cmd = `dagger call ${buildFn}`;
+  } else if (img.buildFn) {
+    // Custom build functions take --pkg-dir + dep flags (no --pkg)
+    cmd = [`dagger call ${buildFn} --pkg-dir ./packages/${pkg}`, flags]
+      .filter(Boolean)
+      .join(" ");
+  } else {
+    // Default build-image takes --pkg-dir, --pkg, and dep flags
+    cmd = [
+      `dagger call ${buildFn} --pkg-dir ./packages/${pkg} --pkg ${img.name}`,
+      flags,
+    ]
+      .filter(Boolean)
+      .join(" ");
+  }
 
   return {
     label: `:docker: Build ${img.name}`,
@@ -66,7 +82,25 @@ const SMOKE_TEST_FUNCTIONS: Record<string, string> = {
   "scout-for-lol": "smoke-test-scout-for-lol",
   "starlight-karma-bot": "smoke-test-starlight-karma-bot",
   "tasknotes-server": "smoke-test-tasknotes-server",
+  homelab: "smoke-test-homelab",
+  "dependency-summary": "smoke-test-deps-summary",
+  "dns-audit": "smoke-test-dns-audit",
+  "caddy-s3proxy": "smoke-test-caddy-s-3-proxy",
+  "discord-plays-pokemon": "smoke-test-discord-plays-pokemon",
+  "better-skill-capped-fetcher": "smoke-test-better-skill-capped-fetcher",
 };
+
+// Smoke test functions that take no arguments (standalone images)
+const SMOKE_NO_ARGS = new Set([
+  "smoke-test-dns-audit",
+  "smoke-test-caddy-s-3-proxy",
+]);
+
+// Smoke test functions that take --pkg-dir + dep flags but no --pkg (custom infra images)
+const SMOKE_CUSTOM_INFRA = new Set([
+  "smoke-test-homelab",
+  "smoke-test-deps-summary",
+]);
 
 function smokeTestStep(
   img: ImageTarget,
@@ -76,14 +110,24 @@ function smokeTestStep(
   if (!daggerFn) return null;
   const pkg = img.package ?? img.name;
   const flags = depFlags(pkg);
-  const cmd = [
-    `dagger call ${daggerFn}`,
-    `--pkg-dir ./packages/${pkg} --pkg ${img.name}`,
-    flags,
-    `--tsconfig ./tsconfig.base.json`,
-  ]
-    .filter(Boolean)
-    .join(" ");
+
+  let cmd: string;
+  if (SMOKE_NO_ARGS.has(daggerFn)) {
+    cmd = `dagger call ${daggerFn}`;
+  } else if (SMOKE_CUSTOM_INFRA.has(daggerFn)) {
+    cmd = [`dagger call ${daggerFn} --pkg-dir ./packages/${pkg}`, flags]
+      .filter(Boolean)
+      .join(" ");
+  } else {
+    cmd = [
+      `dagger call ${daggerFn}`,
+      `--pkg-dir ./packages/${pkg} --pkg ${img.name}`,
+      flags,
+      `--tsconfig ./tsconfig.base.json`,
+    ]
+      .filter(Boolean)
+      .join(" ");
+  }
 
   return {
     label: `:heartbeat: Smoke ${img.name}`,
@@ -112,23 +156,46 @@ function imagePushStep(
   dependsOn: string | string[],
 ): BuildkiteStep {
   const pkg = img.package ?? img.name;
+  const pushFn = img.pushFn ?? "push-image";
+
+  const tagFlags = [
+    `--tags ghcr.io/${img.versionKey}:2.0.0-$BUILDKITE_BUILD_NUMBER`,
+    `--tags ghcr.io/${img.versionKey}:latest`,
+    `--registry-username shepherdjerred`,
+    `--registry-password env:GH_TOKEN`,
+  ].join(" ");
+
+  const NO_SOURCE_PUSHES = new Set(["push-dns-audit-image", "push-caddy-s-3-proxy-image"]);
   const flags = depFlags(pkg);
+
+  let pushCall: string;
+  if (img.pushFn && NO_SOURCE_PUSHES.has(pushFn)) {
+    pushCall = `${pushFn} ${tagFlags}`;
+  } else if (img.pushFn) {
+    // Custom push functions take --pkg-dir + dep flags + tags + registry creds
+    pushCall = [`${pushFn} --pkg-dir ./packages/${pkg}`, flags, tagFlags]
+      .filter(Boolean)
+      .join(" ");
+  } else {
+    // Default push-image takes --pkg-dir, --pkg, dep flags, tags, registry creds
+    const flags = depFlags(pkg);
+    pushCall = [
+      `push-image --pkg-dir ./packages/${pkg} --pkg ${img.name}`,
+      flags,
+      tagFlags,
+    ]
+      .filter(Boolean)
+      .join(" ");
+  }
+
   const cmd = [
     // $$ escapes survive Buildkite interpolation so bash sees $DIGEST at runtime.
     // dagger call outputs ANSI escape codes to stdout even with DAGGER_PROGRESS=dots/plain,
     // so we grep for the sha256 digest line to extract just the return value.
-    `RAW=$$(dagger call push-image --pkg-dir ./packages/${pkg} --pkg ${img.name}`,
-    flags,
-    // Version format: 2.0.0-BUILD (semver prerelease). See decisions/2026-04-04_unified-versioning-strategy.md
-    `--tags ghcr.io/${img.versionKey}:2.0.0-$BUILDKITE_BUILD_NUMBER`,
-    `--tags ghcr.io/${img.versionKey}:latest`,
-    `--registry-username shepherdjerred`,
-    `--registry-password env:GH_TOKEN)`,
+    `RAW=$$(dagger call ${pushCall})`,
     `&& DIGEST=$$(echo "$$RAW" | grep -oE 'sha256:[a-f0-9]+' | head -1)`,
     `&& if [ -n "$$DIGEST" ]; then buildkite-agent meta-data set "digest:${img.versionKey}" "$$DIGEST"; else echo "WARN: empty digest for ${img.name}"; fi`,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  ].join(" ");
 
   return {
     label: `:docker: Push ${img.name}`,
@@ -181,19 +248,6 @@ export function buildImagesWithSmokeGroup(
   };
 }
 
-export function homelabImagesBuildGroup(
-  homelabPkgKey?: string,
-): BuildkiteGroup {
-  const buildDeps = homelabPkgKey
-    ? ["quality-gate", homelabPkgKey]
-    : ["quality-gate"];
-  return {
-    group: ":kubernetes: Build Homelab Images",
-    key: "build-homelab-images",
-    steps: INFRA_PUSH_TARGETS.map((img) => imageBuildStep(img, buildDeps)),
-  };
-}
-
 // ---------------------------------------------------------------------------
 // Push-phase groups (push only, depends on build/smoke completing)
 // ---------------------------------------------------------------------------
@@ -213,16 +267,6 @@ export function pushImagesGroup(
     group: ":package: Push Images",
     key: "push-images",
     steps,
-  };
-}
-
-export function homelabImagesPushGroup(): BuildkiteGroup {
-  return {
-    group: ":kubernetes: Push Homelab Images",
-    key: "push-homelab-images",
-    steps: INFRA_PUSH_TARGETS.map((img) =>
-      imagePushStep(img, `build-${safeKey(img.name)}`),
-    ),
   };
 }
 
