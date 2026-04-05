@@ -1,7 +1,7 @@
 /**
  * NPM publish step generators.
  *
- * Dev releases (every commit): version 0.0.0-dev.BUILD, --tag dev
+ * Dev releases (every commit): version <pkg-version>-dev.BUILD, --tag dev
  * Prod releases (release-please merge): version from package.json, --tag latest
  *
  * Build + publish happens in a single Dagger call (no Buildkite artifact transfer).
@@ -19,28 +19,33 @@ const MAIN_ONLY = "build.branch == pipeline.default_branch";
 function npmPublishStep(
   pkg: { name: string; dir: string },
   pkgKeyMap?: Map<string, string>,
+  mode: "dev" | "prod" = "dev",
 ): BuildkiteStep {
   const deps = WORKSPACE_DEPS[pkg.name] ?? [];
   const depFlags = deps
     .flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`])
     .join(" ");
-  // Dev version: 0.0.0-dev.BUILD. Written to package.json inside Dagger container (ephemeral).
+  const devSuffixFlag =
+    mode === "dev" ? ` --dev-suffix "$BUILDKITE_BUILD_NUMBER"` : "";
   const cmd =
     [
       `dagger call publish-npm --pkg-dir ./${pkg.dir} --pkg ${pkg.name}`,
       depFlags,
       `--npm-token env:NPM_TOKEN`,
       `--tsconfig ./tsconfig.base.json`,
-      `--dev-version "0.0.0-dev.$BUILDKITE_BUILD_NUMBER"`,
     ]
       .filter(Boolean)
-      .join(" ") + DRYRUN_FLAG;
+      .join(" ") +
+    devSuffixFlag +
+    DRYRUN_FLAG;
   const parentPkg = pkg.dir.replace("packages/", "").split("/")[0] ?? "";
   const pkgKey = pkgKeyMap?.get(pkg.name) ?? pkgKeyMap?.get(parentPkg);
   const dependsOn = pkgKey ? ["quality-gate", pkgKey] : ["quality-gate"];
+  const suffix = mode === "prod" ? "-prod" : "";
+  const labelSuffix = mode === "prod" ? " (latest)" : " (dev)";
   return {
-    label: `:npm: Publish ${pkg.name}`,
-    key: `npm-${safeKey(pkg.name)}`,
+    label: `:npm: Publish ${pkg.name}${labelSuffix}`,
+    key: `npm-${safeKey(pkg.name)}${suffix}`,
     if: MAIN_ONLY,
     depends_on: dependsOn,
     command: cmd,
@@ -70,10 +75,18 @@ export function filterNpmPackages(
 export function publishNpmGroup(
   packages: NpmPackage[],
   pkgKeyMap?: Map<string, string>,
+  releasePleaseMerge = false,
 ): BuildkiteGroup {
+  const steps: BuildkiteStep[] = [];
+  for (const pkg of packages) {
+    if (releasePleaseMerge) {
+      steps.push(npmPublishStep(pkg, pkgKeyMap, "prod"));
+    }
+    steps.push(npmPublishStep(pkg, pkgKeyMap, "dev"));
+  }
   return {
     group: ":npm: Publish NPM",
     key: "publish-npm",
-    steps: packages.map((pkg) => npmPublishStep(pkg, pkgKeyMap)),
+    steps,
   };
 }

@@ -42,6 +42,16 @@ function isVersionCommitBack(): boolean {
 }
 
 // ---------------------------------------------------------------------------
+// Release-please merge detection
+// ---------------------------------------------------------------------------
+
+/** Check if the current build is a release-please merge commit. */
+export function isReleasePleaseMerge(): boolean {
+  const msg = process.env["BUILDKITE_MESSAGE"] ?? "";
+  return msg === "chore: release main";
+}
+
+// ---------------------------------------------------------------------------
 // Renovate fast-track
 // ---------------------------------------------------------------------------
 
@@ -415,6 +425,7 @@ function fullBuildResult(): AffectedPackages {
     hasSitePackages: new Set(Object.keys(PACKAGE_TO_SITE)),
     hasNpmPackages: new Set(PACKAGES_WITH_NPM),
     versionBumpOnly: false,
+    releasePleaseMerge: isReleasePleaseMerge(),
   };
 }
 
@@ -432,6 +443,7 @@ function emptyResult(): AffectedPackages {
     hasSitePackages: new Set(),
     hasNpmPackages: new Set(),
     versionBumpOnly: false,
+    releasePleaseMerge: isReleasePleaseMerge(),
   };
 }
 
@@ -469,6 +481,7 @@ function buildScopedResult(
     hasSitePackages,
     hasNpmPackages,
     versionBumpOnly: false,
+    releasePleaseMerge: isReleasePleaseMerge(),
   };
 }
 
@@ -598,6 +611,7 @@ export {
   transitiveClosure as _transitiveClosure,
   isRenovatePr as _isRenovatePr,
   isVersionCommitBack as _isVersionCommitBack,
+  isReleasePleaseMerge as _isReleasePleaseMerge,
   classifyRenovateFiles as _classifyRenovateFiles,
   NON_JS_PACKAGES as _NON_JS_PACKAGES,
   JS_TS_PACKAGES as _JS_TS_PACKAGES,

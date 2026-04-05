@@ -5,6 +5,7 @@ import {
   _transitiveClosure,
   _isRenovatePr,
   _isVersionCommitBack,
+  _isReleasePleaseMerge,
   _classifyRenovateFiles,
   _NON_JS_PACKAGES,
   _JS_TS_PACKAGES,
@@ -192,6 +193,38 @@ describe("isVersionCommitBack", () => {
     process.env["BUILDKITE_MESSAGE"] =
       "chore: bump image versions to 2.0.0-1234";
     expect(_isVersionCommitBack()).toBe(true);
+  });
+});
+
+describe("isReleasePleaseMerge", () => {
+  const originalEnv = { ...process.env };
+
+  beforeEach(() => {
+    delete process.env["BUILDKITE_MESSAGE"];
+  });
+
+  afterEach(() => {
+    process.env["BUILDKITE_MESSAGE"] = originalEnv["BUILDKITE_MESSAGE"];
+  });
+
+  it("returns true for release-please commit message", () => {
+    process.env["BUILDKITE_MESSAGE"] = "chore: release main";
+    expect(_isReleasePleaseMerge()).toBe(true);
+  });
+
+  it("returns false for unrelated commit message", () => {
+    process.env["BUILDKITE_MESSAGE"] = "feat: add new feature";
+    expect(_isReleasePleaseMerge()).toBe(false);
+  });
+
+  it("returns false when env var is undefined", () => {
+    expect(_isReleasePleaseMerge()).toBe(false);
+  });
+
+  it("returns false for version bump commit message", () => {
+    process.env["BUILDKITE_MESSAGE"] =
+      "chore: bump image versions to 2.0.0-867";
+    expect(_isReleasePleaseMerge()).toBe(false);
   });
 });
 

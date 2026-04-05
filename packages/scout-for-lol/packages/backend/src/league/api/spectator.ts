@@ -88,11 +88,21 @@ export async function getActiveGame(
       `[getActiveGame] ✅ ${puuid} is in game ${parseResult.data.gameId.toString()} (${parseResult.data.gameMode})`,
     );
     return parseResult.data;
-  } catch (error) {
+  } catch (error: unknown) {
     // 404 = player not in a game — expected/normal case
-    const httpResult = z.object({ status: z.number() }).safeParse(error);
-    if (httpResult.success && httpResult.data.status === 404) {
+    // twisted's GenericError sets `status` from the HTTP response.
+    // Use z.coerce.number() to handle both number (404) and string ("404") status values,
+    // since twisted's error shape is not guaranteed.
+    const httpStatusResult = z
+      .object({ status: z.coerce.number().int() })
+      .safeParse(error);
+    const httpStatus = httpStatusResult.success
+      ? httpStatusResult.data.status
+      : undefined;
+
+    if (httpStatus === 404) {
       riotApiRequestsTotal.inc({ source: "spectator", status: "not_found" });
+      updateRiotApiHealth(true);
       logger.debug(`[getActiveGame] Player ${puuid} not in game`);
       return undefined;
     }
@@ -106,29 +116,28 @@ export async function getActiveGame(
     });
     updateRiotApiHealth(false);
 
-    if (httpResult.success) {
-      const status = httpResult.data.status;
+    if (httpStatus === undefined) {
       logger.error(
-        `[getActiveGame] ❌ HTTP Error ${status.toString()} for ${puuid}`,
+        `[getActiveGame] ❌ Error checking active game for ${puuid}:`,
+        error,
+      );
+      riotApiErrorsTotal.inc({ source: "spectator", http_status: "unknown" });
+    } else {
+      logger.error(
+        `[getActiveGame] ❌ HTTP Error ${httpStatus.toString()} for ${puuid}`,
       );
       riotApiErrorsTotal.inc({
         source: "spectator",
-        http_status: status.toString(),
+        http_status: httpStatus.toString(),
       });
       Sentry.captureException(error, {
         tags: {
           source: "spectator",
           puuid,
           region,
-          httpStatus: status.toString(),
+          httpStatus: httpStatus.toString(),
         },
       });
-    } else {
-      logger.error(
-        `[getActiveGame] ❌ Error checking active game for ${puuid}:`,
-        error,
-      );
-      riotApiErrorsTotal.inc({ source: "spectator", http_status: "unknown" });
     }
 
     return undefined;

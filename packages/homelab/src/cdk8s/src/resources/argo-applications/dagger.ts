@@ -335,13 +335,14 @@ echo "Done."`,
           "RespectIgnoreDifferences=true",
         ],
       },
-      // Server-side apply normalization on volumeClaimTemplates resources
-      // causes phantom drift between desired and live state.
+      // Kubernetes injects fields (apiVersion, kind, volumeMode, status) into
+      // volumeClaimTemplates that aren't in the desired manifest, causing
+      // permanent OutOfSync. Ignore the entire VCT to suppress phantom drift.
       ignoreDifferences: [
         {
           group: "apps",
           kind: "StatefulSet",
-          jqPathExpressions: [".spec.volumeClaimTemplates[].spec.resources"],
+          jqPathExpressions: [".spec.volumeClaimTemplates[]"],
         },
       ],
     },

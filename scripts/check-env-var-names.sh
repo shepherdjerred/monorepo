@@ -43,7 +43,7 @@ if [ -n "$MATCHES" ]; then
 fi
 
 # --- Special case: GITHUB_TOKEN (exact env var name, not substrings like TOFU_GITHUB_TOKEN) ---
-GITHUB_EXCLUDE='TOFU_GITHUB_TOKEN|GLANCE_TEST_|@modelcontextprotocol|server-github expects|mcp-gateway|YOUR_GITHUB_TOKEN|env:GITHUB_TOKEN|CHANGELOG\.md|plans/|dot_claude/skills/|GITHUB_TOKEN_URL'
+GITHUB_EXCLUDE='TOFU_GITHUB_TOKEN|GLANCE_TEST_|@modelcontextprotocol|server-github expects|mcp-gateway|YOUR_GITHUB_TOKEN|env:GITHUB_TOKEN|CHANGELOG\.md|plans/|dot_claude/skills/|GITHUB_TOKEN_URL|\.dagger/src/release\.ts'
 
 GITHUB_MATCHES=$("${FILES_CMD[@]}" | xargs -0 grep -n 'GITHUB_TOKEN' | grep -vE "${EXCLUDE_PATTERN}" | grep -vE "${GITHUB_EXCLUDE}" || true)
 

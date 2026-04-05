@@ -34,7 +34,7 @@ for npm packages.
 | Docker images       | `2.0.0-BUILD` + `:latest` | `2.0.0-695`          | Valid semver; `@sha256:` digest provides immutability                        |
 | Helm charts         | `2.0.0-BUILD`             | `2.0.0-695`          | ArgoCD `~2.0.0-0` tilde range auto-updates to latest prerelease              |
 | NPM (prod)          | semver via release-please | `0.1.0`              | Standard npm versioning; Renovate manages downstream consumers               |
-| NPM (dev)           | `0.0.0-dev.BUILD`         | `0.0.0-dev.695`      | `dev` dist-tag; `npm install pkg` still gets stable, `pkg@dev` gets dev      |
+| NPM (dev)           | `<version>-dev.BUILD`     | `1.15.0-dev.695`     | `dev` dist-tag; `npm install pkg` still gets stable, `pkg@dev` gets dev      |
 | Clauderon (prod)    | semver via release-please | `0.1.0`              | GitHub Release with proper semver tag                                        |
 | Clauderon (dev)     | `0.0.0-dev.BUILD`         | `0.0.0-dev.695`      | GitHub pre-release; only built when clauderon code changes                   |
 | Cooklang            | `2.0.0-BUILD`             | `2.0.0-695`          | Same as Helm/Docker for consistency                                          |
@@ -53,13 +53,16 @@ for npm packages.
 - **Consistent across Docker + Helm**: Same format for both avoids the kind of divergence that
   caused Eras 2--3.
 
-### Why `0.0.0-dev.BUILD` for NPM
+### Why `<version>-dev.BUILD` for NPM
 
-- Sorts below ANY real release in semver (`0.0.0-dev.695 < 0.0.1 < 0.1.0`).
+- Based on the current `package.json` version with `-dev.BUILD` suffix (e.g. `1.15.0-dev.695`).
+- Sorts below the next release in semver (`1.15.0-dev.695 < 1.15.0`).
 - Uses `dev` dist-tag so `npm install` defaults to stable, `npm install pkg@dev` gets latest dev.
 - `--tolerate-republish` handles re-publish gracefully.
 - Version is written to `package.json` inside the ephemeral Dagger container only -- never modifies
   the repo.
+- On release-please merge commits, both prod (`--tag latest`) and dev (`--tag dev`) releases are
+  published.
 
 ### Why Release-Please for NPM Only
 
