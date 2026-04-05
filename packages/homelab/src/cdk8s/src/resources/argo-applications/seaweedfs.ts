@@ -85,6 +85,7 @@ export function createSeaweedfsApp(chart: Chart) {
   const seaweedfsValues: HelmValuesForChart<"seaweedfs"> = {
     global: {
       seaweedfs: {
+        enableReplication: false,
         monitoring: {
           enabled: true,
           additionalLabels: {
