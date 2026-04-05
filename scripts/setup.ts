@@ -89,11 +89,8 @@ async function findLockfileDirs(): Promise<string[]> {
   }
 
   await walk(ROOT);
-  // Exclude root itself (handled separately)
   return dirs.filter((d) => d !== ROOT).sort();
 }
-
-// ── Phase 1: Tools ───────────���─────────────────────────────────────────
 
 async function findMiseConfigs(): Promise<string[]> {
   const configs: string[] = [];
@@ -125,8 +122,9 @@ async function findMiseConfigs(): Promise<string[]> {
   return configs.sort();
 }
 
+// ── Phase 1: Tools ─────────────────────────────────────────────────────
+
 async function ensureTools(): Promise<void> {
-  // Trust all mise configs in the repo
   const miseConfigs = await findMiseConfigs();
   log("Tools", `Found ${String(miseConfigs.length)} mise config files`);
   await Promise.all(
@@ -134,7 +132,6 @@ async function ensureTools(): Promise<void> {
   );
   log("Tools", "Trusted all mise configs");
 
-  // Install tools from all configs
   await exec("Tools", "mise install", ["mise", "install"]);
 
   const isMac = process.platform === "darwin";
@@ -176,17 +173,14 @@ async function ensureTools(): Promise<void> {
   }
 }
 
-// ── Phase 2: Dependencies ─────────��────────────────────────────────────
+// ── Phase 2: Dependencies ──────────────────────────────────────────────
 
 async function installDependencies(): Promise<void> {
-  // Root install first (gets markdownlint-cli2, triggers lefthook via prepare)
   await exec("Deps", "root bun install", ["bun", "install"]);
 
-  // Find all per-package lockfile directories
   const lockfileDirs = await findLockfileDirs();
   log("Deps", `Found ${String(lockfileDirs.length)} packages with bun.lock`);
 
-  // Install in parallel with concurrency limit
   const concurrency = 6;
   const failures: Array<{ dir: string; error: unknown }> = [];
   let completed = 0;
@@ -201,7 +195,6 @@ async function installDependencies(): Promise<void> {
     }
   }
 
-  // Process in batches
   for (let i = 0; i < lockfileDirs.length; i += concurrency) {
     const batch = lockfileDirs.slice(i, i + concurrency);
     await Promise.allSettled(batch.map((dir) => installOne(dir)));
@@ -220,128 +213,181 @@ async function installDependencies(): Promise<void> {
     throw new Error("Dependency installation failed");
   }
 
-  // Homelab sub-packages (uses frozen-lockfile internally)
   const homelabDir = join(ROOT, "packages", "homelab");
   if (existsSync(homelabDir)) {
     await exec(
       "Deps",
       "homelab install-subpkgs",
       ["bun", "run", "install-subpkgs"],
-      {
-        cwd: homelabDir,
-      },
+      { cwd: homelabDir },
     );
   }
 }
 
-// ── Phase 3: Build Shared Packages ���─────────────────��──────────────────
+// ── Phase 3: Build & Generate (DAG) ────────────────────────────────────
 
-async function buildSharedPackages(): Promise<void> {
-  // Tier 1: eslint-config (depended on by nearly everything)
-  await exec("Build", "eslint-config", ["bun", "run", "build"], {
-    cwd: join(ROOT, "packages", "eslint-config"),
-  });
+type DagTask = {
+  id: string;
+  label: string;
+  cmd: string[];
+  cwd: string;
+  deps: string[];
+  warnOnly: boolean;
+};
 
-  // Tier 2: parallel (depend only on eslint-config or nothing)
-  const tier2 = [
-    { label: "webring", cwd: join(ROOT, "packages", "webring") },
-    {
-      label: "astro-opengraph-images",
-      cwd: join(ROOT, "packages", "astro-opengraph-images"),
-    },
-    {
-      label: "homelab/helm-types",
-      cwd: join(ROOT, "packages", "homelab", "src", "helm-types"),
-    },
-  ];
+const DAG_TASKS: DagTask[] = [
+  {
+    id: "eslint-config",
+    label: "eslint-config build",
+    cmd: ["bun", "run", "build"],
+    cwd: "packages/eslint-config",
+    deps: [],
+    warnOnly: false,
+  },
+  {
+    id: "webring",
+    label: "webring build",
+    cmd: ["bun", "run", "build"],
+    cwd: "packages/webring",
+    deps: [],
+    warnOnly: false,
+  },
+  {
+    id: "astro-og",
+    label: "astro-opengraph-images build",
+    cmd: ["bun", "run", "build"],
+    cwd: "packages/astro-opengraph-images",
+    deps: [],
+    warnOnly: false,
+  },
+  {
+    id: "helm-types-build",
+    label: "helm-types build",
+    cmd: ["bun", "run", "build"],
+    cwd: "packages/homelab/src/helm-types",
+    deps: [],
+    warnOnly: false,
+  },
+  {
+    id: "helm-types-gen",
+    label: "helm-types codegen",
+    cmd: ["bun", "run", "generate-helm-types"],
+    cwd: "packages/homelab/src/cdk8s",
+    deps: ["helm-types-build"],
+    warnOnly: true,
+  },
+  {
+    id: "clauderon-shared",
+    label: "clauderon/web/shared build",
+    cmd: ["bun", "run", "build"],
+    cwd: "packages/clauderon/web/shared",
+    deps: [],
+    warnOnly: false,
+  },
+  {
+    id: "clauderon-client",
+    label: "clauderon/web/client build",
+    cmd: ["bun", "run", "build"],
+    cwd: "packages/clauderon/web/client",
+    deps: ["clauderon-shared"],
+    warnOnly: false,
+  },
+  {
+    id: "birmel-prisma",
+    label: "birmel prisma",
+    cmd: ["bunx", "--trust", "prisma@6", "generate"],
+    cwd: "packages/birmel",
+    deps: [],
+    warnOnly: false,
+  },
+  {
+    id: "scout-generate",
+    label: "scout-for-lol generate",
+    cmd: ["bun", "run", "generate"],
+    cwd: "packages/scout-for-lol",
+    deps: [],
+    warnOnly: false,
+  },
+  {
+    id: "ha-types",
+    label: "homelab HA types",
+    cmd: ["bun", "run", "generate-types"],
+    cwd: "packages/homelab/src/ha",
+    deps: [],
+    warnOnly: true,
+  },
+];
 
-  const tier2Results = await Promise.allSettled(
-    tier2.map((t) =>
-      exec("Build", t.label, ["bun", "run", "build"], { cwd: t.cwd }),
-    ),
-  );
-
-  for (const result of tier2Results) {
-    if (result.status === "rejected") {
-      throw result.reason instanceof Error
-        ? result.reason
-        : new Error(String(result.reason));
-    }
-  }
-
-  // Tier 3: clauderon web packages (sequential — client depends on shared)
-  const clauderonWeb = join(ROOT, "packages", "clauderon", "web");
-  if (existsSync(clauderonWeb)) {
-    await exec("Build", "clauderon/web/shared", ["bun", "run", "build"], {
-      cwd: join(clauderonWeb, "shared"),
-    });
-    await exec("Build", "clauderon/web/client", ["bun", "run", "build"], {
-      cwd: join(clauderonWeb, "client"),
-    });
-  }
-}
-
-// ── Phase 4: Code Generation ─────────────��─────────────────────────────
-
-async function runCodeGeneration(): Promise<void> {
-  const generators: Array<{
-    label: string;
-    cmd: string[];
-    cwd: string;
-    warnOnly: boolean;
-  }> = [
-    {
-      label: "birmel prisma",
-      cmd: ["bunx", "--trust", "prisma@6", "generate"],
-      cwd: join(ROOT, "packages", "birmel"),
-      warnOnly: false,
-    },
-    {
-      label: "scout-for-lol generate",
-      cmd: ["bun", "run", "generate"],
-      cwd: join(ROOT, "packages", "scout-for-lol"),
-      warnOnly: false,
-    },
-    {
-      label: "homelab helm-types codegen",
-      cmd: ["bun", "run", "generate-helm-types"],
-      cwd: join(ROOT, "packages", "homelab", "src", "cdk8s"),
-      warnOnly: true,
-    },
-    {
-      label: "homelab HA types",
-      cmd: ["bun", "run", "generate-types"],
-      cwd: join(ROOT, "packages", "homelab", "src", "ha"),
-      warnOnly: true,
-    },
-  ];
-
-  // Filter out generators whose directories don't exist
-  const valid = generators.filter((g) => {
-    if (!existsSync(g.cwd)) {
-      warn("Codegen", `${g.label} skipped (directory not found)`);
+async function runDag(
+  tasks: DagTask[],
+  maxConcurrency: number = 4,
+): Promise<void> {
+  // Filter to tasks whose directories exist
+  const valid = tasks.filter((t) => {
+    const fullCwd = join(ROOT, t.cwd);
+    if (!existsSync(fullCwd)) {
+      warn("DAG", `${t.label} skipped (directory not found)`);
       return false;
     }
     return true;
   });
 
-  const results = await Promise.allSettled(
-    valid.map((g) =>
-      exec("Codegen", g.label, g.cmd, { cwd: g.cwd, warnOnly: g.warnOnly }),
-    ),
-  );
+  const completed = new Set<string>();
+  const failed = new Set<string>();
+  const running = new Map<string, Promise<string>>();
+  const remaining = new Map(valid.map((t) => [t.id, t]));
 
-  // Re-throw any fatal failures
-  for (const result of results) {
-    if (result.status === "rejected") {
-      throw result.reason instanceof Error
-        ? result.reason
-        : new Error(String(result.reason));
+  while (remaining.size > 0 || running.size > 0) {
+    // Launch ready tasks up to concurrency limit
+    for (const [id, task] of remaining) {
+      if (running.size >= maxConcurrency) break;
+
+      if (task.deps.some((d) => failed.has(d))) {
+        remaining.delete(id);
+        failed.add(id);
+        warn("DAG", `${task.label} skipped (dependency failed)`);
+        continue;
+      }
+
+      if (task.deps.every((d) => completed.has(d))) {
+        remaining.delete(id);
+        const promise = exec("DAG", task.label, task.cmd, {
+          cwd: join(ROOT, task.cwd),
+          warnOnly: task.warnOnly,
+        })
+          .then((ok) => {
+            if (!ok) failed.add(id);
+            return id;
+          })
+          .catch(() => {
+            failed.add(id);
+            return id;
+          });
+        running.set(id, promise);
+      }
     }
+
+    if (running.size === 0) break;
+
+    // Wait for any task to finish
+    const doneId = await Promise.race(running.values());
+    running.delete(doneId);
+    if (!failed.has(doneId)) {
+      completed.add(doneId);
+    }
+  }
+
+  // Check for fatal failures
+  const fatalFailures = valid.filter((t) => failed.has(t.id) && !t.warnOnly);
+  if (fatalFailures.length > 0) {
+    console.error(
+      `  [DAG] Fatal failures: ${fatalFailures.map((t) => t.label).join(", ")}`,
+    );
+    throw new Error("Build/generate tasks failed");
   }
 }
 
-// ── Phase 5: Verify ─────────────────────────────────────────���──────────
+// ── Phase 4: Verify ────────────────────────────────────────────────────
 
 async function verifySetup(): Promise<void> {
   const checks: Array<{ label: string; path: string }> = [
@@ -389,7 +435,7 @@ async function verifySetup(): Promise<void> {
   log("Verify", `${String(passed)}/${String(checks.length)} artifacts present`);
 }
 
-// ── Main ──────────────���────────────────────────���───────────────────────
+// ── Main ───────────────────────────────────────────────────────────────
 
 const totalStart = performance.now();
 console.log("Setting up monorepo development environment...");
@@ -397,8 +443,7 @@ console.log("Setting up monorepo development environment...");
 try {
   await phase("Tools", ensureTools);
   await phase("Dependencies", installDependencies);
-  await phase("Shared Packages", buildSharedPackages);
-  await phase("Code Generation", runCodeGeneration);
+  await phase("Build & Generate", () => runDag(DAG_TASKS));
   await phase("Verify", verifySetup);
 
   console.log(`\nSetup complete (${elapsed(totalStart)})`);
