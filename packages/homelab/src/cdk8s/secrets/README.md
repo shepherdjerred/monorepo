@@ -7,12 +7,10 @@ Everything else is stored in my 1Password vault named `Kubernetes`.
   leak.
 - These should be the only credentials that are manually set. Everything else
   can be retrieved from 1Password.
-- Annoyingly, the credential in `1password-secret.yaml` _must_ be base64
-  encoded.
-
-```bash
-cat 1password-credentials.json | base64 -w 0
-```
+- The credential in `1password-secret.yaml` must be the **raw JSON** from
+  `1password-credentials.json` (do NOT base64-encode it — `stringData` handles
+  encoding automatically). Chart v2.3.0+ mounts the secret as a file, not an
+  env var, so double-encoding will break it.
 
 ```bash
 kubectl create namespace 1password

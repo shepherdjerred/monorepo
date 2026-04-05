@@ -129,9 +129,7 @@ const versions = {
   "library/python":
     "3.14-alpine@sha256:faee120f7885a06fcc9677922331391fa690d911c020abb9e8025ff3d908e510",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
-  "bitnamilegacy/kubectl/velero": "1.33.4",
-  // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
-  "bitnamilegacy/kubectl/kyverno": "1.31",
+  "bitnamilegacy/kubectl": "1.33.4",
   // renovate: datasource=helm registryUrl=https://vmware-tanzu.github.io/helm-charts versioning=semver
   velero: "12.0.0",
   // renovate: datasource=helm registryUrl=https://kyverno.github.io/kyverno versioning=semver

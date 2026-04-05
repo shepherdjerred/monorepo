@@ -178,7 +178,7 @@ install_semgrep() {
     fi
     echo "--- :mag: Installing semgrep ${SEMGREP_VERSION}"
     install_uv
-    uv tool install --python 3.12 "semgrep==${SEMGREP_VERSION}"
+    uv tool install --python 3.12 "semgrep==${SEMGREP_VERSION}" --with setuptools
     export PATH="$HOME/.local/bin:$PATH"
 }
 

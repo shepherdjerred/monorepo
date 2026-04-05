@@ -49,6 +49,10 @@
 
   <repositories>
     <repository>
+      <id>central</id>
+      <url>https://repo.maven.apache.org/maven2/</url>
+    </repository>
+    <repository>
       <id>cron-app</id>
       <url>https://artifactory.cronapp.io/public-release/</url>
       <releases>
