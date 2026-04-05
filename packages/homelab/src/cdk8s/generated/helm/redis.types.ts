@@ -4,30 +4,17 @@ export type RedisHelmValuesGlobal = {
   /**
    * Global Docker image registry
    *
-   * Global Docker image registry
-   *
    * @default ""
    */
   imageRegistry?: string;
-  /**
-   * E.g.
-   *
-   * Global Docker registry secret names as an array
-   *
-   * @default []
-   */
   imagePullSecrets?: unknown[];
   /**
-   * Global default StorageClass for Persistent Volume(s)
-   *
    * Global default StorageClass for Persistent Volume(s)
    *
    * @default ""
    */
   defaultStorageClass?: string;
   /**
-   * DEPRECATED: use global.defaultStorageClass instead
-   *
    * DEPRECATED: use global.defaultStorageClass instead
    *
    * @default ""
@@ -70,8 +57,6 @@ export type RedisHelmValuesGlobalRedis = {
   /**
    * Global Redis(R) password (overrides `auth.password`)
    *
-   * Global Redis&reg; password (overrides `auth.password`)
-   *
    * @default ""
    */
   password?: string;
@@ -90,55 +75,39 @@ export type RedisHelmValuesGlobalCompatibilityOpenshift = {
   /**
    * Adapt the securityContext sections of the deployment to make them compatible with Openshift restricted-v2 SCC: remove runAsUser, runAsGroup and fsGroup and let the platform use their allowed default IDs. Possible values: auto (apply if the detected running cluster is Openshift), force (perform the adaptation always), disabled (do not perform adaptation)
    *
-   * Adapt the securityContext sections of the deployment to make them compatible with Openshift restricted-v2 SCC: remove runAsUser, runAsGroup and fsGroup and let the platform use their allowed default IDs. Possible values: auto (apply if the detected running cluster is Openshift), force (perform the adaptation always), disabled (do not perform adaptation)
-   *
    * @default "auto"
    */
   adaptSecurityContext?: string;
 };
 
+export type RedisHelmValuesCommonLabels = object;
+
+export type RedisHelmValuesCommonAnnotations = object;
+
+export type RedisHelmValuesSecretAnnotations = object;
+
 export type RedisHelmValuesDiagnosticMode = {
   /**
-   * Enable diagnostic mode (all probes will be disabled and the command will be overridden)
-   *
    * Enable diagnostic mode (all probes will be disabled and the command will be overridden)
    *
    * @default false
    */
   enabled?: boolean;
-  /**
-   * Command to override all containers in the deployment
-   *
-   * Command to override all containers in the deployment
-   *
-   * @default ["sleep"]
-   */
-  command?: unknown[] | string;
-  /**
-   * Args to override all containers in the deployment
-   *
-   * Args to override all containers in the deployment
-   *
-   * @default ["infinity"]
-   */
-  args?: unknown[] | string;
+  command?: string[];
+  args?: string[];
 };
 
 export type RedisHelmValuesImage = {
   /**
    * [default: REGISTRY_NAME] Redis(R) image registry
    *
-   * Redis&reg; image registry
-   *
-   * @default "REGISTRY_NAME"
+   * @default "registry-1.docker.io"
    */
   registry?: string;
   /**
    * [default: REPOSITORY_NAME/redis] Redis(R) image repository
    *
-   * Redis&reg; image repository
-   *
-   * @default "REPOSITORY_NAME/redis"
+   * @default "bitnami/redis"
    */
   repository?: string;
   /**
@@ -148,8 +117,6 @@ export type RedisHelmValuesImage = {
   /**
    * Redis(R) image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
    *
-   * Redis&reg; image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
-   *
    * @default ""
    */
   digest?: string;
@@ -157,23 +124,12 @@ export type RedisHelmValuesImage = {
    * Specify a imagePullPolicy
    * ref: https://kubernetes.io/docs/concepts/containers/images/#pre-pulled-images
    *
-   * Redis&reg; image pull policy
-   *
    * @default "IfNotPresent"
    */
   pullPolicy?: string;
-  /**
-   * - myRegistryKeySecretName
-   *
-   * Redis&reg; image pull secrets
-   *
-   * @default []
-   */
   pullSecrets?: unknown[];
   /**
    * Enable debug mode
-   *
-   * Enable image debug mode
    *
    * @default false
    */
@@ -184,15 +140,11 @@ export type RedisHelmValuesAuth = {
   /**
    * Enable password authentication
    *
-   * Enable password authentication
-   *
    * @default true
    */
   enabled?: boolean;
   /**
    * Enable authentication on sentinels too
-   *
-   * Enable password authentication on sentinels too
    *
    * @default true
    */
@@ -200,15 +152,11 @@ export type RedisHelmValuesAuth = {
   /**
    * Defaults to a random 10-character alphanumeric string if not set
    *
-   * Redis&reg; password
-   *
    * @default ""
    */
   password?: string;
   /**
    * NOTE: When it's set, the previous `auth.password` parameter is ignored
-   *
-   * The name of an existing secret with Redis&reg; credentials
    *
    * @default ""
    */
@@ -216,22 +164,16 @@ export type RedisHelmValuesAuth = {
   /**
    * NOTE: ignored unless `auth.existingSecret` parameter is set
    *
-   * Password key to be retrieved from existing secret
-   *
    * @default ""
    */
   existingSecretPasswordKey?: string;
   /**
    * Mount credentials as files instead of using an environment variable
    *
-   * Mount credentials as files instead of using an environment variable
-   *
-   * @default false
+   * @default true
    */
   usePasswordFiles?: boolean;
   /**
-   * Mount password file from secret
-   *
    * Mount password file from secret
    *
    * @default true
@@ -250,8 +192,6 @@ export type RedisHelmValuesAuthAcl = {
   /**
    * Enables the support of the Redis ACL system
    *
-   * Enables the support of the Redis ACL system
-   *
    * @default false
    */
   enabled?: boolean;
@@ -261,16 +201,6 @@ export type RedisHelmValuesAuthAcl = {
    * @default false
    */
   sentinel?: boolean;
-  /**
-   * Example:
-   * users:
-   * - username: "my-user"
-   * channels: "&*"
-   *
-   * A list of the configured users in the Redis ACL system
-   *
-   * @default []
-   */
   users?: unknown[];
   /**
    * Name of the Secret, containing user credentials for ACL users. Keys must match usernames.
@@ -284,15 +214,11 @@ export type RedisHelmValuesMaster = {
   /**
    * Number of Redis(R) master instances to deploy (experimental, requires additional configuration)
    *
-   * Number of Redis&reg; master instances to deploy (experimental, requires additional configuration)
-   *
    * @default 1
    */
   count?: number;
   /**
    * NOTE: Explicitly setting this field to 0, will result in cleaning up all the history, breaking ability to rollback
-   *
-   * The number of old history to retain to allow rollback
    *
    * @default 10
    */
@@ -300,80 +226,29 @@ export type RedisHelmValuesMaster = {
   /**
    * ref: https://redis.io/topics/config
    *
-   * Configuration for Redis&reg; master nodes
-   *
    * @default ""
    */
   configuration?: string;
-  /**
-   * Commands will be completely disabled by renaming each to an empty string.
-   * ref: https://redis.io/topics/security#disabling-of-specific-commands
-   *
-   * Array with Redis&reg; commands to disable on master nodes
-   *
-   * @default ["FLUSHDB","FLUSHALL"]
-   */
   disableCommands?: string[];
+  command?: unknown[];
+  args?: unknown[];
   /**
-   * Override default container command (useful when using custom images)
-   *
-   * Override default container command (useful when using custom images)
-   *
-   * @default []
-   */
-  command?: unknown[] | string;
-  /**
-   * Override default container args (useful when using custom images)
-   *
-   * Override default container args (useful when using custom images)
-   *
-   * @default []
-   */
-  args?: unknown[] | string;
-  /**
-   * Whether information about services should be injected into pod's environment variable
-   *
    * Whether information about services should be injected into pod's environment variable
    *
    * @default true
    */
   enableServiceLinks?: boolean;
-  /**
-   * Additional commands to run prior to starting Redis(R) master
-   *
-   * Additional commands to run prior to starting Redis&reg; master
-   *
-   * @default []
-   */
   preExecCmds?: unknown[];
-  /**
-   * Array with additional command line flags for Redis(R) master
-   *
-   * Array with additional command line flags for Redis&reg; master
-   *
-   * @default []
-   */
   extraFlags?: unknown[];
-  /**
-   * Array with extra environment variables to add to Redis(R) master nodes
-   *
-   * Array with extra environment variables to add to Redis&reg; master nodes
-   *
-   * @default []
-   */
-  extraEnvVars?: unknown[] | string;
+  extraEnvVars?: unknown[];
   /**
    * Name of existing ConfigMap containing extra env vars for Redis(R) master nodes
-   *
-   * Name of existing ConfigMap containing extra env vars for Redis&reg; master nodes
    *
    * @default ""
    */
   extraEnvVarsCM?: string;
   /**
    * Name of existing Secret containing extra env vars for Redis(R) master nodes
-   *
-   * Name of existing Secret containing extra env vars for Redis&reg; master nodes
    *
    * @default ""
    */
@@ -400,33 +275,25 @@ export type RedisHelmValuesMaster = {
   /**
    * Custom startupProbe that overrides the default one
    *
-   * Custom startupProbe that overrides the default one
-   *
    * @default {}
    */
-  customStartupProbe?: object | string;
+  customStartupProbe?: RedisHelmValuesMasterCustomStartupProbe;
   /**
    * Custom livenessProbe that overrides the default one
    *
-   * Custom livenessProbe that overrides the default one
-   *
    * @default {}
    */
-  customLivenessProbe?: object | string;
+  customLivenessProbe?: RedisHelmValuesMasterCustomLivenessProbe;
   /**
    * Custom readinessProbe that overrides the default one
    *
-   * Custom readinessProbe that overrides the default one
-   *
    * @default {}
    */
-  customReadinessProbe?: object | string;
+  customReadinessProbe?: RedisHelmValuesMasterCustomReadinessProbe;
   /**
    * Redis(R) master resource requests and limits
    * ref: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
    * More information: https://github.com/bitnami/charts/blob/main/bitnami/common/templates/_resources.tpl#L15
-   *
-   * Set container resources according to one common preset (allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge). This is ignored if master.resources is set (master.resources is recommended for production).
    *
    * @default "nano"
    */
@@ -437,8 +304,6 @@ export type RedisHelmValuesMaster = {
    * requests:
    * limits:
    * memory: 1024Mi
-   *
-   * Set container requests and limits for different resources like CPU or memory (essential for production workloads)
    *
    * @default {}
    */
@@ -464,15 +329,11 @@ export type RedisHelmValuesMaster = {
   /**
    * ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/
    *
-   * Use either Deployment, StatefulSet (default) or DaemonSet
-   *
    * @default "StatefulSet"
    */
   kind?: string;
   /**
    * ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
-   *
-   * Alternate scheduler for Redis&reg; master pods
    *
    * @default ""
    */
@@ -492,15 +353,11 @@ export type RedisHelmValuesMaster = {
   /**
    * How many seconds a pod needs to be ready before killing the next, during update
    *
-   * How many seconds a pod needs to be ready before killing the next, during update
-   *
    * @default 0
    */
   minReadySeconds?: number;
   /**
    * Redis(R) master pods' priorityClassName
-   *
-   * Redis&reg; master pods' priorityClassName
    *
    * @default ""
    */
@@ -508,23 +365,12 @@ export type RedisHelmValuesMaster = {
   /**
    * Mount Service Account token in pod
    *
-   * Mount Service Account token in pod
-   *
    * @default false
    */
   automountServiceAccountToken?: boolean;
-  /**
-   * https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
-   *
-   * Redis&reg; master pods host aliases
-   *
-   * @default []
-   */
-  hostAliases?: unknown[] | string;
+  hostAliases?: unknown[];
   /**
    * ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-   *
-   * Extra labels for Redis&reg; master pods
    *
    * @default {}
    */
@@ -532,15 +378,11 @@ export type RedisHelmValuesMaster = {
   /**
    * ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
    *
-   * Annotations for Redis&reg; master pods
-   *
    * @default {}
    */
-  podAnnotations?: object | string;
+  podAnnotations?: RedisHelmValuesMasterPodAnnotations;
   /**
    * ref: https://kubernetes.io/docs/tasks/configure-pod-container/share-process-namespace/
-   *
-   * Share a single process namespace between all of the containers in Redis&reg; master pods
    *
    * @default false
    */
@@ -548,15 +390,11 @@ export type RedisHelmValuesMaster = {
   /**
    * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
    *
-   * Pod affinity preset. Ignored if `master.affinity` is set. Allowed values: `soft` or `hard`
-   *
    * @default ""
    */
   podAffinityPreset?: string;
   /**
    * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
-   *
-   * Pod anti-affinity preset. Ignored if `master.affinity` is set. Allowed values: `soft` or `hard`
    *
    * @default "soft"
    */
@@ -572,41 +410,20 @@ export type RedisHelmValuesMaster = {
    * ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
    * NOTE: `master.podAffinityPreset`, `master.podAntiAffinityPreset`, and `master.nodeAffinityPreset` will be ignored when it's set
    *
-   * Affinity for Redis&reg; master pods assignment
-   *
    * @default {}
    */
-  affinity?: object | string;
+  affinity?: RedisHelmValuesMasterAffinity;
   /**
    * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
    *
-   * Node labels for Redis&reg; master pods assignment
-   *
    * @default {}
    */
-  nodeSelector?: object | string;
-  /**
-   * ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-   *
-   * Tolerations for Redis&reg; master pods assignment
-   *
-   * @default []
-   */
-  tolerations?: unknown[] | string;
-  /**
-   * ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
-   * E.g.
-   *
-   * Spread Constraints for Redis&reg; master pod assignment
-   *
-   * @default []
-   */
-  topologySpreadConstraints?: unknown[] | string;
+  nodeSelector?: RedisHelmValuesMasterNodeSelector;
+  tolerations?: unknown[];
+  topologySpreadConstraints?: unknown[];
   /**
    * ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/
    * E.g.
-   *
-   * DNS Policy for Redis&reg; master pod
    *
    * @default ""
    */
@@ -615,51 +432,19 @@ export type RedisHelmValuesMaster = {
    * ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/
    * E.g.
    *
-   * DNS Configuration for Redis&reg; master pod
-   *
    * @default {}
    */
-  dnsConfig?: object | string;
+  dnsConfig?: RedisHelmValuesMasterDnsConfig;
   /**
    * for the Redis(R) master container(s) to automate configuration before or after startup
    *
-   * for the Redis&reg; master container(s) to automate configuration before or after startup
-   *
    * @default {}
    */
-  lifecycleHooks?: object | string;
-  /**
-   * Optionally specify extra list of additional volumes for the Redis(R) master pod(s)
-   *
-   * Optionally specify extra list of additional volumes for the Redis&reg; master pod(s)
-   *
-   * @default []
-   */
-  extraVolumes?: unknown[] | string;
-  /**
-   * Optionally specify extra list of additional volumeMounts for the Redis(R) master container(s)
-   *
-   * Optionally specify extra list of additional volumeMounts for the Redis&reg; master container(s)
-   *
-   * @default []
-   */
-  extraVolumeMounts?: unknown[] | string;
-  /**
-   * Add additional sidecar containers to the Redis(R) master pod(s)
-   *
-   * Add additional sidecar containers to the Redis&reg; master pod(s)
-   *
-   * @default []
-   */
-  sidecars?: unknown[] | string;
-  /**
-   * ref: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
-   *
-   * Add additional init containers to the Redis&reg; master pod(s)
-   *
-   * @default []
-   */
-  initContainers?: unknown[] | string;
+  lifecycleHooks?: RedisHelmValuesMasterLifecycleHooks;
+  extraVolumes?: unknown[];
+  extraVolumeMounts?: unknown[];
+  sidecars?: unknown[];
+  initContainers?: unknown[];
   /**
    * ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
    *
@@ -680,8 +465,6 @@ export type RedisHelmValuesMaster = {
    */
   service?: RedisHelmValuesMasterService;
   /**
-   * Integer setting the termination grace period for the redis-master pods
-   *
    * Integer setting the termination grace period for the redis-master pods
    *
    * @default 30
@@ -717,8 +500,6 @@ export type RedisHelmValuesMasterContainerPorts = {
   /**
    * Container port to open on Redis(R) master nodes
    *
-   * Container port to open on Redis&reg; master nodes
-   *
    * @default 6379
    */
   redis?: number;
@@ -728,14 +509,10 @@ export type RedisHelmValuesMasterStartupProbe = {
   /**
    * Enable startupProbe on Redis(R) master nodes
    *
-   * Enable startupProbe on Redis&reg; master nodes
-   *
    * @default false
    */
   enabled?: boolean;
   /**
-   * Initial delay seconds for startupProbe
-   *
    * Initial delay seconds for startupProbe
    *
    * @default 20
@@ -744,14 +521,10 @@ export type RedisHelmValuesMasterStartupProbe = {
   /**
    * Period seconds for startupProbe
    *
-   * Period seconds for startupProbe
-   *
    * @default 5
    */
   periodSeconds?: number;
   /**
-   * Timeout seconds for startupProbe
-   *
    * Timeout seconds for startupProbe
    *
    * @default 5
@@ -760,14 +533,10 @@ export type RedisHelmValuesMasterStartupProbe = {
   /**
    * Success threshold for startupProbe
    *
-   * Success threshold for startupProbe
-   *
    * @default 1
    */
   successThreshold?: number;
   /**
-   * Failure threshold for startupProbe
-   *
    * Failure threshold for startupProbe
    *
    * @default 5
@@ -779,14 +548,10 @@ export type RedisHelmValuesMasterLivenessProbe = {
   /**
    * Enable livenessProbe on Redis(R) master nodes
    *
-   * Enable livenessProbe on Redis&reg; master nodes
-   *
    * @default true
    */
   enabled?: boolean;
   /**
-   * Initial delay seconds for livenessProbe
-   *
    * Initial delay seconds for livenessProbe
    *
    * @default 20
@@ -795,14 +560,10 @@ export type RedisHelmValuesMasterLivenessProbe = {
   /**
    * Period seconds for livenessProbe
    *
-   * Period seconds for livenessProbe
-   *
    * @default 5
    */
   periodSeconds?: number;
   /**
-   * Timeout seconds for livenessProbe
-   *
    * Timeout seconds for livenessProbe
    *
    * @default 5
@@ -811,14 +572,10 @@ export type RedisHelmValuesMasterLivenessProbe = {
   /**
    * Success threshold for livenessProbe
    *
-   * Success threshold for livenessProbe
-   *
    * @default 1
    */
   successThreshold?: number;
   /**
-   * Failure threshold for livenessProbe
-   *
    * Failure threshold for livenessProbe
    *
    * @default 5
@@ -830,14 +587,10 @@ export type RedisHelmValuesMasterReadinessProbe = {
   /**
    * Enable readinessProbe on Redis(R) master nodes
    *
-   * Enable readinessProbe on Redis&reg; master nodes
-   *
    * @default true
    */
   enabled?: boolean;
   /**
-   * Initial delay seconds for readinessProbe
-   *
    * Initial delay seconds for readinessProbe
    *
    * @default 20
@@ -846,14 +599,10 @@ export type RedisHelmValuesMasterReadinessProbe = {
   /**
    * Period seconds for readinessProbe
    *
-   * Period seconds for readinessProbe
-   *
    * @default 5
    */
   periodSeconds?: number;
   /**
-   * Timeout seconds for readinessProbe
-   *
    * Timeout seconds for readinessProbe
    *
    * @default 1
@@ -862,20 +611,22 @@ export type RedisHelmValuesMasterReadinessProbe = {
   /**
    * Success threshold for readinessProbe
    *
-   * Success threshold for readinessProbe
-   *
    * @default 1
    */
   successThreshold?: number;
   /**
    * Failure threshold for readinessProbe
    *
-   * Failure threshold for readinessProbe
-   *
    * @default 5
    */
   failureThreshold?: number;
 };
+
+export type RedisHelmValuesMasterCustomStartupProbe = object;
+
+export type RedisHelmValuesMasterCustomLivenessProbe = object;
+
+export type RedisHelmValuesMasterCustomReadinessProbe = object;
 
 export type RedisHelmValuesMasterResources = object;
 
@@ -892,39 +643,19 @@ export type RedisHelmValuesMasterPodSecurityContext = {
   /**
    * Enabled Redis(R) master pods' Security Context
    *
-   * Enabled Redis&reg; master pods' Security Context
-   *
    * @default true
    */
   enabled?: boolean;
   /**
    * Set filesystem group change policy
    *
-   * Set filesystem group change policy
-   *
    * @default "Always"
    */
   fsGroupChangePolicy?: string;
-  /**
-   * Set kernel settings using the sysctl interface
-   *
-   * Set kernel settings using the sysctl interface
-   *
-   * @default []
-   */
   sysctls?: unknown[];
-  /**
-   * Set filesystem extra groups
-   *
-   * Set filesystem extra groups
-   *
-   * @default []
-   */
   supplementalGroups?: unknown[];
   /**
    * Set Redis(R) master pod's Security Context fsGroup
-   *
-   * Set Redis&reg; master pod's Security Context fsGroup
    *
    * @default 1001
    */
@@ -934,8 +665,6 @@ export type RedisHelmValuesMasterPodSecurityContext = {
 export type RedisHelmValuesMasterContainerSecurityContext = {
   /**
    * Enabled Redis(R) master containers' Security Context
-   *
-   * Enabled Redis&reg; master containers' Security Context
    *
    * @default true
    */
@@ -949,15 +678,11 @@ export type RedisHelmValuesMasterContainerSecurityContext = {
   /**
    * Set Redis(R) master containers' Security Context runAsUser
    *
-   * Set Redis&reg; master containers' Security Context runAsUser
-   *
    * @default 1001
    */
   runAsUser?: number;
   /**
    * Set Redis(R) master containers' Security Context runAsGroup
-   *
-   * Set Redis&reg; master containers' Security Context runAsGroup
    *
    * @default 1001
    */
@@ -965,22 +690,16 @@ export type RedisHelmValuesMasterContainerSecurityContext = {
   /**
    * Set Redis(R) master containers' Security Context runAsNonRoot
    *
-   * Set Redis&reg; master containers' Security Context runAsNonRoot
-   *
    * @default true
    */
   runAsNonRoot?: boolean;
   /**
    * Is it possible to escalate Redis(R) pod(s) privileges
    *
-   * Is it possible to escalate Redis&reg; pod(s) privileges
-   *
    * @default false
    */
   allowPrivilegeEscalation?: boolean;
   /**
-   * Set container's Security Context read-only root filesystem
-   *
    * Set container's Security Context read-only root filesystem
    *
    * @default true
@@ -1003,21 +722,12 @@ export type RedisHelmValuesMasterContainerSecurityContextSeccompProfile = {
   /**
    * Set Redis(R) master containers' Security Context seccompProfile
    *
-   * Set Redis&reg; master containers' Security Context seccompProfile
-   *
    * @default "RuntimeDefault"
    */
   type?: string;
 };
 
 export type RedisHelmValuesMasterContainerSecurityContextCapabilities = {
-  /**
-   * Set Redis(R) master containers' Security Context capabilities to drop
-   *
-   * Set Redis&reg; master containers' Security Context capabilities to drop
-   *
-   * @default ["ALL"]
-   */
   drop?: string[];
 };
 
@@ -1026,8 +736,6 @@ export type RedisHelmValuesMasterUpdateStrategy = {
    * StrategyType
    * Can be set to RollingUpdate, OnDelete (statefulset), Recreate (deployment)
    *
-   * Redis&reg; master statefulset strategy type
-   *
    * @default "RollingUpdate"
    */
   type?: string;
@@ -1035,10 +743,10 @@ export type RedisHelmValuesMasterUpdateStrategy = {
 
 export type RedisHelmValuesMasterPodLabels = object;
 
+export type RedisHelmValuesMasterPodAnnotations = object;
+
 export type RedisHelmValuesMasterNodeAffinityPreset = {
   /**
-   * Node affinity preset type. Ignored if `master.affinity` is set. Allowed values: `soft` or `hard`
-   *
    * Node affinity preset type. Ignored if `master.affinity` is set. Allowed values: `soft` or `hard`
    *
    * @default ""
@@ -1047,20 +755,19 @@ export type RedisHelmValuesMasterNodeAffinityPreset = {
   /**
    * Node label key to match. Ignored if `master.affinity` is set
    *
-   * Node label key to match. Ignored if `master.affinity` is set
-   *
    * @default ""
    */
   key?: string;
-  /**
-   * E.g.
-   *
-   * Node label values to match. Ignored if `master.affinity` is set
-   *
-   * @default []
-   */
   values?: unknown[];
 };
+
+export type RedisHelmValuesMasterAffinity = object;
+
+export type RedisHelmValuesMasterNodeSelector = object;
+
+export type RedisHelmValuesMasterDnsConfig = object;
+
+export type RedisHelmValuesMasterLifecycleHooks = object;
 
 export type RedisHelmValuesMasterPersistence = {
   /**
@@ -1071,14 +778,10 @@ export type RedisHelmValuesMasterPersistence = {
   /**
    * Enable persistence on Redis(R) master nodes using Persistent Volume Claims
    *
-   * Enable persistence on Redis&reg; master nodes using Persistent Volume Claims
-   *
    * @default true
    */
   enabled?: boolean;
   /**
-   * Provide a medium for `emptyDir` volumes.
-   *
    * Provide a medium for `emptyDir` volumes.
    *
    * @default ""
@@ -1087,15 +790,11 @@ export type RedisHelmValuesMasterPersistence = {
   /**
    * Set this to enable a size limit for `emptyDir` volumes.
    *
-   * Set this to enable a size limit for `emptyDir` volumes.
-   *
    * @default ""
    */
   sizeLimit?: string;
   /**
    * NOTE: Useful when using different Redis(R) images
-   *
-   * The path the volume will be mounted at on Redis&reg; master containers
    *
    * @default "/data"
    */
@@ -1103,15 +802,11 @@ export type RedisHelmValuesMasterPersistence = {
   /**
    * NOTE: Useful in dev environments
    *
-   * The subdirectory of the volume to mount on Redis&reg; master containers
-   *
    * @default ""
    */
   subPath?: string;
   /**
    * Used to construct the subPath subdirectory of the volume to mount on Redis(R) master containers
-   *
-   * Used to construct the subPath subdirectory of the volume to mount on Redis&reg; master containers
    *
    * @default ""
    */
@@ -1121,22 +816,11 @@ export type RedisHelmValuesMasterPersistence = {
    * If set to "-", storageClassName: "", which disables dynamic provisioning
    * If undefined (the default) or set to null, no storageClassName spec is set, choosing the default provisioner
    *
-   * Persistent Volume storage class
-   *
    * @default ""
    */
   storageClass?: string;
-  /**
-   * Persistent Volume access modes
-   *
-   * Persistent Volume access modes
-   *
-   * @default ["ReadWriteOnce"]
-   */
   accessModes?: string[];
   /**
-   * Persistent Volume size
-   *
    * Persistent Volume size
    *
    * @default "8Gi"
@@ -1145,39 +829,29 @@ export type RedisHelmValuesMasterPersistence = {
   /**
    * Additional custom annotations for the PVC
    *
-   * Additional custom annotations for the PVC
-   *
    * @default {}
    */
   annotations?: RedisHelmValuesMasterPersistenceAnnotations;
   /**
    * Additional custom labels for the PVC
    *
-   * Additional custom labels for the PVC
-   *
    * @default {}
    */
-  labels?: object | string;
+  labels?: RedisHelmValuesMasterPersistenceLabels;
   /**
    * Additional labels to match for the PVC
    *
-   * Additional labels to match for the PVC
-   *
    * @default {}
    */
-  selector?: object | string;
+  selector?: RedisHelmValuesMasterPersistenceSelector;
   /**
    * Custom PVC data source
    *
-   * Custom PVC data source
-   *
    * @default {}
    */
-  dataSource?: object | string;
+  dataSource?: RedisHelmValuesMasterPersistenceDataSource;
   /**
    * NOTE: requires master.persistence.enabled: true
-   *
-   * Use a existing PVC which must be created manually before bound
    *
    * @default ""
    */
@@ -1192,10 +866,32 @@ export type RedisHelmValuesMasterPersistenceAnnotations = {
   [key: string]: unknown;
 };
 
+export type RedisHelmValuesMasterPersistenceLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type RedisHelmValuesMasterPersistenceSelector = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type RedisHelmValuesMasterPersistenceDataSource = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
 export type RedisHelmValuesMasterPersistentVolumeClaimRetentionPolicy = {
   /**
-   * Controls if and how PVCs are deleted during the lifecycle of a StatefulSet
-   *
    * Controls if and how PVCs are deleted during the lifecycle of a StatefulSet
    *
    * @default false
@@ -1204,14 +900,10 @@ export type RedisHelmValuesMasterPersistentVolumeClaimRetentionPolicy = {
   /**
    * Volume retention behavior when the replica count of the StatefulSet is reduced
    *
-   * Volume retention behavior when the replica count of the StatefulSet is reduced
-   *
    * @default "Retain"
    */
   whenScaled?: string;
   /**
-   * Volume retention behavior that applies when the StatefulSet is deleted
-   *
    * Volume retention behavior that applies when the StatefulSet is deleted
    *
    * @default "Retain"
@@ -1222,8 +914,6 @@ export type RedisHelmValuesMasterPersistentVolumeClaimRetentionPolicy = {
 export type RedisHelmValuesMasterService = {
   /**
    * Redis(R) master service type
-   *
-   * Redis&reg; master service type
    *
    * @default "ClusterIP"
    */
@@ -1246,23 +936,12 @@ export type RedisHelmValuesMasterService = {
   /**
    * ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
    *
-   * Redis&reg; master service external traffic policy
-   *
    * @default "Cluster"
    */
   externalTrafficPolicy?: string;
-  /**
-   * Extra ports to expose (normally used with the `sidecar` value)
-   *
-   * Extra ports to expose (normally used with the `sidecar` value)
-   *
-   * @default []
-   */
-  extraPorts?: unknown[] | string;
+  extraPorts?: unknown[];
   /**
    * ref: https://kubernetes.io/docs/concepts/services-networking/service-traffic-policy/
-   *
-   * Redis&reg; master service internal traffic policy (requires Kubernetes v1.22 or greater to be usable)
    *
    * @default "Cluster"
    */
@@ -1270,15 +949,11 @@ export type RedisHelmValuesMasterService = {
   /**
    * Redis(R) master service Cluster IP
    *
-   * Redis&reg; master service Cluster IP
-   *
    * @default ""
    */
   clusterIP?: string;
   /**
    * ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
-   *
-   * Redis&reg; master service Load Balancer IP
    *
    * @default ""
    */
@@ -1286,42 +961,20 @@ export type RedisHelmValuesMasterService = {
   /**
    * ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-loadbalancer
    *
-   * master service Load Balancer class if service type is `LoadBalancer` (optional, cloud specific)
-   *
    * @default ""
    */
   loadBalancerClass?: string;
-  /**
-   * https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
-   * e.g.
-   *
-   * Redis&reg; master service Load Balancer sources
-   *
-   * @default []
-   */
   loadBalancerSourceRanges?: unknown[];
-  /**
-   * https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
-   * e.g.
-   *
-   * Redis&reg; master service External IPs
-   *
-   * @default []
-   */
-  externalIPs?: unknown[] | string;
+  externalIPs?: unknown[];
   /**
    * Additional custom annotations for Redis(R) master service
    *
-   * Additional custom annotations for Redis&reg; master service
-   *
    * @default {}
    */
-  annotations?: object | string;
+  annotations?: RedisHelmValuesMasterServiceAnnotations;
   /**
    * If "ClientIP", consecutive client requests will be directed to the same Pod
    * ref: https://kubernetes.io/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies
-   *
-   * Session Affinity for Kubernetes service, can be "None" or "ClientIP"
    *
    * @default "None"
    */
@@ -1329,18 +982,14 @@ export type RedisHelmValuesMasterService = {
   /**
    * Additional settings for the sessionAffinity. Ignored if `master.service.sessionAffinity` is `None`
    *
-   * Additional settings for the sessionAffinity
-   *
    * @default {}
    */
-  sessionAffinityConfig?: object | string;
+  sessionAffinityConfig?: RedisHelmValuesMasterServiceSessionAffinityConfig;
 };
 
 export type RedisHelmValuesMasterServicePortNames = {
   /**
    * Redis(R) master service port name
-   *
-   * Redis&reg; master service port name
    *
    * @default "tcp-redis"
    */
@@ -1351,8 +1000,6 @@ export type RedisHelmValuesMasterServicePorts = {
   /**
    * Redis(R) master service port
    *
-   * Redis&reg; master service port
-   *
    * @default 6379
    */
   redis?: number;
@@ -1362,17 +1009,23 @@ export type RedisHelmValuesMasterServiceNodePorts = {
   /**
    * Node port for Redis(R) master
    *
-   * Node port for Redis&reg; master
-   *
    * @default ""
    */
   redis?: string;
 };
 
+export type RedisHelmValuesMasterServiceAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type RedisHelmValuesMasterServiceSessionAffinityConfig = object;
+
 export type RedisHelmValuesMasterServiceAccount = {
   /**
-   * Specifies whether a ServiceAccount should be created
-   *
    * Specifies whether a ServiceAccount should be created
    *
    * @default true
@@ -1381,15 +1034,11 @@ export type RedisHelmValuesMasterServiceAccount = {
   /**
    * If not set and create is true, a name is generated using the common.names.fullname template
    *
-   * The name of the ServiceAccount to use.
-   *
    * @default ""
    */
   name?: string;
   /**
    * ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#use-the-default-service-account-to-access-the-api-server
-   *
-   * Whether to auto mount the service account token
    *
    * @default false
    */
@@ -1397,17 +1046,21 @@ export type RedisHelmValuesMasterServiceAccount = {
   /**
    * Additional custom annotations for the ServiceAccount
    *
-   * Additional custom annotations for the ServiceAccount
-   *
    * @default {}
    */
-  annotations?: object | string;
+  annotations?: RedisHelmValuesMasterServiceAccountAnnotations;
+};
+
+export type RedisHelmValuesMasterServiceAccountAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
 };
 
 export type RedisHelmValuesMasterPdb = {
   /**
-   * Enable/disable a Pod Disruption Budget creation
-   *
    * Enable/disable a Pod Disruption Budget creation
    *
    * @default true
@@ -1441,15 +1094,11 @@ export type RedisHelmValuesReplica = {
   /**
    * ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/
    *
-   * Use either DaemonSet or StatefulSet (default)
-   *
    * @default "StatefulSet"
    */
   kind?: string;
   /**
    * Number of Redis(R) replicas to deploy
-   *
-   * Number of Redis&reg; replicas to deploy
    *
    * @default 3
    */
@@ -1457,88 +1106,35 @@ export type RedisHelmValuesReplica = {
   /**
    * NOTE: Explicitly setting this field to 0, will result in cleaning up all the history, breaking ability to rollback
    *
-   * The number of old history to retain to allow rollback
-   *
    * @default 10
    */
   revisionHistoryLimit?: number;
   /**
    * ref: https://redis.io/topics/config
    *
-   * Configuration for Redis&reg; replicas nodes
-   *
    * @default ""
    */
   configuration?: string;
-  /**
-   * Commands will be completely disabled by renaming each to an empty string.
-   * ref: https://redis.io/topics/security#disabling-of-specific-commands
-   *
-   * Array with Redis&reg; commands to disable on replicas nodes
-   *
-   * @default ["FLUSHDB","FLUSHALL"]
-   */
   disableCommands?: string[];
+  command?: unknown[];
+  args?: unknown[];
   /**
-   * Override default container command (useful when using custom images)
-   *
-   * Override default container command (useful when using custom images)
-   *
-   * @default []
-   */
-  command?: unknown[] | string;
-  /**
-   * Override default container args (useful when using custom images)
-   *
-   * Override default container args (useful when using custom images)
-   *
-   * @default []
-   */
-  args?: unknown[] | string;
-  /**
-   * Whether information about services should be injected into pod's environment variable
-   *
    * Whether information about services should be injected into pod's environment variable
    *
    * @default true
    */
   enableServiceLinks?: boolean;
-  /**
-   * Additional commands to run prior to starting Redis(R) replicas
-   *
-   * Additional commands to run prior to starting Redis&reg; replicas
-   *
-   * @default []
-   */
   preExecCmds?: unknown[];
-  /**
-   * Array with additional command line flags for Redis(R) replicas
-   *
-   * Array with additional command line flags for Redis&reg; replicas
-   *
-   * @default []
-   */
   extraFlags?: unknown[];
-  /**
-   * Array with extra environment variables to add to Redis(R) replicas nodes
-   *
-   * Array with extra environment variables to add to Redis&reg; replicas nodes
-   *
-   * @default []
-   */
-  extraEnvVars?: unknown[] | string;
+  extraEnvVars?: unknown[];
   /**
    * Name of existing ConfigMap containing extra env vars for Redis(R) replicas nodes
-   *
-   * Name of existing ConfigMap containing extra env vars for Redis&reg; replicas nodes
    *
    * @default ""
    */
   extraEnvVarsCM?: string;
   /**
    * Name of existing Secret containing extra env vars for Redis(R) replicas nodes
-   *
-   * Name of existing Secret containing extra env vars for Redis&reg; replicas nodes
    *
    * @default ""
    */
@@ -1569,33 +1165,25 @@ export type RedisHelmValuesReplica = {
   /**
    * Custom startupProbe that overrides the default one
    *
-   * Custom startupProbe that overrides the default one
-   *
    * @default {}
    */
-  customStartupProbe?: object | string;
+  customStartupProbe?: RedisHelmValuesReplicaCustomStartupProbe;
   /**
    * Custom livenessProbe that overrides the default one
    *
-   * Custom livenessProbe that overrides the default one
-   *
    * @default {}
    */
-  customLivenessProbe?: object | string;
+  customLivenessProbe?: RedisHelmValuesReplicaCustomLivenessProbe;
   /**
    * Custom readinessProbe that overrides the default one
    *
-   * Custom readinessProbe that overrides the default one
-   *
    * @default {}
    */
-  customReadinessProbe?: object | string;
+  customReadinessProbe?: RedisHelmValuesReplicaCustomReadinessProbe;
   /**
    * Redis(R) replicas resource requests and limits
    * ref: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
    * More information: https://github.com/bitnami/charts/blob/main/bitnami/common/templates/_resources.tpl#L15
-   *
-   * Set container resources according to one common preset (allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge). This is ignored if replica.resources is set (replica.resources is recommended for production).
    *
    * @default "nano"
    */
@@ -1606,8 +1194,6 @@ export type RedisHelmValuesReplica = {
    * requests:
    * limits:
    * memory: 1024Mi
-   *
-   * Set container requests and limits for different resources like CPU or memory (essential for production workloads)
    *
    * @default {}
    */
@@ -1633,8 +1219,6 @@ export type RedisHelmValuesReplica = {
   /**
    * ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
    *
-   * Alternate scheduler for Redis&reg; replicas pods
-   *
    * @default ""
    */
   schedulerName?: string;
@@ -1653,15 +1237,11 @@ export type RedisHelmValuesReplica = {
   /**
    * How many seconds a pod needs to be ready before killing the next, during update
    *
-   * How many seconds a pod needs to be ready before killing the next, during update
-   *
    * @default 0
    */
   minReadySeconds?: number;
   /**
    * Redis(R) replicas pods' priorityClassName
-   *
-   * Redis&reg; replicas pods' priorityClassName
    *
    * @default ""
    */
@@ -1669,31 +1249,18 @@ export type RedisHelmValuesReplica = {
   /**
    * ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#pod-management-policies
    *
-   * podManagementPolicy to manage scaling operation of %%MAIN_CONTAINER_NAME%% pods
-   *
    * @default ""
    */
   podManagementPolicy?: string;
   /**
    * Mount Service Account token in pod
    *
-   * Mount Service Account token in pod
-   *
    * @default false
    */
   automountServiceAccountToken?: boolean;
-  /**
-   * https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
-   *
-   * Redis&reg; replicas pods host aliases
-   *
-   * @default []
-   */
-  hostAliases?: unknown[] | string;
+  hostAliases?: unknown[];
   /**
    * ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-   *
-   * Extra labels for Redis&reg; replicas pods
    *
    * @default {}
    */
@@ -1701,15 +1268,11 @@ export type RedisHelmValuesReplica = {
   /**
    * ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
    *
-   * Annotations for Redis&reg; replicas pods
-   *
    * @default {}
    */
-  podAnnotations?: object | string;
+  podAnnotations?: RedisHelmValuesReplicaPodAnnotations;
   /**
    * ref: https://kubernetes.io/docs/tasks/configure-pod-container/share-process-namespace/
-   *
-   * Share a single process namespace between all of the containers in Redis&reg; replicas pods
    *
    * @default false
    */
@@ -1717,15 +1280,11 @@ export type RedisHelmValuesReplica = {
   /**
    * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
    *
-   * Pod affinity preset. Ignored if `replica.affinity` is set. Allowed values: `soft` or `hard`
-   *
    * @default ""
    */
   podAffinityPreset?: string;
   /**
    * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
-   *
-   * Pod anti-affinity preset. Ignored if `replica.affinity` is set. Allowed values: `soft` or `hard`
    *
    * @default "soft"
    */
@@ -1741,41 +1300,20 @@ export type RedisHelmValuesReplica = {
    * ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
    * NOTE: `replica.podAffinityPreset`, `replica.podAntiAffinityPreset`, and `replica.nodeAffinityPreset` will be ignored when it's set
    *
-   * Affinity for Redis&reg; replicas pods assignment
-   *
    * @default {}
    */
-  affinity?: object | string;
+  affinity?: RedisHelmValuesReplicaAffinity;
   /**
    * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
    *
-   * Node labels for Redis&reg; replicas pods assignment
-   *
    * @default {}
    */
-  nodeSelector?: object | string;
-  /**
-   * ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-   *
-   * Tolerations for Redis&reg; replicas pods assignment
-   *
-   * @default []
-   */
-  tolerations?: unknown[] | string;
-  /**
-   * ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
-   * E.g.
-   *
-   * Spread Constraints for Redis&reg; replicas pod assignment
-   *
-   * @default []
-   */
-  topologySpreadConstraints?: unknown[] | string;
+  nodeSelector?: RedisHelmValuesReplicaNodeSelector;
+  tolerations?: unknown[];
+  topologySpreadConstraints?: unknown[];
   /**
    * ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/
    * E.g.
-   *
-   * DNS Policy for Redis&reg; replica pods
    *
    * @default ""
    */
@@ -1784,51 +1322,19 @@ export type RedisHelmValuesReplica = {
    * ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/
    * E.g.
    *
-   * DNS Configuration for Redis&reg; replica pods
-   *
    * @default {}
    */
-  dnsConfig?: object | string;
+  dnsConfig?: RedisHelmValuesReplicaDnsConfig;
   /**
    * for the Redis(R) replica container(s) to automate configuration before or after startup
    *
-   * for the Redis&reg; replica container(s) to automate configuration before or after startup
-   *
    * @default {}
    */
-  lifecycleHooks?: object | string;
-  /**
-   * Optionally specify extra list of additional volumes for the Redis(R) replicas pod(s)
-   *
-   * Optionally specify extra list of additional volumes for the Redis&reg; replicas pod(s)
-   *
-   * @default []
-   */
-  extraVolumes?: unknown[] | string;
-  /**
-   * Optionally specify extra list of additional volumeMounts for the Redis(R) replicas container(s)
-   *
-   * Optionally specify extra list of additional volumeMounts for the Redis&reg; replicas container(s)
-   *
-   * @default []
-   */
-  extraVolumeMounts?: unknown[] | string;
-  /**
-   * Add additional sidecar containers to the Redis(R) replicas pod(s)
-   *
-   * Add additional sidecar containers to the Redis&reg; replicas pod(s)
-   *
-   * @default []
-   */
-  sidecars?: unknown[] | string;
-  /**
-   * ref: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
-   *
-   * Add additional init containers to the Redis&reg; replicas pod(s)
-   *
-   * @default []
-   */
-  initContainers?: unknown[] | string;
+  lifecycleHooks?: RedisHelmValuesReplicaLifecycleHooks;
+  extraVolumes?: unknown[];
+  extraVolumeMounts?: unknown[];
+  sidecars?: unknown[];
+  initContainers?: unknown[];
   /**
    * ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
    *
@@ -1849,8 +1355,6 @@ export type RedisHelmValuesReplica = {
    */
   service?: RedisHelmValuesReplicaService;
   /**
-   * Integer setting the termination grace period for the redis-replicas pods
-   *
    * Integer setting the termination grace period for the redis-replicas pods
    *
    * @default 30
@@ -1892,22 +1396,16 @@ export type RedisHelmValuesReplicaExternalMaster = {
   /**
    * Use external master for bootstrapping
    *
-   * Use external master for bootstrapping
-   *
    * @default false
    */
   enabled?: boolean;
   /**
    * External master host to bootstrap from
    *
-   * External master host to bootstrap from
-   *
    * @default ""
    */
   host?: string;
   /**
-   * Port for Redis service external master host
-   *
    * Port for Redis service external master host
    *
    * @default 6379
@@ -1919,8 +1417,6 @@ export type RedisHelmValuesReplicaContainerPorts = {
   /**
    * Container port to open on Redis(R) replicas nodes
    *
-   * Container port to open on Redis&reg; replicas nodes
-   *
    * @default 6379
    */
   redis?: number;
@@ -1930,14 +1426,10 @@ export type RedisHelmValuesReplicaStartupProbe = {
   /**
    * Enable startupProbe on Redis(R) replicas nodes
    *
-   * Enable startupProbe on Redis&reg; replicas nodes
-   *
    * @default true
    */
   enabled?: boolean;
   /**
-   * Initial delay seconds for startupProbe
-   *
    * Initial delay seconds for startupProbe
    *
    * @default 10
@@ -1946,14 +1438,10 @@ export type RedisHelmValuesReplicaStartupProbe = {
   /**
    * Period seconds for startupProbe
    *
-   * Period seconds for startupProbe
-   *
    * @default 10
    */
   periodSeconds?: number;
   /**
-   * Timeout seconds for startupProbe
-   *
    * Timeout seconds for startupProbe
    *
    * @default 5
@@ -1962,14 +1450,10 @@ export type RedisHelmValuesReplicaStartupProbe = {
   /**
    * Success threshold for startupProbe
    *
-   * Success threshold for startupProbe
-   *
    * @default 1
    */
   successThreshold?: number;
   /**
-   * Failure threshold for startupProbe
-   *
    * Failure threshold for startupProbe
    *
    * @default 22
@@ -1981,14 +1465,10 @@ export type RedisHelmValuesReplicaLivenessProbe = {
   /**
    * Enable livenessProbe on Redis(R) replicas nodes
    *
-   * Enable livenessProbe on Redis&reg; replicas nodes
-   *
    * @default true
    */
   enabled?: boolean;
   /**
-   * Initial delay seconds for livenessProbe
-   *
    * Initial delay seconds for livenessProbe
    *
    * @default 20
@@ -1997,14 +1477,10 @@ export type RedisHelmValuesReplicaLivenessProbe = {
   /**
    * Period seconds for livenessProbe
    *
-   * Period seconds for livenessProbe
-   *
    * @default 5
    */
   periodSeconds?: number;
   /**
-   * Timeout seconds for livenessProbe
-   *
    * Timeout seconds for livenessProbe
    *
    * @default 5
@@ -2013,14 +1489,10 @@ export type RedisHelmValuesReplicaLivenessProbe = {
   /**
    * Success threshold for livenessProbe
    *
-   * Success threshold for livenessProbe
-   *
    * @default 1
    */
   successThreshold?: number;
   /**
-   * Failure threshold for livenessProbe
-   *
    * Failure threshold for livenessProbe
    *
    * @default 5
@@ -2032,14 +1504,10 @@ export type RedisHelmValuesReplicaReadinessProbe = {
   /**
    * Enable readinessProbe on Redis(R) replicas nodes
    *
-   * Enable readinessProbe on Redis&reg; replicas nodes
-   *
    * @default true
    */
   enabled?: boolean;
   /**
-   * Initial delay seconds for readinessProbe
-   *
    * Initial delay seconds for readinessProbe
    *
    * @default 20
@@ -2048,14 +1516,10 @@ export type RedisHelmValuesReplicaReadinessProbe = {
   /**
    * Period seconds for readinessProbe
    *
-   * Period seconds for readinessProbe
-   *
    * @default 5
    */
   periodSeconds?: number;
   /**
-   * Timeout seconds for readinessProbe
-   *
    * Timeout seconds for readinessProbe
    *
    * @default 1
@@ -2064,20 +1528,22 @@ export type RedisHelmValuesReplicaReadinessProbe = {
   /**
    * Success threshold for readinessProbe
    *
-   * Success threshold for readinessProbe
-   *
    * @default 1
    */
   successThreshold?: number;
   /**
    * Failure threshold for readinessProbe
    *
-   * Failure threshold for readinessProbe
-   *
    * @default 5
    */
   failureThreshold?: number;
 };
+
+export type RedisHelmValuesReplicaCustomStartupProbe = object;
+
+export type RedisHelmValuesReplicaCustomLivenessProbe = object;
+
+export type RedisHelmValuesReplicaCustomReadinessProbe = object;
 
 export type RedisHelmValuesReplicaResources = object;
 
@@ -2094,39 +1560,19 @@ export type RedisHelmValuesReplicaPodSecurityContext = {
   /**
    * Enabled Redis(R) replicas pods' Security Context
    *
-   * Enabled Redis&reg; replicas pods' Security Context
-   *
    * @default true
    */
   enabled?: boolean;
   /**
    * Set filesystem group change policy
    *
-   * Set filesystem group change policy
-   *
    * @default "Always"
    */
   fsGroupChangePolicy?: string;
-  /**
-   * Set kernel settings using the sysctl interface
-   *
-   * Set kernel settings using the sysctl interface
-   *
-   * @default []
-   */
   sysctls?: unknown[];
-  /**
-   * Set filesystem extra groups
-   *
-   * Set filesystem extra groups
-   *
-   * @default []
-   */
   supplementalGroups?: unknown[];
   /**
    * Set Redis(R) replicas pod's Security Context fsGroup
-   *
-   * Set Redis&reg; replicas pod's Security Context fsGroup
    *
    * @default 1001
    */
@@ -2136,8 +1582,6 @@ export type RedisHelmValuesReplicaPodSecurityContext = {
 export type RedisHelmValuesReplicaContainerSecurityContext = {
   /**
    * Enabled Redis(R) replicas containers' Security Context
-   *
-   * Enabled Redis&reg; replicas containers' Security Context
    *
    * @default true
    */
@@ -2151,15 +1595,11 @@ export type RedisHelmValuesReplicaContainerSecurityContext = {
   /**
    * Set Redis(R) replicas containers' Security Context runAsUser
    *
-   * Set Redis&reg; replicas containers' Security Context runAsUser
-   *
    * @default 1001
    */
   runAsUser?: number;
   /**
    * Set Redis(R) replicas containers' Security Context runAsGroup
-   *
-   * Set Redis&reg; replicas containers' Security Context runAsGroup
    *
    * @default 1001
    */
@@ -2167,22 +1607,16 @@ export type RedisHelmValuesReplicaContainerSecurityContext = {
   /**
    * Set Redis(R) replicas containers' Security Context runAsNonRoot
    *
-   * Set Redis&reg; replicas containers' Security Context runAsNonRoot
-   *
    * @default true
    */
   runAsNonRoot?: boolean;
   /**
    * Set Redis(R) replicas pod's Security Context allowPrivilegeEscalation
    *
-   * Set Redis&reg; replicas pod's Security Context allowPrivilegeEscalation
-   *
    * @default false
    */
   allowPrivilegeEscalation?: boolean;
   /**
-   * Set container's Security Context read-only root filesystem
-   *
    * Set container's Security Context read-only root filesystem
    *
    * @default true
@@ -2205,21 +1639,12 @@ export type RedisHelmValuesReplicaContainerSecurityContextSeccompProfile = {
   /**
    * Set Redis(R) replicas containers' Security Context seccompProfile
    *
-   * Set Redis&reg; replicas containers' Security Context seccompProfile
-   *
    * @default "RuntimeDefault"
    */
   type?: string;
 };
 
 export type RedisHelmValuesReplicaContainerSecurityContextCapabilities = {
-  /**
-   * Set Redis(R) replicas containers' Security Context capabilities to drop
-   *
-   * Set Redis&reg; replicas containers' Security Context capabilities to drop
-   *
-   * @default ["ALL"]
-   */
   drop?: string[];
 };
 
@@ -2228,8 +1653,6 @@ export type RedisHelmValuesReplicaUpdateStrategy = {
    * StrategyType
    * Can be set to RollingUpdate, OnDelete (statefulset), Recreate (deployment)
    *
-   * Redis&reg; replicas statefulset strategy type
-   *
    * @default "RollingUpdate"
    */
   type?: string;
@@ -2237,10 +1660,10 @@ export type RedisHelmValuesReplicaUpdateStrategy = {
 
 export type RedisHelmValuesReplicaPodLabels = object;
 
+export type RedisHelmValuesReplicaPodAnnotations = object;
+
 export type RedisHelmValuesReplicaNodeAffinityPreset = {
   /**
-   * Node affinity preset type. Ignored if `replica.affinity` is set. Allowed values: `soft` or `hard`
-   *
    * Node affinity preset type. Ignored if `replica.affinity` is set. Allowed values: `soft` or `hard`
    *
    * @default ""
@@ -2249,20 +1672,19 @@ export type RedisHelmValuesReplicaNodeAffinityPreset = {
   /**
    * Node label key to match. Ignored if `replica.affinity` is set
    *
-   * Node label key to match. Ignored if `replica.affinity` is set
-   *
    * @default ""
    */
   key?: string;
-  /**
-   * E.g.
-   *
-   * Node label values to match. Ignored if `replica.affinity` is set
-   *
-   * @default []
-   */
   values?: unknown[];
 };
+
+export type RedisHelmValuesReplicaAffinity = object;
+
+export type RedisHelmValuesReplicaNodeSelector = object;
+
+export type RedisHelmValuesReplicaDnsConfig = object;
+
+export type RedisHelmValuesReplicaLifecycleHooks = object;
 
 export type RedisHelmValuesReplicaPersistence = {
   /**
@@ -2273,14 +1695,10 @@ export type RedisHelmValuesReplicaPersistence = {
   /**
    * Enable persistence on Redis(R) replicas nodes using Persistent Volume Claims
    *
-   * Enable persistence on Redis&reg; replicas nodes using Persistent Volume Claims
-   *
    * @default true
    */
   enabled?: boolean;
   /**
-   * Provide a medium for `emptyDir` volumes.
-   *
    * Provide a medium for `emptyDir` volumes.
    *
    * @default ""
@@ -2289,15 +1707,11 @@ export type RedisHelmValuesReplicaPersistence = {
   /**
    * Set this to enable a size limit for `emptyDir` volumes.
    *
-   * Set this to enable a size limit for `emptyDir` volumes.
-   *
    * @default ""
    */
   sizeLimit?: string;
   /**
    * NOTE: Useful when using different Redis(R) images
-   *
-   * The path the volume will be mounted at on Redis&reg; replicas containers
    *
    * @default "/data"
    */
@@ -2305,15 +1719,11 @@ export type RedisHelmValuesReplicaPersistence = {
   /**
    * NOTE: Useful in dev environments
    *
-   * The subdirectory of the volume to mount on Redis&reg; replicas containers
-   *
    * @default ""
    */
   subPath?: string;
   /**
    * Used to construct the subPath subdirectory of the volume to mount on Redis(R) replicas containers
-   *
-   * Used to construct the subPath subdirectory of the volume to mount on Redis&reg; replicas containers
    *
    * @default ""
    */
@@ -2323,22 +1733,11 @@ export type RedisHelmValuesReplicaPersistence = {
    * If set to "-", storageClassName: "", which disables dynamic provisioning
    * If undefined (the default) or set to null, no storageClassName spec is set, choosing the default provisioner
    *
-   * Persistent Volume storage class
-   *
    * @default ""
    */
   storageClass?: string;
-  /**
-   * Persistent Volume access modes
-   *
-   * Persistent Volume access modes
-   *
-   * @default ["ReadWriteOnce"]
-   */
   accessModes?: string[];
   /**
-   * Persistent Volume size
-   *
    * Persistent Volume size
    *
    * @default "8Gi"
@@ -2347,39 +1746,29 @@ export type RedisHelmValuesReplicaPersistence = {
   /**
    * Additional custom annotations for the PVC
    *
-   * Additional custom annotations for the PVC
-   *
    * @default {}
    */
   annotations?: RedisHelmValuesReplicaPersistenceAnnotations;
   /**
    * Additional custom labels for the PVC
    *
-   * Additional custom labels for the PVC
-   *
    * @default {}
    */
-  labels?: object | string;
+  labels?: RedisHelmValuesReplicaPersistenceLabels;
   /**
    * Additional labels to match for the PVC
    *
-   * Additional labels to match for the PVC
-   *
    * @default {}
    */
-  selector?: object | string;
+  selector?: RedisHelmValuesReplicaPersistenceSelector;
   /**
    * Custom PVC data source
    *
-   * Custom PVC data source
-   *
    * @default {}
    */
-  dataSource?: object | string;
+  dataSource?: RedisHelmValuesReplicaPersistenceDataSource;
   /**
    * NOTE: requires replica.persistence.enabled: true
-   *
-   * Use a existing PVC which must be created manually before bound
    *
    * @default ""
    */
@@ -2394,10 +1783,32 @@ export type RedisHelmValuesReplicaPersistenceAnnotations = {
   [key: string]: unknown;
 };
 
+export type RedisHelmValuesReplicaPersistenceLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type RedisHelmValuesReplicaPersistenceSelector = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type RedisHelmValuesReplicaPersistenceDataSource = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
 export type RedisHelmValuesReplicaPersistentVolumeClaimRetentionPolicy = {
   /**
-   * Controls if and how PVCs are deleted during the lifecycle of a StatefulSet
-   *
    * Controls if and how PVCs are deleted during the lifecycle of a StatefulSet
    *
    * @default false
@@ -2406,14 +1817,10 @@ export type RedisHelmValuesReplicaPersistentVolumeClaimRetentionPolicy = {
   /**
    * Volume retention behavior when the replica count of the StatefulSet is reduced
    *
-   * Volume retention behavior when the replica count of the StatefulSet is reduced
-   *
    * @default "Retain"
    */
   whenScaled?: string;
   /**
-   * Volume retention behavior that applies when the StatefulSet is deleted
-   *
    * Volume retention behavior that applies when the StatefulSet is deleted
    *
    * @default "Retain"
@@ -2424,8 +1831,6 @@ export type RedisHelmValuesReplicaPersistentVolumeClaimRetentionPolicy = {
 export type RedisHelmValuesReplicaService = {
   /**
    * Redis(R) replicas service type
-   *
-   * Redis&reg; replicas service type
    *
    * @default "ClusterIP"
    */
@@ -2444,31 +1849,18 @@ export type RedisHelmValuesReplicaService = {
   /**
    * ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
    *
-   * Redis&reg; replicas service external traffic policy
-   *
    * @default "Cluster"
    */
   externalTrafficPolicy?: string;
   /**
    * ref: https://kubernetes.io/docs/concepts/services-networking/service-traffic-policy/
    *
-   * Redis&reg; replicas service internal traffic policy (requires Kubernetes v1.22 or greater to be usable)
-   *
    * @default "Cluster"
    */
   internalTrafficPolicy?: string;
-  /**
-   * Extra ports to expose (normally used with the `sidecar` value)
-   *
-   * Extra ports to expose (normally used with the `sidecar` value)
-   *
-   * @default []
-   */
-  extraPorts?: unknown[] | string;
+  extraPorts?: unknown[];
   /**
    * Redis(R) replicas service Cluster IP
-   *
-   * Redis&reg; replicas service Cluster IP
    *
    * @default ""
    */
@@ -2476,41 +1868,25 @@ export type RedisHelmValuesReplicaService = {
   /**
    * ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
    *
-   * Redis&reg; replicas service Load Balancer IP
-   *
    * @default ""
    */
   loadBalancerIP?: string;
   /**
    * ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-loadbalancer
    *
-   * replicas service Load Balancer class if service type is `LoadBalancer` (optional, cloud specific)
-   *
    * @default ""
    */
   loadBalancerClass?: string;
-  /**
-   * https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
-   * e.g.
-   *
-   * Redis&reg; replicas service Load Balancer sources
-   *
-   * @default []
-   */
   loadBalancerSourceRanges?: unknown[];
   /**
    * Additional custom annotations for Redis(R) replicas service
    *
-   * Additional custom annotations for Redis&reg; replicas service
-   *
    * @default {}
    */
-  annotations?: object | string;
+  annotations?: RedisHelmValuesReplicaServiceAnnotations;
   /**
    * If "ClientIP", consecutive client requests will be directed to the same Pod
    * ref: https://kubernetes.io/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies
-   *
-   * Session Affinity for Kubernetes service, can be "None" or "ClientIP"
    *
    * @default "None"
    */
@@ -2518,18 +1894,14 @@ export type RedisHelmValuesReplicaService = {
   /**
    * Additional settings for the sessionAffinity. Ignored if `replica.service.sessionAffinity` is `None`
    *
-   * Additional settings for the sessionAffinity
-   *
    * @default {}
    */
-  sessionAffinityConfig?: object | string;
+  sessionAffinityConfig?: RedisHelmValuesReplicaServiceSessionAffinityConfig;
 };
 
 export type RedisHelmValuesReplicaServicePorts = {
   /**
    * Redis(R) replicas service port
-   *
-   * Redis&reg; replicas service port
    *
    * @default 6379
    */
@@ -2540,17 +1912,23 @@ export type RedisHelmValuesReplicaServiceNodePorts = {
   /**
    * Node port for Redis(R) replicas
    *
-   * Node port for Redis&reg; replicas
-   *
    * @default ""
    */
   redis?: string;
 };
 
+export type RedisHelmValuesReplicaServiceAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type RedisHelmValuesReplicaServiceSessionAffinityConfig = object;
+
 export type RedisHelmValuesReplicaAutoscaling = {
   /**
-   * Enable replica autoscaling settings
-   *
    * Enable replica autoscaling settings
    *
    * @default false
@@ -2559,14 +1937,10 @@ export type RedisHelmValuesReplicaAutoscaling = {
   /**
    * Minimum replicas for the pod autoscaling
    *
-   * Minimum replicas for the pod autoscaling
-   *
    * @default 1
    */
   minReplicas?: number;
   /**
-   * Maximum replicas for the pod autoscaling
-   *
    * Maximum replicas for the pod autoscaling
    *
    * @default 11
@@ -2575,14 +1949,10 @@ export type RedisHelmValuesReplicaAutoscaling = {
   /**
    * Percentage of CPU to consider when autoscaling
    *
-   * Percentage of CPU to consider when autoscaling
-   *
    * @default ""
    */
   targetCPU?: string;
   /**
-   * Percentage of Memory to consider when autoscaling
-   *
    * Percentage of Memory to consider when autoscaling
    *
    * @default ""
@@ -2594,15 +1964,11 @@ export type RedisHelmValuesReplicaServiceAccount = {
   /**
    * Specifies whether a ServiceAccount should be created
    *
-   * Specifies whether a ServiceAccount should be created
-   *
    * @default true
    */
   create?: boolean;
   /**
    * If not set and create is true, a name is generated using the common.names.fullname template
-   *
-   * The name of the ServiceAccount to use.
    *
    * @default ""
    */
@@ -2610,25 +1976,27 @@ export type RedisHelmValuesReplicaServiceAccount = {
   /**
    * ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#use-the-default-service-account-to-access-the-api-server
    *
-   * Whether to auto mount the service account token
-   *
    * @default false
    */
   automountServiceAccountToken?: boolean;
   /**
    * Additional custom annotations for the ServiceAccount
    *
-   * Additional custom annotations for the ServiceAccount
-   *
    * @default {}
    */
-  annotations?: object | string;
+  annotations?: RedisHelmValuesReplicaServiceAccountAnnotations;
+};
+
+export type RedisHelmValuesReplicaServiceAccountAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
 };
 
 export type RedisHelmValuesReplicaPdb = {
   /**
-   * Enable/disable a Pod Disruption Budget creation
-   *
    * Enable/disable a Pod Disruption Budget creation
    *
    * @default true
@@ -2663,8 +2031,6 @@ export type RedisHelmValuesSentinel = {
    * IMPORTANT: this will disable the master and replicas services and
    * create a single Redis(R) service exposing both the Redis and Sentinel ports
    *
-   * Use Redis&reg; Sentinel on Redis&reg; pods.
-   *
    * @default false
    */
   enabled?: boolean;
@@ -2679,14 +2045,10 @@ export type RedisHelmValuesSentinel = {
   /**
    * Additional custom annotations for Redis(R) Sentinel resource
    *
-   * Additional custom annotations for Redis&reg; Sentinel resource
-   *
    * @default {}
    */
-  annotations?: object | string;
+  annotations?: RedisHelmValuesSentinelAnnotations;
   /**
-   * Master set name
-   *
    * Master set name
    *
    * @default "mymaster"
@@ -2695,14 +2057,10 @@ export type RedisHelmValuesSentinel = {
   /**
    * Sentinel Quorum
    *
-   * Sentinel Quorum
-   *
    * @default 2
    */
   quorum?: number;
   /**
-   * Amount of time to allow before get_sentinel_master_info() times out.
-   *
    * Amount of time to allow before get_sentinel_master_info() times out.
    *
    * @default 90
@@ -2712,15 +2070,11 @@ export type RedisHelmValuesSentinel = {
    * This also prevents any new replica from starting until the last remaining replica is elected as master to guarantee that it is the one to be elected by Sentinel, and not a newly started replica with no data.
    * NOTE: This feature requires a "downAfterMilliseconds" value less or equal to 2000.
    *
-   * Automate cluster recovery in cases where the last replica is not considered a good replica and Sentinel won't automatically failover to it.
-   *
    * @default false
    */
   automateClusterRecovery?: boolean;
   /**
    * Whether the Redis(R) master container waits for the failover at shutdown (in addition to the Redis(R) Sentinel container).
-   *
-   * Whether the Redis&reg; master container waits for the failover at shutdown (in addition to the Redis&reg; Sentinel container).
    *
    * @default true
    */
@@ -2728,14 +2082,10 @@ export type RedisHelmValuesSentinel = {
   /**
    * Sentinel timing restrictions
    *
-   * Timeout for detecting a Redis&reg; node is down
-   *
    * @default 60000
    */
   downAfterMilliseconds?: number;
   /**
-   * Timeout for performing a election failover
-   *
    * Timeout for performing a election failover
    *
    * @default 180000
@@ -2744,71 +2094,39 @@ export type RedisHelmValuesSentinel = {
   /**
    * Number of replicas that can be reconfigured in parallel to use the new master after a failover
    *
-   * Number of replicas that can be reconfigured in parallel to use the new master after a failover
-   *
    * @default 1
    */
   parallelSyncs?: number;
   /**
-   * ref: https://redis.io/topics/sentinel
+   * Wait for data full sync on replicas before marking them as ready (experimental)
    *
-   * Configuration for Redis&reg; Sentinel nodes
+   * @default false
+   */
+  replicaSyncCheck?: boolean;
+  /**
+   * ref: https://redis.io/topics/sentinel
    *
    * @default ""
    */
   configuration?: string;
+  command?: unknown[];
+  args?: unknown[];
   /**
-   * Override default container command (useful when using custom images)
-   *
-   * Override default container command (useful when using custom images)
-   *
-   * @default []
-   */
-  command?: unknown[] | string;
-  /**
-   * Override default container args (useful when using custom images)
-   *
-   * Override default container args (useful when using custom images)
-   *
-   * @default []
-   */
-  args?: unknown[] | string;
-  /**
-   * Whether information about services should be injected into pod's environment variable
-   *
    * Whether information about services should be injected into pod's environment variable
    *
    * @default true
    */
   enableServiceLinks?: boolean;
-  /**
-   * Additional commands to run prior to starting Redis(R) Sentinel
-   *
-   * Additional commands to run prior to starting Redis&reg; Sentinel
-   *
-   * @default []
-   */
   preExecCmds?: unknown[];
-  /**
-   * Array with extra environment variables to add to Redis(R) Sentinel nodes
-   *
-   * Array with extra environment variables to add to Redis&reg; Sentinel nodes
-   *
-   * @default []
-   */
-  extraEnvVars?: unknown[] | string;
+  extraEnvVars?: unknown[];
   /**
    * Name of existing ConfigMap containing extra env vars for Redis(R) Sentinel nodes
-   *
-   * Name of existing ConfigMap containing extra env vars for Redis&reg; Sentinel nodes
    *
    * @default ""
    */
   extraEnvVarsCM?: string;
   /**
    * Name of existing Secret containing extra env vars for Redis(R) Sentinel nodes
-   *
-   * Name of existing Secret containing extra env vars for Redis&reg; Sentinel nodes
    *
    * @default ""
    */
@@ -2839,27 +2157,21 @@ export type RedisHelmValuesSentinel = {
   /**
    * Custom startupProbe that overrides the default one
    *
-   * Custom startupProbe that overrides the default one
-   *
    * @default {}
    */
-  customStartupProbe?: object | string;
+  customStartupProbe?: RedisHelmValuesSentinelCustomStartupProbe;
   /**
    * Custom livenessProbe that overrides the default one
    *
-   * Custom livenessProbe that overrides the default one
-   *
    * @default {}
    */
-  customLivenessProbe?: object | string;
+  customLivenessProbe?: RedisHelmValuesSentinelCustomLivenessProbe;
   /**
    * Custom readinessProbe that overrides the default one
    *
-   * Custom readinessProbe that overrides the default one
-   *
    * @default {}
    */
-  customReadinessProbe?: object | string;
+  customReadinessProbe?: RedisHelmValuesSentinelCustomReadinessProbe;
   /**
    * ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
    *
@@ -2878,8 +2190,6 @@ export type RedisHelmValuesSentinel = {
    * ref: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
    * More information: https://github.com/bitnami/charts/blob/main/bitnami/common/templates/_resources.tpl#L15
    *
-   * Set container resources according to one common preset (allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge). This is ignored if sentinel.resources is set (sentinel.resources is recommended for production).
-   *
    * @default "nano"
    */
   resourcesPreset?: string;
@@ -2889,8 +2199,6 @@ export type RedisHelmValuesSentinel = {
    * requests:
    * limits:
    * memory: 1024Mi
-   *
-   * Set container requests and limits for different resources like CPU or memory (essential for production workloads)
    *
    * @default {}
    */
@@ -2909,27 +2217,11 @@ export type RedisHelmValuesSentinel = {
   /**
    * for the Redis(R) sentinel container(s) to automate configuration before or after startup
    *
-   * for the Redis&reg; sentinel container(s) to automate configuration before or after startup
-   *
    * @default {}
    */
-  lifecycleHooks?: object | string;
-  /**
-   * Optionally specify extra list of additional volumes for the Redis(R) Sentinel
-   *
-   * Optionally specify extra list of additional volumes for the Redis&reg; Sentinel
-   *
-   * @default []
-   */
-  extraVolumes?: unknown[] | string;
-  /**
-   * Optionally specify extra list of additional volumeMounts for the Redis(R) Sentinel container(s)
-   *
-   * Optionally specify extra list of additional volumeMounts for the Redis&reg; Sentinel container(s)
-   *
-   * @default []
-   */
-  extraVolumeMounts?: unknown[] | string;
+  lifecycleHooks?: RedisHelmValuesSentinelLifecycleHooks;
+  extraVolumes?: unknown[];
+  extraVolumeMounts?: unknown[];
   /**
    * Redis(R) Sentinel service parameters
    * Note: values passed in this section also configure the master service, unless the sentinel.masterService is explicitly overridden.
@@ -2946,8 +2238,6 @@ export type RedisHelmValuesSentinel = {
   /**
    * Integer setting the termination grace period for the redis-node pods
    *
-   * Integer setting the termination grace period for the redis-node pods
-   *
    * @default 30
    */
   terminationGracePeriodSeconds?: number;
@@ -2958,7 +2248,7 @@ export type RedisHelmValuesSentinel = {
    */
   extraPodSpec?: RedisHelmValuesSentinelExtraPodSpec;
   /**
-   * @default {"enabled":false,"service":{"loadBalancerIPAnnotaion":"","type":"LoadBalancer","redisPort":6379,"sentinelPort":26379,"loadBalancerIP":[],"loadBalancerClass":"","loadBalancerSourceRanges":[],"annotations":{}}}
+   * @default {"enabled":false,"service":{"type":"LoadBalancer","redisPort":6379,"sentinelPort":26379,"loadBalancerIPs":[],"loadBalancerClass":"","loadBalancerSourceRanges":[],"annotations":{},"loadBalancerIPAnnotation":""}}
    */
   externalAccess?: RedisHelmValuesSentinelExternalAccess;
 };
@@ -2967,17 +2257,13 @@ export type RedisHelmValuesSentinelImage = {
   /**
    * [default: REGISTRY_NAME] Redis(R) Sentinel image registry
    *
-   * Redis&reg; Sentinel image registry
-   *
-   * @default "REGISTRY_NAME"
+   * @default "registry-1.docker.io"
    */
   registry?: string;
   /**
    * [default: REPOSITORY_NAME/redis-sentinel] Redis(R) Sentinel image repository
    *
-   * Redis&reg; Sentinel image repository
-   *
-   * @default "REPOSITORY_NAME/redis-sentinel"
+   * @default "bitnami/redis-sentinel"
    */
   repository?: string;
   /**
@@ -2987,8 +2273,6 @@ export type RedisHelmValuesSentinelImage = {
   /**
    * Redis(R) Sentinel image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
    *
-   * Redis&reg; Sentinel image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
-   *
    * @default ""
    */
   digest?: string;
@@ -2996,33 +2280,28 @@ export type RedisHelmValuesSentinelImage = {
    * Specify a imagePullPolicy
    * ref: https://kubernetes.io/docs/concepts/containers/images/#pre-pulled-images
    *
-   * Redis&reg; Sentinel image pull policy
-   *
    * @default "IfNotPresent"
    */
   pullPolicy?: string;
-  /**
-   * - myRegistryKeySecretName
-   *
-   * Redis&reg; Sentinel image pull secrets
-   *
-   * @default []
-   */
   pullSecrets?: unknown[];
   /**
    * Enable debug mode
-   *
-   * Enable image debug mode
    *
    * @default false
    */
   debug?: boolean;
 };
 
+export type RedisHelmValuesSentinelAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
 export type RedisHelmValuesSentinelExternalMaster = {
   /**
-   * Use external master for bootstrapping
-   *
    * Use external master for bootstrapping
    *
    * @default false
@@ -3031,14 +2310,10 @@ export type RedisHelmValuesSentinelExternalMaster = {
   /**
    * External master host to bootstrap from
    *
-   * External master host to bootstrap from
-   *
    * @default ""
    */
   host?: string;
   /**
-   * Port for Redis service external master host
-   *
    * Port for Redis service external master host
    *
    * @default 6379
@@ -3050,8 +2325,6 @@ export type RedisHelmValuesSentinelContainerPorts = {
   /**
    * Container port to open on Redis(R) Sentinel nodes
    *
-   * Container port to open on Redis&reg; Sentinel nodes
-   *
    * @default 26379
    */
   sentinel?: number;
@@ -3061,14 +2334,10 @@ export type RedisHelmValuesSentinelStartupProbe = {
   /**
    * Enable startupProbe on Redis(R) Sentinel nodes
    *
-   * Enable startupProbe on Redis&reg; Sentinel nodes
-   *
    * @default true
    */
   enabled?: boolean;
   /**
-   * Initial delay seconds for startupProbe
-   *
    * Initial delay seconds for startupProbe
    *
    * @default 10
@@ -3077,14 +2346,10 @@ export type RedisHelmValuesSentinelStartupProbe = {
   /**
    * Period seconds for startupProbe
    *
-   * Period seconds for startupProbe
-   *
    * @default 10
    */
   periodSeconds?: number;
   /**
-   * Timeout seconds for startupProbe
-   *
    * Timeout seconds for startupProbe
    *
    * @default 5
@@ -3093,14 +2358,10 @@ export type RedisHelmValuesSentinelStartupProbe = {
   /**
    * Success threshold for startupProbe
    *
-   * Success threshold for startupProbe
-   *
    * @default 1
    */
   successThreshold?: number;
   /**
-   * Failure threshold for startupProbe
-   *
    * Failure threshold for startupProbe
    *
    * @default 22
@@ -3112,14 +2373,10 @@ export type RedisHelmValuesSentinelLivenessProbe = {
   /**
    * Enable livenessProbe on Redis(R) Sentinel nodes
    *
-   * Enable livenessProbe on Redis&reg; Sentinel nodes
-   *
    * @default true
    */
   enabled?: boolean;
   /**
-   * Initial delay seconds for livenessProbe
-   *
    * Initial delay seconds for livenessProbe
    *
    * @default 20
@@ -3128,14 +2385,10 @@ export type RedisHelmValuesSentinelLivenessProbe = {
   /**
    * Period seconds for livenessProbe
    *
-   * Period seconds for livenessProbe
-   *
    * @default 10
    */
   periodSeconds?: number;
   /**
-   * Timeout seconds for livenessProbe
-   *
    * Timeout seconds for livenessProbe
    *
    * @default 5
@@ -3144,14 +2397,10 @@ export type RedisHelmValuesSentinelLivenessProbe = {
   /**
    * Success threshold for livenessProbe
    *
-   * Success threshold for livenessProbe
-   *
    * @default 1
    */
   successThreshold?: number;
   /**
-   * Failure threshold for livenessProbe
-   *
    * Failure threshold for livenessProbe
    *
    * @default 6
@@ -3163,14 +2412,10 @@ export type RedisHelmValuesSentinelReadinessProbe = {
   /**
    * Enable readinessProbe on Redis(R) Sentinel nodes
    *
-   * Enable readinessProbe on Redis&reg; Sentinel nodes
-   *
    * @default true
    */
   enabled?: boolean;
   /**
-   * Initial delay seconds for readinessProbe
-   *
    * Initial delay seconds for readinessProbe
    *
    * @default 20
@@ -3179,14 +2424,10 @@ export type RedisHelmValuesSentinelReadinessProbe = {
   /**
    * Period seconds for readinessProbe
    *
-   * Period seconds for readinessProbe
-   *
    * @default 5
    */
   periodSeconds?: number;
   /**
-   * Timeout seconds for readinessProbe
-   *
    * Timeout seconds for readinessProbe
    *
    * @default 1
@@ -3195,20 +2436,22 @@ export type RedisHelmValuesSentinelReadinessProbe = {
   /**
    * Success threshold for readinessProbe
    *
-   * Success threshold for readinessProbe
-   *
    * @default 1
    */
   successThreshold?: number;
   /**
    * Failure threshold for readinessProbe
    *
-   * Failure threshold for readinessProbe
-   *
    * @default 6
    */
   failureThreshold?: number;
 };
+
+export type RedisHelmValuesSentinelCustomStartupProbe = object;
+
+export type RedisHelmValuesSentinelCustomLivenessProbe = object;
+
+export type RedisHelmValuesSentinelCustomReadinessProbe = object;
 
 export type RedisHelmValuesSentinelPersistence = {
   /**
@@ -3219,8 +2462,6 @@ export type RedisHelmValuesSentinelPersistence = {
   /**
    * Enable persistence on Redis(R) sentinel nodes using Persistent Volume Claims (Experimental)
    *
-   * Enable persistence on Redis&reg; sentinel nodes using Persistent Volume Claims (Experimental)
-   *
    * @default false
    */
   enabled?: boolean;
@@ -3229,22 +2470,11 @@ export type RedisHelmValuesSentinelPersistence = {
    * If set to "-", storageClassName: "", which disables dynamic provisioning
    * If undefined (the default) or set to null, no storageClassName spec is set, choosing the default provisioner
    *
-   * Persistent Volume storage class
-   *
    * @default ""
    */
   storageClass?: string;
-  /**
-   * Persistent Volume access modes
-   *
-   * Persistent Volume access modes
-   *
-   * @default ["ReadWriteOnce"]
-   */
   accessModes?: string[];
   /**
-   * Persistent Volume size
-   *
    * Persistent Volume size
    *
    * @default "100Mi"
@@ -3253,46 +2483,34 @@ export type RedisHelmValuesSentinelPersistence = {
   /**
    * Additional custom annotations for the PVC
    *
-   * Additional custom annotations for the PVC
-   *
    * @default {}
    */
   annotations?: RedisHelmValuesSentinelPersistenceAnnotations;
   /**
    * Additional custom labels for the PVC
    *
-   * Additional custom labels for the PVC
-   *
    * @default {}
    */
-  labels?: object | string;
+  labels?: RedisHelmValuesSentinelPersistenceLabels;
   /**
-   * Additional labels to match for the PVC
-   *
    * Additional labels to match for the PVC
    *
    * @default {}
    */
-  selector?: object | string;
+  selector?: RedisHelmValuesSentinelPersistenceSelector;
   /**
-   * Custom PVC data source
-   *
    * Custom PVC data source
    *
    * @default {}
    */
-  dataSource?: object | string;
+  dataSource?: RedisHelmValuesSentinelPersistenceDataSource;
   /**
-   * Provide a medium for `emptyDir` volumes.
-   *
    * Provide a medium for `emptyDir` volumes.
    *
    * @default ""
    */
   medium?: string;
   /**
-   * Set this to enable a size limit for `emptyDir` volumes.
-   *
    * Set this to enable a size limit for `emptyDir` volumes.
    *
    * @default ""
@@ -3308,10 +2526,32 @@ export type RedisHelmValuesSentinelPersistenceAnnotations = {
   [key: string]: unknown;
 };
 
+export type RedisHelmValuesSentinelPersistenceLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type RedisHelmValuesSentinelPersistenceSelector = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type RedisHelmValuesSentinelPersistenceDataSource = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
 export type RedisHelmValuesSentinelPersistentVolumeClaimRetentionPolicy = {
   /**
-   * Controls if and how PVCs are deleted during the lifecycle of a StatefulSet
-   *
    * Controls if and how PVCs are deleted during the lifecycle of a StatefulSet
    *
    * @default false
@@ -3320,14 +2560,10 @@ export type RedisHelmValuesSentinelPersistentVolumeClaimRetentionPolicy = {
   /**
    * Volume retention behavior when the replica count of the StatefulSet is reduced
    *
-   * Volume retention behavior when the replica count of the StatefulSet is reduced
-   *
    * @default "Retain"
    */
   whenScaled?: string;
   /**
-   * Volume retention behavior that applies when the StatefulSet is deleted
-   *
    * Volume retention behavior that applies when the StatefulSet is deleted
    *
    * @default "Retain"
@@ -3350,8 +2586,6 @@ export type RedisHelmValuesSentinelContainerSecurityContext = {
   /**
    * Enabled Redis(R) Sentinel containers' Security Context
    *
-   * Enabled Redis&reg; Sentinel containers' Security Context
-   *
    * @default true
    */
   enabled?: boolean;
@@ -3364,15 +2598,11 @@ export type RedisHelmValuesSentinelContainerSecurityContext = {
   /**
    * Set Redis(R) Sentinel containers' Security Context runAsUser
    *
-   * Set Redis&reg; Sentinel containers' Security Context runAsUser
-   *
    * @default 1001
    */
   runAsUser?: number;
   /**
    * Set Redis(R) Sentinel containers' Security Context runAsGroup
-   *
-   * Set Redis&reg; Sentinel containers' Security Context runAsGroup
    *
    * @default 1001
    */
@@ -3380,22 +2610,16 @@ export type RedisHelmValuesSentinelContainerSecurityContext = {
   /**
    * Set Redis(R) Sentinel containers' Security Context runAsNonRoot
    *
-   * Set Redis&reg; Sentinel containers' Security Context runAsNonRoot
-   *
    * @default true
    */
   runAsNonRoot?: boolean;
   /**
    * Set Redis(R) Sentinel containers' Security Context allowPrivilegeEscalation
    *
-   * Set Redis&reg; Sentinel containers' Security Context allowPrivilegeEscalation
-   *
    * @default false
    */
   allowPrivilegeEscalation?: boolean;
   /**
-   * Set container's Security Context read-only root filesystem
-   *
    * Set container's Security Context read-only root filesystem
    *
    * @default true
@@ -3418,29 +2642,20 @@ export type RedisHelmValuesSentinelContainerSecurityContextSeccompProfile = {
   /**
    * Set Redis(R) Sentinel containers' Security Context seccompProfile
    *
-   * Set Redis&reg; Sentinel containers' Security Context seccompProfile
-   *
    * @default "RuntimeDefault"
    */
   type?: string;
 };
 
 export type RedisHelmValuesSentinelContainerSecurityContextCapabilities = {
-  /**
-   * Set Redis(R) Sentinel containers' Security Context capabilities to drop
-   *
-   * Set Redis&reg; Sentinel containers' Security Context capabilities to drop
-   *
-   * @default ["ALL"]
-   */
   drop?: string[];
 };
+
+export type RedisHelmValuesSentinelLifecycleHooks = object;
 
 export type RedisHelmValuesSentinelService = {
   /**
    * Redis(R) Sentinel service type
-   *
-   * Redis&reg; Sentinel service type
    *
    * @default "ClusterIP"
    */
@@ -3461,23 +2676,12 @@ export type RedisHelmValuesSentinelService = {
   /**
    * ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
    *
-   * Redis&reg; Sentinel service external traffic policy
-   *
    * @default "Cluster"
    */
   externalTrafficPolicy?: string;
-  /**
-   * Extra ports to expose (normally used with the `sidecar` value)
-   *
-   * Extra ports to expose (normally used with the `sidecar` value)
-   *
-   * @default []
-   */
-  extraPorts?: unknown[] | string;
+  extraPorts?: unknown[];
   /**
    * Redis(R) Sentinel service Cluster IP
-   *
-   * Redis&reg; Sentinel service Cluster IP
    *
    * @default ""
    */
@@ -3485,15 +2689,11 @@ export type RedisHelmValuesSentinelService = {
   /**
    * NOTE: rbac.create need to be set to true
    *
-   * Enable master service pointing to the current master (experimental)
-   *
    * @default false
    */
   createMaster?: boolean;
   /**
    * ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
-   *
-   * Redis&reg; Sentinel service Load Balancer IP
    *
    * @default ""
    */
@@ -3501,33 +2701,19 @@ export type RedisHelmValuesSentinelService = {
   /**
    * ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-loadbalancer
    *
-   * sentinel service Load Balancer class if service type is `LoadBalancer` (optional, cloud specific)
-   *
    * @default ""
    */
   loadBalancerClass?: string;
-  /**
-   * https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
-   * e.g.
-   *
-   * Redis&reg; Sentinel service Load Balancer sources
-   *
-   * @default []
-   */
   loadBalancerSourceRanges?: unknown[];
   /**
    * Additional custom annotations for Redis(R) Sentinel service
    *
-   * Additional custom annotations for Redis&reg; Sentinel service
-   *
    * @default {}
    */
-  annotations?: object | string;
+  annotations?: RedisHelmValuesSentinelServiceAnnotations;
   /**
    * If "ClientIP", consecutive client requests will be directed to the same Pod
    * ref: https://kubernetes.io/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies
-   *
-   * Session Affinity for Kubernetes service, can be "None" or "ClientIP"
    *
    * @default "None"
    */
@@ -3535,11 +2721,9 @@ export type RedisHelmValuesSentinelService = {
   /**
    * Additional settings for the sessionAffinity. Ignored if `sentinel.service.sessionAffinity` is `None`
    *
-   * Additional settings for the sessionAffinity
-   *
    * @default {}
    */
-  sessionAffinityConfig?: object | string;
+  sessionAffinityConfig?: RedisHelmValuesSentinelServiceSessionAffinityConfig;
   /**
    * Headless service properties
    *
@@ -3552,15 +2736,11 @@ export type RedisHelmValuesSentinelServicePorts = {
   /**
    * Redis(R) service port for Redis(R)
    *
-   * Redis&reg; service port for Redis&reg;
-   *
    * @default 6379
    */
   redis?: number;
   /**
    * Redis(R) service port for Redis(R) Sentinel
-   *
-   * Redis&reg; service port for Redis&reg; Sentinel
    *
    * @default 26379
    */
@@ -3571,14 +2751,10 @@ export type RedisHelmValuesSentinelServiceNodePorts = {
   /**
    * Node port for Redis(R)
    *
-   * Node port for Redis&reg;
-   *
    * @default ""
    */
   redis?: string;
   /**
-   * Node port for Sentinel
-   *
    * Node port for Sentinel
    *
    * @default ""
@@ -3586,41 +2762,43 @@ export type RedisHelmValuesSentinelServiceNodePorts = {
   sentinel?: string;
 };
 
+export type RedisHelmValuesSentinelServiceAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type RedisHelmValuesSentinelServiceSessionAffinityConfig = object;
+
 export type RedisHelmValuesSentinelServiceHeadless = {
   /**
    * Annotations for the headless service.
    *
-   * Annotations for the headless service.
-   *
    * @default {}
    */
-  annotations?: object | string;
-  /**
-   * Example:
-   * extraPorts:
-   * - name: my-custom-port
-   * targetPort: 12345
-   *
-   * Extra ports to expose for the headless service
-   *
-   * @default []
-   */
+  annotations?: RedisHelmValuesSentinelServiceHeadlessAnnotations;
   extraPorts?: unknown[];
+};
+
+export type RedisHelmValuesSentinelServiceHeadlessAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
 };
 
 export type RedisHelmValuesSentinelMasterService = {
   /**
    * NOTE: rbac.create need to be set to true
    *
-   * Enable master service pointing to the current master (experimental)
-   *
    * @default false
    */
   enabled?: boolean;
   /**
    * Redis(R) Sentinel master service type
-   *
-   * Redis&reg; Sentinel master service type
    *
    * @default "ClusterIP"
    */
@@ -3641,23 +2819,12 @@ export type RedisHelmValuesSentinelMasterService = {
   /**
    * ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
    *
-   * Redis&reg; master service external traffic policy
-   *
    * @default ""
    */
   externalTrafficPolicy?: string;
-  /**
-   * Extra ports to expose (normally used with the `sidecar` value)
-   *
-   * Extra ports to expose (normally used with the `sidecar` value)
-   *
-   * @default []
-   */
-  extraPorts?: unknown[] | string;
+  extraPorts?: unknown[];
   /**
    * Redis(R) master service Cluster IP
-   *
-   * Redis&reg; master service Cluster IP
    *
    * @default ""
    */
@@ -3665,32 +2832,18 @@ export type RedisHelmValuesSentinelMasterService = {
   /**
    * ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
    *
-   * Redis&reg; master service Load Balancer IP
-   *
    * @default ""
    */
   loadBalancerIP?: string;
   /**
    * ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-loadbalancer
    *
-   * master service Load Balancer class if service type is `LoadBalancer` (optional, cloud specific)
-   *
    * @default ""
    */
   loadBalancerClass?: string;
-  /**
-   * https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
-   * e.g.
-   *
-   * Redis&reg; master service Load Balancer sources
-   *
-   * @default []
-   */
   loadBalancerSourceRanges?: unknown[];
   /**
    * Additional custom annotations for Redis(R) master service
-   *
-   * Additional custom annotations for Redis&reg; master service
    *
    * @default {}
    */
@@ -3699,26 +2852,20 @@ export type RedisHelmValuesSentinelMasterService = {
    * If "ClientIP", consecutive client requests will be directed to the same Pod
    * ref: https://kubernetes.io/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies
    *
-   * Session Affinity for Kubernetes service, can be "None" or "ClientIP"
-   *
    * @default "None"
    */
   sessionAffinity?: string;
   /**
    * Additional settings for the sessionAffinity. Ignored if `sentinel.masterService.sessionAffinity` is `None`
    *
-   * Additional settings for the sessionAffinity
-   *
    * @default {}
    */
-  sessionAffinityConfig?: object | string;
+  sessionAffinityConfig?: RedisHelmValuesSentinelMasterServiceSessionAffinityConfig;
 };
 
 export type RedisHelmValuesSentinelMasterServicePorts = {
   /**
    * Redis(R) service port for Redis(R)
-   *
-   * Redis&reg; service port for Redis&reg;
    *
    * @default 6379
    */
@@ -3728,8 +2875,6 @@ export type RedisHelmValuesSentinelMasterServicePorts = {
 export type RedisHelmValuesSentinelMasterServiceNodePorts = {
   /**
    * Node port for Redis(R)
-   *
-   * Node port for Redis&reg;
    *
    * @default ""
    */
@@ -3743,6 +2888,8 @@ export type RedisHelmValuesSentinelMasterServiceAnnotations = {
    */
   [key: string]: unknown;
 };
+
+export type RedisHelmValuesSentinelMasterServiceSessionAffinityConfig = object;
 
 export type RedisHelmValuesSentinelExtraPodSpec = object;
 
@@ -3761,12 +2908,6 @@ export type RedisHelmValuesSentinelExternalAccess = {
 
 export type RedisHelmValuesSentinelExternalAccessService = {
   /**
-   * Name of annotation to specify fixed IP for service in.
-   *
-   * @default ""
-   */
-  loadBalancerIPAnnotaion?: string;
-  /**
    * At this moment only LoadBalancer is supported
    *
    * @default "LoadBalancer"
@@ -3784,7 +2925,7 @@ export type RedisHelmValuesSentinelExternalAccessService = {
    * @default 26379
    */
   sentinelPort?: number;
-  loadBalancerIP?: unknown[];
+  loadBalancerIPs?: unknown[];
   /**
    * ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-loadbalancer
    *
@@ -3798,6 +2939,12 @@ export type RedisHelmValuesSentinelExternalAccessService = {
    * @default {}
    */
   annotations?: RedisHelmValuesSentinelExternalAccessServiceAnnotations;
+  /**
+   * Name of annotation to specify fixed IP for the LoadBalancer service
+   *
+   * @default ""
+   */
+  loadBalancerIPAnnotation?: string;
 };
 
 export type RedisHelmValuesSentinelExternalAccessServiceAnnotations = {
@@ -3812,8 +2959,6 @@ export type RedisHelmValuesServiceBindings = {
   /**
    * Create secret for service binding (Experimental)
    *
-   * Create secret for service binding (Experimental)
-   *
    * @default false
    */
   enabled?: boolean;
@@ -3821,8 +2966,6 @@ export type RedisHelmValuesServiceBindings = {
 
 export type RedisHelmValuesNetworkPolicy = {
   /**
-   * Enable creation of NetworkPolicy resources
-   *
    * Enable creation of NetworkPolicy resources
    *
    * @default true
@@ -3833,46 +2976,24 @@ export type RedisHelmValuesNetworkPolicy = {
    * Redis(R) is listening on. When true, Redis(R) will accept connections from any source
    * (with the correct destination port).
    *
-   * Don't require client label for connections
-   *
    * @default true
    */
   allowExternal?: boolean;
   /**
    * Allow the pod to access any range of port and all destinations.
    *
-   * Allow the pod to access any range of port and all destinations.
-   *
    * @default true
    */
   allowExternalEgress?: boolean;
+  extraIngress?: unknown[];
+  extraEgress?: unknown[];
   /**
-   * Add extra ingress rules to the NetworkPolicy
-   *
-   * Add extra ingress rules to the NetworkPolicy
-   *
-   * @default []
-   */
-  extraIngress?: unknown[] | string;
-  /**
-   * Add extra egress rules to the NetworkPolicy
-   *
-   * Add extra egress rules to the NetworkPolicy
-   *
-   * @default []
-   */
-  extraEgress?: unknown[] | string;
-  /**
-   * Labels to match to allow traffic from other namespaces
-   *
    * Labels to match to allow traffic from other namespaces
    *
    * @default {}
    */
   ingressNSMatchLabels?: RedisHelmValuesNetworkPolicyIngressNSMatchLabels;
   /**
-   * Pod labels to match to allow traffic from other namespaces
-   *
    * Pod labels to match to allow traffic from other namespaces
    *
    * @default {}
@@ -3892,22 +3013,16 @@ export type RedisHelmValuesNetworkPolicyMetrics = {
   /**
    * When set to false, only pods with the correct client label will have network access to the metrics port
    *
-   * Don't require client label for connections for metrics endpoint
-   *
    * @default true
    */
   allowExternal?: boolean;
   /**
    * Labels to match to allow traffic from other namespaces to metrics endpoint
    *
-   * Labels to match to allow traffic from other namespaces to metrics endpoint
-   *
    * @default {}
    */
   ingressNSMatchLabels?: RedisHelmValuesNetworkPolicyMetricsIngressNSMatchLabels;
   /**
-   * Pod labels to match to allow traffic from other namespaces to metrics endpoint
-   *
    * Pod labels to match to allow traffic from other namespaces to metrics endpoint
    *
    * @default {}
@@ -3923,14 +3038,10 @@ export type RedisHelmValuesPodSecurityPolicy = {
   /**
    * Whether to create a PodSecurityPolicy. WARNING: PodSecurityPolicy is deprecated in Kubernetes v1.21 or later, unavailable in v1.25 or later
    *
-   * Whether to create a PodSecurityPolicy. WARNING: PodSecurityPolicy is deprecated in Kubernetes v1.21 or later, unavailable in v1.25 or later
-   *
    * @default false
    */
   create?: boolean;
   /**
-   * Enable PodSecurityPolicy's RBAC rules
-   *
    * Enable PodSecurityPolicy's RBAC rules
    *
    * @default false
@@ -3942,25 +3053,14 @@ export type RedisHelmValuesRbac = {
   /**
    * Specifies whether RBAC resources should be created
    *
-   * Specifies whether RBAC resources should be created
-   *
    * @default false
    */
   create?: boolean;
-  /**
-   * Custom RBAC rules to set
-   *
-   * Custom RBAC rules to set
-   *
-   * @default []
-   */
-  rules?: unknown[] | string;
+  rules?: unknown[];
 };
 
 export type RedisHelmValuesServiceAccount = {
   /**
-   * Specifies whether a ServiceAccount should be created
-   *
    * Specifies whether a ServiceAccount should be created
    *
    * @default true
@@ -3969,15 +3069,11 @@ export type RedisHelmValuesServiceAccount = {
   /**
    * If not set and create is true, a name is generated using the common.names.fullname template
    *
-   * The name of the ServiceAccount to use.
-   *
    * @default ""
    */
   name?: string;
   /**
    * ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#use-the-default-service-account-to-access-the-api-server
-   *
-   * Whether to auto mount the service account token
    *
    * @default false
    */
@@ -3985,11 +3081,17 @@ export type RedisHelmValuesServiceAccount = {
   /**
    * Additional custom annotations for the ServiceAccount
    *
-   * Additional custom annotations for the ServiceAccount
-   *
    * @default {}
    */
-  annotations?: object | string;
+  annotations?: RedisHelmValuesServiceAccountAnnotations;
+};
+
+export type RedisHelmValuesServiceAccountAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
 };
 
 export type RedisHelmValuesPdb = object;
@@ -3998,14 +3100,10 @@ export type RedisHelmValuesTls = {
   /**
    * Enable TLS traffic
    *
-   * Enable TLS traffic
-   *
    * @default false
    */
   enabled?: boolean;
   /**
-   * Require clients to authenticate
-   *
    * Require clients to authenticate
    *
    * @default true
@@ -4014,14 +3112,10 @@ export type RedisHelmValuesTls = {
   /**
    * Enable autogenerated certificates
    *
-   * Enable autogenerated certificates
-   *
    * @default false
    */
   autoGenerated?: boolean;
   /**
-   * The name of the existing secret that contains the TLS certificates
-   *
    * The name of the existing secret that contains the TLS certificates
    *
    * @default ""
@@ -4030,14 +3124,10 @@ export type RedisHelmValuesTls = {
   /**
    * DEPRECATED. Use existingSecret instead.
    *
-   * DEPRECATED. Use existingSecret instead.
-   *
    * @default ""
    */
   certificatesSecret?: string;
   /**
-   * Certificate filename
-   *
    * Certificate filename
    *
    * @default ""
@@ -4046,22 +3136,16 @@ export type RedisHelmValuesTls = {
   /**
    * Certificate Key filename
    *
-   * Certificate Key filename
-   *
    * @default ""
    */
   certKeyFilename?: string;
   /**
    * CA Certificate filename
    *
-   * CA Certificate filename
-   *
    * @default ""
    */
   certCAFilename?: string;
   /**
-   * File containing DH params (in order to support DH based ciphers)
-   *
    * File containing DH params (in order to support DH based ciphers)
    *
    * @default ""
@@ -4072,8 +3156,6 @@ export type RedisHelmValuesTls = {
 export type RedisHelmValuesMetrics = {
   /**
    * Start a sidecar prometheus exporter to expose Redis(R) metrics
-   *
-   * Start a sidecar prometheus exporter to expose Redis&reg; metrics
    *
    * @default false
    */
@@ -4108,39 +3190,24 @@ export type RedisHelmValuesMetrics = {
   /**
    * Custom startupProbe that overrides the default one
    *
-   * Custom startupProbe that overrides the default one
-   *
    * @default {}
    */
-  customStartupProbe?: object | string;
+  customStartupProbe?: RedisHelmValuesMetricsCustomStartupProbe;
   /**
-   * Custom livenessProbe that overrides the default one
-   *
    * Custom livenessProbe that overrides the default one
    *
    * @default {}
    */
-  customLivenessProbe?: object | string;
+  customLivenessProbe?: RedisHelmValuesMetricsCustomLivenessProbe;
   /**
-   * Custom readinessProbe that overrides the default one
-   *
    * Custom readinessProbe that overrides the default one
    *
    * @default {}
    */
-  customReadinessProbe?: object | string;
-  /**
-   * Override default metrics container init command (useful when using custom images)
-   *
-   * Override default metrics container init command (useful when using custom images)
-   *
-   * @default []
-   */
-  command?: unknown[] | string;
+  customReadinessProbe?: RedisHelmValuesMetricsCustomReadinessProbe;
+  command?: unknown[];
   /**
    * Useful for certificate CN/SAN matching
-   *
-   * A way to specify an alternative Redis&reg; hostname
    *
    * @default "localhost"
    */
@@ -4148,19 +3215,10 @@ export type RedisHelmValuesMetrics = {
   /**
    * Extra arguments for Redis(R) exporter, for example:
    *
-   * Extra arguments for Redis&reg; exporter, for example:
-   *
    * @default {}
    */
   extraArgs?: RedisHelmValuesMetricsExtraArgs;
-  /**
-   * Array with extra environment variables to add to Redis(R) exporter
-   *
-   * Array with extra environment variables to add to Redis&reg; exporter
-   *
-   * @default []
-   */
-  extraEnvVars?: unknown[] | string;
+  extraEnvVars?: unknown[];
   /**
    * Configure Container Security Context
    * ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
@@ -4168,28 +3226,12 @@ export type RedisHelmValuesMetrics = {
    * @default {...} (9 keys)
    */
   containerSecurityContext?: RedisHelmValuesMetricsContainerSecurityContext;
-  /**
-   * Optionally specify extra list of additional volumes for the Redis(R) metrics sidecar
-   *
-   * Optionally specify extra list of additional volumes for the Redis&reg; metrics sidecar
-   *
-   * @default []
-   */
-  extraVolumes?: unknown[] | string;
-  /**
-   * Optionally specify extra list of additional volumeMounts for the Redis(R) metrics sidecar
-   *
-   * Optionally specify extra list of additional volumeMounts for the Redis&reg; metrics sidecar
-   *
-   * @default []
-   */
-  extraVolumeMounts?: unknown[] | string;
+  extraVolumes?: unknown[];
+  extraVolumeMounts?: unknown[];
   /**
    * Redis(R) exporter resource requests and limits
    * ref: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
    * More information: https://github.com/bitnami/charts/blob/main/bitnami/common/templates/_resources.tpl#L15
-   *
-   * Set container resources according to one common preset (allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge). This is ignored if metrics.resources is set (metrics.resources is recommended for production).
    *
    * @default "nano"
    */
@@ -4201,8 +3243,6 @@ export type RedisHelmValuesMetrics = {
    * limits:
    * memory: 1024Mi
    *
-   * Set container requests and limits for different resources like CPU or memory (essential for production workloads)
-   *
    * @default {}
    */
   resources?: RedisHelmValuesMetricsResources;
@@ -4212,8 +3252,6 @@ export type RedisHelmValuesMetrics = {
   fips?: RedisHelmValuesMetricsFips;
   /**
    * ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-   *
-   * Extra labels for Redis&reg; exporter pods
    *
    * @default {}
    */
@@ -4260,17 +3298,13 @@ export type RedisHelmValuesMetricsImage = {
   /**
    * [default: REGISTRY_NAME] Redis(R) Exporter image registry
    *
-   * Redis&reg; Exporter image registry
-   *
-   * @default "REGISTRY_NAME"
+   * @default "registry-1.docker.io"
    */
   registry?: string;
   /**
    * [default: REPOSITORY_NAME/redis-exporter] Redis(R) Exporter image repository
    *
-   * Redis&reg; Exporter image repository
-   *
-   * @default "REPOSITORY_NAME/redis-exporter"
+   * @default "bitnami/redis-exporter"
    */
   repository?: string;
   /**
@@ -4280,33 +3314,20 @@ export type RedisHelmValuesMetricsImage = {
   /**
    * Redis(R) Exporter image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
    *
-   * Redis&reg; Exporter image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
-   *
    * @default ""
    */
   digest?: string;
   /**
    * Redis(R) Exporter image pull policy
    *
-   * Redis&reg; Exporter image pull policy
-   *
    * @default "IfNotPresent"
    */
   pullPolicy?: string;
-  /**
-   * - myRegistryKeySecretName
-   *
-   * Redis&reg; Exporter image pull secrets
-   *
-   * @default []
-   */
   pullSecrets?: unknown[];
 };
 
 export type RedisHelmValuesMetricsContainerPorts = {
   /**
-   * Metrics HTTP container port
-   *
    * Metrics HTTP container port
    *
    * @default 9121
@@ -4318,14 +3339,10 @@ export type RedisHelmValuesMetricsStartupProbe = {
   /**
    * Enable startupProbe on Redis(R) replicas nodes
    *
-   * Enable startupProbe on Redis&reg; replicas nodes
-   *
    * @default false
    */
   enabled?: boolean;
   /**
-   * Initial delay seconds for startupProbe
-   *
    * Initial delay seconds for startupProbe
    *
    * @default 10
@@ -4334,14 +3351,10 @@ export type RedisHelmValuesMetricsStartupProbe = {
   /**
    * Period seconds for startupProbe
    *
-   * Period seconds for startupProbe
-   *
    * @default 10
    */
   periodSeconds?: number;
   /**
-   * Timeout seconds for startupProbe
-   *
    * Timeout seconds for startupProbe
    *
    * @default 5
@@ -4350,14 +3363,10 @@ export type RedisHelmValuesMetricsStartupProbe = {
   /**
    * Success threshold for startupProbe
    *
-   * Success threshold for startupProbe
-   *
    * @default 1
    */
   successThreshold?: number;
   /**
-   * Failure threshold for startupProbe
-   *
    * Failure threshold for startupProbe
    *
    * @default 5
@@ -4369,14 +3378,10 @@ export type RedisHelmValuesMetricsLivenessProbe = {
   /**
    * Enable livenessProbe on Redis(R) replicas nodes
    *
-   * Enable livenessProbe on Redis&reg; replicas nodes
-   *
    * @default true
    */
   enabled?: boolean;
   /**
-   * Initial delay seconds for livenessProbe
-   *
    * Initial delay seconds for livenessProbe
    *
    * @default 10
@@ -4385,14 +3390,10 @@ export type RedisHelmValuesMetricsLivenessProbe = {
   /**
    * Period seconds for livenessProbe
    *
-   * Period seconds for livenessProbe
-   *
    * @default 10
    */
   periodSeconds?: number;
   /**
-   * Timeout seconds for livenessProbe
-   *
    * Timeout seconds for livenessProbe
    *
    * @default 5
@@ -4401,14 +3402,10 @@ export type RedisHelmValuesMetricsLivenessProbe = {
   /**
    * Success threshold for livenessProbe
    *
-   * Success threshold for livenessProbe
-   *
    * @default 1
    */
   successThreshold?: number;
   /**
-   * Failure threshold for livenessProbe
-   *
    * Failure threshold for livenessProbe
    *
    * @default 5
@@ -4420,14 +3417,10 @@ export type RedisHelmValuesMetricsReadinessProbe = {
   /**
    * Enable readinessProbe on Redis(R) replicas nodes
    *
-   * Enable readinessProbe on Redis&reg; replicas nodes
-   *
    * @default true
    */
   enabled?: boolean;
   /**
-   * Initial delay seconds for readinessProbe
-   *
    * Initial delay seconds for readinessProbe
    *
    * @default 5
@@ -4436,14 +3429,10 @@ export type RedisHelmValuesMetricsReadinessProbe = {
   /**
    * Period seconds for readinessProbe
    *
-   * Period seconds for readinessProbe
-   *
    * @default 10
    */
   periodSeconds?: number;
   /**
-   * Timeout seconds for readinessProbe
-   *
    * Timeout seconds for readinessProbe
    *
    * @default 1
@@ -4452,14 +3441,10 @@ export type RedisHelmValuesMetricsReadinessProbe = {
   /**
    * Success threshold for readinessProbe
    *
-   * Success threshold for readinessProbe
-   *
    * @default 1
    */
   successThreshold?: number;
   /**
-   * Failure threshold for readinessProbe
-   *
    * Failure threshold for readinessProbe
    *
    * @default 3
@@ -4467,13 +3452,17 @@ export type RedisHelmValuesMetricsReadinessProbe = {
   failureThreshold?: number;
 };
 
+export type RedisHelmValuesMetricsCustomStartupProbe = object;
+
+export type RedisHelmValuesMetricsCustomLivenessProbe = object;
+
+export type RedisHelmValuesMetricsCustomReadinessProbe = object;
+
 export type RedisHelmValuesMetricsExtraArgs = object;
 
 export type RedisHelmValuesMetricsContainerSecurityContext = {
   /**
    * Enabled Redis(R) exporter containers' Security Context
-   *
-   * Enabled Redis&reg; exporter containers' Security Context
    *
    * @default true
    */
@@ -4487,15 +3476,11 @@ export type RedisHelmValuesMetricsContainerSecurityContext = {
   /**
    * Set Redis(R) exporter containers' Security Context runAsUser
    *
-   * Set Redis&reg; exporter containers' Security Context runAsUser
-   *
    * @default 1001
    */
   runAsUser?: number;
   /**
    * Set Redis(R) exporter containers' Security Context runAsGroup
-   *
-   * Set Redis&reg; exporter containers' Security Context runAsGroup
    *
    * @default 1001
    */
@@ -4503,22 +3488,16 @@ export type RedisHelmValuesMetricsContainerSecurityContext = {
   /**
    * Set Redis(R) exporter containers' Security Context runAsNonRoot
    *
-   * Set Redis&reg; exporter containers' Security Context runAsNonRoot
-   *
    * @default true
    */
   runAsNonRoot?: boolean;
   /**
    * Set Redis(R) exporter containers' Security Context allowPrivilegeEscalation
    *
-   * Set Redis&reg; exporter containers' Security Context allowPrivilegeEscalation
-   *
    * @default false
    */
   allowPrivilegeEscalation?: boolean;
   /**
-   * Set container's Security Context read-only root filesystem
-   *
    * Set container's Security Context read-only root filesystem
    *
    * @default true
@@ -4541,21 +3520,12 @@ export type RedisHelmValuesMetricsContainerSecurityContextSeccompProfile = {
   /**
    * Set Redis(R) exporter containers' Security Context seccompProfile
    *
-   * Set Redis&reg; exporter containers' Security Context seccompProfile
-   *
    * @default "RuntimeDefault"
    */
   type?: string;
 };
 
 export type RedisHelmValuesMetricsContainerSecurityContextCapabilities = {
-  /**
-   * Set Redis(R) exporter containers' Security Context capabilities to drop
-   *
-   * Set Redis&reg; exporter containers' Security Context capabilities to drop
-   *
-   * @default ["ALL"]
-   */
   drop?: string[];
 };
 
@@ -4593,15 +3563,11 @@ export type RedisHelmValuesMetricsService = {
   /**
    * Create Service resource(s) for scraping metrics using PrometheusOperator ServiceMonitor, can be disabled when using a PodMonitor
    *
-   * Create Service resource(s) for scraping metrics using PrometheusOperator ServiceMonitor, can be disabled when using a PodMonitor
-   *
    * @default true
    */
   enabled?: boolean;
   /**
    * Redis(R) exporter service type
-   *
-   * Redis&reg; exporter service type
    *
    * @default "ClusterIP"
    */
@@ -4613,23 +3579,12 @@ export type RedisHelmValuesMetricsService = {
   /**
    * ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
    *
-   * Redis&reg; exporter service external traffic policy
-   *
    * @default "Cluster"
    */
   externalTrafficPolicy?: string;
-  /**
-   * Extra ports to expose (normally used with the `sidecar` value)
-   *
-   * Extra ports to expose (normally used with the `sidecar` value)
-   *
-   * @default []
-   */
-  extraPorts?: unknown[] | string;
+  extraPorts?: unknown[];
   /**
    * ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
-   *
-   * Redis&reg; exporter service Load Balancer IP
    *
    * @default ""
    */
@@ -4637,32 +3592,18 @@ export type RedisHelmValuesMetricsService = {
   /**
    * ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-loadbalancer
    *
-   * exporter service Load Balancer class if service type is `LoadBalancer` (optional, cloud specific)
-   *
    * @default ""
    */
   loadBalancerClass?: string;
-  /**
-   * https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
-   * e.g.
-   *
-   * Redis&reg; exporter service Load Balancer sources
-   *
-   * @default []
-   */
   loadBalancerSourceRanges?: unknown[];
   /**
    * Additional custom annotations for Redis(R) exporter service
    *
-   * Additional custom annotations for Redis&reg; exporter service
-   *
    * @default {}
    */
-  annotations?: object | string;
+  annotations?: RedisHelmValuesMetricsServiceAnnotations;
   /**
    * Redis(R) exporter service Cluster IP
-   *
-   * Redis&reg; exporter service Cluster IP
    *
    * @default ""
    */
@@ -4673,17 +3614,21 @@ export type RedisHelmValuesMetricsServicePorts = {
   /**
    * Redis(R) exporter service port
    *
-   * Redis&reg; exporter service port
-   *
    * @default 9121
    */
   http?: number;
 };
 
+export type RedisHelmValuesMetricsServiceAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
 export type RedisHelmValuesMetricsServiceMonitor = {
   /**
-   * the service port to scrape metrics from
-   *
    * the service port to scrape metrics from
    *
    * @default "http-metrics"
@@ -4692,14 +3637,10 @@ export type RedisHelmValuesMetricsServiceMonitor = {
   /**
    * Create ServiceMonitor resource(s) for scraping metrics using PrometheusOperator
    *
-   * Create ServiceMonitor resource(s) for scraping metrics using PrometheusOperator
-   *
    * @default false
    */
   enabled?: boolean;
   /**
-   * The namespace in which the ServiceMonitor will be created
-   *
    * The namespace in which the ServiceMonitor will be created
    *
    * @default ""
@@ -4708,14 +3649,10 @@ export type RedisHelmValuesMetricsServiceMonitor = {
   /**
    * [object] TLS configuration used for scrape endpoints used by Prometheus
    *
-   * TLS configuration used for scrape endpoints used by Prometheus
-   *
    * @default {}
    */
   tlsConfig?: RedisHelmValuesMetricsServiceMonitorTlsConfig;
   /**
-   * The interval at which metrics should be scraped
-   *
    * The interval at which metrics should be scraped
    *
    * @default "30s"
@@ -4724,31 +3661,13 @@ export type RedisHelmValuesMetricsServiceMonitor = {
   /**
    * The timeout after which the scrape is ended
    *
-   * The timeout after which the scrape is ended
-   *
    * @default ""
    */
   scrapeTimeout?: string;
-  /**
-   * Metrics RelabelConfigs to apply to samples before scraping.
-   *
-   * Metrics RelabelConfigs to apply to samples before scraping.
-   *
-   * @default []
-   */
   relabelings?: unknown[];
   relabellings?: unknown[];
-  /**
-   * Metrics RelabelConfigs to apply to samples before ingestion.
-   *
-   * Metrics RelabelConfigs to apply to samples before ingestion.
-   *
-   * @default []
-   */
   metricRelabelings?: unknown[];
   /**
-   * Specify honorLabels parameter to add the scrape endpoint
-   *
    * Specify honorLabels parameter to add the scrape endpoint
    *
    * @default false
@@ -4757,22 +3676,11 @@ export type RedisHelmValuesMetricsServiceMonitor = {
   /**
    * Additional labels that can be used so ServiceMonitor resource(s) can be discovered by Prometheus
    *
-   * Additional labels that can be used so ServiceMonitor resource(s) can be discovered by Prometheus
-   *
    * @default {}
    */
-  additionalLabels?: object | string;
-  /**
-   * Labels from the Kubernetes pod to be transferred to the created metrics
-   *
-   * Labels from the Kubernetes pod to be transferred to the created metrics
-   *
-   * @default []
-   */
+  additionalLabels?: RedisHelmValuesMetricsServiceMonitorAdditionalLabels;
   podTargetLabels?: unknown[];
   /**
-   * Limit of how many samples should be scraped from every Pod
-   *
    * Limit of how many samples should be scraped from every Pod
    *
    * @default false
@@ -4781,27 +3689,18 @@ export type RedisHelmValuesMetricsServiceMonitor = {
   /**
    * Limit of how many targets should be scraped
    *
-   * Limit of how many targets should be scraped
-   *
    * @default false
    */
   targetLimit?: boolean;
-  /**
-   * Additional endpoints to scrape (e.g sentinel)
-   *
-   * Additional endpoints to scrape (e.g sentinel)
-   *
-   * @default []
-   */
   additionalEndpoints?: unknown[];
 };
 
 export type RedisHelmValuesMetricsServiceMonitorTlsConfig = object;
 
+export type RedisHelmValuesMetricsServiceMonitorAdditionalLabels = object;
+
 export type RedisHelmValuesMetricsPodMonitor = {
   /**
-   * the pod port to scrape metrics from
-   *
    * the pod port to scrape metrics from
    *
    * @default "metrics"
@@ -4810,14 +3709,10 @@ export type RedisHelmValuesMetricsPodMonitor = {
   /**
    * Create PodMonitor resource(s) for scraping metrics using PrometheusOperator
    *
-   * Create PodMonitor resource(s) for scraping metrics using PrometheusOperator
-   *
    * @default false
    */
   enabled?: boolean;
   /**
-   * The namespace in which the PodMonitor will be created
-   *
    * The namespace in which the PodMonitor will be created
    *
    * @default ""
@@ -4826,14 +3721,10 @@ export type RedisHelmValuesMetricsPodMonitor = {
   /**
    * [object] TLS configuration used for scrape endpoints used by Prometheus
    *
-   * TLS configuration used for scrape endpoints used by Prometheus
-   *
    * @default {}
    */
   tlsConfig?: RedisHelmValuesMetricsPodMonitorTlsConfig;
   /**
-   * The interval at which metrics should be scraped
-   *
    * The interval at which metrics should be scraped
    *
    * @default "30s"
@@ -4842,31 +3733,13 @@ export type RedisHelmValuesMetricsPodMonitor = {
   /**
    * The timeout after which the scrape is ended
    *
-   * The timeout after which the scrape is ended
-   *
    * @default ""
    */
   scrapeTimeout?: string;
-  /**
-   * Metrics RelabelConfigs to apply to samples before scraping.
-   *
-   * Metrics RelabelConfigs to apply to samples before scraping.
-   *
-   * @default []
-   */
   relabelings?: unknown[];
   relabellings?: unknown[];
-  /**
-   * Metrics RelabelConfigs to apply to samples before ingestion.
-   *
-   * Metrics RelabelConfigs to apply to samples before ingestion.
-   *
-   * @default []
-   */
   metricRelabelings?: unknown[];
   /**
-   * Specify honorLabels parameter to add the scrape endpoint
-   *
    * Specify honorLabels parameter to add the scrape endpoint
    *
    * @default false
@@ -4875,22 +3748,11 @@ export type RedisHelmValuesMetricsPodMonitor = {
   /**
    * Additional labels that can be used so PodMonitor resource(s) can be discovered by Prometheus
    *
-   * Additional labels that can be used so PodMonitor resource(s) can be discovered by Prometheus
-   *
    * @default {}
    */
-  additionalLabels?: object | string;
-  /**
-   * Labels from the Kubernetes pod to be transferred to the created metrics
-   *
-   * Labels from the Kubernetes pod to be transferred to the created metrics
-   *
-   * @default []
-   */
+  additionalLabels?: RedisHelmValuesMetricsPodMonitorAdditionalLabels;
   podTargetLabels?: unknown[];
   /**
-   * Limit of how many samples should be scraped from every Pod
-   *
    * Limit of how many samples should be scraped from every Pod
    *
    * @default false
@@ -4899,27 +3761,18 @@ export type RedisHelmValuesMetricsPodMonitor = {
   /**
    * Limit of how many targets should be scraped
    *
-   * Limit of how many targets should be scraped
-   *
    * @default false
    */
   targetLimit?: boolean;
-  /**
-   * Additional endpoints to scrape (e.g sentinel)
-   *
-   * Additional endpoints to scrape (e.g sentinel)
-   *
-   * @default []
-   */
   additionalEndpoints?: unknown[];
 };
 
 export type RedisHelmValuesMetricsPodMonitorTlsConfig = object;
 
+export type RedisHelmValuesMetricsPodMonitorAdditionalLabels = object;
+
 export type RedisHelmValuesMetricsPrometheusRule = {
   /**
-   * Create a custom prometheusRule Resource for scraping metrics using PrometheusOperator
-   *
    * Create a custom prometheusRule Resource for scraping metrics using PrometheusOperator
    *
    * @default false
@@ -4928,34 +3781,22 @@ export type RedisHelmValuesMetricsPrometheusRule = {
   /**
    * The namespace in which the prometheusRule will be created
    *
-   * The namespace in which the prometheusRule will be created
-   *
    * @default ""
    */
   namespace?: string;
   /**
    * Additional labels for the prometheusRule
    *
-   * Additional labels for the prometheusRule
-   *
    * @default {}
    */
-  additionalLabels?: object | string;
-  /**
-   * Redis(R) instance {{ "{{ $labels.instance }}" }} is using {{ "{{ $value }}" }}% of its available memory.
-   * Redis(R) instance {{ "{{ $labels.instance }}" }} has evicted {{ "{{ $value }}" }} keys in the last 5 minutes.
-   *
-   * Custom Prometheus rules
-   *
-   * @default []
-   */
-  rules?: unknown[] | string;
+  additionalLabels?: RedisHelmValuesMetricsPrometheusRuleAdditionalLabels;
+  rules?: unknown[];
 };
+
+export type RedisHelmValuesMetricsPrometheusRuleAdditionalLabels = object;
 
 export type RedisHelmValuesVolumePermissions = {
   /**
-   * Enable init container that changes the owner/group of the PV mount point to `runAsUser:fsGroup`
-   *
    * Enable init container that changes the owner/group of the PV mount point to `runAsUser:fsGroup`
    *
    * @default false
@@ -4974,8 +3815,6 @@ export type RedisHelmValuesVolumePermissions = {
    * ref: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
    * More information: https://github.com/bitnami/charts/blob/main/bitnami/common/templates/_resources.tpl#L15
    *
-   * Set container resources according to one common preset (allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge). This is ignored if volumePermissions.resources is set (volumePermissions.resources is recommended for production).
-   *
    * @default "nano"
    */
   resourcesPreset?: string;
@@ -4985,8 +3824,6 @@ export type RedisHelmValuesVolumePermissions = {
    * requests:
    * limits:
    * memory: 1024Mi
-   *
-   * Set container requests and limits for different resources like CPU or memory (essential for production workloads)
    *
    * @default {}
    */
@@ -5012,17 +3849,13 @@ export type RedisHelmValuesVolumePermissionsImage = {
   /**
    * [default: REGISTRY_NAME] OS Shell + Utility image registry
    *
-   * OS Shell + Utility image registry
-   *
-   * @default "REGISTRY_NAME"
+   * @default "registry-1.docker.io"
    */
   registry?: string;
   /**
    * [default: REPOSITORY_NAME/os-shell] OS Shell + Utility image repository
    *
-   * OS Shell + Utility image repository
-   *
-   * @default "REPOSITORY_NAME/os-shell"
+   * @default "bitnami/os-shell"
    */
   repository?: string;
   /**
@@ -5032,26 +3865,15 @@ export type RedisHelmValuesVolumePermissionsImage = {
   /**
    * OS Shell + Utility image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
    *
-   * OS Shell + Utility image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
-   *
    * @default ""
    */
   digest?: string;
   /**
    * OS Shell + Utility image pull policy
    *
-   * OS Shell + Utility image pull policy
-   *
    * @default "IfNotPresent"
    */
   pullPolicy?: string;
-  /**
-   * - myRegistryKeySecretName
-   *
-   * OS Shell + Utility image pull secrets
-   *
-   * @default []
-   */
   pullSecrets?: unknown[];
 };
 
@@ -5076,8 +3898,6 @@ export type RedisHelmValuesVolumePermissionsContainerSecurityContext = {
   /**
    * Set init container's Security Context runAsUser
    *
-   * Set init container's Security Context runAsUser
-   *
    * @default 0
    */
   runAsUser?: number;
@@ -5095,13 +3915,6 @@ export type RedisHelmValuesKubectl = {
    * @default {...} (6 keys)
    */
   image?: RedisHelmValuesKubectlImage;
-  /**
-   * kubectl command to execute
-   *
-   * kubectl command to execute
-   *
-   * @default ["/opt/bitnami/scripts/kubectl-scripts/update-master-label.sh"]
-   */
   command?: string[];
   /**
    * Configure Container Security Context
@@ -5127,17 +3940,13 @@ export type RedisHelmValuesKubectlImage = {
   /**
    * [default: REGISTRY_NAME] Kubectl image registry
    *
-   * Kubectl image registry
-   *
-   * @default "REGISTRY_NAME"
+   * @default "registry-1.docker.io"
    */
   registry?: string;
   /**
    * [default: REPOSITORY_NAME/kubectl] Kubectl image repository
    *
-   * Kubectl image repository
-   *
-   * @default "REPOSITORY_NAME/kubectl"
+   * @default "bitnami/kubectl"
    */
   repository?: string;
   /**
@@ -5147,8 +3956,6 @@ export type RedisHelmValuesKubectlImage = {
   /**
    * Kubectl image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
    *
-   * Kubectl image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
-   *
    * @default ""
    */
   digest?: string;
@@ -5156,25 +3963,14 @@ export type RedisHelmValuesKubectlImage = {
    * Specify a imagePullPolicy
    * ref: https://kubernetes.io/docs/concepts/containers/images/#pre-pulled-images
    *
-   * Kubectl image pull policy
-   *
    * @default "IfNotPresent"
    */
   pullPolicy?: string;
-  /**
-   * - myRegistryKeySecretName
-   *
-   * Kubectl pull secrets
-   *
-   * @default []
-   */
   pullSecrets?: unknown[];
 };
 
 export type RedisHelmValuesKubectlContainerSecurityContext = {
   /**
-   * Enabled kubectl containers' Security Context
-   *
    * Enabled kubectl containers' Security Context
    *
    * @default true
@@ -5189,14 +3985,10 @@ export type RedisHelmValuesKubectlContainerSecurityContext = {
   /**
    * Set kubectl containers' Security Context runAsUser
    *
-   * Set kubectl containers' Security Context runAsUser
-   *
    * @default 1001
    */
   runAsUser?: number;
   /**
-   * Set kubectl containers' Security Context runAsGroup
-   *
    * Set kubectl containers' Security Context runAsGroup
    *
    * @default 1001
@@ -5205,22 +3997,16 @@ export type RedisHelmValuesKubectlContainerSecurityContext = {
   /**
    * Set kubectl containers' Security Context runAsNonRoot
    *
-   * Set kubectl containers' Security Context runAsNonRoot
-   *
    * @default true
    */
   runAsNonRoot?: boolean;
   /**
    * Set kubectl containers' Security Context allowPrivilegeEscalation
    *
-   * Set kubectl containers' Security Context allowPrivilegeEscalation
-   *
    * @default false
    */
   allowPrivilegeEscalation?: boolean;
   /**
-   * Set container's Security Context read-only root filesystem
-   *
    * Set container's Security Context read-only root filesystem
    *
    * @default true
@@ -5243,21 +4029,12 @@ export type RedisHelmValuesKubectlContainerSecurityContextSeccompProfile = {
   /**
    * Set kubectl containers' Security Context seccompProfile
    *
-   * Set kubectl containers' Security Context seccompProfile
-   *
    * @default "RuntimeDefault"
    */
   type?: string;
 };
 
 export type RedisHelmValuesKubectlContainerSecurityContextCapabilities = {
-  /**
-   * Set kubectl containers' Security Context capabilities to drop
-   *
-   * Set kubectl containers' Security Context capabilities to drop
-   *
-   * @default ["ALL"]
-   */
   drop?: string[];
 };
 
@@ -5265,14 +4042,10 @@ export type RedisHelmValuesKubectlResources = {
   /**
    * The resources limits for the kubectl containers
    *
-   * The resources limits for the kubectl containers
-   *
    * @default {}
    */
   limits?: RedisHelmValuesKubectlResourcesLimits;
   /**
-   * The requested resources for the kubectl containers
-   *
    * The requested resources for the kubectl containers
    *
    * @default {}
@@ -5303,8 +4076,6 @@ export type RedisHelmValuesSysctl = {
   /**
    * Enable init container to modify Kernel settings
    *
-   * Enable init container to modify Kernel settings
-   *
    * @default false
    */
   enabled?: boolean;
@@ -5316,17 +4087,8 @@ export type RedisHelmValuesSysctl = {
    * @default {...} (6 keys)
    */
   image?: RedisHelmValuesSysctlImage;
+  command?: unknown[];
   /**
-   * Override default init-sysctl container command (useful when using custom images)
-   *
-   * Override default init-sysctl container command (useful when using custom images)
-   *
-   * @default []
-   */
-  command?: unknown[] | string;
-  /**
-   * Mount the host `/sys` folder to `/host-sys`
-   *
    * Mount the host `/sys` folder to `/host-sys`
    *
    * @default false
@@ -5337,8 +4099,6 @@ export type RedisHelmValuesSysctl = {
    * ref: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
    * More information: https://github.com/bitnami/charts/blob/main/bitnami/common/templates/_resources.tpl#L15
    *
-   * Set container resources according to one common preset (allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge). This is ignored if sysctl.resources is set (sysctl.resources is recommended for production).
-   *
    * @default "nano"
    */
   resourcesPreset?: string;
@@ -5348,8 +4108,6 @@ export type RedisHelmValuesSysctl = {
    * requests:
    * limits:
    * memory: 1024Mi
-   *
-   * Set container requests and limits for different resources like CPU or memory (essential for production workloads)
    *
    * @default {}
    */
@@ -5364,17 +4122,13 @@ export type RedisHelmValuesSysctlImage = {
   /**
    * [default: REGISTRY_NAME] OS Shell + Utility image registry
    *
-   * OS Shell + Utility image registry
-   *
-   * @default "REGISTRY_NAME"
+   * @default "registry-1.docker.io"
    */
   registry?: string;
   /**
    * [default: REPOSITORY_NAME/os-shell] OS Shell + Utility image repository
    *
-   * OS Shell + Utility image repository
-   *
-   * @default "REPOSITORY_NAME/os-shell"
+   * @default "bitnami/os-shell"
    */
   repository?: string;
   /**
@@ -5384,26 +4138,15 @@ export type RedisHelmValuesSysctlImage = {
   /**
    * OS Shell + Utility image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
    *
-   * OS Shell + Utility image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
-   *
    * @default ""
    */
   digest?: string;
   /**
    * OS Shell + Utility image pull policy
    *
-   * OS Shell + Utility image pull policy
-   *
    * @default "IfNotPresent"
    */
   pullPolicy?: string;
-  /**
-   * - myRegistryKeySecretName
-   *
-   * OS Shell + Utility image pull secrets
-   *
-   * @default []
-   */
   pullSecrets?: unknown[];
 };
 
@@ -5422,14 +4165,10 @@ export type RedisHelmValuesUseExternalDNS = {
   /**
    * Enable various syntax that would enable external-dns to work.  Note this requires a working installation of `external-dns` to be usable.
    *
-   * Enable various syntax that would enable external-dns to work.  Note this requires a working installation of `external-dns` to be usable.
-   *
    * @default false
    */
   enabled?: boolean;
   /**
-   * The DNS suffix utilized when `external-dns` is enabled.  Note that we prepend the suffix with the full name of the release.
-   *
    * The DNS suffix utilized when `external-dns` is enabled.  Note that we prepend the suffix with the full name of the release.
    *
    * @default ""
@@ -5438,14 +4177,10 @@ export type RedisHelmValuesUseExternalDNS = {
   /**
    * The annotation key utilized when `external-dns` is enabled. Setting this to `false` will disable annotations.
    *
-   * The annotation key utilized when `external-dns` is enabled. Setting this to `false` will disable annotations.
-   *
    * @default "external-dns.alpha.kubernetes.io/"
    */
   annotationKey?: string;
   /**
-   * Extra annotations to be utilized when `external-dns` is enabled.
-   *
    * Extra annotations to be utilized when `external-dns` is enabled.
    *
    * @default {}
@@ -5468,14 +4203,10 @@ export type RedisHelmValues = {
   /**
    * Common parameters
    *
-   * Override Kubernetes version
-   *
    * @default ""
    */
   kubeVersion?: string;
   /**
-   * String to partially override common.names.fullname
-   *
    * String to partially override common.names.fullname
    *
    * @default ""
@@ -5484,14 +4215,10 @@ export type RedisHelmValues = {
   /**
    * String to fully override common.names.fullname
    *
-   * String to fully override common.names.fullname
-   *
    * @default ""
    */
   fullnameOverride?: string;
   /**
-   * String to fully override common.names.namespace
-   *
    * String to fully override common.names.namespace
    *
    * @default ""
@@ -5500,19 +4227,15 @@ export type RedisHelmValues = {
   /**
    * Labels to add to all deployed objects
    *
-   * Labels to add to all deployed objects
-   *
    * @default {}
    */
-  commonLabels?: object | string;
+  commonLabels?: RedisHelmValuesCommonLabels;
   /**
    * Annotations to add to all deployed objects
    *
-   * Annotations to add to all deployed objects
-   *
    * @default {}
    */
-  commonAnnotations?: object | string;
+  commonAnnotations?: RedisHelmValuesCommonAnnotations;
   /**
    * Enable checksum annotations used to trigger rolling updates when ConfigMap(s) change
    *
@@ -5528,30 +4251,17 @@ export type RedisHelmValues = {
   /**
    * Annotations to add to secret
    *
-   * Annotations to add to secret
-   *
    * @default {}
    */
-  secretAnnotations?: object | string;
+  secretAnnotations?: RedisHelmValuesSecretAnnotations;
   /**
-   * Kubernetes cluster domain name
-   *
    * Kubernetes cluster domain name
    *
    * @default "cluster.local"
    */
   clusterDomain?: string;
-  /**
-   * Array of extra objects to deploy with the release
-   *
-   * Array of extra objects to deploy with the release
-   *
-   * @default []
-   */
   extraDeploy?: unknown[];
   /**
-   * Use hostnames internally when announcing replication. If false, the hostname will be resolved to an IP address
-   *
    * Use hostnames internally when announcing replication. If false, the hostname will be resolved to an IP address
    *
    * @default true
@@ -5560,14 +4270,10 @@ export type RedisHelmValues = {
   /**
    * Failure threshold for internal hostnames resolution
    *
-   * Failure threshold for internal hostnames resolution
-   *
    * @default 5
    */
   nameResolutionThreshold?: number;
   /**
-   * Timeout seconds between probes for internal hostnames resolution
-   *
    * Timeout seconds between probes for internal hostnames resolution
    *
    * @default 5
@@ -5592,8 +4298,6 @@ export type RedisHelmValues = {
    * Redis(R) common configuration parameters
    * https://github.com/bitnami/containers/tree/main/bitnami/redis#configuration
    *
-   * Redis&reg; architecture. Allowed values: `standalone` or `replication`
-   *
    * @default "replication"
    */
   architecture?: string;
@@ -5607,15 +4311,12 @@ export type RedisHelmValues = {
   /**
    * ref: https://redis.io/topics/config
    *
-   * Common configuration to be added into the ConfigMap
-   *
-   * @default """"
+   * @default "# Enable ReJSON y Redisearch
+loadmodule /opt/bi..."
    */
   commonConfiguration?: string;
   /**
    * The name of an existing ConfigMap with your custom configuration for Redis(R) nodes
-   *
-   * The name of an existing ConfigMap with your custom configuration for Redis&reg; nodes
    *
    * @default ""
    */
@@ -5635,7 +4336,7 @@ export type RedisHelmValues = {
   /**
    * Redis(R) Sentinel configuration parameters
    *
-   * @default {...} (41 keys)
+   * @default {...} (42 keys)
    */
   sentinel?: RedisHelmValuesSentinel;
   /**
@@ -5670,8 +4371,6 @@ export type RedisHelmValues = {
   serviceAccount?: RedisHelmValuesServiceAccount;
   /**
    * ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
-   *
-   * DEPRECATED Please use `master.pdb` and `replica.pdb` values instead
    *
    * @default {}
    */
@@ -5732,11 +4431,8 @@ export type RedisHelmParameters = {
   nameOverride?: string;
   fullnameOverride?: string;
   namespaceOverride?: string;
-  commonLabels?: string;
-  commonAnnotations?: string;
   configmapChecksumAnnotations?: string;
   secretChecksumAnnotations?: string;
-  secretAnnotations?: string;
   clusterDomain?: string;
   extraDeploy?: string;
   useHostnames?: string;
@@ -5797,9 +4493,6 @@ export type RedisHelmParameters = {
   "master.readinessProbe.timeoutSeconds"?: string;
   "master.readinessProbe.successThreshold"?: string;
   "master.readinessProbe.failureThreshold"?: string;
-  "master.customStartupProbe"?: string;
-  "master.customLivenessProbe"?: string;
-  "master.customReadinessProbe"?: string;
   "master.resourcesPreset"?: string;
   "master.fips.openssl"?: string;
   "master.podSecurityContext.enabled"?: string;
@@ -5823,20 +4516,15 @@ export type RedisHelmParameters = {
   "master.priorityClassName"?: string;
   "master.automountServiceAccountToken"?: string;
   "master.hostAliases"?: string;
-  "master.podAnnotations"?: string;
   "master.shareProcessNamespace"?: string;
   "master.podAffinityPreset"?: string;
   "master.podAntiAffinityPreset"?: string;
   "master.nodeAffinityPreset.type"?: string;
   "master.nodeAffinityPreset.key"?: string;
   "master.nodeAffinityPreset.values"?: string;
-  "master.affinity"?: string;
-  "master.nodeSelector"?: string;
   "master.tolerations"?: string;
   "master.topologySpreadConstraints"?: string;
   "master.dnsPolicy"?: string;
-  "master.dnsConfig"?: string;
-  "master.lifecycleHooks"?: string;
   "master.extraVolumes"?: string;
   "master.extraVolumeMounts"?: string;
   "master.sidecars"?: string;
@@ -5850,9 +4538,6 @@ export type RedisHelmParameters = {
   "master.persistence.storageClass"?: string;
   "master.persistence.accessModes"?: string;
   "master.persistence.size"?: string;
-  "master.persistence.labels"?: string;
-  "master.persistence.selector"?: string;
-  "master.persistence.dataSource"?: string;
   "master.persistence.existingClaim"?: string;
   "master.persistentVolumeClaimRetentionPolicy.enabled"?: string;
   "master.persistentVolumeClaimRetentionPolicy.whenScaled"?: string;
@@ -5869,14 +4554,11 @@ export type RedisHelmParameters = {
   "master.service.loadBalancerClass"?: string;
   "master.service.loadBalancerSourceRanges"?: string;
   "master.service.externalIPs"?: string;
-  "master.service.annotations"?: string;
   "master.service.sessionAffinity"?: string;
-  "master.service.sessionAffinityConfig"?: string;
   "master.terminationGracePeriodSeconds"?: string;
   "master.serviceAccount.create"?: string;
   "master.serviceAccount.name"?: string;
   "master.serviceAccount.automountServiceAccountToken"?: string;
-  "master.serviceAccount.annotations"?: string;
   "master.pdb.create"?: string;
   "master.pdb.minAvailable"?: string;
   "master.pdb.maxUnavailable"?: string;
@@ -5915,9 +4597,6 @@ export type RedisHelmParameters = {
   "replica.readinessProbe.timeoutSeconds"?: string;
   "replica.readinessProbe.successThreshold"?: string;
   "replica.readinessProbe.failureThreshold"?: string;
-  "replica.customStartupProbe"?: string;
-  "replica.customLivenessProbe"?: string;
-  "replica.customReadinessProbe"?: string;
   "replica.resourcesPreset"?: string;
   "replica.fips.openssl"?: string;
   "replica.podSecurityContext.enabled"?: string;
@@ -5941,20 +4620,15 @@ export type RedisHelmParameters = {
   "replica.podManagementPolicy"?: string;
   "replica.automountServiceAccountToken"?: string;
   "replica.hostAliases"?: string;
-  "replica.podAnnotations"?: string;
   "replica.shareProcessNamespace"?: string;
   "replica.podAffinityPreset"?: string;
   "replica.podAntiAffinityPreset"?: string;
   "replica.nodeAffinityPreset.type"?: string;
   "replica.nodeAffinityPreset.key"?: string;
   "replica.nodeAffinityPreset.values"?: string;
-  "replica.affinity"?: string;
-  "replica.nodeSelector"?: string;
   "replica.tolerations"?: string;
   "replica.topologySpreadConstraints"?: string;
   "replica.dnsPolicy"?: string;
-  "replica.dnsConfig"?: string;
-  "replica.lifecycleHooks"?: string;
   "replica.extraVolumes"?: string;
   "replica.extraVolumeMounts"?: string;
   "replica.sidecars"?: string;
@@ -5968,9 +4642,6 @@ export type RedisHelmParameters = {
   "replica.persistence.storageClass"?: string;
   "replica.persistence.accessModes"?: string;
   "replica.persistence.size"?: string;
-  "replica.persistence.labels"?: string;
-  "replica.persistence.selector"?: string;
-  "replica.persistence.dataSource"?: string;
   "replica.persistence.existingClaim"?: string;
   "replica.persistentVolumeClaimRetentionPolicy.enabled"?: string;
   "replica.persistentVolumeClaimRetentionPolicy.whenScaled"?: string;
@@ -5985,9 +4656,7 @@ export type RedisHelmParameters = {
   "replica.service.loadBalancerIP"?: string;
   "replica.service.loadBalancerClass"?: string;
   "replica.service.loadBalancerSourceRanges"?: string;
-  "replica.service.annotations"?: string;
   "replica.service.sessionAffinity"?: string;
-  "replica.service.sessionAffinityConfig"?: string;
   "replica.terminationGracePeriodSeconds"?: string;
   "replica.autoscaling.enabled"?: string;
   "replica.autoscaling.minReplicas"?: string;
@@ -5997,7 +4666,6 @@ export type RedisHelmParameters = {
   "replica.serviceAccount.create"?: string;
   "replica.serviceAccount.name"?: string;
   "replica.serviceAccount.automountServiceAccountToken"?: string;
-  "replica.serviceAccount.annotations"?: string;
   "replica.pdb.create"?: string;
   "replica.pdb.minAvailable"?: string;
   "replica.pdb.maxUnavailable"?: string;
@@ -6009,7 +4677,6 @@ export type RedisHelmParameters = {
   "sentinel.image.pullPolicy"?: string;
   "sentinel.image.pullSecrets"?: string;
   "sentinel.image.debug"?: string;
-  "sentinel.annotations"?: string;
   "sentinel.masterSet"?: string;
   "sentinel.quorum"?: string;
   "sentinel.getMasterTimeout"?: string;
@@ -6018,6 +4685,7 @@ export type RedisHelmParameters = {
   "sentinel.downAfterMilliseconds"?: string;
   "sentinel.failoverTimeout"?: string;
   "sentinel.parallelSyncs"?: string;
+  "sentinel.replicaSyncCheck"?: string;
   "sentinel.configuration"?: string;
   "sentinel.command"?: string;
   "sentinel.args"?: string;
@@ -6048,16 +4716,10 @@ export type RedisHelmParameters = {
   "sentinel.readinessProbe.timeoutSeconds"?: string;
   "sentinel.readinessProbe.successThreshold"?: string;
   "sentinel.readinessProbe.failureThreshold"?: string;
-  "sentinel.customStartupProbe"?: string;
-  "sentinel.customLivenessProbe"?: string;
-  "sentinel.customReadinessProbe"?: string;
   "sentinel.persistence.enabled"?: string;
   "sentinel.persistence.storageClass"?: string;
   "sentinel.persistence.accessModes"?: string;
   "sentinel.persistence.size"?: string;
-  "sentinel.persistence.labels"?: string;
-  "sentinel.persistence.selector"?: string;
-  "sentinel.persistence.dataSource"?: string;
   "sentinel.persistence.medium"?: string;
   "sentinel.persistence.sizeLimit"?: string;
   "sentinel.persistentVolumeClaimRetentionPolicy.enabled"?: string;
@@ -6073,7 +4735,6 @@ export type RedisHelmParameters = {
   "sentinel.containerSecurityContext.readOnlyRootFilesystem"?: string;
   "sentinel.containerSecurityContext.seccompProfile.type"?: string;
   "sentinel.containerSecurityContext.capabilities.drop"?: string;
-  "sentinel.lifecycleHooks"?: string;
   "sentinel.extraVolumes"?: string;
   "sentinel.extraVolumeMounts"?: string;
   "sentinel.service.type"?: string;
@@ -6088,10 +4749,7 @@ export type RedisHelmParameters = {
   "sentinel.service.loadBalancerIP"?: string;
   "sentinel.service.loadBalancerClass"?: string;
   "sentinel.service.loadBalancerSourceRanges"?: string;
-  "sentinel.service.annotations"?: string;
   "sentinel.service.sessionAffinity"?: string;
-  "sentinel.service.sessionAffinityConfig"?: string;
-  "sentinel.service.headless.annotations"?: string;
   "sentinel.service.headless.extraPorts"?: string;
   "sentinel.masterService.enabled"?: string;
   "sentinel.masterService.type"?: string;
@@ -6104,16 +4762,15 @@ export type RedisHelmParameters = {
   "sentinel.masterService.loadBalancerClass"?: string;
   "sentinel.masterService.loadBalancerSourceRanges"?: string;
   "sentinel.masterService.sessionAffinity"?: string;
-  "sentinel.masterService.sessionAffinityConfig"?: string;
   "sentinel.terminationGracePeriodSeconds"?: string;
   "sentinel.externalAccess.enabled"?: string;
-  "sentinel.externalAccess.service.loadBalancerIPAnnotaion"?: string;
   "sentinel.externalAccess.service.type"?: string;
   "sentinel.externalAccess.service.redisPort"?: string;
   "sentinel.externalAccess.service.sentinelPort"?: string;
-  "sentinel.externalAccess.service.loadBalancerIP"?: string;
+  "sentinel.externalAccess.service.loadBalancerIPs"?: string;
   "sentinel.externalAccess.service.loadBalancerClass"?: string;
   "sentinel.externalAccess.service.loadBalancerSourceRanges"?: string;
+  "sentinel.externalAccess.service.loadBalancerIPAnnotation"?: string;
   "serviceBindings.enabled"?: string;
   "networkPolicy.enabled"?: string;
   "networkPolicy.allowExternal"?: string;
@@ -6128,7 +4785,6 @@ export type RedisHelmParameters = {
   "serviceAccount.create"?: string;
   "serviceAccount.name"?: string;
   "serviceAccount.automountServiceAccountToken"?: string;
-  "serviceAccount.annotations"?: string;
   "tls.enabled"?: string;
   "tls.authClients"?: string;
   "tls.autoGenerated"?: string;
@@ -6164,9 +4820,6 @@ export type RedisHelmParameters = {
   "metrics.readinessProbe.timeoutSeconds"?: string;
   "metrics.readinessProbe.successThreshold"?: string;
   "metrics.readinessProbe.failureThreshold"?: string;
-  "metrics.customStartupProbe"?: string;
-  "metrics.customLivenessProbe"?: string;
-  "metrics.customReadinessProbe"?: string;
   "metrics.command"?: string;
   "metrics.redisTargetHost"?: string;
   "metrics.extraEnvVars"?: string;
@@ -6193,7 +4846,6 @@ export type RedisHelmParameters = {
   "metrics.service.loadBalancerIP"?: string;
   "metrics.service.loadBalancerClass"?: string;
   "metrics.service.loadBalancerSourceRanges"?: string;
-  "metrics.service.annotations"?: string;
   "metrics.service.clusterIP"?: string;
   "metrics.serviceMonitor.port"?: string;
   "metrics.serviceMonitor.enabled"?: string;
@@ -6204,7 +4856,6 @@ export type RedisHelmParameters = {
   "metrics.serviceMonitor.relabellings"?: string;
   "metrics.serviceMonitor.metricRelabelings"?: string;
   "metrics.serviceMonitor.honorLabels"?: string;
-  "metrics.serviceMonitor.additionalLabels"?: string;
   "metrics.serviceMonitor.podTargetLabels"?: string;
   "metrics.serviceMonitor.sampleLimit"?: string;
   "metrics.serviceMonitor.targetLimit"?: string;
@@ -6218,14 +4869,12 @@ export type RedisHelmParameters = {
   "metrics.podMonitor.relabellings"?: string;
   "metrics.podMonitor.metricRelabelings"?: string;
   "metrics.podMonitor.honorLabels"?: string;
-  "metrics.podMonitor.additionalLabels"?: string;
   "metrics.podMonitor.podTargetLabels"?: string;
   "metrics.podMonitor.sampleLimit"?: string;
   "metrics.podMonitor.targetLimit"?: string;
   "metrics.podMonitor.additionalEndpoints"?: string;
   "metrics.prometheusRule.enabled"?: string;
   "metrics.prometheusRule.namespace"?: string;
-  "metrics.prometheusRule.additionalLabels"?: string;
   "metrics.prometheusRule.rules"?: string;
   "volumePermissions.enabled"?: string;
   "volumePermissions.image.registry"?: string;

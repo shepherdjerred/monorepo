@@ -18,13 +18,13 @@ export type ConnectHelmValuesConnect = {
   /**
    * The 1Password Connect API Specific Values
    *
-   * @default {...} (7 keys)
+   * @default {...} (8 keys)
    */
   api?: ConnectHelmValuesConnectApi;
   /**
    * The 1Password Connect Sync Specific Values
    *
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   sync?: ConnectHelmValuesConnectSync;
   /**
@@ -41,20 +41,22 @@ export type ConnectHelmValuesConnect = {
   host?: string;
   /**
    * The type of Service resource to create for the Connect API and sync services.
-   * See: https://kubernetes.io/docs/concepts/services-networking/service
-   * This by default is ClusterIP and can also be defined as NodePort or LoadBalancer.
-   * If serviceType is LoadBalancer then loadBalancerSourceRanges and loadBalancerIP should be defined.
-   * See: https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
    *
    * @default "ClusterIP"
    */
   serviceType?: string;
   /**
-   * Additional annotations to be added to the service resource
+   * Additional annotations to be added to the service.
    *
    * @default {}
    */
   serviceAnnotations?: ConnectHelmValuesConnectServiceAnnotations;
+  /**
+   * 1Password Connect Service Account Configuration
+   *
+   * @default {"create":false,"annotations":{},"name":"onepassword-connect"}
+   */
+  serviceAccount?: ConnectHelmValuesConnectServiceAccount;
   /**
    * The name of Kubernetes Secret containing the 1Password Connect credentials
    *
@@ -70,7 +72,7 @@ export type ConnectHelmValuesConnect = {
   credentials?: unknown;
   credentials_base64?: unknown;
   /**
-   * The 1Password Connect API repository
+   * The 1Password Connect API image pull policy
    *
    * @default "IfNotPresent"
    */
@@ -83,14 +85,13 @@ export type ConnectHelmValuesConnect = {
    */
   version?: string;
   /**
-   * Node selector stanza for the Connect pod
-   * See: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
+   * [Node selector](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector) stanza for the Connect pod
    *
    * @default {}
    */
   nodeSelector?: ConnectHelmValuesConnectNodeSelector;
   /**
-   * Affinity rules for the Connect pod
+   * [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) rules for the Connect pod
    *
    * @default {}
    */
@@ -114,7 +115,7 @@ export type ConnectHelmValuesConnect = {
    */
   probes?: ConnectHelmValuesConnectProbes;
   /**
-   * priorityClassName to apply to the Connect API deployment resource.
+   * [priorityClassName](https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/) to apply to the Connect API deployment resource.
    *
    * @default ""
    */
@@ -143,6 +144,12 @@ export type ConnectHelmValuesConnect = {
    * @default {}
    */
   podLabels?: ConnectHelmValuesConnectPodLabels;
+  /**
+   * Pod securityContext to be added to the Connect pods.
+   *
+   * @default {...} (5 keys)
+   */
+  podSecurityContext?: ConnectHelmValuesConnectPodSecurityContext;
   tolerations?: unknown[];
   /**
    * 1Password Connect volume shared between 1Password Connect Containers
@@ -152,7 +159,6 @@ export type ConnectHelmValuesConnect = {
   dataVolume?: ConnectHelmValuesConnectDataVolume;
   /**
    * Determines if HTTPS Port if setup for the 1Password Connect
-   * Services for 1Password Connect API and Sync
    *
    * @default {"enabled":false,"secret":"op-connect-tls"}
    */
@@ -160,9 +166,7 @@ export type ConnectHelmValuesConnect = {
   /**
    * Ingress allows ingress services to be created to allow external access
    * from Kubernetes to access 1Password Connect pods.
-   * In order to expose the service, use the route section below
    * Optionally the internal profiler can be enabled to debug memory or performance issues.
-   * For normal operation of Connect this does not have to enabled.
    *
    * @default {...} (8 keys)
    */
@@ -176,6 +180,8 @@ export type ConnectHelmValuesConnect = {
 
 export type ConnectHelmValuesConnectApi = {
   /**
+   * The name of the 1Password Connect API container
+   *
    * @default "connect-api"
    */
   name?: string;
@@ -186,18 +192,26 @@ export type ConnectHelmValuesConnectApi = {
    */
   imageRepository?: string;
   /**
+   * The resources requests/limits for the 1Password Connect API pod
+   *
    * @default {"limits":{"memory":"128Mi"},"requests":{"cpu":0.2}}
    */
   resources?: ConnectHelmValuesConnectApiResources;
   /**
+   * The port the Connect API is served on when TLS is disabled
+   *
    * @default 8080
    */
   httpPort?: number;
   /**
+   * The port the Connect API is served on when TLS is enabled
+   *
    * @default 8443
    */
   httpsPort?: number;
   /**
+   * Log level of the Connect API container. Valid options are: trace, debug, info, warn, error.
+   *
    * @default "info"
    */
   logLevel?: string;
@@ -208,6 +222,12 @@ export type ConnectHelmValuesConnectApi = {
    * @default {...} (5 keys)
    */
   serviceMonitor?: ConnectHelmValuesConnectApiServiceMonitor;
+  /**
+   * Container securityContext to be added to the Connect API containers.
+   *
+   * @default {"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"allowPrivilegeEscalation":false}
+   */
+  securityContext?: ConnectHelmValuesConnectApiSecurityContext;
 };
 
 export type ConnectHelmValuesConnectApiResources = {
@@ -278,32 +298,115 @@ export type ConnectHelmValuesConnectApiServiceMonitorAnnotations = {
   [key: string]: unknown;
 };
 
+export type ConnectHelmValuesConnectApiSecurityContext = {
+  /**
+   * @default {"drop":["ALL"]}
+   */
+  capabilities?: ConnectHelmValuesConnectApiSecurityContextCapabilities;
+  /**
+   * @default true
+   */
+  readOnlyRootFilesystem?: boolean;
+  /**
+   * @default false
+   */
+  allowPrivilegeEscalation?: boolean;
+};
+
+export type ConnectHelmValuesConnectApiSecurityContextCapabilities = {
+  drop?: string[];
+};
+
 export type ConnectHelmValuesConnectSync = {
   /**
+   * The name of the 1Password Connect Sync container
+   *
    * @default "connect-sync"
    */
   name?: string;
   /**
+   * The 1Password Connect Sync repository
+   *
    * @default "1password/connect-sync"
    */
   imageRepository?: string;
   /**
+   * The resources requests/limits for the 1Password Connect Sync pod
+   *
    * @default {}
    */
   resources?: ConnectHelmValuesConnectSyncResources;
   /**
+   * The port serving the health of the Sync container
+   *
    * @default 8081
    */
   httpPort?: number;
   /**
+   * Log level of the Connect Sync container. Valid options are: trace, debug, info, warn, error.
+   *
    * @default "info"
    */
   logLevel?: string;
+  /**
+   * Container securityContext to be added to the Connect Sync containers.
+   *
+   * @default {"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"allowPrivilegeEscalation":false}
+   */
+  securityContext?: ConnectHelmValuesConnectSyncSecurityContext;
 };
 
 export type ConnectHelmValuesConnectSyncResources = object;
 
+export type ConnectHelmValuesConnectSyncSecurityContext = {
+  /**
+   * @default {"drop":["ALL"]}
+   */
+  capabilities?: ConnectHelmValuesConnectSyncSecurityContextCapabilities;
+  /**
+   * @default true
+   */
+  readOnlyRootFilesystem?: boolean;
+  /**
+   * @default false
+   */
+  allowPrivilegeEscalation?: boolean;
+};
+
+export type ConnectHelmValuesConnectSyncSecurityContextCapabilities = {
+  drop?: string[];
+};
+
 export type ConnectHelmValuesConnectServiceAnnotations = object;
+
+export type ConnectHelmValuesConnectServiceAccount = {
+  /**
+   * Create service account for the 1Password Connect deployment
+   *
+   * @default false
+   */
+  create?: boolean;
+  /**
+   * Annotations for the 1Password Connect Service Account
+   *
+   * @default {}
+   */
+  annotations?: ConnectHelmValuesConnectServiceAccountAnnotations;
+  /**
+   * The name of the 1Password Connect Service Account
+   *
+   * @default "onepassword-connect"
+   */
+  name?: string;
+};
+
+export type ConnectHelmValuesConnectServiceAccountAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
 
 export type ConnectHelmValuesConnectNodeSelector = object;
 
@@ -378,7 +481,7 @@ export type ConnectHelmValuesConnectPdb = {
    */
   annotations?: ConnectHelmValuesConnectPdbAnnotations;
   /**
-   * Number of pods that are unavailble after eviction as number or percentage (eg.: 50%)
+   * Number of pods that are unavailable after eviction as number or percentage (eg.: 50%)
    *
    * @default 1
    */
@@ -401,15 +504,13 @@ export type ConnectHelmValuesConnectPdbAnnotations = {
 
 export type ConnectHelmValuesConnectProbes = {
   /**
-   * Denotes whether the 1Password Connect API readiness probe will operate
-   * and ensure the pod is ready before serving traffic
+   * Denotes whether the 1Password Connect API will be continually checked by Kubernetes for liveness and restarted if the pod becomes unresponsive
    *
    * @default true
    */
   liveness?: boolean;
   /**
-   * Denotes whether the 1Password Connect API will be continually checked
-   * by Kubernetes for liveness and restarted if the pod becomes unresponsive
+   * Denotes whether the 1Password Connect API readiness probe will operate and ensure the pod is ready before serving traffic
    *
    * @default true
    */
@@ -436,6 +537,36 @@ export type ConnectHelmValuesConnectPodAnnotations = object;
 
 export type ConnectHelmValuesConnectPodLabels = object;
 
+export type ConnectHelmValuesConnectPodSecurityContext = {
+  /**
+   * @default 999
+   */
+  fsGroup?: number;
+  /**
+   * @default 999
+   */
+  runAsUser?: number;
+  /**
+   * @default 999
+   */
+  runAsGroup?: number;
+  /**
+   * @default true
+   */
+  runAsNonRoot?: boolean;
+  /**
+   * @default {"type":"RuntimeDefault"}
+   */
+  seccompProfile?: ConnectHelmValuesConnectPodSecurityContextSeccompProfile;
+};
+
+export type ConnectHelmValuesConnectPodSecurityContextSeccompProfile = {
+  /**
+   * @default "RuntimeDefault"
+   */
+  type?: string;
+};
+
 export type ConnectHelmValuesConnectDataVolume = {
   /**
    * The name of the shared volume used between 1Password Connect Containers
@@ -444,15 +575,13 @@ export type ConnectHelmValuesConnectDataVolume = {
    */
   name?: string;
   /**
-   * The type of the shared volume used between
-   * 1Password Connect Containers
+   * The type of the shared volume used between 1Password Connect Containers
    *
    * @default "emptyDir"
    */
   type?: string;
   /**
-   * Desribes the fields and values for configuration of
-   * shared volume for 1Password Connect
+   * Describes the fields and values for configuration of shared volume for 1Password Connect
    *
    * @default {}
    */
@@ -469,7 +598,7 @@ export type ConnectHelmValuesConnectTls = {
    */
   enabled?: boolean;
   /**
-   * The name of the secret containing the TLS key (tls.key) and certificate (tls.crt)
+   * The name of the secret containing the TLS key (`tls.key`) and certificate (`tls.crt`)
    *
    * @default "op-connect-tls"
    */
@@ -478,27 +607,31 @@ export type ConnectHelmValuesConnectTls = {
 
 export type ConnectHelmValuesConnectIngress = {
   /**
+   * The boolean value to enable/disable the 1Password Connect Ingress
+   *
    * @default false
    */
   enabled?: boolean;
   /**
+   * Ingress labels for 1Password Connect
+   *
    * @default {}
    */
   labels?: ConnectHelmValuesConnectIngressLabels;
   /**
+   * The 1Password Connect Ingress Annotations
+   *
    * @default {}
    */
   annotations?: ConnectHelmValuesConnectIngressAnnotations;
   /**
    * Optionally use ingressClassName instead of deprecated annotation.
-   * See: https://kubernetes.io/docs/concepts/services-networking/ingress/#deprecated-annotation
    *
    * @default ""
    */
   ingressClassName?: string;
   /**
-   * As of Kubernetes 1.19, all Ingress Paths must have a pathType configured. The default value below should be sufficient in most cases.
-   * See: https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types for other possible values.
+   * Ingress PathType see [docs](https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types)
    *
    * @default "Prefix"
    */
@@ -534,6 +667,8 @@ export type ConnectHelmValuesConnectIngressHostsElement = {
 
 export type ConnectHelmValuesConnectProfiler = {
   /**
+   * Enable the internal profiler to debug memory or performance issues. For normal operation this does not have to be enabled.
+   *
    * @default false
    */
   enabled?: boolean;
@@ -559,8 +694,7 @@ export type ConnectHelmValuesOperator = {
    */
   create?: boolean;
   /**
-   * Denotes authentication method that 1Password Operator will use to access 1Password secrets
-   * Valid values:
+   * Authentication method for the Operator. Valid values: `connect` (uses Connect token) or `service-account` (uses 1Password Service Account token)
    *
    * Denotes authentication method that 1Password Operator will use to access 1Password secrets.
    *
@@ -568,7 +702,7 @@ export type ConnectHelmValuesOperator = {
    */
   authMethod?: "connect" | "service-account";
   /**
-   * The number of replicas to run the 1Password Connect Operator deployment
+   * The number of replicas to run the 1Password Operator deployment
    *
    * @default 1
    */
@@ -607,18 +741,29 @@ export type ConnectHelmValuesOperator = {
   /**
    * The 1Password Operator version to pull
    *
-   * @default "1.10.1"
+   * @default "1.12.0"
    */
   version?: string;
   /**
-   * Node selector stanza for the Operator pod
-   * See: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
+   * Pod securityContext to be added to the Operator pods.
+   *
+   * @default {...} (5 keys)
+   */
+  podSecurityContext?: ConnectHelmValuesOperatorPodSecurityContext;
+  /**
+   * Container securityContext to be added to the 1Password Operator containers.
+   *
+   * @default {"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"allowPrivilegeEscalation":false}
+   */
+  securityContext?: ConnectHelmValuesOperatorSecurityContext;
+  /**
+   * [Node selector](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector) stanza for the operator pod
    *
    * @default {}
    */
   nodeSelector?: ConnectHelmValuesOperatorNodeSelector;
   /**
-   * Affinity rules for the Operator pod
+   * [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) rules for the Operator pod
    *
    * @default {}
    */
@@ -636,7 +781,7 @@ export type ConnectHelmValuesOperator = {
    */
   pdb?: ConnectHelmValuesOperatorPdb;
   /**
-   * Additional annotations to be added to the Operator pods.
+   * Additional annotations to be added to the Operator deployment resource.
    *
    * @default {}
    */
@@ -660,7 +805,7 @@ export type ConnectHelmValuesOperator = {
    */
   podLabels?: ConnectHelmValuesOperatorPodLabels;
   /**
-   * priorityClassName to apply to the Operator pods.
+   * [priorityClassName](https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/) to apply to the Operator pods.
    *
    * @default ""
    */
@@ -673,6 +818,12 @@ export type ConnectHelmValuesOperator = {
    * @default {}
    */
   resources?: ConnectHelmValuesOperatorResources;
+  /**
+   * 1Password Operator Health Probes
+   *
+   * @default {"port":8081,"liveness":{"create":true,"failureThreshold":3,"periodSeconds":20,"initialDelaySeconds":15},"readiness":{"create":true,"initialDelaySeconds":5,"periodSeconds":10}}
+   */
+  probes?: ConnectHelmValuesOperatorProbes;
   /**
    * 1Password Operator Connect Token Configuration
    *
@@ -706,20 +857,83 @@ export type ConnectHelmValuesOperator = {
    */
   clusterRoleBinding?: ConnectHelmValuesOperatorClusterRoleBinding;
   /**
-   * 1Password Operator Log Level Configuration
+   * Log level of the Operator container. Valid options are: debug, info and error.
    *
    * @default "info"
    */
   logLevel?: string;
   /**
-   * Enables operator-driven annotations when true
+   * Passes the `--enable-annotations` flag to the Operator container when true.
    *
    * Passes the --enable-annotations flag to the Operator container when true.
    *
    * @default false
    */
   enableAnnotations?: boolean;
+  /**
+   * Passes the `--allow-empty-values` flag to the Operator container that allows adding fields with empty values to Kubernetes secrets when true
+   *
+   * Passes the --allow-empty-values flag to the Operator when true, allowing fields with empty values to be added to Kubernetes secrets.
+   *
+   * @default false
+   */
+  allowEmptyValues?: boolean;
   customEnvVars?: unknown[];
+  /**
+   * 1Password Operator TLS settings
+   *
+   * @default {"trust":{}}
+   */
+  tls?: ConnectHelmValuesOperatorTls;
+};
+
+export type ConnectHelmValuesOperatorPodSecurityContext = {
+  /**
+   * @default 65532
+   */
+  fsGroup?: number;
+  /**
+   * @default 65532
+   */
+  runAsUser?: number;
+  /**
+   * @default 65532
+   */
+  runAsGroup?: number;
+  /**
+   * @default true
+   */
+  runAsNonRoot?: boolean;
+  /**
+   * @default {"type":"RuntimeDefault"}
+   */
+  seccompProfile?: ConnectHelmValuesOperatorPodSecurityContextSeccompProfile;
+};
+
+export type ConnectHelmValuesOperatorPodSecurityContextSeccompProfile = {
+  /**
+   * @default "RuntimeDefault"
+   */
+  type?: string;
+};
+
+export type ConnectHelmValuesOperatorSecurityContext = {
+  /**
+   * @default {"drop":["ALL"]}
+   */
+  capabilities?: ConnectHelmValuesOperatorSecurityContextCapabilities;
+  /**
+   * @default true
+   */
+  readOnlyRootFilesystem?: boolean;
+  /**
+   * @default false
+   */
+  allowPrivilegeEscalation?: boolean;
+};
+
+export type ConnectHelmValuesOperatorSecurityContextCapabilities = {
+  drop?: string[];
 };
 
 export type ConnectHelmValuesOperatorNodeSelector = object;
@@ -795,7 +1009,7 @@ export type ConnectHelmValuesOperatorPdb = {
    */
   annotations?: ConnectHelmValuesOperatorPdbAnnotations;
   /**
-   * Number of pods that are unavailble after eviction as number or percentage (eg.: 50%)
+   * Number of pods that are unavailable after eviction as number or percentage (eg.: 50%)
    *
    * @default 1
    */
@@ -838,6 +1052,71 @@ export type ConnectHelmValuesOperatorPodLabels = object;
 
 export type ConnectHelmValuesOperatorResources = object;
 
+export type ConnectHelmValuesOperatorProbes = {
+  /**
+   * The port the health probe endpoints are served on for the Operator pod
+   *
+   * @default 8081
+   */
+  port?: number;
+  /**
+   * @default {...} (4 keys)
+   */
+  liveness?: ConnectHelmValuesOperatorProbesLiveness;
+  /**
+   * @default {"create":true,"initialDelaySeconds":5,"periodSeconds":10}
+   */
+  readiness?: ConnectHelmValuesOperatorProbesReadiness;
+};
+
+export type ConnectHelmValuesOperatorProbesLiveness = {
+  /**
+   * Denotes whether the 1Password Operator will be continually checked by Kubernetes for liveness and restarted if the pod becomes unresponsive
+   *
+   * @default true
+   */
+  create?: boolean;
+  /**
+   * Number of consecutive failures before Kubernetes restarts the container
+   *
+   * @default 3
+   */
+  failureThreshold?: number;
+  /**
+   * Number of seconds between liveness probe checks
+   *
+   * @default 20
+   */
+  periodSeconds?: number;
+  /**
+   * Number of seconds to wait before starting liveness probes
+   *
+   * @default 15
+   */
+  initialDelaySeconds?: number;
+};
+
+export type ConnectHelmValuesOperatorProbesReadiness = {
+  /**
+   * Denotes whether the 1Password Operator readiness probe will operate and ensure the pod is ready before serving traffic
+   *
+   * @default true
+   */
+  create?: boolean;
+  /**
+   * Number of seconds to wait before starting readiness probes
+   *
+   * @default 5
+   */
+  initialDelaySeconds?: number;
+  /**
+   * Number of seconds between readiness probe checks
+   *
+   * @default 10
+   */
+  periodSeconds?: number;
+};
+
 export type ConnectHelmValuesOperatorToken = {
   /**
    * The name of Kubernetes Secret containing the 1Password Connect API token
@@ -872,7 +1151,7 @@ export type ConnectHelmValuesOperatorServiceAccountToken = {
 
 export type ConnectHelmValuesOperatorServiceAccount = {
   /**
-   * The name of the 1Password Conenct Operator
+   * Denotes whether or not a service account will be created for the 1Password Operator
    *
    * @default "{{ .Values.operator.create }}"
    */
@@ -884,7 +1163,7 @@ export type ConnectHelmValuesOperatorServiceAccount = {
    */
   annotations?: ConnectHelmValuesOperatorServiceAccountAnnotations;
   /**
-   * The name of the 1Password Conenct Operator
+   * The name of the 1Password Connect Operator Service Account
    *
    * @default "onepassword-connect-operator"
    */
@@ -937,19 +1216,34 @@ export type ConnectHelmValuesOperatorClusterRoleBinding = {
    */
   create?: string;
   /**
-   * The name of the 1Password Operator Cluster Role
+   * The name of the 1Password Operator Cluster Role Binding
    *
    * @default "onepassword-connect-operator"
    */
   name?: string;
 };
 
+export type ConnectHelmValuesOperatorTls = {
+  /**
+   * Set trust.secret to the secret name containing the Connect TLS cert when using a self-signed cert.
+   *
+   * @default {}
+   */
+  trust?: ConnectHelmValuesOperatorTlsTrust;
+};
+
+export type ConnectHelmValuesOperatorTlsTrust = object;
+
 export type ConnectHelmValuesAcceptanceTests = {
   /**
+   * Enable acceptance tests for the chart
+   *
    * @default false
    */
   enabled?: boolean;
   /**
+   * Test fixtures configuration for acceptance tests
+   *
    * @default {}
    */
   fixtures?: ConnectHelmValuesAcceptanceTestsFixtures;
@@ -957,12 +1251,26 @@ export type ConnectHelmValuesAcceptanceTests = {
    * @default {"enabled":true,"image":{"repository":"curlimages/curl","tag":"latest"}}
    */
   healthCheck?: ConnectHelmValuesAcceptanceTestsHealthCheck;
+  /**
+   * Pod securityContext to be added to the acceptance test pods.
+   *
+   * @default {...} (5 keys)
+   */
+  podSecurityContext?: ConnectHelmValuesAcceptanceTestsPodSecurityContext;
+  /**
+   * Container securityContext to be added to the acceptance test containers.
+   *
+   * @default {"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"allowPrivilegeEscalation":false}
+   */
+  securityContext?: ConnectHelmValuesAcceptanceTestsSecurityContext;
 };
 
 export type ConnectHelmValuesAcceptanceTestsFixtures = object;
 
 export type ConnectHelmValuesAcceptanceTestsHealthCheck = {
   /**
+   * Enable the health check test
+   *
    * @default true
    */
   enabled?: boolean;
@@ -974,13 +1282,66 @@ export type ConnectHelmValuesAcceptanceTestsHealthCheck = {
 
 export type ConnectHelmValuesAcceptanceTestsHealthCheckImage = {
   /**
+   * The image repository for the health check test container
+   *
    * @default "curlimages/curl"
    */
   repository?: string;
   /**
+   * The image tag for the health check test container
+   *
    * @default "latest"
    */
   tag?: string;
+};
+
+export type ConnectHelmValuesAcceptanceTestsPodSecurityContext = {
+  /**
+   * @default 65532
+   */
+  fsGroup?: number;
+  /**
+   * @default 65532
+   */
+  runAsUser?: number;
+  /**
+   * @default 65532
+   */
+  runAsGroup?: number;
+  /**
+   * @default true
+   */
+  runAsNonRoot?: boolean;
+  /**
+   * @default {"type":"RuntimeDefault"}
+   */
+  seccompProfile?: ConnectHelmValuesAcceptanceTestsPodSecurityContextSeccompProfile;
+};
+
+export type ConnectHelmValuesAcceptanceTestsPodSecurityContextSeccompProfile = {
+  /**
+   * @default "RuntimeDefault"
+   */
+  type?: string;
+};
+
+export type ConnectHelmValuesAcceptanceTestsSecurityContext = {
+  /**
+   * @default {"drop":["ALL"]}
+   */
+  capabilities?: ConnectHelmValuesAcceptanceTestsSecurityContextCapabilities;
+  /**
+   * @default true
+   */
+  readOnlyRootFilesystem?: boolean;
+  /**
+   * @default false
+   */
+  allowPrivilegeEscalation?: boolean;
+};
+
+export type ConnectHelmValuesAcceptanceTestsSecurityContextCapabilities = {
+  drop?: string[];
 };
 
 export type ConnectHelmValues = {
@@ -988,7 +1349,7 @@ export type ConnectHelmValues = {
    * Note: values.yaml files don't support templating out of the box, so that means
    * that every value "{{ .Between.Curly.Braces }}" in this file needs to be
    * explicitly interpolated on the template side by using the `tpl` function.
-   * global common labels, applied to all ressources
+   * Global common labels, applied to all resources
    *
    * @default {}
    */
@@ -996,19 +1357,19 @@ export type ConnectHelmValues = {
   /**
    * This section of values is for 1Password Connect API and Sync Configuration
    *
-   * @default {...} (31 keys)
+   * @default {...} (33 keys)
    */
   connect?: ConnectHelmValuesConnect;
   /**
    * This section of values is for 1Password Operator Configuration
    *
-   * @default {...} (31 keys)
+   * @default {...} (36 keys)
    */
   operator?: ConnectHelmValuesOperator;
   /**
    * 1Password Acceptance Tests Functionality
    *
-   * @default {"enabled":false,"fixtures":{},"healthCheck":{"enabled":true,"image":{"repository":"curlimages/curl","tag":"latest"}}}
+   * @default {...} (5 keys)
    */
   acceptanceTests?: ConnectHelmValuesAcceptanceTests;
 };
@@ -1026,13 +1387,21 @@ export type ConnectHelmParameters = {
   "connect.api.serviceMonitor.enabled"?: string;
   "connect.api.serviceMonitor.interval"?: string;
   "connect.api.serviceMonitor.path"?: string;
+  "connect.api.securityContext.capabilities.drop"?: string;
+  "connect.api.securityContext.readOnlyRootFilesystem"?: string;
+  "connect.api.securityContext.allowPrivilegeEscalation"?: string;
   "connect.sync.name"?: string;
   "connect.sync.imageRepository"?: string;
   "connect.sync.httpPort"?: string;
   "connect.sync.logLevel"?: string;
+  "connect.sync.securityContext.capabilities.drop"?: string;
+  "connect.sync.securityContext.readOnlyRootFilesystem"?: string;
+  "connect.sync.securityContext.allowPrivilegeEscalation"?: string;
   "connect.applicationName"?: string;
   "connect.host"?: string;
   "connect.serviceType"?: string;
+  "connect.serviceAccount.create"?: string;
+  "connect.serviceAccount.name"?: string;
   "connect.credentialsName"?: string;
   "connect.credentialsKey"?: string;
   "connect.credentials"?: string;
@@ -1051,6 +1420,11 @@ export type ConnectHelmParameters = {
   "connect.probes.liveness"?: string;
   "connect.probes.readiness"?: string;
   "connect.priorityClassName"?: string;
+  "connect.podSecurityContext.fsGroup"?: string;
+  "connect.podSecurityContext.runAsUser"?: string;
+  "connect.podSecurityContext.runAsGroup"?: string;
+  "connect.podSecurityContext.runAsNonRoot"?: string;
+  "connect.podSecurityContext.seccompProfile.type"?: string;
   "connect.tolerations"?: string;
   "connect.dataVolume.name"?: string;
   "connect.dataVolume.type"?: string;
@@ -1077,6 +1451,14 @@ export type ConnectHelmParameters = {
   "operator.imageRepository"?: string;
   "operator.pollingInterval"?: string;
   "operator.version"?: string;
+  "operator.podSecurityContext.fsGroup"?: string;
+  "operator.podSecurityContext.runAsUser"?: string;
+  "operator.podSecurityContext.runAsGroup"?: string;
+  "operator.podSecurityContext.runAsNonRoot"?: string;
+  "operator.podSecurityContext.seccompProfile.type"?: string;
+  "operator.securityContext.capabilities.drop"?: string;
+  "operator.securityContext.readOnlyRootFilesystem"?: string;
+  "operator.securityContext.allowPrivilegeEscalation"?: string;
   "operator.hpa.enabled"?: string;
   "operator.hpa.minReplicas"?: string;
   "operator.hpa.maxReplicas"?: string;
@@ -1088,6 +1470,14 @@ export type ConnectHelmParameters = {
   "operator.priorityClassName"?: string;
   "operator.tolerations"?: string;
   "operator.watchNamespace"?: string;
+  "operator.probes.port"?: string;
+  "operator.probes.liveness.create"?: string;
+  "operator.probes.liveness.failureThreshold"?: string;
+  "operator.probes.liveness.periodSeconds"?: string;
+  "operator.probes.liveness.initialDelaySeconds"?: string;
+  "operator.probes.readiness.create"?: string;
+  "operator.probes.readiness.initialDelaySeconds"?: string;
+  "operator.probes.readiness.periodSeconds"?: string;
   "operator.token.name"?: string;
   "operator.token.key"?: string;
   "operator.token.value"?: string;
@@ -1104,9 +1494,18 @@ export type ConnectHelmParameters = {
   "operator.clusterRoleBinding.name"?: string;
   "operator.logLevel"?: string;
   "operator.enableAnnotations"?: string;
+  "operator.allowEmptyValues"?: string;
   "operator.customEnvVars"?: string;
   "acceptanceTests.enabled"?: string;
   "acceptanceTests.healthCheck.enabled"?: string;
   "acceptanceTests.healthCheck.image.repository"?: string;
   "acceptanceTests.healthCheck.image.tag"?: string;
+  "acceptanceTests.podSecurityContext.fsGroup"?: string;
+  "acceptanceTests.podSecurityContext.runAsUser"?: string;
+  "acceptanceTests.podSecurityContext.runAsGroup"?: string;
+  "acceptanceTests.podSecurityContext.runAsNonRoot"?: string;
+  "acceptanceTests.podSecurityContext.seccompProfile.type"?: string;
+  "acceptanceTests.securityContext.capabilities.drop"?: string;
+  "acceptanceTests.securityContext.readOnlyRootFilesystem"?: string;
+  "acceptanceTests.securityContext.allowPrivilegeEscalation"?: string;
 };

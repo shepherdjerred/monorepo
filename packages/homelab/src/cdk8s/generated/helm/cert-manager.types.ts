@@ -155,19 +155,31 @@ export type CertmanagerHelmValuesPodDisruptionBudget = {
 
 export type CertmanagerHelmValuesImage = {
   /**
-   * The container registry to pull the manager image from.
+   * If set, this value is *prepended* to the image repository that the chart would otherwise render.
+   * This applies both when `image.repository` is set and when the repository is computed from
+   * `imageRegistry` + `imageNamespace` + `image.name`.
+   * This can produce "double registry" style references such as `legacy.example.io/quay.io/jetstack/...`.
+   * Prefer using the global `imageRegistry`/`imageNamespace` values.
    * +docs:property
-   * The container image for the cert-manager controller.
+   * The image name for the cert-manager controller.
+   * This is used (together with `imageRegistry` and `imageNamespace`) to construct the full image reference.
    * +docs:property
    *
-   * @default "quay.io/jetstack/cert-manager-controller"
+   * @default "cert-manager-controller"
+   */
+  name?: string;
+  /**
+   * Full repository override (takes precedence over `imageRegistry`, `imageNamespace`, and `image.name`).
+   *
+   * @default ""
    */
   repository?: string;
   /**
    * Override the image tag to deploy by setting this variable.
    * If no value is set, the chart's appVersion is used.
    * +docs:property
-   * Setting a digest will override any tag.
+   * Setting a digest pins the image. If a tag is also set, the rendered reference will include
+   * both ("image:tag@digest"), though only the digest will be used for pulling.
    * +docs:property
    * digest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
    * Kubernetes imagePullPolicy on Deployment.
@@ -252,6 +264,47 @@ export type CertmanagerHelmValuesNodeSelector = {
    * @default "linux"
    */
   "kubernetes.io/os"?: string;
+};
+
+export type CertmanagerHelmValuesNetworkPolicy = {
+  /**
+   * Create network policies for cert-manager.
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  ingress?: CertmanagerHelmValuesNetworkPolicyIngressElement[];
+  egress?: CertmanagerHelmValuesNetworkPolicyEgressElement[];
+};
+
+export type CertmanagerHelmValuesNetworkPolicyIngressElement = {
+  ports?: CertmanagerHelmValuesNetworkPolicyIngressPortsElement[];
+};
+
+export type CertmanagerHelmValuesNetworkPolicyIngressPortsElement = {
+  /**
+   * @default "http-metrics"
+   */
+  port?: string;
+  /**
+   * @default "TCP"
+   */
+  protocol?: string;
+};
+
+export type CertmanagerHelmValuesNetworkPolicyEgressElement = {
+  ports?: CertmanagerHelmValuesNetworkPolicyEgressPortsElement[];
+};
+
+export type CertmanagerHelmValuesNetworkPolicyEgressPortsElement = {
+  /**
+   * @default 80
+   */
+  port?: number;
+  /**
+   * @default "TCP"
+   */
+  protocol?: string;
 };
 
 export type CertmanagerHelmValuesIngressShim = object;
@@ -553,6 +606,11 @@ export type CertmanagerHelmValuesWebhook = {
    * It cannot be used if `minAvailable` is set.
    * +docs:property
    * +docs:type=unknown
+   * This configures how to act with unhealthy pods during eviction
+   * Note that this requires Kubernetes 1.31 or `PDBUnhealthyPodEvictionPolicy` feature gate enabled for
+   * the cluster to work.
+   * +docs:property
+   * +docs:type=string
    * Optional additional annotations to add to the webhook Deployment.
    * +docs:property
    * Optional additional annotations to add to the webhook Pods.
@@ -643,7 +701,7 @@ export type CertmanagerHelmValuesWebhook = {
   serviceIPFamilyPolicy?: string;
   serviceIPFamilies?: unknown[];
   /**
-   * @default {"repository":"quay.io/jetstack/cert-manager-webhook","pullPolicy":"IfNotPresent"}
+   * @default {"name":"cert-manager-webhook","repository":"","pullPolicy":"IfNotPresent"}
    */
   image?: CertmanagerHelmValuesWebhookImage;
   /**
@@ -693,8 +751,12 @@ export type CertmanagerHelmValuesWebhook = {
   url?: CertmanagerHelmValuesWebhookUrl;
   /**
    * Enables default network policies for webhooks.
+   * This provides a way for you to restrict network traffic
+   * between cert-manager components and other pods.
+   * For more information, see [Network Policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/)
+   * NOTE: an incorrect networkPolicy will cause traffic to be dropped
    *
-   * @default {"enabled":false,"ingress":[{"from":[{"ipBlock":{"cidr":"0.0.0.0/0"}},{"ipBlock":{"cidr":"::/0"}}]}],"egress":[{"ports":[{"port":80,"protocol":"TCP"},{"port":443,"protocol":"TCP"},{"port":53,"protocol":"TCP"},{"port":53,"protocol":"UDP"},{"port":6443,"protocol":"TCP"}],"to":[{"ipBlock":{"cidr":"0.0.0.0/0"}},{"ipBlock":{"cidr":"::/0"}}]}]}
+   * @default {"enabled":false,"ingress":[{"ports":[{"port":"https","protocol":"TCP"},{"port":"healthcheck","protocol":"TCP"},{"port":"http-metrics","protocol":"TCP"}]}],"egress":[{"ports":[{"port":80,"protocol":"TCP"},{"port":443,"protocol":"TCP"},{"port":53,"protocol":"TCP"},{"port":53,"protocol":"UDP"},{"port":6443,"protocol":"TCP"}]}]}
    */
   networkPolicy?: CertmanagerHelmValuesWebhookNetworkPolicy;
   volumes?: unknown[];
@@ -707,6 +769,26 @@ export type CertmanagerHelmValuesWebhook = {
    * @default false
    */
   enableServiceLinks?: boolean;
+  /**
+   * enableClientVerification turns on client verification of requests
+   * made to the webhook server
+   *
+   * @default false
+   */
+  enableClientVerification?: boolean;
+  /**
+   * the client CA file to be used for verification
+   *
+   * @default ""
+   */
+  clientCAFile?: string;
+  /**
+   * Subject names to verify for the client certificate.
+   * Multiple values may be supplied as a comma-separated list.
+   *
+   * @default ""
+   */
+  apiserverClientCertSubjects?: string;
 };
 
 export type CertmanagerHelmValuesWebhookConfig = {
@@ -873,19 +955,31 @@ export type CertmanagerHelmValuesWebhookServiceLabels = object;
 
 export type CertmanagerHelmValuesWebhookImage = {
   /**
-   * The container registry to pull the webhook image from.
+   * If set, this value is *prepended* to the image repository that the chart would otherwise render.
+   * This applies both when `webhook.image.repository` is set and when the repository is computed from
+   * `imageRegistry` + `imageNamespace` + `webhook.image.name`.
+   * This can produce "double registry" style references such as `legacy.example.io/quay.io/jetstack/...`.
+   * Prefer using the global `imageRegistry`/`imageNamespace` values.
    * +docs:property
-   * The container image for the cert-manager webhook
+   * The image name for the cert-manager webhook.
    * +docs:property
    *
-   * @default "quay.io/jetstack/cert-manager-webhook"
+   * @default "cert-manager-webhook"
+   */
+  name?: string;
+  /**
+   * Full repository override (takes precedence over `imageRegistry`, `imageNamespace`, and `webhook.image.name`).
+   * +docs:property
+   *
+   * @default ""
    */
   repository?: string;
   /**
    * Override the image tag to deploy by setting this variable.
    * If no value is set, the chart's appVersion will be used.
    * +docs:property
-   * Setting a digest will override any tag
+   * Setting a digest pins the image. If a tag is also set, the rendered reference will include
+   * both ("image:tag@digest"), though only the digest will be used for pulling.
    * +docs:property
    * digest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
    * Kubernetes imagePullPolicy on Deployment.
@@ -931,26 +1025,22 @@ export type CertmanagerHelmValuesWebhookNetworkPolicy = {
 };
 
 export type CertmanagerHelmValuesWebhookNetworkPolicyIngressElement = {
-  from?: CertmanagerHelmValuesWebhookNetworkPolicyIngressFromElement[];
+  ports?: CertmanagerHelmValuesWebhookNetworkPolicyIngressPortsElement[];
 };
 
-export type CertmanagerHelmValuesWebhookNetworkPolicyIngressFromElement = {
+export type CertmanagerHelmValuesWebhookNetworkPolicyIngressPortsElement = {
   /**
-   * @default {"cidr":"0.0.0.0/0"}
+   * @default "https"
    */
-  ipBlock?: CertmanagerHelmValuesWebhookNetworkPolicyIngressFromIpBlock;
-};
-
-export type CertmanagerHelmValuesWebhookNetworkPolicyIngressFromIpBlock = {
+  port?: string;
   /**
-   * @default "0.0.0.0/0"
+   * @default "TCP"
    */
-  cidr?: string;
+  protocol?: string;
 };
 
 export type CertmanagerHelmValuesWebhookNetworkPolicyEgressElement = {
   ports?: CertmanagerHelmValuesWebhookNetworkPolicyEgressPortsElement[];
-  to?: CertmanagerHelmValuesWebhookNetworkPolicyEgressToElement[];
 };
 
 export type CertmanagerHelmValuesWebhookNetworkPolicyEgressPortsElement = {
@@ -962,20 +1052,6 @@ export type CertmanagerHelmValuesWebhookNetworkPolicyEgressPortsElement = {
    * @default "TCP"
    */
   protocol?: string;
-};
-
-export type CertmanagerHelmValuesWebhookNetworkPolicyEgressToElement = {
-  /**
-   * @default {"cidr":"0.0.0.0/0"}
-   */
-  ipBlock?: CertmanagerHelmValuesWebhookNetworkPolicyEgressToIpBlock;
-};
-
-export type CertmanagerHelmValuesWebhookNetworkPolicyEgressToIpBlock = {
-  /**
-   * @default "0.0.0.0/0"
-   */
-  cidr?: string;
 };
 
 export type CertmanagerHelmValuesCainjector = {
@@ -1021,6 +1097,16 @@ export type CertmanagerHelmValuesCainjector = {
    */
   containerSecurityContext?: CertmanagerHelmValuesCainjectorContainerSecurityContext;
   /**
+   * Enables default network policies for cainjector.
+   * This provides a way for you to restrict network traffic
+   * between cert-manager components and other pods.
+   * For more information, see [Network Policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/)
+   * NOTE: an incorrect networkPolicy will cause traffic to be dropped
+   *
+   * @default {"enabled":false,"ingress":[{"ports":[{"port":"http-metrics","protocol":"TCP"}]}],"egress":[{"ports":[{"port":80,"protocol":"TCP"},{"port":443,"protocol":"TCP"},{"port":53,"protocol":"TCP"},{"port":53,"protocol":"UDP"},{"port":6443,"protocol":"TCP"}]}]}
+   */
+  networkPolicy?: CertmanagerHelmValuesCainjectorNetworkPolicy;
+  /**
    * `minAvailable` configures the minimum available pods for disruptions. It can either be set to
    * an integer (e.g., 1) or a percentage value (e.g., 25%).
    * Cannot be used if `maxUnavailable` is set.
@@ -1031,6 +1117,11 @@ export type CertmanagerHelmValuesCainjector = {
    * Cannot be used if `minAvailable` is set.
    * +docs:property
    * +docs:type=unknown
+   * This configures how to act with unhealthy pods during eviction
+   * Note that this requires Kubernetes 1.31 or `PDBUnhealthyPodEvictionPolicy` feature gate enabled for
+   * the cluster to work.
+   * +docs:property
+   * +docs:type=string
    * Optional additional annotations to add to the cainjector Deployment.
    * +docs:property
    * Optional additional annotations to add to the cainjector Pods.
@@ -1088,7 +1179,7 @@ export type CertmanagerHelmValuesCainjector = {
    */
   serviceLabels?: CertmanagerHelmValuesCainjectorServiceLabels;
   /**
-   * @default {"repository":"quay.io/jetstack/cert-manager-cainjector","pullPolicy":"IfNotPresent"}
+   * @default {"name":"cert-manager-cainjector","repository":"","pullPolicy":"IfNotPresent"}
    */
   image?: CertmanagerHelmValuesCainjectorImage;
   /**
@@ -1155,6 +1246,47 @@ export type CertmanagerHelmValuesCainjectorContainerSecurityContextCapabilities 
     drop?: string[];
   };
 
+export type CertmanagerHelmValuesCainjectorNetworkPolicy = {
+  /**
+   * Create network policies for the cainjector.
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  ingress?: CertmanagerHelmValuesCainjectorNetworkPolicyIngressElement[];
+  egress?: CertmanagerHelmValuesCainjectorNetworkPolicyEgressElement[];
+};
+
+export type CertmanagerHelmValuesCainjectorNetworkPolicyIngressElement = {
+  ports?: CertmanagerHelmValuesCainjectorNetworkPolicyIngressPortsElement[];
+};
+
+export type CertmanagerHelmValuesCainjectorNetworkPolicyIngressPortsElement = {
+  /**
+   * @default "http-metrics"
+   */
+  port?: string;
+  /**
+   * @default "TCP"
+   */
+  protocol?: string;
+};
+
+export type CertmanagerHelmValuesCainjectorNetworkPolicyEgressElement = {
+  ports?: CertmanagerHelmValuesCainjectorNetworkPolicyEgressPortsElement[];
+};
+
+export type CertmanagerHelmValuesCainjectorNetworkPolicyEgressPortsElement = {
+  /**
+   * @default 80
+   */
+  port?: number;
+  /**
+   * @default "TCP"
+   */
+  protocol?: string;
+};
+
 export type CertmanagerHelmValuesCainjectorPodDisruptionBudget = {
   /**
    * Enable or disable the PodDisruptionBudget resource.
@@ -1185,19 +1317,31 @@ export type CertmanagerHelmValuesCainjectorServiceLabels = object;
 
 export type CertmanagerHelmValuesCainjectorImage = {
   /**
-   * The container registry to pull the cainjector image from.
+   * If set, this value is *prepended* to the image repository that the chart would otherwise render.
+   * This applies both when `cainjector.image.repository` is set and when the repository is computed from
+   * `imageRegistry` + `imageNamespace` + `cainjector.image.name`.
+   * This can produce "double registry" style references such as `legacy.example.io/quay.io/jetstack/...`.
+   * Prefer using the global `imageRegistry`/`imageNamespace` values.
    * +docs:property
-   * The container image for the cert-manager cainjector
+   * The image name for the cert-manager cainjector.
    * +docs:property
    *
-   * @default "quay.io/jetstack/cert-manager-cainjector"
+   * @default "cert-manager-cainjector"
+   */
+  name?: string;
+  /**
+   * Full repository override (takes precedence over `imageRegistry`, `imageNamespace`, and `cainjector.image.name`).
+   * +docs:property
+   *
+   * @default ""
    */
   repository?: string;
   /**
    * Override the image tag to deploy by setting this variable.
    * If no value is set, the chart's appVersion will be used.
    * +docs:property
-   * Setting a digest will override any tag.
+   * Setting a digest pins the image. If a tag is also set, the rendered reference will include
+   * both ("image:tag@digest"), though only the digest will be used for pulling.
    * +docs:property
    * digest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
    * Kubernetes imagePullPolicy on Deployment.
@@ -1231,26 +1375,38 @@ export type CertmanagerHelmValuesCainjectorServiceAccount = {
 
 export type CertmanagerHelmValuesAcmesolver = {
   /**
-   * @default {"repository":"quay.io/jetstack/cert-manager-acmesolver","pullPolicy":"IfNotPresent"}
+   * @default {"name":"cert-manager-acmesolver","repository":"","pullPolicy":"IfNotPresent"}
    */
   image?: CertmanagerHelmValuesAcmesolverImage;
 };
 
 export type CertmanagerHelmValuesAcmesolverImage = {
   /**
-   * The container registry to pull the acmesolver image from.
+   * If set, this value is *prepended* to the image repository that the chart would otherwise render.
+   * This applies both when `acmesolver.image.repository` is set and when the repository is computed from
+   * `imageRegistry` + `imageNamespace` + `acmesolver.image.name`.
+   * This can produce "double registry" style references such as `legacy.example.io/quay.io/jetstack/...`.
+   * Prefer using the global `imageRegistry`/`imageNamespace` values.
    * +docs:property
-   * The container image for the cert-manager acmesolver.
+   * The image name for the cert-manager acmesolver.
    * +docs:property
    *
-   * @default "quay.io/jetstack/cert-manager-acmesolver"
+   * @default "cert-manager-acmesolver"
+   */
+  name?: string;
+  /**
+   * Full repository override (takes precedence over `imageRegistry`, `imageNamespace`, and `acmesolver.image.name`).
+   * +docs:property
+   *
+   * @default ""
    */
   repository?: string;
   /**
    * Override the image tag to deploy by setting this variable.
    * If no value is set, the chart's appVersion is used.
    * +docs:property
-   * Setting a digest will override any tag.
+   * Setting a digest pins the image. If a tag is also set, the rendered reference will include
+   * both ("image:tag@digest"), though only the digest will be used for pulling.
    * +docs:property
    * digest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
    * Kubernetes imagePullPolicy on Deployment.
@@ -1333,7 +1489,7 @@ export type CertmanagerHelmValuesStartupapicheck = {
    */
   podLabels?: CertmanagerHelmValuesStartupapicheckPodLabels;
   /**
-   * @default {"repository":"quay.io/jetstack/cert-manager-startupapicheck","pullPolicy":"IfNotPresent"}
+   * @default {"name":"cert-manager-startupapicheck","repository":"","pullPolicy":"IfNotPresent"}
    */
   image?: CertmanagerHelmValuesStartupapicheckImage;
   /**
@@ -1431,19 +1587,31 @@ export type CertmanagerHelmValuesStartupapicheckPodLabels = object;
 
 export type CertmanagerHelmValuesStartupapicheckImage = {
   /**
-   * The container registry to pull the startupapicheck image from.
+   * If set, this value is *prepended* to the image repository that the chart would otherwise render.
+   * This applies both when `startupapicheck.image.repository` is set and when the repository is computed from
+   * `imageRegistry` + `imageNamespace` + `startupapicheck.image.name`.
+   * This can produce "double registry" style references such as `legacy.example.io/quay.io/jetstack/...`.
+   * Prefer using the global `imageRegistry`/`imageNamespace` values.
    * +docs:property
-   * The container image for the cert-manager startupapicheck.
+   * The image name for the cert-manager startupapicheck.
    * +docs:property
    *
-   * @default "quay.io/jetstack/cert-manager-startupapicheck"
+   * @default "cert-manager-startupapicheck"
+   */
+  name?: string;
+  /**
+   * Full repository override (takes precedence over `imageRegistry`, `imageNamespace`, and `startupapicheck.image.name`).
+   * +docs:property
+   *
+   * @default ""
    */
   repository?: string;
   /**
    * Override the image tag to deploy by setting this variable.
    * If no value is set, the chart's appVersion is used.
    * +docs:property
-   * Setting a digest will override any tag.
+   * Setting a digest pins the image. If a tag is also set, the rendered reference will include
+   * both ("image:tag@digest"), though only the digest will be used for pulling.
    * +docs:property
    * digest: sha256:0e072dddd1f7f8fc8909a2ca6f65e76c5f0d2fcfb8be47935ae3457e8bbceb20
    * Kubernetes imagePullPolicy on Deployment.
@@ -1581,6 +1749,11 @@ export type CertmanagerHelmValues = {
    * it cannot be used if `minAvailable` is set.
    * +docs:property
    * +docs:type=unknown
+   * This configures how to act with unhealthy pods during eviction
+   * Note that this requires Kubernetes 1.31 or `PDBUnhealthyPodEvictionPolicy` feature gate enabled for
+   * the cluster to work.
+   * +docs:property
+   * +docs:type=string
    * A comma-separated list of feature gates that should be enabled on the
    * controller pod.
    *
@@ -1601,7 +1774,21 @@ export type CertmanagerHelmValues = {
    */
   maxConcurrentChallenges?: number;
   /**
-   * @default {"repository":"quay.io/jetstack/cert-manager-controller","pullPolicy":"IfNotPresent"}
+   * The container registry used for all cert-manager images by default.
+   * This can include path prefixes (e.g. `artifactory.example.com/docker`).
+   * +docs:property
+   *
+   * @default "quay.io"
+   */
+  imageRegistry?: string;
+  /**
+   * The repository namespace used for all cert-manager images by default.
+   *
+   * @default "jetstack"
+   */
+  imageNamespace?: string;
+  /**
+   * @default {"name":"cert-manager-controller","repository":"","pullPolicy":"IfNotPresent"}
    */
   image?: CertmanagerHelmValuesImage;
   /**
@@ -1649,26 +1836,24 @@ export type CertmanagerHelmValues = {
    * version (currently `controller.config.cert-manager.io/v1alpha1`). You can pin
    * the version by specifying the `apiVersion` yourself.
    * For example:
-   * Feature gates as of v1.18.1. Listed with their default values.
+   * Feature gates as of v1.20.0. Listed with their default values.
    * See https://cert-manager.io/docs/cli/controller/
-   * AdditionalCertificateOutputFormats: true # GA - default=true
    * AllAlpha: false # ALPHA - default=false
    * AllBeta: false # BETA - default=false
+   * ACMEHTTP01IngressPathTypeExact: true # BETA - default=true
    * ExperimentalCertificateSigningRequestControllers: false # ALPHA - default=false
    * ExperimentalGatewayAPISupport: true # BETA - default=true
    * LiteralCertificateSubject: true # BETA - default=true
    * NameConstraints: true # BETA - default=true
-   * OtherNames: false # ALPHA - default=false
+   * OtherNames: true # BETA - default=true
    * SecretsFilteredCaching: true # BETA - default=true
    * ServerSideApply: false # ALPHA - default=false
    * StableCertificateRequestName: true # BETA - default=true
    * UseCertificateRequestBasicConstraints: false # ALPHA - default=false
-   * UseDomainQualifiedFinalizer: true # GA - default=true
-   * ValidateCAA: false # ALPHA - default=false
-   * DefaultPrivateKeyRotationPolicyAlways: true # BETA - default=true
-   * ACMEHTTP01IngressPathTypeExact: true # BETA - default=true
    * Configure the metrics server for TLS
    * See https://cert-manager.io/docs/devops-tips/prometheus-metrics/#tls
+   * Configure PEM size limits for certificate validation
+   * Useful for certificates with many DNS names (e.g., Istio gateways with 100+ DNS names)
    *
    * @default {}
    */
@@ -1699,6 +1884,7 @@ export type CertmanagerHelmValues = {
   disableAutoApproval?: boolean;
   approveSignerNames?: string[];
   extraArgs?: unknown[];
+  extraContainers?: unknown[];
   extraEnv?: unknown[];
   /**
    * Resources to provide to the cert-manager controller pod.
@@ -1748,6 +1934,16 @@ export type CertmanagerHelmValues = {
    * @default {"kubernetes.io/os":"linux"}
    */
   nodeSelector?: CertmanagerHelmValuesNodeSelector;
+  /**
+   * Enables default network policies for cert-manager.
+   * This provides a way for you to restrict network traffic
+   * between cert-manager components and other pods.
+   * For more information, see [Network Policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/)
+   * NOTE: an incorrect networkPolicy will cause traffic to be dropped
+   *
+   * @default {"enabled":false,"ingress":[{"ports":[{"port":"http-metrics","protocol":"TCP"},{"port":"http-healthz","protocol":"TCP"}]}],"egress":[{"ports":[{"port":80,"protocol":"TCP"},{"port":443,"protocol":"TCP"},{"port":53,"protocol":"TCP"},{"port":53,"protocol":"UDP"},{"port":6443,"protocol":"TCP"}]}]}
+   */
+  networkPolicy?: CertmanagerHelmValuesNetworkPolicy;
   /**
    * +docs:ignore
    * Optional default issuer to use for ingress resources.
@@ -1808,19 +2004,19 @@ export type CertmanagerHelmValues = {
   /**
    * +docs:section=Webhook
    *
-   * @default {...} (33 keys)
+   * @default {...} (36 keys)
    */
   webhook?: CertmanagerHelmValuesWebhook;
   /**
    * +docs:section=CA Injector
    *
-   * @default {...} (22 keys)
+   * @default {...} (23 keys)
    */
   cainjector?: CertmanagerHelmValuesCainjector;
   /**
    * +docs:section=ACME Solver
    *
-   * @default {"image":{"repository":"quay.io/jetstack/cert-manager-acmesolver","pullPolicy":"IfNotPresent"}}
+   * @default {"image":{"name":"cert-manager-acmesolver","repository":"","pullPolicy":"IfNotPresent"}}
    */
   acmesolver?: CertmanagerHelmValuesAcmesolver;
   /**
@@ -1875,6 +2071,9 @@ export type CertmanagerHelmParameters = {
   "podDisruptionBudget.enabled"?: string;
   featureGates?: string;
   maxConcurrentChallenges?: string;
+  imageRegistry?: string;
+  imageNamespace?: string;
+  "image.name"?: string;
   "image.repository"?: string;
   "image.pullPolicy"?: string;
   clusterResourceNamespace?: string;
@@ -1887,6 +2086,7 @@ export type CertmanagerHelmParameters = {
   disableAutoApproval?: string;
   approveSignerNames?: string;
   extraArgs?: string;
+  extraContainers?: string;
   extraEnv?: string;
   "securityContext.runAsNonRoot"?: string;
   "securityContext.seccompProfile.type"?: string;
@@ -1897,6 +2097,11 @@ export type CertmanagerHelmParameters = {
   volumeMounts?: string;
   hostAliases?: string;
   "nodeSelector.kubernetes.io/os"?: string;
+  "networkPolicy.enabled"?: string;
+  "networkPolicy.ingress.ports.port"?: string;
+  "networkPolicy.ingress.ports.protocol"?: string;
+  "networkPolicy.egress.ports.port"?: string;
+  "networkPolicy.egress.ports.protocol"?: string;
   tolerations?: string;
   topologySpreadConstraints?: string;
   "livenessProbe.enabled"?: string;
@@ -1949,6 +2154,7 @@ export type CertmanagerHelmParameters = {
   "webhook.topologySpreadConstraints"?: string;
   "webhook.serviceIPFamilyPolicy"?: string;
   "webhook.serviceIPFamilies"?: string;
+  "webhook.image.name"?: string;
   "webhook.image.repository"?: string;
   "webhook.image.pullPolicy"?: string;
   "webhook.serviceAccount.create"?: string;
@@ -1957,13 +2163,16 @@ export type CertmanagerHelmParameters = {
   "webhook.hostNetwork"?: string;
   "webhook.serviceType"?: string;
   "webhook.networkPolicy.enabled"?: string;
-  "webhook.networkPolicy.ingress.from.ipBlock.cidr"?: string;
+  "webhook.networkPolicy.ingress.ports.port"?: string;
+  "webhook.networkPolicy.ingress.ports.protocol"?: string;
   "webhook.networkPolicy.egress.ports.port"?: string;
   "webhook.networkPolicy.egress.ports.protocol"?: string;
-  "webhook.networkPolicy.egress.to.ipBlock.cidr"?: string;
   "webhook.volumes"?: string;
   "webhook.volumeMounts"?: string;
   "webhook.enableServiceLinks"?: string;
+  "webhook.enableClientVerification"?: string;
+  "webhook.clientCAFile"?: string;
+  "webhook.apiserverClientCertSubjects"?: string;
   "cainjector.enabled"?: string;
   "cainjector.replicaCount"?: string;
   "cainjector.securityContext.runAsNonRoot"?: string;
@@ -1971,6 +2180,11 @@ export type CertmanagerHelmParameters = {
   "cainjector.containerSecurityContext.allowPrivilegeEscalation"?: string;
   "cainjector.containerSecurityContext.capabilities.drop"?: string;
   "cainjector.containerSecurityContext.readOnlyRootFilesystem"?: string;
+  "cainjector.networkPolicy.enabled"?: string;
+  "cainjector.networkPolicy.ingress.ports.port"?: string;
+  "cainjector.networkPolicy.ingress.ports.protocol"?: string;
+  "cainjector.networkPolicy.egress.ports.port"?: string;
+  "cainjector.networkPolicy.egress.ports.protocol"?: string;
   "cainjector.podDisruptionBudget.enabled"?: string;
   "cainjector.extraArgs"?: string;
   "cainjector.extraEnv"?: string;
@@ -1978,6 +2192,7 @@ export type CertmanagerHelmParameters = {
   "cainjector.nodeSelector.kubernetes.io/os"?: string;
   "cainjector.tolerations"?: string;
   "cainjector.topologySpreadConstraints"?: string;
+  "cainjector.image.name"?: string;
   "cainjector.image.repository"?: string;
   "cainjector.image.pullPolicy"?: string;
   "cainjector.serviceAccount.create"?: string;
@@ -1985,6 +2200,7 @@ export type CertmanagerHelmParameters = {
   "cainjector.volumes"?: string;
   "cainjector.volumeMounts"?: string;
   "cainjector.enableServiceLinks"?: string;
+  "acmesolver.image.name"?: string;
   "acmesolver.image.repository"?: string;
   "acmesolver.image.pullPolicy"?: string;
   "startupapicheck.enabled"?: string;
@@ -2002,6 +2218,7 @@ export type CertmanagerHelmParameters = {
   "startupapicheck.extraEnv"?: string;
   "startupapicheck.nodeSelector.kubernetes.io/os"?: string;
   "startupapicheck.tolerations"?: string;
+  "startupapicheck.image.name"?: string;
   "startupapicheck.image.repository"?: string;
   "startupapicheck.image.pullPolicy"?: string;
   "startupapicheck.rbac.annotations.helm.sh/hook"?: string;

@@ -2,31 +2,38 @@
 
 export type SeaweedfsHelmValuesGlobal = {
   /**
-   * @default true
-   */
-  createClusterRole?: boolean;
-  /**
-   * @default ""
-   */
-  registry?: string;
-  /**
-   * if repository is set, it overrides the namespace part of imageName
+   * global.imageRegistry and global.imagePullSecrets are standard Helm conventions
+   * shared across subcharts. See https://helm.sh/docs/chart_template_guide/subcharts_and_globals/
    *
    * @default ""
    */
-  repository?: string;
-  /**
-   * @default "chrislusf/seaweedfs"
-   */
-  imageName?: string;
-  /**
-   * @default "IfNotPresent"
-   */
-  imagePullPolicy?: string;
+  imageRegistry?: string;
   /**
    * @default ""
    */
   imagePullSecrets?: string;
+  /**
+   * All app-specific global values are namespaced under global.seaweedfs
+   * to avoid polluting the shared global namespace when used as a subchart.
+   *
+   * @default {...} (16 keys)
+   */
+  seaweedfs?: SeaweedfsHelmValuesGlobalSeaweedfs;
+};
+
+export type SeaweedfsHelmValuesGlobalSeaweedfs = {
+  /**
+   * @default true
+   */
+  createClusterRole?: boolean;
+  /**
+   * @default {"repository":"","name":"chrislusf/seaweedfs"}
+   */
+  image?: SeaweedfsHelmValuesGlobalSeaweedfsImage;
+  /**
+   * @default "IfNotPresent"
+   */
+  imagePullPolicy?: string;
   /**
    * @default "Always"
    */
@@ -43,7 +50,7 @@ export type SeaweedfsHelmValuesGlobal = {
   /**
    * @default {"jwtSigning":{"volumeWrite":true,"volumeRead":false,"filerWrite":false,"filerRead":false}}
    */
-  securityConfig?: SeaweedfsHelmValuesGlobalSecurityConfig;
+  securityConfig?: SeaweedfsHelmValuesGlobalSeaweedfsSecurityConfig;
   /**
    * we will use this serviceAccountName for all ClusterRoles/ClusterRoleBindings
    *
@@ -51,19 +58,23 @@ export type SeaweedfsHelmValuesGlobal = {
    */
   serviceAccountName?: string;
   /**
+   * @default {}
+   */
+  serviceAccountAnnotations?: SeaweedfsHelmValuesGlobalSeaweedfsServiceAccountAnnotations;
+  /**
    * @default true
    */
   automountServiceAccountToken?: boolean;
   /**
    * @default {"duration":"87600h","renewBefore":"720h","alphacrds":false}
    */
-  certificates?: SeaweedfsHelmValuesGlobalCertificates;
+  certificates?: SeaweedfsHelmValuesGlobalSeaweedfsCertificates;
   /**
    * @default {...} (4 keys)
    */
-  monitoring?: SeaweedfsHelmValuesGlobalMonitoring;
+  monitoring?: SeaweedfsHelmValuesGlobalSeaweedfsMonitoring;
   /**
-   * if enabled will use global.replicationPlacement and override master & filer defaultReplicaPlacement config
+   * if enabled will use global.seaweedfs.replicationPlacement and override master & filer defaultReplicaPlacement config
    *
    * @default false
    */
@@ -80,17 +91,30 @@ export type SeaweedfsHelmValuesGlobal = {
   /**
    * @default {"WEED_CLUSTER_DEFAULT":"sw","WEED_CLUSTER_SW_MASTER":"{{ include \"seaweedfs.cluster.masterAddress\" . }}","WEED_CLUSTER_SW_FILER":"{{ include \"seaweedfs.cluster.filerAddress\" . }}"}
    */
-  extraEnvironmentVars?: SeaweedfsHelmValuesGlobalExtraEnvironmentVars;
+  extraEnvironmentVars?: SeaweedfsHelmValuesGlobalSeaweedfsExtraEnvironmentVars;
 };
 
-export type SeaweedfsHelmValuesGlobalSecurityConfig = {
+export type SeaweedfsHelmValuesGlobalSeaweedfsImage = {
+  /**
+   * if repository is set, it overrides the namespace part of image.name
+   *
+   * @default ""
+   */
+  repository?: string;
+  /**
+   * @default "chrislusf/seaweedfs"
+   */
+  name?: string;
+};
+
+export type SeaweedfsHelmValuesGlobalSeaweedfsSecurityConfig = {
   /**
    * @default {...} (4 keys)
    */
-  jwtSigning?: SeaweedfsHelmValuesGlobalSecurityConfigJwtSigning;
+  jwtSigning?: SeaweedfsHelmValuesGlobalSeaweedfsSecurityConfigJwtSigning;
 };
 
-export type SeaweedfsHelmValuesGlobalSecurityConfigJwtSigning = {
+export type SeaweedfsHelmValuesGlobalSeaweedfsSecurityConfigJwtSigning = {
   /**
    * @default true
    */
@@ -109,7 +133,10 @@ export type SeaweedfsHelmValuesGlobalSecurityConfigJwtSigning = {
   filerRead?: boolean;
 };
 
-export type SeaweedfsHelmValuesGlobalCertificates = {
+export type SeaweedfsHelmValuesGlobalSeaweedfsServiceAccountAnnotations =
+  object;
+
+export type SeaweedfsHelmValuesGlobalSeaweedfsCertificates = {
   /**
    * @default "87600h"
    */
@@ -124,7 +151,7 @@ export type SeaweedfsHelmValuesGlobalCertificates = {
   alphacrds?: boolean;
 };
 
-export type SeaweedfsHelmValuesGlobalMonitoring = {
+export type SeaweedfsHelmValuesGlobalSeaweedfsMonitoring = {
   /**
    * @default false
    */
@@ -134,12 +161,13 @@ export type SeaweedfsHelmValuesGlobalMonitoring = {
   /**
    * @default {}
    */
-  additionalLabels?: SeaweedfsHelmValuesGlobalMonitoringAdditionalLabels;
+  additionalLabels?: SeaweedfsHelmValuesGlobalSeaweedfsMonitoringAdditionalLabels;
 };
 
-export type SeaweedfsHelmValuesGlobalMonitoringAdditionalLabels = object;
+export type SeaweedfsHelmValuesGlobalSeaweedfsMonitoringAdditionalLabels =
+  object;
 
-export type SeaweedfsHelmValuesGlobalExtraEnvironmentVars = {
+export type SeaweedfsHelmValuesGlobalSeaweedfsExtraEnvironmentVars = {
   /**
    * @default "sw"
    */
@@ -693,6 +721,15 @@ export type SeaweedfsHelmValuesVolume = {
    */
   idx?: SeaweedfsHelmValuesVolumeIdx;
   /**
+   * Resource requests, limits, etc. for the vol-move-idx initContainer. This
+   * should map directly to the value of the resources field for a PodSpec,
+   * formatted as a multi-line string. By default no direct resource request
+   * is made.
+   *
+   * @default {}
+   */
+  idxVolMoveResources?: SeaweedfsHelmValuesVolumeIdxVolMoveResources;
+  /**
    * @default {}
    */
   logs?: SeaweedfsHelmValuesVolumeLogs;
@@ -844,6 +881,10 @@ export type SeaweedfsHelmValuesVolume = {
    * @default {...} (7 keys)
    */
   readinessProbe?: SeaweedfsHelmValuesVolumeReadinessProbe;
+  /**
+   * @default {...} (6 keys)
+   */
+  ingress?: SeaweedfsHelmValuesVolumeIngress;
 };
 
 export type SeaweedfsHelmValuesVolumeDataDirsElement = {
@@ -882,6 +923,8 @@ export type SeaweedfsHelmValuesVolumeResizeHook = {
 };
 
 export type SeaweedfsHelmValuesVolumeIdx = object;
+
+export type SeaweedfsHelmValuesVolumeIdxVolMoveResources = object;
 
 export type SeaweedfsHelmValuesVolumeLogs = object;
 
@@ -985,6 +1028,66 @@ export type SeaweedfsHelmValuesVolumeReadinessProbeHttpGet = {
    * @default "HTTP"
    */
   scheme?: string;
+};
+
+export type SeaweedfsHelmValuesVolumeIngress = {
+  /**
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * @default ""
+   */
+  className?: string;
+  /**
+   * @default "volume.seaweedfs.local"
+   */
+  host?: string;
+  /**
+   * @default "/"
+   */
+  path?: string;
+  /**
+   * @default "Prefix"
+   */
+  pathType?: string;
+  /**
+   * nginx.ingress.kubernetes.io/use-regex: "true"
+   * nginx.ingress.kubernetes.io/rewrite-target: /$1
+   * nginx.ingress.kubernetes.io/auth-type: "basic"
+   * nginx.ingress.kubernetes.io/auth-secret: "default/ingress-basic-auth-secret"
+   * nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required - SW-Volume'
+   * nginx.ingress.kubernetes.io/service-upstream: "true"
+   * nginx.ingress.kubernetes.io/enable-rewrite-log: "true"
+   * nginx.ingress.kubernetes.io/ssl-redirect: "false"
+   * nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+   * nginx.ingress.kubernetes.io/configuration-snippet: |
+   * sub_filter '<head>' '<head> <base href="/sw-volume/">'; #add base url
+   * sub_filter '="/' '="./';                               #make absolute paths to relative
+   * sub_filter '=/' '=./';
+   * sub_filter '/seaweedfsstatic' './seaweedfsstatic';
+   * sub_filter_once off;
+   * Map of named volume groups for topology-aware deployments.
+   * Each key inherits all fields from the `volume` section but can override
+   * them locally—for example, replicas, nodeSelector, dataCenter, etc.
+   * To switch entirely to this scheme, set `volume.enabled: false`
+   * and define one entry per zone/data-center under `volumes`.
+   *
+   * @default {"nginx.ingress.kubernetes.io/app-root":"/ui/index.html"}
+   */
+  annotations?: SeaweedfsHelmValuesVolumeIngressAnnotations;
+};
+
+export type SeaweedfsHelmValuesVolumeIngressAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+  /**
+   * @default "/ui/index.html"
+   */
+  "nginx.ingress.kubernetes.io/app-root"?: string;
 };
 
 export type SeaweedfsHelmValuesVolumes = object;
@@ -1264,9 +1367,7 @@ export type SeaweedfsHelmValuesFiler = {
    */
   secretExtraEnvironmentVars?: SeaweedfsHelmValuesFilerSecretExtraEnvironmentVars;
   /**
-   * You may specify buckets to be created during the install process.
-   *
-   * @default {...} (7 keys)
+   * @default {...} (8 keys)
    */
   s3?: SeaweedfsHelmValuesFilerS3;
 };
@@ -1557,12 +1658,29 @@ export type SeaweedfsHelmValuesFilerS3 = {
   enableAuth?: boolean;
   existingConfigSecret?: unknown;
   /**
+   * To provide explicit credentials for the S3 gateway, set them under
+   * the top-level s3.credentials key (not filer.s3.credentials).
+   * The s3-secret.yaml template only reads from .Values.s3.credentials.
+   *
    * @default {}
    */
   auditLogConfig?: SeaweedfsHelmValuesFilerS3AuditLogConfig;
+  /**
+   * @default {"resources":{}}
+   */
+  createBucketsHook?: SeaweedfsHelmValuesFilerS3CreateBucketsHook;
 };
 
 export type SeaweedfsHelmValuesFilerS3AuditLogConfig = object;
+
+export type SeaweedfsHelmValuesFilerS3CreateBucketsHook = {
+  /**
+   * @default {}
+   */
+  resources?: SeaweedfsHelmValuesFilerS3CreateBucketsHookResources;
+};
+
+export type SeaweedfsHelmValuesFilerS3CreateBucketsHookResources = object;
 
 export type SeaweedfsHelmValuesS3 = {
   /**
@@ -1589,10 +1707,12 @@ export type SeaweedfsHelmValuesS3 = {
    * @default 0
    */
   httpsPort?: number;
+  tlsSecret?: unknown;
   /**
    * @default 9327
    */
   metricsPort?: number;
+  icebergPort?: unknown;
   loggingOverrideLevel?: unknown;
   /**
    * enable user & permission to s3 (need to inject to all services)
@@ -1722,9 +1842,23 @@ export type SeaweedfsHelmValuesS3 = {
    */
   readinessProbe?: SeaweedfsHelmValuesS3ReadinessProbe;
   /**
+   * @default {"resources":{}}
+   */
+  createBucketsHook?: SeaweedfsHelmValuesS3CreateBucketsHook;
+  /**
    * @default {...} (7 keys)
    */
   ingress?: SeaweedfsHelmValuesS3Ingress;
+  /**
+   * Service settings
+   *
+   * @default {"type":"ClusterIP"}
+   */
+  service?: SeaweedfsHelmValuesS3Service;
+  /**
+   * @default {...} (7 keys)
+   */
+  icebergIngress?: SeaweedfsHelmValuesS3IcebergIngress;
 };
 
 export type SeaweedfsHelmValuesS3AuditLogConfig = object;
@@ -1850,6 +1984,15 @@ export type SeaweedfsHelmValuesS3ReadinessProbeHttpGet = {
   scheme?: string;
 };
 
+export type SeaweedfsHelmValuesS3CreateBucketsHook = {
+  /**
+   * @default {}
+   */
+  resources?: SeaweedfsHelmValuesS3CreateBucketsHookResources;
+};
+
+export type SeaweedfsHelmValuesS3CreateBucketsHookResources = object;
+
 export type SeaweedfsHelmValuesS3Ingress = {
   /**
    * @default false
@@ -1881,6 +2024,49 @@ export type SeaweedfsHelmValuesS3Ingress = {
 };
 
 export type SeaweedfsHelmValuesS3IngressAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type SeaweedfsHelmValuesS3Service = {
+  /**
+   * @default "ClusterIP"
+   */
+  type?: string;
+};
+
+export type SeaweedfsHelmValuesS3IcebergIngress = {
+  /**
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * @default ""
+   */
+  className?: string;
+  /**
+   * @default "seaweedfs-iceberg.cluster.local"
+   */
+  host?: string;
+  /**
+   * @default "/"
+   */
+  path?: string;
+  /**
+   * @default "Prefix"
+   */
+  pathType?: string;
+  /**
+   * @default {}
+   */
+  annotations?: SeaweedfsHelmValuesS3IcebergIngressAnnotations;
+  tls?: unknown[];
+};
+
+export type SeaweedfsHelmValuesS3IcebergIngressAnnotations = {
   /**
    * This type allows arbitrary additional properties beyond those defined below.
    * This is common for config maps, custom settings, and extensible configurations.
@@ -2063,6 +2249,12 @@ export type SeaweedfsHelmValuesSftp = {
    * @default {...} (6 keys)
    */
   readinessProbe?: SeaweedfsHelmValuesSftpReadinessProbe;
+  /**
+   * Service settings
+   *
+   * @default {"type":"ClusterIP"}
+   */
+  service?: SeaweedfsHelmValuesSftpService;
 };
 
 export type SeaweedfsHelmValuesSftpPodLabels = object;
@@ -2150,6 +2342,13 @@ export type SeaweedfsHelmValuesSftpReadinessProbe = {
   timeoutSeconds?: number;
 };
 
+export type SeaweedfsHelmValuesSftpService = {
+  /**
+   * @default "ClusterIP"
+   */
+  type?: string;
+};
+
 export type SeaweedfsHelmValuesAdmin = {
   /**
    * @default false
@@ -2189,11 +2388,19 @@ export type SeaweedfsHelmValuesAdmin = {
   dataDir?: string;
   /**
    * Master servers to connect to
-   * If empty, uses global.masterServer or auto-discovers from master statefulset
+   * If empty, uses global.seaweedfs.masterServer or auto-discovers from master statefulset
    *
    * @default ""
    */
   masters?: string;
+  /**
+   * URL path prefix when running behind a reverse proxy under a subdirectory
+   * Example: "/seaweedfs-admin" makes the UI available at /seaweedfs-admin/
+   * If empty and ingress is enabled with a non-root path, the ingress path is used automatically
+   *
+   * @default ""
+   */
+  urlPrefix?: string;
   extraArgs?: unknown[];
   /**
    * Storage configuration
@@ -2612,21 +2819,35 @@ export type SeaweedfsHelmValuesWorker = {
    */
   metricsPort?: number;
   /**
+   * If empty, defaults to 0.0.0.0
+   *
+   * @default ""
+   */
+  metricsIp?: string;
+  /**
    * Admin server to connect to
    *
    * @default ""
    */
   adminServer?: string;
   /**
-   * @default "vacuum,balance,erasure_coding"
-   */
-  capabilities?: string;
-  /**
-   * Maximum number of concurrent tasks
+   * Worker job types - comma-separated list
    *
-   * @default 3
+   * @default "vacuum,volume_balance,erasure_coding"
    */
-  maxConcurrent?: number;
+  jobType?: string;
+  /**
+   * Maximum number of concurrent detection requests
+   *
+   * @default 1
+   */
+  maxDetect?: number;
+  /**
+   * Maximum number of concurrent execution jobs
+   *
+   * @default 4
+   */
+  maxExecute?: number;
   /**
    * Working directory for task execution
    *
@@ -3000,14 +3221,14 @@ export type SeaweedfsHelmValuesAllInOne = {
   /**
    * Note: Most parameters below default to null, which means they inherit from
    * the global s3.* settings. Set explicit values here to override for allInOne only.
-   * You may specify buckets to be created during the install process.
-   * Note: Most parameters below default to null, which means they inherit from
-   * the global sftp.* settings. Set explicit values here to override for allInOne only.
    *
-   * @default {...} (7 keys)
+   * @default {...} (9 keys)
    */
   s3?: SeaweedfsHelmValuesAllInOneS3;
   /**
+   * Note: Most parameters below default to null, which means they inherit from
+   * the global sftp.* settings. Set explicit values here to override for allInOne only.
+   *
    * @default {...} (13 keys)
    */
   sftp?: SeaweedfsHelmValuesAllInOneSftp;
@@ -3198,7 +3419,21 @@ export type SeaweedfsHelmValuesAllInOneS3 = {
   enableAuth?: boolean;
   existingConfigSecret?: unknown;
   auditLogConfig?: unknown;
+  trafficDistribution?: unknown;
+  /**
+   * @default {"resources":{}}
+   */
+  createBucketsHook?: SeaweedfsHelmValuesAllInOneS3CreateBucketsHook;
 };
+
+export type SeaweedfsHelmValuesAllInOneS3CreateBucketsHook = {
+  /**
+   * @default {}
+   */
+  resources?: SeaweedfsHelmValuesAllInOneS3CreateBucketsHookResources;
+};
+
+export type SeaweedfsHelmValuesAllInOneS3CreateBucketsHookResources = object;
 
 export type SeaweedfsHelmValuesAllInOneSftp = {
   /**
@@ -3461,6 +3696,12 @@ export type SeaweedfsHelmValuesCosi = {
    */
   bucketClassName?: string;
   /**
+   * Optional parameters to pass to the default BucketClass (e.g., diskType for tiered storage)
+   *
+   * @default {}
+   */
+  bucketClassParameters?: SeaweedfsHelmValuesCosiBucketClassParameters;
+  /**
    * @default ""
    */
   endpoint?: string;
@@ -3505,6 +3746,8 @@ export type SeaweedfsHelmValuesCosi = {
    */
   resources?: SeaweedfsHelmValuesCosiResources;
 };
+
+export type SeaweedfsHelmValuesCosiBucketClassParameters = object;
 
 export type SeaweedfsHelmValuesCosiSidecar = {
   /**
@@ -3598,7 +3841,7 @@ export type SeaweedfsHelmValuesPodAnnotations = object;
 
 export type SeaweedfsHelmValues = {
   /**
-   * @default {...} (18 keys)
+   * @default {"imageRegistry":"","imagePullSecrets":"","seaweedfs":{"createClusterRole":true,"image":{"repository":"","name":"chrislusf/seaweedfs"},"imagePullPolicy":"IfNotPresent","restartPolicy":"Always","loggingLevel":1,"enableSecurity":false,"masterServer":null,"securityConfig":{"jwtSigning":{"volumeWrite":true,"volumeRead":false,"filerWrite":false,"filerRead":false}},"serviceAccountName":"seaweedfs","serviceAccountAnnotations":{},"automountServiceAccountToken":true,"certificates":{"duration":"87600h","renewBefore":"720h","alphacrds":false},"monitoring":{"enabled":false,"gatewayHost":null,"gatewayPort":null,"additionalLabels":{}},"enableReplication":false,"replicationPlacement":"001","extraEnvironmentVars":{"WEED_CLUSTER_DEFAULT":"sw","WEED_CLUSTER_SW_MASTER":"{{ include \"seaweedfs.cluster.masterAddress\" . }}","WEED_CLUSTER_SW_FILER":"{{ include \"seaweedfs.cluster.filerAddress\" . }}"}}}
    */
   global?: SeaweedfsHelmValuesGlobal;
   /**
@@ -3610,15 +3853,11 @@ export type SeaweedfsHelmValues = {
    */
   master?: SeaweedfsHelmValuesMaster;
   /**
-   * @default {...} (46 keys)
+   * @default {...} (48 keys)
    */
   volume?: SeaweedfsHelmValuesVolume;
   /**
-   * Map of named volume groups for topology-aware deployments.
-   * Each key inherits all fields from the `volume` section but can override
-   * them locally—for example, replicas, nodeSelector, dataCenter, etc.
-   * To switch entirely to this scheme, set `volume.enabled: false`
-   * and define one entry per zone/data-center under `volumes`.
+   * topology.kubernetes.io/zone: dc3
    *
    * @default {}
    */
@@ -3628,19 +3867,19 @@ export type SeaweedfsHelmValues = {
    */
   filer?: SeaweedfsHelmValuesFiler;
   /**
-   * @default {...} (33 keys)
+   * @default {...} (38 keys)
    */
   s3?: SeaweedfsHelmValuesS3;
   /**
-   * @default {...} (40 keys)
+   * @default {...} (41 keys)
    */
   sftp?: SeaweedfsHelmValuesSftp;
   /**
-   * @default {...} (36 keys)
+   * @default {...} (37 keys)
    */
   admin?: SeaweedfsHelmValuesAdmin;
   /**
-   * @default {...} (33 keys)
+   * @default {...} (35 keys)
    */
   worker?: SeaweedfsHelmValuesWorker;
   /**
@@ -3654,7 +3893,7 @@ export type SeaweedfsHelmValues = {
    * Requires COSI CRDs and controller to be installed in the cluster
    * For more information, visit: https://container-object-storage-interface.github.io/docs/deployment-guide
    *
-   * @default {...} (14 keys)
+   * @default {...} (15 keys)
    */
   cosi?: SeaweedfsHelmValuesCosi;
   /**
@@ -3676,33 +3915,33 @@ export type SeaweedfsHelmValues = {
 };
 
 export type SeaweedfsHelmParameters = {
-  "global.createClusterRole"?: string;
-  "global.registry"?: string;
-  "global.repository"?: string;
-  "global.imageName"?: string;
-  "global.imagePullPolicy"?: string;
+  "global.imageRegistry"?: string;
   "global.imagePullSecrets"?: string;
-  "global.restartPolicy"?: string;
-  "global.loggingLevel"?: string;
-  "global.enableSecurity"?: string;
-  "global.masterServer"?: string;
-  "global.securityConfig.jwtSigning.volumeWrite"?: string;
-  "global.securityConfig.jwtSigning.volumeRead"?: string;
-  "global.securityConfig.jwtSigning.filerWrite"?: string;
-  "global.securityConfig.jwtSigning.filerRead"?: string;
-  "global.serviceAccountName"?: string;
-  "global.automountServiceAccountToken"?: string;
-  "global.certificates.duration"?: string;
-  "global.certificates.renewBefore"?: string;
-  "global.certificates.alphacrds"?: string;
-  "global.monitoring.enabled"?: string;
-  "global.monitoring.gatewayHost"?: string;
-  "global.monitoring.gatewayPort"?: string;
-  "global.enableReplication"?: string;
-  "global.replicationPlacement"?: string;
-  "global.extraEnvironmentVars.WEED_CLUSTER_DEFAULT"?: string;
-  "global.extraEnvironmentVars.WEED_CLUSTER_SW_MASTER"?: string;
-  "global.extraEnvironmentVars.WEED_CLUSTER_SW_FILER"?: string;
+  "global.seaweedfs.createClusterRole"?: string;
+  "global.seaweedfs.image.repository"?: string;
+  "global.seaweedfs.image.name"?: string;
+  "global.seaweedfs.imagePullPolicy"?: string;
+  "global.seaweedfs.restartPolicy"?: string;
+  "global.seaweedfs.loggingLevel"?: string;
+  "global.seaweedfs.enableSecurity"?: string;
+  "global.seaweedfs.masterServer"?: string;
+  "global.seaweedfs.securityConfig.jwtSigning.volumeWrite"?: string;
+  "global.seaweedfs.securityConfig.jwtSigning.volumeRead"?: string;
+  "global.seaweedfs.securityConfig.jwtSigning.filerWrite"?: string;
+  "global.seaweedfs.securityConfig.jwtSigning.filerRead"?: string;
+  "global.seaweedfs.serviceAccountName"?: string;
+  "global.seaweedfs.automountServiceAccountToken"?: string;
+  "global.seaweedfs.certificates.duration"?: string;
+  "global.seaweedfs.certificates.renewBefore"?: string;
+  "global.seaweedfs.certificates.alphacrds"?: string;
+  "global.seaweedfs.monitoring.enabled"?: string;
+  "global.seaweedfs.monitoring.gatewayHost"?: string;
+  "global.seaweedfs.monitoring.gatewayPort"?: string;
+  "global.seaweedfs.enableReplication"?: string;
+  "global.seaweedfs.replicationPlacement"?: string;
+  "global.seaweedfs.extraEnvironmentVars.WEED_CLUSTER_DEFAULT"?: string;
+  "global.seaweedfs.extraEnvironmentVars.WEED_CLUSTER_SW_MASTER"?: string;
+  "global.seaweedfs.extraEnvironmentVars.WEED_CLUSTER_SW_FILER"?: string;
   "image.registry"?: string;
   "image.repository"?: string;
   "image.tag"?: string;
@@ -3830,6 +4069,12 @@ export type SeaweedfsHelmParameters = {
   "volume.readinessProbe.successThreshold"?: string;
   "volume.readinessProbe.failureThreshold"?: string;
   "volume.readinessProbe.timeoutSeconds"?: string;
+  "volume.ingress.enabled"?: string;
+  "volume.ingress.className"?: string;
+  "volume.ingress.host"?: string;
+  "volume.ingress.path"?: string;
+  "volume.ingress.pathType"?: string;
+  "volume.ingress.annotations.nginx.ingress.kubernetes.io/app-root"?: string;
   "filer.enabled"?: string;
   "filer.imageOverride"?: string;
   "filer.restartPolicy"?: string;
@@ -3920,7 +4165,9 @@ export type SeaweedfsHelmParameters = {
   "s3.bindAddress"?: string;
   "s3.port"?: string;
   "s3.httpsPort"?: string;
+  "s3.tlsSecret"?: string;
   "s3.metricsPort"?: string;
+  "s3.icebergPort"?: string;
   "s3.loggingOverrideLevel"?: string;
   "s3.enableAuth"?: string;
   "s3.existingConfigSecret"?: string;
@@ -3961,6 +4208,13 @@ export type SeaweedfsHelmParameters = {
   "s3.ingress.path"?: string;
   "s3.ingress.pathType"?: string;
   "s3.ingress.tls"?: string;
+  "s3.service.type"?: string;
+  "s3.icebergIngress.enabled"?: string;
+  "s3.icebergIngress.className"?: string;
+  "s3.icebergIngress.host"?: string;
+  "s3.icebergIngress.path"?: string;
+  "s3.icebergIngress.pathType"?: string;
+  "s3.icebergIngress.tls"?: string;
   "sftp.enabled"?: string;
   "sftp.imageOverride"?: string;
   "sftp.restartPolicy"?: string;
@@ -4005,6 +4259,7 @@ export type SeaweedfsHelmParameters = {
   "sftp.readinessProbe.successThreshold"?: string;
   "sftp.readinessProbe.failureThreshold"?: string;
   "sftp.readinessProbe.timeoutSeconds"?: string;
+  "sftp.service.type"?: string;
   "admin.enabled"?: string;
   "admin.imageOverride"?: string;
   "admin.restartPolicy"?: string;
@@ -4019,6 +4274,7 @@ export type SeaweedfsHelmParameters = {
   "admin.secret.adminPassword"?: string;
   "admin.dataDir"?: string;
   "admin.masters"?: string;
+  "admin.urlPrefix"?: string;
   "admin.extraArgs"?: string;
   "admin.data.type"?: string;
   "admin.data.size"?: string;
@@ -4070,9 +4326,11 @@ export type SeaweedfsHelmParameters = {
   "worker.replicas"?: string;
   "worker.loggingOverrideLevel"?: string;
   "worker.metricsPort"?: string;
+  "worker.metricsIp"?: string;
   "worker.adminServer"?: string;
-  "worker.capabilities"?: string;
-  "worker.maxConcurrent"?: string;
+  "worker.jobType"?: string;
+  "worker.maxDetect"?: string;
+  "worker.maxExecute"?: string;
   "worker.workingDir"?: string;
   "worker.extraArgs"?: string;
   "worker.data.type"?: string;
@@ -4132,6 +4390,7 @@ export type SeaweedfsHelmParameters = {
   "allInOne.s3.enableAuth"?: string;
   "allInOne.s3.existingConfigSecret"?: string;
   "allInOne.s3.auditLogConfig"?: string;
+  "allInOne.s3.trafficDistribution"?: string;
   "allInOne.sftp.enabled"?: string;
   "allInOne.sftp.port"?: string;
   "allInOne.sftp.sshPrivateKey"?: string;

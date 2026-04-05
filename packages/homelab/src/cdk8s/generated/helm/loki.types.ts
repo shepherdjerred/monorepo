@@ -36,6 +36,8 @@ export type LokiHelmValuesGlobalImage = {
   registry?: unknown;
 };
 
+export type LokiHelmValuesCommonLabels = object;
+
 export type LokiHelmValuesLoki = {
   /**
    * Configures the liveness probe for all of the Loki pods
@@ -420,7 +422,7 @@ export type LokiHelmValuesLokiImage = {
   /**
    * Overrides the image tag whose default is the chart's appVersion
    *
-   * @default "3.6.3"
+   * @default "3.6.7"
    */
   tag?: string;
   digest?: unknown;
@@ -1154,7 +1156,7 @@ export type LokiHelmValuesEnterprise = {
   /**
    * Default version of GEL to deploy
    *
-   * @default "3.6.1"
+   * @default "3.6.5"
    */
   version?: string;
   cluster_name?: unknown;
@@ -1249,7 +1251,7 @@ export type LokiHelmValuesEnterpriseImage = {
   /**
    * Docker image tag
    *
-   * @default "3.6.3"
+   * @default "3.6.7"
    */
   tag?: string;
   digest?: unknown;
@@ -3542,6 +3544,12 @@ export type LokiHelmValuesWrite = {
    */
   dnsConfig?: LokiHelmValuesWriteDnsConfig;
   /**
+   * Pod Disruption Budget maxUnavailable
+   *
+   * @default 1
+   */
+  maxUnavailable?: number;
+  /**
    * Node selector for write pods
    *
    * @default {}
@@ -3964,6 +3972,12 @@ export type LokiHelmValuesRead = {
    */
   dnsConfig?: LokiHelmValuesReadDnsConfig;
   /**
+   * Pod Disruption Budget maxUnavailable
+   *
+   * @default 1
+   */
+  maxUnavailable?: number;
+  /**
    * Node selector for read pods
    *
    * @default {}
@@ -4283,6 +4297,12 @@ export type LokiHelmValuesBackend = {
    * @default {}
    */
   dnsConfig?: LokiHelmValuesBackendDnsConfig;
+  /**
+   * Pod Disruption Budget maxUnavailable
+   *
+   * @default 1
+   */
+  maxUnavailable?: number;
   /**
    * Node selector for backend pods
    *
@@ -8674,6 +8694,12 @@ export type LokiHelmValuesResultsCache = {
    */
   allocatedMemory?: number;
   /**
+   * Amount of cpu allocated to results-cache for object storage (in integer or millicores).
+   *
+   * @default "500m"
+   */
+  allocatedCPU?: string;
+  /**
    * Maximum item results-cache for memcached (in MB).
    *
    * @default 5
@@ -8963,6 +8989,12 @@ export type LokiHelmValuesChunksCache = {
    */
   allocatedMemory?: number;
   /**
+   * Amount of cpu allocated to chunks-cache for object storage (in integer or millicores).
+   *
+   * @default "500m"
+   */
+  allocatedCPU?: string;
+  /**
    * Maximum item memory for chunks-cache (in MB).
    *
    * @default 5
@@ -9095,7 +9127,7 @@ export type LokiHelmValuesChunksCache = {
   /**
    * l2 memcache configuration
    *
-   * @default {...} (39 keys)
+   * @default {...} (40 keys)
    */
   l2?: LokiHelmValuesChunksCacheL2;
 };
@@ -9262,6 +9294,12 @@ export type LokiHelmValuesChunksCacheL2 = {
    * @default 8192
    */
   allocatedMemory?: number;
+  /**
+   * Amount of cpu allocated to chunks-cache-l2 for object storage (in integer or millicores).
+   *
+   * @default "500m"
+   */
+  allocatedCPU?: string;
   /**
    * Maximum item memory for chunks-cache-l2 (in MB).
    *
@@ -9708,6 +9746,12 @@ export type LokiHelmValuesSidecar = {
    */
   skipTlsVerify?: boolean;
   /**
+   * Set to true to disable strict x509 verification for kube api calls.
+   *
+   * @default false
+   */
+  disableX509StrictVerification?: boolean;
+  /**
    * Ensure that rule files aren't conflicting and being overwritten by prefixing their name with the namespace they are defined in.
    *
    * @default false
@@ -9751,7 +9795,7 @@ export type LokiHelmValuesSidecarImage = {
   /**
    * Docker image tag
    *
-   * @default "1.30.9"
+   * @default "2.5.0"
    */
   tag?: string;
   /**
@@ -10629,6 +10673,12 @@ export type LokiHelmValues = {
    */
   deploymentMode?: string;
   /**
+   * Labels to be added to resources
+   *
+   * @default {}
+   */
+  commonLabels?: LokiHelmValuesCommonLabels;
+  /**
    * Base Loki Configs including kubernetes configurations and configurations for Loki itself,
    * see below for more specifics on Loki's configuration.
    * Configuration for running Loki
@@ -10733,19 +10783,19 @@ export type LokiHelmValues = {
    * For small to medium size Loki deployments up to around 1 TB/day, this is the default mode for this helm chart
    * Configuration for the write pod(s)
    *
-   * @default {...} (29 keys)
+   * @default {...} (30 keys)
    */
   write?: LokiHelmValuesWrite;
   /**
    * Configuration for the read pod(s)
    *
-   * @default {...} (31 keys)
+   * @default {...} (32 keys)
    */
   read?: LokiHelmValuesRead;
   /**
    * Configuration for the backend pod(s)
    *
-   * @default {...} (27 keys)
+   * @default {...} (28 keys)
    */
   backend?: LokiHelmValuesBackend;
   /**
@@ -10837,11 +10887,11 @@ export type LokiHelmValues = {
    */
   memcachedExporter?: LokiHelmValuesMemcachedExporter;
   /**
-   * @default {...} (35 keys)
+   * @default {...} (36 keys)
    */
   resultsCache?: LokiHelmValuesResultsCache;
   /**
-   * @default {...} (39 keys)
+   * @default {...} (40 keys)
    */
   chunksCache?: LokiHelmValuesChunksCache;
   /**
@@ -10861,7 +10911,7 @@ export type LokiHelmValues = {
   /**
    * Whether to enable the rules sidecar
    *
-   * @default {...} (9 keys)
+   * @default {...} (10 keys)
    */
   sidecar?: LokiHelmValuesSidecar;
   /**
@@ -11314,6 +11364,7 @@ export type LokiHelmParameters = {
   "write.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/name"?: string;
   "write.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/instance"?: string;
   "write.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.topologyKey"?: string;
+  "write.maxUnavailable"?: string;
   "write.topologySpreadConstraints"?: string;
   "write.tolerations"?: string;
   "write.podManagementPolicy"?: string;
@@ -11351,6 +11402,7 @@ export type LokiHelmParameters = {
   "read.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/name"?: string;
   "read.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/instance"?: string;
   "read.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.topologyKey"?: string;
+  "read.maxUnavailable"?: string;
   "read.topologySpreadConstraints"?: string;
   "read.tolerations"?: string;
   "read.podManagementPolicy"?: string;
@@ -11386,6 +11438,7 @@ export type LokiHelmParameters = {
   "backend.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/name"?: string;
   "backend.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/instance"?: string;
   "backend.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.topologyKey"?: string;
+  "backend.maxUnavailable"?: string;
   "backend.topologySpreadConstraints"?: string;
   "backend.tolerations"?: string;
   "backend.podManagementPolicy"?: string;
@@ -11902,6 +11955,7 @@ export type LokiHelmParameters = {
   "resultsCache.replicas"?: string;
   "resultsCache.port"?: string;
   "resultsCache.allocatedMemory"?: string;
+  "resultsCache.allocatedCPU"?: string;
   "resultsCache.maxItemMemory"?: string;
   "resultsCache.connectionLimit"?: string;
   "resultsCache.writebackSizeLimit"?: string;
@@ -11936,6 +11990,7 @@ export type LokiHelmParameters = {
   "chunksCache.replicas"?: string;
   "chunksCache.port"?: string;
   "chunksCache.allocatedMemory"?: string;
+  "chunksCache.allocatedCPU"?: string;
   "chunksCache.maxItemMemory"?: string;
   "chunksCache.connectionLimit"?: string;
   "chunksCache.writebackSizeLimit"?: string;
@@ -11971,6 +12026,7 @@ export type LokiHelmParameters = {
   "chunksCache.l2.replicas"?: string;
   "chunksCache.l2.port"?: string;
   "chunksCache.l2.allocatedMemory"?: string;
+  "chunksCache.l2.allocatedCPU"?: string;
   "chunksCache.l2.maxItemMemory"?: string;
   "chunksCache.l2.connectionLimit"?: string;
   "chunksCache.l2.writebackSizeLimit"?: string;
@@ -12031,6 +12087,7 @@ export type LokiHelmParameters = {
   "sidecar.securityContext.capabilities.drop"?: string;
   "sidecar.securityContext.allowPrivilegeEscalation"?: string;
   "sidecar.skipTlsVerify"?: string;
+  "sidecar.disableX509StrictVerification"?: string;
   "sidecar.enableUniqueFilenames"?: string;
   "sidecar.rules.enabled"?: string;
   "sidecar.rules.label"?: string;

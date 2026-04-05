@@ -26,15 +26,15 @@ export type VeleroHelmValuesNamespaceLabels = {
 
 export type VeleroHelmValuesImage = {
   /**
-   * @default "velero/velero"
+   * @default "docker.io/velero/velero"
    */
   repository?: string;
   /**
-   * @default "v1.17.1"
+   * @default "v1.18.0"
    */
   tag?: string;
   /**
-   * Digest value example: sha256:d238835e151cec91c6a811fe3a89a66d3231d9f64d09e5f3c49552672d271f38.
+   * Digest value example: sha256:73266e6bd7e2fe3f65fb20677d36c4a8df76d417d9ba76bd9932e0d983a776ec.
    * If used, it will take precedence over the image.tag.
    *
    * @default "IfNotPresent"
@@ -399,12 +399,12 @@ export type VeleroHelmValuesMetricsPrometheusRuleAdditionalLabels = object;
 
 export type VeleroHelmValuesKubectl = {
   /**
-   * Digest value example: sha256:d238835e151cec91c6a811fe3a89a66d3231d9f64d09e5f3c49552672d271f38.
+   * Digest value example: sha256:c7bf8cf6e79f474fda2623a7b98572a1b909c4d912b05062b444ffe79883fdbe.
    * If used, it will take precedence over the kubectl.image.tag.
    * Container Level Security Context for the 'kubectl' container of the crd jobs. Optional.
    * See: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
    *
-   * @default {"repository":"docker.io/bitnamilegacy/kubectl"}
+   * @default {"repository":"registry.k8s.io/kubectl"}
    */
   image?: VeleroHelmValuesKubectlImage;
   /**
@@ -450,7 +450,7 @@ export type VeleroHelmValuesKubectlImage = {
    */
   [key: string]: unknown;
   /**
-   * @default "docker.io/bitnamilegacy/kubectl"
+   * @default "registry.k8s.io/kubectl"
    */
   repository?: string;
 };

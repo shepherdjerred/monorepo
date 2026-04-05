@@ -13,7 +13,7 @@ export type KubeprometheusstackHelmValuesCrds = {
    * It deploys a corresponding clusterrole, clusterrolebinding and serviceaccount to apply the CRDs.
    * This feature is in preview, off by default and may change in the future.
    *
-   * @default {...} (18 keys)
+   * @default {...} (19 keys)
    */
   upgradeJob?: KubeprometheusstackHelmValuesCrdsUpgradeJob;
 };
@@ -91,6 +91,12 @@ export type KubeprometheusstackHelmValuesCrdsUpgradeJob = {
    * @default {...} (5 keys)
    */
   serviceAccount?: KubeprometheusstackHelmValuesCrdsUpgradeJobServiceAccount;
+  /**
+   * Automounting API credentials for upgrade crd job pod.
+   *
+   * @default true
+   */
+  automountServiceAccountToken?: boolean;
   /**
    * ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
    *
@@ -1158,6 +1164,13 @@ export type KubeprometheusstackHelmValuesAlertmanager = {
    */
   podDisruptionBudget?: KubeprometheusstackHelmValuesAlertmanagerPodDisruptionBudget;
   /**
+   * Enable vertical pod autoscaler support for Alertmanager
+   * ref: https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler
+   *
+   * @default {...} (5 keys)
+   */
+  verticalPodAutoscaler?: KubeprometheusstackHelmValuesAlertmanagerVerticalPodAutoscaler;
+  /**
    * ref: https://prometheus.io/docs/alerting/configuration/#configuration-file
    * https://prometheus.io/webtools/alerting/routing-tree-editor/
    *
@@ -1259,7 +1272,7 @@ export type KubeprometheusstackHelmValuesAlertmanager = {
    */
   serviceMonitor?: KubeprometheusstackHelmValuesAlertmanagerServiceMonitor;
   /**
-   * @default {...} (51 keys)
+   * @default {...} (56 keys)
    */
   alertmanagerSpec?: KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpec;
   /**
@@ -1402,6 +1415,48 @@ export type KubeprometheusstackHelmValuesAlertmanagerPodDisruptionBudget = {
    */
   unhealthyPodEvictionPolicy?: string;
 };
+
+export type KubeprometheusstackHelmValuesAlertmanagerVerticalPodAutoscaler = {
+  /**
+   * @default false
+   */
+  enabled?: boolean;
+  controlledResources?: unknown[];
+  /**
+   * Specifies which resource values should be controlled: RequestsOnly or RequestsAndLimits.
+   * Define the max allowed resources for the pod
+   *
+   * @default {}
+   */
+  maxAllowed?: KubeprometheusstackHelmValuesAlertmanagerVerticalPodAutoscalerMaxAllowed;
+  /**
+   * Define the min allowed resources for the pod
+   *
+   * @default {}
+   */
+  minAllowed?: KubeprometheusstackHelmValuesAlertmanagerVerticalPodAutoscalerMinAllowed;
+  /**
+   * @default {"updateMode":"Recreate"}
+   */
+  updatePolicy?: KubeprometheusstackHelmValuesAlertmanagerVerticalPodAutoscalerUpdatePolicy;
+};
+
+export type KubeprometheusstackHelmValuesAlertmanagerVerticalPodAutoscalerMaxAllowed =
+  object;
+
+export type KubeprometheusstackHelmValuesAlertmanagerVerticalPodAutoscalerMinAllowed =
+  object;
+
+export type KubeprometheusstackHelmValuesAlertmanagerVerticalPodAutoscalerUpdatePolicy =
+  {
+    /**
+     * Specifies whether recommended updates are applied when a Pod is started and whether recommended updates
+     * are applied during the life of a Pod. Possible values are "Off", "Initial", "Recreate", and "InPlaceOrRecreate".
+     *
+     * @default "Recreate"
+     */
+    updateMode?: string;
+  };
 
 export type KubeprometheusstackHelmValuesAlertmanagerConfig = {
   /**
@@ -2135,6 +2190,7 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpec = {
    * @default {...} (5 keys)
    */
   securityContext?: KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecSecurityContext;
+  hostUsers?: unknown;
   /**
    * DNS configuration for Alertmanager.
    * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.PodDNSConfig
@@ -2149,6 +2205,12 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpec = {
    * @default ""
    */
   dnsPolicy?: string;
+  /**
+   * Enable hostNetwork for Alertmanager.
+   *
+   * @default false
+   */
+  hostNetwork?: boolean;
   /**
    * ListenLocal makes the Alertmanager server listen on loopback, so that it does not bind against the Pod IP.
    * Note this is only for the Alertmanager UI, not the gossip communication.
@@ -2221,6 +2283,21 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpec = {
    */
   minReadySeconds?: number;
   /**
+   * Pod management policy. Kubernetes default is OrderedReady but prometheus-operator default is Parallel.
+   * ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#pod-management-policies
+   *
+   * @default ""
+   */
+  podManagementPolicy?: string;
+  /**
+   * Update strategy for the StatefulSet.
+   * ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
+   *
+   * @default {}
+   */
+  updateStrategy?: KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecUpdateStrategy;
+  terminationGracePeriodSeconds?: unknown;
+  /**
    * Additional configuration which is not covered by the properties above. (passed through tpl)
    *
    * @default {}
@@ -2252,7 +2329,7 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecImage = {
    */
   repository?: string;
   /**
-   * @default "v0.30.1"
+   * @default "v0.31.1"
    */
   tag?: string;
   /**
@@ -2333,6 +2410,9 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecSecurityCon
   };
 
 export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecDnsConfig =
+  object;
+
+export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecUpdateStrategy =
   object;
 
 export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecAdditionalConfig =
@@ -2457,6 +2537,13 @@ export type KubeprometheusstackHelmValuesGrafana = {
   extraConfigmapMounts?: unknown[];
   deleteDatasources?: unknown[];
   additionalDataSources?: unknown[];
+  /**
+   * Configure additional grafana datasources as a templated string (passed through tpl)
+   * Useful when you need Helm flow control or templating inside the datasource definition
+   *
+   * @default ""
+   */
+  additionalDataSourcesString?: string;
   /**
    * Flag to mark provisioned data sources for deletion if they are no longer configured.
    * It takes no effect if data sources are already listed in the deleteDatasources section.
@@ -3507,7 +3594,7 @@ export type KubeprometheusstackHelmValuesCoreDns = {
    */
   service?: KubeprometheusstackHelmValuesCoreDnsService;
   /**
-   * @default {...} (15 keys)
+   * @default {...} (16 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesCoreDnsServiceMonitor;
 };
@@ -3609,6 +3696,13 @@ export type KubeprometheusstackHelmValuesCoreDnsServiceMonitor = {
    */
   additionalLabels?: KubeprometheusstackHelmValuesCoreDnsServiceMonitorAdditionalLabels;
   targetLabels?: unknown[];
+  /**
+   * File containing bearer token to be used when scraping targets
+   * Empty value do not send any bearer token.
+   *
+   * @default "/var/run/secrets/kubernetes.io/serviceaccount/t..."
+   */
+  bearerTokenFile?: string;
 };
 
 export type KubeprometheusstackHelmValuesCoreDnsServiceMonitorSelector = object;
@@ -3626,7 +3720,7 @@ export type KubeprometheusstackHelmValuesKubeDns = {
    */
   service?: KubeprometheusstackHelmValuesKubeDnsService;
   /**
-   * @default {...} (15 keys)
+   * @default {...} (16 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesKubeDnsServiceMonitor;
 };
@@ -3740,6 +3834,13 @@ export type KubeprometheusstackHelmValuesKubeDnsServiceMonitor = {
    */
   additionalLabels?: KubeprometheusstackHelmValuesKubeDnsServiceMonitorAdditionalLabels;
   targetLabels?: unknown[];
+  /**
+   * File containing bearer token to be used when scraping targets
+   * Empty value do not send any bearer token.
+   *
+   * @default "/var/run/secrets/kubernetes.io/serviceaccount/t..."
+   */
+  bearerTokenFile?: string;
 };
 
 export type KubeprometheusstackHelmValuesKubeDnsServiceMonitorSelector = object;
@@ -3763,7 +3864,7 @@ export type KubeprometheusstackHelmValuesKubeEtcd = {
    */
   service?: KubeprometheusstackHelmValuesKubeEtcdService;
   /**
-   * @default {...} (21 keys)
+   * @default {...} (22 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesKubeEtcdServiceMonitor;
 };
@@ -3889,6 +3990,13 @@ export type KubeprometheusstackHelmValuesKubeEtcdServiceMonitor = {
    */
   additionalLabels?: KubeprometheusstackHelmValuesKubeEtcdServiceMonitorAdditionalLabels;
   targetLabels?: unknown[];
+  /**
+   * File containing bearer token to be used when scraping targets
+   * Empty value do not send any bearer token.
+   *
+   * @default "/var/run/secrets/kubernetes.io/serviceaccount/t..."
+   */
+  bearerTokenFile?: string;
 };
 
 export type KubeprometheusstackHelmValuesKubeEtcdServiceMonitorSelector =
@@ -4049,7 +4157,7 @@ export type KubeprometheusstackHelmValuesKubeProxy = {
    */
   service?: KubeprometheusstackHelmValuesKubeProxyService;
   /**
-   * @default {...} (16 keys)
+   * @default {...} (17 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesKubeProxyServiceMonitor;
 };
@@ -4158,6 +4266,13 @@ export type KubeprometheusstackHelmValuesKubeProxyServiceMonitor = {
    */
   additionalLabels?: KubeprometheusstackHelmValuesKubeProxyServiceMonitorAdditionalLabels;
   targetLabels?: unknown[];
+  /**
+   * File containing bearer token to be used when scraping targets
+   * Empty value do not send any bearer token.
+   *
+   * @default "/var/run/secrets/kubernetes.io/serviceaccount/t..."
+   */
+  bearerTokenFile?: string;
 };
 
 export type KubeprometheusstackHelmValuesKubeProxyServiceMonitorSelector =
@@ -5524,7 +5639,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatc
      */
     repository?: string;
     /**
-     * @default "1.7.4"
+     * @default "1.8.0"
      */
     tag?: string;
     /**
@@ -6054,7 +6169,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorVerticalPodAutoscaler
      */
     minAllowed?: KubeprometheusstackHelmValuesPrometheusOperatorVerticalPodAutoscalerMinAllowed;
     /**
-     * @default {"updateMode":"Auto"}
+     * @default {"updateMode":"Recreate"}
      */
     updatePolicy?: KubeprometheusstackHelmValuesPrometheusOperatorVerticalPodAutoscalerUpdatePolicy;
   };
@@ -6070,9 +6185,9 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorVerticalPodAutoscaler
     /**
      * Specifies minimal number of replicas which need to be alive for VPA Updater to attempt pod eviction
      * Specifies whether recommended updates are applied when a Pod is started and whether recommended updates
-     * are applied during the life of a Pod. Possible values are "Off", "Initial", "Recreate", and "Auto".
+     * are applied during the life of a Pod. Possible values are "Off", "Initial", "Recreate", and "InPlaceOrRecreate".
      *
-     * @default "Auto"
+     * @default "Recreate"
      */
     updateMode?: string;
   };
@@ -6157,7 +6272,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorThanosImage = {
    */
   repository?: string;
   /**
-   * @default "v0.40.1"
+   * @default "v0.41.0"
    */
   tag?: string;
   /**
@@ -6228,7 +6343,7 @@ export type KubeprometheusstackHelmValuesPrometheus = {
   /**
    * Configuration for Prometheus service
    *
-   * @default {...} (18 keys)
+   * @default {...} (19 keys)
    */
   service?: KubeprometheusstackHelmValuesPrometheusService;
   /**
@@ -6244,6 +6359,13 @@ export type KubeprometheusstackHelmValuesPrometheus = {
    * @default {"enabled":false,"minAvailable":1,"unhealthyPodEvictionPolicy":"AlwaysAllow"}
    */
   podDisruptionBudget?: KubeprometheusstackHelmValuesPrometheusPodDisruptionBudget;
+  /**
+   * Enable vertical pod autoscaler support for Prometheus
+   * ref: https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler
+   *
+   * @default {...} (5 keys)
+   */
+  verticalPodAutoscaler?: KubeprometheusstackHelmValuesPrometheusVerticalPodAutoscaler;
   /**
    * Ingress exposes thanos sidecar outside the cluster
    * ExtraSecret can be used to store various data in an extra secret
@@ -6288,7 +6410,7 @@ export type KubeprometheusstackHelmValuesPrometheus = {
    */
   serviceMonitor?: KubeprometheusstackHelmValuesPrometheusServiceMonitor;
   /**
-   * @default {...} (117 keys)
+   * @default {...} (122 keys)
    */
   prometheusSpec?: KubeprometheusstackHelmValuesPrometheusPrometheusSpec;
   additionalRulesForClusterRole?: unknown[];
@@ -6619,6 +6741,7 @@ export type KubeprometheusstackHelmValuesPrometheusService = {
    * @default 8080
    */
   reloaderWebPort?: number;
+  reloaderWebNodePort?: unknown;
   externalIPs?: unknown[];
   /**
    * Port to expose on each node
@@ -6800,6 +6923,48 @@ export type KubeprometheusstackHelmValuesPrometheusPodDisruptionBudget = {
    */
   unhealthyPodEvictionPolicy?: string;
 };
+
+export type KubeprometheusstackHelmValuesPrometheusVerticalPodAutoscaler = {
+  /**
+   * @default false
+   */
+  enabled?: boolean;
+  controlledResources?: unknown[];
+  /**
+   * Specifies which resource values should be controlled: RequestsOnly or RequestsAndLimits.
+   * Define the max allowed resources for the pod
+   *
+   * @default {}
+   */
+  maxAllowed?: KubeprometheusstackHelmValuesPrometheusVerticalPodAutoscalerMaxAllowed;
+  /**
+   * Define the min allowed resources for the pod
+   *
+   * @default {}
+   */
+  minAllowed?: KubeprometheusstackHelmValuesPrometheusVerticalPodAutoscalerMinAllowed;
+  /**
+   * @default {"updateMode":"Recreate"}
+   */
+  updatePolicy?: KubeprometheusstackHelmValuesPrometheusVerticalPodAutoscalerUpdatePolicy;
+};
+
+export type KubeprometheusstackHelmValuesPrometheusVerticalPodAutoscalerMaxAllowed =
+  object;
+
+export type KubeprometheusstackHelmValuesPrometheusVerticalPodAutoscalerMinAllowed =
+  object;
+
+export type KubeprometheusstackHelmValuesPrometheusVerticalPodAutoscalerUpdatePolicy =
+  {
+    /**
+     * Specifies whether recommended updates are applied when a Pod is started and whether recommended updates
+     * are applied during the life of a Pod. Possible values are "Off", "Initial", "Recreate", and "InPlaceOrRecreate".
+     *
+     * @default "Recreate"
+     */
+    updateMode?: string;
+  };
 
 export type KubeprometheusstackHelmValuesPrometheusThanosIngress = {
   /**
@@ -7304,6 +7469,12 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpec = {
   image?: KubeprometheusstackHelmValuesPrometheusPrometheusSpecImage;
   tolerations?: unknown[];
   topologySpreadConstraints?: unknown[];
+  /**
+   * Disable alerting
+   *
+   * @default false
+   */
+  disableAlerting?: boolean;
   alertingEndpoints?: unknown[];
   /**
    * External labels to add to any time series or alerts when communicating with external systems
@@ -7802,6 +7973,7 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpec = {
    * @default 0
    */
   minReadySeconds?: number;
+  terminationGracePeriodSeconds?: unknown;
   /**
    * Required for use in managed kubernetes clusters (such as AWS EKS) with custom CNI (such as calico),
    * because control-plane managed by AWS cannot communicate with pods' IP CIDR and admission webhooks are not working
@@ -7811,6 +7983,7 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpec = {
    * @default false
    */
   hostNetwork?: boolean;
+  hostUsers?: unknown;
   hostAliases?: unknown[];
   /**
    * TracingConfig configures tracing in Prometheus.
@@ -7826,6 +7999,20 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpec = {
    * @default ""
    */
   serviceDiscoveryRole?: string;
+  /**
+   * Pod management policy. Kubernetes default is OrderedReady but prometheus-operator default is Parallel.
+   * ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#pod-management-policies
+   *
+   * @default ""
+   */
+  podManagementPolicy?: string;
+  /**
+   * Update strategy for the StatefulSet.
+   * ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
+   *
+   * @default {}
+   */
+  updateStrategy?: KubeprometheusstackHelmValuesPrometheusPrometheusSpecUpdateStrategy;
   /**
    * Additional configuration which is not covered by the properties above. (passed through tpl)
    *
@@ -7876,7 +8063,7 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecImage = {
    */
   repository?: string;
   /**
-   * @default "v3.9.1"
+   * @default "v3.11.0"
    */
   tag?: string;
   /**
@@ -8004,6 +8191,9 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecThanos =
 export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecTracingConfig =
   object;
 
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecUpdateStrategy =
+  object;
+
 export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecAdditionalConfig =
   object;
 
@@ -8063,7 +8253,7 @@ export type KubeprometheusstackHelmValuesThanosRuler = {
    */
   serviceMonitor?: KubeprometheusstackHelmValuesThanosRulerServiceMonitor;
   /**
-   * @default {...} (41 keys)
+   * @default {...} (45 keys)
    */
   thanosRulerSpec?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpec;
   /**
@@ -8586,6 +8776,7 @@ export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpec = {
    * @default {...} (5 keys)
    */
   securityContext?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecSecurityContext;
+  hostUsers?: unknown;
   /**
    * ListenLocal makes the ThanosRuler server listen on loopback, so that it does not bind against the Pod IP.
    * Note this is only for the ThanosRuler UI, not the gossip communication.
@@ -8609,6 +8800,7 @@ export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpec = {
    * @default "web"
    */
   portName?: string;
+  terminationGracePeriodSeconds?: unknown;
   /**
    * WebTLSConfig defines the TLS parameters for HTTPS
    * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#thanosrulerwebspec
@@ -8616,6 +8808,20 @@ export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpec = {
    * @default {}
    */
   web?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecWeb;
+  /**
+   * Pod management policy. Kubernetes default is OrderedReady but prometheus-operator default is Parallel.
+   * ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#pod-management-policies
+   *
+   * @default ""
+   */
+  podManagementPolicy?: string;
+  /**
+   * Update strategy for the StatefulSet.
+   * ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
+   *
+   * @default {}
+   */
+  updateStrategy?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecUpdateStrategy;
   /**
    * Additional configuration which is not covered by the properties above. (passed through tpl)
    *
@@ -8644,7 +8850,7 @@ export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecImage = {
    */
   repository?: string;
   /**
-   * @default "v0.40.1"
+   * @default "v0.41.0"
    */
   tag?: string;
   /**
@@ -8804,6 +9010,9 @@ export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecSecurityConte
 
 export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecWeb = object;
 
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecUpdateStrategy =
+  object;
+
 export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecAdditionalConfig =
   object;
 
@@ -8879,7 +9088,7 @@ export type KubeprometheusstackHelmValues = {
   /**
    * Install Prometheus Operator CRDs
    *
-   * @default {"enabled":true,"upgradeJob":{"enabled":false,"forceConflicts":false,"image":{"busybox":{"registry":"docker.io","repository":"busybox","tag":"latest","sha":"","pullPolicy":"IfNotPresent"},"kubectl":{"registry":"registry.k8s.io","repository":"kubectl","tag":"","sha":"","pullPolicy":"IfNotPresent"}},"env":{},"resources":{},"extraVolumes":[],"extraVolumeMounts":[],"nodeSelector":{},"affinity":{},"tolerations":[],"topologySpreadConstraints":[],"labels":{},"annotations":{},"podLabels":{},"podAnnotations":{},"serviceAccount":{"create":true,"name":"","annotations":{},"labels":{},"automountServiceAccountToken":true},"containerSecurityContext":{"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"capabilities":{"drop":["ALL"]}},"podSecurityContext":{"fsGroup":65534,"runAsGroup":65534,"runAsNonRoot":true,"runAsUser":65534,"seccompProfile":{"type":"RuntimeDefault"}}}}
+   * @default {"enabled":true,"upgradeJob":{"enabled":false,"forceConflicts":false,"image":{"busybox":{"registry":"docker.io","repository":"busybox","tag":"latest","sha":"","pullPolicy":"IfNotPresent"},"kubectl":{"registry":"registry.k8s.io","repository":"kubectl","tag":"","sha":"","pullPolicy":"IfNotPresent"}},"env":{},"resources":{},"extraVolumes":[],"extraVolumeMounts":[],"nodeSelector":{},"affinity":{},"tolerations":[],"topologySpreadConstraints":[],"labels":{},"annotations":{},"podLabels":{},"podAnnotations":{},"serviceAccount":{"create":true,"name":"","annotations":{},"labels":{},"automountServiceAccountToken":true},"automountServiceAccountToken":true,"containerSecurityContext":{"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"capabilities":{"drop":["ALL"]}},"podSecurityContext":{"fsGroup":65534,"runAsGroup":65534,"runAsNonRoot":true,"runAsUser":65534,"seccompProfile":{"type":"RuntimeDefault"}}}}
    */
   crds?: KubeprometheusstackHelmValuesCrds;
   /**
@@ -8921,11 +9130,11 @@ export type KubeprometheusstackHelmValues = {
    * someoneelse:$apr1$DMZX2Z4q$6SbQIfyuLQd.xmo/P0m2c.
    * Using default values from https://github.com/grafana/helm-charts/blob/main/charts/grafana/values.yaml
    *
-   * @default {...} (23 keys)
+   * @default {...} (24 keys)
    */
   alertmanager?: KubeprometheusstackHelmValuesAlertmanager;
   /**
-   * @default {...} (21 keys)
+   * @default {...} (22 keys)
    */
   grafana?: KubeprometheusstackHelmValuesGrafana;
   /**
@@ -8955,13 +9164,13 @@ export type KubeprometheusstackHelmValues = {
   /**
    * Component scraping coreDns. Use either this or kubeDns
    *
-   * @default {"enabled":true,"service":{"enabled":true,"port":9153,"targetPort":9153,"ipDualStack":{"enabled":false,"ipFamilies":["IPv6","IPv4"],"ipFamilyPolicy":"PreferDualStack"}},"serviceMonitor":{"enabled":true,"interval":"","sampleLimit":0,"targetLimit":0,"labelLimit":0,"labelNameLengthLimit":0,"labelValueLengthLimit":0,"proxyUrl":"","port":"http-metrics","jobLabel":"jobLabel","selector":{},"metricRelabelings":[],"relabelings":[],"additionalLabels":{},"targetLabels":[]}}
+   * @default {"enabled":true,"service":{"enabled":true,"port":9153,"targetPort":9153,"ipDualStack":{"enabled":false,"ipFamilies":["IPv6","IPv4"],"ipFamilyPolicy":"PreferDualStack"}},"serviceMonitor":{"enabled":true,"interval":"","sampleLimit":0,"targetLimit":0,"labelLimit":0,"labelNameLengthLimit":0,"labelValueLengthLimit":0,"proxyUrl":"","port":"http-metrics","jobLabel":"jobLabel","selector":{},"metricRelabelings":[],"relabelings":[],"additionalLabels":{},"targetLabels":[],"bearerTokenFile":"/var/run/secrets/kubernetes.io/serviceaccount/token"}}
    */
   coreDns?: KubeprometheusstackHelmValuesCoreDns;
   /**
    * Component scraping kubeDns. Use either this or coreDns
    *
-   * @default {"enabled":false,"service":{"dnsmasq":{"port":10054,"targetPort":10054},"skydns":{"port":10055,"targetPort":10055},"ipDualStack":{"enabled":false,"ipFamilies":["IPv6","IPv4"],"ipFamilyPolicy":"PreferDualStack"}},"serviceMonitor":{"interval":"","sampleLimit":0,"targetLimit":0,"labelLimit":0,"labelNameLengthLimit":0,"labelValueLengthLimit":0,"proxyUrl":"","jobLabel":"jobLabel","selector":{},"metricRelabelings":[],"relabelings":[],"dnsmasqMetricRelabelings":[],"dnsmasqRelabelings":[],"additionalLabels":{},"targetLabels":[]}}
+   * @default {"enabled":false,"service":{"dnsmasq":{"port":10054,"targetPort":10054},"skydns":{"port":10055,"targetPort":10055},"ipDualStack":{"enabled":false,"ipFamilies":["IPv6","IPv4"],"ipFamilyPolicy":"PreferDualStack"}},"serviceMonitor":{"interval":"","sampleLimit":0,"targetLimit":0,"labelLimit":0,"labelNameLengthLimit":0,"labelValueLengthLimit":0,"proxyUrl":"","jobLabel":"jobLabel","selector":{},"metricRelabelings":[],"relabelings":[],"dnsmasqMetricRelabelings":[],"dnsmasqRelabelings":[],"additionalLabels":{},"targetLabels":[],"bearerTokenFile":"/var/run/secrets/kubernetes.io/serviceaccount/token"}}
    */
   kubeDns?: KubeprometheusstackHelmValuesKubeDns;
   /**
@@ -9015,7 +9224,7 @@ export type KubeprometheusstackHelmValues = {
   /**
    * Deploy a Prometheus instance
    *
-   * @default {...} (22 keys)
+   * @default {...} (23 keys)
    */
   prometheus?: KubeprometheusstackHelmValuesPrometheus;
   /**
@@ -9063,6 +9272,7 @@ export type KubeprometheusstackHelmParameters = {
   "crds.upgradeJob.serviceAccount.create"?: string;
   "crds.upgradeJob.serviceAccount.name"?: string;
   "crds.upgradeJob.serviceAccount.automountServiceAccountToken"?: string;
+  "crds.upgradeJob.automountServiceAccountToken"?: string;
   "crds.upgradeJob.containerSecurityContext.allowPrivilegeEscalation"?: string;
   "crds.upgradeJob.containerSecurityContext.readOnlyRootFilesystem"?: string;
   "crds.upgradeJob.containerSecurityContext.capabilities.drop"?: string;
@@ -9142,6 +9352,9 @@ export type KubeprometheusstackHelmParameters = {
   "alertmanager.podDisruptionBudget.enabled"?: string;
   "alertmanager.podDisruptionBudget.minAvailable"?: string;
   "alertmanager.podDisruptionBudget.unhealthyPodEvictionPolicy"?: string;
+  "alertmanager.verticalPodAutoscaler.enabled"?: string;
+  "alertmanager.verticalPodAutoscaler.controlledResources"?: string;
+  "alertmanager.verticalPodAutoscaler.updatePolicy.updateMode"?: string;
   "alertmanager.config.global.resolve_timeout"?: string;
   "alertmanager.config.inhibit_rules.source_matchers"?: string;
   "alertmanager.config.inhibit_rules.target_matchers"?: string;
@@ -9245,7 +9458,9 @@ export type KubeprometheusstackHelmParameters = {
   "alertmanager.alertmanagerSpec.securityContext.runAsUser"?: string;
   "alertmanager.alertmanagerSpec.securityContext.fsGroup"?: string;
   "alertmanager.alertmanagerSpec.securityContext.seccompProfile.type"?: string;
+  "alertmanager.alertmanagerSpec.hostUsers"?: string;
   "alertmanager.alertmanagerSpec.dnsPolicy"?: string;
+  "alertmanager.alertmanagerSpec.hostNetwork"?: string;
   "alertmanager.alertmanagerSpec.listenLocal"?: string;
   "alertmanager.alertmanagerSpec.containers"?: string;
   "alertmanager.alertmanagerSpec.volumes"?: string;
@@ -9261,6 +9476,8 @@ export type KubeprometheusstackHelmParameters = {
   "alertmanager.alertmanagerSpec.clusterLabel"?: string;
   "alertmanager.alertmanagerSpec.forceEnableClusterMode"?: string;
   "alertmanager.alertmanagerSpec.minReadySeconds"?: string;
+  "alertmanager.alertmanagerSpec.podManagementPolicy"?: string;
+  "alertmanager.alertmanagerSpec.terminationGracePeriodSeconds"?: string;
   "alertmanager.alertmanagerSpec.additionalConfigString"?: string;
   "grafana.enabled"?: string;
   "grafana.namespaceOverride"?: string;
@@ -9312,6 +9529,7 @@ export type KubeprometheusstackHelmParameters = {
   "grafana.extraConfigmapMounts"?: string;
   "grafana.deleteDatasources"?: string;
   "grafana.additionalDataSources"?: string;
+  "grafana.additionalDataSourcesString"?: string;
   "grafana.prune"?: string;
   "grafana.service.portName"?: string;
   "grafana.service.ipFamilies"?: string;
@@ -9431,6 +9649,7 @@ export type KubeprometheusstackHelmParameters = {
   "coreDns.serviceMonitor.metricRelabelings"?: string;
   "coreDns.serviceMonitor.relabelings"?: string;
   "coreDns.serviceMonitor.targetLabels"?: string;
+  "coreDns.serviceMonitor.bearerTokenFile"?: string;
   "kubeDns.enabled"?: string;
   "kubeDns.service.dnsmasq.port"?: string;
   "kubeDns.service.dnsmasq.targetPort"?: string;
@@ -9452,6 +9671,7 @@ export type KubeprometheusstackHelmParameters = {
   "kubeDns.serviceMonitor.dnsmasqMetricRelabelings"?: string;
   "kubeDns.serviceMonitor.dnsmasqRelabelings"?: string;
   "kubeDns.serviceMonitor.targetLabels"?: string;
+  "kubeDns.serviceMonitor.bearerTokenFile"?: string;
   "kubeEtcd.enabled"?: string;
   "kubeEtcd.endpoints"?: string;
   "kubeEtcd.service.enabled"?: string;
@@ -9479,6 +9699,7 @@ export type KubeprometheusstackHelmParameters = {
   "kubeEtcd.serviceMonitor.metricRelabelings"?: string;
   "kubeEtcd.serviceMonitor.relabelings"?: string;
   "kubeEtcd.serviceMonitor.targetLabels"?: string;
+  "kubeEtcd.serviceMonitor.bearerTokenFile"?: string;
   "kubeScheduler.enabled"?: string;
   "kubeScheduler.jobNameOverride"?: string;
   "kubeScheduler.endpoints"?: string;
@@ -9527,6 +9748,7 @@ export type KubeprometheusstackHelmParameters = {
   "kubeProxy.serviceMonitor.metricRelabelings"?: string;
   "kubeProxy.serviceMonitor.relabelings"?: string;
   "kubeProxy.serviceMonitor.targetLabels"?: string;
+  "kubeProxy.serviceMonitor.bearerTokenFile"?: string;
   "kubeStateMetrics.enabled"?: string;
   "kube-state-metrics.releaseLabel"?: string;
   "kube-state-metrics.prometheusScrape"?: string;
@@ -9791,6 +10013,7 @@ export type KubeprometheusstackHelmParameters = {
   "prometheus.service.port"?: string;
   "prometheus.service.targetPort"?: string;
   "prometheus.service.reloaderWebPort"?: string;
+  "prometheus.service.reloaderWebNodePort"?: string;
   "prometheus.service.externalIPs"?: string;
   "prometheus.service.nodePort"?: string;
   "prometheus.service.loadBalancerIP"?: string;
@@ -9814,6 +10037,9 @@ export type KubeprometheusstackHelmParameters = {
   "prometheus.podDisruptionBudget.enabled"?: string;
   "prometheus.podDisruptionBudget.minAvailable"?: string;
   "prometheus.podDisruptionBudget.unhealthyPodEvictionPolicy"?: string;
+  "prometheus.verticalPodAutoscaler.enabled"?: string;
+  "prometheus.verticalPodAutoscaler.controlledResources"?: string;
+  "prometheus.verticalPodAutoscaler.updatePolicy.updateMode"?: string;
   "prometheus.thanosIngress.enabled"?: string;
   "prometheus.thanosIngress.ingressClassName"?: string;
   "prometheus.thanosIngress.servicePort"?: string;
@@ -9881,6 +10107,7 @@ export type KubeprometheusstackHelmParameters = {
   "prometheus.prometheusSpec.image.pullPolicy"?: string;
   "prometheus.prometheusSpec.tolerations"?: string;
   "prometheus.prometheusSpec.topologySpreadConstraints"?: string;
+  "prometheus.prometheusSpec.disableAlerting"?: string;
   "prometheus.prometheusSpec.alertingEndpoints"?: string;
   "prometheus.prometheusSpec.enableRemoteWriteReceiver"?: string;
   "prometheus.prometheusSpec.replicaExternalLabelName"?: string;
@@ -9945,9 +10172,12 @@ export type KubeprometheusstackHelmParameters = {
   "prometheus.prometheusSpec.allowOverlappingBlocks"?: string;
   "prometheus.prometheusSpec.nameValidationScheme"?: string;
   "prometheus.prometheusSpec.minReadySeconds"?: string;
+  "prometheus.prometheusSpec.terminationGracePeriodSeconds"?: string;
   "prometheus.prometheusSpec.hostNetwork"?: string;
+  "prometheus.prometheusSpec.hostUsers"?: string;
   "prometheus.prometheusSpec.hostAliases"?: string;
   "prometheus.prometheusSpec.serviceDiscoveryRole"?: string;
+  "prometheus.prometheusSpec.podManagementPolicy"?: string;
   "prometheus.prometheusSpec.additionalConfigString"?: string;
   "prometheus.prometheusSpec.maximumStartupDurationSeconds"?: string;
   "prometheus.prometheusSpec.scrapeProtocols"?: string;
@@ -10029,6 +10259,7 @@ export type KubeprometheusstackHelmParameters = {
   "thanosRuler.thanosRulerSpec.securityContext.runAsUser"?: string;
   "thanosRuler.thanosRulerSpec.securityContext.fsGroup"?: string;
   "thanosRuler.thanosRulerSpec.securityContext.seccompProfile.type"?: string;
+  "thanosRuler.thanosRulerSpec.hostUsers"?: string;
   "thanosRuler.thanosRulerSpec.listenLocal"?: string;
   "thanosRuler.thanosRulerSpec.containers"?: string;
   "thanosRuler.thanosRulerSpec.volumes"?: string;
@@ -10036,6 +10267,8 @@ export type KubeprometheusstackHelmParameters = {
   "thanosRuler.thanosRulerSpec.initContainers"?: string;
   "thanosRuler.thanosRulerSpec.priorityClassName"?: string;
   "thanosRuler.thanosRulerSpec.portName"?: string;
+  "thanosRuler.thanosRulerSpec.terminationGracePeriodSeconds"?: string;
+  "thanosRuler.thanosRulerSpec.podManagementPolicy"?: string;
   "thanosRuler.thanosRulerSpec.additionalConfigString"?: string;
   cleanPrometheusOperatorObjectNames?: string;
   extraManifests?: string;

@@ -27,7 +27,7 @@ export type ArgocdHelmValuesCrds = {
   /**
    * Annotations to be added to all CRDs
    *
-   * @default {}
+   * @default {"argocd.argoproj.io/sync-options":"ServerSideApply=true"}
    */
   annotations?: ArgocdHelmValuesCrdsAnnotations;
   /**
@@ -44,6 +44,10 @@ export type ArgocdHelmValuesCrdsAnnotations = {
    * This is common for config maps, custom settings, and extensible configurations.
    */
   [key: string]: unknown;
+  /**
+   * @default "ServerSideApply=true"
+   */
+  "argocd.argoproj.io/sync-options"?: string;
 };
 
 export type ArgocdHelmValuesCrdsAdditionalLabels = object;
@@ -93,6 +97,12 @@ export type ArgocdHelmValuesGlobal = {
    * @default {}
    */
   statefulsetAnnotations?: ArgocdHelmValuesGlobalStatefulsetAnnotations;
+  /**
+   * Labels for the all deployed Statefulsets
+   *
+   * @default {}
+   */
+  statefulsetLabels?: ArgocdHelmValuesGlobalStatefulsetLabels;
   /**
    * Annotations for the all deployed Deployments
    *
@@ -220,6 +230,8 @@ export type ArgocdHelmValuesGlobalLogging = {
 
 export type ArgocdHelmValuesGlobalStatefulsetAnnotations = object;
 
+export type ArgocdHelmValuesGlobalStatefulsetLabels = object;
+
 export type ArgocdHelmValuesGlobalDeploymentAnnotations = object;
 
 export type ArgocdHelmValuesGlobalDeploymentLabels = object;
@@ -306,7 +318,7 @@ export type ArgocdHelmValuesConfigs = {
    * General Argo CD configuration. Any values you put under `.configs.cm` are passed to argocd-cm ConfigMap.
    * Ref: https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/argocd-cm.yaml
    *
-   * @default {...} (18 keys)
+   * @default {...} (19 keys)
    */
   cm?: ArgocdHelmValuesConfigsCm;
   /**
@@ -442,9 +454,15 @@ export type ArgocdHelmValuesConfigsCm = {
   /**
    * Timeout to discover if a new manifests version got published to the repository
    *
-   * @default "180s"
+   * @default "120s"
    */
   "timeout.reconciliation"?: string;
+  /**
+   * Maximum jitter added to the reconciliation timeout to spread out refreshes and reduce repo-server load
+   *
+   * @default "60s"
+   */
+  "timeout.reconciliation.jitter"?: string;
   /**
    * Timeout to refresh application data as well as target manifests cache
    *
@@ -960,6 +978,12 @@ export type ArgocdHelmValuesController = {
    */
   statefulsetAnnotations?: ArgocdHelmValuesControllerStatefulsetAnnotations;
   /**
+   * Labels for the application controller StatefulSet
+   *
+   * @default {}
+   */
+  statefulsetLabels?: ArgocdHelmValuesControllerStatefulsetLabels;
+  /**
    * Annotations for the application controller Deployment
    *
    * @default {}
@@ -1212,6 +1236,8 @@ export type ArgocdHelmValuesControllerEmptyDir = {
 };
 
 export type ArgocdHelmValuesControllerStatefulsetAnnotations = object;
+
+export type ArgocdHelmValuesControllerStatefulsetLabels = object;
 
 export type ArgocdHelmValuesControllerDeploymentAnnotations = object;
 
@@ -1628,7 +1654,7 @@ export type ArgocdHelmValuesDex = {
   /**
    * Dex image
    *
-   * @default {"repository":"ghcr.io/dexidp/dex","tag":"v2.44.0","imagePullPolicy":""}
+   * @default {"repository":"ghcr.io/dexidp/dex","tag":"v2.45.1","imagePullPolicy":""}
    */
   image?: ArgocdHelmValuesDexImage;
   imagePullSecrets?: unknown[];
@@ -1706,7 +1732,7 @@ export type ArgocdHelmValuesDex = {
   /**
    * Dex container-level security context
    *
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   containerSecurityContext?: ArgocdHelmValuesDexContainerSecurityContext;
   /**
@@ -1988,7 +2014,7 @@ export type ArgocdHelmValuesDexImage = {
   /**
    * Dex image tag
    *
-   * @default "v2.44.0"
+   * @default "v2.45.1"
    */
   tag?: string;
   /**
@@ -2130,6 +2156,10 @@ export type ArgocdHelmValuesDexContainerSecurityContext = {
    * @default true
    */
   runAsNonRoot?: boolean;
+  /**
+   * @default 1001
+   */
+  runAsUser?: number;
   /**
    * @default true
    */
@@ -2352,7 +2382,7 @@ export type ArgocdHelmValuesRedis = {
   /**
    * Redis image
    *
-   * @default {"repository":"ecr-public.aws.com/docker/library/redis","tag":"8.2.2-alpine","imagePullPolicy":""}
+   * @default {"repository":"ecr-public.aws.com/docker/library/redis","tag":"8.2.3-alpine","imagePullPolicy":""}
    */
   image?: ArgocdHelmValuesRedisImage;
   /**
@@ -2559,7 +2589,7 @@ export type ArgocdHelmValuesRedisImage = {
    * Redis tag
    * Do not use 7.4.0 <= v < 8.0.0, otherwise you are no longer using an open source version of Redis
    *
-   * @default "8.2.2-alpine"
+   * @default "8.2.3-alpine"
    */
   tag?: string;
   /**
@@ -2581,7 +2611,7 @@ export type ArgocdHelmValuesRedisExporter = {
   /**
    * Prometheus redis-exporter image
    *
-   * @default {"repository":"ghcr.io/oliver006/redis_exporter","tag":"v1.80.1","imagePullPolicy":""}
+   * @default {"repository":"ghcr.io/oliver006/redis_exporter","tag":"v1.82.0","imagePullPolicy":""}
    */
   image?: ArgocdHelmValuesRedisExporterImage;
   /**
@@ -2619,7 +2649,7 @@ export type ArgocdHelmValuesRedisExporterImage = {
   /**
    * Tag to use for the redis-exporter
    *
-   * @default "v1.80.1"
+   * @default "v1.82.0"
    */
   tag?: string;
   /**
@@ -3129,7 +3159,7 @@ export type ArgocdHelmValuesRedisha = {
   /**
    * Redis image
    *
-   * @default {"repository":"ecr-public.aws.com/docker/library/redis","tag":"8.2.2-alpine"}
+   * @default {"repository":"ecr-public.aws.com/docker/library/redis","tag":"8.2.3-alpine"}
    */
   image?: ArgocdHelmValuesRedishaImage;
   /**
@@ -3212,7 +3242,7 @@ export type ArgocdHelmValuesRedishaImage = {
    * Redis tag
    * Do not upgrade to >= 7.4.0, otherwise you are no longer using an open source version of Redis
    *
-   * @default "8.2.2-alpine"
+   * @default "8.2.3-alpine"
    */
   tag?: string;
 };
@@ -8101,7 +8131,7 @@ export type ArgocdHelmValues = {
   /**
    * Globally shared configuration
    *
-   * @default {...} (27 keys)
+   * @default {...} (28 keys)
    */
   global?: ArgocdHelmValuesGlobal;
   /**
@@ -8119,7 +8149,7 @@ export type ArgocdHelmValues = {
    * Specific implementation for ingress controller. One of `generic`, `aws` or `gke`
    * Additional configuration might be required in related configuration sections
    *
-   * @default {...} (42 keys)
+   * @default {...} (43 keys)
    */
   controller?: ArgocdHelmValuesController;
   /**
@@ -8195,6 +8225,7 @@ export type ArgocdHelmParameters = {
   "openshift.enabled"?: string;
   "crds.install"?: string;
   "crds.keep"?: string;
+  "crds.annotations.argocd.argoproj.io/sync-options"?: string;
   "global.domain"?: string;
   "global.runtimeClassName"?: string;
   "global.revisionHistoryLimit"?: string;
@@ -8226,6 +8257,7 @@ export type ArgocdHelmParameters = {
   "configs.cm.exec.enabled"?: string;
   "configs.cm.admin.enabled"?: string;
   "configs.cm.timeout.reconciliation"?: string;
+  "configs.cm.timeout.reconciliation.jitter"?: string;
   "configs.cm.timeout.hard.reconciliation"?: string;
   "configs.cm.statusbadge.enabled"?: string;
   "configs.cm.resource.customizations.ignoreResourceUpdates.all"?: string;
@@ -8365,6 +8397,7 @@ export type ArgocdHelmParameters = {
   "dex.containerPorts.metrics"?: string;
   "dex.dnsPolicy"?: string;
   "dex.containerSecurityContext.runAsNonRoot"?: string;
+  "dex.containerSecurityContext.runAsUser"?: string;
   "dex.containerSecurityContext.readOnlyRootFilesystem"?: string;
   "dex.containerSecurityContext.allowPrivilegeEscalation"?: string;
   "dex.containerSecurityContext.seccompProfile.type"?: string;

@@ -1,5 +1,5 @@
 # Mise configuration for monorepo development
-# Run `mise run dev` to set up your development environment
+# Run `mise run dev` or `bun run scripts/setup.ts` to set up your development environment
 
 [tools]
 # renovate: datasource=github-releases depName=oven-sh/bun
@@ -9,35 +9,8 @@ java = "latest"
 
 [tasks.dev]
 description = "Set up the development environment for all packages"
-run = """
-#!/usr/bin/env bash
-set -e
-
-echo "🔧 Setting up development environment..."
-
-# Trust mise configuration
-echo "📋 Trusting mise configuration..."
-mise trust
-
-# Install mise tools
-echo "🛠️  Installing mise tools..."
-mise install
-
-# Install root dependencies
-echo "📦 Installing root dependencies..."
-bun install
-
-# Generate Prisma client for birmel
-echo "🗄️  Generating Prisma client for birmel..."
-cd packages/birmel && bunx prisma generate && cd ../..
-
-echo "✅ Development environment setup complete!"
-"""
+run = "bun run scripts/setup.ts"
 
 [tasks.install]
 description = "Install all dependencies (alias for dev)"
 depends = ["dev"]
-
-[tasks.prisma]
-description = "Generate Prisma client for birmel"
-run = "cd packages/birmel && bunx prisma generate"

@@ -1,18 +1,13 @@
 // Generated TypeScript types for kyverno Helm chart
 
-export type KyvernoHelmValuesTemplating = {
-  /**
-   * @default false
-   */
-  enabled?: boolean;
-  /**
-   * @default false
-   */
-  debug?: boolean;
-  version?: unknown;
-};
-
 export type KyvernoHelmValuesGlobal = {
+  /**
+   * Internal settings used with `helm template` to generate install manifest
+   * @ignored
+   *
+   * @default {"enabled":false,"debug":false,"version":null}
+   */
+  templating?: KyvernoHelmValuesGlobalTemplating;
   /**
    * @default {"registry":null}
    */
@@ -25,6 +20,12 @@ export type KyvernoHelmValuesGlobal = {
    */
   resyncPeriod?: string;
   /**
+   * Enable/Disable custom resource watcher to invalidate cache
+   *
+   * @default false
+   */
+  crdWatcher?: boolean;
+  /**
    * @default {"data":null,"volume":{}}
    */
   caCertificates?: KyvernoHelmValuesGlobalCaCertificates;
@@ -36,6 +37,18 @@ export type KyvernoHelmValuesGlobal = {
    */
   nodeSelector?: KyvernoHelmValuesGlobalNodeSelector;
   tolerations?: unknown[];
+};
+
+export type KyvernoHelmValuesGlobalTemplating = {
+  /**
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * @default false
+   */
+  debug?: boolean;
+  version?: unknown;
 };
 
 export type KyvernoHelmValuesGlobalImage = {
@@ -71,6 +84,69 @@ export type KyvernoHelmValuesApiVersionOverride = {
   podDisruptionBudget?: unknown;
 };
 
+export type KyvernoHelmValuesRbac = {
+  /**
+   * @default {"aggregate":{"admin":true,"view":true}}
+   */
+  roles?: KyvernoHelmValuesRbacRoles;
+};
+
+export type KyvernoHelmValuesRbacRoles = {
+  /**
+   * Aggregate ClusterRoles to Kubernetes default user-facing roles. For more information, see [User-facing roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#user-facing-roles)
+   *
+   * @default {"admin":true,"view":true}
+   */
+  aggregate?: KyvernoHelmValuesRbacRolesAggregate;
+};
+
+export type KyvernoHelmValuesRbacRolesAggregate = {
+  /**
+   * @default true
+   */
+  admin?: boolean;
+  /**
+   * @default true
+   */
+  view?: boolean;
+};
+
+export type KyvernoHelmValuesOpenreports = {
+  /**
+   * Enable OpenReports feature in controllers
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Whether to install CRDs from the upstream OpenReports chart. Setting this to true requires enabled to also be true.
+   *
+   * @default false
+   */
+  installCrds?: boolean;
+};
+
+export type KyvernoHelmValuesReportsServer = {
+  /**
+   * Enable reports-server deployment alongside Kyverno
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Wait for reports-server to be ready before starting Kyverno components
+   *
+   * @default true
+   */
+  waitForReady?: boolean;
+  /**
+   * Timeout for waiting for reports-server readiness (as duration string, e.g. 300s, 5m)
+   *
+   * @default "300s"
+   */
+  readinessTimeout?: string;
+};
+
 export type KyvernoHelmValuesCrds = {
   /**
    * Whether to have Helm install the Kyverno CRDs, if the CRDs are not installed by Helm, they must be added before policies can be created
@@ -79,7 +155,11 @@ export type KyvernoHelmValuesCrds = {
    */
   install?: boolean;
   /**
-   * @default {"kyverno":{"cleanuppolicies":true,"clustercleanuppolicies":true,"clusterpolicies":true,"globalcontextentries":true,"policies":true,"policyexceptions":true,"updaterequests":true},"reports":{"clusterephemeralreports":true,"ephemeralreports":true},"wgpolicyk8s":{"clusterpolicyreports":true,"policyreports":true}}
+   * @default {"enabled":false}
+   */
+  reportsServer?: KyvernoHelmValuesCrdsReportsServer;
+  /**
+   * @default {...} (4 keys)
    */
   groups?: KyvernoHelmValuesCrdsGroups;
   /**
@@ -97,9 +177,18 @@ export type KyvernoHelmValuesCrds = {
    */
   customLabels?: KyvernoHelmValuesCrdsCustomLabels;
   /**
-   * @default {...} (13 keys)
+   * @default {...} (15 keys)
    */
   migration?: KyvernoHelmValuesCrdsMigration;
+};
+
+export type KyvernoHelmValuesCrdsReportsServer = {
+  /**
+   * Kyverno reports-server is used in your cluster
+   *
+   * @default false
+   */
+  enabled?: boolean;
 };
 
 export type KyvernoHelmValuesCrdsGroups = {
@@ -109,6 +198,12 @@ export type KyvernoHelmValuesCrdsGroups = {
    * @default {...} (7 keys)
    */
   kyverno?: KyvernoHelmValuesCrdsGroupsKyverno;
+  /**
+   * Install CRDs in group `policies.kyverno.io`
+   *
+   * @default {...} (10 keys)
+   */
+  policies?: KyvernoHelmValuesCrdsGroupsPolicies;
   /**
    * Install CRDs in group `reports.kyverno.io`
    *
@@ -152,6 +247,49 @@ export type KyvernoHelmValuesCrdsGroupsKyverno = {
    * @default true
    */
   updaterequests?: boolean;
+};
+
+export type KyvernoHelmValuesCrdsGroupsPolicies = {
+  /**
+   * @default true
+   */
+  validatingpolicies?: boolean;
+  /**
+   * @default true
+   */
+  policyexceptions?: boolean;
+  /**
+   * @default true
+   */
+  imagevalidatingpolicies?: boolean;
+  /**
+   * @default true
+   */
+  namespacedimagevalidatingpolicies?: boolean;
+  /**
+   * @default true
+   */
+  mutatingpolicies?: boolean;
+  /**
+   * @default true
+   */
+  namespacedmutatingpolicies?: boolean;
+  /**
+   * @default true
+   */
+  generatingpolicies?: boolean;
+  /**
+   * @default true
+   */
+  deletingpolicies?: boolean;
+  /**
+   * @default true
+   */
+  namespaceddeletingpolicies?: boolean;
+  /**
+   * @default true
+   */
+  namespacedvalidatingpolicies?: boolean;
 };
 
 export type KyvernoHelmValuesCrdsGroupsReports = {
@@ -248,12 +386,20 @@ export type KyvernoHelmValuesCrdsMigration = {
    * @default {...} (8 keys)
    */
   securityContext?: KyvernoHelmValuesCrdsMigrationSecurityContext;
+  /**
+   * @default {"limits":{"cpu":"100m","memory":"256Mi"},"requests":{"cpu":"10m","memory":"64Mi"}}
+   */
+  podResources?: KyvernoHelmValuesCrdsMigrationPodResources;
+  /**
+   * @default {"automountServiceAccountToken":true}
+   */
+  serviceAccount?: KyvernoHelmValuesCrdsMigrationServiceAccount;
 };
 
 export type KyvernoHelmValuesCrdsMigrationImage = {
   registry?: unknown;
   /**
-   * @default "ghcr.io"
+   * @default "reg.kyverno.io"
    */
   defaultRegistry?: string;
   /**
@@ -337,6 +483,52 @@ export type KyvernoHelmValuesCrdsMigrationSecurityContextSeccompProfile = {
   type?: string;
 };
 
+export type KyvernoHelmValuesCrdsMigrationPodResources = {
+  /**
+   * Pod resource limits
+   *
+   * @default {"cpu":"100m","memory":"256Mi"}
+   */
+  limits?: KyvernoHelmValuesCrdsMigrationPodResourcesLimits;
+  /**
+   * Pod resource requests
+   *
+   * @default {"cpu":"10m","memory":"64Mi"}
+   */
+  requests?: KyvernoHelmValuesCrdsMigrationPodResourcesRequests;
+};
+
+export type KyvernoHelmValuesCrdsMigrationPodResourcesLimits = {
+  /**
+   * @default "100m"
+   */
+  cpu?: string;
+  /**
+   * @default "256Mi"
+   */
+  memory?: string;
+};
+
+export type KyvernoHelmValuesCrdsMigrationPodResourcesRequests = {
+  /**
+   * @default "10m"
+   */
+  cpu?: string;
+  /**
+   * @default "64Mi"
+   */
+  memory?: string;
+};
+
+export type KyvernoHelmValuesCrdsMigrationServiceAccount = {
+  /**
+   * Toggle automounting of the ServiceAccount
+   *
+   * @default true
+   */
+  automountServiceAccountToken?: boolean;
+};
+
 export type KyvernoHelmValuesConfig = {
   /**
    * This type allows arbitrary additional properties beyond those defined below.
@@ -384,6 +576,7 @@ export type KyvernoHelmValuesConfig = {
    * @default false
    */
   generateSuccessEvents?: boolean;
+  maxContextSize?: unknown;
   resourceFilters?: string[];
   /**
    * Sets the threshold for the total number of UpdateRequests generated for mutateExisitng and generate policies.
@@ -394,7 +587,6 @@ export type KyvernoHelmValuesConfig = {
   /**
    * Defines the `namespaceSelector`/`objectSelector` in the webhook configurations.
    * The Kyverno namespace is excluded if `excludeKyvernoNamespace` is `true` (default)
-   * Exclude objects
    * Defines annotations to set on webhook configurations.
    *
    * @default {"namespaceSelector":{"matchExpressions":[{"key":"kubernetes.io/metadata.name","operator":"NotIn","values":["kube-system"]}]}}
@@ -494,7 +686,7 @@ export type KyvernoHelmValuesMetricsConfig = {
   /**
    * (map) Configures the exposure of individual metrics, by default all metrics and all labels are exported, changing this configuration requires restart of the kyverno admission controller
    *
-   * @default {...} (6 keys)
+   * @default {...} (10 keys)
    */
   metricsExposure?: KyvernoHelmValuesMetricsConfigMetricsExposure;
 };
@@ -518,6 +710,22 @@ export type KyvernoHelmValuesMetricsConfigMetricsExposure = {
    */
   kyverno_policy_execution_duration_seconds?: KyvernoHelmValuesMetricsConfigMetricsExposureKyvernopolicyexecutiondurationseconds;
   /**
+   * @default {"disabledLabelDimensions":["resource_namespace","resource_request_operation"]}
+   */
+  kyverno_validating_policy_execution_duration_seconds?: KyvernoHelmValuesMetricsConfigMetricsExposureKyvernovalidatingpolicyexecutiondurationseconds;
+  /**
+   * @default {"disabledLabelDimensions":["resource_namespace","resource_request_operation"]}
+   */
+  kyverno_image_validating_policy_execution_duration_seconds?: KyvernoHelmValuesMetricsConfigMetricsExposureKyvernoimagevalidatingpolicyexecutiondurationseconds;
+  /**
+   * @default {"disabledLabelDimensions":["resource_namespace","resource_request_operation"]}
+   */
+  kyverno_mutating_policy_execution_duration_seconds?: KyvernoHelmValuesMetricsConfigMetricsExposureKyvernomutatingpolicyexecutiondurationseconds;
+  /**
+   * @default {"disabledLabelDimensions":["resource_namespace","resource_request_operation"]}
+   */
+  kyverno_generating_policy_execution_duration_seconds?: KyvernoHelmValuesMetricsConfigMetricsExposureKyvernogeneratingpolicyexecutiondurationseconds;
+  /**
    * @default {"disabledLabelDimensions":["resource_namespace"]}
    */
   kyverno_admission_review_duration_seconds?: KyvernoHelmValuesMetricsConfigMetricsExposureKyvernoadmissionreviewdurationseconds;
@@ -540,6 +748,26 @@ export type KyvernoHelmValuesMetricsConfigMetricsExposure = {
 };
 
 export type KyvernoHelmValuesMetricsConfigMetricsExposureKyvernopolicyexecutiondurationseconds =
+  {
+    disabledLabelDimensions?: string[];
+  };
+
+export type KyvernoHelmValuesMetricsConfigMetricsExposureKyvernovalidatingpolicyexecutiondurationseconds =
+  {
+    disabledLabelDimensions?: string[];
+  };
+
+export type KyvernoHelmValuesMetricsConfigMetricsExposureKyvernoimagevalidatingpolicyexecutiondurationseconds =
+  {
+    disabledLabelDimensions?: string[];
+  };
+
+export type KyvernoHelmValuesMetricsConfigMetricsExposureKyvernomutatingpolicyexecutiondurationseconds =
+  {
+    disabledLabelDimensions?: string[];
+  };
+
+export type KyvernoHelmValuesMetricsConfigMetricsExposureKyvernogeneratingpolicyexecutiondurationseconds =
   {
     disabledLabelDimensions?: string[];
   };
@@ -593,23 +821,46 @@ export type KyvernoHelmValuesTest = {
    * @default {...} (8 keys)
    */
   securityContext?: KyvernoHelmValuesTestSecurityContext;
+  /**
+   * Toggle automounting of the ServiceAccount
+   *
+   * @default true
+   */
+  automountServiceAccountToken?: boolean;
+  /**
+   * Node labels for pod assignment
+   * Additional Pod annotations
+   *
+   * @default {}
+   */
+  nodeSelector?: KyvernoHelmValuesTestNodeSelector;
+  /**
+   * @default {}
+   */
+  podAnnotations?: KyvernoHelmValuesTestPodAnnotations;
+  tolerations?: unknown[];
 };
 
 export type KyvernoHelmValuesTestImage = {
-  registry?: unknown;
+  /**
+   * (string) Image registry
+   *
+   * @default "ghcr.io"
+   */
+  registry?: string;
   /**
    * Image repository
    *
-   * @default "busybox"
+   * @default "kyverno/readiness-checker"
    */
   repository?: string;
   /**
    * Image tag
    * Defaults to `latest` if omitted
    *
-   * @default "1.35"
+   * @default "v0.1.0"
    */
-  tag?: number;
+  tag?: string;
   pullPolicy?: unknown;
 };
 
@@ -696,6 +947,10 @@ export type KyvernoHelmValuesTestSecurityContextSeccompProfile = {
   type?: string;
 };
 
+export type KyvernoHelmValuesTestNodeSelector = object;
+
+export type KyvernoHelmValuesTestPodAnnotations = object;
+
 export type KyvernoHelmValuesCustomLabels = object;
 
 export type KyvernoHelmValuesWebhooksCleanup = {
@@ -763,6 +1018,14 @@ export type KyvernoHelmValuesWebhooksCleanup = {
    * @default {...} (8 keys)
    */
   securityContext?: KyvernoHelmValuesWebhooksCleanupSecurityContext;
+  /**
+   * @default {"limits":{"cpu":"100m","memory":"256Mi"},"requests":{"cpu":"10m","memory":"64Mi"}}
+   */
+  resources?: KyvernoHelmValuesWebhooksCleanupResources;
+  /**
+   * @default {"automountServiceAccountToken":true}
+   */
+  serviceAccount?: KyvernoHelmValuesWebhooksCleanupServiceAccount;
 };
 
 export type KyvernoHelmValuesWebhooksCleanupAutoDeleteWebhooks = {
@@ -775,18 +1038,23 @@ export type KyvernoHelmValuesWebhooksCleanupAutoDeleteWebhooks = {
 };
 
 export type KyvernoHelmValuesWebhooksCleanupImage = {
-  registry?: unknown;
+  /**
+   * (string) Image registry
+   *
+   * @default "registry.k8s.io"
+   */
+  registry?: string;
   /**
    * Image repository
    *
-   * @default "bitnami/kubectl"
+   * @default "kubectl"
    */
   repository?: string;
   /**
    * Image tag
    * Defaults to `latest` if omitted
    *
-   * @default "1.30.2"
+   * @default "v1.34.3"
    */
   tag?: string;
   pullPolicy?: unknown;
@@ -858,153 +1126,51 @@ export type KyvernoHelmValuesWebhooksCleanupSecurityContextSeccompProfile = {
   type?: string;
 };
 
-export type KyvernoHelmValuesPolicyReportsCleanup = {
+export type KyvernoHelmValuesWebhooksCleanupResources = {
   /**
-   * Create a helm post-upgrade hook to cleanup the old policy reports.
+   * Pod resource limits
+   *
+   * @default {"cpu":"100m","memory":"256Mi"}
+   */
+  limits?: KyvernoHelmValuesWebhooksCleanupResourcesLimits;
+  /**
+   * Pod resource requests
+   *
+   * @default {"cpu":"10m","memory":"64Mi"}
+   */
+  requests?: KyvernoHelmValuesWebhooksCleanupResourcesRequests;
+};
+
+export type KyvernoHelmValuesWebhooksCleanupResourcesLimits = {
+  /**
+   * @default "100m"
+   */
+  cpu?: string;
+  /**
+   * @default "256Mi"
+   */
+  memory?: string;
+};
+
+export type KyvernoHelmValuesWebhooksCleanupResourcesRequests = {
+  /**
+   * @default "10m"
+   */
+  cpu?: string;
+  /**
+   * @default "64Mi"
+   */
+  memory?: string;
+};
+
+export type KyvernoHelmValuesWebhooksCleanupServiceAccount = {
+  /**
+   * Toggle automounting of the ServiceAccount
    *
    * @default true
    */
-  enabled?: boolean;
-  /**
-   * @default {...} (4 keys)
-   */
-  image?: KyvernoHelmValuesPolicyReportsCleanupImage;
-  imagePullSecrets?: unknown[];
-  /**
-   * Security context for the pod
-   *
-   * @default {}
-   */
-  podSecurityContext?: KyvernoHelmValuesPolicyReportsCleanupPodSecurityContext;
-  /**
-   * Node labels for pod assignment
-   *
-   * @default {}
-   */
-  nodeSelector?: KyvernoHelmValuesPolicyReportsCleanupNodeSelector;
-  tolerations?: unknown[];
-  /**
-   * Pod anti affinity constraints.
-   *
-   * @default {}
-   */
-  podAntiAffinity?: KyvernoHelmValuesPolicyReportsCleanupPodAntiAffinity;
-  /**
-   * Pod affinity constraints.
-   *
-   * @default {}
-   */
-  podAffinity?: KyvernoHelmValuesPolicyReportsCleanupPodAffinity;
-  /**
-   * Pod labels.
-   *
-   * @default {}
-   */
-  podLabels?: KyvernoHelmValuesPolicyReportsCleanupPodLabels;
-  /**
-   * Pod annotations.
-   *
-   * @default {}
-   */
-  podAnnotations?: KyvernoHelmValuesPolicyReportsCleanupPodAnnotations;
-  /**
-   * Node affinity constraints.
-   *
-   * @default {}
-   */
-  nodeAffinity?: KyvernoHelmValuesPolicyReportsCleanupNodeAffinity;
-  /**
-   * Security context for the hook containers
-   *
-   * @default {...} (8 keys)
-   */
-  securityContext?: KyvernoHelmValuesPolicyReportsCleanupSecurityContext;
+  automountServiceAccountToken?: boolean;
 };
-
-export type KyvernoHelmValuesPolicyReportsCleanupImage = {
-  registry?: unknown;
-  /**
-   * Image repository
-   *
-   * @default "bitnami/kubectl"
-   */
-  repository?: string;
-  /**
-   * Image tag
-   * Defaults to `latest` if omitted
-   *
-   * @default "1.30.2"
-   */
-  tag?: string;
-  pullPolicy?: unknown;
-};
-
-export type KyvernoHelmValuesPolicyReportsCleanupPodSecurityContext = object;
-
-export type KyvernoHelmValuesPolicyReportsCleanupNodeSelector = object;
-
-export type KyvernoHelmValuesPolicyReportsCleanupPodAntiAffinity = object;
-
-export type KyvernoHelmValuesPolicyReportsCleanupPodAffinity = object;
-
-export type KyvernoHelmValuesPolicyReportsCleanupPodLabels = object;
-
-export type KyvernoHelmValuesPolicyReportsCleanupPodAnnotations = object;
-
-export type KyvernoHelmValuesPolicyReportsCleanupNodeAffinity = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
-
-export type KyvernoHelmValuesPolicyReportsCleanupSecurityContext = {
-  /**
-   * @default 65534
-   */
-  runAsUser?: number;
-  /**
-   * @default 65534
-   */
-  runAsGroup?: number;
-  /**
-   * @default true
-   */
-  runAsNonRoot?: boolean;
-  /**
-   * @default false
-   */
-  privileged?: boolean;
-  /**
-   * @default false
-   */
-  allowPrivilegeEscalation?: boolean;
-  /**
-   * @default true
-   */
-  readOnlyRootFilesystem?: boolean;
-  /**
-   * @default {"drop":["ALL"]}
-   */
-  capabilities?: KyvernoHelmValuesPolicyReportsCleanupSecurityContextCapabilities;
-  /**
-   * @default {"type":"RuntimeDefault"}
-   */
-  seccompProfile?: KyvernoHelmValuesPolicyReportsCleanupSecurityContextSeccompProfile;
-};
-
-export type KyvernoHelmValuesPolicyReportsCleanupSecurityContextCapabilities = {
-  drop?: string[];
-};
-
-export type KyvernoHelmValuesPolicyReportsCleanupSecurityContextSeccompProfile =
-  {
-    /**
-     * @default "RuntimeDefault"
-     */
-    type?: string;
-  };
 
 export type KyvernoHelmValuesGrafana = {
   /**
@@ -1101,9 +1267,13 @@ export type KyvernoHelmValuesFeatures = {
    */
   policyReports?: KyvernoHelmValuesFeaturesPolicyReports;
   /**
-   * @default {"enabled":false}
+   * @default {"enabled":true}
    */
   validatingAdmissionPolicyReports?: KyvernoHelmValuesFeaturesValidatingAdmissionPolicyReports;
+  /**
+   * @default {"enabled":false}
+   */
+  mutatingAdmissionPolicyReports?: KyvernoHelmValuesFeaturesMutatingAdmissionPolicyReports;
   /**
    * @default {...} (5 keys)
    */
@@ -1121,6 +1291,10 @@ export type KyvernoHelmValuesFeatures = {
    */
   configMapCaching?: KyvernoHelmValuesFeaturesConfigMapCaching;
   /**
+   * @default {"bindAddress":":8080"}
+   */
+  controllerRuntimeMetrics?: KyvernoHelmValuesFeaturesControllerRuntimeMetrics;
+  /**
    * @default {"enabled":true}
    */
   deferredLoading?: KyvernoHelmValuesFeaturesDeferredLoading;
@@ -1133,9 +1307,13 @@ export type KyvernoHelmValuesFeatures = {
    */
   forceFailurePolicyIgnore?: KyvernoHelmValuesFeaturesForceFailurePolicyIgnore;
   /**
-   * @default {"enabled":false}
+   * @default {"enabled":true}
    */
   generateValidatingAdmissionPolicy?: KyvernoHelmValuesFeaturesGenerateValidatingAdmissionPolicy;
+  /**
+   * @default {"enabled":false}
+   */
+  generateMutatingAdmissionPolicy?: KyvernoHelmValuesFeaturesGenerateMutatingAdmissionPolicy;
   /**
    * @default {"enabled":false}
    */
@@ -1202,6 +1380,15 @@ export type KyvernoHelmValuesFeaturesPolicyReports = {
 };
 
 export type KyvernoHelmValuesFeaturesValidatingAdmissionPolicyReports = {
+  /**
+   * Enables the feature
+   *
+   * @default true
+   */
+  enabled?: boolean;
+};
+
+export type KyvernoHelmValuesFeaturesMutatingAdmissionPolicyReports = {
   /**
    * Enables the feature
    *
@@ -1288,6 +1475,15 @@ export type KyvernoHelmValuesFeaturesConfigMapCaching = {
   enabled?: boolean;
 };
 
+export type KyvernoHelmValuesFeaturesControllerRuntimeMetrics = {
+  /**
+   * Bind address for controller-runtime metrics (use "0" to disable it)
+   *
+   * @default ":8080"
+   */
+  bindAddress?: string;
+};
+
 export type KyvernoHelmValuesFeaturesDeferredLoading = {
   /**
    * Enables the feature
@@ -1316,6 +1512,15 @@ export type KyvernoHelmValuesFeaturesForceFailurePolicyIgnore = {
 };
 
 export type KyvernoHelmValuesFeaturesGenerateValidatingAdmissionPolicy = {
+  /**
+   * Enables the feature
+   *
+   * @default true
+   */
+  enabled?: boolean;
+};
+
+export type KyvernoHelmValuesFeaturesGenerateMutatingAdmissionPolicy = {
   /**
    * Enables the feature
    *
@@ -1419,6 +1624,10 @@ export type KyvernoHelmValuesFeaturesTuf = {
 
 export type KyvernoHelmValuesAdmissionController = {
   /**
+   * @default {...} (5 keys)
+   */
+  autoscaling?: KyvernoHelmValuesAdmissionControllerAutoscaling;
+  /**
    * Overrides features defined at the root level
    *
    * @default {"admissionReports":{"backPressureThreshold":1000}}
@@ -1432,6 +1641,24 @@ export type KyvernoHelmValuesAdmissionController = {
    * @default false
    */
   createSelfSignedCert?: boolean;
+  /**
+   * Key algorithm for self-signed TLS certificates.
+   * Supported values: RSA, ECDSA, Ed25519
+   * Only used when createSelfSignedCert is false (Kyverno-managed certificates).
+   *
+   * @default "RSA"
+   */
+  tlsKeyAlgorithm?: string;
+  /**
+   * Configure cert-manager to manage TLS certificates.
+   * When enabled, cert-manager Certificate resources will be created to provision
+   * the TLS certificates for the admission controller.
+   * Requires cert-manager to be installed in the cluster.
+   * Takes precedence over createSelfSignedCert when enabled.
+   *
+   * @default {...} (7 keys)
+   */
+  certManager?: KyvernoHelmValuesAdmissionControllerCertManager;
   replicas?: unknown;
   /**
    * The number of revisions to keep
@@ -1445,6 +1672,12 @@ export type KyvernoHelmValuesAdmissionController = {
    * @default "15m"
    */
   resyncPeriod?: string;
+  /**
+   * Enable/Disable custom resource watcher to invalidate cache
+   *
+   * @default false
+   */
+  crdWatcher?: boolean;
   /**
    * Additional labels to add to each pod
    * example.com/label: foo
@@ -1518,6 +1751,13 @@ export type KyvernoHelmValuesAdmissionController = {
    */
   dnsPolicy?: string;
   /**
+   * `dnsConfig` allows to specify DNS configuration for the pod.
+   * For further reference: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config.
+   *
+   * @default {}
+   */
+  dnsConfig?: KyvernoHelmValuesAdmissionControllerDnsConfig;
+  /**
    * Startup probe.
    * The block is directly forwarded into the deployment, so you can use whatever startupProbes configuration you want.
    * ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/
@@ -1544,7 +1784,7 @@ export type KyvernoHelmValuesAdmissionController = {
   /**
    * Node labels for pod assignment
    *
-   * @default {}
+   * @default {"kubernetes.io/os":"linux"}
    */
   nodeSelector?: KyvernoHelmValuesAdmissionControllerNodeSelector;
   tolerations?: unknown[];
@@ -1578,7 +1818,7 @@ export type KyvernoHelmValuesAdmissionController = {
    */
   podSecurityContext?: KyvernoHelmValuesAdmissionControllerPodSecurityContext;
   /**
-   * @default {"enabled":false,"minAvailable":1,"maxUnavailable":null}
+   * @default {...} (4 keys)
    */
   podDisruptionBudget?: KyvernoHelmValuesAdmissionControllerPodDisruptionBudget;
   /**
@@ -1609,11 +1849,11 @@ export type KyvernoHelmValuesAdmissionController = {
   extraInitContainers?: unknown[];
   extraContainers?: unknown[];
   /**
-   * @default {...} (4 keys)
+   * @default {...} (5 keys)
    */
   service?: KyvernoHelmValuesAdmissionControllerService;
   /**
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   metricsService?: KyvernoHelmValuesAdmissionControllerMetricsService;
   /**
@@ -1621,7 +1861,7 @@ export type KyvernoHelmValuesAdmissionController = {
    */
   networkPolicy?: KyvernoHelmValuesAdmissionControllerNetworkPolicy;
   /**
-   * @default {...} (9 keys)
+   * @default {...} (10 keys)
    */
   serviceMonitor?: KyvernoHelmValuesAdmissionControllerServiceMonitor;
   /**
@@ -1637,6 +1877,41 @@ export type KyvernoHelmValuesAdmissionController = {
    */
   profiling?: KyvernoHelmValuesAdmissionControllerProfiling;
 };
+
+export type KyvernoHelmValuesAdmissionControllerAutoscaling = {
+  /**
+   * Enable horizontal pod autoscaling
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Minimum number of pods
+   *
+   * @default 1
+   */
+  minReplicas?: number;
+  /**
+   * Maximum number of pods
+   *
+   * @default 10
+   */
+  maxReplicas?: number;
+  /**
+   * Target CPU utilization percentage
+   *
+   * @default 80
+   */
+  targetCPUUtilizationPercentage?: number;
+  /**
+   * Configurable scaling behavior
+   *
+   * @default {}
+   */
+  behavior?: KyvernoHelmValuesAdmissionControllerAutoscalingBehavior;
+};
+
+export type KyvernoHelmValuesAdmissionControllerAutoscalingBehavior = object;
 
 export type KyvernoHelmValuesAdmissionControllerFeaturesOverride = {
   /**
@@ -1675,7 +1950,7 @@ export type KyvernoHelmValuesAdmissionControllerRbac = {
    */
   viewRoleName?: string;
   /**
-   * @default {"name":null,"annotations":{}}
+   * @default {"name":null,"annotations":{},"automountServiceAccountToken":true}
    */
   serviceAccount?: KyvernoHelmValuesAdmissionControllerRbacServiceAccount;
   /**
@@ -1700,6 +1975,12 @@ export type KyvernoHelmValuesAdmissionControllerRbacServiceAccount = {
    * @default {}
    */
   annotations?: KyvernoHelmValuesAdmissionControllerRbacServiceAccountAnnotations;
+  /**
+   * Toggle automounting of the ServiceAccount
+   *
+   * @default true
+   */
+  automountServiceAccountToken?: boolean;
 };
 
 export type KyvernoHelmValuesAdmissionControllerRbacServiceAccountAnnotations =
@@ -1717,6 +1998,105 @@ export type KyvernoHelmValuesAdmissionControllerRbacCoreClusterRole = {
 
 export type KyvernoHelmValuesAdmissionControllerRbacClusterRole = {
   extraResources?: unknown[];
+};
+
+export type KyvernoHelmValuesAdmissionControllerCertManager = {
+  /**
+   * Enable cert-manager integration for certificate management
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Create a self-signed ClusterIssuer for CA generation.
+   * Set to false if you want to use an existing issuer specified in issuerRef.
+   *
+   * @default true
+   */
+  createSelfSignedIssuer?: boolean;
+  /**
+   * Reference to an existing issuer for signing CA certificates.
+   * Only used when createSelfSignedIssuer is false.
+   *
+   * @default {"name":"","kind":"ClusterIssuer","group":"cert-manager.io"}
+   */
+  issuerRef?: KyvernoHelmValuesAdmissionControllerCertManagerIssuerRef;
+  /**
+   * Key algorithm for certificates (RSA, ECDSA, Ed25519)
+   *
+   * @default "RSA"
+   */
+  algorithm?: string;
+  /**
+   * Key size for RSA (2048, 4096) or ECDSA (256, 384).
+   * Ignored for Ed25519.
+   *
+   * @default 2048
+   */
+  size?: number;
+  /**
+   * CA certificate configuration
+   *
+   * @default {"duration":"87600h","renewBefore":"720h"}
+   */
+  ca?: KyvernoHelmValuesAdmissionControllerCertManagerCa;
+  /**
+   * TLS certificate configuration
+   *
+   * @default {"duration":"8760h","renewBefore":"720h"}
+   */
+  tls?: KyvernoHelmValuesAdmissionControllerCertManagerTls;
+};
+
+export type KyvernoHelmValuesAdmissionControllerCertManagerIssuerRef = {
+  /**
+   * Name of the issuer
+   *
+   * @default ""
+   */
+  name?: string;
+  /**
+   * Kind of the issuer (ClusterIssuer or Issuer)
+   *
+   * @default "ClusterIssuer"
+   */
+  kind?: string;
+  /**
+   * Group of the issuer
+   *
+   * @default "cert-manager.io"
+   */
+  group?: string;
+};
+
+export type KyvernoHelmValuesAdmissionControllerCertManagerCa = {
+  /**
+   * Duration of the CA certificate (default 10 years)
+   *
+   * @default "87600h"
+   */
+  duration?: string;
+  /**
+   * Time before expiry to renew the CA certificate (default 30 days)
+   *
+   * @default "720h"
+   */
+  renewBefore?: string;
+};
+
+export type KyvernoHelmValuesAdmissionControllerCertManagerTls = {
+  /**
+   * Duration of the TLS certificate (default 1 year)
+   *
+   * @default "8760h"
+   */
+  duration?: string;
+  /**
+   * Time before expiry to renew the TLS certificate (default 30 days)
+   *
+   * @default "720h"
+   */
+  renewBefore?: string;
 };
 
 export type KyvernoHelmValuesAdmissionControllerPodLabels = object;
@@ -1803,6 +2183,8 @@ export type KyvernoHelmValuesAdmissionControllerWebhookServer = {
    */
   port?: number;
 };
+
+export type KyvernoHelmValuesAdmissionControllerDnsConfig = object;
 
 export type KyvernoHelmValuesAdmissionControllerStartupProbe = {
   /**
@@ -1922,7 +2304,12 @@ export type KyvernoHelmValuesAdmissionControllerReadinessProbeHttpGet = {
   scheme?: string;
 };
 
-export type KyvernoHelmValuesAdmissionControllerNodeSelector = object;
+export type KyvernoHelmValuesAdmissionControllerNodeSelector = {
+  /**
+   * @default "linux"
+   */
+  "kubernetes.io/os"?: string;
+};
 
 export type KyvernoHelmValuesAdmissionControllerAntiAffinity = {
   /**
@@ -2008,6 +2395,7 @@ export type KyvernoHelmValuesAdmissionControllerPodDisruptionBudget = {
    */
   minAvailable?: number;
   maxUnavailable?: unknown;
+  unhealthyPodEvictionPolicy?: unknown;
 };
 
 export type KyvernoHelmValuesAdmissionControllerSigstoreVolume = {
@@ -2059,7 +2447,7 @@ export type KyvernoHelmValuesAdmissionControllerInitContainer = {
 export type KyvernoHelmValuesAdmissionControllerInitContainerImage = {
   registry?: unknown;
   /**
-   * @default "ghcr.io"
+   * @default "reg.kyverno.io"
    */
   defaultRegistry?: string;
   /**
@@ -2179,7 +2567,7 @@ export type KyvernoHelmValuesAdmissionControllerContainer = {
 export type KyvernoHelmValuesAdmissionControllerContainerImage = {
   registry?: unknown;
   /**
-   * @default "ghcr.io"
+   * @default "reg.kyverno.io"
    */
   defaultRegistry?: string;
   /**
@@ -2290,6 +2678,7 @@ export type KyvernoHelmValuesAdmissionControllerService = {
    * @default {}
    */
   annotations?: KyvernoHelmValuesAdmissionControllerServiceAnnotations;
+  trafficDistribution?: unknown;
 };
 
 export type KyvernoHelmValuesAdmissionControllerServiceAnnotations = {
@@ -2325,6 +2714,7 @@ export type KyvernoHelmValuesAdmissionControllerMetricsService = {
    * @default {}
    */
   annotations?: KyvernoHelmValuesAdmissionControllerMetricsServiceAnnotations;
+  trafficDistribution?: unknown;
 };
 
 export type KyvernoHelmValuesAdmissionControllerMetricsServiceAnnotations = {
@@ -2353,6 +2743,12 @@ export type KyvernoHelmValuesAdmissionControllerServiceMonitor = {
    * @default false
    */
   enabled?: boolean;
+  /**
+   * Additional annotations
+   *
+   * @default {}
+   */
+  additionalAnnotations?: KyvernoHelmValuesAdmissionControllerServiceMonitorAdditionalAnnotations;
   /**
    * Additional labels
    *
@@ -2387,6 +2783,9 @@ export type KyvernoHelmValuesAdmissionControllerServiceMonitor = {
   relabelings?: unknown[];
   metricRelabelings?: unknown[];
 };
+
+export type KyvernoHelmValuesAdmissionControllerServiceMonitorAdditionalAnnotations =
+  object;
 
 export type KyvernoHelmValuesAdmissionControllerServiceMonitorAdditionalLabels =
   object;
@@ -2549,6 +2948,13 @@ export type KyvernoHelmValuesBackgroundController = {
    */
   dnsPolicy?: string;
   /**
+   * `dnsConfig` allows to specify DNS configuration for the pod.
+   * For further reference: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config.
+   *
+   * @default {}
+   */
+  dnsConfig?: KyvernoHelmValuesBackgroundControllerDnsConfig;
+  /**
    * Extra arguments passed to the container on the command line
    *
    * @default {}
@@ -2562,7 +2968,7 @@ export type KyvernoHelmValuesBackgroundController = {
   /**
    * Node labels for pod assignment
    *
-   * @default {}
+   * @default {"kubernetes.io/os":"linux"}
    */
   nodeSelector?: KyvernoHelmValuesBackgroundControllerNodeSelector;
   tolerations?: unknown[];
@@ -2602,7 +3008,7 @@ export type KyvernoHelmValuesBackgroundController = {
    */
   securityContext?: KyvernoHelmValuesBackgroundControllerSecurityContext;
   /**
-   * @default {"enabled":false,"minAvailable":1,"maxUnavailable":null}
+   * @default {...} (4 keys)
    */
   podDisruptionBudget?: KyvernoHelmValuesBackgroundControllerPodDisruptionBudget;
   /**
@@ -2610,7 +3016,7 @@ export type KyvernoHelmValuesBackgroundController = {
    */
   caCertificates?: KyvernoHelmValuesBackgroundControllerCaCertificates;
   /**
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   metricsService?: KyvernoHelmValuesBackgroundControllerMetricsService;
   /**
@@ -2618,7 +3024,7 @@ export type KyvernoHelmValuesBackgroundController = {
    */
   networkPolicy?: KyvernoHelmValuesBackgroundControllerNetworkPolicy;
   /**
-   * @default {...} (9 keys)
+   * @default {...} (10 keys)
    */
   serviceMonitor?: KyvernoHelmValuesBackgroundControllerServiceMonitor;
   /**
@@ -2664,11 +3070,11 @@ export type KyvernoHelmValuesBackgroundControllerRbac = {
    */
   viewRoleName?: string;
   /**
-   * @default {"name":null,"annotations":{}}
+   * @default {"name":null,"annotations":{},"automountServiceAccountToken":true}
    */
   serviceAccount?: KyvernoHelmValuesBackgroundControllerRbacServiceAccount;
   /**
-   * @default {"extraResources":[{"apiGroups":["networking.k8s.io"],"resources":["ingresses","ingressclasses","networkpolicies"],"verbs":["create","update","patch","delete"]},{"apiGroups":["rbac.authorization.k8s.io"],"resources":["rolebindings","roles"],"verbs":["create","update","patch","delete"]},{"apiGroups":[""],"resources":["configmaps","resourcequotas","limitranges"],"verbs":["create","update","patch","delete"]}]}
+   * @default {"extraResources":[{"apiGroups":["networking.k8s.io"],"resources":["ingresses","ingressclasses","networkpolicies"],"verbs":["create","update","patch","delete"]},{"apiGroups":["rbac.authorization.k8s.io"],"resources":["rolebindings","roles"],"verbs":["create","update","patch","delete"]},{"apiGroups":[""],"resources":["configmaps","resourcequotas","limitranges"],"verbs":["create","update","patch","delete"]},{"apiGroups":["resource.k8s.io"],"resources":["resourceclaims","resourceclaimtemplates"],"verbs":["create","delete","update","patch","deletecollection"]}]}
    */
   coreClusterRole?: KyvernoHelmValuesBackgroundControllerRbacCoreClusterRole;
   /**
@@ -2686,6 +3092,12 @@ export type KyvernoHelmValuesBackgroundControllerRbacServiceAccount = {
    * @default {}
    */
   annotations?: KyvernoHelmValuesBackgroundControllerRbacServiceAccountAnnotations;
+  /**
+   * Toggle automounting of the ServiceAccount
+   *
+   * @default true
+   */
+  automountServiceAccountToken?: boolean;
 };
 
 export type KyvernoHelmValuesBackgroundControllerRbacServiceAccountAnnotations =
@@ -2715,7 +3127,7 @@ export type KyvernoHelmValuesBackgroundControllerRbacClusterRole = {
 export type KyvernoHelmValuesBackgroundControllerImage = {
   registry?: unknown;
   /**
-   * @default "ghcr.io"
+   * @default "reg.kyverno.io"
    */
   defaultRegistry?: string;
   /**
@@ -2767,6 +3179,8 @@ export type KyvernoHelmValuesBackgroundControllerUpdateStrategyRollingUpdate = {
   maxUnavailable?: string;
 };
 
+export type KyvernoHelmValuesBackgroundControllerDnsConfig = object;
+
 export type KyvernoHelmValuesBackgroundControllerExtraArgs = object;
 
 export type KyvernoHelmValuesBackgroundControllerResources = {
@@ -2802,7 +3216,12 @@ export type KyvernoHelmValuesBackgroundControllerResourcesRequests = {
   memory?: string;
 };
 
-export type KyvernoHelmValuesBackgroundControllerNodeSelector = object;
+export type KyvernoHelmValuesBackgroundControllerNodeSelector = {
+  /**
+   * @default "linux"
+   */
+  "kubernetes.io/os"?: string;
+};
 
 export type KyvernoHelmValuesBackgroundControllerAntiAffinity = {
   /**
@@ -2927,6 +3346,7 @@ export type KyvernoHelmValuesBackgroundControllerPodDisruptionBudget = {
    */
   minAvailable?: number;
   maxUnavailable?: unknown;
+  unhealthyPodEvictionPolicy?: unknown;
 };
 
 export type KyvernoHelmValuesBackgroundControllerCaCertificates = {
@@ -2967,6 +3387,7 @@ export type KyvernoHelmValuesBackgroundControllerMetricsService = {
    * @default {}
    */
   annotations?: KyvernoHelmValuesBackgroundControllerMetricsServiceAnnotations;
+  trafficDistribution?: unknown;
 };
 
 export type KyvernoHelmValuesBackgroundControllerMetricsServiceAnnotations = {
@@ -2995,6 +3416,12 @@ export type KyvernoHelmValuesBackgroundControllerServiceMonitor = {
    * @default false
    */
   enabled?: boolean;
+  /**
+   * Additional annotations
+   *
+   * @default {}
+   */
+  additionalAnnotations?: KyvernoHelmValuesBackgroundControllerServiceMonitorAdditionalAnnotations;
   /**
    * Additional labels
    *
@@ -3029,6 +3456,9 @@ export type KyvernoHelmValuesBackgroundControllerServiceMonitor = {
   relabelings?: unknown[];
   metricRelabelings?: unknown[];
 };
+
+export type KyvernoHelmValuesBackgroundControllerServiceMonitorAdditionalAnnotations =
+  object;
 
 export type KyvernoHelmValuesBackgroundControllerServiceMonitorAdditionalLabels =
   object;
@@ -3127,13 +3557,31 @@ export type KyvernoHelmValuesCleanupController = {
    */
   enabled?: boolean;
   /**
-   * @default {"create":true,"serviceAccount":{"name":null,"annotations":{}},"clusterRole":{"extraResources":[]}}
+   * @default {"create":true,"serviceAccount":{"name":null,"annotations":{},"automountServiceAccountToken":true},"clusterRole":{"extraResources":[]}}
    */
   rbac?: KyvernoHelmValuesCleanupControllerRbac;
   /**
    * @default false
    */
   createSelfSignedCert?: boolean;
+  /**
+   * Key algorithm for self-signed TLS certificates.
+   * Supported values: RSA, ECDSA, Ed25519
+   * Only used when createSelfSignedCert is false (Kyverno-managed certificates).
+   *
+   * @default "RSA"
+   */
+  tlsKeyAlgorithm?: string;
+  /**
+   * Configure cert-manager to manage TLS certificates.
+   * When enabled, cert-manager Certificate resources will be created to provision
+   * the TLS certificates for the cleanup controller.
+   * Requires cert-manager to be installed in the cluster.
+   * Takes precedence over createSelfSignedCert when enabled.
+   *
+   * @default {...} (7 keys)
+   */
+  certManager?: KyvernoHelmValuesCleanupControllerCertManager;
   /**
    * @default {...} (5 keys)
    */
@@ -3201,13 +3649,6 @@ export type KyvernoHelmValuesCleanupController = {
    */
   server?: KyvernoHelmValuesCleanupControllerServer;
   /**
-   * cleanupController webhook server port
-   * in case you are using hostNetwork: true, you might want to change the port the webhookServer is listening to
-   *
-   * @default {"port":9443}
-   */
-  webhookServer?: KyvernoHelmValuesCleanupControllerWebhookServer;
-  /**
    * `dnsPolicy` determines the manner in which DNS resolution happens in the cluster.
    * In case of `hostNetwork: true`, usually, the `dnsPolicy` is suitable to be `ClusterFirstWithHostNet`.
    * For further reference: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy.
@@ -3215,6 +3656,13 @@ export type KyvernoHelmValuesCleanupController = {
    * @default "ClusterFirst"
    */
   dnsPolicy?: string;
+  /**
+   * `dnsConfig` allows to specify DNS configuration for the pod.
+   * For further reference: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config.
+   *
+   * @default {}
+   */
+  dnsConfig?: KyvernoHelmValuesCleanupControllerDnsConfig;
   /**
    * Extra arguments passed to the container on the command line
    *
@@ -3253,7 +3701,7 @@ export type KyvernoHelmValuesCleanupController = {
   /**
    * Node labels for pod assignment
    *
-   * @default {}
+   * @default {"kubernetes.io/os":"linux"}
    */
   nodeSelector?: KyvernoHelmValuesCleanupControllerNodeSelector;
   tolerations?: unknown[];
@@ -3293,15 +3741,15 @@ export type KyvernoHelmValuesCleanupController = {
    */
   securityContext?: KyvernoHelmValuesCleanupControllerSecurityContext;
   /**
-   * @default {"enabled":false,"minAvailable":1,"maxUnavailable":null}
+   * @default {...} (4 keys)
    */
   podDisruptionBudget?: KyvernoHelmValuesCleanupControllerPodDisruptionBudget;
   /**
-   * @default {...} (4 keys)
+   * @default {...} (5 keys)
    */
   service?: KyvernoHelmValuesCleanupControllerService;
   /**
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   metricsService?: KyvernoHelmValuesCleanupControllerMetricsService;
   /**
@@ -3309,7 +3757,7 @@ export type KyvernoHelmValuesCleanupController = {
    */
   networkPolicy?: KyvernoHelmValuesCleanupControllerNetworkPolicy;
   /**
-   * @default {...} (9 keys)
+   * @default {...} (10 keys)
    */
   serviceMonitor?: KyvernoHelmValuesCleanupControllerServiceMonitor;
   /**
@@ -3336,7 +3784,7 @@ export type KyvernoHelmValuesCleanupControllerRbac = {
    */
   create?: boolean;
   /**
-   * @default {"name":null,"annotations":{}}
+   * @default {"name":null,"annotations":{},"automountServiceAccountToken":true}
    */
   serviceAccount?: KyvernoHelmValuesCleanupControllerRbacServiceAccount;
   /**
@@ -3357,6 +3805,12 @@ export type KyvernoHelmValuesCleanupControllerRbacServiceAccount = {
    * @default {}
    */
   annotations?: KyvernoHelmValuesCleanupControllerRbacServiceAccountAnnotations;
+  /**
+   * Toggle automounting of the ServiceAccount
+   *
+   * @default true
+   */
+  automountServiceAccountToken?: boolean;
 };
 
 export type KyvernoHelmValuesCleanupControllerRbacServiceAccountAnnotations = {
@@ -3371,10 +3825,109 @@ export type KyvernoHelmValuesCleanupControllerRbacClusterRole = {
   extraResources?: unknown[];
 };
 
+export type KyvernoHelmValuesCleanupControllerCertManager = {
+  /**
+   * Enable cert-manager integration for certificate management
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Create a self-signed ClusterIssuer for CA generation.
+   * Set to false if you want to use an existing issuer specified in issuerRef.
+   *
+   * @default true
+   */
+  createSelfSignedIssuer?: boolean;
+  /**
+   * Reference to an existing issuer for signing CA certificates.
+   * Only used when createSelfSignedIssuer is false.
+   *
+   * @default {"name":"","kind":"ClusterIssuer","group":"cert-manager.io"}
+   */
+  issuerRef?: KyvernoHelmValuesCleanupControllerCertManagerIssuerRef;
+  /**
+   * Key algorithm for certificates (RSA, ECDSA, Ed25519)
+   *
+   * @default "RSA"
+   */
+  algorithm?: string;
+  /**
+   * Key size for RSA (2048, 4096) or ECDSA (256, 384).
+   * Ignored for Ed25519.
+   *
+   * @default 2048
+   */
+  size?: number;
+  /**
+   * CA certificate configuration
+   *
+   * @default {"duration":"87600h","renewBefore":"720h"}
+   */
+  ca?: KyvernoHelmValuesCleanupControllerCertManagerCa;
+  /**
+   * TLS certificate configuration
+   *
+   * @default {"duration":"8760h","renewBefore":"720h"}
+   */
+  tls?: KyvernoHelmValuesCleanupControllerCertManagerTls;
+};
+
+export type KyvernoHelmValuesCleanupControllerCertManagerIssuerRef = {
+  /**
+   * Name of the issuer
+   *
+   * @default ""
+   */
+  name?: string;
+  /**
+   * Kind of the issuer (ClusterIssuer or Issuer)
+   *
+   * @default "ClusterIssuer"
+   */
+  kind?: string;
+  /**
+   * Group of the issuer
+   *
+   * @default "cert-manager.io"
+   */
+  group?: string;
+};
+
+export type KyvernoHelmValuesCleanupControllerCertManagerCa = {
+  /**
+   * Duration of the CA certificate (default 10 years)
+   *
+   * @default "87600h"
+   */
+  duration?: string;
+  /**
+   * Time before expiry to renew the CA certificate (default 30 days)
+   *
+   * @default "720h"
+   */
+  renewBefore?: string;
+};
+
+export type KyvernoHelmValuesCleanupControllerCertManagerTls = {
+  /**
+   * Duration of the TLS certificate (default 1 year)
+   *
+   * @default "8760h"
+   */
+  duration?: string;
+  /**
+   * Time before expiry to renew the TLS certificate (default 30 days)
+   *
+   * @default "720h"
+   */
+  renewBefore?: string;
+};
+
 export type KyvernoHelmValuesCleanupControllerImage = {
   registry?: unknown;
   /**
-   * @default "ghcr.io"
+   * @default "reg.kyverno.io"
    */
   defaultRegistry?: string;
   /**
@@ -3433,12 +3986,7 @@ export type KyvernoHelmValuesCleanupControllerServer = {
   port?: number;
 };
 
-export type KyvernoHelmValuesCleanupControllerWebhookServer = {
-  /**
-   * @default 9443
-   */
-  port?: number;
-};
+export type KyvernoHelmValuesCleanupControllerDnsConfig = object;
 
 export type KyvernoHelmValuesCleanupControllerExtraArgs = object;
 
@@ -3593,7 +4141,12 @@ export type KyvernoHelmValuesCleanupControllerReadinessProbeHttpGet = {
   scheme?: string;
 };
 
-export type KyvernoHelmValuesCleanupControllerNodeSelector = object;
+export type KyvernoHelmValuesCleanupControllerNodeSelector = {
+  /**
+   * @default "linux"
+   */
+  "kubernetes.io/os"?: string;
+};
 
 export type KyvernoHelmValuesCleanupControllerAntiAffinity = {
   /**
@@ -3717,6 +4270,7 @@ export type KyvernoHelmValuesCleanupControllerPodDisruptionBudget = {
    */
   minAvailable?: number;
   maxUnavailable?: unknown;
+  unhealthyPodEvictionPolicy?: unknown;
 };
 
 export type KyvernoHelmValuesCleanupControllerService = {
@@ -3737,6 +4291,7 @@ export type KyvernoHelmValuesCleanupControllerService = {
    * @default {}
    */
   annotations?: KyvernoHelmValuesCleanupControllerServiceAnnotations;
+  trafficDistribution?: unknown;
 };
 
 export type KyvernoHelmValuesCleanupControllerServiceAnnotations = {
@@ -3772,6 +4327,7 @@ export type KyvernoHelmValuesCleanupControllerMetricsService = {
    * @default {}
    */
   annotations?: KyvernoHelmValuesCleanupControllerMetricsServiceAnnotations;
+  trafficDistribution?: unknown;
 };
 
 export type KyvernoHelmValuesCleanupControllerMetricsServiceAnnotations = {
@@ -3800,6 +4356,12 @@ export type KyvernoHelmValuesCleanupControllerServiceMonitor = {
    * @default false
    */
   enabled?: boolean;
+  /**
+   * Additional annotations
+   *
+   * @default {}
+   */
+  additionalAnnotations?: KyvernoHelmValuesCleanupControllerServiceMonitorAdditionalAnnotations;
   /**
    * Additional labels
    *
@@ -3834,6 +4396,9 @@ export type KyvernoHelmValuesCleanupControllerServiceMonitor = {
   relabelings?: unknown[];
   metricRelabelings?: unknown[];
 };
+
+export type KyvernoHelmValuesCleanupControllerServiceMonitorAdditionalAnnotations =
+  object;
 
 export type KyvernoHelmValuesCleanupControllerServiceMonitorAdditionalLabels =
   object;
@@ -4011,6 +4576,13 @@ export type KyvernoHelmValuesReportsController = {
    */
   dnsPolicy?: string;
   /**
+   * `dnsConfig` allows to specify DNS configuration for the pod.
+   * For further reference: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config.
+   *
+   * @default {}
+   */
+  dnsConfig?: KyvernoHelmValuesReportsControllerDnsConfig;
+  /**
    * Extra arguments passed to the container on the command line
    *
    * @default {}
@@ -4024,7 +4596,7 @@ export type KyvernoHelmValuesReportsController = {
   /**
    * Node labels for pod assignment
    *
-   * @default {}
+   * @default {"kubernetes.io/os":"linux"}
    */
   nodeSelector?: KyvernoHelmValuesReportsControllerNodeSelector;
   tolerations?: unknown[];
@@ -4064,7 +4636,7 @@ export type KyvernoHelmValuesReportsController = {
    */
   securityContext?: KyvernoHelmValuesReportsControllerSecurityContext;
   /**
-   * @default {"enabled":false,"minAvailable":1,"maxUnavailable":null}
+   * @default {...} (4 keys)
    */
   podDisruptionBudget?: KyvernoHelmValuesReportsControllerPodDisruptionBudget;
   /**
@@ -4082,7 +4654,7 @@ export type KyvernoHelmValuesReportsController = {
    */
   caCertificates?: KyvernoHelmValuesReportsControllerCaCertificates;
   /**
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   metricsService?: KyvernoHelmValuesReportsControllerMetricsService;
   /**
@@ -4090,7 +4662,7 @@ export type KyvernoHelmValuesReportsController = {
    */
   networkPolicy?: KyvernoHelmValuesReportsControllerNetworkPolicy;
   /**
-   * @default {...} (9 keys)
+   * @default {...} (10 keys)
    */
   serviceMonitor?: KyvernoHelmValuesReportsControllerServiceMonitor;
   /**
@@ -4140,7 +4712,7 @@ export type KyvernoHelmValuesReportsControllerRbac = {
    */
   viewRoleName?: string;
   /**
-   * @default {"name":null,"annotations":{}}
+   * @default {"name":null,"annotations":{},"automountServiceAccountToken":true}
    */
   serviceAccount?: KyvernoHelmValuesReportsControllerRbacServiceAccount;
   /**
@@ -4162,6 +4734,12 @@ export type KyvernoHelmValuesReportsControllerRbacServiceAccount = {
    * @default {}
    */
   annotations?: KyvernoHelmValuesReportsControllerRbacServiceAccountAnnotations;
+  /**
+   * Toggle automounting of the ServiceAccount
+   *
+   * @default true
+   */
+  automountServiceAccountToken?: boolean;
 };
 
 export type KyvernoHelmValuesReportsControllerRbacServiceAccountAnnotations = {
@@ -4183,7 +4761,7 @@ export type KyvernoHelmValuesReportsControllerRbacClusterRole = {
 export type KyvernoHelmValuesReportsControllerImage = {
   registry?: unknown;
   /**
-   * @default "ghcr.io"
+   * @default "reg.kyverno.io"
    */
   defaultRegistry?: string;
   /**
@@ -4278,6 +4856,8 @@ export type KyvernoHelmValuesReportsControllerPriorityLevelConfigurationSpecLimi
     queueLengthLimit?: number;
   };
 
+export type KyvernoHelmValuesReportsControllerDnsConfig = object;
+
 export type KyvernoHelmValuesReportsControllerExtraArgs = object;
 
 export type KyvernoHelmValuesReportsControllerResources = {
@@ -4313,7 +4893,12 @@ export type KyvernoHelmValuesReportsControllerResourcesRequests = {
   memory?: string;
 };
 
-export type KyvernoHelmValuesReportsControllerNodeSelector = object;
+export type KyvernoHelmValuesReportsControllerNodeSelector = {
+  /**
+   * @default "linux"
+   */
+  "kubernetes.io/os"?: string;
+};
 
 export type KyvernoHelmValuesReportsControllerAntiAffinity = {
   /**
@@ -4437,6 +5022,7 @@ export type KyvernoHelmValuesReportsControllerPodDisruptionBudget = {
    */
   minAvailable?: number;
   maxUnavailable?: unknown;
+  unhealthyPodEvictionPolicy?: unknown;
 };
 
 export type KyvernoHelmValuesReportsControllerSigstoreVolume = {
@@ -4488,6 +5074,7 @@ export type KyvernoHelmValuesReportsControllerMetricsService = {
    * @default {}
    */
   annotations?: KyvernoHelmValuesReportsControllerMetricsServiceAnnotations;
+  trafficDistribution?: unknown;
 };
 
 export type KyvernoHelmValuesReportsControllerMetricsServiceAnnotations = {
@@ -4516,6 +5103,12 @@ export type KyvernoHelmValuesReportsControllerServiceMonitor = {
    * @default false
    */
   enabled?: boolean;
+  /**
+   * Additional annotations
+   *
+   * @default {}
+   */
+  additionalAnnotations?: KyvernoHelmValuesReportsControllerServiceMonitorAdditionalAnnotations;
   /**
    * Additional labels
    *
@@ -4550,6 +5143,9 @@ export type KyvernoHelmValuesReportsControllerServiceMonitor = {
   relabelings?: unknown[];
   metricRelabelings?: unknown[];
 };
+
+export type KyvernoHelmValuesReportsControllerServiceMonitorAdditionalAnnotations =
+  object;
 
 export type KyvernoHelmValuesReportsControllerServiceMonitorAdditionalLabels =
   object;
@@ -4622,14 +5218,7 @@ export type KyvernoHelmValuesReportsControllerProfiling = {
 
 export type KyvernoHelmValues = {
   /**
-   * Internal settings used with `helm template` to generate install manifest
-   * @ignored
-   *
-   * @default {"enabled":false,"debug":false,"version":null}
-   */
-  templating?: KyvernoHelmValuesTemplating;
-  /**
-   * @default {...} (7 keys)
+   * @default {...} (9 keys)
    */
   global?: KyvernoHelmValuesGlobal;
   nameOverride?: unknown;
@@ -4644,15 +5233,31 @@ export type KyvernoHelmValues = {
    */
   apiVersionOverride?: KyvernoHelmValuesApiVersionOverride;
   /**
+   * @default {"roles":{"aggregate":{"admin":true,"view":true}}}
+   */
+  rbac?: KyvernoHelmValuesRbac;
+  /**
+   * Use openreports.io as the API group for reporting
+   *
+   * @default {"enabled":false,"installCrds":false}
+   */
+  openreports?: KyvernoHelmValuesOpenreports;
+  /**
+   * Reports Server configuration
+   *
+   * @default {"enabled":false,"waitForReady":true,"readinessTimeout":"300s"}
+   */
+  reportsServer?: KyvernoHelmValuesReportsServer;
+  /**
    * CRDs configuration
    *
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   crds?: KyvernoHelmValuesCrds;
   /**
    * Configuration
    *
-   * @default {...} (22 keys)
+   * @default {...} (23 keys)
    */
   config?: KyvernoHelmValuesConfig;
   /**
@@ -4671,7 +5276,7 @@ export type KyvernoHelmValues = {
   /**
    * Tests configuration
    *
-   * @default {...} (5 keys)
+   * @default {...} (9 keys)
    */
   test?: KyvernoHelmValuesTest;
   /**
@@ -4681,13 +5286,9 @@ export type KyvernoHelmValues = {
    */
   customLabels?: KyvernoHelmValuesCustomLabels;
   /**
-   * @default {...} (13 keys)
+   * @default {...} (15 keys)
    */
   webhooksCleanup?: KyvernoHelmValuesWebhooksCleanup;
-  /**
-   * @default {...} (12 keys)
-   */
-  policyReportsCleanup?: KyvernoHelmValuesPolicyReportsCleanup;
   /**
    * @default {...} (6 keys)
    */
@@ -4695,36 +5296,37 @@ export type KyvernoHelmValues = {
   /**
    * Features configuration
    *
-   * @default {...} (21 keys)
+   * @default {...} (24 keys)
    */
   features?: KyvernoHelmValuesFeatures;
   /**
    * Admission controller configuration
    *
-   * @default {...} (43 keys)
+   * @default {...} (48 keys)
    */
   admissionController?: KyvernoHelmValuesAdmissionController;
   /**
-   * @default {...} (36 keys)
+   * @default {...} (37 keys)
    */
   backgroundController?: KyvernoHelmValuesBackgroundController;
   /**
-   * @default {...} (41 keys)
+   * @default {...} (43 keys)
    */
   cleanupController?: KyvernoHelmValuesCleanupController;
   /**
-   * @default {...} (41 keys)
+   * @default {...} (42 keys)
    */
   reportsController?: KyvernoHelmValuesReportsController;
 };
 
 export type KyvernoHelmParameters = {
-  "templating.enabled"?: string;
-  "templating.debug"?: string;
-  "templating.version"?: string;
+  "global.templating.enabled"?: string;
+  "global.templating.debug"?: string;
+  "global.templating.version"?: string;
   "global.image.registry"?: string;
   "global.imagePullSecrets"?: string;
   "global.resyncPeriod"?: string;
+  "global.crdWatcher"?: string;
   "global.caCertificates.data"?: string;
   "global.extraEnvVars"?: string;
   "global.tolerations"?: string;
@@ -4733,7 +5335,15 @@ export type KyvernoHelmParameters = {
   namespaceOverride?: string;
   "upgrade.fromV2"?: string;
   "apiVersionOverride.podDisruptionBudget"?: string;
+  "rbac.roles.aggregate.admin"?: string;
+  "rbac.roles.aggregate.view"?: string;
+  "openreports.enabled"?: string;
+  "openreports.installCrds"?: string;
+  "reportsServer.enabled"?: string;
+  "reportsServer.waitForReady"?: string;
+  "reportsServer.readinessTimeout"?: string;
   "crds.install"?: string;
+  "crds.reportsServer.enabled"?: string;
   "crds.groups.kyverno.cleanuppolicies"?: string;
   "crds.groups.kyverno.clustercleanuppolicies"?: string;
   "crds.groups.kyverno.clusterpolicies"?: string;
@@ -4741,6 +5351,16 @@ export type KyvernoHelmParameters = {
   "crds.groups.kyverno.policies"?: string;
   "crds.groups.kyverno.policyexceptions"?: string;
   "crds.groups.kyverno.updaterequests"?: string;
+  "crds.groups.policies.validatingpolicies"?: string;
+  "crds.groups.policies.policyexceptions"?: string;
+  "crds.groups.policies.imagevalidatingpolicies"?: string;
+  "crds.groups.policies.namespacedimagevalidatingpolicies"?: string;
+  "crds.groups.policies.mutatingpolicies"?: string;
+  "crds.groups.policies.namespacedmutatingpolicies"?: string;
+  "crds.groups.policies.generatingpolicies"?: string;
+  "crds.groups.policies.deletingpolicies"?: string;
+  "crds.groups.policies.namespaceddeletingpolicies"?: string;
+  "crds.groups.policies.namespacedvalidatingpolicies"?: string;
   "crds.groups.reports.clusterephemeralreports"?: string;
   "crds.groups.reports.ephemeralreports"?: string;
   "crds.groups.wgpolicyk8s.clusterpolicyreports"?: string;
@@ -4762,6 +5382,11 @@ export type KyvernoHelmParameters = {
   "crds.migration.securityContext.readOnlyRootFilesystem"?: string;
   "crds.migration.securityContext.capabilities.drop"?: string;
   "crds.migration.securityContext.seccompProfile.type"?: string;
+  "crds.migration.podResources.limits.cpu"?: string;
+  "crds.migration.podResources.limits.memory"?: string;
+  "crds.migration.podResources.requests.cpu"?: string;
+  "crds.migration.podResources.requests.memory"?: string;
+  "crds.migration.serviceAccount.automountServiceAccountToken"?: string;
   "config.create"?: string;
   "config.preserve"?: string;
   "config.name"?: string;
@@ -4772,6 +5397,7 @@ export type KyvernoHelmParameters = {
   "config.excludeRoles"?: string;
   "config.excludeClusterRoles"?: string;
   "config.generateSuccessEvents"?: string;
+  "config.maxContextSize"?: string;
   "config.resourceFilters"?: string;
   "config.updateRequestThreshold"?: string;
   "config.webhooks.namespaceSelector.matchExpressions.key"?: string;
@@ -4791,6 +5417,10 @@ export type KyvernoHelmParameters = {
   "metricsConfig.metricsRefreshInterval"?: string;
   "metricsConfig.bucketBoundaries"?: string;
   "metricsConfig.metricsExposure.kyverno_policy_execution_duration_seconds.disabledLabelDimensions"?: string;
+  "metricsConfig.metricsExposure.kyverno_validating_policy_execution_duration_seconds.disabledLabelDimensions"?: string;
+  "metricsConfig.metricsExposure.kyverno_image_validating_policy_execution_duration_seconds.disabledLabelDimensions"?: string;
+  "metricsConfig.metricsExposure.kyverno_mutating_policy_execution_duration_seconds.disabledLabelDimensions"?: string;
+  "metricsConfig.metricsExposure.kyverno_generating_policy_execution_duration_seconds.disabledLabelDimensions"?: string;
   "metricsConfig.metricsExposure.kyverno_admission_review_duration_seconds.disabledLabelDimensions"?: string;
   "metricsConfig.metricsExposure.kyverno_policy_rule_info_total.disabledLabelDimensions"?: string;
   "metricsConfig.metricsExposure.kyverno_policy_results_total.disabledLabelDimensions"?: string;
@@ -4815,6 +5445,8 @@ export type KyvernoHelmParameters = {
   "test.securityContext.readOnlyRootFilesystem"?: string;
   "test.securityContext.capabilities.drop"?: string;
   "test.securityContext.seccompProfile.type"?: string;
+  "test.automountServiceAccountToken"?: string;
+  "test.tolerations"?: string;
   "webhooksCleanup.enabled"?: string;
   "webhooksCleanup.autoDeleteWebhooks.enabled"?: string;
   "webhooksCleanup.image.registry"?: string;
@@ -4831,21 +5463,11 @@ export type KyvernoHelmParameters = {
   "webhooksCleanup.securityContext.readOnlyRootFilesystem"?: string;
   "webhooksCleanup.securityContext.capabilities.drop"?: string;
   "webhooksCleanup.securityContext.seccompProfile.type"?: string;
-  "policyReportsCleanup.enabled"?: string;
-  "policyReportsCleanup.image.registry"?: string;
-  "policyReportsCleanup.image.repository"?: string;
-  "policyReportsCleanup.image.tag"?: string;
-  "policyReportsCleanup.image.pullPolicy"?: string;
-  "policyReportsCleanup.imagePullSecrets"?: string;
-  "policyReportsCleanup.tolerations"?: string;
-  "policyReportsCleanup.securityContext.runAsUser"?: string;
-  "policyReportsCleanup.securityContext.runAsGroup"?: string;
-  "policyReportsCleanup.securityContext.runAsNonRoot"?: string;
-  "policyReportsCleanup.securityContext.privileged"?: string;
-  "policyReportsCleanup.securityContext.allowPrivilegeEscalation"?: string;
-  "policyReportsCleanup.securityContext.readOnlyRootFilesystem"?: string;
-  "policyReportsCleanup.securityContext.capabilities.drop"?: string;
-  "policyReportsCleanup.securityContext.seccompProfile.type"?: string;
+  "webhooksCleanup.resources.limits.cpu"?: string;
+  "webhooksCleanup.resources.limits.memory"?: string;
+  "webhooksCleanup.resources.requests.cpu"?: string;
+  "webhooksCleanup.resources.requests.memory"?: string;
+  "webhooksCleanup.serviceAccount.automountServiceAccountToken"?: string;
   "grafana.enabled"?: string;
   "grafana.configMapName"?: string;
   "grafana.namespace"?: string;
@@ -4858,6 +5480,7 @@ export type KyvernoHelmParameters = {
   "features.aggregateReports.enabled"?: string;
   "features.policyReports.enabled"?: string;
   "features.validatingAdmissionPolicyReports.enabled"?: string;
+  "features.mutatingAdmissionPolicyReports.enabled"?: string;
   "features.reporting.validate"?: string;
   "features.reporting.mutate"?: string;
   "features.reporting.mutateExisting"?: string;
@@ -4869,10 +5492,12 @@ export type KyvernoHelmParameters = {
   "features.backgroundScan.backgroundScanInterval"?: string;
   "features.backgroundScan.skipResourceFilters"?: string;
   "features.configMapCaching.enabled"?: string;
+  "features.controllerRuntimeMetrics.bindAddress"?: string;
   "features.deferredLoading.enabled"?: string;
   "features.dumpPayload.enabled"?: string;
   "features.forceFailurePolicyIgnore.enabled"?: string;
   "features.generateValidatingAdmissionPolicy.enabled"?: string;
+  "features.generateMutatingAdmissionPolicy.enabled"?: string;
   "features.dumpPatches.enabled"?: string;
   "features.globalContext.maxApiCallResponseLength"?: string;
   "features.logging.format"?: string;
@@ -4888,17 +5513,35 @@ export type KyvernoHelmParameters = {
   "features.tuf.root"?: string;
   "features.tuf.rootRaw"?: string;
   "features.tuf.mirror"?: string;
+  "admissionController.autoscaling.enabled"?: string;
+  "admissionController.autoscaling.minReplicas"?: string;
+  "admissionController.autoscaling.maxReplicas"?: string;
+  "admissionController.autoscaling.targetCPUUtilizationPercentage"?: string;
   "admissionController.featuresOverride.admissionReports.backPressureThreshold"?: string;
   "admissionController.rbac.create"?: string;
   "admissionController.rbac.createViewRoleBinding"?: string;
   "admissionController.rbac.viewRoleName"?: string;
   "admissionController.rbac.serviceAccount.name"?: string;
+  "admissionController.rbac.serviceAccount.automountServiceAccountToken"?: string;
   "admissionController.rbac.coreClusterRole.extraResources"?: string;
   "admissionController.rbac.clusterRole.extraResources"?: string;
   "admissionController.createSelfSignedCert"?: string;
+  "admissionController.tlsKeyAlgorithm"?: string;
+  "admissionController.certManager.enabled"?: string;
+  "admissionController.certManager.createSelfSignedIssuer"?: string;
+  "admissionController.certManager.issuerRef.name"?: string;
+  "admissionController.certManager.issuerRef.kind"?: string;
+  "admissionController.certManager.issuerRef.group"?: string;
+  "admissionController.certManager.algorithm"?: string;
+  "admissionController.certManager.size"?: string;
+  "admissionController.certManager.ca.duration"?: string;
+  "admissionController.certManager.ca.renewBefore"?: string;
+  "admissionController.certManager.tls.duration"?: string;
+  "admissionController.certManager.tls.renewBefore"?: string;
   "admissionController.replicas"?: string;
   "admissionController.revisionHistoryLimit"?: string;
   "admissionController.resyncPeriod"?: string;
+  "admissionController.crdWatcher"?: string;
   "admissionController.updateStrategy.rollingUpdate.maxSurge"?: string;
   "admissionController.updateStrategy.rollingUpdate.maxUnavailable"?: string;
   "admissionController.updateStrategy.type"?: string;
@@ -4933,6 +5576,7 @@ export type KyvernoHelmParameters = {
   "admissionController.readinessProbe.timeoutSeconds"?: string;
   "admissionController.readinessProbe.failureThreshold"?: string;
   "admissionController.readinessProbe.successThreshold"?: string;
+  "admissionController.nodeSelector.kubernetes.io/os"?: string;
   "admissionController.tolerations"?: string;
   "admissionController.antiAffinity.enabled"?: string;
   "admissionController.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.weight"?: string;
@@ -4944,6 +5588,7 @@ export type KyvernoHelmParameters = {
   "admissionController.podDisruptionBudget.enabled"?: string;
   "admissionController.podDisruptionBudget.minAvailable"?: string;
   "admissionController.podDisruptionBudget.maxUnavailable"?: string;
+  "admissionController.podDisruptionBudget.unhealthyPodEvictionPolicy"?: string;
   "admissionController.tufRootMountPath"?: string;
   "admissionController.caCertificates.data"?: string;
   "admissionController.imagePullSecrets"?: string;
@@ -4983,10 +5628,12 @@ export type KyvernoHelmParameters = {
   "admissionController.service.port"?: string;
   "admissionController.service.type"?: string;
   "admissionController.service.nodePort"?: string;
+  "admissionController.service.trafficDistribution"?: string;
   "admissionController.metricsService.create"?: string;
   "admissionController.metricsService.port"?: string;
   "admissionController.metricsService.type"?: string;
   "admissionController.metricsService.nodePort"?: string;
+  "admissionController.metricsService.trafficDistribution"?: string;
   "admissionController.networkPolicy.enabled"?: string;
   "admissionController.networkPolicy.ingressFrom"?: string;
   "admissionController.serviceMonitor.enabled"?: string;
@@ -5014,6 +5661,7 @@ export type KyvernoHelmParameters = {
   "backgroundController.rbac.createViewRoleBinding"?: string;
   "backgroundController.rbac.viewRoleName"?: string;
   "backgroundController.rbac.serviceAccount.name"?: string;
+  "backgroundController.rbac.serviceAccount.automountServiceAccountToken"?: string;
   "backgroundController.rbac.coreClusterRole.extraResources.apiGroups"?: string;
   "backgroundController.rbac.coreClusterRole.extraResources.resources"?: string;
   "backgroundController.rbac.coreClusterRole.extraResources.verbs"?: string;
@@ -5037,6 +5685,7 @@ export type KyvernoHelmParameters = {
   "backgroundController.resources.limits.memory"?: string;
   "backgroundController.resources.requests.cpu"?: string;
   "backgroundController.resources.requests.memory"?: string;
+  "backgroundController.nodeSelector.kubernetes.io/os"?: string;
   "backgroundController.tolerations"?: string;
   "backgroundController.antiAffinity.enabled"?: string;
   "backgroundController.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.weight"?: string;
@@ -5054,11 +5703,13 @@ export type KyvernoHelmParameters = {
   "backgroundController.podDisruptionBudget.enabled"?: string;
   "backgroundController.podDisruptionBudget.minAvailable"?: string;
   "backgroundController.podDisruptionBudget.maxUnavailable"?: string;
+  "backgroundController.podDisruptionBudget.unhealthyPodEvictionPolicy"?: string;
   "backgroundController.caCertificates.data"?: string;
   "backgroundController.metricsService.create"?: string;
   "backgroundController.metricsService.port"?: string;
   "backgroundController.metricsService.type"?: string;
   "backgroundController.metricsService.nodePort"?: string;
+  "backgroundController.metricsService.trafficDistribution"?: string;
   "backgroundController.networkPolicy.enabled"?: string;
   "backgroundController.networkPolicy.ingressFrom"?: string;
   "backgroundController.serviceMonitor.enabled"?: string;
@@ -5085,8 +5736,21 @@ export type KyvernoHelmParameters = {
   "cleanupController.enabled"?: string;
   "cleanupController.rbac.create"?: string;
   "cleanupController.rbac.serviceAccount.name"?: string;
+  "cleanupController.rbac.serviceAccount.automountServiceAccountToken"?: string;
   "cleanupController.rbac.clusterRole.extraResources"?: string;
   "cleanupController.createSelfSignedCert"?: string;
+  "cleanupController.tlsKeyAlgorithm"?: string;
+  "cleanupController.certManager.enabled"?: string;
+  "cleanupController.certManager.createSelfSignedIssuer"?: string;
+  "cleanupController.certManager.issuerRef.name"?: string;
+  "cleanupController.certManager.issuerRef.kind"?: string;
+  "cleanupController.certManager.issuerRef.group"?: string;
+  "cleanupController.certManager.algorithm"?: string;
+  "cleanupController.certManager.size"?: string;
+  "cleanupController.certManager.ca.duration"?: string;
+  "cleanupController.certManager.ca.renewBefore"?: string;
+  "cleanupController.certManager.tls.duration"?: string;
+  "cleanupController.certManager.tls.renewBefore"?: string;
   "cleanupController.image.registry"?: string;
   "cleanupController.image.defaultRegistry"?: string;
   "cleanupController.image.repository"?: string;
@@ -5102,7 +5766,6 @@ export type KyvernoHelmParameters = {
   "cleanupController.priorityClassName"?: string;
   "cleanupController.hostNetwork"?: string;
   "cleanupController.server.port"?: string;
-  "cleanupController.webhookServer.port"?: string;
   "cleanupController.dnsPolicy"?: string;
   "cleanupController.extraEnvVars"?: string;
   "cleanupController.resources.limits.memory"?: string;
@@ -5130,6 +5793,7 @@ export type KyvernoHelmParameters = {
   "cleanupController.readinessProbe.timeoutSeconds"?: string;
   "cleanupController.readinessProbe.failureThreshold"?: string;
   "cleanupController.readinessProbe.successThreshold"?: string;
+  "cleanupController.nodeSelector.kubernetes.io/os"?: string;
   "cleanupController.tolerations"?: string;
   "cleanupController.antiAffinity.enabled"?: string;
   "cleanupController.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.weight"?: string;
@@ -5147,13 +5811,16 @@ export type KyvernoHelmParameters = {
   "cleanupController.podDisruptionBudget.enabled"?: string;
   "cleanupController.podDisruptionBudget.minAvailable"?: string;
   "cleanupController.podDisruptionBudget.maxUnavailable"?: string;
+  "cleanupController.podDisruptionBudget.unhealthyPodEvictionPolicy"?: string;
   "cleanupController.service.port"?: string;
   "cleanupController.service.type"?: string;
   "cleanupController.service.nodePort"?: string;
+  "cleanupController.service.trafficDistribution"?: string;
   "cleanupController.metricsService.create"?: string;
   "cleanupController.metricsService.port"?: string;
   "cleanupController.metricsService.type"?: string;
   "cleanupController.metricsService.nodePort"?: string;
+  "cleanupController.metricsService.trafficDistribution"?: string;
   "cleanupController.networkPolicy.enabled"?: string;
   "cleanupController.networkPolicy.ingressFrom"?: string;
   "cleanupController.serviceMonitor.enabled"?: string;
@@ -5181,6 +5848,7 @@ export type KyvernoHelmParameters = {
   "reportsController.rbac.createViewRoleBinding"?: string;
   "reportsController.rbac.viewRoleName"?: string;
   "reportsController.rbac.serviceAccount.name"?: string;
+  "reportsController.rbac.serviceAccount.automountServiceAccountToken"?: string;
   "reportsController.rbac.coreClusterRole.extraResources"?: string;
   "reportsController.rbac.clusterRole.extraResources"?: string;
   "reportsController.image.registry"?: string;
@@ -5207,6 +5875,7 @@ export type KyvernoHelmParameters = {
   "reportsController.resources.limits.memory"?: string;
   "reportsController.resources.requests.cpu"?: string;
   "reportsController.resources.requests.memory"?: string;
+  "reportsController.nodeSelector.kubernetes.io/os"?: string;
   "reportsController.tolerations"?: string;
   "reportsController.antiAffinity.enabled"?: string;
   "reportsController.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.weight"?: string;
@@ -5224,12 +5893,14 @@ export type KyvernoHelmParameters = {
   "reportsController.podDisruptionBudget.enabled"?: string;
   "reportsController.podDisruptionBudget.minAvailable"?: string;
   "reportsController.podDisruptionBudget.maxUnavailable"?: string;
+  "reportsController.podDisruptionBudget.unhealthyPodEvictionPolicy"?: string;
   "reportsController.tufRootMountPath"?: string;
   "reportsController.caCertificates.data"?: string;
   "reportsController.metricsService.create"?: string;
   "reportsController.metricsService.port"?: string;
   "reportsController.metricsService.type"?: string;
   "reportsController.metricsService.nodePort"?: string;
+  "reportsController.metricsService.trafficDistribution"?: string;
   "reportsController.networkPolicy.enabled"?: string;
   "reportsController.networkPolicy.ingressFrom"?: string;
   "reportsController.serviceMonitor.enabled"?: string;

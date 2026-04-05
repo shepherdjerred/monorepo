@@ -67,8 +67,22 @@ cd scripts/ci && bun run src/main.ts
 ## Development Setup
 
 ```bash
-mise trust && mise dev   # Installs bun + rust
+mise trust && mise install   # Install bun, rust, java
+bun run scripts/setup.ts     # Full setup: deps, shared builds, codegen
+# Or equivalently: mise run dev
 ```
+
+Run `bun run scripts/setup.ts` after cloning or pulling changes that modify dependencies or schemas.
+
+The setup script runs 5 phases:
+
+1. **Tools** — `mise install` + warns about optional tools
+2. **Dependencies** — root + per-package `bun install --frozen-lockfile`
+3. **Shared Builds** — eslint-config, webring, astro-opengraph-images, helm-types, clauderon/web shared+client
+4. **Code Generation** — Prisma (birmel, scout-for-lol), helm-types codegen, HA types
+5. **Verify** — checks critical build artifacts exist
+
+Optional tools (warned if missing): helm, swift, swiftlint, swiftformat, typeshare, go, golangci-lint, mvn, gitleaks, shellcheck.
 
 ## Verification
 

@@ -369,6 +369,18 @@ export type PrometheusadapterHelmValues = {
   affinity?: PrometheusadapterHelmValuesAffinity;
   topologySpreadConstraints?: unknown[];
   /**
+   * Override the name of the chart
+   *
+   * @default ""
+   */
+  nameOverride?: string;
+  /**
+   * Override the full name of the release
+   *
+   * @default ""
+   */
+  fullnameOverride?: string;
+  /**
    * @default {...} (4 keys)
    */
   image?: PrometheusadapterHelmValuesImage;
@@ -544,6 +556,8 @@ export type PrometheusadapterHelmValues = {
 
 export type PrometheusadapterHelmParameters = {
   topologySpreadConstraints?: string;
+  nameOverride?: string;
+  fullnameOverride?: string;
   "image.repository"?: string;
   "image.tag"?: string;
   "image.pullPolicy"?: string;

@@ -4,22 +4,11 @@ export type MariadbHelmValuesGlobal = {
   /**
    * Global Docker Image registry
    *
-   * Global Docker Image registry
-   *
    * @default ""
    */
   imageRegistry?: string;
-  /**
-   * E.g.
-   *
-   * Global Docker registry secret names as an array
-   *
-   * @default []
-   */
   imagePullSecrets?: unknown[];
   /**
-   * Global default StorageClass for Persistent Volume(s)
-   *
    * Global default StorageClass for Persistent Volume(s)
    *
    * @default ""
@@ -49,8 +38,6 @@ export type MariadbHelmValuesGlobalSecurity = {
   /**
    * Allows skipping image verification
    *
-   * Allows skipping image verification
-   *
    * @default false
    */
   allowInsecureImages?: boolean;
@@ -69,8 +56,6 @@ export type MariadbHelmValuesGlobalCompatibilityOpenshift = {
   /**
    * Adapt the securityContext sections of the deployment to make them compatible with Openshift restricted-v2 SCC: remove runAsUser, runAsGroup and fsGroup and let the platform use their allowed default IDs. Possible values: auto (apply if the detected running cluster is Openshift), force (perform the adaptation always), disabled (do not perform adaptation)
    *
-   * Adapt the securityContext sections of the deployment to make them compatible with Openshift restricted-v2 SCC: remove runAsUser, runAsGroup and fsGroup and let the platform use their allowed default IDs. Possible values: auto (apply if the detected running cluster is Openshift), force (perform the adaptation always), disabled (do not perform adaptation)
-   *
    * @default "auto"
    */
   adaptSecurityContext?: string;
@@ -84,33 +69,15 @@ export type MariadbHelmValuesDiagnosticMode = {
   /**
    * Enable diagnostic mode (all probes will be disabled and the command will be overridden)
    *
-   * Enable diagnostic mode (all probes will be disabled and the command will be overridden)
-   *
    * @default false
    */
   enabled?: boolean;
-  /**
-   * Command to override all containers in the deployment
-   *
-   * Command to override all containers in the deployment
-   *
-   * @default ["sleep"]
-   */
   command?: string[];
-  /**
-   * Args to override all containers in the deployment
-   *
-   * Args to override all containers in the deployment
-   *
-   * @default ["infinity"]
-   */
   args?: string[];
 };
 
 export type MariadbHelmValuesServiceBindings = {
   /**
-   * Create secret for service binding (Experimental)
-   *
    * Create secret for service binding (Experimental)
    *
    * @default false
@@ -122,17 +89,13 @@ export type MariadbHelmValuesImage = {
   /**
    * [default: REGISTRY_NAME] MariaDB image registry
    *
-   * MariaDB image registry
-   *
-   * @default "REGISTRY_NAME"
+   * @default "registry-1.docker.io"
    */
   registry?: string;
   /**
    * [default: REPOSITORY_NAME/mariadb] MariaDB image repository
    *
-   * MariaDB image repository
-   *
-   * @default "REPOSITORY_NAME/mariadb"
+   * @default "bitnami/mariadb"
    */
   repository?: string;
   /**
@@ -142,8 +105,6 @@ export type MariadbHelmValuesImage = {
   /**
    * MariaDB image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
    *
-   * MariaDB image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
-   *
    * @default ""
    */
   digest?: string;
@@ -151,28 +112,13 @@ export type MariadbHelmValuesImage = {
    * Specify a imagePullPolicy
    * ref: https://kubernetes.io/docs/concepts/containers/images/#pre-pulled-images
    *
-   * MariaDB image pull policy
-   *
    * @default "IfNotPresent"
    */
   pullPolicy?: string;
-  /**
-   * Optionally specify an array of imagePullSecrets (secrets must be manually created in the namespace)
-   * ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-   * Example:
-   * pullSecrets:
-   * - myRegistryKeySecretName
-   *
-   * Specify docker-registry secret names as an array
-   *
-   * @default []
-   */
   pullSecrets?: unknown[];
   /**
    * Set to true if you would like to see extra information on logs
    * It turns BASH and/or NAMI debugging in the image
-   *
-   * Specify if debug logs should be enabled
    *
    * @default false
    */
@@ -183,15 +129,11 @@ export type MariadbHelmValuesAuth = {
   /**
    * ref: https://github.com/bitnami/containers/tree/main/bitnami/mariadb#setting-the-root-password-on-first-run
    *
-   * Password for the `root` user. Ignored if existing secret is provided.
-   *
    * @default ""
    */
   rootPassword?: string;
   /**
    * ref: https://github.com/bitnami/containers/blob/main/bitnami/mariadb/README.md#creating-a-database-on-first-run
-   *
-   * Name for a custom database to create
    *
    * @default "my_database"
    */
@@ -199,14 +141,10 @@ export type MariadbHelmValuesAuth = {
   /**
    * ref: https://github.com/bitnami/containers/blob/main/bitnami/mariadb/README.md#creating-a-database-user-on-first-run
    *
-   * Name for a custom user to create
-   *
    * @default ""
    */
   username?: string;
   /**
-   * Password for the new user. Ignored if existing secret is provided
-   *
    * Password for the new user. Ignored if existing secret is provided
    *
    * @default ""
@@ -215,22 +153,16 @@ export type MariadbHelmValuesAuth = {
   /**
    * ref: https://github.com/bitnami/containers/tree/main/bitnami/mariadb#setting-up-a-replication-cluster
    *
-   * MariaDB replication user
-   *
    * @default "replicator"
    */
   replicationUser?: string;
   /**
    * ref: https://github.com/bitnami/containers/tree/main/bitnami/mariadb#setting-up-a-replication-cluster
    *
-   * MariaDB replication user password. Ignored if existing secret is provided
-   *
    * @default ""
    */
   replicationPassword?: string;
   /**
-   * Use existing secret for password details (`auth.rootPassword`, `auth.password`, `auth.replicationPassword` will be ignored and picked up from this secret). The secret has to contain the keys `mariadb-root-password`, `mariadb-replication-password` and `mariadb-password`
-   *
    * Use existing secret for password details (`auth.rootPassword`, `auth.password`, `auth.replicationPassword` will be ignored and picked up from this secret). The secret has to contain the keys `mariadb-root-password`, `mariadb-replication-password` and `mariadb-password`
    *
    * @default ""
@@ -239,25 +171,19 @@ export type MariadbHelmValuesAuth = {
   /**
    * Force users to specify required passwords
    *
-   * Force users to specify required passwords
-   *
    * @default false
    */
   forcePassword?: boolean;
   /**
    * Mount credentials as files instead of using environment variables
    *
-   * Mount credentials as files instead of using environment variables
-   *
-   * @default false
+   * @default true
    */
   usePasswordFiles?: boolean;
   /**
    * Example:
    * customPasswordFiles:
    * replicator: /vault/secrets/mariadb-replicator
-   *
-   * Use custom password files when `auth.usePasswordFiles` is set to `true`. Define path for keys `root` and `user`, also define `replicator` if `architecture` is set to `replication`
    *
    * @default {}
    */
@@ -272,14 +198,10 @@ export type MariadbHelmValuesTls = {
   /**
    * Enable TLS in MariaDB
    *
-   * Enable TLS in MariaDB
-   *
    * @default false
    */
   enabled?: boolean;
   /**
-   * Existing secret that contains TLS certificates
-   *
    * Existing secret that contains TLS certificates
    *
    * @default ""
@@ -288,14 +210,10 @@ export type MariadbHelmValuesTls = {
   /**
    * The secret key from the existingSecret if 'cert' key different from the default (tls.crt)
    *
-   * The secret key from the existingSecret if 'cert' key different from the default (tls.crt)
-   *
    * @default "tls.crt"
    */
   certFilename?: string;
   /**
-   * The secret key from the existingSecret if 'key' key different from the default (tls.key)
-   *
    * The secret key from the existingSecret if 'key' key different from the default (tls.key)
    *
    * @default "tls.key"
@@ -304,14 +222,10 @@ export type MariadbHelmValuesTls = {
   /**
    * The secret key from the existingSecret if 'ca' key different from the default (tls.crt)
    *
-   * The secret key from the existingSecret if 'ca' key different from the default (tls.crt)
-   *
    * @default ""
    */
   certCAFilename?: string;
   /**
-   * CA certificate for TLS. Ignored if `tls.existingSecret` is set
-   *
    * CA certificate for TLS. Ignored if `tls.existingSecret` is set
    *
    * @default ""
@@ -320,15 +234,11 @@ export type MariadbHelmValuesTls = {
   /**
    * TLS certificate for MariaDB. Ignored if `tls.existingSecret` is set
    *
-   * TLS certificate. Ignored if `tls.master.existingSecret` is set
-   *
    * @default ""
    */
   cert?: string;
   /**
    * TLS key for MariaDB. Ignored if `tls.existingSecret` is set
-   *
-   * TLS key. Ignored if `tls.master.existingSecret` is set
    *
    * @default ""
    */
@@ -343,14 +253,10 @@ export type MariadbHelmValuesTlsAutoGenerated = {
   /**
    * Enable automatic generation of TLS certificates
    *
-   * Enable automatic generation of certificates for TLS
-   *
    * @default true
    */
   enabled?: boolean;
   /**
-   * Mechanism to generate the certificates (allowed values: helm, cert-manager)
-   *
    * Mechanism to generate the certificates (allowed values: helm, cert-manager)
    *
    * @default "helm"
@@ -373,14 +279,10 @@ export type MariadbHelmValuesTlsAutoGeneratedCertManager = {
   /**
    * The name of an existing Issuer to use for generating the certificates (only for `cert-manager` engine)
    *
-   * The name of an existing Issuer to use for generating the certificates (only for `cert-manager` engine)
-   *
    * @default ""
    */
   existingIssuer?: string;
   /**
-   * Existing Issuer kind, defaults to Issuer (only for `cert-manager` engine)
-   *
    * Existing Issuer kind, defaults to Issuer (only for `cert-manager` engine)
    *
    * @default ""
@@ -389,14 +291,10 @@ export type MariadbHelmValuesTlsAutoGeneratedCertManager = {
   /**
    * Key size for the certificates (only for `cert-manager` engine)
    *
-   * Key size for the certificates (only for `cert-manager` engine)
-   *
    * @default 2048
    */
   keySize?: number;
   /**
-   * Key algorithm for the certificates (only for `cert-manager` engine)
-   *
    * Key algorithm for the certificates (only for `cert-manager` engine)
    *
    * @default "RSA"
@@ -405,14 +303,10 @@ export type MariadbHelmValuesTlsAutoGeneratedCertManager = {
   /**
    * Duration for the certificates (only for `cert-manager` engine)
    *
-   * Duration for the certificates (only for `cert-manager` engine)
-   *
    * @default "2160h"
    */
   duration?: string;
   /**
-   * Renewal period for the certificates (only for `cert-manager` engine)
-   *
    * Renewal period for the certificates (only for `cert-manager` engine)
    *
    * @default "360h"
@@ -424,14 +318,10 @@ export type MariadbHelmValuesTde = {
   /**
    * Enable Transparent Data Encryption using the File Key Management Encryption Plugin for MariaDB
    *
-   * Enable Transparent Data Encryption using the File Key Management Encryption Plugin for MariaDB
-   *
    * @default false
    */
   enabled?: boolean;
   /**
-   * Existing secret that contains Transparent Data Encryption key files used when secretsStoreProvider is not enabled
-   *
    * Existing secret that contains Transparent Data Encryption key files used when secretsStoreProvider is not enabled
    *
    * @default ""
@@ -440,14 +330,10 @@ export type MariadbHelmValuesTde = {
   /**
    * File name of the 'random keyfile' when it is different from the default (keyfile.key), is also used for key name in the existingSecret
    *
-   * File name of the 'random keyfile' when it is different from the default (keyfile.key), is also used for key name in the existingSecret
-   *
    * @default "keyfile.key"
    */
   randomKeyFilename?: string;
   /**
-   * File name of the 'encrypted keyfile' when it is different from the default (keyfile.enc), is also used for key name in the existingSecret
-   *
    * File name of the 'encrypted keyfile' when it is different from the default (keyfile.enc), is also used for key name in the existingSecret
    *
    * @default "keyfile.enc"
@@ -456,14 +342,10 @@ export type MariadbHelmValuesTde = {
   /**
    * Encryption algorithm used for encrypting data (allowed values: AES_CTR, AES_CBC | default: AES_CTR)
    *
-   * Encryption algorithm used for encrypting data (allowed values: AES_CTR, AES_CBC | default: AES_CTR)
-   *
    * @default "AES_CTR"
    */
   fileKeyManagementEncryptionAlgorithm?: string;
   /**
-   * Enables automatic encryption of all InnoDB tablespaces (allowed values: FORCE, ON, OFF | default: FORCE)
-   *
    * Enables automatic encryption of all InnoDB tablespaces (allowed values: FORCE, ON, OFF | default: FORCE)
    *
    * @default "FORCE"
@@ -472,14 +354,10 @@ export type MariadbHelmValuesTde = {
   /**
    * Enables encryption of the InnoDB redo log (allowed values: ON, OFF | default: ON)
    *
-   * Enables encryption of the InnoDB redo log (allowed values: ON, OFF | default: ON)
-   *
    * @default "ON"
    */
   innodbEncryptLog?: string;
   /**
-   * Enables automatic encryption of the InnoDB temporary tablespace (allowed values: ON, OFF | default: ON)
-   *
    * Enables automatic encryption of the InnoDB temporary tablespace (allowed values: ON, OFF | default: ON)
    *
    * @default "ON"
@@ -488,14 +366,10 @@ export type MariadbHelmValuesTde = {
   /**
    * Enables automatic encryption of all internal on-disk temporary tables that are created during query execution (allowed values: ON, OFF | default: ON)
    *
-   * Enables automatic encryption of all internal on-disk temporary tables that are created during query execution (allowed values: ON, OFF | default: ON)
-   *
    * @default "ON"
    */
   encryptTmpDiskTables?: string;
   /**
-   * Enables automatic encryption of temporary files, such as those created for filesort operations, binary log file caches, etc. (allowed values: ON, OFF | default: ON)
-   *
    * Enables automatic encryption of temporary files, such as those created for filesort operations, binary log file caches, etc. (allowed values: ON, OFF | default: ON)
    *
    * @default "ON"
@@ -504,22 +378,16 @@ export type MariadbHelmValuesTde = {
   /**
    * Enables encrypting binary logs including relay logs (allowed values: ON, OFF | default: ON)
    *
-   * Enables encrypting binary logs including relay logs (allowed values: ON, OFF | default: ON)
-   *
    * @default "ON"
    */
   encryptBINLOG?: string;
   /**
    * Enables automatic encryption of all Aria tablespaces (allowed values: ON, OFF | default: ON)
    *
-   * Enables automatic encryption of all Aria tablespaces (allowed values: ON, OFF | default: ON)
-   *
    * @default "ON"
    */
   ariaEncryptTables?: string;
   /**
-   * Number of threads to use for encryption (default: 4)
-   *
    * Number of threads to use for encryption (default: 4)
    *
    * @default 4
@@ -535,14 +403,10 @@ export type MariadbHelmValuesTdeSecretsStoreProvider = {
   /**
    * Enable use of secrets store provider for Transparent Data Encryption key files
    *
-   * Enable use of secrets store provider for Transparent Data Encryption key files
-   *
    * @default false
    */
   enabled?: boolean;
   /**
-   * Type of provider used in secrets store provider class (allowed values: vault)
-   *
    * Type of provider used in secrets store provider class (allowed values: vault)
    *
    * @default "vault"
@@ -558,14 +422,10 @@ export type MariadbHelmValuesTdeSecretsStoreProviderVault = {
   /**
    * The name of the HashiCorp Vault role used for accessing the key files (only for `vault` provider)
    *
-   * The name of the HashiCorp Vault role used for accessing the key files (only for `vault` provider)
-   *
    * @default ""
    */
   roleName?: string;
   /**
-   * The URL of the HashiCorp Vault server (only for `vault` provider)
-   *
    * The URL of the HashiCorp Vault server (only for `vault` provider)
    *
    * @default ""
@@ -574,14 +434,10 @@ export type MariadbHelmValuesTdeSecretsStoreProviderVault = {
   /**
    * The HashiCorp Vault auth mount path (only for `vault` provider)
    *
-   * The HashiCorp Vault auth mount path (only for `vault` provider)
-   *
    * @default ""
    */
   authMountPath?: string;
   /**
-   * The HashiCorp Vault secret path for the 'random keyfile' (only for `vault` provider)
-   *
    * The HashiCorp Vault secret path for the 'random keyfile' (only for `vault` provider)
    *
    * @default ""
@@ -590,22 +446,16 @@ export type MariadbHelmValuesTdeSecretsStoreProviderVault = {
   /**
    * The HashiCorp Vault secret key for the 'random keyfile' (only for `vault` provider)
    *
-   * The HashiCorp Vault secret key for the 'random keyfile' (only for `vault` provider)
-   *
    * @default ""
    */
   randomKeySecretKey?: string;
   /**
    * The HashiCorp Vault secret path for the 'encrypted keyfile' (only for `vault` provider)
    *
-   * The HashiCorp Vault secret path for the 'encrypted keyfile' (only for `vault` provider)
-   *
    * @default ""
    */
   encryptedKeySecretPath?: string;
   /**
-   * The HashiCorp Vault secret key for the 'encrypted keyfile' (only for `vault` provider)
-   *
    * The HashiCorp Vault secret key for the 'encrypted keyfile' (only for `vault` provider)
    *
    * @default ""
@@ -617,30 +467,12 @@ export type MariadbHelmValuesPrimary = {
   /**
    * Name of the primary database (eg primary, master, leader, ...)
    *
-   * Name of the primary database (eg primary, master, leader, ...)
-   *
    * @default "primary"
    */
   name?: string;
-  /**
-   * Override default container command on MariaDB Primary container(s) (useful when using custom images)
-   *
-   * Override default container command on MariaDB Primary container(s) (useful when using custom images)
-   *
-   * @default []
-   */
   command?: unknown[];
-  /**
-   * Override default container args on MariaDB Primary container(s) (useful when using custom images)
-   *
-   * Override default container args on MariaDB Primary container(s) (useful when using custom images)
-   *
-   * @default []
-   */
   args?: unknown[];
   /**
-   * for the MariaDB Primary container(s) to automate configuration before or after startup
-   *
    * for the MariaDB Primary container(s) to automate configuration before or after startup
    *
    * @default {}
@@ -649,18 +481,9 @@ export type MariadbHelmValuesPrimary = {
   /**
    * Mount Service Account token in pod
    *
-   * Mount Service Account token in pod
-   *
    * @default false
    */
   automountServiceAccountToken?: boolean;
-  /**
-   * https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
-   *
-   * Add deployment host aliases
-   *
-   * @default []
-   */
   hostAliases?: unknown[];
   /**
    * @default {"mysql":3306}
@@ -669,15 +492,13 @@ export type MariadbHelmValuesPrimary = {
   /**
    * ref: https://mysql.com/kb/en/mysql/configuring-mysql-with-mycnf/#example-of-configuration-file
    *
-   * MariaDB Primary configuration to be injected as ConfigMap
-   *
-   * @default """"
+   * @default "[mysqld]
+skip-name-resolve
+explicit_defaults_fo..."
    */
   configuration?: string;
   /**
    * NOTE: When it's set the 'configuration' parameter is ignored
-   *
-   * Name of existing ConfigMap with MariaDB Primary configuration.
    *
    * @default ""
    */
@@ -689,17 +510,7 @@ export type MariadbHelmValuesPrimary = {
    */
   updateStrategy?: MariadbHelmValuesPrimaryUpdateStrategy;
   /**
-   * https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#partitions
-   *
-   * Partition update strategy for Mariadb Primary statefulset
-   *
-   * @default ""
-   */
-  rollingUpdatePartition?: string;
-  /**
    * ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-   *
-   * Additional pod annotations for MariaDB primary pods
    *
    * @default {}
    */
@@ -707,23 +518,17 @@ export type MariadbHelmValuesPrimary = {
   /**
    * ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
    *
-   * Extra labels for MariaDB primary pods
-   *
    * @default {}
    */
   podLabels?: MariadbHelmValuesPrimaryPodLabels;
   /**
    * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
    *
-   * MariaDB primary pod affinity preset. Ignored if `primary.affinity` is set. Allowed values: `soft` or `hard`
-   *
    * @default ""
    */
   podAffinityPreset?: string;
   /**
    * Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
-   *
-   * MariaDB primary pod anti-affinity preset. Ignored if `primary.affinity` is set. Allowed values: `soft` or `hard`
    *
    * @default "soft"
    */
@@ -738,31 +543,18 @@ export type MariadbHelmValuesPrimary = {
   /**
    * Affinity for MariaDB primary pods assignment
    *
-   * Affinity for MariaDB primary pods assignment
-   *
    * @default {}
    */
   affinity?: MariadbHelmValuesPrimaryAffinity;
   /**
    * Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
    *
-   * Node labels for MariaDB primary pods assignment
-   *
    * @default {}
    */
   nodeSelector?: MariadbHelmValuesPrimaryNodeSelector;
-  /**
-   * Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-   *
-   * Tolerations for MariaDB primary pods assignment
-   *
-   * @default []
-   */
   tolerations?: unknown[];
   /**
    * ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
-   *
-   * Name of the k8s scheduler (other than default)
    *
    * @default ""
    */
@@ -776,31 +568,18 @@ export type MariadbHelmValuesPrimary = {
   /**
    * ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#pod-management-policies
    *
-   * podManagementPolicy to manage scaling operation of MariaDB primary pods
-   *
    * @default ""
    */
   podManagementPolicy?: string;
-  /**
-   * Topology Spread Constraints for MariaDB primary pods assignment
-   *
-   * Topology Spread Constraints for MariaDB primary pods assignment
-   *
-   * @default []
-   */
   topologySpreadConstraints?: unknown[];
   /**
    * Ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
-   *
-   * Priority class for MariaDB primary pods assignment
    *
    * @default ""
    */
   priorityClassName?: string;
   /**
    * Ref: https://kubernetes.io/docs/concepts/containers/runtime-class/
-   *
-   * Runtime Class for MariaDB primary pods
    *
    * @default ""
    */
@@ -829,9 +608,7 @@ export type MariadbHelmValuesPrimary = {
    * NOTE: The "nano" and "micro" presets allocate extremely low CPU/memory. These values may cause MariaDB to fail during startup (e.g., OOMKilled, readiness/liveness probe failures)
    * More information: https://github.com/bitnami/charts/blob/main/bitnami/common/templates/_resources.tpl#L15
    *
-   * Set container resources according to one common preset (allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge). This is ignored if primary.resources is set (primary.resources is recommended for production).
-   *
-   * @default "micro"
+   * @default "small"
    */
   resourcesPreset?: string;
   /**
@@ -840,8 +617,6 @@ export type MariadbHelmValuesPrimary = {
    * requests:
    * limits:
    * memory: 1024Mi
-   *
-   * Set container requests and limits for different resources like CPU or memory (essential for production workloads)
    *
    * @default {}
    */
@@ -871,22 +646,16 @@ export type MariadbHelmValuesPrimary = {
   /**
    * Override default startup probe for MariaDB primary containers
    *
-   * Override default startup probe for MariaDB primary containers
-   *
    * @default {}
    */
   customStartupProbe?: MariadbHelmValuesPrimaryCustomStartupProbe;
   /**
    * Override default liveness probe for MariaDB primary containers
    *
-   * Override default liveness probe for MariaDB primary containers
-   *
    * @default {}
    */
   customLivenessProbe?: MariadbHelmValuesPrimaryCustomLivenessProbe;
   /**
-   * Override default readiness probe for MariaDB primary containers
-   *
    * Override default readiness probe for MariaDB primary containers
    *
    * @default {}
@@ -898,8 +667,6 @@ export type MariadbHelmValuesPrimary = {
    * if all checks have failed after X tries. Use these to control these checks.
    * ref: https://github.com/bitnami/containers/tree/main/bitnami/mariadb/pull/240
    *
-   * Override default builtin startup wait check options for MariaDB primary containers
-   *
    * @default {}
    */
   startupWaitOptions?: MariadbHelmValuesPrimaryStartupWaitOptions;
@@ -907,30 +674,17 @@ export type MariadbHelmValuesPrimary = {
    * Can be used to specify command line flags, for example:
    * E.g.
    *
-   * MariaDB primary additional command line flags
-   *
    * @default ""
    */
   extraFlags?: string;
-  /**
-   * E.g.
-   *
-   * Extra environment variables to be set on MariaDB primary containers
-   *
-   * @default []
-   */
   extraEnvVars?: unknown[];
   /**
-   * Name of existing ConfigMap containing extra env vars for MariaDB primary containers
-   *
    * Name of existing ConfigMap containing extra env vars for MariaDB primary containers
    *
    * @default ""
    */
   extraEnvVarsCM?: string;
   /**
-   * Name of existing Secret containing extra env vars for MariaDB primary containers
-   *
    * Name of existing Secret containing extra env vars for MariaDB primary containers
    *
    * @default ""
@@ -943,37 +697,9 @@ export type MariadbHelmValuesPrimary = {
    * @default {...} (9 keys)
    */
   persistence?: MariadbHelmValuesPrimaryPersistence;
-  /**
-   * Optionally specify extra list of additional volumes to the MariaDB Primary pod(s)
-   *
-   * Optionally specify extra list of additional volumes to the MariaDB Primary pod(s)
-   *
-   * @default []
-   */
   extraVolumes?: unknown[];
-  /**
-   * Optionally specify extra list of additional volumeMounts for the MariaDB Primary container(s)
-   *
-   * Optionally specify extra list of additional volumeMounts for the MariaDB Primary container(s)
-   *
-   * @default []
-   */
   extraVolumeMounts?: unknown[];
-  /**
-   * Add additional init containers for the MariaDB Primary pod(s)
-   *
-   * Add additional init containers for the MariaDB Primary pod(s)
-   *
-   * @default []
-   */
   initContainers?: unknown[];
-  /**
-   * Add additional sidecar containers for the MariaDB Primary pod(s)
-   *
-   * Add additional sidecar containers for the MariaDB Primary pod(s)
-   *
-   * @default []
-   */
   sidecars?: unknown[];
   /**
    * MariaDB Primary Service parameters
@@ -990,8 +716,6 @@ export type MariadbHelmValuesPrimary = {
   /**
    * Maximum number of revisions that will be maintained in the StatefulSet
    *
-   * Maximum number of revisions that will be maintained in the StatefulSet
-   *
    * @default 10
    */
   revisionHistoryLimit?: number;
@@ -1003,8 +727,6 @@ export type MariadbHelmValuesPrimaryContainerPorts = {
   /**
    * Container port for mysql
    *
-   * Container port for mysql
-   *
    * @default 3306
    */
   mysql?: number;
@@ -1014,8 +736,6 @@ export type MariadbHelmValuesPrimaryUpdateStrategy = {
   /**
    * StrategyType
    * Can be set to RollingUpdate or OnDelete
-   *
-   * MariaDB primary statefulset strategy type
    *
    * @default "RollingUpdate"
    */
@@ -1030,26 +750,15 @@ export type MariadbHelmValuesPrimaryNodeAffinityPreset = {
   /**
    * MariaDB primary node affinity preset type. Ignored if `primary.affinity` is set. Allowed values: `soft` or `hard`
    *
-   * MariaDB primary node affinity preset type. Ignored if `primary.affinity` is set. Allowed values: `soft` or `hard`
-   *
    * @default ""
    */
   type?: string;
   /**
    * E.g.
    *
-   * MariaDB primary node label key to match Ignored if `primary.affinity` is set.
-   *
    * @default ""
    */
   key?: string;
-  /**
-   * E.g.
-   *
-   * MariaDB primary node label values to match. Ignored if `primary.affinity` is set.
-   *
-   * @default []
-   */
   values?: unknown[];
 };
 
@@ -1061,38 +770,18 @@ export type MariadbHelmValuesPrimaryPodSecurityContext = {
   /**
    * Enable security context for MariaDB primary pods
    *
-   * Enable security context for MariaDB primary pods
-   *
    * @default true
    */
   enabled?: boolean;
   /**
    * Set filesystem group change policy
    *
-   * Set filesystem group change policy
-   *
    * @default "Always"
    */
   fsGroupChangePolicy?: string;
-  /**
-   * Set kernel settings using the sysctl interface
-   *
-   * Set kernel settings using the sysctl interface
-   *
-   * @default []
-   */
   sysctls?: unknown[];
-  /**
-   * Set filesystem extra groups
-   *
-   * Set filesystem extra groups
-   *
-   * @default []
-   */
   supplementalGroups?: unknown[];
   /**
-   * Group ID for the mounted volumes' filesystem
-   *
    * Group ID for the mounted volumes' filesystem
    *
    * @default 1001
@@ -1102,8 +791,6 @@ export type MariadbHelmValuesPrimaryPodSecurityContext = {
 
 export type MariadbHelmValuesPrimaryContainerSecurityContext = {
   /**
-   * MariaDB primary container securityContext
-   *
    * MariaDB primary container securityContext
    *
    * @default true
@@ -1118,14 +805,10 @@ export type MariadbHelmValuesPrimaryContainerSecurityContext = {
   /**
    * User ID for the MariaDB primary container
    *
-   * User ID for the MariaDB primary container
-   *
    * @default 1001
    */
   runAsUser?: number;
   /**
-   * Group ID for the MariaDB primary container
-   *
    * Group ID for the MariaDB primary container
    *
    * @default 1001
@@ -1134,14 +817,10 @@ export type MariadbHelmValuesPrimaryContainerSecurityContext = {
   /**
    * Set primary container's Security Context runAsNonRoot
    *
-   * Set primary container's Security Context runAsNonRoot
-   *
    * @default true
    */
   runAsNonRoot?: boolean;
   /**
-   * Set primary container's Security Context privileged
-   *
    * Set primary container's Security Context privileged
    *
    * @default false
@@ -1150,14 +829,10 @@ export type MariadbHelmValuesPrimaryContainerSecurityContext = {
   /**
    * Set primary container's Security Context allowPrivilegeEscalation
    *
-   * Set primary container's Security Context allowPrivilegeEscalation
-   *
    * @default false
    */
   allowPrivilegeEscalation?: boolean;
   /**
-   * Set container's Security Context readOnlyRootFilesystem
-   *
    * Set container's Security Context readOnlyRootFilesystem
    *
    * @default true
@@ -1177,20 +852,11 @@ export type MariadbHelmValuesPrimaryContainerSecurityContextSeLinuxOptions =
   object;
 
 export type MariadbHelmValuesPrimaryContainerSecurityContextCapabilities = {
-  /**
-   * List of capabilities to be dropped
-   *
-   * List of capabilities to be dropped
-   *
-   * @default ["ALL"]
-   */
   drop?: string[];
 };
 
 export type MariadbHelmValuesPrimaryContainerSecurityContextSeccompProfile = {
   /**
-   * Set container's Security Context seccomp profile
-   *
    * Set container's Security Context seccomp profile
    *
    * @default "RuntimeDefault"
@@ -1213,14 +879,10 @@ export type MariadbHelmValuesPrimaryStartupProbe = {
   /**
    * Enable startupProbe
    *
-   * Enable startupProbe
-   *
    * @default false
    */
   enabled?: boolean;
   /**
-   * Initial delay seconds for startupProbe
-   *
    * Initial delay seconds for startupProbe
    *
    * @default 120
@@ -1229,14 +891,10 @@ export type MariadbHelmValuesPrimaryStartupProbe = {
   /**
    * Period seconds for startupProbe
    *
-   * Period seconds for startupProbe
-   *
    * @default 15
    */
   periodSeconds?: number;
   /**
-   * Timeout seconds for startupProbe
-   *
    * Timeout seconds for startupProbe
    *
    * @default 5
@@ -1245,14 +903,10 @@ export type MariadbHelmValuesPrimaryStartupProbe = {
   /**
    * Failure threshold for startupProbe
    *
-   * Failure threshold for startupProbe
-   *
    * @default 10
    */
   failureThreshold?: number;
   /**
-   * Success threshold for startupProbe
-   *
    * Success threshold for startupProbe
    *
    * @default 1
@@ -1264,14 +918,10 @@ export type MariadbHelmValuesPrimaryLivenessProbe = {
   /**
    * Enable livenessProbe
    *
-   * Enable livenessProbe
-   *
    * @default true
    */
   enabled?: boolean;
   /**
-   * Initial delay seconds for livenessProbe
-   *
    * Initial delay seconds for livenessProbe
    *
    * @default 120
@@ -1280,14 +930,10 @@ export type MariadbHelmValuesPrimaryLivenessProbe = {
   /**
    * Period seconds for livenessProbe
    *
-   * Period seconds for livenessProbe
-   *
    * @default 10
    */
   periodSeconds?: number;
   /**
-   * Timeout seconds for livenessProbe
-   *
    * Timeout seconds for livenessProbe
    *
    * @default 1
@@ -1296,14 +942,10 @@ export type MariadbHelmValuesPrimaryLivenessProbe = {
   /**
    * Failure threshold for livenessProbe
    *
-   * Failure threshold for livenessProbe
-   *
    * @default 3
    */
   failureThreshold?: number;
   /**
-   * Success threshold for livenessProbe
-   *
    * Success threshold for livenessProbe
    *
    * @default 1
@@ -1315,14 +957,10 @@ export type MariadbHelmValuesPrimaryReadinessProbe = {
   /**
    * Enable readinessProbe
    *
-   * Enable readinessProbe
-   *
    * @default true
    */
   enabled?: boolean;
   /**
-   * Initial delay seconds for readinessProbe
-   *
    * Initial delay seconds for readinessProbe
    *
    * @default 30
@@ -1331,14 +969,10 @@ export type MariadbHelmValuesPrimaryReadinessProbe = {
   /**
    * Period seconds for readinessProbe
    *
-   * Period seconds for readinessProbe
-   *
    * @default 10
    */
   periodSeconds?: number;
   /**
-   * Timeout seconds for readinessProbe
-   *
    * Timeout seconds for readinessProbe
    *
    * @default 1
@@ -1347,14 +981,10 @@ export type MariadbHelmValuesPrimaryReadinessProbe = {
   /**
    * Failure threshold for readinessProbe
    *
-   * Failure threshold for readinessProbe
-   *
    * @default 3
    */
   failureThreshold?: number;
   /**
-   * Success threshold for readinessProbe
-   *
    * Success threshold for readinessProbe
    *
    * @default 1
@@ -1379,22 +1009,16 @@ export type MariadbHelmValuesPrimaryPersistence = {
   /**
    * Enable persistence on MariaDB primary replicas using a `PersistentVolumeClaim`. If false, use emptyDir
    *
-   * Enable persistence on MariaDB primary replicas using a `PersistentVolumeClaim`. If false, use emptyDir
-   *
    * @default true
    */
   enabled?: boolean;
   /**
    * NOTE: When it's set the rest of persistence parameters are ignored
    *
-   * Name of an existing `PersistentVolumeClaim` for MariaDB primary replicas
-   *
    * @default ""
    */
   existingClaim?: string;
   /**
-   * Subdirectory of the volume to mount at
-   *
    * Subdirectory of the volume to mount at
    *
    * @default ""
@@ -1407,14 +1031,10 @@ export type MariadbHelmValuesPrimaryPersistence = {
    * set, choosing the default provisioner.  (gp2 on AWS, standard on
    * GKE, AWS & OpenStack)
    *
-   * MariaDB primary persistent volume storage Class
-   *
    * @default ""
    */
   storageClass?: string;
   /**
-   * Labels for the PVC
-   *
    * Labels for the PVC
    *
    * @default {}
@@ -1423,30 +1043,17 @@ export type MariadbHelmValuesPrimaryPersistence = {
   /**
    * MariaDB primary persistent volume claim annotations
    *
-   * MariaDB primary persistent volume claim annotations
-   *
    * @default {}
    */
   annotations?: MariadbHelmValuesPrimaryPersistenceAnnotations;
-  /**
-   * MariaDB primary persistent volume access Modes
-   *
-   * MariaDB primary persistent volume access Modes
-   *
-   * @default ["ReadWriteOnce"]
-   */
   accessModes?: string[];
   /**
-   * MariaDB primary persistent volume size
-   *
    * MariaDB primary persistent volume size
    *
    * @default "8Gi"
    */
   size?: string;
   /**
-   * Selector to match an existing Persistent Volume
-   *
    * Selector to match an existing Persistent Volume
    *
    * @default {}
@@ -1482,8 +1089,6 @@ export type MariadbHelmValuesPrimaryService = {
   /**
    * MariaDB Primary Kubernetes service type
    *
-   * MariaDB Primary Kubernetes service type
-   *
    * @default "ClusterIP"
    */
   type?: string;
@@ -1500,15 +1105,11 @@ export type MariadbHelmValuesPrimaryService = {
   /**
    * MariaDB Primary Kubernetes service clusterIP IP
    *
-   * MariaDB Primary Kubernetes service clusterIP IP
-   *
    * @default ""
    */
   clusterIP?: string;
   /**
    * ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
-   *
-   * MariaDB Primary loadBalancerIP if service type is `LoadBalancer`
    *
    * @default ""
    */
@@ -1516,31 +1117,12 @@ export type MariadbHelmValuesPrimaryService = {
   /**
    * ref https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
    *
-   * Enable client source IP preservation
-   *
    * @default "Cluster"
    */
   externalTrafficPolicy?: string;
-  /**
-   * https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
-   * E.g.
-   *
-   * Address that are allowed when MariaDB Primary service is LoadBalancer
-   *
-   * @default []
-   */
   loadBalancerSourceRanges?: unknown[];
-  /**
-   * Extra ports to expose (normally used with the `sidecar` value)
-   *
-   * Extra ports to expose (normally used with the `sidecar` value)
-   *
-   * @default []
-   */
   extraPorts?: unknown[];
   /**
-   * Provide any additional annotations which may be required
-   *
    * Provide any additional annotations which may be required
    *
    * @default {}
@@ -1550,15 +1132,11 @@ export type MariadbHelmValuesPrimaryService = {
    * If "ClientIP", consecutive client requests will be directed to the same Pod
    * ref: https://kubernetes.io/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies
    *
-   * Session Affinity for Kubernetes service, can be "None" or "ClientIP"
-   *
    * @default "None"
    */
   sessionAffinity?: string;
   /**
    * Additional settings for the sessionAffinity. Ignored if `primary.service.sessionAffinity` is `None`
-   *
-   * Additional settings for the sessionAffinity
    *
    * @default {}
    */
@@ -1573,14 +1151,10 @@ export type MariadbHelmValuesPrimaryServicePorts = {
   /**
    * MariaDB Primary Kubernetes service port for MariaDB
    *
-   * MariaDB Primary Kubernetes service port for MariaDB
-   *
    * @default 3306
    */
   mysql?: number;
   /**
-   * MariaDB Primary Kubernetes service port for metrics
-   *
    * MariaDB Primary Kubernetes service port for metrics
    *
    * @default 9104
@@ -1590,8 +1164,6 @@ export type MariadbHelmValuesPrimaryServicePorts = {
 
 export type MariadbHelmValuesPrimaryServiceNodePorts = {
   /**
-   * MariaDB Primary Kubernetes service node port
-   *
    * MariaDB Primary Kubernetes service node port
    *
    * @default ""
@@ -1613,8 +1185,6 @@ export type MariadbHelmValuesPrimaryServiceHeadless = {
   /**
    * Annotations of the headless service
    *
-   * Annotations of the headless service
-   *
    * @default {}
    */
   annotations?: MariadbHelmValuesPrimaryServiceHeadlessAnnotations;
@@ -1632,22 +1202,16 @@ export type MariadbHelmValuesPrimaryPdb = {
   /**
    * Enable/disable a Pod Disruption Budget creation for MariaDB primary pods
    *
-   * Enable/disable a Pod Disruption Budget creation for MariaDB primary pods
-   *
    * @default true
    */
   create?: boolean;
   /**
    * Minimum number/percentage of MariaDB primary pods that must still be available after the eviction
    *
-   * Minimum number/percentage of MariaDB primary pods that must still be available after the eviction
-   *
    * @default ""
    */
   minAvailable?: string;
   /**
-   * Maximum number/percentage of MariaDB primary pods that can be unavailable after the eviction. Defaults to `1` if both `primary.pdb.minAvailable` and `primary.pdb.maxUnavailable` are empty.
-   *
    * Maximum number/percentage of MariaDB primary pods that can be unavailable after the eviction. Defaults to `1` if both `primary.pdb.minAvailable` and `primary.pdb.maxUnavailable` are empty.
    *
    * @default ""
@@ -1659,38 +1223,18 @@ export type MariadbHelmValuesSecondary = {
   /**
    * Name of the secondary database (eg secondary, slave, ...)
    *
-   * Name of the secondary database (eg secondary, slave, ...)
-   *
    * @default "secondary"
    */
   name?: string;
   /**
    * Number of MariaDB secondary replicas
    *
-   * Number of MariaDB secondary replicas
-   *
    * @default 1
    */
   replicaCount?: number;
-  /**
-   * Override default container command on MariaDB Secondary container(s) (useful when using custom images)
-   *
-   * Override default container command on MariaDB Secondary container(s) (useful when using custom images)
-   *
-   * @default []
-   */
   command?: unknown[];
-  /**
-   * Override default container args on MariaDB Secondary container(s) (useful when using custom images)
-   *
-   * Override default container args on MariaDB Secondary container(s) (useful when using custom images)
-   *
-   * @default []
-   */
   args?: unknown[];
   /**
-   * for the MariaDB Secondary container(s) to automate configuration before or after startup
-   *
    * for the MariaDB Secondary container(s) to automate configuration before or after startup
    *
    * @default {}
@@ -1699,18 +1243,9 @@ export type MariadbHelmValuesSecondary = {
   /**
    * Mount Service Account token in pod
    *
-   * Mount Service Account token in pod
-   *
    * @default false
    */
   automountServiceAccountToken?: boolean;
-  /**
-   * https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
-   *
-   * Add deployment host aliases
-   *
-   * @default []
-   */
   hostAliases?: unknown[];
   /**
    * @default {"mysql":3306}
@@ -1719,15 +1254,13 @@ export type MariadbHelmValuesSecondary = {
   /**
    * ref: https://mysql.com/kb/en/mysql/configuring-mysql-with-mycnf/#example-of-configuration-file
    *
-   * MariaDB Secondary configuration to be injected as ConfigMap
-   *
-   * @default """"
+   * @default "[mysqld]
+skip-name-resolve
+explicit_defaults_fo..."
    */
   configuration?: string;
   /**
    * NOTE: When it's set the 'configuration' parameter is ignored
-   *
-   * Name of existing ConfigMap with MariaDB Secondary configuration.
    *
    * @default ""
    */
@@ -1739,17 +1272,7 @@ export type MariadbHelmValuesSecondary = {
    */
   updateStrategy?: MariadbHelmValuesSecondaryUpdateStrategy;
   /**
-   * https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#partitions
-   *
-   * Partition update strategy for Mariadb Secondary statefulset
-   *
-   * @default ""
-   */
-  rollingUpdatePartition?: string;
-  /**
    * ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-   *
-   * Additional pod annotations for MariaDB secondary pods
    *
    * @default {}
    */
@@ -1757,23 +1280,17 @@ export type MariadbHelmValuesSecondary = {
   /**
    * ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
    *
-   * Extra labels for MariaDB secondary pods
-   *
    * @default {}
    */
   podLabels?: MariadbHelmValuesSecondaryPodLabels;
   /**
    * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
    *
-   * MariaDB secondary pod affinity preset. Ignored if `secondary.affinity` is set. Allowed values: `soft` or `hard`
-   *
    * @default ""
    */
   podAffinityPreset?: string;
   /**
    * Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
-   *
-   * MariaDB secondary pod anti-affinity preset. Ignored if `secondary.affinity` is set. Allowed values: `soft` or `hard`
    *
    * @default "soft"
    */
@@ -1788,39 +1305,19 @@ export type MariadbHelmValuesSecondary = {
   /**
    * Affinity for MariaDB secondary pods assignment
    *
-   * Affinity for MariaDB secondary pods assignment
-   *
    * @default {}
    */
   affinity?: MariadbHelmValuesSecondaryAffinity;
   /**
    * Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
    *
-   * Node labels for MariaDB secondary pods assignment
-   *
    * @default {}
    */
   nodeSelector?: MariadbHelmValuesSecondaryNodeSelector;
-  /**
-   * Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-   *
-   * Tolerations for MariaDB secondary pods assignment
-   *
-   * @default []
-   */
   tolerations?: unknown[];
-  /**
-   * Topology Spread Constraints for MariaDB secondary pods assignment
-   *
-   * Topology Spread Constraints for MariaDB secondary pods assignment
-   *
-   * @default []
-   */
   topologySpreadConstraints?: unknown[];
   /**
    * Ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
-   *
-   * Priority class for MariaDB secondary pods assignment
    *
    * @default ""
    */
@@ -1828,15 +1325,11 @@ export type MariadbHelmValuesSecondary = {
   /**
    * Ref: https://kubernetes.io/docs/concepts/containers/runtime-class/
    *
-   * Runtime Class for MariaDB secondary pods
-   *
    * @default ""
    */
   runtimeClassName?: string;
   /**
    * ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
-   *
-   * Name of the k8s scheduler (other than default)
    *
    * @default ""
    */
@@ -1849,8 +1342,6 @@ export type MariadbHelmValuesSecondary = {
   terminationGracePeriodSeconds?: string;
   /**
    * ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#pod-management-policies
-   *
-   * podManagementPolicy to manage scaling operation of MariaDB secondary pods
    *
    * @default ""
    */
@@ -1878,9 +1369,7 @@ export type MariadbHelmValuesSecondary = {
    * lines, adjust them as necessary, and remove the curly braces after 'resources:'.
    * More information: https://github.com/bitnami/charts/blob/main/bitnami/common/templates/_resources.tpl#L15
    *
-   * Set container resources according to one common preset (allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge). This is ignored if secondary.resources is set (secondary.resources is recommended for production).
-   *
-   * @default "micro"
+   * @default "small"
    */
   resourcesPreset?: string;
   /**
@@ -1889,8 +1378,6 @@ export type MariadbHelmValuesSecondary = {
    * requests:
    * limits:
    * memory: 1024Mi
-   *
-   * Set container requests and limits for different resources like CPU or memory (essential for production workloads)
    *
    * @default {}
    */
@@ -1916,22 +1403,16 @@ export type MariadbHelmValuesSecondary = {
   /**
    * Override default startup probe for MariaDB secondary containers
    *
-   * Override default startup probe for MariaDB secondary containers
-   *
    * @default {}
    */
   customStartupProbe?: MariadbHelmValuesSecondaryCustomStartupProbe;
   /**
    * Override default liveness probe for MariaDB secondary containers
    *
-   * Override default liveness probe for MariaDB secondary containers
-   *
    * @default {}
    */
   customLivenessProbe?: MariadbHelmValuesSecondaryCustomLivenessProbe;
   /**
-   * Override default readiness probe for MariaDB secondary containers
-   *
    * Override default readiness probe for MariaDB secondary containers
    *
    * @default {}
@@ -1943,8 +1424,6 @@ export type MariadbHelmValuesSecondary = {
    * if all checks have failed after X tries. Use these to control these checks.
    * ref: https://github.com/bitnami/containers/tree/main/bitnami/mariadb/pull/240
    *
-   * Override default builtin startup wait check options for MariaDB secondary containers
-   *
    * @default {}
    */
   startupWaitOptions?: MariadbHelmValuesSecondaryStartupWaitOptions;
@@ -1952,30 +1431,17 @@ export type MariadbHelmValuesSecondary = {
    * Can be used to specify command line flags, for example:
    * E.g.
    *
-   * MariaDB secondary additional command line flags
-   *
    * @default ""
    */
   extraFlags?: string;
-  /**
-   * E.g.
-   *
-   * Extra environment variables to be set on MariaDB secondary containers
-   *
-   * @default []
-   */
   extraEnvVars?: unknown[];
   /**
-   * Name of existing ConfigMap containing extra env vars for MariaDB secondary containers
-   *
    * Name of existing ConfigMap containing extra env vars for MariaDB secondary containers
    *
    * @default ""
    */
   extraEnvVarsCM?: string;
   /**
-   * Name of existing Secret containing extra env vars for MariaDB secondary containers
-   *
    * Name of existing Secret containing extra env vars for MariaDB secondary containers
    *
    * @default ""
@@ -1988,37 +1454,9 @@ export type MariadbHelmValuesSecondary = {
    * @default {...} (8 keys)
    */
   persistence?: MariadbHelmValuesSecondaryPersistence;
-  /**
-   * Optionally specify extra list of additional volumes to the MariaDB secondary pod(s)
-   *
-   * Optionally specify extra list of additional volumes to the MariaDB secondary pod(s)
-   *
-   * @default []
-   */
   extraVolumes?: unknown[];
-  /**
-   * Optionally specify extra list of additional volumeMounts for the MariaDB secondary container(s)
-   *
-   * Optionally specify extra list of additional volumeMounts for the MariaDB secondary container(s)
-   *
-   * @default []
-   */
   extraVolumeMounts?: unknown[];
-  /**
-   * Add additional init containers for the MariaDB secondary pod(s)
-   *
-   * Add additional init containers for the MariaDB secondary pod(s)
-   *
-   * @default []
-   */
   initContainers?: unknown[];
-  /**
-   * Add additional sidecar containers for the MariaDB secondary pod(s)
-   *
-   * Add additional sidecar containers for the MariaDB secondary pod(s)
-   *
-   * @default []
-   */
   sidecars?: unknown[];
   /**
    * MariaDB Secondary Service parameters
@@ -2033,8 +1471,6 @@ export type MariadbHelmValuesSecondary = {
    */
   pdb?: MariadbHelmValuesSecondaryPdb;
   /**
-   * Maximum number of revisions that will be maintained in the StatefulSet
-   *
    * Maximum number of revisions that will be maintained in the StatefulSet
    *
    * @default 10
@@ -2052,8 +1488,6 @@ export type MariadbHelmValuesSecondaryContainerPorts = {
   /**
    * Container port for mysql
    *
-   * Container port for mysql
-   *
    * @default 3306
    */
   mysql?: number;
@@ -2063,8 +1497,6 @@ export type MariadbHelmValuesSecondaryUpdateStrategy = {
   /**
    * StrategyType
    * Can be set to RollingUpdate or OnDelete
-   *
-   * MariaDB secondary statefulset strategy type
    *
    * @default "RollingUpdate"
    */
@@ -2079,26 +1511,15 @@ export type MariadbHelmValuesSecondaryNodeAffinityPreset = {
   /**
    * MariaDB secondary node affinity preset type. Ignored if `secondary.affinity` is set. Allowed values: `soft` or `hard`
    *
-   * MariaDB secondary node affinity preset type. Ignored if `secondary.affinity` is set. Allowed values: `soft` or `hard`
-   *
    * @default ""
    */
   type?: string;
   /**
    * E.g.
    *
-   * MariaDB secondary node label key to match Ignored if `secondary.affinity` is set.
-   *
    * @default ""
    */
   key?: string;
-  /**
-   * E.g.
-   *
-   * MariaDB secondary node label values to match. Ignored if `secondary.affinity` is set.
-   *
-   * @default []
-   */
   values?: unknown[];
 };
 
@@ -2110,38 +1531,18 @@ export type MariadbHelmValuesSecondaryPodSecurityContext = {
   /**
    * Enable security context for MariaDB secondary pods
    *
-   * Enable security context for MariaDB secondary pods
-   *
    * @default true
    */
   enabled?: boolean;
   /**
    * Set filesystem group change policy
    *
-   * Set filesystem group change policy
-   *
    * @default "Always"
    */
   fsGroupChangePolicy?: string;
-  /**
-   * Set kernel settings using the sysctl interface
-   *
-   * Set kernel settings using the sysctl interface
-   *
-   * @default []
-   */
   sysctls?: unknown[];
-  /**
-   * Set filesystem extra groups
-   *
-   * Set filesystem extra groups
-   *
-   * @default []
-   */
   supplementalGroups?: unknown[];
   /**
-   * Group ID for the mounted volumes' filesystem
-   *
    * Group ID for the mounted volumes' filesystem
    *
    * @default 1001
@@ -2151,8 +1552,6 @@ export type MariadbHelmValuesSecondaryPodSecurityContext = {
 
 export type MariadbHelmValuesSecondaryContainerSecurityContext = {
   /**
-   * MariaDB secondary container securityContext
-   *
    * MariaDB secondary container securityContext
    *
    * @default true
@@ -2167,14 +1566,10 @@ export type MariadbHelmValuesSecondaryContainerSecurityContext = {
   /**
    * User ID for the MariaDB secondary container
    *
-   * User ID for the MariaDB secondary container
-   *
    * @default 1001
    */
   runAsUser?: number;
   /**
-   * Group ID for the MariaDB secondary container
-   *
    * Group ID for the MariaDB secondary container
    *
    * @default 1001
@@ -2183,14 +1578,10 @@ export type MariadbHelmValuesSecondaryContainerSecurityContext = {
   /**
    * Set secondary container's Security Context runAsNonRoot
    *
-   * Set secondary container's Security Context runAsNonRoot
-   *
    * @default true
    */
   runAsNonRoot?: boolean;
   /**
-   * Set secondary container's Security Context privileged
-   *
    * Set secondary container's Security Context privileged
    *
    * @default false
@@ -2199,14 +1590,10 @@ export type MariadbHelmValuesSecondaryContainerSecurityContext = {
   /**
    * Set secondary container's Security Context allowPrivilegeEscalation
    *
-   * Set secondary container's Security Context allowPrivilegeEscalation
-   *
    * @default false
    */
   allowPrivilegeEscalation?: boolean;
   /**
-   * Set container's Security Context readOnlyRootFilesystem
-   *
    * Set container's Security Context readOnlyRootFilesystem
    *
    * @default true
@@ -2226,20 +1613,11 @@ export type MariadbHelmValuesSecondaryContainerSecurityContextSeLinuxOptions =
   object;
 
 export type MariadbHelmValuesSecondaryContainerSecurityContextCapabilities = {
-  /**
-   * List of capabilities to be dropped
-   *
-   * List of capabilities to be dropped
-   *
-   * @default ["ALL"]
-   */
   drop?: string[];
 };
 
 export type MariadbHelmValuesSecondaryContainerSecurityContextSeccompProfile = {
   /**
-   * Set container's Security Context seccomp profile
-   *
    * Set container's Security Context seccomp profile
    *
    * @default "RuntimeDefault"
@@ -2253,14 +1631,10 @@ export type MariadbHelmValuesSecondaryStartupProbe = {
   /**
    * Enable startupProbe
    *
-   * Enable startupProbe
-   *
    * @default false
    */
   enabled?: boolean;
   /**
-   * Initial delay seconds for startupProbe
-   *
    * Initial delay seconds for startupProbe
    *
    * @default 120
@@ -2269,14 +1643,10 @@ export type MariadbHelmValuesSecondaryStartupProbe = {
   /**
    * Period seconds for startupProbe
    *
-   * Period seconds for startupProbe
-   *
    * @default 15
    */
   periodSeconds?: number;
   /**
-   * Timeout seconds for startupProbe
-   *
    * Timeout seconds for startupProbe
    *
    * @default 5
@@ -2285,14 +1655,10 @@ export type MariadbHelmValuesSecondaryStartupProbe = {
   /**
    * Failure threshold for startupProbe
    *
-   * Failure threshold for startupProbe
-   *
    * @default 10
    */
   failureThreshold?: number;
   /**
-   * Success threshold for startupProbe
-   *
    * Success threshold for startupProbe
    *
    * @default 1
@@ -2304,14 +1670,10 @@ export type MariadbHelmValuesSecondaryLivenessProbe = {
   /**
    * Enable livenessProbe
    *
-   * Enable livenessProbe
-   *
    * @default true
    */
   enabled?: boolean;
   /**
-   * Initial delay seconds for livenessProbe
-   *
    * Initial delay seconds for livenessProbe
    *
    * @default 120
@@ -2320,14 +1682,10 @@ export type MariadbHelmValuesSecondaryLivenessProbe = {
   /**
    * Period seconds for livenessProbe
    *
-   * Period seconds for livenessProbe
-   *
    * @default 10
    */
   periodSeconds?: number;
   /**
-   * Timeout seconds for livenessProbe
-   *
    * Timeout seconds for livenessProbe
    *
    * @default 1
@@ -2336,14 +1694,10 @@ export type MariadbHelmValuesSecondaryLivenessProbe = {
   /**
    * Failure threshold for livenessProbe
    *
-   * Failure threshold for livenessProbe
-   *
    * @default 3
    */
   failureThreshold?: number;
   /**
-   * Success threshold for livenessProbe
-   *
    * Success threshold for livenessProbe
    *
    * @default 1
@@ -2355,14 +1709,10 @@ export type MariadbHelmValuesSecondaryReadinessProbe = {
   /**
    * Enable readinessProbe
    *
-   * Enable readinessProbe
-   *
    * @default true
    */
   enabled?: boolean;
   /**
-   * Initial delay seconds for readinessProbe
-   *
    * Initial delay seconds for readinessProbe
    *
    * @default 30
@@ -2371,14 +1721,10 @@ export type MariadbHelmValuesSecondaryReadinessProbe = {
   /**
    * Period seconds for readinessProbe
    *
-   * Period seconds for readinessProbe
-   *
    * @default 10
    */
   periodSeconds?: number;
   /**
-   * Timeout seconds for readinessProbe
-   *
    * Timeout seconds for readinessProbe
    *
    * @default 1
@@ -2387,14 +1733,10 @@ export type MariadbHelmValuesSecondaryReadinessProbe = {
   /**
    * Failure threshold for readinessProbe
    *
-   * Failure threshold for readinessProbe
-   *
    * @default 3
    */
   failureThreshold?: number;
   /**
-   * Success threshold for readinessProbe
-   *
    * Success threshold for readinessProbe
    *
    * @default 1
@@ -2419,14 +1761,10 @@ export type MariadbHelmValuesSecondaryPersistence = {
   /**
    * Enable persistence on MariaDB secondary replicas using a `PersistentVolumeClaim`
    *
-   * Enable persistence on MariaDB secondary replicas using a `PersistentVolumeClaim`
-   *
    * @default true
    */
   enabled?: boolean;
   /**
-   * Subdirectory of the volume to mount at
-   *
    * Subdirectory of the volume to mount at
    *
    * @default ""
@@ -2439,14 +1777,10 @@ export type MariadbHelmValuesSecondaryPersistence = {
    * set, choosing the default provisioner.  (gp2 on AWS, standard on
    * GKE, AWS & OpenStack)
    *
-   * MariaDB secondary persistent volume storage Class
-   *
    * @default ""
    */
   storageClass?: string;
   /**
-   * Labels for the PVC
-   *
    * Labels for the PVC
    *
    * @default {}
@@ -2455,30 +1789,17 @@ export type MariadbHelmValuesSecondaryPersistence = {
   /**
    * MariaDB secondary persistent volume claim annotations
    *
-   * MariaDB secondary persistent volume claim annotations
-   *
    * @default {}
    */
   annotations?: MariadbHelmValuesSecondaryPersistenceAnnotations;
-  /**
-   * MariaDB secondary persistent volume access Modes
-   *
-   * MariaDB secondary persistent volume access Modes
-   *
-   * @default ["ReadWriteOnce"]
-   */
   accessModes?: string[];
   /**
-   * MariaDB secondary persistent volume size
-   *
    * MariaDB secondary persistent volume size
    *
    * @default "8Gi"
    */
   size?: string;
   /**
-   * Selector to match an existing Persistent Volume
-   *
    * Selector to match an existing Persistent Volume
    *
    * @default {}
@@ -2514,8 +1835,6 @@ export type MariadbHelmValuesSecondaryService = {
   /**
    * MariaDB secondary Kubernetes service type
    *
-   * MariaDB secondary Kubernetes service type
-   *
    * @default "ClusterIP"
    */
   type?: string;
@@ -2532,15 +1851,11 @@ export type MariadbHelmValuesSecondaryService = {
   /**
    * MariaDB secondary Kubernetes service clusterIP IP
    *
-   * MariaDB secondary Kubernetes service clusterIP IP
-   *
    * @default ""
    */
   clusterIP?: string;
   /**
    * ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
-   *
-   * MariaDB secondary loadBalancerIP if service type is `LoadBalancer`
    *
    * @default ""
    */
@@ -2548,31 +1863,12 @@ export type MariadbHelmValuesSecondaryService = {
   /**
    * ref https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
    *
-   * Enable client source IP preservation
-   *
    * @default "Cluster"
    */
   externalTrafficPolicy?: string;
-  /**
-   * https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
-   * E.g.
-   *
-   * Address that are allowed when MariaDB secondary service is LoadBalancer
-   *
-   * @default []
-   */
   loadBalancerSourceRanges?: unknown[];
-  /**
-   * Extra ports to expose (normally used with the `sidecar` value)
-   *
-   * Extra ports to expose (normally used with the `sidecar` value)
-   *
-   * @default []
-   */
   extraPorts?: unknown[];
   /**
-   * Provide any additional annotations which may be required
-   *
    * Provide any additional annotations which may be required
    *
    * @default {}
@@ -2582,15 +1878,11 @@ export type MariadbHelmValuesSecondaryService = {
    * If "ClientIP", consecutive client requests will be directed to the same Pod
    * ref: https://kubernetes.io/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies
    *
-   * Session Affinity for Kubernetes service, can be "None" or "ClientIP"
-   *
    * @default "None"
    */
   sessionAffinity?: string;
   /**
    * Additional settings for the sessionAffinity. Ignored if `secondary.service.sessionAffinity` is `None`
-   *
-   * Additional settings for the sessionAffinity
    *
    * @default {}
    */
@@ -2601,14 +1893,10 @@ export type MariadbHelmValuesSecondaryServicePorts = {
   /**
    * MariaDB secondary Kubernetes service port for MariaDB
    *
-   * MariaDB secondary Kubernetes service port for MariaDB
-   *
    * @default 3306
    */
   mysql?: number;
   /**
-   * MariaDB secondary Kubernetes service port for metrics
-   *
    * MariaDB secondary Kubernetes service port for metrics
    *
    * @default 9104
@@ -2618,8 +1906,6 @@ export type MariadbHelmValuesSecondaryServicePorts = {
 
 export type MariadbHelmValuesSecondaryServiceNodePorts = {
   /**
-   * MariaDB secondary Kubernetes service node port
-   *
    * MariaDB secondary Kubernetes service node port
    *
    * @default ""
@@ -2641,22 +1927,16 @@ export type MariadbHelmValuesSecondaryPdb = {
   /**
    * Enable/disable a Pod Disruption Budget creation for MariaDB secondary pods
    *
-   * Enable/disable a Pod Disruption Budget creation for MariaDB secondary pods
-   *
    * @default true
    */
   create?: boolean;
   /**
    * Minimum number/percentage of MariaDB secondary pods that should remain scheduled
    *
-   * Minimum number/percentage of MariaDB secondary pods that should remain scheduled
-   *
    * @default ""
    */
   minAvailable?: string;
   /**
-   * Maximum number/percentage of MariaDB secondary pods that may be made unavailable. Defaults to `1` if both `secondary.pdb.minAvailable` and `secondary.pdb.maxUnavailable` are empty.
-   *
    * Maximum number/percentage of MariaDB secondary pods that may be made unavailable. Defaults to `1` if both `secondary.pdb.minAvailable` and `secondary.pdb.maxUnavailable` are empty.
    *
    * @default ""
@@ -2677,15 +1957,11 @@ export type MariadbHelmValuesServiceAccount = {
   /**
    * Enable the creation of a ServiceAccount for MariaDB pods
    *
-   * Enable the creation of a ServiceAccount for MariaDB pods
-   *
    * @default true
    */
   create?: boolean;
   /**
    * If not set and create is true, a name is generated using the mariadb.fullname template
-   *
-   * Name of the created ServiceAccount
    *
    * @default ""
    */
@@ -2693,14 +1969,10 @@ export type MariadbHelmValuesServiceAccount = {
   /**
    * Annotations for MariaDB Service Account
    *
-   * Annotations for MariaDB Service Account
-   *
    * @default {}
    */
   annotations?: MariadbHelmValuesServiceAccountAnnotations;
   /**
-   * Automount service account token for the server service account
-   *
    * Automount service account token for the server service account
    *
    * @default false
@@ -2720,8 +1992,6 @@ export type MariadbHelmValuesRbac = {
   /**
    * Whether to create and use RBAC resources or not
    *
-   * Whether to create and use RBAC resources or not
-   *
    * @default false
    */
   create?: boolean;
@@ -2731,38 +2001,18 @@ export type MariadbHelmValuesPasswordUpdateJob = {
   /**
    * Enable password update job
    *
-   * Enable password update job
-   *
    * @default false
    */
   enabled?: boolean;
   /**
    * set backoff limit of the job
    *
-   * set backoff limit of the job
-   *
    * @default 10
    */
   backoffLimit?: number;
-  /**
-   * Override default container command on MariaDB Primary container(s) (useful when using custom images)
-   *
-   * Override default container command on MariaDB Primary container(s) (useful when using custom images)
-   *
-   * @default []
-   */
   command?: unknown[];
-  /**
-   * Override default container args on MariaDB Primary container(s) (useful when using custom images)
-   *
-   * Override default container args on MariaDB Primary container(s) (useful when using custom images)
-   *
-   * @default []
-   */
   args?: unknown[];
   /**
-   * Extra commands to pass to the generation job
-   *
    * Extra commands to pass to the generation job
    *
    * @default ""
@@ -2786,17 +2036,8 @@ export type MariadbHelmValuesPasswordUpdateJob = {
    * @default {...} (5 keys)
    */
   podSecurityContext?: MariadbHelmValuesPasswordUpdateJobPodSecurityContext;
-  /**
-   * For example:
-   *
-   * Array containing extra env vars to configure the credential init job
-   *
-   * @default []
-   */
   extraEnvVars?: unknown[];
   /**
-   * ConfigMap containing extra env vars to configure the credential init job
-   *
    * ConfigMap containing extra env vars to configure the credential init job
    *
    * @default ""
@@ -2805,41 +2046,16 @@ export type MariadbHelmValuesPasswordUpdateJob = {
   /**
    * Secret containing extra env vars to configure the credential init job (in case of sensitive data)
    *
-   * Secret containing extra env vars to configure the credential init job (in case of sensitive data)
-   *
    * @default ""
    */
   extraEnvVarsSecret?: string;
-  /**
-   * Optionally specify extra list of additional volumes for the credential init job
-   *
-   * Optionally specify extra list of additional volumes for the credential init job
-   *
-   * @default []
-   */
   extraVolumes?: unknown[];
-  /**
-   * Array of extra volume mounts to be added to the jwt Container (evaluated as template). Normally used with `extraVolumes`.
-   *
-   * Array of extra volume mounts to be added to the jwt Container (evaluated as template). Normally used with `extraVolumes`.
-   *
-   * @default []
-   */
   extraVolumeMounts?: unknown[];
-  /**
-   * Add additional init containers for the MariaDB Primary pod(s)
-   *
-   * Add additional init containers for the MariaDB Primary pod(s)
-   *
-   * @default []
-   */
   initContainers?: unknown[];
   /**
    * Container resource requests and limits
    * ref: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
    * More information: https://github.com/bitnami/charts/blob/main/bitnami/common/templates/_resources.tpl#L15
-   *
-   * Set container resources according to one common preset (allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge). This is ignored if passwordUpdateJob.resources is set (passwordUpdateJob.resources is recommended for production).
    *
    * @default "micro"
    */
@@ -2851,14 +2067,10 @@ export type MariadbHelmValuesPasswordUpdateJob = {
    * limits:
    * memory: 1024Mi
    *
-   * Set container requests and limits for different resources like CPU or memory (essential for production workloads)
-   *
    * @default {}
    */
   resources?: MariadbHelmValuesPasswordUpdateJobResources;
   /**
-   * Custom livenessProbe that overrides the default one
-   *
    * Custom livenessProbe that overrides the default one
    *
    * @default {}
@@ -2867,14 +2079,10 @@ export type MariadbHelmValuesPasswordUpdateJob = {
   /**
    * Custom readinessProbe that overrides the default one
    *
-   * Custom readinessProbe that overrides the default one
-   *
    * @default {}
    */
   customReadinessProbe?: MariadbHelmValuesPasswordUpdateJobCustomReadinessProbe;
   /**
-   * Custom startupProbe that overrides the default one
-   *
    * Custom startupProbe that overrides the default one
    *
    * @default {}
@@ -2883,18 +2091,9 @@ export type MariadbHelmValuesPasswordUpdateJob = {
   /**
    * Mount Service Account token in pod
    *
-   * Mount Service Account token in pod
-   *
    * @default false
    */
   automountServiceAccountToken?: boolean;
-  /**
-   * https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
-   *
-   * Add deployment host aliases
-   *
-   * @default []
-   */
   hostAliases?: unknown[];
   /**
    * [object] Add annotations to the job
@@ -2905,15 +2104,11 @@ export type MariadbHelmValuesPasswordUpdateJob = {
   /**
    * Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
    *
-   * Additional pod labels
-   *
    * @default {}
    */
   podLabels?: MariadbHelmValuesPasswordUpdateJobPodLabels;
   /**
    * ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-   *
-   * Additional pod annotations
    *
    * @default {}
    */
@@ -2928,14 +2123,10 @@ export type MariadbHelmValuesPasswordUpdateJobPreviousPasswords = {
   /**
    * Previous root password (set if the password secret was already changed)
    *
-   * Previous root password (set if the password secret was already changed)
-   *
    * @default ""
    */
   rootPassword?: string;
   /**
-   * Previous password (set if the password secret was already changed)
-   *
    * Previous password (set if the password secret was already changed)
    *
    * @default ""
@@ -2944,14 +2135,10 @@ export type MariadbHelmValuesPasswordUpdateJobPreviousPasswords = {
   /**
    * Previous replication password (set if the password secret was already changed)
    *
-   * Previous replication password (set if the password secret was already changed)
-   *
    * @default ""
    */
   replicationPassword?: string;
   /**
-   * Name of a secret containing the previous passwords (set if the password secret was already changed)
-   *
    * Name of a secret containing the previous passwords (set if the password secret was already changed)
    *
    * @default ""
@@ -2961,8 +2148,6 @@ export type MariadbHelmValuesPasswordUpdateJobPreviousPasswords = {
 
 export type MariadbHelmValuesPasswordUpdateJobContainerSecurityContext = {
   /**
-   * Enabled containers' Security Context
-   *
    * Enabled containers' Security Context
    *
    * @default true
@@ -2977,14 +2162,10 @@ export type MariadbHelmValuesPasswordUpdateJobContainerSecurityContext = {
   /**
    * Set containers' Security Context runAsUser
    *
-   * Set containers' Security Context runAsUser
-   *
    * @default 1001
    */
   runAsUser?: number;
   /**
-   * Set containers' Security Context runAsGroup
-   *
    * Set containers' Security Context runAsGroup
    *
    * @default 1001
@@ -2993,14 +2174,10 @@ export type MariadbHelmValuesPasswordUpdateJobContainerSecurityContext = {
   /**
    * Set container's Security Context runAsNonRoot
    *
-   * Set container's Security Context runAsNonRoot
-   *
    * @default true
    */
   runAsNonRoot?: boolean;
   /**
-   * Set container's Security Context privileged
-   *
    * Set container's Security Context privileged
    *
    * @default false
@@ -3009,14 +2186,10 @@ export type MariadbHelmValuesPasswordUpdateJobContainerSecurityContext = {
   /**
    * Set container's Security Context readOnlyRootFilesystem
    *
-   * Set container's Security Context readOnlyRootFilesystem
-   *
    * @default true
    */
   readOnlyRootFilesystem?: boolean;
   /**
-   * Set container's Security Context allowPrivilegeEscalation
-   *
    * Set container's Security Context allowPrivilegeEscalation
    *
    * @default false
@@ -3037,21 +2210,12 @@ export type MariadbHelmValuesPasswordUpdateJobContainerSecurityContextSeLinuxOpt
 
 export type MariadbHelmValuesPasswordUpdateJobContainerSecurityContextCapabilities =
   {
-    /**
-     * List of capabilities to be dropped
-     *
-     * List of capabilities to be dropped
-     *
-     * @default ["ALL"]
-     */
     drop?: string[];
   };
 
 export type MariadbHelmValuesPasswordUpdateJobContainerSecurityContextSeccompProfile =
   {
     /**
-     * Set container's Security Context seccomp profile
-     *
      * Set container's Security Context seccomp profile
      *
      * @default "RuntimeDefault"
@@ -3063,38 +2227,18 @@ export type MariadbHelmValuesPasswordUpdateJobPodSecurityContext = {
   /**
    * Enabled credential init job pods' Security Context
    *
-   * Enabled credential init job pods' Security Context
-   *
    * @default true
    */
   enabled?: boolean;
   /**
    * Set filesystem group change policy
    *
-   * Set filesystem group change policy
-   *
    * @default "Always"
    */
   fsGroupChangePolicy?: string;
-  /**
-   * Set kernel settings using the sysctl interface
-   *
-   * Set kernel settings using the sysctl interface
-   *
-   * @default []
-   */
   sysctls?: unknown[];
-  /**
-   * Set filesystem extra groups
-   *
-   * Set filesystem extra groups
-   *
-   * @default []
-   */
   supplementalGroups?: unknown[];
   /**
-   * Set credential init job pod's Security Context fsGroup
-   *
    * Set credential init job pod's Security Context fsGroup
    *
    * @default 1001
@@ -3135,8 +2279,6 @@ export type MariadbHelmValuesVolumePermissions = {
   /**
    * Enable init container that changes the owner and group of the persistent volume(s) mountpoint to `runAsUser:fsGroup`
    *
-   * Enable init container that changes the owner and group of the persistent volume(s) mountpoint to `runAsUser:fsGroup`
-   *
    * @default false
    */
   enabled?: boolean;
@@ -3149,8 +2291,6 @@ export type MariadbHelmValuesVolumePermissions = {
   /**
    * More information: https://github.com/bitnami/charts/blob/main/bitnami/common/templates/_resources.tpl#L15
    *
-   * Set container resources according to one common preset (allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge). This is ignored if volumePermissions.resources is set (volumePermissions.resources is recommended for production).
-   *
    * @default "nano"
    */
   resourcesPreset?: string;
@@ -3160,8 +2300,6 @@ export type MariadbHelmValuesVolumePermissions = {
    * requests:
    * limits:
    * memory: 1024Mi
-   *
-   * Set container requests and limits for different resources like CPU or memory (essential for production workloads)
    *
    * @default {}
    */
@@ -3176,17 +2314,13 @@ export type MariadbHelmValuesVolumePermissionsImage = {
   /**
    * [default: REGISTRY_NAME] Init container volume-permissions image registry
    *
-   * Init container volume-permissions image registry
-   *
-   * @default "REGISTRY_NAME"
+   * @default "registry-1.docker.io"
    */
   registry?: string;
   /**
    * [default: REPOSITORY_NAME/os-shell] Init container volume-permissions image repository
    *
-   * Init container volume-permissions image repository
-   *
-   * @default "REPOSITORY_NAME/os-shell"
+   * @default "bitnami/os-shell"
    */
   repository?: string;
   /**
@@ -3196,30 +2330,15 @@ export type MariadbHelmValuesVolumePermissionsImage = {
   /**
    * Init container volume-permissions image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
    *
-   * Init container volume-permissions image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
-   *
    * @default ""
    */
   digest?: string;
   /**
    * Init container volume-permissions image pull policy
    *
-   * Init container volume-permissions image pull policy
-   *
    * @default "IfNotPresent"
    */
   pullPolicy?: string;
-  /**
-   * Optionally specify an array of imagePullSecrets (secrets must be manually created in the namespace)
-   * ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-   * Example:
-   * pullSecrets:
-   * - myRegistryKeySecretName
-   *
-   * Specify docker-registry secret names as an array
-   *
-   * @default []
-   */
   pullSecrets?: unknown[];
 };
 
@@ -3236,8 +2355,6 @@ export type MariadbHelmValuesVolumePermissionsFips = {
 
 export type MariadbHelmValuesMetrics = {
   /**
-   * Start a side-car prometheus exporter
-   *
    * Start a side-car prometheus exporter
    *
    * @default false
@@ -3326,8 +2443,6 @@ export type MariadbHelmValuesMetrics = {
    * lines, adjust them as necessary, and remove the curly braces after 'resources:'.
    * More information: https://github.com/bitnami/charts/blob/main/bitnami/common/templates/_resources.tpl#L15
    *
-   * Set container resources according to one common preset (allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge). This is ignored if metrics.resources is set (metrics.resources is recommended for production).
-   *
    * @default "nano"
    */
   resourcesPreset?: string;
@@ -3337,8 +2452,6 @@ export type MariadbHelmValuesMetrics = {
    * requests:
    * limits:
    * memory: 1024Mi
-   *
-   * Set container requests and limits for different resources like CPU or memory (essential for production workloads)
    *
    * @default {}
    */
@@ -3380,17 +2493,13 @@ export type MariadbHelmValuesMetricsImage = {
   /**
    * [default: REGISTRY_NAME] Exporter image registry
    *
-   * Exporter image registry
-   *
-   * @default "REGISTRY_NAME"
+   * @default "registry-1.docker.io"
    */
   registry?: string;
   /**
    * [default: REPOSITORY_NAME/mysqld-exporter] Exporter image repository
    *
-   * Exporter image repository
-   *
-   * @default "REPOSITORY_NAME/mysqld-exporter"
+   * @default "bitnami/mysqld-exporter"
    */
   repository?: string;
   /**
@@ -3400,30 +2509,15 @@ export type MariadbHelmValuesMetricsImage = {
   /**
    * Exporter image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
    *
-   * Exporter image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag
-   *
    * @default ""
    */
   digest?: string;
   /**
    * Exporter image pull policy
    *
-   * Exporter image pull policy
-   *
    * @default "IfNotPresent"
    */
   pullPolicy?: string;
-  /**
-   * Optionally specify an array of imagePullSecrets (secrets must be manually created in the namespace)
-   * ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-   * Example:
-   * pullSecrets:
-   * - myRegistryKeySecretName
-   *
-   * Specify docker-registry secret names as an array
-   *
-   * @default []
-   */
   pullSecrets?: unknown[];
 };
 
@@ -3457,8 +2551,6 @@ export type MariadbHelmValuesMetricsContainerPorts = {
   /**
    * Container port for http
    *
-   * Container port for http
-   *
    * @default 9104
    */
   http?: number;
@@ -3468,22 +2560,16 @@ export type MariadbHelmValuesMetricsContainerSecurityContext = {
   /**
    * Enable security context for MariaDB metrics container
    *
-   * Enable security context for MariaDB metrics container
-   *
    * @default false
    */
   enabled?: boolean;
   /**
    * Set metrics container's Security Context privileged
    *
-   * Set metrics container's Security Context privileged
-   *
    * @default false
    */
   privileged?: boolean;
   /**
-   * Set metrics container's Security Context runAsNonRoot
-   *
    * Set metrics container's Security Context runAsNonRoot
    *
    * @default true
@@ -3498,14 +2584,10 @@ export type MariadbHelmValuesMetricsContainerSecurityContext = {
   /**
    * User ID for the MariaDB metrics container
    *
-   * User ID for the MariaDB metrics container
-   *
    * @default 1001
    */
   runAsUser?: number;
   /**
-   * Group ID for the MariaDB metrics container
-   *
    * Group ID for the MariaDB metrics container
    *
    * @default 1001
@@ -3514,14 +2596,10 @@ export type MariadbHelmValuesMetricsContainerSecurityContext = {
   /**
    * Set container's Security Context readOnlyRootFilesystem
    *
-   * Set container's Security Context readOnlyRootFilesystem
-   *
    * @default true
    */
   readOnlyRootFilesystem?: boolean;
   /**
-   * Set metrics container's Security Context allowPrivilegeEscalation
-   *
    * Set metrics container's Security Context allowPrivilegeEscalation
    *
    * @default false
@@ -3541,20 +2619,11 @@ export type MariadbHelmValuesMetricsContainerSecurityContextSeLinuxOptions =
   object;
 
 export type MariadbHelmValuesMetricsContainerSecurityContextCapabilities = {
-  /**
-   * List of capabilities to be dropped
-   *
-   * List of capabilities to be dropped
-   *
-   * @default ["ALL"]
-   */
   drop?: string[];
 };
 
 export type MariadbHelmValuesMetricsContainerSecurityContextSeccompProfile = {
   /**
-   * Set container's Security Context seccomp profile
-   *
    * Set container's Security Context seccomp profile
    *
    * @default "RuntimeDefault"
@@ -3583,14 +2652,10 @@ export type MariadbHelmValuesMetricsLivenessProbe = {
   /**
    * Enable livenessProbe
    *
-   * Enable livenessProbe
-   *
    * @default true
    */
   enabled?: boolean;
   /**
-   * Initial delay seconds for livenessProbe
-   *
    * Initial delay seconds for livenessProbe
    *
    * @default 120
@@ -3599,14 +2664,10 @@ export type MariadbHelmValuesMetricsLivenessProbe = {
   /**
    * Period seconds for livenessProbe
    *
-   * Period seconds for livenessProbe
-   *
    * @default 10
    */
   periodSeconds?: number;
   /**
-   * Timeout seconds for livenessProbe
-   *
    * Timeout seconds for livenessProbe
    *
    * @default 1
@@ -3615,14 +2676,10 @@ export type MariadbHelmValuesMetricsLivenessProbe = {
   /**
    * Success threshold for livenessProbe
    *
-   * Success threshold for livenessProbe
-   *
    * @default 1
    */
   successThreshold?: number;
   /**
-   * Failure threshold for livenessProbe
-   *
    * Failure threshold for livenessProbe
    *
    * @default 3
@@ -3634,14 +2691,10 @@ export type MariadbHelmValuesMetricsReadinessProbe = {
   /**
    * Enable readinessProbe
    *
-   * Enable readinessProbe
-   *
    * @default true
    */
   enabled?: boolean;
   /**
-   * Initial delay seconds for readinessProbe
-   *
    * Initial delay seconds for readinessProbe
    *
    * @default 30
@@ -3650,14 +2703,10 @@ export type MariadbHelmValuesMetricsReadinessProbe = {
   /**
    * Period seconds for readinessProbe
    *
-   * Period seconds for readinessProbe
-   *
    * @default 10
    */
   periodSeconds?: number;
   /**
-   * Timeout seconds for readinessProbe
-   *
    * Timeout seconds for readinessProbe
    *
    * @default 1
@@ -3666,14 +2715,10 @@ export type MariadbHelmValuesMetricsReadinessProbe = {
   /**
    * Success threshold for readinessProbe
    *
-   * Success threshold for readinessProbe
-   *
    * @default 1
    */
   successThreshold?: number;
   /**
-   * Failure threshold for readinessProbe
-   *
    * Failure threshold for readinessProbe
    *
    * @default 3
@@ -3685,14 +2730,10 @@ export type MariadbHelmValuesMetricsServiceMonitor = {
   /**
    * Create ServiceMonitor Resource for scraping metrics using PrometheusOperator
    *
-   * Create ServiceMonitor Resource for scraping metrics using PrometheusOperator
-   *
    * @default false
    */
   enabled?: boolean;
   /**
-   * Namespace which Prometheus is running in
-   *
    * Namespace which Prometheus is running in
    *
    * @default ""
@@ -3701,14 +2742,10 @@ export type MariadbHelmValuesMetricsServiceMonitor = {
   /**
    * The name of the label on the target service to use as the job name in prometheus.
    *
-   * The name of the label on the target service to use as the job name in prometheus.
-   *
    * @default ""
    */
   jobLabel?: string;
   /**
-   * Interval at which metrics should be scraped
-   *
    * Interval at which metrics should be scraped
    *
    * @default "30s"
@@ -3717,30 +2754,12 @@ export type MariadbHelmValuesMetricsServiceMonitor = {
   /**
    * Specify the timeout after which the scrape is ended
    *
-   * Specify the timeout after which the scrape is ended
-   *
    * @default ""
    */
   scrapeTimeout?: string;
-  /**
-   * ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#relabelconfig
-   *
-   * RelabelConfigs to apply to samples before scraping
-   *
-   * @default []
-   */
   relabelings?: unknown[];
-  /**
-   * ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#relabelconfig
-   *
-   * MetricRelabelConfigs to apply to samples before ingestion
-   *
-   * @default []
-   */
   metricRelabelings?: unknown[];
   /**
-   * honorLabels chooses the metric's labels on collisions with target labels
-   *
    * honorLabels chooses the metric's labels on collisions with target labels
    *
    * @default false
@@ -3749,14 +2768,10 @@ export type MariadbHelmValuesMetricsServiceMonitor = {
   /**
    * ref: https://github.com/bitnami/charts/tree/main/bitnami/prometheus-operator#prometheus-configuration
    *
-   * ServiceMonitor selector labels
-   *
    * @default {}
    */
   selector?: MariadbHelmValuesMetricsServiceMonitorSelector;
   /**
-   * Extra labels for the ServiceMonitor
-   *
    * Extra labels for the ServiceMonitor
    *
    * @default {}
@@ -3778,14 +2793,10 @@ export type MariadbHelmValuesMetricsPrometheusRule = {
   /**
    * if `true`, creates a Prometheus Operator PrometheusRule (also requires `metrics.enabled` to be `true` and `metrics.prometheusRule.rules`)
    *
-   * if `true`, creates a Prometheus Operator PrometheusRule (also requires `metrics.enabled` to be `true` and `metrics.prometheusRule.rules`)
-   *
    * @default false
    */
   enabled?: boolean;
   /**
-   * Namespace for the PrometheusRule Resource (defaults to the Release Namespace)
-   *
    * Namespace for the PrometheusRule Resource (defaults to the Release Namespace)
    *
    * @default ""
@@ -3794,18 +2805,9 @@ export type MariadbHelmValuesMetricsPrometheusRule = {
   /**
    * Additional labels that can be used so PrometheusRule will be discovered by Prometheus
    *
-   * Additional labels that can be used so PrometheusRule will be discovered by Prometheus
-   *
    * @default {}
    */
   additionalLabels?: MariadbHelmValuesMetricsPrometheusRuleAdditionalLabels;
-  /**
-   * Prometheus Rule definitions
-   *
-   * Prometheus Rule definitions
-   *
-   * @default []
-   */
   rules?: unknown[];
 };
 
@@ -3815,8 +2817,6 @@ export type MariadbHelmValuesNetworkPolicy = {
   /**
    * Enable creation of NetworkPolicy resources
    *
-   * Enable creation of NetworkPolicy resources
-   *
    * @default true
    */
   enabled?: boolean;
@@ -3824,35 +2824,17 @@ export type MariadbHelmValuesNetworkPolicy = {
    * When set to false, only pods with the correct client label will have network access to the ports MariaDB is
    * listening on. When true, MariaDB will accept connections from any source (with the correct destination port).
    *
-   * The Policy model to apply
-   *
    * @default true
    */
   allowExternal?: boolean;
   /**
    * Allow the pod to access any range of port and all destinations.
    *
-   * Allow the pod to access any range of port and all destinations.
-   *
    * @default true
    */
   allowExternalEgress?: boolean;
-  /**
-   * [array] Add extra ingress rules to the NetworkPolicy
-   *
-   * Add extra ingress rules to the NetworkPolicy
-   *
-   * @default "[]"
-   */
-  extraIngress?: string[];
-  /**
-   * [array] Add extra ingress rules to the NetworkPolicy
-   *
-   * Add extra ingress rules to the NetworkPolicy
-   *
-   * @default "[]"
-   */
-  extraEgress?: string[];
+  extraIngress?: unknown[];
+  extraEgress?: unknown[];
   /**
    * [object] Labels to match to allow traffic from other namespaces
    *
@@ -3884,14 +2866,10 @@ export type MariadbHelmValues = {
   /**
    * Common parameters
    *
-   * Force target Kubernetes version (using Helm capabilities if not set)
-   *
    * @default ""
    */
   kubeVersion?: string;
   /**
-   * String to partially override mariadb.fullname
-   *
    * String to partially override mariadb.fullname
    *
    * @default ""
@@ -3900,14 +2878,10 @@ export type MariadbHelmValues = {
   /**
    * String to fully override mariadb.fullname
    *
-   * String to fully override mariadb.fullname
-   *
    * @default ""
    */
   fullnameOverride?: string;
   /**
-   * Default Kubernetes cluster domain
-   *
    * Default Kubernetes cluster domain
    *
    * @default "cluster.local"
@@ -3916,14 +2890,10 @@ export type MariadbHelmValues = {
   /**
    * Common annotations to add to all MariaDB resources (sub-charts are not considered)
    *
-   * Common annotations to add to all MariaDB resources (sub-charts are not considered)
-   *
    * @default {}
    */
   commonAnnotations?: MariadbHelmValuesCommonAnnotations;
   /**
-   * Common labels to add to all MariaDB resources (sub-charts are not considered)
-   *
    * Common labels to add to all MariaDB resources (sub-charts are not considered)
    *
    * @default {}
@@ -3932,26 +2902,15 @@ export type MariadbHelmValues = {
   /**
    * ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
    *
-   * Name of the scheduler (other than default) to dispatch pods
-   *
    * @default ""
    */
   schedulerName?: string;
   /**
    * ref: https://kubernetes.io/docs/concepts/containers/runtime-class/
    *
-   * Name of the Runtime Class for all MariaDB pods
-   *
    * @default ""
    */
   runtimeClassName?: string;
-  /**
-   * Array of extra objects to deploy with the release (evaluated as a template)
-   *
-   * Array of extra objects to deploy with the release (evaluated as a template)
-   *
-   * @default []
-   */
   extraDeploy?: unknown[];
   /**
    * Enable diagnostic mode in the deployment
@@ -3977,8 +2936,6 @@ export type MariadbHelmValues = {
   /**
    * MariaDB architecture (`standalone` or `replication`)
    *
-   * MariaDB architecture (`standalone` or `replication`)
-   *
    * @default "standalone"
    */
   architecture?: string;
@@ -3996,14 +2953,10 @@ export type MariadbHelmValues = {
    * !/bin/bash
    * echo "Do something."
    *
-   * Dictionary of initdb scripts
-   *
    * @default {}
    */
   initdbScripts?: MariadbHelmValuesInitdbScripts;
   /**
-   * ConfigMap with the initdb scripts (Note: Overrides `initdbScripts`)
-   *
    * ConfigMap with the initdb scripts (Note: Overrides `initdbScripts`)
    *
    * @default ""
@@ -4026,14 +2979,14 @@ export type MariadbHelmValues = {
    * MariaDB Primary parameters
    * Mariadb Primary parameters
    *
-   * @default {...} (49 keys)
+   * @default {...} (48 keys)
    */
   primary?: MariadbHelmValuesPrimary;
   /**
    * MariaDB Secondary parameters
    * Mariadb Secondary parameters
    *
-   * @default {...} (50 keys)
+   * @default {...} (49 keys)
    */
   secondary?: MariadbHelmValuesSecondary;
   /**
@@ -4165,7 +3118,6 @@ export type MariadbHelmParameters = {
   "primary.configuration"?: string;
   "primary.existingConfigmap"?: string;
   "primary.updateStrategy.type"?: string;
-  "primary.rollingUpdatePartition"?: string;
   "primary.podAffinityPreset"?: string;
   "primary.podAntiAffinityPreset"?: string;
   "primary.nodeAffinityPreset.type"?: string;
@@ -4250,7 +3202,6 @@ export type MariadbHelmParameters = {
   "secondary.configuration"?: string;
   "secondary.existingConfigmap"?: string;
   "secondary.updateStrategy.type"?: string;
-  "secondary.rollingUpdatePartition"?: string;
   "secondary.podAffinityPreset"?: string;
   "secondary.podAntiAffinityPreset"?: string;
   "secondary.nodeAffinityPreset.type"?: string;

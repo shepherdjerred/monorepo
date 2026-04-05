@@ -416,6 +416,8 @@ export type MinecraftHelmValuesMinecraftServer = {
   loadBalancerClass?: unknown;
   loadBalancerIP?: unknown;
   externalIPs?: unknown;
+  ipFamilies?: unknown;
+  ipFamilyPolicy?: unknown;
   /**
    * List with URLs and paths to jar files, additionally may be a directory with jars
    * This works for both mods and plugins depending on server type
@@ -1087,7 +1089,7 @@ export type MinecraftHelmValues = {
    */
   extraPodSpec?: MinecraftHelmValuesExtraPodSpec;
   /**
-   * @default {...} (73 keys)
+   * @default {...} (75 keys)
    */
   minecraftServer?: MinecraftHelmValuesMinecraftServer;
   /**
@@ -1250,6 +1252,8 @@ export type MinecraftHelmParameters = {
   "minecraftServer.loadBalancerClass"?: string;
   "minecraftServer.loadBalancerIP"?: string;
   "minecraftServer.externalIPs"?: string;
+  "minecraftServer.ipFamilies"?: string;
+  "minecraftServer.ipFamilyPolicy"?: string;
   "minecraftServer.modUrls"?: string;
   "minecraftServer.pluginUrls"?: string;
   "minecraftServer.spigetResources"?: string;
