@@ -7,6 +7,7 @@ import { competitionCommand } from "#src/discord/commands/competition/index.ts";
 import { adminCommand } from "#src/discord/commands/admin/index.ts";
 import { subscriptionCommand } from "#src/discord/commands/subscription/index.ts";
 import { helpCommand } from "#src/discord/commands/help.ts";
+import { meCommand } from "#src/discord/commands/me.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("discord-rest");
@@ -19,6 +20,7 @@ const commands = [
   competitionCommand.toJSON(),
   adminCommand.toJSON(),
   helpCommand.toJSON(),
+  meCommand.toJSON(),
 ];
 
 logger.info("📋 Commands to register:");

@@ -73,4 +73,46 @@ export const subscriptionCommand = new SlashCommandBuilder()
     subcommand
       .setName("list")
       .setDescription("Lists all users that the server is subscribed to"),
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("add-channel")
+      .setDescription(
+        "Add an existing player to an additional channel",
+      )
+      .addStringOption((option) =>
+        option
+          .setName("alias")
+          .setDescription("The alias of the player")
+          .setRequired(true),
+      )
+      .addChannelOption((option) =>
+        option
+          .setName("channel")
+          .setDescription("The channel to add the subscription to")
+          .setRequired(true),
+      ),
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("move")
+      .setDescription("Move a player's subscription from one channel to another")
+      .addStringOption((option) =>
+        option
+          .setName("alias")
+          .setDescription("The alias of the player")
+          .setRequired(true),
+      )
+      .addChannelOption((option) =>
+        option
+          .setName("from-channel")
+          .setDescription("The current channel")
+          .setRequired(true),
+      )
+      .addChannelOption((option) =>
+        option
+          .setName("to-channel")
+          .setDescription("The channel to move the subscription to")
+          .setRequired(true),
+      ),
   );

@@ -151,6 +151,11 @@ export const adminCommand = new SlashCommandBuilder()
   )
   .addSubcommand((subcommand) =>
     subcommand
+      .setName("player-list")
+      .setDescription("List all players in this server"),
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
       .setName("player-link-discord")
       .setDescription("Link a Discord user to a player")
       .addStringOption((option) =>

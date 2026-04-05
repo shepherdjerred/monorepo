@@ -39,9 +39,12 @@ export async function executeHelp(
       {
         name: "🔔 Basic Commands",
         value:
+          "• `/me` - Look up your own or any player's accounts\n" +
           "• `/subscription add` - Track a League player's matches\n" +
           "• `/subscription delete` - Stop tracking a player\n" +
-          "• `/subscription list` - View all subscriptions",
+          "• `/subscription list` - View all subscriptions\n" +
+          "• `/subscription add-channel` - Add a player to another channel\n" +
+          "• `/subscription move` - Move a subscription between channels",
         inline: false,
       },
       {
@@ -72,7 +75,8 @@ export async function executeHelp(
           "• `/admin player-delete` - Permanently delete a player\n" +
           "• `/admin player-link-discord` - Link Discord user to player\n" +
           "• `/admin player-unlink-discord` - Unlink Discord user\n" +
-          "• `/admin player-view` - View player details",
+          "• `/admin player-view` - View player details\n" +
+          "• `/admin player-list` - List all players in the server",
         inline: false,
       },
       {
