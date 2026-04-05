@@ -4,7 +4,7 @@
 set -euo pipefail
 
 # renovate: datasource=github-releases depName=BurntSushi/ripgrep
-RIPGREP_VERSION="15.0.0"
+RIPGREP_VERSION="15.1.0"
 
 # renovate: datasource=github-releases depName=kubernetes/kubernetes
 KUBECTL_VERSION="v1.35.3"
