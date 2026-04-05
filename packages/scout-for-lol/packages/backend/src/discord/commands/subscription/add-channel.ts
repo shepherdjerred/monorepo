@@ -79,12 +79,15 @@ export async function executeSubscriptionAddChannel(
     }
 
     // Create the new subscription
+    const now = new Date();
     await prisma.subscription.create({
       data: {
         playerId: player.id,
         channelId: channel,
         serverId: guildId,
         creatorDiscordId: userId,
+        createdTime: now,
+        updatedTime: now,
       },
     });
 

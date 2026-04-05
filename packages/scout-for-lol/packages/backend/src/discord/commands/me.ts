@@ -7,6 +7,8 @@ import { z } from "zod";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
+  type DiscordAccountId,
+  type DiscordGuildId,
 } from "@scout-for-lol/data/index.ts";
 import { prisma } from "#src/database/index.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
@@ -31,6 +33,24 @@ const ArgsSchema = z.object({
   guildId: DiscordGuildIdSchema,
   userId: DiscordAccountIdSchema,
 });
+
+const playerInclude = {
+  accounts: true,
+  subscriptions: true,
+  competitionParticipants: {
+    include: {
+      competition: true,
+    },
+  },
+} as const;
+
+type PlayerQueryResult = NonNullable<
+  Awaited<
+    ReturnType<
+      typeof prisma.player.findFirst<{ include: typeof playerInclude }>
+    >
+  >
+>;
 
 export async function executeMe(
   interaction: ChatInputCommandInteraction,
@@ -58,10 +78,8 @@ export async function executeMe(
 
   try {
     if (alias !== undefined) {
-      // Look up by alias
       await lookupByAlias(interaction, guildId, alias);
     } else {
-      // Look up caller's own linked player
       await lookupByDiscordId(interaction, guildId, userId);
     }
   } catch (error) {
@@ -74,7 +92,7 @@ export async function executeMe(
 
 async function lookupByAlias(
   interaction: ChatInputCommandInteraction,
-  guildId: string,
+  guildId: DiscordGuildId,
   alias: string,
 ): Promise<void> {
   const player = await prisma.player.findUnique({
@@ -84,15 +102,7 @@ async function lookupByAlias(
         alias,
       },
     },
-    include: {
-      accounts: true,
-      subscriptions: true,
-      competitionParticipants: {
-        include: {
-          competition: true,
-        },
-      },
-    },
+    include: playerInclude,
   });
 
   if (!player) {
@@ -109,23 +119,15 @@ async function lookupByAlias(
 
 async function lookupByDiscordId(
   interaction: ChatInputCommandInteraction,
-  guildId: string,
-  userId: string,
+  guildId: DiscordGuildId,
+  userId: DiscordAccountId,
 ): Promise<void> {
   const player = await prisma.player.findFirst({
     where: {
       serverId: guildId,
       discordId: userId,
     },
-    include: {
-      accounts: true,
-      subscriptions: true,
-      competitionParticipants: {
-        include: {
-          competition: true,
-        },
-      },
-    },
+    include: playerInclude,
   });
 
   if (!player) {
@@ -141,26 +143,7 @@ async function lookupByDiscordId(
   });
 }
 
-type PlayerWithDetails = {
-  alias: string;
-  discordId: string | null;
-  accounts: Array<{
-    alias: string;
-    region: string;
-  }>;
-  subscriptions: Array<{
-    channelId: string;
-  }>;
-  competitionParticipants: Array<{
-    status: string;
-    competition: {
-      title: string;
-      isCancelled: boolean;
-    };
-  }>;
-};
-
-function formatPlayerInfo(player: PlayerWithDetails): string {
+function formatPlayerInfo(player: PlayerQueryResult): string {
   const sections: string[] = [];
 
   // Header
