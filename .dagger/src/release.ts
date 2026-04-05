@@ -688,6 +688,8 @@ export function versionCommitBackHelper(
       [
         `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
         `cd /repo`,
+        `git config user.email "ci@sjer.red"`,
+        `git config user.name "CI Bot"`,
         `bun run .buildkite/scripts/update-versions.ts packages/homelab/src/cdk8s/src/versions.ts "${version}" ${digestArgs}`,
         `git checkout -b "chore/version-bump-${version}"`,
         `git add packages/homelab/src/cdk8s/src/versions.ts`,
