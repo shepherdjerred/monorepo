@@ -19,6 +19,8 @@ AI-maintained knowledge base for the monorepo.
 - [Dagger Audit: Current vs Plans](decisions/2026-04-02_dagger-audit-current-vs-plans.md) - Full audit of Dagger CI: 27 findings status, lost features, implementation plan
 - [Dagger --source . vs Plain Steps](decisions/2026-04-03_dagger-source-vs-plain-steps.md) - Tradeoff: full-repo copy cost in Dagger vs isolation loss in plain Buildkite steps
 - [CI Reporting & Artifact Collection](decisions/2026-04-04_ci-reporting-artifacts.md) - Audit of what CI collects today vs what's missing; phased plan for test analytics, coverage, lint annotations
+- [CI Security Audit](decisions/2026-04-04_ci-security-audit.md) - Buildkite + Dagger security audit for external contributor safety
+- [CI Security Remediation Plan](decisions/2026-04-04_ci-security-remediation-plan.md) - Defense-in-depth remediation for fork PR builds
 - [Unified Versioning Strategy](decisions/2026-04-04_unified-versioning-strategy.md) - Restored Era 1 versioning with `2.0.0-BUILD` format; migration plan
 - [Dagger Full Audit](decisions/2026-03-29_dagger-full-audit.md) - Line-by-line audit of all Dagger code; 27 findings across 4 tiers
 - [Env Var Naming Convention](decisions/2026-03-27_env-var-naming-convention.md) - Canonical env var names, 1Password field = K8s key = env var convention, banned names linter
@@ -31,16 +33,17 @@ AI-maintained knowledge base for the monorepo.
 
 - [CI Complete Fix Plan](plans/2026-04-03_ci-complete-fix-plan.md) - Complete fix plan with 5-layer DAG (52 individual tasks)
 - [CI Scripts ESLint](plans/2026-04-03_ci-scripts-eslint.md) - ESLint setup for `scripts/ci/src/`
-- [Dagger Migration](plans/2026-03-19_dagger-migration.md) - Replace Bazel with Dagger for CI: root cause analysis, architecture, migration phases
-- [ZFS Orphan Cleanup](plans/2026-03-26_zfs-orphan-cleanup.md) - ZFS orphaned volume cleanup (in progress)
-- [ArgoCD Token Management](plans/2026-02-22_argocd-token-management.md) - Automate ArgoCD token via OpenTofu + 1Password (partial, manual steps remain)
-- [Sentinel Implementation](plans/2026-02-22_sentinel-implementation.md) - Autonomous agent system build plan with phased rollout
-- [Autonomous Agent System Research](plans/2026-02-22_autonomous-agent-system.md) - Architecture research: memory, permissions, queue design
-- [Tasks for Obsidian iOS Audit](plans/2026-02-26_tasks-for-obsidian-ios-audit.md) - iOS app compliance and review (in progress)
-- [Bedrock Waker](plans/2026-03-01_bedrock-waker.md) - Minecraft Bedrock server wake-on-LAN
-- [Local CI/Release CLI](plans/2026-03-18_local-ci-release-cli.md) - Run deploy/release workflows locally without Buildkite
-- [Scout User Outreach](plans/2026-03-27_scout-user-outreach.md) - User engagement plan for Discord bot
+- [CI Quality Hardening](plans/2026-04-05_ci-quality-hardening.md) - Make Trivy, Semgrep, Knip hard failures
+- [Accelerated CI for Release-Please](plans/2026-04-05_accelerated-ci-release-please.md) - Skip redundant CI for automated version-bump PRs
+- [Homelab Ops Audit](plans/2026-04-05_homelab-ops-audit.md) - Full-stack ops audit and hardening plan
+- [OpenTofu Audit & Expansion](plans/2026-04-05_opentofu-audit-expansion.md) - Gaps in existing tofu modules + new providers
+- [Temporal Migration](plans/2026-04-05_temporal-migration.md) - Consolidate ad-hoc workflow patterns under Temporal
 - [PV Expansion](plans/2026-04-04_pv-expansion.md) - Expand PVs near capacity
+- [Sentinel Implementation](plans/2026-02-22_sentinel-implementation.md) - Autonomous agent system build plan (on hold)
+- [Autonomous Agent System Research](plans/2026-02-22_autonomous-agent-system.md) - Architecture research: memory, permissions, queue design (on hold)
+- [Tasks for Obsidian iOS Audit](plans/2026-02-26_tasks-for-obsidian-ios-audit.md) - iOS app compliance and review (mostly complete)
+- [Bedrock Waker](plans/2026-03-01_bedrock-waker.md) - Minecraft Bedrock server wake-on-LAN
+- [Scout User Outreach](plans/2026-03-27_scout-user-outreach.md) - User engagement plan for Discord bot
 
 ## Guides
 
@@ -48,7 +51,7 @@ AI-maintained knowledge base for the monorepo.
 - [Local Quality Check](guides/2026-04-03_local-quality-check.md) - Full monorepo verification: all linters, tests, builds, and quality gates
 - [Homelab Audit Runbook](guides/2026-04-04_homelab-audit-runbook.md) - Repeatable procedure for comprehensive cluster health audit
 - [Homelab Health Audit (2026-04-05)](guides/2026-04-05_homelab-health-audit.md) - 1Password Connect corrupted, 18 degraded apps, NVMe1 thermal
-- [Homelab Health Audit (2026-03-28)](guides/2026-03-28_homelab-health-audit.md) - Point-in-time audit result: 313 days uptime, critical issues
+- [Dependency Risk Assessment](guides/2026-04-04_dependency-risk-assessment.md) - Renovate pending updates classified by risk/effort
 - [Network Policy Gaps](guides/2026-03-15_network-policy-gaps.md) - Kubernetes network policy analysis
 - [Minecraft Modpack Recommendations](guides/2026-03-27_minecraft-modpack-recommendations.md) - Modpack research for non-combat playstyles
 - [Monthly Changelog: March 2026](guides/2026-03-19_monthly-changelog-march.md) - Summary of major changes Feb 19 – Mar 19, 2026
@@ -62,4 +65,4 @@ AI-maintained knowledge base for the monorepo.
 Historical docs preserved for reference. These are no longer actively maintained.
 
 - [`archive/bazel/`](archive/bazel/) - 14 docs from the Bazel era (Bazel removed from monorepo)
-- [`archive/superseded/`](archive/superseded/) - 12 plans superseded by the [CI Complete Fix Plan](plans/2026-04-03_ci-complete-fix-plan.md)
+- [`archive/superseded/`](archive/superseded/) - 18 plans, audits, and snapshots superseded by newer docs

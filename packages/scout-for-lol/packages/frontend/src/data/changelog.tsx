@@ -140,6 +140,33 @@ function ChangelogSection({
 
 export const changelog: ChangelogEntry[] = [
   {
+    date: "2026 04 05",
+    banner: (
+      <>
+        <strong>Pre-match notifications</strong> — know when your friends start
+        playing
+      </>
+    ),
+    text: (
+      <>
+        <ChangelogSection
+          title="Pre-Match Detection"
+          color="teal"
+          items={[
+            "Get notified the moment your friends start a League match",
+            "See champion picks and game mode before the match ends",
+            "Multiple tracked players in the same game are grouped into one notification",
+          ]}
+        />
+      </>
+    ),
+    formatted: {
+      year: 2026,
+      month: 4,
+      day: 5,
+    },
+  },
+  {
     date: "2026 02 22",
     banner: (
       <>

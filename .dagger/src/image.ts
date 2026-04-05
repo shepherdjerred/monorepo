@@ -58,7 +58,11 @@ export function buildImageHelper(
     .withLabel("org.opencontainers.image.revision", gitSha)
     .withEnvVariable("VERSION", version)
     .withEnvVariable("GIT_SHA", gitSha)
-    .withEntrypoint(["bun", "run", "src/index.ts"]);
+    .withEntrypoint([
+      "/bin/sh",
+      "-c",
+      "bunx prisma db push --skip-generate && bun run src/index.ts",
+    ]);
 }
 
 // ---------------------------------------------------------------------------
@@ -474,7 +478,11 @@ export function buildScoutImageHelper(
     .withLabel("org.opencontainers.image.revision", gitSha)
     .withEnvVariable("VERSION", version)
     .withEnvVariable("GIT_SHA", gitSha)
-    .withEntrypoint(["bun", "run", "src/index.ts"]);
+    .withEntrypoint([
+      "/bin/sh",
+      "-c",
+      "bunx prisma migrate deploy && bun run src/index.ts",
+    ]);
 }
 
 /**

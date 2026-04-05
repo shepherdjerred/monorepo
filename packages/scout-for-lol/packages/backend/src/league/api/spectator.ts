@@ -89,6 +89,14 @@ export async function getActiveGame(
     );
     return parseResult.data;
   } catch (error) {
+    // 404 = player not in a game — expected/normal case
+    const httpResult = z.object({ status: z.number() }).safeParse(error);
+    if (httpResult.success && httpResult.data.status === 404) {
+      riotApiRequestsTotal.inc({ source: "spectator", status: "not_found" });
+      logger.debug(`[getActiveGame] Player ${puuid} not in game`);
+      return undefined;
+    }
+
     riotApiRequestsTotal.inc({
       source: "spectator",
       status:
@@ -98,7 +106,6 @@ export async function getActiveGame(
     });
     updateRiotApiHealth(false);
 
-    const httpResult = z.object({ status: z.number() }).safeParse(error);
     if (httpResult.success) {
       const status = httpResult.data.status;
       logger.error(

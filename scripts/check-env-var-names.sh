@@ -14,7 +14,7 @@ FILES_CMD=(git ls-files -z --
 )
 
 # Files to exclude from all pattern matches
-EXCLUDE_PATTERN='check-env-var-names\.sh|env-var-naming-convention\.md|packages/clauderon/|packages/docs/guides/2026-04-04_homelab-health-audit-2\.md'
+EXCLUDE_PATTERN='check-env-var-names\.sh|env-var-naming-convention\.md|packages/clauderon/|packages/docs/guides/2026-04-04_homelab-health-audit-2\.md|packages/docs/archive/'
 
 # --- Bulk check: all simple banned patterns in one grep pass ---
 BANNED_REGEX='GRAFANA_SERVER|GRAFANA_TOKEN|PAGERDUTY_API_KEY|PAGERDUTY_API_TOKEN|RIOT_API_TOKEN|BUGSINK_API_TOKEN|CF_ACCOUNT_ID|CF_R2_ACCESS|CF_R2_SECRET|TS_AUTH_KEY'

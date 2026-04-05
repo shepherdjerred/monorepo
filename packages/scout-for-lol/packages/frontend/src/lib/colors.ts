@@ -60,4 +60,5 @@ export const gradientColors: Record<string, string> = {
   green: "from-green-500 to-emerald-600",
   red: "from-red-500 to-pink-600",
   indigo: "from-indigo-600 to-purple-600",
+  teal: "from-teal-500 to-cyan-600",
 };
