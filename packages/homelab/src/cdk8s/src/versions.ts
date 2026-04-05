@@ -207,10 +207,6 @@ const versions = {
   // not managed by renovate
   "shepherdjerred/caddy-s3proxy":
     "2.0.0-829@sha256:e7a1e2e7e6ea6f42db9b26f3c373d2d84e9a4afd082f94db39d75322488cc935",
-  // Custom sentinel image - Autonomous agent system for operational tasks
-  // not managed by renovate
-  "shepherdjerred/sentinel":
-    "1.1.152@sha256:5da42b8da97259eacdfac967a636fce902a700c5f296f6547eab4e38fada9013",
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":

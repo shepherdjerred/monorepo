@@ -32,9 +32,10 @@ if (!existsSync(parentPkgPath)) {
   process.exit(1);
 }
 
-const parentPkg = JSON.parse(
-  await Bun.file(parentPkgPath).text(),
-) as Record<string, unknown>;
+const parentPkg = JSON.parse(await Bun.file(parentPkgPath).text()) as Record<
+  string,
+  unknown
+>;
 const files = parentPkg["files"];
 
 if (!Array.isArray(files)) {
@@ -43,9 +44,7 @@ if (!Array.isArray(files)) {
 }
 
 // Always include package.json
-const toCopy: string[] = [
-  ...new Set(["package.json", ...(files as string[])]),
-];
+const toCopy: string[] = [...new Set(["package.json", ...(files as string[])])];
 
 // Clean and recreate target
 if (existsSync(targetDir)) {

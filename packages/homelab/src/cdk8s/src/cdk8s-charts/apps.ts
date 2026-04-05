@@ -64,7 +64,6 @@ import { createKyvernoPoliciesApp } from "@shepherdjerred/homelab/cdk8s/src/reso
 import { createMcpGatewayApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/mcp-gateway.ts";
 import { createBugsinkApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/bugsink.ts";
 import { createDnsAuditApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/dns-audit.ts";
-import { createSentinelApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/sentinel.ts";
 import { createTasknotesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/tasknotes.ts";
 import { createStatusPageApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/status-page.ts";
 import { createDaggerApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/dagger.ts";
@@ -158,7 +157,6 @@ export async function createAppsChart(app: App) {
   createMcpGatewayApp(chart);
   createBugsinkApp(chart);
   createDnsAuditApp(chart);
-  createSentinelApp(chart);
   createTasknotesApp(chart);
   createStatusPageApp(chart);
   createDaggerApp(chart);

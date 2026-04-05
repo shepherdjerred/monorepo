@@ -158,10 +158,7 @@ export async function checkActiveGames(): Promise<void> {
         prematchDetectionsTotal.inc({ status: "detected" });
         gamesDetected++;
       } catch (error) {
-        logger.error(
-          `[${player.alias}] ❌ Error checking active game:`,
-          error,
-        );
+        logger.error(`[${player.alias}] ❌ Error checking active game:`, error);
         Sentry.captureException(error, {
           tags: {
             source: "prematch-detection",

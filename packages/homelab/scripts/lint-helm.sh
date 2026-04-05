@@ -48,8 +48,9 @@ for chart_dir in "$HELM_DIR"/*/; do
     if [ -f "$CDK8S_DIR/dist/${chart_name}.k8s.yaml" ]; then
         cp "$CDK8S_DIR/dist/${chart_name}.k8s.yaml" templates/
     else
-        echo "   ⚠️  No manifest found for $chart_name, skipping..."
-        continue
+        echo "   ❌ No manifest found for $chart_name"
+        echo "   Ensure the chart is registered in setup-charts.ts and bun run build succeeds"
+        exit 1
     fi
 
     # Run helm lint

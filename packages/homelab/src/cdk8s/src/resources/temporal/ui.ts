@@ -47,7 +47,9 @@ export function createTemporalUiDeployment(
       image: `temporalio/ui:${versions["temporalio/ui"]}`,
       ports: [{ name: "http", number: 8080 }],
       envVariables: {
-        TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverService.name}:7233`),
+        TEMPORAL_ADDRESS: EnvValue.fromValue(
+          `${props.serverService.name}:7233`,
+        ),
         TEMPORAL_UI_PORT: EnvValue.fromValue("8080"),
         TEMPORAL_CORS_ORIGINS: EnvValue.fromValue(
           "https://temporal-ui.tailnet-1a49.ts.net,https://temporal.sjer.red",

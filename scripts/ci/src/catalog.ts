@@ -265,7 +265,6 @@ export const HELM_CHARTS: string[] = [
   "bugsink",
   "dns-audit",
   "tasknotes",
-  "sentinel",
   "status-page",
   "temporal",
 ];

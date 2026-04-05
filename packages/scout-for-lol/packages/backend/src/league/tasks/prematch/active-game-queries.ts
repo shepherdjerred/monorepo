@@ -72,12 +72,12 @@ export async function upsertActiveGame(
       `📝 Tracked active game ${gameId.toString()} with ${trackedPuuids.length.toString()} player(s)`,
     );
   } catch (error) {
-    logger.error(
-      `❌ Error upserting active game ${gameId.toString()}:`,
-      error,
-    );
+    logger.error(`❌ Error upserting active game ${gameId.toString()}:`, error);
     Sentry.captureException(error, {
-      tags: { source: "prematch-upsert-active-game", gameId: gameId.toString() },
+      tags: {
+        source: "prematch-upsert-active-game",
+        gameId: gameId.toString(),
+      },
     });
     throw error;
   }

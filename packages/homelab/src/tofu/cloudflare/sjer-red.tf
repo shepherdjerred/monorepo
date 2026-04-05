@@ -205,15 +205,6 @@ resource "cloudflare_dns_record" "sjer_red_cname_ts_mc_net" {
   proxied = true
 }
 
-resource "cloudflare_dns_record" "sjer_red_cname_sentinel_webhooks" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "sentinel-webhooks"
-  type    = "CNAME"
-  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
-  proxied = true
-}
-
 resource "cloudflare_dns_record" "sjer_red_cname_birmel_oauth" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
