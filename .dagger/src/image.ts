@@ -391,6 +391,11 @@ export function buildObsidianHeadlessImageHelper(
   return dag
     .container()
     .from("oven/bun:slim")
+    .withExec([
+      "sh",
+      "-c",
+      "apt-get update && apt-get install -y python3 build-essential && rm -rf /var/lib/apt/lists/*",
+    ])
     .withExec(["bun", "add", "-g", "obsidian-headless"])
     .withExec(["mkdir", "-p", "/vault"])
     .withLabel(
@@ -654,7 +659,7 @@ export async function pushBetterSkillCappedFetcherImageHelper(
 
 /** Build the CI base image from .buildkite/ci-image/Dockerfile. */
 export function buildCiBaseImageHelper(context: Directory): Container {
-  return dag.container().build(context);
+  return context.dockerBuild();
 }
 
 /** Build and push the CI base image. Returns the digest. */
