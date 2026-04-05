@@ -25,6 +25,7 @@ import { createDnsAuditChart } from "./cdk8s-charts/dns-audit.ts";
 import { createSentinelChart } from "./cdk8s-charts/sentinel.ts";
 import { createTasknotesChart } from "./cdk8s-charts/tasknotes.ts";
 import { createStatusPageChart } from "./cdk8s-charts/status-page.ts";
+import { createTemporalChart } from "./cdk8s-charts/temporal.ts";
 
 /**
  * Sets up all charts for the application
@@ -68,4 +69,5 @@ export async function setupCharts(app: App): Promise<void> {
   createSentinelChart(app);
   createTasknotesChart(app);
   createStatusPageChart(app);
+  createTemporalChart(app);
 }

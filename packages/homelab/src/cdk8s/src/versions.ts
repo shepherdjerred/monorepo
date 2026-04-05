@@ -223,6 +223,15 @@ const versions = {
   // not managed by renovate
   "shepherdjerred/status-page-api":
     "1.1.138@sha256:d8a35c286800ea21b880389b0405e333c8428c1c7af50dabe947f7ff9ca6a745",
+  // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
+  "temporalio/auto-setup":
+    "1.29.5@sha256:7eaaed21322c8bc98977fab38873847958024e01ffcc1efeffcd474c4f6461ca",
+  // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
+  "temporalio/ui":
+    "2.48.1@sha256:edb5dd1b3e0ddb35611939dde9b573533afd6fbafbbf077b73c7131a30ca91ff",
+  // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
+  "temporalio/admin-tools":
+    "1.29.5@sha256:95f36d92249d086f0cbd1fd8662839a0c73083397529f5395f447f1c761219af",
 };
 
 export default versions;

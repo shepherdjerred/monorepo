@@ -267,6 +267,7 @@ export const HELM_CHARTS: string[] = [
   "tasknotes",
   "sentinel",
   "status-page",
+  "temporal",
 ];
 
 // ---------------------------------------------------------------------------
