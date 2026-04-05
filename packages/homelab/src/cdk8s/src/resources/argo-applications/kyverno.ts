@@ -63,8 +63,21 @@ export function createKyvernoApp(chart: Chart) {
       },
       syncPolicy: {
         automated: {},
-        syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
+        syncOptions: [
+          "CreateNamespace=true",
+          "ServerSideApply=true",
+          "RespectIgnoreDifferences=true",
+        ],
       },
+      // Kyverno 3.7.1 renders `labels: {}` on new policies.kyverno.io CRDs;
+      // Kubernetes normalizes it away, causing perpetual OutOfSync.
+      ignoreDifferences: [
+        {
+          group: "apiextensions.k8s.io",
+          kind: "CustomResourceDefinition",
+          jqPathExpressions: [".metadata.labels"],
+        },
+      ],
     },
   });
 }

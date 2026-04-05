@@ -43,18 +43,12 @@ STANDARD_RULESET = RulesetConfig(
     target="branch",
     enforcement="active",
     conditions={"ref_name": {"include": ["~DEFAULT_BRANCH"], "exclude": []}},
+    # Note: required_status_checks for monorepo are managed via OpenTofu
+    # (packages/homelab/src/tofu/github/rulesets.tf), not this script.
     rules=[
         {"type": "deletion"},
         {"type": "non_fast_forward"},
         {"type": "required_linear_history"},
-        {
-            "type": "required_status_checks",
-            "parameters": {
-                "required_status_checks": [{"context": "dagger-ci"}],
-                "strict_required_status_checks_policy": False,
-                "do_not_enforce_on_create": False,
-            },
-        },
     ],
     bypass_actors=[
         {

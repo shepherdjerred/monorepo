@@ -5,7 +5,7 @@
  * Push steps (release-phase) publish to GHCR, reusing the cached build.
  */
 import type { ImageTarget } from "../catalog.ts";
-import { IMAGE_PUSH_TARGETS, INFRA_PUSH_TARGETS } from "../catalog.ts";
+import { IMAGE_PUSH_TARGETS } from "../catalog.ts";
 import { safeKey, RETRY, DAGGER_ENV } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";

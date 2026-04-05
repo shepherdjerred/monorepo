@@ -32,6 +32,116 @@ const INFRA_FILES = new Set([
 const INFRA_DIRS = [".buildkite/", ".dagger/", "scripts/ci/"];
 
 // ---------------------------------------------------------------------------
+// Version commit-back fast-track
+// ---------------------------------------------------------------------------
+
+/** Check if the current build is a version commit-back merge (auto-generated). */
+function isVersionCommitBack(): boolean {
+  const msg = process.env["BUILDKITE_MESSAGE"] ?? "";
+  return msg.startsWith("chore: bump image versions to ");
+}
+
+// ---------------------------------------------------------------------------
+// Renovate fast-track
+// ---------------------------------------------------------------------------
+
+/**
+ * Packages that are NOT JavaScript/TypeScript — excluded from the "all-js"
+ * Renovate classification (root package.json changes).
+ */
+const NON_JS_PACKAGES = new Set([
+  "castle-casters", // Java
+  "clauderon", // Rust
+  "terraform-provider-asuswrt", // Go
+  "resume", // LaTeX
+]);
+
+/** All JS/TS workspace packages (ALL_PACKAGES minus non-JS). */
+const JS_TS_PACKAGES = ALL_PACKAGES.filter((p) => !NON_JS_PACKAGES.has(p));
+
+/** Check if the current build is a Renovate pull request. */
+function isRenovatePr(): boolean {
+  const email = process.env["BUILDKITE_BUILD_AUTHOR_EMAIL"] ?? "";
+  const pr = process.env["BUILDKITE_PULL_REQUEST"] ?? "false";
+  return email.includes("renovate[bot]") && pr !== "false";
+}
+
+type RenovateClassification =
+  | { kind: "noop" }
+  | { kind: "scoped"; packages: Set<string> }
+  | { kind: "all-js" }
+  | null;
+
+/**
+ * Classify changed files in a Renovate PR.
+ * Returns null if any file doesn't match a known Renovate pattern
+ * (falls through to normal detection).
+ *
+ * Priority: null > all-js > scoped > noop
+ */
+function classifyRenovateFiles(changedFiles: string[]): RenovateClassification {
+  let level: "noop" | "scoped" | "all-js" = "noop";
+  const scopedPackages = new Set<string>();
+
+  for (const f of changedFiles) {
+    // Version files — pure string value changes, nothing to test
+    if (f.endsWith("/versions.ts") || f.endsWith("/lib-versions.ts")) {
+      continue; // stays at current level (noop or higher)
+    }
+
+    // Per-package manifest, lockfile, or Dockerfile
+    if (f.startsWith("packages/")) {
+      const rest = f.slice("packages/".length);
+      const pkg = rest.split("/")[0];
+      if (!pkg) return null;
+
+      const relPath = rest.slice(pkg.length + 1);
+      if (
+        relPath === "package.json" ||
+        relPath === "bun.lock" ||
+        relPath === "package-lock.json" ||
+        relPath === "Dockerfile"
+      ) {
+        scopedPackages.add(pkg);
+        if (level === "noop") level = "scoped";
+        continue;
+      }
+
+      // Unknown file under packages/ — not a recognized Renovate pattern
+      return null;
+    }
+
+    // Root bun.lock — derivative of manifest changes, ignore
+    if (f === "bun.lock") {
+      continue;
+    }
+
+    // Root package.json — affects all JS/TS packages
+    if (f === "package.json") {
+      level = "all-js";
+      continue;
+    }
+
+    // CI tool versions — string value bumps, nothing to test
+    if (f === ".buildkite/scripts/setup-tools.sh") {
+      continue;
+    }
+
+    // CI base image — string value bumps, nothing to test
+    if (f.startsWith(".buildkite/ci-image/")) {
+      continue;
+    }
+
+    // Anything else is unrecognized — fall through to normal detection
+    return null;
+  }
+
+  if (level === "all-js") return { kind: "all-js" };
+  if (level === "scoped") return { kind: "scoped", packages: scopedPackages };
+  return { kind: "noop" };
+}
+
+// ---------------------------------------------------------------------------
 // Buildkite API: find last green build
 // ---------------------------------------------------------------------------
 
@@ -288,79 +398,47 @@ function transitiveClosure(
 }
 
 // ---------------------------------------------------------------------------
-// Main detection
+// Result builders
 // ---------------------------------------------------------------------------
 
-export async function detectChanges(): Promise<AffectedPackages> {
-  const forceFullEnv =
-    (process.env["FULL_BUILD"] ?? "").toLowerCase() === "true";
-  const commitMsg = process.env["BUILDKITE_MESSAGE"] ?? "";
-  const forceFull = forceFullEnv || commitMsg.includes("[full-build]");
+function fullBuildResult(): AffectedPackages {
+  return {
+    packages: new Set(ALL_PACKAGES),
+    buildAll: true,
+    homelabChanged: true,
+    clauderonChanged: true,
+    cooklangChanged: true,
+    castleCastersChanged: true,
+    resumeChanged: true,
+    ciImageChanged: true,
+    hasImagePackages: new Set(PACKAGES_WITH_IMAGES),
+    hasSitePackages: new Set(Object.keys(PACKAGE_TO_SITE)),
+    hasNpmPackages: new Set(PACKAGES_WITH_NPM),
+    versionBumpOnly: false,
+  };
+}
 
-  const changedFiles = await getChangedFiles();
-  const infraChanged =
-    changedFiles === null || checkInfraChanges(changedFiles ?? []);
+function emptyResult(): AffectedPackages {
+  return {
+    packages: new Set(),
+    buildAll: false,
+    homelabChanged: false,
+    clauderonChanged: false,
+    cooklangChanged: false,
+    castleCastersChanged: false,
+    resumeChanged: false,
+    ciImageChanged: false,
+    hasImagePackages: new Set(),
+    hasSitePackages: new Set(),
+    hasNpmPackages: new Set(),
+    versionBumpOnly: false,
+  };
+}
 
-  if (forceFull || changedFiles === null || infraChanged) {
-    const reason = forceFull
-      ? "Full build requested"
-      : changedFiles === null
-        ? "No base revision available"
-        : "Infrastructure files changed";
-    console.error(`${reason}, building everything`);
-
-    return {
-      packages: new Set(ALL_PACKAGES),
-      buildAll: true,
-      homelabChanged: true,
-      clauderonChanged: true,
-      cooklangChanged: true,
-      castleCastersChanged: true,
-      resumeChanged: true,
-      ciImageChanged: true,
-      hasImagePackages: new Set(PACKAGES_WITH_IMAGES),
-      hasSitePackages: new Set(Object.keys(PACKAGE_TO_SITE)),
-      hasNpmPackages: new Set(PACKAGES_WITH_NPM),
-    };
-  }
-
-  // Map changed files to packages
-  const directlyChanged = new Set<string>();
-  for (const f of changedFiles) {
-    const pkg = extractPackageName(f);
-    if (pkg !== null && ALL_PACKAGES.includes(pkg)) {
-      directlyChanged.add(pkg);
-    }
-  }
-
-  const ciImageChanged = checkCiImageChanges(changedFiles);
-
-  if (directlyChanged.size === 0 && !ciImageChanged) {
-    console.error("No affected packages detected");
-    return {
-      packages: new Set(),
-      buildAll: false,
-      homelabChanged: false,
-      clauderonChanged: false,
-      cooklangChanged: false,
-      castleCastersChanged: false,
-      resumeChanged: false,
-      ciImageChanged: false,
-      hasImagePackages: new Set(),
-      hasSitePackages: new Set(),
-      hasNpmPackages: new Set(),
-    };
-  }
-
-  // Compute transitive closure via workspace dependency graph
-  const depGraph = await readWorkspaceDeps();
-  const allAffected = transitiveClosure(directlyChanged, depGraph);
-
-  console.error(`Affected packages (${allAffected.size}):`);
-  for (const p of [...allAffected].sort()) {
-    console.error(`  ${p}`);
-  }
-
+function buildScopedResult(
+  allAffected: Set<string>,
+  ciImageChanged: boolean,
+): AffectedPackages {
   const hasImagePackages = new Set<string>();
   const hasSitePackages = new Set<string>();
   const hasNpmPackages = new Set<string>();
@@ -390,7 +468,127 @@ export async function detectChanges(): Promise<AffectedPackages> {
     hasImagePackages,
     hasSitePackages,
     hasNpmPackages,
+    versionBumpOnly: false,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Main detection
+// ---------------------------------------------------------------------------
+
+export async function detectChanges(): Promise<AffectedPackages> {
+  const forceFullEnv =
+    (process.env["FULL_BUILD"] ?? "").toLowerCase() === "true";
+  const commitMsg = process.env["BUILDKITE_MESSAGE"] ?? "";
+  const forceFull = forceFullEnv || commitMsg.includes("[full-build]");
+
+  const changedFiles = await getChangedFiles();
+
+  if (forceFull || changedFiles === null) {
+    const reason = forceFull
+      ? "Full build requested"
+      : "No base revision available";
+    console.error(`${reason}, building everything`);
+    return fullBuildResult();
+  }
+
+  // Renovate fast-track: runs BEFORE infra check so that bun.lock/package.json
+  // in INFRA_FILES don't short-circuit the fast path.
+  if (isRenovatePr()) {
+    const classification = classifyRenovateFiles(changedFiles);
+    if (classification !== null) {
+      console.error(`Renovate fast-track: ${classification.kind}`);
+
+      if (classification.kind === "noop") {
+        console.error("Renovate: no builds needed");
+        return emptyResult();
+      }
+
+      // Seed directly-changed packages from classification, then fall through
+      // to transitive closure + flag derivation below.
+      const directlyChanged = new Set<string>();
+      if (classification.kind === "scoped") {
+        for (const pkg of classification.packages) {
+          if (ALL_PACKAGES.includes(pkg)) {
+            directlyChanged.add(pkg);
+          }
+        }
+      } else {
+        // all-js
+        for (const pkg of JS_TS_PACKAGES) {
+          directlyChanged.add(pkg);
+        }
+      }
+
+      const depGraph = await readWorkspaceDeps();
+      const allAffected = transitiveClosure(directlyChanged, depGraph);
+
+      console.error(`Renovate affected packages (${allAffected.size}):`);
+      for (const p of [...allAffected].sort()) {
+        console.error(`  ${p}`);
+      }
+
+      return buildScopedResult(allAffected, false);
+    }
+
+    // classification === null: unrecognized files, fall through to normal detection
+    console.error(
+      "Renovate PR with unrecognized files, using normal detection",
+    );
+  }
+
+  // Version commit-back fast-track: prevents infinite loop where
+  // version-commit-back → merge → build → images → version-commit-back.
+  // The new digests still need to flow through cdk8s synth → Helm push → ArgoCD,
+  // but image builds and another version-commit-back must be skipped.
+  if (isVersionCommitBack()) {
+    const classification = classifyRenovateFiles(changedFiles);
+    if (classification !== null && classification.kind === "noop") {
+      console.error(
+        "Version commit-back: skipping image builds, running deploy pipeline",
+      );
+      const result = buildScopedResult(new Set(["homelab"]), false);
+      result.versionBumpOnly = true;
+      return result;
+    }
+    console.error(
+      "Version commit-back with non-trivial changes, using normal detection",
+    );
+  }
+
+  // Normal detection: check infrastructure files
+  const infraChanged = checkInfraChanges(changedFiles);
+  if (infraChanged) {
+    console.error("Infrastructure files changed, building everything");
+    return fullBuildResult();
+  }
+
+  // Map changed files to packages
+  const directlyChanged = new Set<string>();
+  for (const f of changedFiles) {
+    const pkg = extractPackageName(f);
+    if (pkg !== null && ALL_PACKAGES.includes(pkg)) {
+      directlyChanged.add(pkg);
+    }
+  }
+
+  const ciImageChanged = checkCiImageChanges(changedFiles);
+
+  if (directlyChanged.size === 0 && !ciImageChanged) {
+    console.error("No affected packages detected");
+    return emptyResult();
+  }
+
+  // Compute transitive closure via workspace dependency graph
+  const depGraph = await readWorkspaceDeps();
+  const allAffected = transitiveClosure(directlyChanged, depGraph);
+
+  console.error(`Affected packages (${allAffected.size}):`);
+  for (const p of [...allAffected].sort()) {
+    console.error(`  ${p}`);
+  }
+
+  return buildScopedResult(allAffected, ciImageChanged);
 }
 
 // Export for testing
@@ -398,4 +596,9 @@ export {
   checkInfraChanges as _checkInfraChanges,
   extractPackageName as _extractPackageName,
   transitiveClosure as _transitiveClosure,
+  isRenovatePr as _isRenovatePr,
+  isVersionCommitBack as _isVersionCommitBack,
+  classifyRenovateFiles as _classifyRenovateFiles,
+  NON_JS_PACKAGES as _NON_JS_PACKAGES,
+  JS_TS_PACKAGES as _JS_TS_PACKAGES,
 };

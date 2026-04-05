@@ -64,6 +64,13 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
       command: "echo 'No affected targets detected, nothing to build.'",
       plugins: [k8sPlugin()],
     });
+    steps.push({
+      label: ":white_check_mark: CI Complete",
+      key: "ci-complete",
+      command: "echo 'CI complete'",
+      depends_on: ["no-changes"],
+      plugins: [k8sPlugin()],
+    });
     return { agents: { queue: "default" }, steps };
   }
 
@@ -120,11 +127,8 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     releaseDeps.push(caddyStep.key);
   }
 
-  // --- Code Review (PRs only) ---
-  const prNumber = process.env["BUILDKITE_PULL_REQUEST"] ?? "false";
-  if (prNumber !== "false" && prNumber !== "" && prNumber !== undefined) {
-    steps.push(codeReviewStep());
-  }
+  // --- Code Review (PRs only, gated by BuildKite `if` condition) ---
+  steps.push(codeReviewStep());
 
   // --- Main-only steps ---
   const hasMainSteps =
@@ -164,16 +168,19 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     // BUILD PHASE — depends on quality-gate, runs before release
     // =======================================================================
 
-    // Determine which images need building based on what changed
+    // Determine which images need building based on what changed.
+    // versionBumpOnly: digests already pushed — skip image rebuilds to prevent loop.
     const imagesToBuild: ImageTarget[] = [];
-    if (affected.buildAll) {
-      imagesToBuild.push(...IMAGE_PUSH_TARGETS, ...INFRA_PUSH_TARGETS);
-    } else {
-      if (affected.hasImagePackages.size > 0) {
-        imagesToBuild.push(...IMAGE_PUSH_TARGETS);
-      }
-      if (affected.homelabChanged) {
-        imagesToBuild.push(...INFRA_PUSH_TARGETS);
+    if (!affected.versionBumpOnly) {
+      if (affected.buildAll) {
+        imagesToBuild.push(...IMAGE_PUSH_TARGETS, ...INFRA_PUSH_TARGETS);
+      } else {
+        if (affected.hasImagePackages.size > 0) {
+          imagesToBuild.push(...IMAGE_PUSH_TARGETS);
+        }
+        if (affected.homelabChanged) {
+          imagesToBuild.push(...INFRA_PUSH_TARGETS);
+        }
       }
     }
     const hasImages = imagesToBuild.length > 0;
@@ -303,6 +310,16 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     }
     steps.push(buildSummaryStep(summaryDeps));
   }
+
+  // --- CI Complete: single terminal step for GitHub required status check ---
+  const ciCompleteDeps = [...releaseDeps, ...pkgKeyMap.values()];
+  steps.push({
+    label: ":white_check_mark: CI Complete",
+    key: "ci-complete",
+    command: "echo 'CI complete'",
+    depends_on: ciCompleteDeps,
+    plugins: [k8sPlugin()],
+  });
 
   return { agents: { queue: "default" }, steps };
 }

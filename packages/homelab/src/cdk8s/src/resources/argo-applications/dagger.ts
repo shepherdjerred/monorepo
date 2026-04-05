@@ -329,8 +329,21 @@ echo "Done."`,
       },
       syncPolicy: {
         automated: {},
-        syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
+        syncOptions: [
+          "CreateNamespace=true",
+          "ServerSideApply=true",
+          "RespectIgnoreDifferences=true",
+        ],
       },
+      // Server-side apply normalization on volumeClaimTemplates resources
+      // causes phantom drift between desired and live state.
+      ignoreDifferences: [
+        {
+          group: "apps",
+          kind: "StatefulSet",
+          jqPathExpressions: [".spec.volumeClaimTemplates[].spec.resources"],
+        },
+      ],
     },
   });
 }

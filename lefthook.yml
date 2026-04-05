@@ -379,6 +379,12 @@ pre-commit:
 
           # homelab-test combined into homelab-typecheck to avoid parallel bun install races
 
+          - name: homelab-versions-validate
+            root: "packages/homelab/src/cdk8s/"
+            glob:
+              - "packages/homelab/src/cdk8s/src/versions.ts"
+            run: bun test src/versions.test.ts
+
           - name: homelab-helm-lint
             root: "packages/homelab/"
             glob:

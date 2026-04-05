@@ -120,9 +120,9 @@ resource "github_repository" "monorepo" {
   allow_rebase_merge     = true
 }
 
-# Branch protection is now managed via GitHub Rulesets (configured in UI).
-# The old github_branch_protection resource was removed from state after
-# migration to rulesets caused the provider to hang on GraphQL refresh.
+# Branch protection is managed via github_repository_ruleset in rulesets.tf.
+# The old github_branch_protection resource used GraphQL and hung on refresh;
+# github_repository_ruleset uses the REST API instead.
 
 resource "github_repository" "scout_for_lol" {
   name                   = "scout-for-lol"

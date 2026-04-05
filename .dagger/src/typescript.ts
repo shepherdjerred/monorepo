@@ -64,7 +64,8 @@ export function testHelper(
   tsconfig: File | null = null,
   needsHelm = false,
 ): Container {
-  let container = bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig);
+  let container = bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig)
+    .withEnvVariable("CI", "true");
   if (needsHelm) {
     const helmBinary = dag.container().from(HELM_IMAGE).file("/usr/bin/helm");
     container = container.withFile("/usr/local/bin/helm", helmBinary);

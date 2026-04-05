@@ -19,9 +19,11 @@ function emptyAffected(): AffectedPackages {
     cooklangChanged: false,
     castleCastersChanged: false,
     resumeChanged: false,
+    ciImageChanged: false,
     hasImagePackages: new Set(),
     hasSitePackages: new Set(),
     hasNpmPackages: new Set(),
+    versionBumpOnly: false,
   };
 }
 
@@ -34,9 +36,11 @@ function fullBuild(): AffectedPackages {
     cooklangChanged: true,
     castleCastersChanged: true,
     resumeChanged: true,
+    ciImageChanged: true,
     hasImagePackages: new Set(PACKAGES_WITH_IMAGES),
     hasSitePackages: new Set(Object.keys(PACKAGE_TO_SITE)),
     hasNpmPackages: new Set(PACKAGES_WITH_NPM),
+    versionBumpOnly: false,
   };
 }
 
@@ -60,13 +64,19 @@ function isWait(step: unknown): step is { wait: string } {
 
 describe("buildPipeline", () => {
   describe("no changes", () => {
-    it("returns a minimal pipeline with no-changes step", () => {
+    it("returns a minimal pipeline with no-changes and ci-complete steps", () => {
       const pipeline = buildPipeline(emptyAffected());
-      expect(pipeline.steps).toHaveLength(1);
-      const step = pipeline.steps[0]!;
-      expect(isStep(step)).toBe(true);
-      if (isStep(step)) {
-        expect(step.key).toBe("no-changes");
+      expect(pipeline.steps).toHaveLength(2);
+      const noChanges = pipeline.steps[0]!;
+      expect(isStep(noChanges)).toBe(true);
+      if (isStep(noChanges)) {
+        expect(noChanges.key).toBe("no-changes");
+      }
+      const ciComplete = pipeline.steps[1]!;
+      expect(isStep(ciComplete)).toBe(true);
+      if (isStep(ciComplete)) {
+        expect(ciComplete.key).toBe("ci-complete");
+        expect(ciComplete.depends_on).toEqual(["no-changes"]);
       }
     });
   });
@@ -91,6 +101,24 @@ describe("buildPipeline", () => {
       const pipeline = buildPipeline(affected);
       const waits = pipeline.steps.filter(isWait);
       expect(waits).toHaveLength(0);
+    });
+
+    it("includes ci-complete step depending on quality gates and package build", () => {
+      const affected = emptyAffected();
+      affected.packages.add("webring");
+
+      const pipeline = buildPipeline(affected);
+      const steps = pipeline.steps.filter(isStep);
+      const ciComplete = steps.find((s) => s.key === "ci-complete");
+      expect(ciComplete).toBeDefined();
+      const deps = Array.isArray(ciComplete?.depends_on)
+        ? ciComplete.depends_on
+        : [];
+      // Should include the package build group
+      expect(deps).toContain("pkg-webring");
+      // Should include blocking quality gates
+      expect(deps).toContain("lockfile-check");
+      expect(deps).toContain("shellcheck");
     });
 
     it("includes async quality checks even without main steps", () => {
@@ -331,6 +359,21 @@ describe("buildPipeline", () => {
       expect(steps.some((s) => s.key === "version-commit-back")).toBe(true);
     });
 
+    it("includes ci-complete step in full build", () => {
+      const pipeline = buildPipeline(fullBuild());
+      const steps = pipeline.steps.filter(isStep);
+      const ciComplete = steps.find((s) => s.key === "ci-complete");
+      expect(ciComplete).toBeDefined();
+      const deps = Array.isArray(ciComplete?.depends_on)
+        ? ciComplete.depends_on
+        : [];
+      // Should include blocking quality gates
+      expect(deps).toContain("lockfile-check");
+      expect(deps).toContain("shellcheck");
+      // Should include per-package build keys
+      expect(deps.some((d: string) => d.startsWith("pkg-"))).toBe(true);
+    });
+
     it("includes build summary step with allow_dependency_failure", () => {
       const pipeline = buildPipeline(fullBuild());
       const steps = pipeline.steps.filter(isStep);
@@ -374,6 +417,110 @@ describe("buildPipeline", () => {
         expect(s.concurrency).toBe(1);
         expect(s.concurrency_group).toContain("monorepo/argocd-sync-");
       }
+    });
+  });
+
+  describe("version-bump-only (commit-back)", () => {
+    function versionBumpAffected(): AffectedPackages {
+      const affected = emptyAffected();
+      affected.packages.add("homelab");
+      affected.homelabChanged = true;
+      affected.versionBumpOnly = true;
+      return affected;
+    }
+
+    it("includes cdk8s synth so new digests are rendered into manifests", () => {
+      const pipeline = buildPipeline(versionBumpAffected());
+      const steps = pipeline.steps.filter(isStep);
+      expect(steps.some((s) => s.key === "homelab-cdk8s")).toBe(true);
+    });
+
+    it("includes helm chart push so ArgoCD picks up new manifests", () => {
+      const pipeline = buildPipeline(versionBumpAffected());
+      const groups = pipeline.steps.filter(isGroup);
+      expect(groups.some((g) => g.key === "homelab-helm-push")).toBe(true);
+    });
+
+    it("includes tofu apply", () => {
+      const pipeline = buildPipeline(versionBumpAffected());
+      const groups = pipeline.steps.filter(isGroup);
+      expect(groups.some((g) => g.key === "homelab-tofu")).toBe(true);
+    });
+
+    it("includes ArgoCD sync and health check", () => {
+      const pipeline = buildPipeline(versionBumpAffected());
+      const steps = pipeline.steps.filter(isStep);
+      expect(steps.some((s) => s.key === "deploy-argocd")).toBe(true);
+      expect(steps.some((s) => s.key === "argocd-health")).toBe(true);
+    });
+
+    it("does NOT build any images (they were already pushed)", () => {
+      const pipeline = buildPipeline(versionBumpAffected());
+      const groups = pipeline.steps.filter(isGroup);
+      expect(groups.some((g) => g.key === "build-images")).toBe(false);
+    });
+
+    it("does NOT push any images", () => {
+      const pipeline = buildPipeline(versionBumpAffected());
+      const groups = pipeline.steps.filter(isGroup);
+      expect(groups.some((g) => g.key === "push-images")).toBe(false);
+    });
+
+    it("does NOT run version-commit-back (breaks the loop)", () => {
+      const pipeline = buildPipeline(versionBumpAffected());
+      const steps = pipeline.steps.filter(isStep);
+      expect(steps.some((s) => s.key === "version-commit-back")).toBe(false);
+    });
+
+    it("does NOT include unrelated packages (clauderon, cooklang, npm, sites)", () => {
+      const pipeline = buildPipeline(versionBumpAffected());
+      const groups = pipeline.steps.filter(isGroup);
+      const groupKeys = groups.map((g) => g.key);
+      expect(groupKeys).not.toContain("clauderon-build");
+      expect(groupKeys).not.toContain("cooklang-release");
+      expect(groupKeys).not.toContain("publish-npm");
+      expect(groupKeys).not.toContain("deploy-sites");
+    });
+
+    it("ArgoCD sync depends on helm and tofu, not image pushes", () => {
+      const pipeline = buildPipeline(versionBumpAffected());
+      const steps = pipeline.steps.filter(isStep);
+      const argoSync = steps.find((s) => s.key === "deploy-argocd");
+      expect(argoSync).toBeDefined();
+      const deps = Array.isArray(argoSync?.depends_on)
+        ? argoSync.depends_on
+        : [];
+      expect(deps).toContain("homelab-helm-push");
+      // Should NOT depend on any push-* image keys
+      const imagePushDeps = deps.filter((d: string) => d.startsWith("push-"));
+      expect(imagePushDeps).toHaveLength(0);
+    });
+
+    it("has valid depends_on references (no dangling refs to skipped image steps)", () => {
+      const pipeline = buildPipeline(versionBumpAffected());
+      const allKeys = new Set<string>();
+      const allDeps: string[] = [];
+
+      function collect(steps: unknown[]) {
+        for (const s of steps) {
+          if (typeof s !== "object" || s === null) continue;
+          const obj = s as Record<string, unknown>;
+          if (typeof obj["key"] === "string") allKeys.add(obj["key"]);
+          if (typeof obj["depends_on"] === "string")
+            allDeps.push(obj["depends_on"]);
+          if (Array.isArray(obj["depends_on"])) {
+            for (const d of obj["depends_on"]) {
+              if (typeof d === "string") allDeps.push(d);
+            }
+          }
+          if (Array.isArray(obj["steps"])) collect(obj["steps"] as unknown[]);
+        }
+      }
+
+      collect(pipeline.steps);
+
+      const missing = allDeps.filter((d) => !allKeys.has(d));
+      expect(missing).toEqual([]);
     });
   });
 

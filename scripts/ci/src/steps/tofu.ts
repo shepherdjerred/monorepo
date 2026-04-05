@@ -22,12 +22,14 @@ function tofuStackStep(stack: string, homelabPkgKey?: string): BuildkiteStep {
     command:
       [
         `dagger call tofu-apply --source . --stack ${stack}`,
-        `--aws-access-key-id env:SEAWEEDFS_ACCESS_KEY_ID`,
-        `--aws-secret-access-key env:SEAWEEDFS_SECRET_ACCESS_KEY`,
-        `--gh-token env:TOFU_GITHUB_TOKEN`,
-        `--cloudflare-account-id env:CLOUDFLARE_ACCOUNT_ID`,
+        // Workaround for dagger/dagger#12883: env: URI secrets get stale on
+        // cross-session cache hits. Adding a per-build nonce prevents collisions.
+        `--aws-access-key-id 'env:SEAWEEDFS_ACCESS_KEY_ID?nonce=$BUILDKITE_BUILD_NUMBER'`,
+        `--aws-secret-access-key 'env:SEAWEEDFS_SECRET_ACCESS_KEY?nonce=$BUILDKITE_BUILD_NUMBER'`,
+        `--gh-token 'env:TOFU_GITHUB_TOKEN?nonce=$BUILDKITE_BUILD_NUMBER'`,
+        `--cloudflare-account-id 'env:CLOUDFLARE_ACCOUNT_ID?nonce=$BUILDKITE_BUILD_NUMBER'`,
         stack === "cloudflare"
-          ? `--cloudflare-api-token env:CLOUDFLARE_API_TOKEN`
+          ? `--cloudflare-api-token 'env:CLOUDFLARE_API_TOKEN?nonce=$BUILDKITE_BUILD_NUMBER'`
           : "",
       ]
         .filter(Boolean)
@@ -57,12 +59,14 @@ function tofuPlanStep(stack: string): BuildkiteStep {
     command:
       [
         `dagger call tofu-plan --source . --stack ${stack}`,
-        `--aws-access-key-id env:SEAWEEDFS_ACCESS_KEY_ID`,
-        `--aws-secret-access-key env:SEAWEEDFS_SECRET_ACCESS_KEY`,
-        `--gh-token env:TOFU_GITHUB_TOKEN`,
-        `--cloudflare-account-id env:CLOUDFLARE_ACCOUNT_ID`,
+        // Workaround for dagger/dagger#12883: env: URI secrets get stale on
+        // cross-session cache hits. Adding a per-build nonce prevents collisions.
+        `--aws-access-key-id 'env:SEAWEEDFS_ACCESS_KEY_ID?nonce=$BUILDKITE_BUILD_NUMBER'`,
+        `--aws-secret-access-key 'env:SEAWEEDFS_SECRET_ACCESS_KEY?nonce=$BUILDKITE_BUILD_NUMBER'`,
+        `--gh-token 'env:TOFU_GITHUB_TOKEN?nonce=$BUILDKITE_BUILD_NUMBER'`,
+        `--cloudflare-account-id 'env:CLOUDFLARE_ACCOUNT_ID?nonce=$BUILDKITE_BUILD_NUMBER'`,
         stack === "cloudflare"
-          ? `--cloudflare-api-token env:CLOUDFLARE_API_TOKEN`
+          ? `--cloudflare-api-token 'env:CLOUDFLARE_API_TOKEN?nonce=$BUILDKITE_BUILD_NUMBER'`
           : "",
       ]
         .filter(Boolean)

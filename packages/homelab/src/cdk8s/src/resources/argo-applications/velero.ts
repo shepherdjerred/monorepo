@@ -6,6 +6,7 @@ import { Schedule } from "@shepherdjerred/homelab/cdk8s/generated/imports/velero
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { Namespace } from "cdk8s-plus-31";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { VELERO_SCHEDULES } from "@shepherdjerred/homelab/cdk8s/src/resources/velero-schedules.ts";
 export function createVeleroApp(chart: Chart) {
   new Namespace(chart, `velero-namespace`, {
@@ -23,8 +24,7 @@ export function createVeleroApp(chart: Chart) {
     "velero-cloud-credentials-onepassword",
     {
       spec: {
-        itemPath:
-          "vaults/v64ocnykdqju4ui6j6pua56xw4/items/7thelujgeruxxp2qdsrqe2wd7q",
+        itemPath: vaultItemPath("ypce2djferc6zf7bocxft36n6a"),
       },
       metadata: {
         name: "cloud-credentials",

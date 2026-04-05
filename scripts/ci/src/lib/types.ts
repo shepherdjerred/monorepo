@@ -11,6 +11,8 @@ export interface AffectedPackages {
   hasImagePackages: Set<string>;
   hasSitePackages: Set<string>;
   hasNpmPackages: Set<string>;
+  /** True when only version strings changed (commit-back). Skips image builds and version-commit-back. */
+  versionBumpOnly: boolean;
 }
 
 /** A single Buildkite step. */

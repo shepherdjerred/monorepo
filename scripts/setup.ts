@@ -49,8 +49,23 @@ async function exec(
       return false;
     }
     console.error(`  [${phaseName}] ${msg}`);
-    if (error instanceof Error) {
-      console.error(`  ${error.message.split("\n").slice(0, 5).join("\n  ")}`);
+    const shellErr = error as {
+      stderr?: Buffer;
+      stdout?: Buffer;
+      message?: string;
+    };
+    if (shellErr.stderr?.length) {
+      console.error(`  stderr:\n${shellErr.stderr.toString().trimEnd()}`);
+    }
+    if (shellErr.stdout?.length) {
+      console.error(`  stdout:\n${shellErr.stdout.toString().trimEnd()}`);
+    }
+    if (
+      !shellErr.stderr?.length &&
+      !shellErr.stdout?.length &&
+      error instanceof Error
+    ) {
+      console.error(`  ${error.message}`);
     }
     throw error;
   }
@@ -305,7 +320,7 @@ const DAG_TASKS: DagTask[] = [
     label: "scout-for-lol generate",
     cmd: ["bun", "run", "generate"],
     cwd: "packages/scout-for-lol",
-    deps: [],
+    deps: ["birmel-prisma"],
     warnOnly: false,
   },
   {
