@@ -1,76 +1,85 @@
 resource "cloudflare_zone" "sjer_red" {
-  account_id = var.cloudflare_account_id
-  zone       = "sjer.red"
+  account = { id = var.cloudflare_account_id }
+  name       = "sjer.red"
 }
 
 # ── CNAMEs (Cloudflare Tunnel services) ─────────────────────────────────────
 
-resource "cloudflare_record" "sjer_red_cname_apex" {
+resource "cloudflare_dns_record" "sjer_red_cname_apex" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "sjer.red"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_argocd" {
+resource "cloudflare_dns_record" "sjer_red_cname_argocd" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "argocd"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_better_skill_capped_com" {
+resource "cloudflare_dns_record" "sjer_red_cname_better_skill_capped_com" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "better-skill-capped.com"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_bluemap_ts_mc_net" {
+resource "cloudflare_dns_record" "sjer_red_cname_bluemap_ts_mc_net" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "bluemap.ts-mc.net"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_bugsink_shepherdjerred_com" {
+resource "cloudflare_dns_record" "sjer_red_cname_bugsink_shepherdjerred_com" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "bugsink.shepherdjerred.com"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_bugsink" {
+resource "cloudflare_dns_record" "sjer_red_cname_bugsink" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "bugsink"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_chartmuseum" {
+resource "cloudflare_dns_record" "sjer_red_cname_chartmuseum" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "chartmuseum"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_clauderon_com" {
+resource "cloudflare_dns_record" "sjer_red_cname_clauderon_com" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "clauderon.com"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_discord_plays_pokemon_com" {
+resource "cloudflare_dns_record" "sjer_red_cname_discord_plays_pokemon_com" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "discord-plays-pokemon.com"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
@@ -79,152 +88,171 @@ resource "cloudflare_record" "sjer_red_cname_discord_plays_pokemon_com" {
 
 # files.sjer.red CNAME is auto-managed by Cloudflare R2 custom domain
 
-resource "cloudflare_record" "sjer_red_cname_freshrss" {
+resource "cloudflare_dns_record" "sjer_red_cname_freshrss" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "freshrss"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_homeassistant" {
+resource "cloudflare_dns_record" "sjer_red_cname_homeassistant" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "homeassistant"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_overseerr" {
+resource "cloudflare_dns_record" "sjer_red_cname_overseerr" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "overseerr"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_peertube" {
+resource "cloudflare_dns_record" "sjer_red_cname_peertube" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "peertube"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_plausible" {
+resource "cloudflare_dns_record" "sjer_red_cname_plausible" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "plausible"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_plex" {
+resource "cloudflare_dns_record" "sjer_red_cname_plex" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "plex"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_pokebot" {
+resource "cloudflare_dns_record" "sjer_red_cname_pokebot" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "pokebot"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_resume" {
+resource "cloudflare_dns_record" "sjer_red_cname_resume" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "resume"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_scout_for_lol_com" {
+resource "cloudflare_dns_record" "sjer_red_cname_scout_for_lol_com" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "scout-for-lol.com"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_seaweedfs" {
+resource "cloudflare_dns_record" "sjer_red_cname_seaweedfs" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "seaweedfs"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_shuxin_bluemap" {
+resource "cloudflare_dns_record" "sjer_red_cname_shuxin_bluemap" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "shuxin.bluemap"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_sjerred_bluemap" {
+resource "cloudflare_dns_record" "sjer_red_cname_sjerred_bluemap" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "sjerred.bluemap"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_ts_mc_net" {
+resource "cloudflare_dns_record" "sjer_red_cname_ts_mc_net" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "ts-mc.net"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_sentinel_webhooks" {
+resource "cloudflare_dns_record" "sjer_red_cname_sentinel_webhooks" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "sentinel-webhooks"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_birmel_oauth" {
+resource "cloudflare_dns_record" "sjer_red_cname_birmel_oauth" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "birmel-oauth"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_webring" {
+resource "cloudflare_dns_record" "sjer_red_cname_webring" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "webring"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_cook" {
+resource "cloudflare_dns_record" "sjer_red_cname_cook" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "cook"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_status_api" {
+resource "cloudflare_dns_record" "sjer_red_cname_status_api" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "status-api"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "sjer_red_cname_status" {
+resource "cloudflare_dns_record" "sjer_red_cname_status" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "status"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
@@ -233,40 +261,45 @@ resource "cloudflare_record" "sjer_red_cname_status" {
 
 # ── CNAMEs (Minecraft modded servers → ddns for mc-router) ────────────────────
 
-resource "cloudflare_record" "sjer_red_cname_allthemons" {
+resource "cloudflare_dns_record" "sjer_red_cname_allthemons" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "allthemons"
   type    = "CNAME"
   content = "ddns.sjer.red"
   proxied = false
 }
 
-resource "cloudflare_record" "sjer_red_cname_stoneblock4" {
+resource "cloudflare_dns_record" "sjer_red_cname_stoneblock4" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "stoneblock4"
   type    = "CNAME"
   content = "ddns.sjer.red"
   proxied = false
 }
 
-resource "cloudflare_record" "sjer_red_cname_bettermc" {
+resource "cloudflare_dns_record" "sjer_red_cname_bettermc" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "bettermc"
   type    = "CNAME"
   content = "ddns.sjer.red"
   proxied = false
 }
 
-resource "cloudflare_record" "sjer_red_cname_allofcreate" {
+resource "cloudflare_dns_record" "sjer_red_cname_allofcreate" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "allofcreate"
   type    = "CNAME"
   content = "ddns.sjer.red"
   proxied = false
 }
 
-resource "cloudflare_record" "sjer_red_cname_ftbskies2" {
+resource "cloudflare_dns_record" "sjer_red_cname_ftbskies2" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "ftbskies2"
   type    = "CNAME"
   content = "ddns.sjer.red"
@@ -275,11 +308,12 @@ resource "cloudflare_record" "sjer_red_cname_ftbskies2" {
 
 # SRV records for Minecraft modded servers (port 30000 = mc-router NodePort)
 
-resource "cloudflare_record" "sjer_red_srv_minecraft_allthemons" {
+resource "cloudflare_dns_record" "sjer_red_srv_minecraft_allthemons" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "_minecraft._tcp.allthemons"
   type    = "SRV"
-  data {
+  data = {
     priority = 0
     weight   = 5
     port     = 30000
@@ -287,11 +321,12 @@ resource "cloudflare_record" "sjer_red_srv_minecraft_allthemons" {
   }
 }
 
-resource "cloudflare_record" "sjer_red_srv_minecraft_stoneblock4" {
+resource "cloudflare_dns_record" "sjer_red_srv_minecraft_stoneblock4" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "_minecraft._tcp.stoneblock4"
   type    = "SRV"
-  data {
+  data = {
     priority = 0
     weight   = 5
     port     = 30000
@@ -299,11 +334,12 @@ resource "cloudflare_record" "sjer_red_srv_minecraft_stoneblock4" {
   }
 }
 
-resource "cloudflare_record" "sjer_red_srv_minecraft_bettermc" {
+resource "cloudflare_dns_record" "sjer_red_srv_minecraft_bettermc" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "_minecraft._tcp.bettermc"
   type    = "SRV"
-  data {
+  data = {
     priority = 0
     weight   = 5
     port     = 30000
@@ -311,11 +347,12 @@ resource "cloudflare_record" "sjer_red_srv_minecraft_bettermc" {
   }
 }
 
-resource "cloudflare_record" "sjer_red_srv_minecraft_allofcreate" {
+resource "cloudflare_dns_record" "sjer_red_srv_minecraft_allofcreate" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "_minecraft._tcp.allofcreate"
   type    = "SRV"
-  data {
+  data = {
     priority = 0
     weight   = 5
     port     = 30000
@@ -323,11 +360,12 @@ resource "cloudflare_record" "sjer_red_srv_minecraft_allofcreate" {
   }
 }
 
-resource "cloudflare_record" "sjer_red_srv_minecraft_ftbskies2" {
+resource "cloudflare_dns_record" "sjer_red_srv_minecraft_ftbskies2" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "_minecraft._tcp.ftbskies2"
   type    = "SRV"
-  data {
+  data = {
     priority = 0
     weight   = 5
     port     = 30000
@@ -336,24 +374,27 @@ resource "cloudflare_record" "sjer_red_srv_minecraft_ftbskies2" {
 }
 
 # FastMail DKIM
-resource "cloudflare_record" "sjer_red_dkim_fm1" {
+resource "cloudflare_dns_record" "sjer_red_dkim_fm1" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "fm1._domainkey"
   type    = "CNAME"
   content = "fm1.sjer.red.dkim.fmhosted.com"
   proxied = false
 }
 
-resource "cloudflare_record" "sjer_red_dkim_fm2" {
+resource "cloudflare_dns_record" "sjer_red_dkim_fm2" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "fm2._domainkey"
   type    = "CNAME"
   content = "fm2.sjer.red.dkim.fmhosted.com"
   proxied = false
 }
 
-resource "cloudflare_record" "sjer_red_dkim_fm3" {
+resource "cloudflare_dns_record" "sjer_red_dkim_fm3" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "fm3._domainkey"
   type    = "CNAME"
   content = "fm3.sjer.red.dkim.fmhosted.com"
@@ -362,32 +403,36 @@ resource "cloudflare_record" "sjer_red_dkim_fm3" {
 
 # ── MX (FastMail) ───────────────────────────────────────────────────────────
 
-resource "cloudflare_record" "sjer_red_mx1" {
+resource "cloudflare_dns_record" "sjer_red_mx1" {
   zone_id  = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name     = "sjer.red"
   type     = "MX"
   content  = "in1-smtp.messagingengine.com"
   priority = 10
 }
 
-resource "cloudflare_record" "sjer_red_mx2" {
+resource "cloudflare_dns_record" "sjer_red_mx2" {
   zone_id  = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name     = "sjer.red"
   type     = "MX"
   content  = "in2-smtp.messagingengine.com"
   priority = 20
 }
 
-resource "cloudflare_record" "sjer_red_mx_rp1" {
+resource "cloudflare_dns_record" "sjer_red_mx_rp1" {
   zone_id  = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name     = "rp"
   type     = "MX"
   content  = "in1-smtp.messagingengine.com"
   priority = 10
 }
 
-resource "cloudflare_record" "sjer_red_mx_rp2" {
+resource "cloudflare_dns_record" "sjer_red_mx_rp2" {
   zone_id  = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name     = "rp"
   type     = "MX"
   content  = "in2-smtp.messagingengine.com"
@@ -396,11 +441,12 @@ resource "cloudflare_record" "sjer_red_mx_rp2" {
 
 # ── SRV (FastMail autodiscovery) ────────────────────────────────────────────
 
-resource "cloudflare_record" "sjer_red_srv_caldavs" {
+resource "cloudflare_dns_record" "sjer_red_srv_caldavs" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "_caldavs._tcp"
   type    = "SRV"
-  data {
+  data = {
     priority = 0
     weight   = 1
     port     = 443
@@ -408,11 +454,12 @@ resource "cloudflare_record" "sjer_red_srv_caldavs" {
   }
 }
 
-resource "cloudflare_record" "sjer_red_srv_caldav" {
+resource "cloudflare_dns_record" "sjer_red_srv_caldav" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "_caldav._tcp"
   type    = "SRV"
-  data {
+  data = {
     priority = 0
     weight   = 0
     port     = 0
@@ -420,11 +467,12 @@ resource "cloudflare_record" "sjer_red_srv_caldav" {
   }
 }
 
-resource "cloudflare_record" "sjer_red_srv_carddavs" {
+resource "cloudflare_dns_record" "sjer_red_srv_carddavs" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "_carddavs._tcp"
   type    = "SRV"
-  data {
+  data = {
     priority = 0
     weight   = 1
     port     = 443
@@ -432,11 +480,12 @@ resource "cloudflare_record" "sjer_red_srv_carddavs" {
   }
 }
 
-resource "cloudflare_record" "sjer_red_srv_carddav" {
+resource "cloudflare_dns_record" "sjer_red_srv_carddav" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "_carddav._tcp"
   type    = "SRV"
-  data {
+  data = {
     priority = 0
     weight   = 0
     port     = 0
@@ -444,11 +493,12 @@ resource "cloudflare_record" "sjer_red_srv_carddav" {
   }
 }
 
-resource "cloudflare_record" "sjer_red_srv_imaps" {
+resource "cloudflare_dns_record" "sjer_red_srv_imaps" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "_imaps._tcp"
   type    = "SRV"
-  data {
+  data = {
     priority = 0
     weight   = 1
     port     = 993
@@ -456,11 +506,12 @@ resource "cloudflare_record" "sjer_red_srv_imaps" {
   }
 }
 
-resource "cloudflare_record" "sjer_red_srv_imap" {
+resource "cloudflare_dns_record" "sjer_red_srv_imap" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "_imap._tcp"
   type    = "SRV"
-  data {
+  data = {
     priority = 0
     weight   = 0
     port     = 0
@@ -468,11 +519,12 @@ resource "cloudflare_record" "sjer_red_srv_imap" {
   }
 }
 
-resource "cloudflare_record" "sjer_red_srv_minecraft" {
+resource "cloudflare_dns_record" "sjer_red_srv_minecraft" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "_minecraft._tcp"
   type    = "SRV"
-  data {
+  data = {
     priority = 0
     weight   = 5
     port     = 30000
@@ -480,11 +532,12 @@ resource "cloudflare_record" "sjer_red_srv_minecraft" {
   }
 }
 
-resource "cloudflare_record" "sjer_red_srv_minecraft_shuxin" {
+resource "cloudflare_dns_record" "sjer_red_srv_minecraft_shuxin" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "_minecraft._tcp.shuxin"
   type    = "SRV"
-  data {
+  data = {
     priority = 0
     weight   = 5
     port     = 30000
@@ -492,11 +545,12 @@ resource "cloudflare_record" "sjer_red_srv_minecraft_shuxin" {
   }
 }
 
-resource "cloudflare_record" "sjer_red_srv_pop3s" {
+resource "cloudflare_dns_record" "sjer_red_srv_pop3s" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "_pop3s._tcp"
   type    = "SRV"
-  data {
+  data = {
     priority = 10
     weight   = 1
     port     = 995
@@ -504,11 +558,12 @@ resource "cloudflare_record" "sjer_red_srv_pop3s" {
   }
 }
 
-resource "cloudflare_record" "sjer_red_srv_pop3" {
+resource "cloudflare_dns_record" "sjer_red_srv_pop3" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "_pop3._tcp"
   type    = "SRV"
-  data {
+  data = {
     priority = 0
     weight   = 0
     port     = 0
@@ -516,11 +571,12 @@ resource "cloudflare_record" "sjer_red_srv_pop3" {
   }
 }
 
-resource "cloudflare_record" "sjer_red_srv_submission" {
+resource "cloudflare_dns_record" "sjer_red_srv_submission" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "_submission._tcp"
   type    = "SRV"
-  data {
+  data = {
     priority = 0
     weight   = 1
     port     = 587
@@ -530,109 +586,124 @@ resource "cloudflare_record" "sjer_red_srv_submission" {
 
 # ── TXT ─────────────────────────────────────────────────────────────────────
 
-resource "cloudflare_record" "sjer_red_spf" {
+resource "cloudflare_dns_record" "sjer_red_spf" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "sjer.red"
   type    = "TXT"
   content = "v=spf1 include:spf.messagingengine.com ~all"
 }
 
-resource "cloudflare_record" "sjer_red_dmarc" {
+resource "cloudflare_dns_record" "sjer_red_dmarc" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "_dmarc"
   type    = "TXT"
   content = "v=DMARC1; p=quarantine; rua=mailto:dmarc@sjer.red"
 }
 
 # DMARC aggregate report authorization for external domains (RFC 7489 §7.1)
-resource "cloudflare_record" "sjer_red_dmarc_report_ts_mc_net" {
+resource "cloudflare_dns_record" "sjer_red_dmarc_report_ts_mc_net" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "ts-mc.net._report._dmarc"
   type    = "TXT"
   content = "v=DMARC1"
 }
 
-resource "cloudflare_record" "sjer_red_dmarc_report_scout_for_lol_com" {
+resource "cloudflare_dns_record" "sjer_red_dmarc_report_scout_for_lol_com" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "scout-for-lol.com._report._dmarc"
   type    = "TXT"
   content = "v=DMARC1"
 }
 
-resource "cloudflare_record" "sjer_red_dmarc_report_better_skill_capped_com" {
+resource "cloudflare_dns_record" "sjer_red_dmarc_report_better_skill_capped_com" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "better-skill-capped.com._report._dmarc"
   type    = "TXT"
   content = "v=DMARC1"
 }
 
-resource "cloudflare_record" "sjer_red_dmarc_report_discord_plays_pokemon_com" {
+resource "cloudflare_dns_record" "sjer_red_dmarc_report_discord_plays_pokemon_com" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "discord-plays-pokemon.com._report._dmarc"
   type    = "TXT"
   content = "v=DMARC1"
 }
 
-resource "cloudflare_record" "sjer_red_dmarc_report_clauderon_com" {
+resource "cloudflare_dns_record" "sjer_red_dmarc_report_clauderon_com" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "clauderon.com._report._dmarc"
   type    = "TXT"
   content = "v=DMARC1"
 }
 
-resource "cloudflare_record" "sjer_red_dmarc_report_jerred_is" {
+resource "cloudflare_dns_record" "sjer_red_dmarc_report_jerred_is" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "jerred.is._report._dmarc"
   type    = "TXT"
   content = "v=DMARC1"
 }
 
-resource "cloudflare_record" "sjer_red_dmarc_report_jerredshepherd_com" {
+resource "cloudflare_dns_record" "sjer_red_dmarc_report_jerredshepherd_com" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "jerredshepherd.com._report._dmarc"
   type    = "TXT"
   content = "v=DMARC1"
 }
 
-resource "cloudflare_record" "sjer_red_dmarc_report_glitter_boys_com" {
+resource "cloudflare_dns_record" "sjer_red_dmarc_report_glitter_boys_com" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "glitter-boys.com._report._dmarc"
   type    = "TXT"
   content = "v=DMARC1"
 }
 
-resource "cloudflare_record" "sjer_red_spf_rp" {
+resource "cloudflare_dns_record" "sjer_red_spf_rp" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "rp"
   type    = "TXT"
   content = "v=spf1 include:spf.messagingengine.com ~all"
 }
 
 # Postal DKIM keys
-resource "cloudflare_record" "sjer_red_dkim_postal_aoolxx" {
+resource "cloudflare_dns_record" "sjer_red_dkim_postal_aoolxx" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "postal-aoolxx._domainkey"
   type    = "TXT"
   content = "v=DKIM1; t=s; h=sha256; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDFfuKrHpylh2b4GmkgNWYNOkD5LypiaG8T4rDFR/3erk8ZE2fT7Z5ycQcyt+WdVlaN4VhT4phGNLr1rdXNRpUMFZV6uvOFqy2vzvHLaYSiNaYGONdhBe8L1af67XXMsxUbNO8kbyVkSkvpPS9hnz7/qZBfd0glRoGdNI64NQyHlwIDAQAB;"
 }
 
-resource "cloudflare_record" "sjer_red_dkim_postal_isna7c" {
+resource "cloudflare_dns_record" "sjer_red_dkim_postal_isna7c" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "postal-isna7c._domainkey"
   type    = "TXT"
   content = "v=DKIM1; t=s; h=sha256; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC55pcuuiIJO3bp3vDbFn2Hjr0z/W+1hJ0QOzsFm2elKfTujgIj1ExZ7B2nTCsNzv+OLZr8jNhk6dy6az0hafC7JV+Cm0z+N7P99Fj7+R6hfkVuOuXlhG3XsL16/RXdowAxjmXi9mDPHy3l0hqlMyfUmcrtdhydbLR4E2X4FdKQHwIDAQAB;"
 }
 
 # Legacy ACME challenges (Tailscale certs)
-resource "cloudflare_record" "sjer_red_acme_influxdb" {
+resource "cloudflare_dns_record" "sjer_red_acme_influxdb" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "_acme-challenge.influxdb.ts.zeus"
   type    = "TXT"
   content = "I0A35eU62OobpAKrT9PFPBg1TYnOatgNusx0lgBmuLw"
 }
 
-resource "cloudflare_record" "sjer_red_acme_syncthing" {
+resource "cloudflare_dns_record" "sjer_red_acme_syncthing" {
   zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
   name    = "_acme-challenge.syncthing.ts.zeus"
   type    = "TXT"
   content = "FR8t1KHtHXWGKfERJqTZVcPitpVKmAKENo6auaz9OV0"

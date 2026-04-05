@@ -1,29 +1,32 @@
 resource "cloudflare_zone" "shepherdjerred_com" {
-  account_id = var.cloudflare_account_id
-  zone       = "shepherdjerred.com"
+  account = { id = var.cloudflare_account_id }
+  name       = "shepherdjerred.com"
 }
 
 # ── CNAMEs ──────────────────────────────────────────────────────────────────
 
 # FastMail DKIM
-resource "cloudflare_record" "shepherdjerred_com_dkim_fm1" {
+resource "cloudflare_dns_record" "shepherdjerred_com_dkim_fm1" {
   zone_id = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
   name    = "fm1._domainkey"
   type    = "CNAME"
   content = "fm1.shepherdjerred.com.dkim.fmhosted.com"
   proxied = false
 }
 
-resource "cloudflare_record" "shepherdjerred_com_dkim_fm2" {
+resource "cloudflare_dns_record" "shepherdjerred_com_dkim_fm2" {
   zone_id = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
   name    = "fm2._domainkey"
   type    = "CNAME"
   content = "fm2.shepherdjerred.com.dkim.fmhosted.com"
   proxied = false
 }
 
-resource "cloudflare_record" "shepherdjerred_com_dkim_fm3" {
+resource "cloudflare_dns_record" "shepherdjerred_com_dkim_fm3" {
   zone_id = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
   name    = "fm3._domainkey"
   type    = "CNAME"
   content = "fm3.shepherdjerred.com.dkim.fmhosted.com"
@@ -31,16 +34,18 @@ resource "cloudflare_record" "shepherdjerred_com_dkim_fm3" {
 }
 
 # Redirect to sjer.red
-resource "cloudflare_record" "shepherdjerred_com_cname_apex" {
+resource "cloudflare_dns_record" "shepherdjerred_com_cname_apex" {
   zone_id = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
   name    = "shepherdjerred.com"
   type    = "CNAME"
   content = "sjer.red"
   proxied = false
 }
 
-resource "cloudflare_record" "shepherdjerred_com_cname_www" {
+resource "cloudflare_dns_record" "shepherdjerred_com_cname_www" {
   zone_id = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
   name    = "www"
   type    = "CNAME"
   content = "sjer.red"
@@ -50,16 +55,18 @@ resource "cloudflare_record" "shepherdjerred_com_cname_www" {
 # ── MX ──────────────────────────────────────────────────────────────────────
 
 # FastMail MX (apex)
-resource "cloudflare_record" "shepherdjerred_com_mx1" {
+resource "cloudflare_dns_record" "shepherdjerred_com_mx1" {
   zone_id  = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
   name     = "shepherdjerred.com"
   type     = "MX"
   content  = "in1-smtp.messagingengine.com"
   priority = 10
 }
 
-resource "cloudflare_record" "shepherdjerred_com_mx2" {
+resource "cloudflare_dns_record" "shepherdjerred_com_mx2" {
   zone_id  = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
   name     = "shepherdjerred.com"
   type     = "MX"
   content  = "in2-smtp.messagingengine.com"
@@ -67,16 +74,18 @@ resource "cloudflare_record" "shepherdjerred_com_mx2" {
 }
 
 # FastMail MX (wildcard)
-resource "cloudflare_record" "shepherdjerred_com_mx_wildcard1" {
+resource "cloudflare_dns_record" "shepherdjerred_com_mx_wildcard1" {
   zone_id  = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
   name     = "*"
   type     = "MX"
   content  = "in1-smtp.messagingengine.com"
   priority = 10
 }
 
-resource "cloudflare_record" "shepherdjerred_com_mx_wildcard2" {
+resource "cloudflare_dns_record" "shepherdjerred_com_mx_wildcard2" {
   zone_id  = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
   name     = "*"
   type     = "MX"
   content  = "in2-smtp.messagingengine.com"
@@ -85,11 +94,12 @@ resource "cloudflare_record" "shepherdjerred_com_mx_wildcard2" {
 
 # ── SRV (FastMail autodiscovery) ────────────────────────────────────────────
 
-resource "cloudflare_record" "shepherdjerred_com_srv_caldavs" {
+resource "cloudflare_dns_record" "shepherdjerred_com_srv_caldavs" {
   zone_id = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
   name    = "_caldavs._tcp"
   type    = "SRV"
-  data {
+  data = {
     priority = 0
     weight   = 1
     port     = 443
@@ -97,11 +107,12 @@ resource "cloudflare_record" "shepherdjerred_com_srv_caldavs" {
   }
 }
 
-resource "cloudflare_record" "shepherdjerred_com_srv_caldav" {
+resource "cloudflare_dns_record" "shepherdjerred_com_srv_caldav" {
   zone_id = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
   name    = "_caldav._tcp"
   type    = "SRV"
-  data {
+  data = {
     priority = 0
     weight   = 0
     port     = 0
@@ -109,11 +120,12 @@ resource "cloudflare_record" "shepherdjerred_com_srv_caldav" {
   }
 }
 
-resource "cloudflare_record" "shepherdjerred_com_srv_carddavs" {
+resource "cloudflare_dns_record" "shepherdjerred_com_srv_carddavs" {
   zone_id = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
   name    = "_carddavs._tcp"
   type    = "SRV"
-  data {
+  data = {
     priority = 0
     weight   = 1
     port     = 443
@@ -121,11 +133,12 @@ resource "cloudflare_record" "shepherdjerred_com_srv_carddavs" {
   }
 }
 
-resource "cloudflare_record" "shepherdjerred_com_srv_carddav" {
+resource "cloudflare_dns_record" "shepherdjerred_com_srv_carddav" {
   zone_id = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
   name    = "_carddav._tcp"
   type    = "SRV"
-  data {
+  data = {
     priority = 0
     weight   = 0
     port     = 0
@@ -133,11 +146,12 @@ resource "cloudflare_record" "shepherdjerred_com_srv_carddav" {
   }
 }
 
-resource "cloudflare_record" "shepherdjerred_com_srv_imaps" {
+resource "cloudflare_dns_record" "shepherdjerred_com_srv_imaps" {
   zone_id = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
   name    = "_imaps._tcp"
   type    = "SRV"
-  data {
+  data = {
     priority = 0
     weight   = 1
     port     = 993
@@ -145,11 +159,12 @@ resource "cloudflare_record" "shepherdjerred_com_srv_imaps" {
   }
 }
 
-resource "cloudflare_record" "shepherdjerred_com_srv_imap" {
+resource "cloudflare_dns_record" "shepherdjerred_com_srv_imap" {
   zone_id = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
   name    = "_imap._tcp"
   type    = "SRV"
-  data {
+  data = {
     priority = 0
     weight   = 0
     port     = 0
@@ -157,11 +172,12 @@ resource "cloudflare_record" "shepherdjerred_com_srv_imap" {
   }
 }
 
-resource "cloudflare_record" "shepherdjerred_com_srv_pop3s" {
+resource "cloudflare_dns_record" "shepherdjerred_com_srv_pop3s" {
   zone_id = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
   name    = "_pop3s._tcp"
   type    = "SRV"
-  data {
+  data = {
     priority = 10
     weight   = 1
     port     = 995
@@ -169,11 +185,12 @@ resource "cloudflare_record" "shepherdjerred_com_srv_pop3s" {
   }
 }
 
-resource "cloudflare_record" "shepherdjerred_com_srv_pop3" {
+resource "cloudflare_dns_record" "shepherdjerred_com_srv_pop3" {
   zone_id = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
   name    = "_pop3._tcp"
   type    = "SRV"
-  data {
+  data = {
     priority = 0
     weight   = 0
     port     = 0
@@ -181,11 +198,12 @@ resource "cloudflare_record" "shepherdjerred_com_srv_pop3" {
   }
 }
 
-resource "cloudflare_record" "shepherdjerred_com_srv_submission" {
+resource "cloudflare_dns_record" "shepherdjerred_com_srv_submission" {
   zone_id = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
   name    = "_submission._tcp"
   type    = "SRV"
-  data {
+  data = {
     priority = 0
     weight   = 1
     port     = 587
@@ -195,15 +213,17 @@ resource "cloudflare_record" "shepherdjerred_com_srv_submission" {
 
 # ── TXT ─────────────────────────────────────────────────────────────────────
 
-resource "cloudflare_record" "shepherdjerred_com_spf" {
+resource "cloudflare_dns_record" "shepherdjerred_com_spf" {
   zone_id = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
   name    = "shepherdjerred.com"
   type    = "TXT"
   content = "v=spf1 include:spf.messagingengine.com ~all"
 }
 
-resource "cloudflare_record" "shepherdjerred_com_dmarc" {
+resource "cloudflare_dns_record" "shepherdjerred_com_dmarc" {
   zone_id = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
   name    = "_dmarc"
   type    = "TXT"
   content = "v=DMARC1; p=quarantine; rua=mailto:jerred@shepherdjerred.com"

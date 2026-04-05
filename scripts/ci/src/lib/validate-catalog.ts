@@ -12,6 +12,8 @@ function getRepoRoot(): string {
     encoding: "utf-8",
   }).trim();
 }
+import { readFile } from "node:fs/promises";
+
 import {
   ALL_PACKAGES,
   IMAGE_PUSH_TARGETS,
@@ -20,6 +22,7 @@ import {
   DEPLOY_SITES,
   PACKAGE_TO_SITE,
   SKIP_PACKAGES,
+  PLAYWRIGHT_PACKAGES,
 } from "../catalog.ts";
 
 export async function validateCatalog(): Promise<void> {
@@ -104,6 +107,17 @@ export async function validateCatalog(): Promise<void> {
     }
   }
 
+  // 8. Playwright Docker image version must match installed @playwright/test version
+  const playwrightImageVersion = await getPlaywrightImageVersion(repoRoot);
+  for (const pkg of PLAYWRIGHT_PACKAGES) {
+    const npmVersion = await getPlaywrightNpmVersion(repoRoot, pkg);
+    if (npmVersion && playwrightImageVersion !== npmVersion) {
+      errors.push(
+        `Playwright version mismatch: Docker image is v${playwrightImageVersion} but packages/${pkg} has @playwright/test@${npmVersion}. Update PLAYWRIGHT_IMAGE in .dagger/src/constants.ts.`,
+      );
+    }
+  }
+
   if (errors.length > 0) {
     throw new Error(
       `Catalog validation failed:\n${errors.map((e) => `  - ${e}`).join("\n")}`,
@@ -113,4 +127,31 @@ export async function validateCatalog(): Promise<void> {
   console.error(
     `Catalog validated: ${ALL_PACKAGES.length} packages, ${PACKAGES_WITH_IMAGES.size} with images, ${Object.keys(PACKAGE_TO_SITE).length} with sites`,
   );
+}
+
+/** Extract version from PLAYWRIGHT_IMAGE constant (e.g., "v1.59.1" from "...playwright:v1.59.1-noble"). */
+async function getPlaywrightImageVersion(repoRoot: string): Promise<string> {
+  const content = await readFile(
+    `${repoRoot}/.dagger/src/constants.ts`,
+    "utf-8",
+  );
+  const match = /PLAYWRIGHT_IMAGE\s*=\s*"[^"]*:v([\d.]+)-/.exec(content);
+  return match?.[1] ?? "unknown";
+}
+
+/** Get resolved @playwright/test version from bun.lock. */
+async function getPlaywrightNpmVersion(
+  repoRoot: string,
+  pkg: string,
+): Promise<string | null> {
+  try {
+    const lockContent = await readFile(
+      `${repoRoot}/packages/${pkg}/bun.lock`,
+      "utf-8",
+    );
+    const match = /"@playwright\/test@([\d.]+)"/.exec(lockContent);
+    return match?.[1] ?? null;
+  } catch {
+    return null;
+  }
 }

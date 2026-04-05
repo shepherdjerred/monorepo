@@ -1,12 +1,13 @@
 resource "cloudflare_zone" "ts_mc_net" {
-  account_id = var.cloudflare_account_id
-  zone       = "ts-mc.net"
+  account = { id = var.cloudflare_account_id }
+  name       = "ts-mc.net"
 }
 
 # ── A records ───────────────────────────────────────────────────────────────
 
-resource "cloudflare_record" "ts_mc_net_a_minecraft" {
+resource "cloudflare_dns_record" "ts_mc_net_a_minecraft" {
   zone_id = cloudflare_zone.ts_mc_net.id
+  ttl     = 1
   name    = "minecraft"
   type    = "A"
   content = "15.204.44.15"
@@ -15,16 +16,18 @@ resource "cloudflare_record" "ts_mc_net_a_minecraft" {
 
 # ── CNAMEs ──────────────────────────────────────────────────────────────────
 
-resource "cloudflare_record" "ts_mc_net_cname_apex" {
+resource "cloudflare_dns_record" "ts_mc_net_cname_apex" {
   zone_id = cloudflare_zone.ts_mc_net.id
+  ttl     = 1
   name    = "ts-mc.net"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
 }
 
-resource "cloudflare_record" "ts_mc_net_cname_bluemap" {
+resource "cloudflare_dns_record" "ts_mc_net_cname_bluemap" {
   zone_id = cloudflare_zone.ts_mc_net.id
+  ttl     = 1
   name    = "bluemap"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
@@ -34,24 +37,27 @@ resource "cloudflare_record" "ts_mc_net_cname_bluemap" {
 # storage.ts-mc.net CNAME is auto-managed by Cloudflare R2 custom domain
 
 # FastMail DKIM
-resource "cloudflare_record" "ts_mc_net_dkim_fm1" {
+resource "cloudflare_dns_record" "ts_mc_net_dkim_fm1" {
   zone_id = cloudflare_zone.ts_mc_net.id
+  ttl     = 1
   name    = "fm1._domainkey"
   type    = "CNAME"
   content = "fm1.ts-mc.net.dkim.fmhosted.com"
   proxied = false
 }
 
-resource "cloudflare_record" "ts_mc_net_dkim_fm2" {
+resource "cloudflare_dns_record" "ts_mc_net_dkim_fm2" {
   zone_id = cloudflare_zone.ts_mc_net.id
+  ttl     = 1
   name    = "fm2._domainkey"
   type    = "CNAME"
   content = "fm2.ts-mc.net.dkim.fmhosted.com"
   proxied = false
 }
 
-resource "cloudflare_record" "ts_mc_net_dkim_fm3" {
+resource "cloudflare_dns_record" "ts_mc_net_dkim_fm3" {
   zone_id = cloudflare_zone.ts_mc_net.id
+  ttl     = 1
   name    = "fm3._domainkey"
   type    = "CNAME"
   content = "fm3.ts-mc.net.dkim.fmhosted.com"
@@ -60,32 +66,36 @@ resource "cloudflare_record" "ts_mc_net_dkim_fm3" {
 
 # ── MX (FastMail) ───────────────────────────────────────────────────────────
 
-resource "cloudflare_record" "ts_mc_net_mx1" {
+resource "cloudflare_dns_record" "ts_mc_net_mx1" {
   zone_id  = cloudflare_zone.ts_mc_net.id
+  ttl     = 1
   name     = "ts-mc.net"
   type     = "MX"
   content  = "in1-smtp.messagingengine.com"
   priority = 10
 }
 
-resource "cloudflare_record" "ts_mc_net_mx2" {
+resource "cloudflare_dns_record" "ts_mc_net_mx2" {
   zone_id  = cloudflare_zone.ts_mc_net.id
+  ttl     = 1
   name     = "ts-mc.net"
   type     = "MX"
   content  = "in2-smtp.messagingengine.com"
   priority = 20
 }
 
-resource "cloudflare_record" "ts_mc_net_mx_wildcard1" {
+resource "cloudflare_dns_record" "ts_mc_net_mx_wildcard1" {
   zone_id  = cloudflare_zone.ts_mc_net.id
+  ttl     = 1
   name     = "*"
   type     = "MX"
   content  = "in1-smtp.messagingengine.com"
   priority = 10
 }
 
-resource "cloudflare_record" "ts_mc_net_mx_wildcard2" {
+resource "cloudflare_dns_record" "ts_mc_net_mx_wildcard2" {
   zone_id  = cloudflare_zone.ts_mc_net.id
+  ttl     = 1
   name     = "*"
   type     = "MX"
   content  = "in2-smtp.messagingengine.com"
@@ -94,11 +104,12 @@ resource "cloudflare_record" "ts_mc_net_mx_wildcard2" {
 
 # ── SRV ─────────────────────────────────────────────────────────────────────
 
-resource "cloudflare_record" "ts_mc_net_srv_minecraft" {
+resource "cloudflare_dns_record" "ts_mc_net_srv_minecraft" {
   zone_id = cloudflare_zone.ts_mc_net.id
+  ttl     = 1
   name    = "_minecraft._tcp"
   type    = "SRV"
-  data {
+  data = {
     priority = 0
     weight   = 5
     port     = 30000
@@ -108,15 +119,17 @@ resource "cloudflare_record" "ts_mc_net_srv_minecraft" {
 
 # ── TXT ─────────────────────────────────────────────────────────────────────
 
-resource "cloudflare_record" "ts_mc_net_spf" {
+resource "cloudflare_dns_record" "ts_mc_net_spf" {
   zone_id = cloudflare_zone.ts_mc_net.id
+  ttl     = 1
   name    = "ts-mc.net"
   type    = "TXT"
   content = "v=spf1 include:spf.messagingengine.com ~all"
 }
 
-resource "cloudflare_record" "ts_mc_net_dmarc" {
+resource "cloudflare_dns_record" "ts_mc_net_dmarc" {
   zone_id = cloudflare_zone.ts_mc_net.id
+  ttl     = 1
   name    = "_dmarc"
   type    = "TXT"
   content = "v=DMARC1; p=reject; sp=reject; adkim=s; aspf=s; rua=mailto:dmarc@sjer.red"
