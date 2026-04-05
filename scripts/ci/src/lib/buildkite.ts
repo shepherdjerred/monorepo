@@ -3,7 +3,7 @@ import { k8sPlugin } from "./k8s-plugin.ts";
 
 /** Convert a name to a Buildkite-safe step key. */
 export function safeKey(name: string): string {
-  return name.replace(/\./g, "-").replace(/\//g, "-");
+  return name.replace(/[^a-zA-Z0-9_:-]/g, "-");
 }
 
 /** Standard retry configuration for CI steps. */
