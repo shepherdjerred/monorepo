@@ -1,7 +1,7 @@
 import {
   setToken,
   getTransactions,
-  getTransactionCategories,
+  getCategories,
   updateTransaction,
   updateTransactionSplits,
 } from "monarch-money-api";
@@ -107,7 +107,7 @@ export async function fetchAllTransactions(
 }
 
 export async function fetchCategories(): Promise<MonarchCategory[]> {
-  const response = await getTransactionCategories();
+  const response = await getCategories();
   return response.categories.filter((c) => !c.isDisabled);
 }
 

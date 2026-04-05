@@ -14,7 +14,7 @@
     "@shepherdjerred/eslint-config": "file:../eslint-config",
     "@types/node": "^22.0.0",
     "builtin-modules": "^4.0.0",
-    "esbuild": "^0.27.0",
+    "esbuild": "^0.28.0",
     "obsidian": "latest",
     "eslint": "^9.22.0",
     "typescript": "^5.7.0"

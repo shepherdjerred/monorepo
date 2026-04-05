@@ -59,7 +59,7 @@
     "@resvg/resvg-js": "^2.6.2",
     "jsdom": "^28.0.0",
     "react": "^19.0.0",
-    "satori": "^0.25.0"
+    "satori": "^0.26.0"
   },
   "peerDependencies": {
     "tw-to-css": "^0.0.12"

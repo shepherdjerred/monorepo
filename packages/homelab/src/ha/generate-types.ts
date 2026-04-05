@@ -1,6 +1,13 @@
 #!/usr/bin/env bun
 
+import { existsSync } from "node:fs";
 import { $ } from "bun";
+
+const GENERATED_FILES = [
+  "src/hass/registry.mts",
+  "src/hass/services.mts",
+  "src/hass/mappings.mts",
+];
 
 /**
  * Entity state mappings - defines which entities should have their state
@@ -141,13 +148,7 @@ async function addDisableCommentsToFile(filePath: string) {
 async function addTsDisableComments() {
   console.log("🔄 Adding TypeScript disable comments to generated files...");
 
-  const generatedFiles = [
-    "src/hass/registry.mts",
-    "src/hass/services.mts",
-    "src/hass/mappings.mts",
-  ];
-
-  for (const filePath of generatedFiles) {
+  for (const filePath of GENERATED_FILES) {
     try {
       await addDisableCommentsToFile(filePath);
     } catch (error) {
@@ -336,6 +337,19 @@ async function main() {
 
   // Step 1: Generate types
   await generateTypes();
+
+  // Verify generated files exist before post-processing
+  const missingFiles = GENERATED_FILES.filter((f) => !existsSync(f));
+  if (missingFiles.length > 0) {
+    console.error(
+      "❌ Type generation did not produce expected files:",
+      missingFiles.join(", "),
+    );
+    console.error(
+      "   The Home Assistant instance may be unreachable or the type-writer failed silently.",
+    );
+    process.exit(1);
+  }
 
   // Step 2: Add TypeScript disable comments to generated files
   await addTsDisableComments();

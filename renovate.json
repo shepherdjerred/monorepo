@@ -75,6 +75,11 @@
     {
       "matchPackageNames": ["ghcr.io/shepherdjerred/dotfiles"],
       "minimumReleaseAge": "0 days"
+    },
+    {
+      "description": "Disable updates for archived and practice projects",
+      "matchFileNames": ["archive/**", "practice/**"],
+      "enabled": false
     }
   ],
   "minimumReleaseAge": "30 days",

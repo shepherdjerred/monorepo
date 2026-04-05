@@ -30,7 +30,7 @@ RUN curl -fsSL "https://dl.dagger.io/dagger/releases/${DAGGER_VERSION}/dagger_v$
     chmod +x /usr/local/bin/dagger
 
 # renovate: datasource=github-releases depName=astral-sh/uv
-ARG UV_VERSION=0.10.8
+ARG UV_VERSION=0.11.3
 RUN curl -LsSf "https://astral.sh/uv/${UV_VERSION}/install.sh" | sh && \
     mv /root/.local/bin/uv /usr/local/bin/uv && \
     mv /root/.local/bin/uvx /usr/local/bin/uvx || true

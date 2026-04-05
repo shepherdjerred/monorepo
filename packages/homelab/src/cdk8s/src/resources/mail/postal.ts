@@ -97,7 +97,7 @@ export function createPostalDeployment(
     MAIN_DB_USERNAME: EnvValue.fromValue(props.mariadb.username),
     MAIN_DB_PASSWORD: EnvValue.fromSecretValue({
       secret: mariadbSecret,
-      key: "MARIADB_PASSWORD",
+      key: "mariadb-password",
     }),
     MAIN_DB_DATABASE: EnvValue.fromValue(props.mariadb.databaseName),
 
@@ -108,7 +108,7 @@ export function createPostalDeployment(
     MESSAGE_DB_USERNAME: EnvValue.fromValue(props.mariadb.username),
     MESSAGE_DB_PASSWORD: EnvValue.fromSecretValue({
       secret: mariadbSecret,
-      key: "MARIADB_PASSWORD",
+      key: "mariadb-password",
     }),
 
     // Web server configuration

@@ -57,7 +57,7 @@ declare module "monarch-money-api" {
     };
   }>;
 
-  export function getTransactionCategories(): Promise<{
+  export function getCategories(): Promise<{
     categories: {
       id: string;
       order: number;
