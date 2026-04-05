@@ -48,7 +48,19 @@ function buildSummaryScript(): string {
     const tag = `ghcr.io/${key}:$$VERSION`;
     lines.push(
       `DIGEST=$$(buildkite-agent meta-data get "digest:${key}" --default "")`,
-      `if [ -n "$$DIGEST" ]; then echo "| [${key}](${ghcrUrl}) | $${BT}${tag}$${BT} | $${BT}$$DIGEST$${BT} |" >> $$SUMMARY; else echo "| [${key}](${ghcrUrl}) | $${BT}${tag}$${BT} | :x: _not pushed_ |" >> $$SUMMARY; fi`,
+      `if [ -n "$$DIGEST" ]; then echo "| [${key}](${ghcrUrl}) | $` +
+        "$BT" +
+        `${tag}$` +
+        "$BT" +
+        ` | $` +
+        "$BT" +
+        `$$DIGEST$` +
+        "$BT" +
+        ` |" >> $$SUMMARY; else echo "| [${key}](${ghcrUrl}) | $` +
+        "$BT" +
+        `${tag}$` +
+        "$BT" +
+        ` | :x: _not pushed_ |" >> $$SUMMARY; fi`,
     );
   }
 
