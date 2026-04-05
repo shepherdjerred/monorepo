@@ -16,7 +16,7 @@ export const RUST_IMAGE = "rust:1.89.0-bookworm";
 // renovate: datasource=docker depName=golang
 export const GO_IMAGE = "golang:1.25.4-bookworm";
 // renovate: datasource=docker depName=mcr.microsoft.com/playwright
-export const PLAYWRIGHT_IMAGE = "mcr.microsoft.com/playwright:v1.58.2-noble";
+export const PLAYWRIGHT_IMAGE = "mcr.microsoft.com/playwright:v1.59.1-noble";
 // renovate: datasource=docker depName=ghcr.io/realm/swiftlint
 export const SWIFTLINT_IMAGE = "ghcr.io/realm/swiftlint:0.58.2";
 // renovate: datasource=docker depName=alpine
