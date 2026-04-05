@@ -31,7 +31,6 @@
     "@tailwindcss/vite": "^4.0.15",
     "@types/jsdom": "^27.0.0",
     "astro": "^5.5.2",
-    "astro-diagram": "^0.7.0",
     "astro-icon": "^1.1.5",
     "astro-opengraph-images": "file:../astro-opengraph-images",
     "astro-seo": "^1.0.0",

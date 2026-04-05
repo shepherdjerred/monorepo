@@ -95,21 +95,22 @@ Slim `packages/homelab/src/ha/` to an event listener + Temporal client. Keep `@d
 **2b. Activities (HA REST API)**
 
 Replace `@digital-alchemy/hass` service calls with direct HA REST API:
+
 - `callHassService(domain, service, serviceData)` -- POST `/api/services/{domain}/{service}`
 - `getEntityState(entityId)` -- GET `/api/states/{entityId}`
 - `sendNotification(title, message)` -- calls `notify.notify` service
 
 **2c. Workflow translations**
 
-| Current Pattern | Temporal Equivalent |
-|---|---|
-| `runParallel([...])` | `Promise.all([activity1(), activity2()])` in workflow |
-| `runSequential([...])` | Sequential `await activity()` calls |
-| `runSequentialWithDelay([...], delay)` | `await activity(); await sleep(delay); await activity()` |
-| `withTimeout(promise, duration)` | Activity-level `scheduleToCloseTimeout` |
-| `verifyAfterDelay(entity, expected, delay, retries)` | `await sleep(delay); for (retries) { check + sleep }` |
-| `wait(time)` | `await sleep(duration)` -- durable timer |
-| `runIf(condition, fn)` | Normal `if` in workflow code |
+| Current Pattern                                      | Temporal Equivalent                                      |
+| ---------------------------------------------------- | -------------------------------------------------------- |
+| `runParallel([...])`                                 | `Promise.all([activity1(), activity2()])` in workflow    |
+| `runSequential([...])`                               | Sequential `await activity()` calls                      |
+| `runSequentialWithDelay([...], delay)`               | `await activity(); await sleep(delay); await activity()` |
+| `withTimeout(promise, duration)`                     | Activity-level `scheduleToCloseTimeout`                  |
+| `verifyAfterDelay(entity, expected, delay, retries)` | `await sleep(delay); for (retries) { check + sleep }`    |
+| `wait(time)`                                         | `await sleep(duration)` -- durable timer                 |
+| `runIf(condition, fn)`                               | Normal `if` in workflow code                             |
 
 **2d. Schedules and triggers**
 
@@ -124,6 +125,7 @@ Replace `@digital-alchemy/hass` service calls with direct HA REST API:
 Migrate 6 infrequent cron jobs. Keep 30s pre-match and 1min post-match as in-process cron (Temporal overhead disproportionate at that frequency).
 
 **Migrate:**
+
 - Competition lifecycle (15min)
 - Data validation (hourly)
 - Daily leaderboard update (midnight UTC)
@@ -137,16 +139,17 @@ Migrate 6 infrequent cron jobs. Keep 30s pre-match and 1min post-match as in-pro
 
 Sentinel's architecture maps 1:1 to Temporal:
 
-| Sentinel | Temporal |
-|---|---|
-| SQLite job queue (Prisma) | Task queue |
-| Worker loop | Temporal worker |
-| Cron adapter | Temporal schedules |
-| Webhook adapter | Workflow start from webhook handler |
-| Job timeout | Workflow execution timeout |
-| Retry/recovery | Retry policies |
+| Sentinel                  | Temporal                            |
+| ------------------------- | ----------------------------------- |
+| SQLite job queue (Prisma) | Task queue                          |
+| Worker loop               | Temporal worker                     |
+| Cron adapter              | Temporal schedules                  |
+| Webhook adapter           | Workflow start from webhook handler |
+| Job timeout               | Workflow execution timeout          |
+| Retry/recovery            | Retry policies                      |
 
 **Workflow**: `agentJob(agent, prompt, triggerType, triggerSource)`
+
 - Activities: `buildMemoryContext`, `runAgentQuery`, `logConversation`, `sendDiscordNotification`
 - `runAgentQuery` must heartbeat (use Agent SDK streaming events)
 
@@ -165,12 +168,12 @@ Sentinel's architecture maps 1:1 to Temporal:
 
 ## What NOT to Migrate
 
-| Candidate | Reason |
-|---|---|
-| Bugsink Housekeeping | Requires bugsink Python environment; K8s CronJob is correct |
-| Golink Sync | Requires kubectl + Tailscale sidecar; ArgoCD PostSync hook is correct |
-| Toolkit Daemon | Local filesystem watcher; reactive, not workflow-shaped |
-| Scout pre-match (30s) / post-match (1min) | Frequency too high for Temporal workflow overhead |
+| Candidate                                 | Reason                                                                |
+| ----------------------------------------- | --------------------------------------------------------------------- |
+| Bugsink Housekeeping                      | Requires bugsink Python environment; K8s CronJob is correct           |
+| Golink Sync                               | Requires kubectl + Tailscale sidecar; ArgoCD PostSync hook is correct |
+| Toolkit Daemon                            | Local filesystem watcher; reactive, not workflow-shaped               |
+| Scout pre-match (30s) / post-match (1min) | Frequency too high for Temporal workflow overhead                     |
 
 ## Key Files to Modify
 
@@ -196,6 +199,7 @@ Sentinel's architecture maps 1:1 to Temporal:
 ## Verification
 
 After each phase:
+
 1. Workflows visible in Temporal UI with correct schedules
 2. Manual workflow execution produces expected results
 3. Metrics flowing to Prometheus
