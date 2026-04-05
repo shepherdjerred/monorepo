@@ -6,7 +6,7 @@
     "build": "rm -rf dist/ && bun run src/app.ts && bun run scripts/patch.ts",
     "lint": "bunx eslint .",
     "typecheck": "bunx tsc --noEmit",
-    "test": "bun test && bun run test:gpu-resources",
+    "test": "bun run build && bun test && bun run test:gpu-resources",
     "test:gpu-resources": "bun run scripts/test-gpu-resources.ts",
     "clear": "rm -rf dist/",
     "build-app": "bun run src/app.ts",
