@@ -4,8 +4,8 @@ import { font } from "#src/assets/index.ts";
 import { PlayerCard } from "#src/html/loading-screen/player-card.tsx";
 
 export function StandardLayout({ data }: { data: LoadingScreenData }) {
-  const blueTeam = data.participants.filter((p) => p.teamId === 100);
-  const redTeam = data.participants.filter((p) => p.teamId === 200);
+  const blueTeam = data.participants.filter((p) => p.team === "blue");
+  const redTeam = data.participants.filter((p) => p.team === "red");
 
   return (
     <div

@@ -4,7 +4,7 @@ import { font } from "#src/assets/index.ts";
 import { PlayerCard } from "#src/html/loading-screen/player-card.tsx";
 
 type ArenaTeam = {
-  teamId: number;
+  teamKey: number;
   players: LoadingScreenParticipant[];
 };
 
@@ -14,14 +14,16 @@ function groupIntoArenaTeams(
   const teamMap = new Map<number, LoadingScreenParticipant[]>();
 
   for (const participant of participants) {
-    const existing = teamMap.get(participant.teamId) ?? [];
+    // Arena team IDs are numeric
+    const teamNum = typeof participant.team === "number" ? participant.team : 0;
+    const existing = teamMap.get(teamNum) ?? [];
     existing.push(participant);
-    teamMap.set(participant.teamId, existing);
+    teamMap.set(teamNum, existing);
   }
 
   return [...teamMap.entries()]
-    .map(([teamId, players]) => ({ teamId, players }))
-    .toSorted((a, b) => a.teamId - b.teamId);
+    .map(([teamKey, players]) => ({ teamKey, players }))
+    .toSorted((a, b) => a.teamKey - b.teamKey);
 }
 
 function TeamPair({
@@ -104,7 +106,7 @@ export function ArenaLayout({ data }: { data: LoadingScreenData }) {
         >
           {row.map((team, colIdx) => (
             <TeamPair
-              key={team.teamId.toString()}
+              key={team.teamKey.toString()}
               team={team}
               teamIndex={rowIdx * 2 + colIdx}
             />

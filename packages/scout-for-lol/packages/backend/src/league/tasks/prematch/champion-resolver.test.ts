@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { resolveChampionKey } from "#src/league/tasks/prematch/champion-resolver.ts";
+import { resolveChampionKey } from "#src/utils/champion.ts";
 
 describe("resolveChampionKey", () => {
   test("resolves known champion IDs", () => {

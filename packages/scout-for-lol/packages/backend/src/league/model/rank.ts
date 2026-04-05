@@ -63,14 +63,14 @@ export function getRank(
 }
 
 /**
- * Fetch solo queue rank for any player by PUUID and region.
- * Used by the loading screen to display ranks for all 10 participants.
+ * Fetch ranks (solo + flex) for any player by PUUID and region.
+ * Used by the loading screen to display ranks for all participants.
  * Returns undefined on any error (graceful — does not throw).
  */
 export async function getRankByPuuid(
   puuid: string,
   region: Region,
-): Promise<Rank | undefined> {
+): Promise<Ranks | undefined> {
   try {
     const response = await withTimeout(
       api.League.byPUUID(puuid, mapRegionToEnum(region)),
@@ -92,15 +92,17 @@ export async function getRankByPuuid(
       return undefined;
     }
 
-    return getRank(parseResult.data, solo);
+    return {
+      solo: getRank(parseResult.data, solo),
+      flex: getRank(parseResult.data, flex),
+    };
   } catch (error) {
     const status =
       error instanceof Error && error.message.includes("timed out")
         ? "timeout"
         : "error";
     riotApiRequestsTotal.inc({ source: "rank-by-puuid", status });
-    // Don't log at error level — rank fetch failures for non-tracked players are expected
-    logger.debug(`Failed to fetch rank for puuid ${puuid}: ${String(error)}`);
+    logger.warn(`Failed to fetch rank for puuid ${puuid}: ${String(error)}`);
     return undefined;
   }
 }

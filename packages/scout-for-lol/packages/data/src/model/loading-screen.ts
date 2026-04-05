@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { RankSchema } from "#src/model/rank.ts";
+import { RanksSchema } from "#src/model/rank.ts";
 import { QueueTypeSchema } from "#src/model/state.ts";
+import { TeamSchema } from "#src/model/team.ts";
 
 /**
  * Layout mode determines how participants are arranged visually.
@@ -10,6 +11,34 @@ import { QueueTypeSchema } from "#src/model/state.ts";
  */
 export type LoadingScreenLayout = z.infer<typeof LoadingScreenLayoutSchema>;
 export const LoadingScreenLayoutSchema = z.enum(["standard", "aram", "arena"]);
+
+/**
+ * Branded type for summoner spell IDs (e.g., 4=Flash, 14=Ignite).
+ */
+export type SummonerSpellId = z.infer<typeof SummonerSpellIdSchema>;
+export const SummonerSpellIdSchema = z
+  .number()
+  .int()
+  .nonnegative()
+  .brand<"SummonerSpellId">();
+
+/**
+ * Branded type for rune IDs (keystone, tree, etc.).
+ */
+export type RuneId = z.infer<typeof RuneIdSchema>;
+export const RuneIdSchema = z.number().int().positive().brand<"RuneId">();
+
+/**
+ * Branded type for Riot champion IDs (e.g., 1=Annie, 266=Aatrox).
+ */
+export type LoadingScreenChampionId = z.infer<
+  typeof LoadingScreenChampionIdSchema
+>;
+export const LoadingScreenChampionIdSchema = z
+  .number()
+  .int()
+  .positive()
+  .brand<"LoadingScreenChampionId">();
 
 /**
  * A single participant on the loading screen.
@@ -29,18 +58,18 @@ export const LoadingScreenParticipantSchema = z.strictObject({
   championDisplayName: z.string(),
   /** Skin number for loading screen art (0 = default) */
   skinNum: z.number().int().nonnegative(),
-  /** Team ID: 100=blue, 200=red, or arena team IDs */
-  teamId: z.number().int(),
+  /** Team side: "blue" or "red" for standard/ARAM, or arena team number */
+  team: z.union([TeamSchema, z.number().int().positive()]),
   /** Summoner spell 1 ID (e.g., 4=Flash) */
-  spell1Id: z.number().int(),
+  spell1Id: SummonerSpellIdSchema,
   /** Summoner spell 2 ID (e.g., 14=Ignite) */
-  spell2Id: z.number().int(),
+  spell2Id: SummonerSpellIdSchema,
   /** Keystone rune ID (first perk in primary tree) */
-  keystoneRuneId: z.number().int().optional(),
+  keystoneRuneId: RuneIdSchema.optional(),
   /** Secondary rune tree ID */
-  secondaryTreeId: z.number().int().optional(),
-  /** Solo queue rank (fetched via LeagueV4) */
-  rank: RankSchema.optional(),
+  secondaryTreeId: RuneIdSchema.optional(),
+  /** Ranks (solo + flex, fetched via LeagueV4) */
+  ranks: RanksSchema.optional(),
   /** Whether this player is tracked by the bot */
   isTrackedPlayer: z.boolean(),
 });
@@ -51,11 +80,11 @@ export const LoadingScreenParticipantSchema = z.strictObject({
 export type LoadingScreenBan = z.infer<typeof LoadingScreenBanSchema>;
 export const LoadingScreenBanSchema = z.strictObject({
   /** Riot champion ID */
-  championId: z.number().int(),
+  championId: LoadingScreenChampionIdSchema,
   /** Champion key for image lookup (e.g., "Aatrox") */
   championName: z.string(),
-  /** Team that banned this champion (100=blue, 200=red) */
-  teamId: z.number().int(),
+  /** Team that made the ban */
+  team: TeamSchema,
 });
 
 /**
@@ -65,7 +94,7 @@ export const LoadingScreenBanSchema = z.strictObject({
 export type LoadingScreenData = z.infer<typeof LoadingScreenDataSchema>;
 export const LoadingScreenDataSchema = z.strictObject({
   /** Riot game ID from spectator API */
-  gameId: z.number(),
+  gameId: z.number().int().positive(),
   /** Parsed queue type (undefined for unknown queues) */
   queueType: QueueTypeSchema.optional(),
   /** Human-readable queue name (e.g., "Ranked Solo", "ARAM") */
@@ -81,5 +110,5 @@ export const LoadingScreenDataSchema = z.strictObject({
   /** Banned champions (empty for ARAM/Arena) */
   bans: z.array(LoadingScreenBanSchema),
   /** Game start timestamp in milliseconds */
-  gameStartTime: z.number(),
+  gameStartTime: z.number().int().nonnegative(),
 });

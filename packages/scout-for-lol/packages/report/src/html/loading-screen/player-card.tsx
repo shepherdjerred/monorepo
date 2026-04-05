@@ -130,11 +130,13 @@ function RuneIcons({
 }
 
 function RankDisplay({ participant }: { participant: LoadingScreenParticipant }) {
-  if (!participant.rank) {
+  // Show solo queue rank, falling back to flex
+  const rank = participant.ranks?.solo ?? participant.ranks?.flex;
+  if (rank === undefined) {
     return null;
   }
 
-  const { tier, division } = participant.rank;
+  const { tier, division } = rank;
 
   return (
     <div

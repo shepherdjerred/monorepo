@@ -138,15 +138,6 @@ export function getChampionLoadingImage(
     return cached;
   }
 
-  // Fallback to default skin if requested skin not found
-  if (skinNum !== 0) {
-    const defaultKey = `${championName}_0`;
-    const defaultCached = championLoadingImageCache.get(defaultKey);
-    if (defaultCached !== undefined && defaultCached.length > 0) {
-      return defaultCached;
-    }
-  }
-
   throw new Error(
     `Champion loading image for ${key} not found in cache. Call preloadChampionLoadingImages() before rendering.`,
   );

@@ -140,8 +140,13 @@ export async function sendPrematchNotification(
   let loadingScreenEmbed: EmbedBuilder | undefined;
   try {
     const startTime = Date.now();
-    const region =
-      trackedPlayers[0]?.league.leagueAccount.region ?? "AMERICA_NORTH";
+    const firstPlayer = trackedPlayers[0];
+    if (firstPlayer === undefined) {
+      throw new Error(
+        `No tracked players provided for game ${gameId}`,
+      );
+    }
+    const region = firstPlayer.league.leagueAccount.region;
     const trackedPuuidSet = new Set(
       trackedPlayers.map((p) => p.league.leagueAccount.puuid),
     );

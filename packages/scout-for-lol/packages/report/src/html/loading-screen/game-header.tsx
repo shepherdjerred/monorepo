@@ -12,7 +12,7 @@ function BanIcon({ ban }: { ban: LoadingScreenBan }) {
   }
 
   const teamColor =
-    ban.teamId === 100 ? palette.teams.blue : palette.teams.red;
+    ban.team === "blue" ? palette.teams.blue : palette.teams.red;
 
   return (
     <div
@@ -77,8 +77,8 @@ function BanIcon({ ban }: { ban: LoadingScreenBan }) {
   );
 }
 
-function BansRow({ bans, teamId }: { bans: LoadingScreenBan[]; teamId: number }) {
-  const teamBans = bans.filter((b) => b.teamId === teamId);
+function BansRow({ bans, team }: { bans: LoadingScreenBan[]; team: "blue" | "red" }) {
+  const teamBans = bans.filter((b) => b.team === team);
   if (teamBans.length === 0) {
     return null;
   }
@@ -173,7 +173,7 @@ export function GameHeader({ data }: { data: LoadingScreenData }) {
             gap: "16px",
           }}
         >
-          <BansRow bans={data.bans} teamId={100} />
+          <BansRow bans={data.bans} team="blue" />
           <span
             style={{
               fontSize: "12px",
@@ -184,7 +184,7 @@ export function GameHeader({ data }: { data: LoadingScreenData }) {
           >
             Bans
           </span>
-          <BansRow bans={data.bans} teamId={200} />
+          <BansRow bans={data.bans} team="red" />
         </div>
       )}
     </div>
