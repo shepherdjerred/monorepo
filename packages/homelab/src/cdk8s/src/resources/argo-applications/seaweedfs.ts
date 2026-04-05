@@ -84,11 +84,12 @@ export function createSeaweedfsApp(chart: Chart) {
 
   const seaweedfsValues: HelmValuesForChart<"seaweedfs"> = {
     global: {
-      enableReplication: false,
-      monitoring: {
-        enabled: true,
-        additionalLabels: {
-          release: "prometheus",
+      seaweedfs: {
+        monitoring: {
+          enabled: true,
+          additionalLabels: {
+            release: "prometheus",
+          },
         },
       },
     },

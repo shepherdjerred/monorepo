@@ -106,7 +106,18 @@ export function createBuildkiteApp(chart: Chart) {
                 priorityClassName: "batch-low",
                 serviceAccountName: "buildkite-agent-stack-k8s-controller",
                 automountServiceAccountToken: true,
-                containers: [{ name: "agent" }],
+                containers: [
+                  {
+                    name: "agent",
+                    envFrom: [
+                      {
+                        secretRef: {
+                          name: "buildkite-ci-secrets",
+                        },
+                      },
+                    ],
+                  },
+                ],
               },
             },
           },
