@@ -695,7 +695,8 @@ export function versionCommitBackHelper(
         `git add packages/homelab/src/cdk8s/src/versions.ts`,
         `git commit -m "chore: bump image versions to ${version}"`,
         `git push origin "chore/version-bump-${version}"`,
-        `gh pr create --title "chore: bump image versions to ${version}" --body "Auto-generated version bump" --auto`,
+        `gh pr create --title "chore: bump image versions to ${version}" --body "Auto-generated version bump"`,
+        `gh pr merge --auto --merge`,
       ].join(" && "),
     ]);
 }
