@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.15.0](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.14.3...astro-opengraph-images-v1.15.0) (2026-04-05)
+
+Maintenance release with dependency updates and build system improvements.
+
 ## [1.14.3](https://github.com/shepherdjerred/astro-opengraph-images/compare/v1.14.2...v1.14.3) (2026-02-08)
 
 ### Bug Fixes
