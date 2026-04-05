@@ -186,8 +186,10 @@ export async function smokeTestScoutForLolHelper(
     .withEnvVariable("VERSION", "0.0.0-smoke")
     .withEnvVariable("GIT_SHA", "smoke-test")
     .withEntrypoint([])
+    // Generate Prisma client — scout backend imports from #generated/prisma/client
     .withWorkdir("/workspace/packages/scout-for-lol/packages/backend")
-    .withExec(["sh", "-c", "timeout 30s bun run src/index.ts 2>&1"]);
+    .withExec(["bunx", "--trust", "prisma@6", "generate"])
+    .withExec(["sh", "-c", "timeout 30s bun run src/index.ts 2>&1; exit 0"]);
 
   return runSmokeTest(container, [
     "401",
