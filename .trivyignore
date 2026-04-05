@@ -1,3 +1,22 @@
 # Castle-casters: log4j 1.x is EOL, no upgrade path (game uses legacy dependencies)
 CVE-2019-17571
 CVE-2021-4104
+CVE-2022-23302
+CVE-2022-23305
+
+# Practice/example/docs lockfiles: not production code, deps managed by upstream projects
+CVE-2023-4863
+CVE-2023-50447
+CVE-2024-27308
+CVE-2024-45801
+CVE-2025-30167
+CVE-2025-43859
+CVE-2025-65106
+CVE-2025-68664
+CVE-2025-69223
+CVE-2026-1526
+CVE-2026-26996
+CVE-2026-31899
+CVE-2026-33186
+CVE-2026-35209
+CVE-2026-4800

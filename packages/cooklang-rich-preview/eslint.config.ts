@@ -1,9 +1,10 @@
 import { recommended } from "@shepherdjerred/eslint-config";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-export default [
+const config: TSESLint.FlatConfig.ConfigArray = [
   {
     ignores: ["**/*.astro", "src/env.d.ts", "eslint.config.ts"],
   },
   ...recommended({ tsconfigRootDir: import.meta.dirname }),
-] satisfies TSESLint.FlatConfig.ConfigArray;
+];
+export default config;

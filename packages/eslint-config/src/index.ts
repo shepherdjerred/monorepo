@@ -7,6 +7,9 @@
 
 import type { TSESLint } from "@typescript-eslint/utils";
 
+// Re-export TSESLint so consuming packages can portably reference Config types
+export type { TSESLint } from "@typescript-eslint/utils";
+
 // Export composable configs
 export { baseConfig, type BaseConfigOptions } from "./configs/base.js";
 export { importsConfig, type ImportsConfigOptions } from "./configs/imports.js";
@@ -249,16 +252,24 @@ export function recommended(
   });
 
   // Config files may import local workspace entrypoints for shared lint config.
+  // Type resolution for transitive deps (typescript-eslint Config) may fail in
+  // allowDefaultProject context, producing error-typed values that trigger unsafe rules.
   configs.push({
     files: [
       "eslint.config.ts",
       "eslint.config.js",
       "eslint.config.mjs",
       "eslint.config.cjs",
+      "**/eslint.config.ts",
+      "**/eslint.config.js",
     ],
     rules: {
       "custom-rules/no-parent-imports": "off",
       "import/no-relative-packages": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
     },
   });
 

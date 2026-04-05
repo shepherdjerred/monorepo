@@ -5,7 +5,7 @@
     "module": "esnext",
     "lib": ["esnext"],
     "jsx": "react-native",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -13,9 +13,8 @@
     "isolatedModules": true,
     "noEmit": true,
     "strict": true,
-    "baseUrl": "./src",
     "paths": {
-      "@/*": ["*"]
+      "@/*": ["./src/*"]
     },
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,

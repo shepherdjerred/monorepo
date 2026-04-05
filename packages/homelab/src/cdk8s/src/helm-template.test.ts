@@ -12,10 +12,18 @@ import path from "node:path";
  * Pipeline: TypeScript → CDK8s synth → YAML (dist/) → Helm chart → ArgoCD helm template → K8s
  *
  * See: packages/docs/guides/2026-04-04_helm-escaping-pipeline.md
+ *
+ * These tests are skipped in CI where dist/ is not present (it's gitignored).
+ * The dedicated homelab-cdk8s build step validates the full pipeline in CI.
  */
 
 const HELM_DIR = path.join(import.meta.dir, "../helm");
 const DIST_DIR = path.join(import.meta.dir, "../dist");
+
+// dist/ is gitignored — only exists locally after CDK8s synth
+const distExists = await Bun.file(
+  path.join(DIST_DIR, "apps.k8s.yaml"),
+).exists();
 
 /**
  * Check that no unescaped {{ sequences exist in YAML content.
@@ -104,7 +112,7 @@ async function helmTemplateChart(chartName: string): Promise<{
   }
 }
 
-describe("Helm Escaping - Denylist Check (dist/)", () => {
+describe.skipIf(!distExists)("Helm Escaping - Denylist Check (dist/)", () => {
   it("should not contain unescaped {{ in any dist file", async () => {
     const glob = new Glob("*.k8s.yaml");
     for await (const entry of glob.scan(DIST_DIR)) {
@@ -122,7 +130,7 @@ describe("Helm Escaping - Denylist Check (dist/)", () => {
   });
 });
 
-describe("Helm Escaping - helm template (dist/)", () => {
+describe.skipIf(!distExists)("Helm Escaping - helm template (dist/)", () => {
   it("should render all charts with helm template without errors", async () => {
     const glob = new Glob("*/Chart.yaml");
     const chartNames: string[] = [];
@@ -148,44 +156,47 @@ describe("Helm Escaping - helm template (dist/)", () => {
   });
 });
 
-describe("Helm Escaping - E2E Content Verification (dist/)", () => {
-  it("apps chart: Prometheus rules contain unescaped Go templates after Helm", async () => {
-    const result = await helmTemplateChart("apps");
-    expect(result.stdout).toContain("{{ $value }}");
-    expect(result.stdout).toContain("{{ $labels.");
-  });
+describe.skipIf(!distExists)(
+  "Helm Escaping - E2E Content Verification (dist/)",
+  () => {
+    it("apps chart: Prometheus rules contain unescaped Go templates after Helm", async () => {
+      const result = await helmTemplateChart("apps");
+      expect(result.stdout).toContain("{{ $value }}");
+      expect(result.stdout).toContain("{{ $labels.");
+    });
 
-  it("apps chart: event-exporter config contains unescaped Go templates after Helm", async () => {
-    const result = await helmTemplateChart("apps");
-    expect(result.stdout).toContain("{{ .InvolvedObject.Namespace }}");
-    expect(result.stdout).toContain("{{ .Reason }}");
-  });
+    it("apps chart: event-exporter config contains unescaped Go templates after Helm", async () => {
+      const result = await helmTemplateChart("apps");
+      expect(result.stdout).toContain("{{ .InvolvedObject.Namespace }}");
+      expect(result.stdout).toContain("{{ .Reason }}");
+    });
 
-  it("apps chart: R2 exporter Python has correct f-string braces after Helm", async () => {
-    const result = await helmTemplateChart("apps");
-    expect(result.stdout).toContain('{metrics_cache["storage_bytes"]}');
-  });
+    it("apps chart: R2 exporter Python has correct f-string braces after Helm", async () => {
+      const result = await helmTemplateChart("apps");
+      expect(result.stdout).toContain('{metrics_cache["storage_bytes"]}');
+    });
 
-  it("apps chart: PagerDuty config contains unescaped Alertmanager templates after Helm", async () => {
-    const result = await helmTemplateChart("apps");
-    expect(result.stdout).toContain("{{ range .Alerts }}");
-    expect(result.stdout).toContain("{{ .Annotations.summary }}");
-  });
+    it("apps chart: PagerDuty config contains unescaped Alertmanager templates after Helm", async () => {
+      const result = await helmTemplateChart("apps");
+      expect(result.stdout).toContain("{{ range .Alerts }}");
+      expect(result.stdout).toContain("{{ .Annotations.summary }}");
+    });
 
-  it("apps chart: no Helm escape artifacts remain after rendering", async () => {
-    const result = await helmTemplateChart("apps");
-    expect(result.stdout).not.toContain('{{ "{{" }}');
-    expect(result.stdout).not.toContain('{{ "}}" }}');
-  });
+    it("apps chart: no Helm escape artifacts remain after rendering", async () => {
+      const result = await helmTemplateChart("apps");
+      expect(result.stdout).not.toContain('{{ "{{" }}');
+      expect(result.stdout).not.toContain('{{ "}}" }}');
+    });
 
-  it("home chart: HA Jinja2 templates contain unescaped braces after Helm", async () => {
-    const result = await helmTemplateChart("home");
-    expect(result.stdout).toContain("{{ states");
-  });
+    it("home chart: HA Jinja2 templates contain unescaped braces after Helm", async () => {
+      const result = await helmTemplateChart("home");
+      expect(result.stdout).toContain("{{ states");
+    });
 
-  it("home chart: no Helm escape artifacts remain after rendering", async () => {
-    const result = await helmTemplateChart("home");
-    expect(result.stdout).not.toContain('{{ "{{" }}');
-    expect(result.stdout).not.toContain('{{ "}}" }}');
-  });
-});
+    it("home chart: no Helm escape artifacts remain after rendering", async () => {
+      const result = await helmTemplateChart("home");
+      expect(result.stdout).not.toContain('{{ "{{" }}');
+      expect(result.stdout).not.toContain('{{ "}}" }}');
+    });
+  },
+);

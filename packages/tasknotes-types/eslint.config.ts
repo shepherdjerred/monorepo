@@ -1,7 +1,7 @@
 import { recommended } from "@shepherdjerred/eslint-config";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-export default [
+const config: TSESLint.FlatConfig.ConfigArray = [
   ...recommended({
     tsconfigRootDir: import.meta.dirname,
     ignores: [
@@ -24,4 +24,5 @@ export default [
       "custom-rules/no-re-exports": "off",
     },
   },
-] satisfies TSESLint.FlatConfig.ConfigArray;
+];
+export default config;

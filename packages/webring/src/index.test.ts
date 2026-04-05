@@ -22,8 +22,8 @@ function createUrl(urlPath: string): string {
 
 function createSources(count: number): Configuration["sources"] {
   return Array.from({ length: count }, (_, i) => ({
-    title: `rss ${i.toString()}`,
-    url: createUrl(`rss-${i.toString()}.xml`),
+    title: `rss ${(i + 1).toString()}`,
+    url: createUrl(`rss-${(i + 1).toString()}.xml`),
   }));
 }
 

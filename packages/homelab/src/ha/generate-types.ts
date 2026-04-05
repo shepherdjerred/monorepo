@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 
-import { existsSync } from "node:fs";
 import { $ } from "bun";
 
 const GENERATED_FILES = [
@@ -339,7 +338,13 @@ async function main() {
   await generateTypes();
 
   // Verify generated files exist before post-processing
-  const missingFiles = GENERATED_FILES.filter((f) => !existsSync(f));
+  const existChecks = await Promise.all(
+    GENERATED_FILES.map(async (f) => ({
+      file: f,
+      exists: await Bun.file(f).exists(),
+    })),
+  );
+  const missingFiles = existChecks.filter((c) => !c.exists).map((c) => c.file);
   if (missingFiles.length > 0) {
     console.error(
       "❌ Type generation did not produce expected files:",

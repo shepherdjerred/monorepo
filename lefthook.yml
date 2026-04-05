@@ -362,11 +362,6 @@ pre-commit:
             glob: "packages/monarch/**/*.{ts,tsx}"
             run: bun run test
 
-          - name: scout-for-lol-test
-            root: "packages/scout-for-lol/"
-            glob: "packages/scout-for-lol/**/*.{ts,tsx}"
-            run: bunx prisma generate && bun run test
-
           - name: tasknotes-server-test
             root: "packages/tasknotes-server/"
             glob: "packages/tasknotes-server/**/*.{ts,tsx}"
@@ -382,10 +377,7 @@ pre-commit:
             glob: "packages/webring/**/*.{ts,tsx}"
             run: bun run test
 
-          - name: homelab-test
-            root: "packages/homelab/"
-            glob: "packages/homelab/**/*.{ts,tsx}"
-            run: bun run test
+          # homelab-test combined into homelab-typecheck to avoid parallel bun install races
 
           - name: homelab-helm-lint
             root: "packages/homelab/"
@@ -438,7 +430,7 @@ pre-commit:
           - name: scout-for-lol-typecheck
             root: "packages/scout-for-lol/"
             glob: "packages/scout-for-lol/**/*.{ts,tsx}"
-            run: bun run typecheck
+            run: bun run --cwd packages/backend db:generate && bun run typecheck && bun run test
 
           - name: discord-plays-pokemon-typecheck
             root: "packages/discord-plays-pokemon/"
@@ -448,7 +440,7 @@ pre-commit:
           - name: homelab-typecheck
             root: "packages/homelab/"
             glob: "packages/homelab/**/*.{ts,tsx}"
-            run: bun run typecheck
+            run: bun run typecheck && bun run test
 
           - name: cooklang-rich-preview-typecheck
             root: "packages/cooklang-rich-preview/"

@@ -1,7 +1,7 @@
 import { recommended } from "@shepherdjerred/eslint-config";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-export default [
+const config: TSESLint.FlatConfig.ConfigArray = [
   {
     ignores: ["vite.config.ts", "eslint.config.ts", "**/*.test.ts"],
   },
@@ -12,4 +12,5 @@ export default [
       "no-console": "off",
     },
   },
-] satisfies TSESLint.FlatConfig.ConfigArray;
+];
+export default config;
