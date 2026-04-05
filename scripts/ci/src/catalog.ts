@@ -68,7 +68,10 @@ export interface NpmPackage {
 export const NPM_PACKAGES: NpmPackage[] = [
   { name: "astro-opengraph-images", dir: "packages/astro-opengraph-images" },
   { name: "webring", dir: "packages/webring" },
-  { name: "helm-types", dir: "packages/homelab/src/helm-types" },
+  {
+    name: "@shepherdjerred/helm-types",
+    dir: "packages/homelab/src/helm-types",
+  },
 ];
 
 // ---------------------------------------------------------------------------

@@ -37,14 +37,16 @@ function buildSummaryScript(): string {
     // Images section
     `echo "### :docker: Images" >> $$SUMMARY`,
     `echo "" >> $$SUMMARY`,
-    `echo "| Image | Digest |" >> $$SUMMARY`,
-    `echo "|-------|--------|" >> $$SUMMARY`,
+    `echo "| Image | Version | Digest |" >> $$SUMMARY`,
+    `echo "|-------|---------|--------|" >> $$SUMMARY`,
   ];
 
   for (const key of ALL_IMAGE_KEYS) {
+    const ghcrUrl = `https://ghcr.io/${key}`;
+    const tag = `ghcr.io/${key}:$$VERSION`;
     lines.push(
       `DIGEST=$$(buildkite-agent meta-data get "digest:${key}" --default "")`,
-      `if [ -n "$$DIGEST" ]; then echo "| ${key} | \`$$DIGEST\` |" >> $$SUMMARY; else echo "| ${key} | :x: _not pushed_ |" >> $$SUMMARY; fi`,
+      `if [ -n "$$DIGEST" ]; then echo "| [${key}](${ghcrUrl}) | \`${tag}\` | \`$$DIGEST\` |" >> $$SUMMARY; else echo "| [${key}](${ghcrUrl}) | \`${tag}\` | :x: _not pushed_ |" >> $$SUMMARY; fi`,
     );
   }
 
