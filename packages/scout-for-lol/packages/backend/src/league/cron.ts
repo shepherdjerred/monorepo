@@ -1,4 +1,5 @@
 import { checkPostMatch } from "#src/league/tasks/postmatch/index.ts";
+import { checkPreMatch } from "#src/league/tasks/prematch/index.ts";
 import { runLifecycleCheck } from "#src/league/tasks/competition/lifecycle.ts";
 import { runDailyLeaderboardUpdate } from "#src/league/tasks/competition/daily-update.ts";
 import { runPlayerPruning } from "#src/league/tasks/cleanup/prune-players.ts";
@@ -20,6 +21,17 @@ export async function startCronJobs() {
   await runStartupRecovery();
 
   logger.info("⏰ Initializing cron job scheduler");
+
+  // check active games every 30 seconds (pre-match detection)
+  logger.info("📅 Setting up pre-match active game check (every 30 seconds)");
+  createCronJob({
+    schedule: "*/30 * * * * *",
+    jobName: "pre_match_check",
+    task: checkPreMatch,
+    logMessage: "🔍 Running pre-match active game check",
+    timezone: "America/Los_Angeles",
+    runOnInit: true,
+  });
 
   // check match history every minute
   logger.info("📅 Setting up match history polling job (every minute at :00)");
@@ -139,7 +151,7 @@ export async function startCronJobs() {
 
   logger.info("✅ Cron jobs initialized successfully");
   logger.info(
-    "📊 Match history polling (1min), competition lifecycle (15min), data validation (hourly), " +
+    "📊 Pre-match check (30s), match history polling (1min), competition lifecycle (15min), data validation (hourly), " +
       "match time refresh (6hr), daily leaderboard (midnight UTC), player pruning (3AM UTC), " +
       "abandoned guild cleanup (4AM UTC), and weekly pairing update (Sunday 6PM UTC) cron jobs are now active",
   );
