@@ -1,3 +1,8 @@
+import {
+  to = github_repository_ruleset.monorepo_main
+  id = "monorepo:11098884"
+}
+
 resource "github_repository_ruleset" "monorepo_main" {
   name        = "main"
   repository  = github_repository.monorepo.name
