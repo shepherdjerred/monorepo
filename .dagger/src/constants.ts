@@ -75,10 +75,6 @@ export const MAVEN_CACHE = "maven-local-repo";
 
 /** Directories excluded when mounting source into containers. */
 export const SOURCE_EXCLUDES = [
-  // Must come before node_modules — Bun creates recursive symlinks in
-  // webring/example/node_modules/webring/example/... that exceed PATH_MAX
-  // and crash BuildKit file sync before glob excludes are applied.
-  "**/example/node_modules",
   "**/node_modules",
   "**/.eslintcache",
   "**/dist",

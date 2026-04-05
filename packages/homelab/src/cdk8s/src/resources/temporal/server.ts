@@ -82,7 +82,7 @@ export function createTemporalServerDeployment(
       ],
       envVariables: {
         // Database configuration
-        DB: EnvValue.fromValue("postgresql"),
+        DB: EnvValue.fromValue("postgres12"),
         DB_PORT: EnvValue.fromValue("5432"),
         POSTGRES_SEEDS: EnvValue.fromValue("temporal-postgresql"),
         DBNAME: EnvValue.fromValue("temporal"),

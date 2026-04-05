@@ -7,7 +7,8 @@
     "start": "astro dev",
     "build": "astro check && astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "postinstall": "bun run ../../../scripts/copy-example-deps.ts ../ webring ."
   },
   "dependencies": {
     "@astrojs/mdx": "^4.1.1",
@@ -15,7 +16,6 @@
     "@astrojs/sitemap": "^3.2.1",
     "astro": "^5.4.3",
     "@astrojs/check": "^0.9.4",
-    "typescript": "^6",
-    "webring": "file:../"
+    "typescript": "^6"
   }
 }
