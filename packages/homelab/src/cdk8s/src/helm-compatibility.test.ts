@@ -248,80 +248,7 @@ describe("Helm Compatibility - Templates and Structure", () => {
     allResources = parseResources(yamlContent);
   });
 
-  describe("Template Syntax Validation", () => {
-    it("should not contain unescaped Helm template syntax", () => {
-      const violations: {
-        file: string;
-        lineNumber: number;
-        line: string;
-        reason: string;
-      }[] = [];
-
-      const lines = yamlContent.split("\n");
-      const fileName = "manifests.k8s.yaml";
-
-      for (const [i, line] of lines.entries()) {
-        if (!line) {
-          continue;
-        }
-
-        if (line.trim().startsWith("#")) {
-          continue;
-        }
-
-        const hasTemplateStart = line.includes("{{");
-        const hasTemplateEnd = line.includes("}}");
-
-        if (
-          hasTemplateStart &&
-          hasTemplateEnd &&
-          (/\{\{(?!\s*"[{"}]")/.test(line) ||
-            /[^"]\}\}/.test(line.replaceAll('}}" }}', "")))
-        ) {
-          const suspiciousPatterns = [
-            /\{\{\s*\.\w+/,
-            /\{\{\s*template\s+/,
-            /\{\{\s*include\s+/,
-            /\{\{\s*range\s+/,
-            /\{\{\s*if\s+/,
-            /\{\{\s*with\s+/,
-            /\{\{\s*define\s+/,
-          ];
-
-          for (const pattern of suspiciousPatterns) {
-            if (pattern.test(line)) {
-              violations.push({
-                file: fileName,
-                lineNumber: i + 1,
-                line: line.trim(),
-                reason: "Contains unescaped Helm template syntax",
-              });
-              break;
-            }
-          }
-        }
-      }
-
-      expect(violations).toEqual([]);
-    });
-
-    it("should properly escape template syntax for Prometheus alerts", () => {
-      const escapedStartCount = (yamlContent.match(/\{\{ "\{\{" \}\}/g) ?? [])
-        .length;
-      const escapedEndCount = (yamlContent.match(/\{\{ "\}\}" \}\}/g) ?? [])
-        .length;
-      const escapedCount = escapedStartCount + escapedEndCount;
-
-      if (escapedCount > 0) {
-        console.log(
-          [
-            "Found properly escaped template syntax (for Prometheus/Grafana templates):",
-            `  - manifests.k8s.yaml: ${String(escapedCount)} escaped template markers`,
-          ].join("\n"),
-        );
-      }
-    });
-  });
+  // Template syntax validation moved to helm-template.test.ts (reads from dist/ without synthesis)
 
   describe("Resource Uniqueness", () => {
     it("should not have duplicate resources (same kind/name/namespace)", () => {
@@ -402,15 +329,6 @@ describe("Helm Compatibility - Templates and Structure", () => {
       }
 
       expect(violations).toEqual([]);
-    });
-  });
-
-  describe("Helm Chart Lint", () => {
-    it("should pass helm lint when packaged as a chart", async () => {
-      const scriptPath = `${import.meta.dir}/../../../scripts/lint-helm.sh`;
-      const fileExists = await Bun.file(scriptPath).exists();
-
-      expect(fileExists).toBe(true);
     });
   });
 });

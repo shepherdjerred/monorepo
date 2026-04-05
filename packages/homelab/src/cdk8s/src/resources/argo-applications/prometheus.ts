@@ -267,7 +267,7 @@ export async function createPrometheusApp(chart: Chart) {
             pagerduty_configs: [
               {
                 send_resolved: true,
-                routing_key_file: `/etc/alertmanager/secrets/${alertmanagerSecrets.name}/pagerduty_token`,
+                routing_key_file: `/etc/alertmanager/secrets/${alertmanagerSecrets.name}/PAGERDUTY_TOKEN`,
                 // Alertmanager will evaluate this Go template when sending to PagerDuty
                 // kube-prometheus-stack chart passes config values through without template processing
                 description: escapeHelmGoTemplate(
@@ -384,6 +384,11 @@ export async function createPrometheusApp(chart: Chart) {
         retentionSize: "240GB", // Safety limit - delete old data if storage exceeds this
         storageSpec: {
           volumeClaimTemplate: {
+            metadata: {
+              labels: {
+                "velero.io/exclude-from-backup": "true",
+              },
+            },
             spec: {
               storageClassName: NVME_STORAGE_CLASS,
               accessModes: ["ReadWriteOnce"],

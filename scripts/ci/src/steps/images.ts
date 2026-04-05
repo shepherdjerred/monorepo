@@ -102,10 +102,13 @@ const SMOKE_NO_ARGS = new Set([
   "smoke-test-obsidian-headless",
 ]);
 
-// Smoke test functions that take --pkg-dir + dep flags but no --pkg (custom infra images)
+// Smoke test functions that take --pkg-dir + dep flags but no --pkg (custom infra images / workspace monorepos)
 const SMOKE_CUSTOM_INFRA = new Set([
   "smoke-test-homelab",
   "smoke-test-deps-summary",
+  "smoke-test-scout-for-lol",
+  "smoke-test-discord-plays-pokemon",
+  "smoke-test-better-skill-capped-fetcher",
 ]);
 
 function smokeTestStep(
@@ -129,7 +132,6 @@ function smokeTestStep(
       `dagger call ${daggerFn}`,
       `--pkg-dir ./packages/${pkg} --pkg ${img.name}`,
       flags,
-      `--tsconfig ./tsconfig.base.json`,
     ]
       .filter(Boolean)
       .join(" ");

@@ -25,10 +25,17 @@ export interface ImageTarget {
 export const IMAGE_PUSH_TARGETS: ImageTarget[] = [
   { name: "birmel", versionKey: "shepherdjerred/birmel" },
   { name: "tasknotes-server", versionKey: "shepherdjerred/tasknotes-server" },
-  { name: "scout-for-lol", versionKey: "shepherdjerred/scout-for-lol" },
+  {
+    name: "scout-for-lol",
+    versionKey: "shepherdjerred/scout-for-lol",
+    buildFn: "build-scout-image",
+    pushFn: "push-scout-image",
+  },
   {
     name: "discord-plays-pokemon",
     versionKey: "shepherdjerred/discord-plays-pokemon",
+    buildFn: "build-discord-plays-pokemon-image",
+    pushFn: "push-discord-plays-pokemon-image",
   },
   {
     name: "starlight-karma-bot",
@@ -38,6 +45,8 @@ export const IMAGE_PUSH_TARGETS: ImageTarget[] = [
     name: "better-skill-capped-fetcher",
     package: "better-skill-capped",
     versionKey: "shepherdjerred/better-skill-capped-fetcher",
+    buildFn: "build-better-skill-capped-fetcher-image",
+    pushFn: "push-better-skill-capped-fetcher-image",
   },
 ];
 

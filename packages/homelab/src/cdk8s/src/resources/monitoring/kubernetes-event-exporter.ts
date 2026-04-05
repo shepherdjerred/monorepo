@@ -30,7 +30,17 @@ export function createKubernetesEventExporter(chart: Chart) {
     rules: [
       {
         apiGroups: [""],
-        resources: ["events"],
+        resources: ["events", "pods"],
+        verbs: ["get", "watch", "list"],
+      },
+      {
+        apiGroups: ["apps"],
+        resources: ["deployments", "statefulsets", "daemonsets", "replicasets"],
+        verbs: ["get", "watch", "list"],
+      },
+      {
+        apiGroups: ["batch"],
+        resources: ["jobs", "cronjobs"],
         verbs: ["get", "watch", "list"],
       },
     ],

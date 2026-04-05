@@ -1,1 +1,4 @@
 !vendor/**/*
+rendered/
+.helm-render-*
+.helm-test-*

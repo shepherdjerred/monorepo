@@ -44,6 +44,7 @@ AI-maintained knowledge base for the monorepo.
 
 ## Guides
 
+- [Helm Escaping Pipeline](guides/2026-04-04_helm-escaping-pipeline.md) - How template-bearing content survives the multi-engine rendering pipeline
 - [Local Quality Check](guides/2026-04-03_local-quality-check.md) - Full monorepo verification: all linters, tests, builds, and quality gates
 - [Homelab Audit Runbook](guides/2026-04-04_homelab-audit-runbook.md) - Repeatable procedure for comprehensive cluster health audit
 - [Homelab Health Audit (2026-04-05)](guides/2026-04-05_homelab-health-audit.md) - 1Password Connect corrupted, 18 degraded apps, NVMe1 thermal

@@ -1,4 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["bun-types"]
+  },
   "exclude": ["node_modules", "eslint.config.ts"]
 }

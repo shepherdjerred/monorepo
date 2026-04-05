@@ -23,8 +23,14 @@ export async function createR2ExporterMonitoring(chart: Chart) {
   const scriptPath = path.join(CURRENT_DIRNAME, "scripts", "r2_exporter.py");
   const scriptContent = await Bun.file(scriptPath).text();
 
-  // No Helm escaping needed: this ConfigMap is rendered by cdk8s as a raw Kubernetes resource,
-  // not processed by Helm's template engine. Python f-string braces pass through as-is.
+  // Python f-string braces ({{ and }}) conflict with Helm's Go template engine
+  // when this ConfigMap is packaged inside the apps Helm chart.
+  // Escape them so Helm passes them through literally.
+  // See: packages/docs/guides/2026-04-04_helm-escaping-pipeline.md
+  const escapedScriptContent = scriptContent.replaceAll(
+    /\{\{|\}\}/g,
+    (match) => (match === "{{" ? '{{ "{{" }}' : '{{ "}}" }}'),
+  );
 
   // Create 1Password secret for Cloudflare API credentials
   const cloudflareSecret = new OnePasswordItem(
@@ -49,7 +55,7 @@ export async function createR2ExporterMonitoring(chart: Chart) {
       namespace: "prometheus",
     },
     data: {
-      "r2_exporter.py": scriptContent,
+      "r2_exporter.py": escapedScriptContent,
     },
   });
 

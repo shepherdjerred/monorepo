@@ -16,13 +16,16 @@ import {
   SOURCE_EXCLUDES,
 } from "./constants";
 
-import { bunBaseContainer } from "./base";
 import {
+  buildImageHelper,
   buildHomelabImageHelper,
   buildDepsSummaryImageHelper,
   buildDnsAuditImageHelper,
   buildCaddyS3ProxyImageHelper,
   buildObsidianHeadlessImageHelper,
+  buildScoutImageHelper,
+  buildDiscordPlaysPokemonImageHelper,
+  buildBetterSkillCappedFetcherImageHelper,
 } from "./image";
 
 /** Build MkDocs documentation site and return the built site/ directory. */
@@ -179,23 +182,16 @@ async function runSmokeTest(
  */
 export async function smokeTestScoutForLolHelper(
   pkgDir: Directory,
-  pkg: string,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  tsconfig: File | null = null,
 ): Promise<string> {
-  const container = bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig)
+  const container = buildScoutImageHelper(pkgDir, depNames, depDirs)
     .withEnvVariable("DISCORD_TOKEN", "smoke-test-dummy")
     .withEnvVariable("APPLICATION_ID", "000000000000000000")
     .withEnvVariable("RIOT_API_KEY", "smoke-test-dummy")
     .withEnvVariable("DATABASE_URL", "file:/tmp/smoke-test.db")
     .withEnvVariable("PORT", "3000")
-    .withEnvVariable("VERSION", "0.0.0-smoke")
-    .withEnvVariable("GIT_SHA", "smoke-test")
     .withEntrypoint([])
-    // Generate Prisma client — scout backend imports from #generated/prisma/client
-    .withWorkdir("/workspace/packages/scout-for-lol/packages/backend")
-    .withExec(["bunx", "--trust", "prisma@6", "generate"])
     .withExec(["sh", "-c", "timeout 30s bun run src/index.ts 2>&1"]);
 
   return runSmokeTest(container, [
@@ -215,9 +211,8 @@ export async function smokeTestBirmelHelper(
   pkg: string,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  tsconfig: File | null = null,
 ): Promise<string> {
-  const container = bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig)
+  const container = buildImageHelper(pkgDir, pkg, depNames, depDirs)
     .withEnvVariable("DISCORD_TOKEN", "smoke-test-dummy")
     .withEnvVariable("DISCORD_CLIENT_ID", "smoke-test-dummy")
     .withEnvVariable("ANTHROPIC_API_KEY", "smoke-test-dummy")
@@ -248,14 +243,11 @@ export async function smokeTestStarlightKarmaBotHelper(
   pkg: string,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  tsconfig: File | null = null,
 ): Promise<string> {
-  const container = bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig)
+  const container = buildImageHelper(pkgDir, pkg, depNames, depDirs)
     .withEnvVariable("DISCORD_TOKEN", "smoke-test-dummy")
     .withEnvVariable("APPLICATION_ID", "000000000000000000")
     .withEnvVariable("DATA_DIR", "/tmp/smoke-data")
-    .withEnvVariable("VERSION", "0.0.0-smoke")
-    .withEnvVariable("GIT_SHA", "smoke-test")
     .withEntrypoint([])
     .withExec(["mkdir", "-p", "/tmp/smoke-data"])
     .withExec(["sh", "-c", "timeout 30s bun run src/index.ts 2>&1"]);
@@ -278,9 +270,8 @@ export async function smokeTestTasknotesServerHelper(
   pkg: string,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  tsconfig: File | null = null,
 ): Promise<string> {
-  const container = bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig)
+  const container = buildImageHelper(pkgDir, pkg, depNames, depDirs)
     .withEnvVariable("VAULT_PATH", "/tmp/smoke-vault")
     .withEnvVariable("AUTH_TOKEN", "smoke-test-token")
     .withEnvVariable("PORT", "3000")
@@ -424,10 +415,8 @@ export async function smokeTestObsidianHeadlessHelper(): Promise<string> {
  */
 export async function smokeTestDiscordPlaysPokemonHelper(
   pkgDir: Directory,
-  pkg: string,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  tsconfig: File | null = null,
 ): Promise<string> {
   // Minimal config.toml that passes Zod validation but uses dummy tokens
   const configToml = `
@@ -499,13 +488,16 @@ assets = "/tmp"
 enabled = false
 `;
 
-  const container = bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig)
+  const container = buildDiscordPlaysPokemonImageHelper(
+    pkgDir,
+    depNames,
+    depDirs,
+  )
     .withEntrypoint([])
     .withNewFile(
       "/workspace/packages/discord-plays-pokemon/packages/backend/config.toml",
       configToml,
     )
-    .withWorkdir("/workspace/packages/discord-plays-pokemon/packages/backend")
     .withExec(["sh", "-c", "timeout 30s bun run src/index.ts 2>&1"]);
 
   return runSmokeTest(container, [
@@ -523,17 +515,16 @@ enabled = false
  */
 export async function smokeTestBetterSkillCappedFetcherHelper(
   pkgDir: Directory,
-  pkg: string,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  tsconfig: File | null = null,
 ): Promise<string> {
-  const container = bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig)
+  const container = buildBetterSkillCappedFetcherImageHelper(
+    pkgDir,
+    depNames,
+    depDirs,
+  )
     .withEnvVariable("OUTPUT_PATH", "/tmp/smoke-manifest.json")
     .withEntrypoint([])
-    // The fetcher is a sub-directory with its own package.json
-    .withWorkdir(`/workspace/packages/${pkg}/fetcher`)
-    .withExec(["bun", "install", "--frozen-lockfile"])
     .withExec(["sh", "-c", "timeout 30s bun run src/index.ts 2>&1"]);
 
   return runSmokeTest(container, [

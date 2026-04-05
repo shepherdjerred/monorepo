@@ -422,6 +422,233 @@ export async function pushObsidianHeadlessImageHelper(
 }
 
 // ---------------------------------------------------------------------------
+// Workspace-monorepo image builders (scout, discord-plays-pokemon, better-skill-capped)
+// ---------------------------------------------------------------------------
+
+/**
+ * Build the scout-for-lol backend image.
+ * Scout is a Bun workspace monorepo — mount the full package, install deps at root,
+ * run prisma generate, then set workdir to the backend sub-package.
+ */
+export function buildScoutImageHelper(
+  pkgDir: Directory,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Container {
+  const excludes = ["node_modules", "dist", ".eslintcache"];
+
+  let container = dag
+    .container()
+    .from(BUN_IMAGE)
+    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
+    .withWorkdir("/workspace")
+    .withDirectory("/workspace/packages/scout-for-lol", pkgDir, {
+      exclude: excludes,
+    });
+
+  for (let i = 0; i < depNames.length; i++) {
+    container = container.withDirectory(
+      `/workspace/packages/${depNames[i]}`,
+      depDirs[i],
+      { exclude: excludes },
+    );
+  }
+
+  return container
+    .withWorkdir("/workspace/packages/scout-for-lol")
+    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withWorkdir("/workspace/packages/scout-for-lol/packages/backend")
+    .withExec(["bunx", "--trust", "prisma@6", "generate"])
+    .withLabel(
+      "org.opencontainers.image.source",
+      "https://github.com/shepherdjerred/monorepo",
+    )
+    .withLabel("org.opencontainers.image.version", version)
+    .withLabel("org.opencontainers.image.revision", gitSha)
+    .withEnvVariable("VERSION", version)
+    .withEnvVariable("GIT_SHA", gitSha)
+    .withEntrypoint(["bun", "run", "src/index.ts"]);
+}
+
+/**
+ * Build the discord-plays-pokemon backend image.
+ * Similar workspace structure — mount the full package, install deps at root,
+ * then install deps in the backend sub-package.
+ */
+export function buildDiscordPlaysPokemonImageHelper(
+  pkgDir: Directory,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Container {
+  const excludes = ["node_modules", "dist", ".eslintcache"];
+
+  let container = dag
+    .container()
+    .from(BUN_IMAGE)
+    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
+    .withWorkdir("/workspace")
+    .withDirectory("/workspace/packages/discord-plays-pokemon", pkgDir, {
+      exclude: excludes,
+    });
+
+  for (let i = 0; i < depNames.length; i++) {
+    container = container.withDirectory(
+      `/workspace/packages/${depNames[i]}`,
+      depDirs[i],
+      { exclude: excludes },
+    );
+  }
+
+  return container
+    .withWorkdir("/workspace/packages/discord-plays-pokemon")
+    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withWorkdir("/workspace/packages/discord-plays-pokemon/packages/backend")
+    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withLabel(
+      "org.opencontainers.image.source",
+      "https://github.com/shepherdjerred/monorepo",
+    )
+    .withLabel("org.opencontainers.image.version", version)
+    .withLabel("org.opencontainers.image.revision", gitSha)
+    .withEnvVariable("VERSION", version)
+    .withEnvVariable("GIT_SHA", gitSha)
+    .withEntrypoint(["bun", "run", "src/index.ts"]);
+}
+
+/**
+ * Build the better-skill-capped fetcher image.
+ * The fetcher is a subdirectory with its own package.json — mount the full package,
+ * install deps at root, then install deps in the fetcher sub-directory.
+ */
+export function buildBetterSkillCappedFetcherImageHelper(
+  pkgDir: Directory,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Container {
+  const excludes = ["node_modules", "dist", ".eslintcache"];
+
+  let container = dag
+    .container()
+    .from(BUN_IMAGE)
+    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
+    .withWorkdir("/workspace")
+    .withDirectory("/workspace/packages/better-skill-capped", pkgDir, {
+      exclude: excludes,
+    });
+
+  for (let i = 0; i < depNames.length; i++) {
+    container = container.withDirectory(
+      `/workspace/packages/${depNames[i]}`,
+      depDirs[i],
+      { exclude: excludes },
+    );
+  }
+
+  return container
+    .withWorkdir("/workspace/packages/better-skill-capped")
+    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withWorkdir("/workspace/packages/better-skill-capped/fetcher")
+    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withLabel(
+      "org.opencontainers.image.source",
+      "https://github.com/shepherdjerred/monorepo",
+    )
+    .withLabel("org.opencontainers.image.version", version)
+    .withLabel("org.opencontainers.image.revision", gitSha)
+    .withEnvVariable("VERSION", version)
+    .withEnvVariable("GIT_SHA", gitSha)
+    .withEntrypoint(["bun", "run", "src/index.ts"]);
+}
+
+// ---------------------------------------------------------------------------
+// Push helpers for workspace-monorepo images
+// ---------------------------------------------------------------------------
+
+/** Push a scout-for-lol image to a registry. */
+export async function pushScoutImageHelper(
+  pkgDir: Directory,
+  tags: string[],
+  registryUsername: string,
+  registryPassword: Secret,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Promise<string> {
+  const container = buildScoutImageHelper(
+    pkgDir,
+    depNames,
+    depDirs,
+    version,
+    gitSha,
+  );
+  return pushContainerHelper(
+    container,
+    tags,
+    registryUsername,
+    registryPassword,
+  );
+}
+
+/** Push a discord-plays-pokemon image to a registry. */
+export async function pushDiscordPlaysPokemonImageHelper(
+  pkgDir: Directory,
+  tags: string[],
+  registryUsername: string,
+  registryPassword: Secret,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Promise<string> {
+  const container = buildDiscordPlaysPokemonImageHelper(
+    pkgDir,
+    depNames,
+    depDirs,
+    version,
+    gitSha,
+  );
+  return pushContainerHelper(
+    container,
+    tags,
+    registryUsername,
+    registryPassword,
+  );
+}
+
+/** Push a better-skill-capped-fetcher image to a registry. */
+export async function pushBetterSkillCappedFetcherImageHelper(
+  pkgDir: Directory,
+  tags: string[],
+  registryUsername: string,
+  registryPassword: Secret,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Promise<string> {
+  const container = buildBetterSkillCappedFetcherImageHelper(
+    pkgDir,
+    depNames,
+    depDirs,
+    version,
+    gitSha,
+  );
+  return pushContainerHelper(
+    container,
+    tags,
+    registryUsername,
+    registryPassword,
+  );
+}
+
+// ---------------------------------------------------------------------------
 // CI base image (Dockerfile-based build)
 // ---------------------------------------------------------------------------
 

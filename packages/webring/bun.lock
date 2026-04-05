@@ -26,7 +26,7 @@
         "typedoc": "^0.28.0",
         "typedoc-plugin-extras": "^4.0.1",
         "typedoc-plugin-zod": "^1.4.0",
-        "typescript": "^5.8.2",
+        "typescript": "^6",
         "vitest": "^3.0.8",
       },
     },
@@ -1092,7 +1092,7 @@
 
     "typedoc-plugin-zod": ["typedoc-plugin-zod@1.4.3", "", { "peerDependencies": { "typedoc": "0.23.x || 0.24.x || 0.25.x || 0.26.x || 0.27.x || 0.28.x" } }, "sha512-j3kb4dGGK5OegtiIOH4F4etYdqq2lh+sTx6sABTmptPJJm8qx9XHyNlzfLYqW86ZVfL0hFR3+B/Ij9YXQw9TsA=="],
 
-    "typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+    "typescript": ["typescript@6.0.2", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-bGdAIrZ0wiGDo5l8c++HWtbaNCWTS4UTv7RaTH/ThVIgjkveJt83m74bBHMJkuCbslY8ixgLBVZJIOiQlQTjfQ=="],
 
     "typescript-eslint": ["typescript-eslint@8.58.0", "", { "dependencies": { "@typescript-eslint/eslint-plugin": "8.58.0", "@typescript-eslint/parser": "8.58.0", "@typescript-eslint/typescript-estree": "8.58.0", "@typescript-eslint/utils": "8.58.0" }, "peerDependencies": { "eslint": "^8.57.0 || ^9.0.0 || ^10.0.0", "typescript": ">=4.8.4 <6.1.0" } }, "sha512-e2TQzKfaI85fO+F3QywtX+tCTsu/D3WW5LVU6nz8hTFKFZ8yBJ6mSYRpXqdR3mFjPWmO0eWsTa5f+UpAOe/FMA=="],
 

@@ -92,15 +92,18 @@ export function createHaDeployment(chart: Chart) {
         allowPrivilegeEscalation: false,
       },
       ports: [{ name: "metrics", number: 9090 }],
+      startup: Probe.fromHttpGet("/health", {
+        port: 9090,
+        periodSeconds: Duration.seconds(5),
+        failureThreshold: 24, // 2 minutes to start
+      }),
       liveness: Probe.fromHttpGet("/health", {
         port: 9090,
-        initialDelaySeconds: Duration.seconds(30),
         periodSeconds: Duration.seconds(10),
-        failureThreshold: 3,
+        failureThreshold: 6, // 60s before kill (after startup succeeds)
       }),
       readiness: Probe.fromHttpGet("/health", {
         port: 9090,
-        initialDelaySeconds: Duration.seconds(10),
         periodSeconds: Duration.seconds(5),
         failureThreshold: 3,
       }),

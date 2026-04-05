@@ -108,7 +108,12 @@
       "project": ["src/**/*.{ts,tsx,astro}", "*.ts"]
     },
     "packages/hn-enhancer": {
-      "entry": ["src/background/index.ts", "src/content/index.ts", "src/popup/popup.ts", "vite.config.ts"],
+      "entry": [
+        "src/background/index.ts",
+        "src/content/index.ts",
+        "src/popup/popup.ts",
+        "vite.config.ts"
+      ],
       "project": ["src/**/*.ts", "*.ts"]
     },
     "packages/monarch": {

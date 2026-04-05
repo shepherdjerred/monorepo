@@ -387,6 +387,14 @@ pre-commit:
             glob: "packages/homelab/**/*.{ts,tsx}"
             run: bun run test
 
+          - name: homelab-helm-lint
+            root: "packages/homelab/"
+            glob:
+              - "packages/homelab/src/cdk8s/**/*.{ts,py}"
+              - "packages/homelab/src/cdk8s/helm/**"
+              - "packages/homelab/src/cdk8s/config/**"
+            run: bash scripts/lint-helm.sh
+
           - name: discord-plays-pokemon-test
             root: "packages/discord-plays-pokemon/"
             glob: "packages/discord-plays-pokemon/**/*.{ts,tsx}"

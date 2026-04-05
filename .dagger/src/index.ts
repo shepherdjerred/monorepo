@@ -60,11 +60,17 @@ import {
   buildDnsAuditImageHelper,
   buildCaddyS3ProxyImageHelper,
   buildObsidianHeadlessImageHelper,
+  buildScoutImageHelper,
+  buildDiscordPlaysPokemonImageHelper,
+  buildBetterSkillCappedFetcherImageHelper,
   pushHomelabImageHelper,
   pushDepsSummaryImageHelper,
   pushDnsAuditImageHelper,
   pushCaddyS3ProxyImageHelper,
   pushObsidianHeadlessImageHelper,
+  pushScoutImageHelper,
+  pushDiscordPlaysPokemonImageHelper,
+  pushBetterSkillCappedFetcherImageHelper,
   buildCiBaseImageHelper,
   pushCiBaseImageHelper,
 } from "./image";
@@ -534,6 +540,130 @@ export class Monorepo {
       tags,
       registryUsername,
       registryPassword,
+      version,
+      gitSha,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Workspace-monorepo image operations (scout, discord-plays-pokemon, better-skill-capped)
+  // ---------------------------------------------------------------------------
+
+  /** Build the scout-for-lol backend image (Bun workspace + Prisma) */
+  @func()
+  buildScoutImage(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Container {
+    return buildScoutImageHelper(pkgDir, depNames, depDirs, version, gitSha);
+  }
+
+  /** Push a scout-for-lol image to a registry. Returns digest. */
+  @func({ cache: "never" })
+  async pushScoutImage(
+    pkgDir: Directory,
+    tags: string[],
+    registryUsername: string,
+    registryPassword: Secret,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Promise<string> {
+    return pushScoutImageHelper(
+      pkgDir,
+      tags,
+      registryUsername,
+      registryPassword,
+      depNames,
+      depDirs,
+      version,
+      gitSha,
+    );
+  }
+
+  /** Build the discord-plays-pokemon backend image (Bun workspace) */
+  @func()
+  buildDiscordPlaysPokemonImage(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Container {
+    return buildDiscordPlaysPokemonImageHelper(
+      pkgDir,
+      depNames,
+      depDirs,
+      version,
+      gitSha,
+    );
+  }
+
+  /** Push a discord-plays-pokemon image to a registry. Returns digest. */
+  @func({ cache: "never" })
+  async pushDiscordPlaysPokemonImage(
+    pkgDir: Directory,
+    tags: string[],
+    registryUsername: string,
+    registryPassword: Secret,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Promise<string> {
+    return pushDiscordPlaysPokemonImageHelper(
+      pkgDir,
+      tags,
+      registryUsername,
+      registryPassword,
+      depNames,
+      depDirs,
+      version,
+      gitSha,
+    );
+  }
+
+  /** Build the better-skill-capped fetcher image (Bun + fetcher subdirectory) */
+  @func()
+  buildBetterSkillCappedFetcherImage(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Container {
+    return buildBetterSkillCappedFetcherImageHelper(
+      pkgDir,
+      depNames,
+      depDirs,
+      version,
+      gitSha,
+    );
+  }
+
+  /** Push a better-skill-capped-fetcher image to a registry. Returns digest. */
+  @func({ cache: "never" })
+  async pushBetterSkillCappedFetcherImage(
+    pkgDir: Directory,
+    tags: string[],
+    registryUsername: string,
+    registryPassword: Secret,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Promise<string> {
+    return pushBetterSkillCappedFetcherImageHelper(
+      pkgDir,
+      tags,
+      registryUsername,
+      registryPassword,
+      depNames,
+      depDirs,
       version,
       gitSha,
     );
@@ -1133,64 +1263,47 @@ export class Monorepo {
   // Per-package smoke tests
   // ---------------------------------------------------------------------------
 
-  /** Smoke test scout-for-lol: install deps, verify config, HTTP server, expected Discord auth failure */
+  /** Smoke test scout-for-lol: build production image, verify config, HTTP server, expected Discord auth failure */
   @func()
   async smokeTestScoutForLol(
     pkgDir: Directory,
-    pkg: string,
     depNames: string[] = [],
     depDirs: Directory[] = [],
-    tsconfig: File | null = null,
   ): Promise<string> {
-    return smokeTestScoutForLolHelper(pkgDir, pkg, depNames, depDirs, tsconfig);
+    return smokeTestScoutForLolHelper(pkgDir, depNames, depDirs);
   }
 
-  /** Smoke test birmel: install deps, verify config, Discord login attempt, expected auth failure */
+  /** Smoke test birmel: build production image, verify config, Discord login attempt, expected auth failure */
   @func()
   async smokeTestBirmel(
     pkgDir: Directory,
     pkg: string,
     depNames: string[] = [],
     depDirs: Directory[] = [],
-    tsconfig: File | null = null,
   ): Promise<string> {
-    return smokeTestBirmelHelper(pkgDir, pkg, depNames, depDirs, tsconfig);
+    return smokeTestBirmelHelper(pkgDir, pkg, depNames, depDirs);
   }
 
-  /** Smoke test starlight-karma-bot: install deps, verify config, server start, expected auth failure */
+  /** Smoke test starlight-karma-bot: build production image, verify config, server start, expected auth failure */
   @func()
   async smokeTestStarlightKarmaBot(
     pkgDir: Directory,
     pkg: string,
     depNames: string[] = [],
     depDirs: Directory[] = [],
-    tsconfig: File | null = null,
   ): Promise<string> {
-    return smokeTestStarlightKarmaBotHelper(
-      pkgDir,
-      pkg,
-      depNames,
-      depDirs,
-      tsconfig,
-    );
+    return smokeTestStarlightKarmaBotHelper(pkgDir, pkg, depNames, depDirs);
   }
 
-  /** Smoke test tasknotes-server: install deps, verify server starts and listens */
+  /** Smoke test tasknotes-server: build production image, verify server starts and listens */
   @func()
   async smokeTestTasknotesServer(
     pkgDir: Directory,
     pkg: string,
     depNames: string[] = [],
     depDirs: Directory[] = [],
-    tsconfig: File | null = null,
   ): Promise<string> {
-    return smokeTestTasknotesServerHelper(
-      pkgDir,
-      pkg,
-      depNames,
-      depDirs,
-      tsconfig,
-    );
+    return smokeTestTasknotesServerHelper(pkgDir, pkg, depNames, depDirs);
   }
 
   /** Smoke test homelab HA: boots app, expects ECONNREFUSED to HA */
@@ -1231,39 +1344,23 @@ export class Monorepo {
     return smokeTestObsidianHeadlessHelper();
   }
 
-  /** Smoke test discord-plays-pokemon: boots app, expects Discord auth failure */
+  /** Smoke test discord-plays-pokemon: build production image, boots app, expects Discord auth failure */
   @func()
   async smokeTestDiscordPlaysPokemon(
     pkgDir: Directory,
-    pkg: string,
     depNames: string[] = [],
     depDirs: Directory[] = [],
-    tsconfig: File | null = null,
   ): Promise<string> {
-    return smokeTestDiscordPlaysPokemonHelper(
-      pkgDir,
-      pkg,
-      depNames,
-      depDirs,
-      tsconfig,
-    );
+    return smokeTestDiscordPlaysPokemonHelper(pkgDir, depNames, depDirs);
   }
 
-  /** Smoke test better-skill-capped-fetcher: boots app, expects Firebase auth failure */
+  /** Smoke test better-skill-capped-fetcher: build production image, boots app, expects Firebase auth failure */
   @func()
   async smokeTestBetterSkillCappedFetcher(
     pkgDir: Directory,
-    pkg: string,
     depNames: string[] = [],
     depDirs: Directory[] = [],
-    tsconfig: File | null = null,
   ): Promise<string> {
-    return smokeTestBetterSkillCappedFetcherHelper(
-      pkgDir,
-      pkg,
-      depNames,
-      depDirs,
-      tsconfig,
-    );
+    return smokeTestBetterSkillCappedFetcherHelper(pkgDir, depNames, depDirs);
   }
 }
