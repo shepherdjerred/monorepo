@@ -83,6 +83,12 @@
       "description": "Disable updates for archived and practice projects",
       "matchFileNames": ["archive/**", "practice/**"],
       "enabled": false
+    },
+    {
+      "description": "Disable mise manager for task-only mise.toml files",
+      "matchManagers": ["mise"],
+      "matchFileNames": ["packages/clauderon/mobile/**"],
+      "enabled": false
     }
   ],
   "minimumReleaseAge": "30 days",

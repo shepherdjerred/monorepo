@@ -6,7 +6,7 @@ set -euo pipefail
 # renovate: datasource=github-releases depName=BurntSushi/ripgrep
 RIPGREP_VERSION="15.0.0"
 
-# renovate: datasource=github-releases depName=kubernetes/kubectl
+# renovate: datasource=github-releases depName=kubernetes/kubernetes
 KUBECTL_VERSION="v1.35.3"
 
 # renovate: datasource=github-releases depName=koalaman/shellcheck
@@ -30,7 +30,7 @@ BUN_VERSION="1.3.11"
 # renovate: datasource=github-releases depName=cli/cli
 GH_VERSION="2.87.3"
 
-# renovate: datasource=github-releases depName=rust-lang/rustup versioning=semver
+# renovate: datasource=github-tags depName=rust-lang/rustup versioning=semver
 RUSTUP_VERSION="1.28.2"
 
 # renovate: datasource=github-releases depName=gitleaks/gitleaks
