@@ -1,0 +1,6 @@
+apiVersion: v2
+name: temporal
+description: Temporal - Workflow orchestration platform
+type: application
+version: "$version"
+appVersion: "$appVersion"
