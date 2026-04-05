@@ -69,3 +69,25 @@ export function rarityNumberToString(
   }
   return "silver";
 }
+
+/**
+ * Schema for parsing champion detail JSON to extract skins array.
+ * Used by the loading screen art downloader.
+ */
+export const ChampionDetailSkinsSchema = z.object({
+  data: z.record(
+    z.string(),
+    z.object({
+      skins: z.array(
+        z.object({
+          id: z.string(),
+          num: z.number(),
+          name: z.string(),
+          chromas: z.boolean(),
+        }),
+      ),
+    }),
+  ),
+});
+
+export type ChampionDetailSkins = z.infer<typeof ChampionDetailSkinsSchema>;

@@ -2,9 +2,11 @@ import type {
   MatchId,
   RawMatch,
   RawTimeline,
+  RawCurrentGameInfo,
 } from "@scout-for-lol/data/index.ts";
 import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import { saveToS3 } from "#src/storage/s3-helpers.ts";
+import { savePrematchToS3 } from "#src/storage/s3-prematch.ts";
 
 /**
  * Save a League of Legends match to S3 storage
@@ -119,6 +121,90 @@ export async function saveSvgToS3(
     additionalLogDetails: {
       queueType,
     },
+  });
+}
+
+/**
+ * Save raw spectator API payload to S3 for debugging/replay.
+ */
+export async function savePrematchDataToS3(
+  gameId: number,
+  gameInfo: RawCurrentGameInfo,
+  trackedPlayerAliases: string[],
+): Promise<void> {
+  const body = JSON.stringify(gameInfo, null, 2);
+  await savePrematchToS3({
+    gameId,
+    assetType: "spectator-data",
+    extension: "json",
+    body,
+    contentType: "application/json",
+    metadata: {
+      gameId: gameId.toString(),
+      gameMode: gameInfo.gameMode,
+      queueId: gameInfo.gameQueueConfigId.toString(),
+      participantCount: gameInfo.participants.length.toString(),
+      trackedPlayers: trackedPlayerAliases.join(", "),
+    },
+    logEmoji: "📡",
+    logMessage: "Saving spectator data to S3",
+    errorContext: "prematch-data",
+  });
+}
+
+/**
+ * Save a loading screen PNG image to S3.
+ */
+export async function savePrematchImageToS3(
+  gameId: number,
+  imageBuffer: Uint8Array,
+  queueType: string,
+  trackedPlayerAliases: string[],
+): Promise<string | undefined> {
+  return savePrematchToS3({
+    gameId,
+    assetType: "loading-screen",
+    extension: "png",
+    body: imageBuffer,
+    contentType: "image/png",
+    metadata: {
+      gameId: gameId.toString(),
+      queueType,
+      format: "png",
+      trackedPlayers: trackedPlayerAliases.join(", "),
+    },
+    logEmoji: "🖼️",
+    logMessage: "Saving loading screen PNG to S3",
+    errorContext: "prematch-image",
+    returnUrl: true,
+  });
+}
+
+/**
+ * Save a loading screen SVG to S3.
+ */
+export async function savePrematchSvgToS3(
+  gameId: number,
+  svgContent: string,
+  queueType: string,
+  trackedPlayerAliases: string[],
+): Promise<string | undefined> {
+  return savePrematchToS3({
+    gameId,
+    assetType: "loading-screen",
+    extension: "svg",
+    body: svgContent,
+    contentType: "image/svg+xml",
+    metadata: {
+      gameId: gameId.toString(),
+      queueType,
+      format: "svg",
+      trackedPlayers: trackedPlayerAliases.join(", "),
+    },
+    logEmoji: "📄",
+    logMessage: "Saving loading screen SVG to S3",
+    errorContext: "prematch-svg",
+    returnUrl: true,
   });
 }
 

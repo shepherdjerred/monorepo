@@ -129,6 +129,8 @@ export {
   getRuneIconBase64,
   getAugmentIconBase64,
   getLaneIconBase64,
+  getChampionLoadingImageBase64,
+  getChampionLoadingImageUrl,
   // Validation functions (async)
   validateChampionImage,
   validateItemImage,
@@ -136,4 +138,11 @@ export {
   validateRuneIcon,
   validateAugmentIcon,
   validateLaneIcon,
+  validateChampionLoadingImage,
+  normalizeChampionName,
 } from "./data-dragon/images.ts";
+
+export {
+  getAvailableSkins,
+  isSkinAvailable,
+} from "./data-dragon/champion-skins.ts";

@@ -1,5 +1,6 @@
 import {
   getChampionImageBase64,
+  getChampionLoadingImageBase64,
   getItemImageBase64,
   getSpellImageBase64,
   getAugmentIconBase64,
@@ -21,6 +22,9 @@ const spellImageCache = new Map<string, string>();
 
 // Augment icon cache
 const augmentIconCache = new Map<string, string>();
+
+// Champion loading screen image cache (key: "{ChampionName}_{skinNum}")
+const championLoadingImageCache = new Map<string, string>();
 
 // Pre-load spell images at module load time (static set)
 if (typeof Bun !== "undefined") {
@@ -118,6 +122,62 @@ export async function preloadAugmentIcons(iconPaths: string[]): Promise<void> {
       if (!augmentIconCache.has(iconPath)) {
         const base64 = await getAugmentIconBase64(iconPath);
         augmentIconCache.set(iconPath, base64);
+      }
+    }),
+  );
+}
+
+// Get champion loading screen image from cache (must be pre-loaded)
+export function getChampionLoadingImage(
+  championName: string,
+  skinNum: number,
+): string {
+  const key = `${championName}_${skinNum.toString()}`;
+  const cached = championLoadingImageCache.get(key);
+  if (cached !== undefined && cached.length > 0) {
+    return cached;
+  }
+
+  // Fallback to default skin if requested skin not found
+  if (skinNum !== 0) {
+    const defaultKey = `${championName}_0`;
+    const defaultCached = championLoadingImageCache.get(defaultKey);
+    if (defaultCached !== undefined && defaultCached.length > 0) {
+      return defaultCached;
+    }
+  }
+
+  throw new Error(
+    `Champion loading image for ${key} not found in cache. Call preloadChampionLoadingImages() before rendering.`,
+  );
+}
+
+// Pre-load champion loading screen images for a list of champion/skin combos
+export async function preloadChampionLoadingImages(
+  entries: Array<{ championName: string; skinNum: number }>,
+): Promise<void> {
+  // Deduplicate entries, also always include default skin (0) as fallback
+  const keysToLoad = new Set<string>();
+  for (const entry of entries) {
+    keysToLoad.add(`${entry.championName}_${entry.skinNum.toString()}`);
+    keysToLoad.add(`${entry.championName}_0`);
+  }
+
+  await Promise.all(
+    [...keysToLoad].map(async (key) => {
+      if (!championLoadingImageCache.has(key)) {
+        const parts = key.split("_");
+        const skinNum = Number.parseInt(parts.pop() ?? "0", 10);
+        const championName = parts.join("_");
+        try {
+          const base64 = await getChampionLoadingImageBase64(
+            championName,
+            skinNum,
+          );
+          championLoadingImageCache.set(key, base64);
+        } catch {
+          // If specific skin not available, skip (fallback to default handled in getter)
+        }
       }
     }),
   );

@@ -230,6 +230,26 @@ export const prematchPollingSkipsTotal = new Counter({
   registers: [registry],
 });
 
+/**
+ * Total loading screen images generated (or failed)
+ */
+export const prematchLoadingScreenGeneratedTotal = new Counter({
+  name: "prematch_loading_screen_generated_total",
+  help: "Total loading screen images generated for pre-match notifications",
+  labelNames: ["queue_type", "status"] as const,
+  registers: [registry],
+});
+
+/**
+ * Loading screen generation duration in seconds
+ */
+export const prematchLoadingScreenDurationSeconds = new Histogram({
+  name: "prematch_loading_screen_duration_seconds",
+  help: "Time to generate loading screen image in seconds",
+  buckets: [0.5, 1, 2, 5, 10, 20, 30],
+  registers: [registry],
+});
+
 // =======================
 // Usage & Growth Metrics
 // =======================

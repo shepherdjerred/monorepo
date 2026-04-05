@@ -160,3 +160,35 @@ export async function getLaneIconBase64(lane: Lane): Promise<string> {
   const relativePath = `./assets/img/lane/${lane}.png`;
   return loadImageAsBase64(relativePath, "image/png");
 }
+
+// Champion loading screen art (tall portrait images used in LoL loading screen)
+
+export async function validateChampionLoadingImage(
+  championName: string,
+  skinNum: number,
+): Promise<void> {
+  const normalized = normalizeChampionName(championName);
+  const relativePath = `./assets/img/champion-loading/${normalized}_${skinNum.toString()}.jpg`;
+  const absolutePath = getAbsolutePath(relativePath);
+  await validateImageExists(
+    absolutePath,
+    `Champion loading image for ${normalized} skin ${skinNum.toString()}`,
+  );
+}
+
+export function getChampionLoadingImageUrl(
+  championName: string,
+  skinNum = 0,
+): string {
+  const normalized = normalizeChampionName(championName);
+  return `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${normalized}_${skinNum.toString()}.jpg`;
+}
+
+export async function getChampionLoadingImageBase64(
+  championName: string,
+  skinNum = 0,
+): Promise<string> {
+  const normalized = normalizeChampionName(championName);
+  const relativePath = `./assets/img/champion-loading/${normalized}_${skinNum.toString()}.jpg`;
+  return loadImageAsBase64(relativePath, "image/jpeg");
+}

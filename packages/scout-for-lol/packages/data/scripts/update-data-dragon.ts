@@ -8,6 +8,7 @@ import {
   ItemSchema,
   ChampionListSchema,
   ArenaAugmentsApiResponseSchema,
+  ChampionDetailSkinsSchema,
   rarityNumberToString,
   type SummonerData,
   type ItemData,
@@ -120,6 +121,7 @@ async function createDirectories(): Promise<void> {
   await ensureDir(`${IMG_DIR}/rune`);
   await ensureDir(`${IMG_DIR}/augment`);
   await ensureDir(`${IMG_DIR}/lane`);
+  await ensureDir(`${IMG_DIR}/champion-loading`);
   await ensureDir(`${ASSETS_DIR}/champion`);
 }
 
@@ -244,6 +246,82 @@ async function downloadChampionData(
   }
   console.log(`✓ Downloaded ${String(championDataCount)} champion data files`);
   return championDataCount;
+}
+
+/**
+ * Download champion loading screen art for all skins (excluding chromas).
+ * These are the tall portrait images shown in the LoL loading screen.
+ * URL format: https://ddragon.leagueoflegends.com/cdn/img/champion/loading/{Name}_{skinNum}.jpg
+ *
+ * Also generates champion-skins.json mapping champion names to valid skin numbers.
+ */
+async function downloadChampionLoadingImages(
+  championNames: string[],
+): Promise<{ imageCount: number; skinMapCount: number }> {
+  console.log("\nDownloading champion loading screen images...");
+
+  const skinMap: Record<string, number[]> = {};
+  const allImages: { url: string; path: string; name: string }[] = [];
+
+  for (const championName of championNames) {
+    try {
+      const championFilePath = `${ASSETS_DIR}/champion/${championName}.json`;
+      const fileContent = await Bun.file(championFilePath).text();
+      const data = ChampionDetailSkinsSchema.parse(JSON.parse(fileContent));
+      const championData = data.data[championName];
+
+      if (!championData) {
+        console.warn(
+          `  ⚠ No champion data found for ${championName} in detail JSON`,
+        );
+        continue;
+      }
+
+      // Filter out chromas: chromas have the same num as their parent skin
+      // and are typically indicated by having chromas=true on the parent.
+      // We want all unique skin nums (base skins only, no parentSkin field needed
+      // since the detail JSON doesn't include parentSkin — chromas share the same
+      // splash art as their parent so we just need one image per num).
+      const skinNums = championData.skins.map((skin) => skin.num);
+      const uniqueSkinNums = [...new Set(skinNums)];
+
+      skinMap[championName] = uniqueSkinNums;
+
+      for (const skinNum of uniqueSkinNums) {
+        allImages.push({
+          url: `${BASE_URL}/cdn/img/champion/loading/${championName}_${String(skinNum)}.jpg`,
+          path: `${IMG_DIR}/champion-loading/${championName}_${String(skinNum)}.jpg`,
+          name: `${championName}_${String(skinNum)}`,
+        });
+      }
+    } catch (error) {
+      console.warn(
+        `  ⚠ Failed to parse skins for ${championName}: ${String(error)}`,
+      );
+      // Still add default skin
+      skinMap[championName] = [0];
+      allImages.push({
+        url: `${BASE_URL}/cdn/img/champion/loading/${championName}_0.jpg`,
+        path: `${IMG_DIR}/champion-loading/${championName}_0.jpg`,
+        name: `${championName}_0`,
+      });
+    }
+  }
+
+  // Download all loading screen images
+  await downloadImagesInBatches(allImages, 20);
+
+  // Write champion-skins.json
+  await Bun.write(
+    `${ASSETS_DIR}/champion-skins.json`,
+    JSON.stringify(skinMap, null, 2),
+  );
+  console.log(
+    `✓ Downloaded ${String(allImages.length)} champion loading images across ${String(championNames.length)} champions`,
+  );
+  console.log(`✓ Written champion-skins.json`);
+
+  return { imageCount: allImages.length, skinMapCount: championNames.length };
 }
 
 async function downloadRuneImages(runes: RuneTreeData): Promise<number> {
@@ -433,13 +511,18 @@ async function main(): Promise<void> {
       communityDragonPositionsUrl,
     );
 
+    // Download champion loading screen images (all skins) — must run after champion data
+    const { imageCount: loadingImagesCount } =
+      await downloadChampionLoadingImages(championNames);
+
     const totalImages =
       spellImagesCount +
       itemImagesCount +
       championImagesCount +
       runeImagesCount +
       augmentImagesCount +
-      laneImagesCount;
+      laneImagesCount +
+      loadingImagesCount;
     console.log(
       `\n✅ Successfully updated Data Dragon assets to version ${version}`,
     );
@@ -448,6 +531,9 @@ async function main(): Promise<void> {
     console.log(`  - ${String(spellImagesCount)} summoner spell images`);
     console.log(`  - ${String(itemImagesCount)} item images`);
     console.log(`  - ${String(championImagesCount)} champion portrait images`);
+    console.log(
+      `  - ${String(loadingImagesCount)} champion loading screen images`,
+    );
     console.log(`  - ${String(runeImagesCount)} rune images`);
     console.log(`  - ${String(augmentImagesCount)} augment images`);
     console.log(`  - ${String(laneImagesCount)} lane position icons`);
