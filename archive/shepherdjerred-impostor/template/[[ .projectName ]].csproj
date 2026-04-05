@@ -3,7 +3,7 @@
         <TargetFramework>net5.0</TargetFramework>
     </PropertyGroup>
     <ItemGroup>
-      <PackageReference Include="Impostor.Api" Version="1.2.2-ci.121" />
+      <PackageReference Include="Impostor.Api" Version="1.10.4" />
     </ItemGroup>
     <ItemGroup>
       <Content Include=".github\workflows\ci.yml" />

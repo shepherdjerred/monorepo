@@ -10,7 +10,7 @@
   <ItemGroup>
     <PackageReference Include="DSharpPlus" Version="4.0.0-nightly-00745" />
     <PackageReference Include="DSharpPlus.CommandsNext" Version="4.0.0-nightly-00745" />
-    <PackageReference Include="Impostor.Api" Version="1.2.2-ci.91" />
+    <PackageReference Include="Impostor.Api" Version="1.10.4" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="config.impostorCord.json">
