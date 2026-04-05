@@ -98,13 +98,13 @@ const versions = {
   tempo: "1.24.3",
   // renovate: datasource=helm registryUrl=https://openebs.github.io/openebs versioning=semver
   openebs: "4.4.0",
-  // not managed by renovate
+  // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/scout-for-lol/beta":
     "1.1.137@sha256:716f4e9ccca16213a80c0071232588fa519ba8a010144c143bcc41fa0e788ac3",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
   "shepherdjerred/scout-for-lol/prod":
     "1.1.137@sha256:716f4e9ccca16213a80c0071232588fa519ba8a010144c143bcc41fa0e788ac3",
-  // not managed by renovate
+  // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
     "1.1.137@sha256:93b628f488b674a93d78f4f86b8259f74a0e28ce74236f18224f2f6c4efd18ce",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/starlight-karma-bot

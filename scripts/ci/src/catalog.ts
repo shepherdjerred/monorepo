@@ -16,19 +16,23 @@ export interface ImageTarget {
   package?: string;
   /** Workspace packages needed for the image build (besides the main pkg). */
   neededPackages?: string[];
+  /** Custom Dagger build function name (kebab-case). Defaults to "build-image". */
+  buildFn?: string;
+  /** Custom Dagger push function name (kebab-case). Defaults to "push-image". */
+  pushFn?: string;
 }
 
 export const IMAGE_PUSH_TARGETS: ImageTarget[] = [
   { name: "birmel", versionKey: "shepherdjerred/birmel" },
   { name: "tasknotes-server", versionKey: "shepherdjerred/tasknotes-server" },
-  { name: "scout-for-lol", versionKey: "shepherdjerred/scout-for-lol/beta" },
+  { name: "scout-for-lol", versionKey: "shepherdjerred/scout-for-lol" },
   {
     name: "discord-plays-pokemon",
     versionKey: "shepherdjerred/discord-plays-pokemon",
   },
   {
     name: "starlight-karma-bot",
-    versionKey: "shepherdjerred/starlight-karma-bot/beta",
+    versionKey: "shepherdjerred/starlight-karma-bot",
   },
   {
     name: "better-skill-capped-fetcher",
@@ -38,21 +42,32 @@ export const IMAGE_PUSH_TARGETS: ImageTarget[] = [
 ];
 
 export const INFRA_PUSH_TARGETS: ImageTarget[] = [
-  { name: "homelab", versionKey: "shepherdjerred/homelab" },
+  {
+    name: "homelab",
+    versionKey: "shepherdjerred/homelab",
+    buildFn: "build-homelab-image",
+    pushFn: "push-homelab-image",
+  },
   {
     name: "dependency-summary",
     package: "homelab",
     versionKey: "shepherdjerred/dependency-summary",
+    buildFn: "build-deps-summary-image",
+    pushFn: "push-deps-summary-image",
   },
   {
     name: "dns-audit",
     package: "homelab",
     versionKey: "shepherdjerred/dns-audit",
+    buildFn: "build-dns-audit-image",
+    pushFn: "push-dns-audit-image",
   },
   {
     name: "caddy-s3proxy",
     package: "homelab",
     versionKey: "shepherdjerred/caddy-s3proxy",
+    buildFn: "build-caddy-s3-proxy-image",
+    pushFn: "push-caddy-s3-proxy-image",
   },
 ];
 

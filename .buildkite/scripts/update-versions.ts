@@ -37,16 +37,19 @@ let updated = 0;
 
 for (let i = 0; i < lines.length; i++) {
   for (const [key, digest] of digests) {
-    // Match lines like:  "shepherdjerred/birmel":
-    //   followed by a value line like:    "1.1.137@sha256:abc...",
-    if (lines[i].includes(`"${key}"`)) {
-      // The value is on the next line (or same line after the colon)
+    // Match lines containing the key as an exact match OR as a prefix with /beta suffix.
+    // Digest keys come from catalog versionKey (e.g. "shepherdjerred/scout-for-lol").
+    // versions.ts may have "/beta" suffix for deployment stages — we update the beta entry.
+    const exactMatch = lines[i].includes(`"${key}"`);
+    const betaMatch = lines[i].includes(`"${key}/beta"`);
+    if (exactMatch || betaMatch) {
       if (i + 1 < lines.length) {
         const valueLine = lines[i + 1];
         const indent = valueLine.match(/^(\s*)/)?.[1] ?? "    ";
         lines[i + 1] = `${indent}"${version}@${digest}",`;
         updated++;
-        console.log(`Updated ${key}: ${version}@${digest}`);
+        const matchedKey = betaMatch ? `${key}/beta` : key;
+        console.log(`Updated ${matchedKey}: ${version}@${digest}`);
       }
     }
   }
