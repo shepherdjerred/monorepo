@@ -24,11 +24,11 @@ The `apps` application (app-of-apps) fails to render with `bad character U+003D 
 
 **Action:** Investigate MariaDB init failure — likely missing credentials secret.
 
-### 3. Scout Prod Down — Missing RIOT_API_KEY
+### 3. Scout Prod Down — Missing RIOT_API_TOKEN
 
-`scout-prod-scout-backend` CrashLoopBackOff: `env-var: "RIOT_API_KEY" is a required variable, but it was not set`. Secret injection is failing.
+`scout-prod-scout-backend` CrashLoopBackOff: `env-var: "RIOT_API_TOKEN" is a required variable, but it was not set`. Secret injection is failing.
 
-**Action:** Restore the `RIOT_API_KEY` secret (check 1Password/ExternalSecret source).
+**Action:** Restore the `RIOT_API_TOKEN` secret (check 1Password/ExternalSecret source).
 
 ### 4. Scout Beta Down — Broken Image
 
@@ -163,7 +163,7 @@ All 11 unacknowledged. Alert delivery to PagerDuty is broken, so no new incident
 
 1. **Fix app-of-apps Helm template** — YAML parse error at line 3504 blocks all child app syncs
 2. **Fix Alertmanager → PagerDuty** — Restore alert delivery pipeline
-3. **Restore scout-prod RIOT_API_KEY** — Secret injection failing
+3. **Restore scout-prod RIOT_API_TOKEN** — Secret injection failing
 4. **Fix scout-beta image** — Rebuild `scout-for-lol:2.0.0-724` or roll back
 5. **Investigate Postal MariaDB** — Init container stuck, likely missing credentials
 6. **Investigate Home Assistant** — Down per critical alert
