@@ -5,7 +5,7 @@
  */
 import { dag, Container, Directory, File } from "@dagger.io/dagger";
 
-import { ESLINT_CACHE } from "./constants";
+import { ESLINT_CACHE, HELM_IMAGE } from "./constants";
 
 import { bunBaseContainer } from "./base";
 
@@ -62,12 +62,14 @@ export function testHelper(
   depNames: string[] = [],
   depDirs: Directory[] = [],
   tsconfig: File | null = null,
+  needsHelm = false,
 ): Container {
-  return bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig).withExec([
-    "bun",
-    "run",
-    "test",
-  ]);
+  let container = bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig);
+  if (needsHelm) {
+    const helmBinary = dag.container().from(HELM_IMAGE).file("/usr/bin/helm");
+    container = container.withFile("/usr/local/bin/helm", helmBinary);
+  }
+  return container.withExec(["bun", "run", "test"]);
 }
 
 /** Run bun run generate and return the container (for chaining lint/typecheck/test). */

@@ -152,8 +152,16 @@ export class Monorepo {
     depNames: string[] = [],
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
+    needsHelm = false,
   ): Promise<string> {
-    return testHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout();
+    return testHelper(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      tsconfig,
+      needsHelm,
+    ).stdout();
   }
 
   /** Run the build script on a package. Returns the Container so dist/ can be exported via CLI chaining. */

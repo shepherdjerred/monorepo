@@ -98,11 +98,12 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
         ),
       );
     } else {
+      const needsHelm = pkg === "homelab" ? " --needs-helm" : "";
       steps.push(
         daggerCallStep(
           `:test_tube: Test`,
           `test-${sk}`,
-          `dagger call test ${pf}`,
+          `dagger call test ${pf}${needsHelm}`,
           resources,
         ),
       );

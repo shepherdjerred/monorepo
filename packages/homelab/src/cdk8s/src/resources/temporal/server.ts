@@ -1,7 +1,7 @@
 import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
+import type { ConfigMap } from "cdk8s-plus-31";
 import {
-  ConfigMap,
   Cpu,
   Deployment,
   DeploymentStrategy,
