@@ -114,14 +114,17 @@ function imagePushStep(
   const pkg = img.package ?? img.name;
   const flags = depFlags(pkg);
   const cmd = [
-    // $$ escapes survive Buildkite interpolation so bash sees $DIGEST at runtime
-    `DIGEST=$$(dagger call push-image --pkg-dir ./packages/${pkg} --pkg ${img.name}`,
+    // $$ escapes survive Buildkite interpolation so bash sees $DIGEST at runtime.
+    // dagger call outputs ANSI escape codes to stdout even with DAGGER_PROGRESS=dots/plain,
+    // so we grep for the sha256 digest line to extract just the return value.
+    `RAW=$$(dagger call push-image --pkg-dir ./packages/${pkg} --pkg ${img.name}`,
     flags,
     // Version format: 2.0.0-BUILD (semver prerelease). See decisions/2026-04-04_unified-versioning-strategy.md
     `--tags ghcr.io/${img.versionKey}:2.0.0-$BUILDKITE_BUILD_NUMBER`,
     `--tags ghcr.io/${img.versionKey}:latest`,
     `--registry-username shepherdjerred`,
     `--registry-password env:GH_TOKEN)`,
+    `&& DIGEST=$$(echo "$$RAW" | grep -oE 'sha256:[a-f0-9]+' | head -1)`,
     `&& if [ -n "$$DIGEST" ]; then buildkite-agent meta-data set "digest:${img.versionKey}" "$$DIGEST"; else echo "WARN: empty digest for ${img.name}"; fi`,
   ]
     .filter(Boolean)
