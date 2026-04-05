@@ -120,15 +120,9 @@ resource "github_repository" "monorepo" {
   allow_rebase_merge     = true
 }
 
-resource "github_branch_protection" "monorepo_main" {
-  repository_id = github_repository.monorepo.node_id
-  pattern       = "main"
-
-  required_status_checks {
-    strict   = true
-    contexts = ["buildkite/monorepo"]
-  }
-}
+# Branch protection is now managed via GitHub Rulesets (configured in UI).
+# The old github_branch_protection resource was removed from state after
+# migration to rulesets caused the provider to hang on GraphQL refresh.
 
 resource "github_repository" "scout_for_lol" {
   name                   = "scout-for-lol"
