@@ -41,6 +41,7 @@ export function bunBaseContainer(
       "-y",
       "-qq",
       "--no-install-recommends",
+      "ca-certificates",
       "zstd",
       "python3",
       "python3-setuptools",
