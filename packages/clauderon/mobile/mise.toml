@@ -1,3 +1,5 @@
+[tools]
+
 [tasks.ios-install]
 description = "Build and install the app on a physical iPhone"
 run = """

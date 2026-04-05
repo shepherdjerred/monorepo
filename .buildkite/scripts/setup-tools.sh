@@ -4,7 +4,7 @@
 set -euo pipefail
 
 # renovate: datasource=github-releases depName=BurntSushi/ripgrep
-RIPGREP_VERSION="15.0.0"
+RIPGREP_VERSION="15.1.0"
 
 # renovate: datasource=github-releases depName=kubernetes/kubernetes
 KUBECTL_VERSION="v1.35.3"
@@ -13,13 +13,13 @@ KUBECTL_VERSION="v1.35.3"
 SHELLCHECK_VERSION="0.11.0"
 
 # renovate: datasource=github-releases depName=astral-sh/uv
-UV_VERSION="0.10.8"
+UV_VERSION="0.11.3"
 
 # renovate: datasource=github-releases depName=helm/helm
 HELM_VERSION="v4.1.3"
 
 # renovate: datasource=github-tags depName=aws/aws-cli versioning=semver
-AWSCLI_VERSION="2.34.3"
+AWSCLI_VERSION="2.34.24"
 
 # renovate: datasource=github-releases depName=opentofu/opentofu
 OPENTOFU_VERSION="1.11.5"
@@ -28,19 +28,19 @@ OPENTOFU_VERSION="1.11.5"
 BUN_VERSION="1.3.11"
 
 # renovate: datasource=github-releases depName=cli/cli
-GH_VERSION="2.87.3"
+GH_VERSION="2.89.0"
 
 # renovate: datasource=github-tags depName=rust-lang/rustup versioning=semver
-RUSTUP_VERSION="1.28.2"
+RUSTUP_VERSION="1.29.0"
 
 # renovate: datasource=github-releases depName=gitleaks/gitleaks
-GITLEAKS_VERSION="8.30.0"
+GITLEAKS_VERSION="8.30.1"
 
 # renovate: datasource=github-releases depName=aquasecurity/trivy
 TRIVY_VERSION="0.69.3"
 
 # renovate: datasource=pypi depName=semgrep
-SEMGREP_VERSION="1.154.0"
+SEMGREP_VERSION="1.157.0"
 
 
 install_base() {

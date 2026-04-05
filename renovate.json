@@ -85,10 +85,20 @@
       "enabled": false
     },
     {
-      "description": "Disable mise manager for task-only mise.toml files",
-      "matchManagers": ["mise"],
-      "matchFileNames": ["packages/clauderon/mobile/**"],
-      "enabled": false
+      "description": "Group @types/node with Node.js major updates",
+      "groupName": "Node.js",
+      "matchPackageNames": ["@types/node", "node"],
+      "matchUpdateTypes": ["major"]
+    },
+    {
+      "description": "Ignore architecture-specific Plex tags (armhf, arm64)",
+      "matchPackageNames": ["plexinc/pms-docker"],
+      "allowedVersions": "!/-(armhf|arm64)$/"
+    },
+    {
+      "description": "Ignore bogus Ubuntu base image tags for qBittorrent",
+      "matchPackageNames": ["linuxserver/qbittorrent"],
+      "allowedVersions": "/^[0-9]+\\.[0-9]+\\.[0-9]+$/"
     }
   ],
   "minimumReleaseAge": "30 days",
