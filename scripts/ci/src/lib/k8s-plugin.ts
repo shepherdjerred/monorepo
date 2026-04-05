@@ -1,5 +1,16 @@
-/** CI base image — kept in sync with .buildkite/ci-image/VERSION. */
-const CI_BASE_IMAGE = "ghcr.io/shepherdjerred/ci-base:404";
+import { readFileSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+/** CI base image — version read from .buildkite/ci-image/VERSION at pipeline generation time. */
+const CI_BASE_VERSION = readFileSync(
+  resolve(
+    dirname(fileURLToPath(import.meta.url)),
+    "../../../../.buildkite/ci-image/VERSION",
+  ),
+  "utf-8",
+).trim();
+const CI_BASE_IMAGE = `ghcr.io/shepherdjerred/ci-base:${CI_BASE_VERSION}`;
 
 /** Build the Kubernetes plugin config for a Buildkite step. */
 export function k8sPlugin(

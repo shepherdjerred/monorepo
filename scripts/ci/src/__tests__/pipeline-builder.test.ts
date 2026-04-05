@@ -162,19 +162,19 @@ describe("buildPipeline", () => {
       }
     });
 
-    it("release step depends only on quality gates, not per-package builds", () => {
+    it("quality gate depends only on quality checks, not per-package builds", () => {
       const pipeline = buildPipeline(fullBuild());
 
-      // No wait steps — release uses explicit depends_on
+      // No wait steps — quality-gate uses explicit depends_on
       const waits = pipeline.steps.filter(isWait);
       expect(waits).toHaveLength(0);
 
-      // Release step exists with depends_on
+      // Quality gate step exists with depends_on
       const steps = pipeline.steps.filter(isStep);
-      const release = steps.find((s) => s.key === "release");
-      expect(release).toBeDefined();
-      expect(Array.isArray(release?.depends_on)).toBe(true);
-      const deps = release?.depends_on;
+      const gate = steps.find((s) => s.key === "quality-gate");
+      expect(gate).toBeDefined();
+      expect(Array.isArray(gate?.depends_on)).toBe(true);
+      const deps = gate?.depends_on;
       expect(Array.isArray(deps) ? deps : []).not.toHaveLength(0);
 
       // depends_on does NOT include per-package group keys
@@ -318,8 +318,9 @@ describe("buildPipeline", () => {
       const groups = pipeline.steps.filter(isGroup);
       const groupKeys = groups.map((g) => g.key);
 
-      expect(groupKeys).toContain("build-homelab-images");
-      expect(groupKeys).toContain("push-homelab-images");
+      // Homelab images are now part of the unified build/push groups
+      expect(groupKeys).toContain("build-images");
+      expect(groupKeys).toContain("push-images");
       expect(groupKeys).toContain("homelab-helm-push");
       expect(groupKeys).toContain("homelab-tofu");
     });
@@ -386,8 +387,9 @@ describe("buildPipeline", () => {
       const groups = pipeline.steps.filter(isGroup);
       const groupKeys = groups.map((g) => g.key);
 
-      expect(groupKeys).toContain("build-homelab-images");
-      expect(groupKeys).toContain("push-homelab-images");
+      // Homelab images are part of the unified build/push groups
+      expect(groupKeys).toContain("build-images");
+      expect(groupKeys).toContain("push-images");
       expect(groupKeys).toContain("homelab-helm-push");
       expect(groupKeys).toContain("homelab-tofu");
       expect(groupKeys).not.toContain("clauderon-build");

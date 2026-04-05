@@ -4,43 +4,43 @@
 set -euo pipefail
 
 # renovate: datasource=github-releases depName=BurntSushi/ripgrep
-RIPGREP_VERSION="14.1.1"
+RIPGREP_VERSION="15.0.0"
 
 # renovate: datasource=github-releases depName=kubernetes/kubectl
-KUBECTL_VERSION="v1.34.1"
+KUBECTL_VERSION="v1.35.3"
 
 # renovate: datasource=github-releases depName=koalaman/shellcheck
-SHELLCHECK_VERSION="0.10.0"
+SHELLCHECK_VERSION="0.11.0"
 
 # renovate: datasource=github-releases depName=astral-sh/uv
-UV_VERSION="0.6.9"
+UV_VERSION="0.10.8"
 
 # renovate: datasource=github-releases depName=helm/helm
-HELM_VERSION="v3.17.3"
+HELM_VERSION="v4.1.3"
 
 # renovate: datasource=github-tags depName=aws/aws-cli versioning=semver
-AWSCLI_VERSION="2.27.22"
+AWSCLI_VERSION="2.34.3"
 
 # renovate: datasource=github-releases depName=opentofu/opentofu
-OPENTOFU_VERSION="1.9.1"
+OPENTOFU_VERSION="1.11.5"
 
 # renovate: datasource=github-releases depName=oven-sh/bun
 BUN_VERSION="1.3.11"
 
 # renovate: datasource=github-releases depName=cli/cli
-GH_VERSION="2.72.0"
+GH_VERSION="2.87.3"
 
 # renovate: datasource=github-releases depName=rust-lang/rustup versioning=semver
 RUSTUP_VERSION="1.28.2"
 
 # renovate: datasource=github-releases depName=gitleaks/gitleaks
-GITLEAKS_VERSION="8.22.1"
+GITLEAKS_VERSION="8.30.0"
 
 # renovate: datasource=github-releases depName=aquasecurity/trivy
 TRIVY_VERSION="0.69.3"
 
 # renovate: datasource=pypi depName=semgrep
-SEMGREP_VERSION="1.103.0"
+SEMGREP_VERSION="1.154.0"
 
 
 install_base() {
@@ -197,4 +197,3 @@ install_rust() {
     rustup target add x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu
     apt-get install -y -qq gcc-aarch64-linux-gnu > /dev/null
 }
-

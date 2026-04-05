@@ -53,11 +53,14 @@ set -gx ARGOCD_AUTH_TOKEN '{{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/n
 set -gx OPENAI_API_KEY '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/v2kd6fap7kzaaoqcbqqgz64y7m/credential" }}'
 set -gx ANTHROPIC_API_KEY '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/sksz6g6ds4ypujxkoqfvm26jsu/credential" }}'
 set -gx GEMINI_API_KEY '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/ysjsz6ndtzbvppylhcfdiacrwe/credential" }}'
+set -gx HASS_TOKEN '{{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/y4c2gno3yrxcdcudaofbirmi4u/password" }}'
+set -gx HASS_BASE_URL 'https://homeassistant.sjer.red'
 {{ else -}}
 # 1Password CLI (op) not available - secrets not loaded
 # Install op and run 'chezmoi apply' to load secrets
 set -gx GRAFANA_URL 'https://grafana.tailnet-1a49.ts.net'
 set -gx BUGSINK_URL 'https://bugsink.sjer.red'
+set -gx HASS_BASE_URL 'https://homeassistant.sjer.red'
 {{ end -}}
 if status is-interactive
   fish_vi_key_bindings

@@ -86,3 +86,15 @@ packages/tasks-for-obsidian/ios/build/
 *.sqlite
 *.sqlite3
 MODULE.bazel.lock
+
+# Generated TypeDoc docs (webring)
+packages/webring/docs/
+
+# Astro build cache
+packages/cooklang-rich-preview/.astro/
+
+# ESLint config compiled output
+packages/eslint-config/local.js
+packages/eslint-config/local.js.map
+packages/eslint-config/local.d.ts
+packages/eslint-config/local.d.ts.map

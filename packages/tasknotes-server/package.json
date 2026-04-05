@@ -13,7 +13,7 @@
   "dependencies": {
     "@sentry/bun": "^10.47.0",
     "gray-matter": "^4",
-    "hono": "^4",
+    "hono": "^4.12.0",
     "prom-client": "^15",
     "tasknotes-types": "file:../tasknotes-types",
     "yaml": "^2",

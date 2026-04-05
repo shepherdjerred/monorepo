@@ -7,6 +7,7 @@ export interface AffectedPackages {
   cooklangChanged: boolean;
   castleCastersChanged: boolean;
   resumeChanged: boolean;
+  ciImageChanged: boolean;
   hasImagePackages: Set<string>;
   hasSitePackages: Set<string>;
   hasNpmPackages: Set<string>;

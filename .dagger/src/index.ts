@@ -63,6 +63,8 @@ import {
   pushDepsSummaryImageHelper,
   pushDnsAuditImageHelper,
   pushCaddyS3ProxyImageHelper,
+  buildCiBaseImageHelper,
+  pushCiBaseImageHelper,
 } from "./image";
 
 import {
@@ -504,6 +506,32 @@ export class Monorepo {
       registryPassword,
       version,
       gitSha,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // CI base image
+  // ---------------------------------------------------------------------------
+
+  /** Build the CI base image from a Dockerfile context. */
+  @func()
+  buildCiBaseImage(context: Directory): Container {
+    return buildCiBaseImageHelper(context);
+  }
+
+  /** Build and push the CI base image. Returns digest. */
+  @func({ cache: "never" })
+  async pushCiBaseImage(
+    context: Directory,
+    tags: string[],
+    registryUsername: string,
+    registryPassword: Secret,
+  ): Promise<string> {
+    return pushCiBaseImageHelper(
+      context,
+      tags,
+      registryUsername,
+      registryPassword,
     );
   }
 

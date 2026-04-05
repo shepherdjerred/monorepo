@@ -49,6 +49,7 @@ import { argoCdSyncStep, argoCdHealthStep } from "./steps/argocd.ts";
 import { clauderonBuildGroup, clauderonUploadStep } from "./steps/clauderon.ts";
 import { cooklangReleaseGroup } from "./steps/cooklang.ts";
 import { versionCommitBackStep } from "./steps/version.ts";
+import { ciBaseImageBuildStep, ciBaseImagePushStep } from "./steps/ci-image.ts";
 import { buildSummaryStep } from "./steps/build-summary.ts";
 import { k8sPlugin } from "./lib/k8s-plugin.ts";
 
@@ -133,7 +134,8 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     affected.hasNpmPackages.size > 0 ||
     affected.homelabChanged ||
     affected.clauderonChanged ||
-    affected.cooklangChanged;
+    affected.cooklangChanged ||
+    affected.ciImageChanged;
 
   if (hasMainSteps) {
     // Quality gate: lightweight step that passes once all blocking checks pass.
@@ -184,6 +186,12 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     // --- Build clauderon binaries ---
     if (affected.buildAll || affected.clauderonChanged) {
       steps.push(clauderonBuildGroup(pkgKeyMap.get("clauderon")));
+    }
+
+    // --- Build + push CI base image ---
+    if (affected.buildAll || affected.ciImageChanged) {
+      steps.push(ciBaseImageBuildStep());
+      steps.push(ciBaseImagePushStep());
     }
 
     // --- Build cdk8s manifests ---

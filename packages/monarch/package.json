@@ -13,8 +13,8 @@
     "lint": "bunx eslint ."
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.52.0",
-    "monarch-money-api": "^0.0.5",
+    "@anthropic-ai/sdk": "^0.78.0",
+    "monarch-money-api": "^0.0.7",
     "pdfjs-dist": "4.10.38",
     "playwright": "^1.52.0",
     "zod": "^4.3.6"

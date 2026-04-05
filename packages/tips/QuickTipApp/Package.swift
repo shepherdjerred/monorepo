@@ -8,8 +8,8 @@ let package = Package(
         .macOS(.v15)
     ],
     dependencies: [
-        .package(url: "https://github.com/jpsim/Yams.git", from: "6.0.0"),
-        .package(url: "https://github.com/swiftlang/swift-markdown.git", from: "0.5.0")
+        .package(url: "https://github.com/jpsim/Yams.git", from: "6.2.1"),
+        .package(url: "https://github.com/swiftlang/swift-markdown.git", from: "0.7.3")
     ],
     targets: [
         .executableTarget(

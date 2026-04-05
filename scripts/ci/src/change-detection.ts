@@ -168,6 +168,9 @@ async function getChangedFiles(): Promise<string[] | null> {
     .filter((f) => f.length > 0);
 }
 
+/** Paths under INFRA_DIRS that should NOT trigger a full build. */
+const INFRA_DIR_EXCLUSIONS = [".buildkite/ci-image/"];
+
 function checkInfraChanges(changedFiles: string[]): boolean {
   for (const f of changedFiles) {
     if (INFRA_FILES.has(f)) {
@@ -176,9 +179,20 @@ function checkInfraChanges(changedFiles: string[]): boolean {
     }
     for (const d of INFRA_DIRS) {
       if (f.startsWith(d)) {
+        if (INFRA_DIR_EXCLUSIONS.some((ex) => f.startsWith(ex))) continue;
         console.error(`Infrastructure dir changed: ${f}`);
         return true;
       }
+    }
+  }
+  return false;
+}
+
+function checkCiImageChanges(changedFiles: string[]): boolean {
+  for (const f of changedFiles) {
+    if (f.startsWith(".buildkite/ci-image/")) {
+      console.error(`CI image changed: ${f}`);
+      return true;
     }
   }
   return false;
@@ -303,6 +317,7 @@ export async function detectChanges(): Promise<AffectedPackages> {
       cooklangChanged: true,
       castleCastersChanged: true,
       resumeChanged: true,
+      ciImageChanged: true,
       hasImagePackages: new Set(PACKAGES_WITH_IMAGES),
       hasSitePackages: new Set(Object.keys(PACKAGE_TO_SITE)),
       hasNpmPackages: new Set(PACKAGES_WITH_NPM),
@@ -318,7 +333,9 @@ export async function detectChanges(): Promise<AffectedPackages> {
     }
   }
 
-  if (directlyChanged.size === 0) {
+  const ciImageChanged = checkCiImageChanges(changedFiles);
+
+  if (directlyChanged.size === 0 && !ciImageChanged) {
     console.error("No affected packages detected");
     return {
       packages: new Set(),
@@ -328,6 +345,7 @@ export async function detectChanges(): Promise<AffectedPackages> {
       cooklangChanged: false,
       castleCastersChanged: false,
       resumeChanged: false,
+      ciImageChanged: false,
       hasImagePackages: new Set(),
       hasSitePackages: new Set(),
       hasNpmPackages: new Set(),
@@ -368,6 +386,7 @@ export async function detectChanges(): Promise<AffectedPackages> {
       allAffected.has("cooklang-for-obsidian"),
     castleCastersChanged: allAffected.has("castle-casters"),
     resumeChanged: allAffected.has("resume"),
+    ciImageChanged,
     hasImagePackages,
     hasSitePackages,
     hasNpmPackages,

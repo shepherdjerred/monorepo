@@ -1,4 +1,4 @@
-use rand::Rng;
+use rand::{Rng, RngExt};
 
 /// Characters used for generating random suffixes
 const CHARSET: &[u8] = b"abcdefghijklmnopqrstuvwxyz0123456789";

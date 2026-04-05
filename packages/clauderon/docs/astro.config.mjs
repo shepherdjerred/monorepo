@@ -7,10 +7,13 @@ export default defineConfig({
     starlight({
       title: "clauderon",
       description: "Session management for AI coding agents",
-      social: {
-        github:
-          "https://github.com/shepherdjerred/monorepo/tree/main/packages/clauderon",
-      },
+      social: [
+        {
+          icon: "github",
+          label: "GitHub",
+          href: "https://github.com/shepherdjerred/monorepo/tree/main/packages/clauderon",
+        },
+      ],
       logo: {
         light: "./src/assets/logo-light.svg",
         dark: "./src/assets/logo-dark.svg",

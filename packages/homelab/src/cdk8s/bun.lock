@@ -5,13 +5,13 @@
     "": {
       "name": "@homelab/cdk8s",
       "dependencies": {
-        "@grafana/grafana-foundation-sdk": "11.6.0-cogv0.0.x.1759917919",
+        "@grafana/grafana-foundation-sdk": "11.6.0-cogv0.0.x.1769699379",
         "@shepherdjerred/helm-types": "file:../helm-types",
         "cdk8s": "^2.69.60",
         "cdk8s-plus-31": "^2.2.4",
         "constructs": "^10.4.2",
         "cron-parser": "^5.4.0",
-        "lodash": "^4.17.21",
+        "lodash": "4.18.1",
         "remeda": "^2.22.5",
         "ts-pattern": "^5.7.1",
         "zod": "^4.1.11",
@@ -25,7 +25,7 @@
     },
   },
   "packages": {
-    "@grafana/grafana-foundation-sdk": ["@grafana/grafana-foundation-sdk@11.6.0-cogv0.0.x.1759917919", "", { "dependencies": { "tslib": "^2.6.2" } }, "sha512-cVFNeub37cYQQj+fTY+XdwHi4s7NOxWjhOhJoYFUFcv68TFqIvXFzrzKptGftR0eH3W3nMGm5Bc6nf7T3aEtPA=="],
+    "@grafana/grafana-foundation-sdk": ["@grafana/grafana-foundation-sdk@11.6.0-cogv0.0.x.1769699379", "", { "dependencies": { "tslib": "^2.6.2" } }, "sha512-kCE8BenAAOjFC5baHIPWy9lepzs6Z7GgJ0FoBO0ZNxBnNuka0VTEV18UX9DLMXcfSrITqY3yzwkq0L0E/Sf61g=="],
 
     "@shepherdjerred/helm-types": ["@shepherdjerred/helm-types@file:../helm-types", { "dependencies": { "yaml": "^2.8.1", "zod": "^4.1.11" }, "bin": { "helm-types": "dist/cli.js" } }],
 
@@ -49,7 +49,7 @@
 
     "jiti": ["jiti@2.6.1", "", { "bin": { "jiti": "lib/jiti-cli.mjs" } }, "sha512-ekilCSN1jwRvIbgeg/57YFh8qQDNbwDb9xT/qu2DAHbFFZUicIl4ygVaAvzveMhMVr3LnpSKTNnwt8PoOfmKhQ=="],
 
-    "lodash": ["lodash@4.17.23", "", {}, "sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w=="],
+    "lodash": ["lodash@4.18.1", "", {}, "sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q=="],
 
     "luxon": ["luxon@3.7.2", "", {}, "sha512-vtEhXh/gNjI9Yg1u4jX/0YVPMvxzHuGgCm6tC5kZyb08yjGWGnqAjGJvcXbqQR2P3MyMEFnRbpcdFS6PBcLqew=="],
 

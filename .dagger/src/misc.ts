@@ -195,7 +195,7 @@ export async function smokeTestScoutForLolHelper(
     // Generate Prisma client — scout backend imports from #generated/prisma/client
     .withWorkdir("/workspace/packages/scout-for-lol/packages/backend")
     .withExec(["bunx", "--trust", "prisma@6", "generate"])
-    .withExec(["sh", "-c", "timeout 30s bun run src/index.ts 2>&1; exit 0"]);
+    .withExec(["sh", "-c", "timeout 30s bun run src/index.ts 2>&1"]);
 
   return runSmokeTest(container, [
     "401",
@@ -331,15 +331,9 @@ export async function smokeTestDepsSummaryHelper(
   depNames: string[] = [],
   depDirs: Directory[] = [],
 ): Promise<string> {
-  // The deps-email image needs git to clone the homelab repo for analysis.
-  // Install it in the smoke test so the app gets past the initial boot.
+  // git is installed in the production image via homelabSubPackageBase
   const container = buildDepsSummaryImageHelper(pkgDir, depNames, depDirs)
     .withEntrypoint([])
-    .withExec([
-      "sh",
-      "-c",
-      "apt-get update -qq && apt-get install -y -qq git > /dev/null 2>&1",
-    ])
     .withExec(["sh", "-c", "timeout 30s bun run src/main.ts 2>&1"]);
 
   return runSmokeTest(container, [

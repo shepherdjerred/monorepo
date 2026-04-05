@@ -196,11 +196,13 @@ function imagePushStep(
 
   const cmd = [
     // $$ escapes survive Buildkite interpolation so bash sees $DIGEST at runtime.
-    // dagger call outputs ANSI escape codes to stdout even with DAGGER_PROGRESS=dots/plain,
-    // so we grep for the sha256 digest line to extract just the return value.
+    // Dagger outputs ANSI escape codes even with DAGGER_PROGRESS=dots/plain,
+    // so we strip them before grepping for the sha256 digest.
     `RAW=$$(dagger call ${pushCall})`,
-    `&& DIGEST=$$(echo "$$RAW" | grep -oE 'sha256:[a-f0-9]+' | head -1)`,
-    `&& if [ -n "$$DIGEST" ]; then buildkite-agent meta-data set "digest:${img.versionKey}" "$$DIGEST"; else echo "WARN: empty digest for ${img.name}"; fi`,
+    `&& CLEAN=$$(printf '%s' "$$RAW" | sed 's/\\x1b\\[[0-9;]*[a-zA-Z]//g' | tr -d '\\r')`,
+    `&& DIGEST=$$(echo "$$CLEAN" | grep -oE 'sha256:[a-f0-9]+' | head -1)`,
+    `&& if [ -z "$$DIGEST" ]; then echo "ERROR: empty digest for ${img.name} — raw output was: $$RAW" >&2; exit 1; fi`,
+    `&& buildkite-agent meta-data set "digest:${img.versionKey}" "$$DIGEST"`,
   ].join(" ");
 
   return {

@@ -83,6 +83,12 @@ function homelabSubPackageBase(
   let container = dag
     .container()
     .from(BUN_IMAGE)
+    // git is needed at runtime by deps-email (simple-git clones the homelab repo)
+    .withExec([
+      "sh",
+      "-c",
+      "apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*",
+    ])
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
     .withWorkdir("/workspace")
     .withDirectory("/workspace/packages/homelab", pkgDir, {
@@ -366,6 +372,31 @@ export async function pushCaddyS3ProxyImageHelper(
   gitSha: string = "unknown",
 ): Promise<string> {
   const container = buildCaddyS3ProxyImageHelper(version, gitSha);
+  return pushContainerHelper(
+    container,
+    tags,
+    registryUsername,
+    registryPassword,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// CI base image (Dockerfile-based build)
+// ---------------------------------------------------------------------------
+
+/** Build the CI base image from .buildkite/ci-image/Dockerfile. */
+export function buildCiBaseImageHelper(context: Directory): Container {
+  return dag.container().build(context);
+}
+
+/** Build and push the CI base image. Returns the digest. */
+export async function pushCiBaseImageHelper(
+  context: Directory,
+  tags: string[],
+  registryUsername: string,
+  registryPassword: Secret,
+): Promise<string> {
+  const container = buildCiBaseImageHelper(context);
   return pushContainerHelper(
     container,
     tags,

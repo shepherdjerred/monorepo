@@ -7,6 +7,7 @@ AI-maintained knowledge base for the monorepo.
 - [Monorepo Structure](architecture/2026-02-22_monorepo-structure.md) - Package layout, workspaces, and conventions
 - [Sentinel](architecture/2026-02-22_sentinel.md) - Autonomous agent system architecture
 - [Monarch](architecture/2026-02-23_monarch.md) - Transaction categorization pipeline with tiered classification
+- [Release/Push/Deploy Inventory](architecture/2026-04-04_release-push-inventory.md) - Complete inventory of all external publish targets (Docker, Helm, npm, S3, GitHub, Tofu, ArgoCD)
 
 ## Patterns
 
@@ -43,7 +44,9 @@ AI-maintained knowledge base for the monorepo.
 ## Guides
 
 - [Local Quality Check](guides/2026-04-03_local-quality-check.md) - Full monorepo verification: all linters, tests, builds, and quality gates
-- [Homelab Health Audit](guides/2026-03-28_homelab-health-audit.md) - Cluster health: 313 days uptime, critical issues
+- [Homelab Audit Runbook](guides/2026-04-04_homelab-audit-runbook.md) - Repeatable procedure for comprehensive cluster health audit
+- [Homelab Health Audit (2026-04-05)](guides/2026-04-05_homelab-health-audit.md) - 1Password Connect corrupted, 18 degraded apps, NVMe1 thermal
+- [Homelab Health Audit (2026-03-28)](guides/2026-03-28_homelab-health-audit.md) - Point-in-time audit result: 313 days uptime, critical issues
 - [Network Policy Gaps](guides/2026-03-15_network-policy-gaps.md) - Kubernetes network policy analysis
 - [Minecraft Modpack Recommendations](guides/2026-03-27_minecraft-modpack-recommendations.md) - Modpack research for non-combat playstyles
 - [Monthly Changelog: March 2026](guides/2026-03-19_monthly-changelog-march.md) - Summary of major changes Feb 19 – Mar 19, 2026

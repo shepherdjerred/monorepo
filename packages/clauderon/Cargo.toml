@@ -50,10 +50,10 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 tracing-appender = "0.2"
 
 # Error reporting
-sentry = { version = "0.46", default-features = false, features = ["backtrace", "contexts", "panic", "rustls", "reqwest", "tracing"] }
+sentry = { version = "0.47", default-features = false, features = ["backtrace", "contexts", "panic", "rustls", "reqwest", "tracing"] }
 
 # Utilities
-rand = "0.9"
+rand = "0.10"
 dirs = "6"
 exec = "0.3"
 async-trait = "0.1"
@@ -63,7 +63,7 @@ include_dir = "0.7"
 mime_guess = "2"
 dashmap = "6"
 arboard = "3.4"  # Cross-platform clipboard access
-uzers = "0.11"  # Safe Unix user/group info (for getuid)
+uzers = "0.12"  # Safe Unix user/group info (for getuid)
 walkdir = "2"  # Recursive directory traversal (for Codex history file search)
 
 # HTTP types
@@ -74,7 +74,7 @@ base64 = "0.22"
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
 
 # Config files
-toml = "0.9"
+toml = "1"
 serde_yaml = "0.9"
 
 # Time handling
@@ -107,7 +107,7 @@ tokio-test = "0.4"
 # Screenshot generation (TUI PNG rendering)
 image = "0.25"
 ab_glyph = "0.2"
-imageproc = "0.25"
+imageproc = "0.26"
 
 [lints.rust]
 unsafe_code = "forbid"

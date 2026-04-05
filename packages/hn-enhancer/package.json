@@ -19,7 +19,7 @@
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.3.0",
     "@shepherdjerred/eslint-config": "file:../eslint-config",
-    "@types/chrome": "^0.0.320",
+    "@types/chrome": "^0.1.0",
     "eslint": "^9.39.1",
     "jiti": "^2.6.1",
     "typescript": "^5.9.3",
