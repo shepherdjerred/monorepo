@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 export type IntegrationInput = {
   options: PartialIntegrationOptions;
   render: RenderFunction;
+  filter?: FilterFunction;
 };
 
 /** When applied to PartialIntegrationOptions this type equals IntegrationOptions */
@@ -46,6 +47,11 @@ export type RenderFunctionInput = {
   dir: URL;
   document: Document;
 } & PageDetails;
+
+/** A function that filters which pages should have Open Graph images generated for them **/
+export type FilterFunction = (
+  input: RenderFunctionInput,
+) => Promise<boolean> | boolean;
 
 /** A function that renders some page input to React */
 export type RenderFunction = (
