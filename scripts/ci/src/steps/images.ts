@@ -35,6 +35,7 @@ function imageBuildStep(
   const NO_SOURCE_BUILDS = new Set([
     "build-dns-audit-image",
     "build-caddy-s-3-proxy-image",
+    "build-obsidian-headless-image",
   ]);
 
   const flags = depFlags(pkg);
@@ -89,6 +90,7 @@ const SMOKE_TEST_FUNCTIONS: Record<string, string> = {
   "dependency-summary": "smoke-test-deps-summary",
   "dns-audit": "smoke-test-dns-audit",
   "caddy-s3proxy": "smoke-test-caddy-s-3-proxy",
+  "obsidian-headless": "smoke-test-obsidian-headless",
   "discord-plays-pokemon": "smoke-test-discord-plays-pokemon",
   "better-skill-capped-fetcher": "smoke-test-better-skill-capped-fetcher",
 };
@@ -97,6 +99,7 @@ const SMOKE_TEST_FUNCTIONS: Record<string, string> = {
 const SMOKE_NO_ARGS = new Set([
   "smoke-test-dns-audit",
   "smoke-test-caddy-s-3-proxy",
+  "smoke-test-obsidian-headless",
 ]);
 
 // Smoke test functions that take --pkg-dir + dep flags but no --pkg (custom infra images)
@@ -171,6 +174,7 @@ function imagePushStep(
   const NO_SOURCE_PUSHES = new Set([
     "push-dns-audit-image",
     "push-caddy-s-3-proxy-image",
+    "push-obsidian-headless-image",
   ]);
   const flags = depFlags(pkg);
 

@@ -1,9 +1,9 @@
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 
-// These functions are identity functions. CDK8s-generated PrometheusRule CRDs
-// and kube-prometheus-stack alertmanager config are NOT processed through Helm
-// templating, so Go template syntax ({{ $labels.xxx }}, {{ .Alerts }}) must be
-// passed through as-is for Prometheus/Alertmanager to evaluate.
+// CDK8s-generated PrometheusRule CRDs are embedded in the apps Helm chart,
+// so Go template syntax ({{ $value }}, {{ $labels.xxx }}) must be escaped
+// for Helm to pass them through literally to Prometheus/Alertmanager.
+// Alertmanager config inside kube-prometheus-stack values is also Helm-rendered.
 export function escapeGoTemplate(template: string): string {
   return template;
 }
@@ -15,7 +15,7 @@ export function escapeHelmGoTemplate(template: string): string {
 }
 
 export function escapePrometheusTemplate(template: string): string {
-  return template;
+  return escapeHelmGoTemplate(template);
 }
 
 export const escapeAlertmanagerTemplate = escapeGoTemplate;

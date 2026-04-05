@@ -380,6 +380,47 @@ export async function pushCaddyS3ProxyImageHelper(
   );
 }
 
+/**
+ * Build the obsidian-headless image.
+ * Bun-based, installs obsidian-headless CLI globally for Obsidian vault sync.
+ */
+export function buildObsidianHeadlessImageHelper(
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Container {
+  return dag
+    .container()
+    .from("oven/bun:slim")
+    .withExec(["bun", "add", "-g", "obsidian-headless"])
+    .withExec(["mkdir", "-p", "/vault"])
+    .withLabel(
+      "org.opencontainers.image.source",
+      "https://github.com/shepherdjerred/monorepo",
+    )
+    .withLabel("org.opencontainers.image.version", version)
+    .withLabel("org.opencontainers.image.revision", gitSha)
+    .withEnvVariable("VERSION", version)
+    .withEnvVariable("GIT_SHA", gitSha)
+    .withEntrypoint(["/bin/sh", "-c"]);
+}
+
+/** Push an obsidian-headless image to a registry. */
+export async function pushObsidianHeadlessImageHelper(
+  tags: string[],
+  registryUsername: string,
+  registryPassword: Secret,
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Promise<string> {
+  const container = buildObsidianHeadlessImageHelper(version, gitSha);
+  return pushContainerHelper(
+    container,
+    tags,
+    registryUsername,
+    registryPassword,
+  );
+}
+
 // ---------------------------------------------------------------------------
 // CI base image (Dockerfile-based build)
 // ---------------------------------------------------------------------------

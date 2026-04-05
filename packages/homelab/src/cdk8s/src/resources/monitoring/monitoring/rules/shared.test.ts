@@ -82,36 +82,53 @@ describe("Template escaping utilities", () => {
     });
   });
 
-  describe("escapePrometheusTemplate (identity)", () => {
-    test("should pass through $value template unchanged", () => {
+  describe("escapePrometheusTemplate (Helm escaping)", () => {
+    test("should escape $value template for Helm", () => {
       const input = "CPU usage is {{ $value }}%";
-      expect(escapePrometheusTemplate(input)).toBe(input);
+      expect(escapePrometheusTemplate(input)).toBe(
+        'CPU usage is {{ "{{" }} $value {{ "}}" }}%',
+      );
     });
 
-    test("should pass through $value with filter unchanged", () => {
+    test("should escape $value with filter for Helm", () => {
       const input = "Memory usage: {{ $value | humanize }} bytes";
-      expect(escapePrometheusTemplate(input)).toBe(input);
+      expect(escapePrometheusTemplate(input)).toBe(
+        'Memory usage: {{ "{{" }} $value | humanize {{ "}}" }} bytes',
+      );
     });
 
-    test("should pass through $labels template unchanged", () => {
+    test("should escape $labels template for Helm", () => {
       const input = "Alert on {{ $labels.instance }}";
-      expect(escapePrometheusTemplate(input)).toBe(input);
+      expect(escapePrometheusTemplate(input)).toBe(
+        'Alert on {{ "{{" }} $labels.instance {{ "}}" }}',
+      );
     });
 
-    test("should pass through multiple Prometheus patterns unchanged", () => {
+    test("should escape multiple Prometheus patterns for Helm", () => {
       const input =
         "{{ $labels.job }} has {{ $value | humanizePercentage }} usage on {{ $labels.instance }}";
-      expect(escapePrometheusTemplate(input)).toBe(input);
+      expect(escapePrometheusTemplate(input)).toBe(
+        '{{ "{{" }} $labels.job {{ "}}" }} has {{ "{{" }} $value | humanizePercentage {{ "}}" }} usage on {{ "{{" }} $labels.instance {{ "}}" }}',
+      );
     });
 
     test("should handle whitespace variations", () => {
       const input = "{{$value}} and {{ $value }} and {{  $value  }}";
-      expect(escapePrometheusTemplate(input)).toBe(input);
+      expect(escapePrometheusTemplate(input)).toBe(
+        '{{ "{{" }}$value{{ "}}" }} and {{ "{{" }} $value {{ "}}" }} and {{ "{{" }}  $value  {{ "}}" }}',
+      );
     });
 
-    test("should pass through complex filter chains unchanged", () => {
+    test("should escape complex filter chains for Helm", () => {
       const input = "{{ $value | humanizePercentage }}";
-      expect(escapePrometheusTemplate(input)).toBe(input);
+      expect(escapePrometheusTemplate(input)).toBe(
+        '{{ "{{" }} $value | humanizePercentage {{ "}}" }}',
+      );
+    });
+
+    test("should behave identically to escapeHelmGoTemplate", () => {
+      const input = "{{ $value }}% on {{ $labels.instance }}";
+      expect(escapePrometheusTemplate(input)).toBe(escapeHelmGoTemplate(input));
     });
   });
 
@@ -152,10 +169,12 @@ describe("Template escaping utilities", () => {
       expect(result).toContain("{{ .Alerts.Firing | len }}");
     });
 
-    test("should pass through Prometheus alert description unchanged", () => {
+    test("should escape Prometheus alert description for Helm", () => {
       const input =
         "Node {{ $labels.instance }} has sustained high CPU usage: {{ $value | humanizePercentage }} for over 1 day";
-      expect(escapePrometheusTemplate(input)).toBe(input);
+      expect(escapePrometheusTemplate(input)).toBe(
+        'Node {{ "{{" }} $labels.instance {{ "}}" }} has sustained high CPU usage: {{ "{{" }} $value | humanizePercentage {{ "}}" }} for over 1 day',
+      );
     });
 
     test("escapeHelmGoTemplate should escape real-world JSON details", () => {

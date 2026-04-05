@@ -52,7 +52,7 @@ Code: `.dagger/src/image.ts`, `scripts/ci/src/steps/images.ts`, `scripts/ci/src/
 
 Code: `.dagger/src/release.ts`, `scripts/ci/src/steps/helm.ts`
 
-ddns, apps, scout-beta, scout-prod, starlight-karma-bot-beta, starlight-karma-bot-prod, redlib, better-skill-capped-fetcher, plausible, birmel, cloudflare-tunnel, media, home, postal, syncthing, golink, freshrss, pokemon, gickup, grafana-db, mcp-gateway, s3-static-sites, kyverno-policies, bugsink, dns-audit, tasknotes, windmill-db
+ddns, apps, scout-beta, scout-prod, starlight-karma-bot-beta, starlight-karma-bot-prod, redlib, better-skill-capped-fetcher, plausible, birmel, cloudflare-tunnel, media, home, postal, syncthing, golink, freshrss, pokemon, gickup, grafana-db, mcp-gateway, s3-static-sites, kyverno-policies, bugsink, dns-audit, tasknotes
 
 ## npm Packages → npm Registry
 

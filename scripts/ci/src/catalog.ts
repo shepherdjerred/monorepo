@@ -69,6 +69,13 @@ export const INFRA_PUSH_TARGETS: ImageTarget[] = [
     buildFn: "build-caddy-s-3-proxy-image",
     pushFn: "push-caddy-s-3-proxy-image",
   },
+  {
+    name: "obsidian-headless",
+    package: "homelab",
+    versionKey: "shepherdjerred/obsidian-headless",
+    buildFn: "build-obsidian-headless-image",
+    pushFn: "push-obsidian-headless-image",
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -249,7 +256,8 @@ export const HELM_CHARTS: string[] = [
   "bugsink",
   "dns-audit",
   "tasknotes",
-  "windmill-db",
+  "sentinel",
+  "status-page",
 ];
 
 // ---------------------------------------------------------------------------

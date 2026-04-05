@@ -59,10 +59,12 @@ import {
   buildDepsSummaryImageHelper,
   buildDnsAuditImageHelper,
   buildCaddyS3ProxyImageHelper,
+  buildObsidianHeadlessImageHelper,
   pushHomelabImageHelper,
   pushDepsSummaryImageHelper,
   pushDnsAuditImageHelper,
   pushCaddyS3ProxyImageHelper,
+  pushObsidianHeadlessImageHelper,
   buildCiBaseImageHelper,
   pushCiBaseImageHelper,
 } from "./image";
@@ -101,6 +103,7 @@ import {
   smokeTestDepsSummaryHelper,
   smokeTestDnsAuditHelper,
   smokeTestCaddyS3ProxyHelper,
+  smokeTestObsidianHeadlessHelper,
   smokeTestDiscordPlaysPokemonHelper,
   smokeTestBetterSkillCappedFetcherHelper,
 } from "./misc";
@@ -425,6 +428,15 @@ export class Monorepo {
     return buildCaddyS3ProxyImageHelper(version, gitSha);
   }
 
+  /** Build the obsidian-headless image (Bun + obsidian CLI) */
+  @func()
+  buildObsidianHeadlessImage(
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Container {
+    return buildObsidianHeadlessImageHelper(version, gitSha);
+  }
+
   /** Push a homelab HA image to a registry. Returns digest. */
   @func({ cache: "never" })
   async pushHomelabImage(
@@ -501,6 +513,24 @@ export class Monorepo {
     gitSha: string = "unknown",
   ): Promise<string> {
     return pushCaddyS3ProxyImageHelper(
+      tags,
+      registryUsername,
+      registryPassword,
+      version,
+      gitSha,
+    );
+  }
+
+  /** Push an obsidian-headless image to a registry. Returns digest. */
+  @func({ cache: "never" })
+  async pushObsidianHeadlessImage(
+    tags: string[],
+    registryUsername: string,
+    registryPassword: Secret,
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Promise<string> {
+    return pushObsidianHeadlessImageHelper(
       tags,
       registryUsername,
       registryPassword,
@@ -1193,6 +1223,12 @@ export class Monorepo {
   @func()
   async smokeTestCaddyS3Proxy(): Promise<string> {
     return smokeTestCaddyS3ProxyHelper();
+  }
+
+  /** Smoke test obsidian-headless: verifies Bun + obsidian CLI installed */
+  @func()
+  async smokeTestObsidianHeadless(): Promise<string> {
+    return smokeTestObsidianHeadlessHelper();
   }
 
   /** Smoke test discord-plays-pokemon: boots app, expects Discord auth failure */

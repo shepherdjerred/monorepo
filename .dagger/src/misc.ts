@@ -22,6 +22,7 @@ import {
   buildDepsSummaryImageHelper,
   buildDnsAuditImageHelper,
   buildCaddyS3ProxyImageHelper,
+  buildObsidianHeadlessImageHelper,
 } from "./image";
 
 /** Build MkDocs documentation site and return the built site/ directory. */
@@ -396,6 +397,18 @@ export async function smokeTestCaddyS3ProxyHelper(): Promise<string> {
       "-c",
       "caddy start --config /dev/null 2>&1; sleep 1; caddy stop 2>&1; echo 'caddy start/stop OK'",
     ]);
+
+  return runSmokeTest(container, []);
+}
+
+/**
+ * Smoke test obsidian-headless image.
+ * Verifies: bun runtime works and obsidian-headless CLI is installed.
+ */
+export async function smokeTestObsidianHeadlessHelper(): Promise<string> {
+  const container = buildObsidianHeadlessImageHelper()
+    .withEntrypoint([])
+    .withExec(["ob", "--help"]);
 
   return runSmokeTest(container, []);
 }

@@ -67,13 +67,13 @@ logLevel: info
 logFormat: json
 maxEventAgeSeconds: 60
 route:
+  drop:
+    # Drop Normal events - only keep Warning
+    - type: "Normal"
   routes:
     # Route Warning events to Loki
     - match:
         - receiver: "loki"
-      drop:
-        # Drop Normal events - only keep Warning
-        - type: "Normal"
 receivers:
   - name: "loki"
     loki:

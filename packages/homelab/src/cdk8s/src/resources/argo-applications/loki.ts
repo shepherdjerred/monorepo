@@ -353,7 +353,11 @@ export function createLokiApp(chart: Chart) {
       },
       syncPolicy: {
         automated: {},
-        syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
+        syncOptions: [
+          "CreateNamespace=true",
+          "ServerSideApply=true",
+          "Replace=true",
+        ],
       },
     },
   });
