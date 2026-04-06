@@ -49,17 +49,17 @@ function buildSummaryScript(): string {
     lines.push(
       `DIGEST=$$(buildkite-agent meta-data get "digest:${key}" --default "")`,
       `if [ -n "$$DIGEST" ]; then echo "| [${key}](${ghcrUrl}) | $` +
-        "$BT" +
+        "$${BT}" +
         `${tag}$` +
-        "$BT" +
+        "$${BT}" +
         ` | $` +
-        "$BT" +
+        "$${BT}" +
         `$$DIGEST$` +
-        "$BT" +
+        "$${BT}" +
         ` |" >> $$SUMMARY; else echo "| [${key}](${ghcrUrl}) | $` +
-        "$BT" +
+        "$${BT}" +
         `${tag}$` +
-        "$BT" +
+        "$${BT}" +
         ` | :x: _not pushed_ |" >> $$SUMMARY; fi`,
     );
   }

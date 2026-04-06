@@ -38,7 +38,10 @@ const INFRA_DIRS = [".buildkite/", ".dagger/", "scripts/ci/"];
 /** Check if the current build is a version commit-back merge (auto-generated). */
 function isVersionCommitBack(): boolean {
   const msg = process.env["BUILDKITE_MESSAGE"] ?? "";
-  return msg.startsWith("chore: bump image versions to ");
+  return (
+    msg.startsWith("chore: bump image versions to ") ||
+    /^Merge pull request #\d+ from .+\/chore\/version-bump-/.test(msg)
+  );
 }
 
 // ---------------------------------------------------------------------------
