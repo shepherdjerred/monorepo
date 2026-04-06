@@ -32,11 +32,14 @@ function checkForUnescapedBraces(yamlContent: string, fileName: string) {
     // Strip all known Helm escape patterns:
     // - {{ "{{" }} / {{ "}}" }} — standard escape used by escapeHelmGoTemplate
     // - {{ print "{{" }} / {{ print "}}" }} — alternative used by Grafana dashboards
+    // - {{ `{{` }} / {{ `}}` }} — backtick-based escape for JSON-rendered templates
     const stripped = line
       .replaceAll('{{ "{{" }}', "")
       .replaceAll('{{ "}}" }}', "")
       .replaceAll('{{ print "{{" }}', "")
-      .replaceAll('{{ print "}}" }}', "");
+      .replaceAll('{{ print "}}" }}', "")
+      .replaceAll("{{ `{{` }}", "")
+      .replaceAll("{{ `}}` }}", "");
 
     // Only {{ triggers Helm template parsing. Standalone }} is safe.
     if (stripped.includes("{{")) {

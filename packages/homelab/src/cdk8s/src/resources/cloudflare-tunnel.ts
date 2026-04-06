@@ -18,7 +18,9 @@ export function createCloudflareTunnelCRD(chart: Chart) {
     spec: {
       cloudflare: {
         secret: CLOUDFLARE_TUNNEL_SECRET_NAME,
-        cloudflareApiToken: "cloudflare-api-token",
+        // cloudflareApiToken defaults to "CLOUDFLARE_API_TOKEN" which matches the 1Password field
+        // cloudflareTunnelCredentialSecret must be set to match the 1Password field name "credential"
+        cloudflareTunnelCredentialSecret: "credential",
         accountId: "48948ed6cd40d73e34d27f0cc10e595f",
         domain: "sjer.red",
       },

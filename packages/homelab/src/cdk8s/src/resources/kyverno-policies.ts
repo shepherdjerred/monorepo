@@ -26,7 +26,11 @@ export function createVeleroBackupLabelPolicy(chart: Chart) {
                 resources: {
                   kinds: ["PersistentVolumeClaim"],
                   namespaces: ["prometheus"],
-                  names: ["prometheus-*", "alertmanager-*", "pgdata-grafana-*"],
+                  names: [
+                    "alertmanager-*",
+                    "pgdata-grafana-*",
+                    "storage-prometheus-grafana-*",
+                  ],
                 },
               },
               {
