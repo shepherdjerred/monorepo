@@ -362,7 +362,15 @@ export class Monorepo {
     gitSha: string = "unknown",
     usePrisma: boolean = false,
   ): Container {
-    return buildImageHelper(pkgDir, pkg, depNames, depDirs, version, gitSha, usePrisma);
+    return buildImageHelper(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      version,
+      gitSha,
+      usePrisma,
+    );
   }
 
   /** Push a built image to a registry under one or more tags. Returns digest of the first tag. */
