@@ -67,15 +67,15 @@ const versions = {
   // Custom homelab HA image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/homelab":
-    "2.0.0-891@sha256:3da2202b46267196bd7a1854fc8fdd1460c7a06dff471870738c5b387dc52633",
+    "2.0.0-899@sha256:a51c583647e6632eb714fe78842f41f4d54148387e70425e6000acec54503947",
   // Custom dependency-summary image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/dependency-summary":
-    "2.0.0-891@sha256:6f4d117c35e5934d938dac926d76906b0eae634132546439f3fb98ec5a19f0d3",
+    "2.0.0-899@sha256:86c618ce3079fc81979e5be0efad13f54ce02b0c971c10341b9f32e4f4d3b5a9",
   // Custom better-skill-capped-fetcher image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/better-skill-capped-fetcher":
-    "2.0.0-891@sha256:5bda0d0b0c473a275407f7e15a12e5f3564db6612d3d341ada33e9497b3fd3fe",
+    "2.0.0-899@sha256:5bda0d0b0c473a275407f7e15a12e5f3564db6612d3d341ada33e9497b3fd3fe",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "linuxserver/syncthing":
     "2.0.15@sha256:580ed2fe422253042da782cef634084e9868f7dcd449f5d6dd2b40e6e3a9dc13",
@@ -100,22 +100,22 @@ const versions = {
   openebs: "4.4.0",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/scout-for-lol/beta":
-    "2.0.0-891@sha256:1a0ba51bcd63e251a2dd03aeb9c17cc13b011a51487494a677ced38597d8f1b9",
+    "2.0.0-899@sha256:0bc2dce800c9e519c0804264ec3434a56de54c417c4f92e801745d5c83ec043e",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
   "shepherdjerred/scout-for-lol/prod":
     "2.0.0-829@sha256:28260a7f4a7896355d9242fdcc8b87572c04ac06bfb72b882b767bcd90c2d06b",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
-    "2.0.0-891@sha256:64874cc18b071cd12a2ec26fcf68f2ef1300d5b8483ca70deba72e9aa04a2b54",
+    "2.0.0-899@sha256:3a76672b043b5658f9b8739daf3654d9dc87da8abdc4fe9d7680631039686ab7",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/starlight-karma-bot
   "shepherdjerred/starlight-karma-bot/prod":
     "2.0.0-829@sha256:3a76672b043b5658f9b8739daf3654d9dc87da8abdc4fe9d7680631039686ab7",
   // not managed by renovate
   "shepherdjerred/birmel":
-    "2.0.0-891@sha256:d0164872f8afd4fd614ac758fc33f0f308d582936f53f75ace9a4ede63dad114",
+    "2.0.0-899@sha256:afa737baf28cafa97fb2eb4be3edbbb5642877fdd9b97f71375b4cfa0887e049",
   // not managed by renovate
   "shepherdjerred/discord-plays-pokemon":
-    "2.0.0-891@sha256:4837547b89a8cb673a68a8fa1e5733b75bdf6e4d6764e126e58f9d12197f531d",
+    "2.0.0-899@sha256:4837547b89a8cb673a68a8fa1e5733b75bdf6e4d6764e126e58f9d12197f531d",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "freshrss/freshrss":
     "1.28.1@sha256:9100f649f5c946f589f54cdb9be7a65996528f48f691ef90eb262a0e06e5a522",
@@ -202,19 +202,19 @@ const versions = {
   // Custom dns-audit image - Python with checkdmarc pre-installed for DNS auditing
   // not managed by renovate
   "shepherdjerred/dns-audit":
-    "2.0.0-891@sha256:e16e49cf7921018a8c28809ba048f1b4e26fd69f1ce34f7f3226fe91e1f2dfc4",
+    "2.0.0-899@sha256:e16e49cf7921018a8c28809ba048f1b4e26fd69f1ce34f7f3226fe91e1f2dfc4",
   // Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3
   // not managed by renovate
   "shepherdjerred/caddy-s3proxy":
-    "2.0.0-891@sha256:e7a1e2e7e6ea6f42db9b26f3c373d2d84e9a4afd082f94db39d75322488cc935",
+    "2.0.0-899@sha256:e7a1e2e7e6ea6f42db9b26f3c373d2d84e9a4afd082f94db39d75322488cc935",
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
-    "2.0.0-891@sha256:9abccb7871cdbbfedfff69c025ff0706cbd3f2ea0cd5cd4c15378547f936b1a3",
+    "2.0.0-899@sha256:20458c89877b0cb66876c4a3c0b46e82130a367fb801f968387385b4f7242821",
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
-    "2.0.0-891@sha256:cccb58d388cf69ba73844f38c2df1022881b1ac0d20587e613efa890c3e9ce5f",
+    "2.0.0-899@sha256:cccb58d388cf69ba73844f38c2df1022881b1ac0d20587e613efa890c3e9ce5f",
   // Custom status-page-api image - Status page API
   // not managed by renovate
   "shepherdjerred/status-page-api":
