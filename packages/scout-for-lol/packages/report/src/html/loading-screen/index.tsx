@@ -8,12 +8,12 @@ import {
 } from "#src/dataDragon/image-cache.ts";
 import { svgToPng } from "#src/html/index.tsx";
 
-// Standard/ARAM: 3200x2800 (two columns of 5 tall cards + header)
-// Arena: 3200x2600 (4 rows x 2 columns of team pairs + header)
-const STANDARD_WIDTH = 3200;
-const STANDARD_HEIGHT = 2800;
-const ARENA_WIDTH = 3200;
-const ARENA_HEIGHT = 2600;
+// Standard/ARAM: 5 cards per row × 2 rows + header/bans
+const STANDARD_WIDTH = 1600;
+const STANDARD_HEIGHT = 1200;
+// Arena: 4 rows × 2 team pairs
+const ARENA_WIDTH = 1600;
+const ARENA_HEIGHT = 1400;
 
 async function preloadLoadingScreenImages(
   data: LoadingScreenData,
