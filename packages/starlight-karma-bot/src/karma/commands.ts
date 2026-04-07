@@ -1,5 +1,4 @@
 import { Karma } from "#src/db/karma.ts";
-import { KarmaCounts } from "#src/db/karma-counts.ts";
 import { KarmaReceived } from "#src/db/karma-received.ts";
 import { Person } from "#src/db/person.ts";
 import {
@@ -101,7 +100,7 @@ async function modifyKarma(params: {
 }
 
 async function getKarma(id: string, guildId: string): Promise<number> {
-  const karmaCounts = await dataSource.getRepository(KarmaCounts).findOneBy({
+  const karmaCounts = await dataSource.getRepository(KarmaReceived).findOneBy({
     id,
     guildId,
   });
