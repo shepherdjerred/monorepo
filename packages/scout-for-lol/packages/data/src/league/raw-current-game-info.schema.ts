@@ -52,6 +52,8 @@ export const RawCurrentGameParticipantSchema = z
         perkSubStyle: z.number().optional(),
       })
       .optional(),
+    riotId: z.string().optional(),
+    lastSelectedSkinIndex: z.number().optional(),
   })
   .strict();
 

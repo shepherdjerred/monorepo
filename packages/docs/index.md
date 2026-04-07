@@ -49,7 +49,9 @@ AI-maintained knowledge base for the monorepo.
 
 - [Helm Escaping Pipeline](guides/2026-04-04_helm-escaping-pipeline.md) - How template-bearing content survives the multi-engine rendering pipeline
 - [Local Quality Check](guides/2026-04-03_local-quality-check.md) - Full monorepo verification: all linters, tests, builds, and quality gates
+- [Is My Commit Deployed?](guides/2026-04-06_is-commit-deployed.md) - Trace a commit through CI → GHCR → ChartMuseum → ArgoCD → cluster
 - [Homelab Audit Runbook](guides/2026-04-04_homelab-audit-runbook.md) - Repeatable procedure for comprehensive cluster health audit
+- [Homelab Health Audit (2026-04-06)](guides/2026-04-06_homelab-health-audit.md) - 8 issues: Bugsink disk full, ArgoCD sync blocked by Jobs, scout spectator validation, undeployed fixes
 - [Homelab Health Audit (2026-04-05 PM)](guides/2026-04-05_homelab-health-audit-2.md) - 13 issues: OOM, Prisma entrypoint, Velero chain poison, Cloudflare secret mismatch, NVMe thermals
 - [Dependency Risk Assessment](guides/2026-04-04_dependency-risk-assessment.md) - Renovate pending updates classified by risk/effort
 - [Network Policy Gaps](guides/2026-03-15_network-policy-gaps.md) - Kubernetes network policy analysis

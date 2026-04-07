@@ -39,6 +39,8 @@ export function createDaggerApp(chart: Chart) {
       name: "dagger-zfs-tuning",
       namespace: "dagger",
       annotations: {
+        "argocd.argoproj.io/hook": "Sync",
+        "argocd.argoproj.io/hook-delete-policy": "BeforeHookCreation",
         "ignore-check.kube-linter.io/privileged-container":
           "Required for ZFS device access",
         "ignore-check.kube-linter.io/privilege-escalation-container":
@@ -154,6 +156,8 @@ zfs get sync,logbias,atime "$DATASET"`,
       name: "docker-config-builder",
       namespace: "dagger",
       annotations: {
+        "argocd.argoproj.io/hook": "Sync",
+        "argocd.argoproj.io/hook-delete-policy": "BeforeHookCreation",
         "ignore-check.kube-linter.io/run-as-non-root":
           "Minimal alpine container, no privilege needed beyond K8s API access",
       },
