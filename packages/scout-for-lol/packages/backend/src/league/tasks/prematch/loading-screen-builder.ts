@@ -92,11 +92,11 @@ function buildParticipant(
 ): Omit<LoadingScreenParticipant, "ranks"> {
   const championName = resolveChampionKey(participant.championId);
   const championDisplayName = getChampionDisplayName(participant.championId);
-  const skinNum = resolveSkinNum(participant, championName);
+  const skinNum = resolveSkinNum(participant);
 
   return {
-    puuid: participant.puuid,
-    summonerName: participant.summonerName,
+    puuid: participant.puuid ?? "",
+    summonerName: participant.riotId,
     championName,
     championDisplayName,
     skinNum,
@@ -111,7 +111,9 @@ function buildParticipant(
       participant.perks?.perkSubStyle === undefined
         ? undefined
         : RuneIdSchema.parse(participant.perks.perkSubStyle),
-    isTrackedPlayer: trackedPuuids.has(participant.puuid),
+    isTrackedPlayer:
+      participant.puuid !== null &&
+      trackedPuuids.has(participant.puuid),
   };
 }
 
@@ -173,7 +175,12 @@ export async function buildLoadingScreenData(
     `Fetching ranks for ${gameInfo.participants.length.toString()} participants`,
   );
   const rankResults = await Promise.allSettled(
-    gameInfo.participants.map((p) => getRankByPuuid(p.puuid, region)),
+    gameInfo.participants.map(async (p): Promise<Ranks | undefined> => {
+      if (p.puuid === null) {
+        return;
+      }
+      return getRankByPuuid(p.puuid, region);
+    }),
   );
 
   // Combine base participants with rank results

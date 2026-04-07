@@ -9,74 +9,29 @@ function makeParticipant(
     championId: 266,
     puuid: "test-puuid",
     teamId: 100,
-    summonerName: "TestPlayer",
+    riotId: "TestPlayer#NA1",
     spell1Id: 4,
     spell2Id: 14,
+    lastSelectedSkinIndex: 0,
     bot: false,
     profileIconId: 1,
-    summonerId: "test-summoner-id",
     ...overrides,
   };
 }
 
 describe("resolveSkinNum", () => {
-  test("returns 0 when no gameCustomizationObjects", () => {
-    const participant = makeParticipant();
-    expect(resolveSkinNum(participant, "Aatrox")).toBe(0);
+  test("returns 0 for default skin", () => {
+    const participant = makeParticipant({ lastSelectedSkinIndex: 0 });
+    expect(resolveSkinNum(participant)).toBe(0);
   });
 
-  test("returns 0 when gameCustomizationObjects is empty", () => {
-    const participant = makeParticipant({
-      gameCustomizationObjects: [],
-    });
-    expect(resolveSkinNum(participant, "Aatrox")).toBe(0);
+  test("returns the selected skin index", () => {
+    const participant = makeParticipant({ lastSelectedSkinIndex: 7 });
+    expect(resolveSkinNum(participant)).toBe(7);
   });
 
-  test("extracts skin num from 'skin' category", () => {
-    const participant = makeParticipant({
-      gameCustomizationObjects: [
-        { category: "skin", content: "3" },
-      ],
-    });
-    expect(resolveSkinNum(participant, "Aatrox")).toBe(3);
-  });
-
-  test("extracts skin num from 'champion-skin' category", () => {
-    const participant = makeParticipant({
-      gameCustomizationObjects: [
-        { category: "champion-skin", content: "7" },
-      ],
-    });
-    expect(resolveSkinNum(participant, "Aatrox")).toBe(7);
-  });
-
-  test("extracts skin from JSON content with skinId field", () => {
-    const participant = makeParticipant({
-      gameCustomizationObjects: [
-        {
-          category: "other",
-          content: JSON.stringify({ skinId: 5 }),
-        },
-      ],
-    });
-    expect(resolveSkinNum(participant, "Aatrox")).toBe(5);
-  });
-
-  test("returns 0 for unrecognized categories with non-numeric content", () => {
-    const participant = makeParticipant({
-      gameCustomizationObjects: [
-        { category: "perks", content: "some-rune-data" },
-      ],
-    });
-    expect(resolveSkinNum(participant, "Aatrox")).toBe(0);
-  });
-
-  test("returns 0 for negative skin numbers", () => {
-    const participant = makeParticipant({
-      gameCustomizationObjects: [
-        { category: "skin", content: "-1" },
-      ],
-    });
-    expect(resolveSkinNum(participant, "Aatrox")).toBe(0);
+  test("returns high skin numbers", () => {
+    const participant = makeParticipant({ lastSelectedSkinIndex: 72 });
+    expect(resolveSkinNum(participant)).toBe(72);
   });
 });
