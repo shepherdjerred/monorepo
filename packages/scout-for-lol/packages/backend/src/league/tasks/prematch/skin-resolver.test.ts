@@ -1,6 +1,23 @@
-import { describe, expect, test } from "bun:test";
-import { resolveSkinNum } from "#src/league/tasks/prematch/skin-resolver.ts";
+import { describe, expect, test, mock } from "bun:test";
 import type { RawCurrentGameParticipant } from "@scout-for-lol/data/index.ts";
+
+// Mock resolveLoadingSkinNum to avoid needing champion-skins.json
+void mock.module("@scout-for-lol/data/index.ts", () => {
+  const actual =
+    require("@scout-for-lol/data/index.ts") as typeof import("@scout-for-lol/data/index.ts");
+  return {
+    ...actual,
+    resolveLoadingSkinNum: async (
+      _championName: string,
+      skinNum: number,
+    ) => skinNum,
+  };
+});
+
+// Import after mock
+const { resolveSkinNum } = await import(
+  "#src/league/tasks/prematch/skin-resolver.ts"
+);
 
 function makeParticipant(
   overrides: Partial<RawCurrentGameParticipant> = {},
@@ -20,18 +37,18 @@ function makeParticipant(
 }
 
 describe("resolveSkinNum", () => {
-  test("returns 0 for default skin", () => {
+  test("returns 0 for default skin", async () => {
     const participant = makeParticipant({ lastSelectedSkinIndex: 0 });
-    expect(resolveSkinNum(participant)).toBe(0);
+    expect(await resolveSkinNum(participant, "Aatrox")).toBe(0);
   });
 
-  test("returns the selected skin index", () => {
+  test("returns the selected skin index", async () => {
     const participant = makeParticipant({ lastSelectedSkinIndex: 7 });
-    expect(resolveSkinNum(participant)).toBe(7);
+    expect(await resolveSkinNum(participant, "Aatrox")).toBe(7);
   });
 
-  test("returns high skin numbers", () => {
+  test("returns high skin numbers (chroma range)", async () => {
     const participant = makeParticipant({ lastSelectedSkinIndex: 72 });
-    expect(resolveSkinNum(participant)).toBe(72);
+    expect(await resolveSkinNum(participant, "Zyra")).toBe(72);
   });
 });

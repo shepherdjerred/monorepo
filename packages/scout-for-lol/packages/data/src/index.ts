@@ -145,4 +145,5 @@ export {
 export {
   getAvailableSkins,
   isSkinAvailable,
+  resolveLoadingSkinNum,
 } from "./data-dragon/champion-skins.ts";

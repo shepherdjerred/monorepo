@@ -84,6 +84,8 @@ export const ChampionDetailSkinsSchema = z.object({
           num: z.number(),
           name: z.string(),
           chromas: z.boolean(),
+          /** Present on chroma variants — points to the parent skin num */
+          parentSkin: z.number().optional(),
         }),
       ),
     }),

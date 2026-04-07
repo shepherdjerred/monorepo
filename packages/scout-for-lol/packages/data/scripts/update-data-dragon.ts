@@ -260,7 +260,10 @@ async function downloadChampionLoadingImages(
 ): Promise<{ imageCount: number; skinMapCount: number }> {
   console.log("\nDownloading champion loading screen images...");
 
-  const skinMap: Record<string, number[]> = {};
+  // baseSkins: champion → array of skin nums that have their own loading screen art
+  const baseSkins: Record<string, number[]> = {};
+  // chromaToParent: champion → { chromaNum → parentSkinNum } for resolving chroma selections
+  const chromaToParent: Record<string, Record<string, number>> = {};
   const allImages: { url: string; path: string; name: string }[] = [];
 
   for (const championName of championNames) {
@@ -277,17 +280,26 @@ async function downloadChampionLoadingImages(
         continue;
       }
 
-      // Filter out chromas: chromas have the same num as their parent skin
-      // and are typically indicated by having chromas=true on the parent.
-      // We want all unique skin nums (base skins only, no parentSkin field needed
-      // since the detail JSON doesn't include parentSkin — chromas share the same
-      // splash art as their parent so we just need one image per num).
-      const skinNums = championData.skins.map((skin) => skin.num);
-      const uniqueSkinNums = [...new Set(skinNums)];
+      // Separate base skins from chromas.
+      // Entries with parentSkin are chroma variants that share the parent's
+      // loading screen art. Only download images for base skins.
+      const baseSkinsForChamp: number[] = [];
+      const chromaMap: Record<string, number> = {};
 
-      skinMap[championName] = uniqueSkinNums;
+      for (const skin of championData.skins) {
+        if (skin.parentSkin === undefined) {
+          baseSkinsForChamp.push(skin.num);
+        } else {
+          chromaMap[String(skin.num)] = skin.parentSkin;
+        }
+      }
 
-      for (const skinNum of uniqueSkinNums) {
+      baseSkins[championName] = baseSkinsForChamp;
+      if (Object.keys(chromaMap).length > 0) {
+        chromaToParent[championName] = chromaMap;
+      }
+
+      for (const skinNum of baseSkinsForChamp) {
         allImages.push({
           url: `${BASE_URL}/cdn/img/champion/loading/${championName}_${String(skinNum)}.jpg`,
           path: `${IMG_DIR}/champion-loading/${championName}_${String(skinNum)}.jpg`,
@@ -298,8 +310,7 @@ async function downloadChampionLoadingImages(
       console.warn(
         `  ⚠ Failed to parse skins for ${championName}: ${String(error)}`,
       );
-      // Still add default skin
-      skinMap[championName] = [0];
+      baseSkins[championName] = [0];
       allImages.push({
         url: `${BASE_URL}/cdn/img/champion/loading/${championName}_0.jpg`,
         path: `${IMG_DIR}/champion-loading/${championName}_0.jpg`,
@@ -311,10 +322,11 @@ async function downloadChampionLoadingImages(
   // Download all loading screen images
   await downloadImagesInBatches(allImages, 20);
 
-  // Write champion-skins.json
+  // Write champion-skins.json with both base skins and chroma-to-parent mapping
+  const skinsData = { baseSkins, chromaToParent };
   await Bun.write(
     `${ASSETS_DIR}/champion-skins.json`,
-    JSON.stringify(skinMap, null, 2),
+    JSON.stringify(skinsData, null, 2),
   );
   console.log(
     `✓ Downloaded ${String(allImages.length)} champion loading images across ${String(championNames.length)} champions`,

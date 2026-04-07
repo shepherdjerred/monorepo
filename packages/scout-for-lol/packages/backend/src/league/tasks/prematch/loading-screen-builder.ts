@@ -85,14 +85,14 @@ function resolveTeam(
  * Convert a spectator API participant to a loading screen participant.
  * Ranks are fetched separately and injected afterward.
  */
-function buildParticipant(
+async function buildParticipant(
   participant: RawCurrentGameParticipant,
   trackedPuuids: Set<string>,
   layout: LoadingScreenLayout,
-): Omit<LoadingScreenParticipant, "ranks"> {
+): Promise<Omit<LoadingScreenParticipant, "ranks">> {
   const championName = resolveChampionKey(participant.championId);
   const championDisplayName = getChampionDisplayName(participant.championId);
-  const skinNum = resolveSkinNum(participant);
+  const skinNum = await resolveSkinNum(participant, championName);
 
   return {
     puuid: participant.puuid ?? "",
@@ -166,8 +166,10 @@ export async function buildLoadingScreenData(
   const mapName = mapIdToName(gameInfo.mapId);
 
   // Build base participant data (without ranks)
-  const baseParticipants = gameInfo.participants.map((p) =>
-    buildParticipant(p, trackedPuuids, layout),
+  const baseParticipants = await Promise.all(
+    gameInfo.participants.map((p) =>
+      buildParticipant(p, trackedPuuids, layout),
+    ),
   );
 
   // Fetch ranks for all participants in parallel
