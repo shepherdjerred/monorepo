@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Shyvana": {
       "id": "Shyvana",
@@ -192,8 +192,8 @@
           "parentSkin": 17
         }
       ],
-      "lore": "Shyvana is a creature with the magic of a rune shard burning within her heart. Though she often appears humanoid, she can take her true form as a fearsome dragon, incinerating her foes with fiery breath. Having saved the life of the crown prince Jarvan IV, Shyvana now serves uneasily in his royal guard, struggling to find acceptance among the suspicious people of Demacia.",
-      "blurb": "Shyvana is a creature with the magic of a rune shard burning within her heart. Though she often appears humanoid, she can take her true form as a fearsome dragon, incinerating her foes with fiery breath. Having saved the life of the crown prince Jarvan...",
+      "lore": "Shyvana is a fearsome half-dragon warrior. Though she often appears humanoid, she also rules the skies as a dragon, incinerating her foes with fiery breath. Having saved the life of the crown prince Jarvan IV, Shyvana now serves uneasily in his royal guard, struggling to find acceptance among the suspicious people of Demacia.",
+      "blurb": "Shyvana is a fearsome half-dragon warrior. Though she often appears humanoid, she also rules the skies as a dragon, incinerating her foes with fiery breath. Having saved the life of the crown prince Jarvan IV, Shyvana now serves uneasily in his royal...",
       "allytips": [
         "Shyvana's abilities all benefit from attacking units. As a result, Attack Speed items are more valuable on her than most champions.",
         "Flame Breath is great to level-up against difficult lane opponents.",
@@ -240,7 +240,7 @@
           "id": "ShyvanaQ",
           "name": "Emberstrike",
           "description": "Shyvana's next attack strikes both the target and the surrounding area. This Ability can be recast. While in Dragon Form, it gains an additional recast, dealing massive damage to a single target.",
-          "tooltip": "<spellPassive>Passive:</spellPassive> Shyvana's Attacks deal <magicDamage>{{ calc_max_health_damage }} max Health magic damage</magicDamage> <OnHit>%i:OnHit% On-Hit</OnHit> and reduce this Ability's cooldown by {{ cooldown_reduction }} seconds.<br /><br /><spellActive>Active:</spellActive> Shyvana's next Attack strikes the target and the surrounding area dealing <physicalDamage>{{ calc_damage }} physical damage</physicalDamage>. This Ability may be <recast>Recast</recast> after an Attack or short delay within the next {{ recastduration }} seconds.<br /><br /><keywordMajor>Dragon Form:</keywordMajor> Shyvana gains an additional <recast>Recast</recast>, causing her to bite the target of her next Attack dealing <trueDamage>{{ calc_dragon_form_damage }} true damage</trueDamage>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Shyvana's Attacks deal <magicDamage>{{ calc_max_health_damage }} max Health magic damage</magicDamage> <OnHit>%i:OnHit% On-Hit</OnHit> and reduce this Ability's Cooldown by {{ cooldown_reduction }} seconds.<br /><br /><spellActive>Active:</spellActive> Shyvana's next Attack strikes the target and the surrounding area dealing <physicalDamage>{{ calc_damage }} physical damage</physicalDamage>. This Ability may be <recast>Recast</recast> after an Attack or short delay within the next {{ recastduration }} seconds.<br /><br /><keywordMajor>Dragon Form:</keywordMajor> Shyvana gains an additional <recast>Recast</recast>, causing her to bite the target of her next Attack dealing <trueDamage>{{ calc_dragon_form_damage }} true damage</trueDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Damage"],
             "effect": [
@@ -300,7 +300,7 @@
           "id": "ShyvanaW",
           "name": "Inferno Aegis",
           "description": "Shyvana gains a shield, movement speed, and after a short delay, the area around her detonates.  While in Dragon Form, the explosion will heal her if it strikes an enemy champion.",
-          "tooltip": "Shyvana wraps herself in flames for {{ duration }} seconds, gaining <shield>{{ calc_shield }} Shield</shield>, increased by <shield>{{ calc_shield_per_nearby_champion }}</shield> per nearby enemy champion and <speed>{{ movespeed }} Move Speed</speed>, increased to <speed>{{ movespeedtowardsenemies }}</speed> when moving towards enemy champions.<br /><br />When the effect ends, the <shield>shield</shield> is broken, or upon <recast>Recast</recast> the area around her detonates, dealing <magicDamage>{{ damage }} magic damage</magicDamage>.<br /><br /><keywordMajor>Dragon Form:</keywordMajor> If the detonation hits an enemy champion Shyvana <healing>restores from {{ calc_heal_min }} to {{ calc_heal_max }}</healing> Health based on her missing Health.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Shyvana wraps herself in flames for {{ duration }} seconds, gaining <shield>{{ calc_shield }} Shield</shield>, increased by <shield>{{ calc_shield_per_nearby_champion }}</shield> per nearby enemy champion and <speed>{{ movespeed }} Move Speed</speed>, increased to <speed>{{ movespeedtowardsenemies }}</speed> when moving towards enemy champions.<br /><br />When the effect ends, the <shield>Shield</shield> is broken, or upon <recast>Recast</recast> the area around her detonates, dealing <magicDamage>{{ damage }} magic damage</magicDamage>.<br /><br /><keywordMajor>Dragon Form:</keywordMajor> If the detonation hits an enemy champion Shyvana <healing>restores from {{ calc_heal_min }} to {{ calc_heal_max }} Health</healing> based on her missing Health.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Shield Amount", "Damage"],
             "effect": [
@@ -422,7 +422,7 @@
           "id": "ShyvanaR",
           "name": "Dragon's Descent",
           "description": "Shyvana transforms into a Dragon and leaps forward causing enemies along her path to flee. While in Dragon form she becomes larger and her basic abilities are empowered.",
-          "tooltip": "<spellPassive>Passive</spellPassive>: Shyvana generates <keywordMajor>{{ fury_generation }} Dragon Fury</keywordMajor> by striking enemies with Attacks and Abilities, increased by {{ tt_fury_mult }} while in <keywordMajor>Dragon Form</keywordMajor>, and reduced {{ tt_fury_aoe_penalty }} by when striking in an area against non-champions.<br /><br /><spellActive>Active</spellActive>: Shyvana transforms into her <keywordMajor>Dragon Form</keywordMajor>, becoming <attention>Unstoppable</attention>, and flying to the target location breathing fire on enemies below dealing <magicDamage>{{ damage }} magic damage</magicDamage> and causing them <status>Flee for {{ fearduration }} second</status>.<br /><br />While transformed, Shyvana's basic Abilities are upgraded, she gains <scaleHealth>{{ calc_bonus_health }} bonus Health</scaleHealth>, size, and Attack Range. Shyvana loses <keywordMajor>Dragon Fury</keywordMajor> over time and her transformation ends when she has no <keywordMajor>Dragon Fury</keywordMajor> remaining.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive</spellPassive>: Shyvana generates <keywordMajor>{{ fury_generation }} Dragon Fury</keywordMajor> by striking enemies with Attacks and Abilities, increased by {{ tt_fury_mult }} while in <keywordMajor>Dragon Form</keywordMajor>, and reduced {{ tt_fury_aoe_penalty }} by when striking in an area against non-champions.<br /><br /><spellActive>Active</spellActive>: Shyvana transforms into her <keywordMajor>Dragon Form</keywordMajor>, becoming <attention>Unstoppable</attention>, and flying to the target location breathing fire on enemies below dealing <magicDamage>{{ damage }} magic damage</magicDamage> and causing them <status>Flee for {{ fearduration }} seconds</status>.<br /><br />While transformed, Shyvana's basic Abilities are upgraded, she gains <scaleHealth>{{ calc_bonus_health }} bonus Health</scaleHealth>, size, and Attack Range. Shyvana loses <keywordMajor>Dragon Fury</keywordMajor> over time and her transformation ends when she has no <keywordMajor>Dragon Fury</keywordMajor> remaining.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Dragon Fury Generation per Second",

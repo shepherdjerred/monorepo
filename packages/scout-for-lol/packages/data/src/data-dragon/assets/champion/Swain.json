@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Swain": {
       "id": "Swain",
@@ -301,6 +301,68 @@
           "name": "Chosen of the Wolf Swain (Pearl)",
           "chromas": false,
           "parentSkin": 32
+        },
+        {
+          "id": "50042",
+          "num": 42,
+          "name": "Fried Chicken King Swain",
+          "chromas": true
+        },
+        {
+          "id": "50043",
+          "num": 43,
+          "name": "Fried Chicken King Swain (Ruby)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "50044",
+          "num": 44,
+          "name": "Fried Chicken King Swain (Catseye)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "50045",
+          "num": 45,
+          "name": "Fried Chicken King Swain (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "50046",
+          "num": 46,
+          "name": "Fried Chicken King Swain (Emerald)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "50047",
+          "num": 47,
+          "name": "Fried Chicken King Swain (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "50048",
+          "num": 48,
+          "name": "Fried Chicken King Swain (Sapphire)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "50049",
+          "num": 49,
+          "name": "Fried Chicken King Swain (Obsidian)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "50050",
+          "num": 50,
+          "name": "Fried Chicken King Swain (Turquoise)",
+          "chromas": false,
+          "parentSkin": 42
         }
       ],
       "lore": "Jericho Swain is the visionary ruler of Noxus, an expansionist nation that reveres only strength. Though he was cast down and crippled in the Ionian wars, his left arm severed, he seized control of the empire with ruthless determination… and a new, demonic hand. Now, Swain commands from the front lines, marching against a coming darkness that only he can see—in glimpses gathered by shadowy ravens from the corpses all around him. In a swirl of sacrifice and secrets, the greatest secret of all is that the true enemy lies within.",

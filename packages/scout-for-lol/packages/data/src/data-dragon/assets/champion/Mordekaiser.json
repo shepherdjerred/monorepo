@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Mordekaiser": {
       "id": "Mordekaiser",
@@ -389,6 +389,19 @@
           "num": 54,
           "name": "Sahn-Uzal Mordekaiser",
           "chromas": false
+        },
+        {
+          "id": "82055",
+          "num": 55,
+          "name": "Prestige Money Miser Mordekaiser",
+          "chromas": true
+        },
+        {
+          "id": "82058",
+          "num": 58,
+          "name": "Prestige Money Miser Mordekaiser (Vivid)",
+          "chromas": false,
+          "parentSkin": 55
         }
       ],
       "lore": "Twice slain and thrice born, Mordekaiser is a brutal warlord from a foregone epoch who uses his necromantic sorcery to bind souls into an eternity of servitude. Few now remain who remember his earlier conquests, or know the true extent of his powers—but there are some ancient souls that do, and they fear the day when he may return to claim dominion over both the living and the dead.",

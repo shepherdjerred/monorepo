@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Azir": {
       "id": "Azir",
@@ -255,7 +255,7 @@
           "id": "AzirQWrapper",
           "name": "Conquering Sands",
           "description": "Azir sends all Sand Soldiers towards a location. Sand Soldiers deal magic damage to enemies they pass through and apply a slow for 1 second.",
-          "tooltip": "Azir orders all <keywordMajor>Sand Soldiers</keywordMajor> to an area, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to enemies they pass through and <status>Slowing</status> them by {{ e2 }}% for 1 second.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Azir orders all <keywordMajor>Sand Soldiers</keywordMajor> to an area, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to enemies they pass through and <status>Slowing</status> them by {{ slowamount*-100 }}% for 1 second.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -279,7 +279,7 @@
           "effect": [
             null,
             [0, 0, 0, 0, 0],
-            [25, 25, 25, 25, 25],
+            [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
             [70, 70, 70, 70, 70],
             [1600, 1600, 1600, 1600, 1600],
@@ -292,7 +292,7 @@
           "effectBurn": [
             null,
             "0",
-            "25",
+            "0",
             "0",
             "70",
             "1600",
