@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Seraphine": {
       "id": "Seraphine",
@@ -487,7 +487,10 @@
       "blurb": "Born in Piltover to Zaunite parents, Seraphine can hear the souls of others—the world sings to her, and she sings back. Though these sounds overwhelmed her in her youth, she now draws on them for inspiration, turning the chaos into a symphony. She...",
       "allytips": [],
       "enemytips": [],
-      "tags": ["Support", "Mage"],
+      "tags": [
+        "Support",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 0,
@@ -536,23 +539,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 7.5, 7, 6.5, 6],
+          "cooldown": [
+            8,
+            7.5,
+            7,
+            6.5,
+            6
+          ],
           "cooldownBurn": "8/7.5/7/6.5/6",
-          "cost": [60, 70, 80, 90, 100],
+          "cost": [
+            60,
+            70,
+            80,
+            90,
+            100
+          ],
           "costBurn": "60/70/80/90/100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -570,7 +645,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [900, 900, 900, 900, 900],
+          "range": [
+            900,
+            900,
+            900,
+            900,
+            900
+          ],
           "rangeBurn": "900",
           "image": {
             "full": "SeraphineQ.png",
@@ -601,23 +682,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [22, 22, 22, 22, 22],
+          "cooldown": [
+            22,
+            22,
+            22,
+            22,
+            22
+          ],
           "cooldownBurn": "22",
-          "cost": [70, 75, 80, 85, 90],
+          "cost": [
+            70,
+            75,
+            80,
+            85,
+            90
+          ],
           "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -635,7 +788,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "SeraphineW.png",
@@ -654,7 +813,11 @@
           "description": "Seraphine deals damage and impairs the movement of enemies in a line.",
           "tooltip": "Seraphine unleashes a heavy soundwave, dealing <magicDamage>{{ finaldamage }} magic damage</magicDamage> to enemies in a line and <status>Slowing</status> them by {{ slowvalue }}% for {{ slowduration }} seconds.<br /><br />Enemies that are already <status>Slowed</status> are <status>Rooted</status> instead, and <status>Immobilized</status> enemies are <status>Stunned</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow Duration", "Cooldown"],
+            "label": [
+              "Damage",
+              "Slow Duration",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ slowduration }} -> {{ slowdurationNL }}",
@@ -662,23 +825,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 10.5, 10, 9.5, 9],
+          "cooldown": [
+            11,
+            10.5,
+            10,
+            9.5,
+            9
+          ],
           "cooldownBurn": "11/10.5/10/9.5/9",
-          "cost": [60, 60, 60, 60, 60],
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -696,7 +931,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1300, 1300, 1300, 1300, 1300],
+          "range": [
+            1300,
+            1300,
+            1300,
+            1300,
+            1300
+          ],
           "rangeBurn": "1300",
           "image": {
             "full": "SeraphineE.png",
@@ -715,7 +956,11 @@
           "description": "Seraphine deals damage and charms enemies hit, refreshing the range with every allied or enemy champion hit.",
           "tooltip": "Seraphine takes the stage, projecting a captivating force that <status>Charms</status> for {{ rchannelduration }} seconds and deals <magicDamage>{{ r1totaldamage }} magic damage</magicDamage>.<br /><br />Any champions struck (including allies) become part of the performance, extending the range of this Ability. Allied champions gain maximum <keywordMajor>Notes</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Initial Damage", "Charm Duration", "Cooldown"],
+            "label": [
+              "Initial Damage",
+              "Charm Duration",
+              "Cooldown"
+            ],
             "effect": [
               "{{ r1basedamage }} -> {{ r1basedamageNL }}",
               "{{ rchannelduration }} -> {{ rchanneldurationNL }}",
@@ -723,23 +968,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [160, 140, 120],
+          "cooldown": [
+            160,
+            140,
+            120
+          ],
           "cooldownBurn": "160/140/120",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -757,7 +1050,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "SeraphineR.png",

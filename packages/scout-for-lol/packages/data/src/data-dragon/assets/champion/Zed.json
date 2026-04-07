@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Zed": {
       "id": "Zed",
@@ -513,7 +513,9 @@
         "After Zed uses his Living Shadow, he is at his most vulnerable as his damage, slow, and mobility are both dependent upon it.",
         "Zed's Shadow Slash can only slow you if his shadow hits you with it. "
       ],
-      "tags": ["Assassin"],
+      "tags": [
+        "Assassin"
+      ],
       "partype": "Energy",
       "info": {
         "attack": 9,
@@ -550,30 +552,105 @@
           "description": "Zed and his shadows throw their shurikens.<br><br>Each shuriken deals damage to every enemy hit.",
           "tooltip": "Zed and his <keywordMajor>Shadows</keywordMajor> throw their shurikens, each dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to the first enemy they pass through, and <physicalDamage>{{ passthroughdamage }} physical damage</physicalDamage> to each additional enemy.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [6, 6, 6, 6, 6],
+          "cooldown": [
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
           "cooldownBurn": "6",
-          "cost": [75, 70, 65, 60, 55],
+          "cost": [
+            75,
+            70,
+            65,
+            60,
+            55
+          ],
           "costBurn": "75/70/65/60/55",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -591,7 +668,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [900, 900, 900, 900, 900],
+          "range": [
+            900,
+            900,
+            900,
+            900,
+            900
+          ],
           "rangeBurn": "900",
           "image": {
             "full": "ZedQ.png",
@@ -622,23 +705,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [20, 19, 18, 17, 16],
+          "cooldown": [
+            20,
+            19,
+            18,
+            17,
+            16
+          ],
           "cooldownBurn": "20/19/18/17/16",
-          "cost": [40, 35, 30, 25, 20],
+          "cost": [
+            40,
+            35,
+            30,
+            25,
+            20
+          ],
           "costBurn": "40/35/30/25/20",
           "datavalues": {},
           "effect": [
             null,
-            [5.25, 5.25, 5.25, 5.25, 5.25],
-            [0.2, 0.2, 0.2, 0.2, 0.2],
-            [30, 35, 40, 45, 50],
-            [5.25, 5.25, 5.25, 5.25, 5.25],
-            [5, 5, 5, 5, 5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              5.25,
+              5.25,
+              5.25,
+              5.25,
+              5.25
+            ],
+            [
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2
+            ],
+            [
+              30,
+              35,
+              40,
+              45,
+              50
+            ],
+            [
+              5.25,
+              5.25,
+              5.25,
+              5.25,
+              5.25
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -656,7 +811,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "ZedW.png",
@@ -675,7 +836,11 @@
           "description": "Zed and his Shadows slash, dealing damage to nearby enemies. Enemies hit by a Shadow's slash are slowed.",
           "tooltip": "Zed and his <keywordMajor>Shadows</keywordMajor> slash, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to nearby enemies.<br /><br />Each enemy champion hit by Zed's slash reduces <spellName>Living Shadow</spellName>'s Cooldown by {{ shadowhitcdr }} seconds.<br /><br />Enemies hit by a <keywordMajor>Shadow</keywordMajor>'s slash are <status>Slowed</status> by {{ movespeedmod*-100 }}% for {{ slowduration }} seconds. Enemies hit by multiple slashes take no additional damage but are <status>Slowed</status> by {{ movespeedmodbonus*-100 }}% instead.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow", "Cooldown"],
+            "label": [
+              "Damage",
+              "Slow",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ movespeedmod*-100.000000 }}% -> {{ movespeedmodnl*-100.000000 }}%",
@@ -683,23 +848,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [5, 4.5, 4, 3.5, 3],
+          "cooldown": [
+            5,
+            4.5,
+            4,
+            3.5,
+            3
+          ],
           "cooldownBurn": "5/4.5/4/3.5/3",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -717,7 +954,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [290, 290, 290, 290, 290],
+          "range": [
+            290,
+            290,
+            290,
+            290,
+            290
+          ],
           "rangeBurn": "290",
           "image": {
             "full": "ZedE.png",
@@ -736,30 +979,81 @@
           "description": "Zed becomes untargetable and dashes to an enemy champion, marking them. After 3 seconds the mark triggers, repeating a portion of all the damage Zed dealt to the target while they were marked.",
           "tooltip": "Zed becomes Untargetable and dashes to an enemy champion, marking them. After {{ rdeathmarkduration }} seconds, the mark triggers, dealing <physicalDamage>{{ rcalculateddamage }} physical damage</physicalDamage> and repeating {{ rdamageamp*100 }}% of all damage dealt to the target by Zed while the mark was active.<br /><br />The dash leaves a <keywordMajor>Shadow</keywordMajor> behind for {{ rshadowdurationdisplayed }} seconds. Zed can <recast>Recast</recast> this Ability to switch positions with this <keywordMajor>Shadow</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Mark Detonation Damage", "Cooldown"],
+            "label": [
+              "Mark Detonation Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ rdamageamp*100.000000 }}% -> {{ rdamageampnl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 110, 100],
+          "cooldown": [
+            120,
+            110,
+            100
+          ],
           "cooldownBurn": "120/110/100",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -777,7 +1071,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [625, 625, 625],
+          "range": [
+            625,
+            625,
+            625
+          ],
           "rangeBurn": "625",
           "image": {
             "full": "ZedR.png",

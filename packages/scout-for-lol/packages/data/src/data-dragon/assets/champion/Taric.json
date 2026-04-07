@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Taric": {
       "id": "Taric",
@@ -274,7 +274,10 @@
         "Taric's ultimate, Cosmic Radiance, has a long delay before its effect. Try to quickly assess whether to disengage the fight or attempt to kill his allies before it goes off.",
         "Taric reduces his spell cooldowns by basic attacking enemies with Bravado. Try to kite him in teamfights and punish him for approaching the minion wave in lane."
       ],
-      "tags": ["Support", "Tank"],
+      "tags": [
+        "Support",
+        "Tank"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 4,
@@ -311,27 +314,105 @@
           "description": "Heals nearby allied champions based on charges stored. Bravado-empowered attacks grant a charge of Starlight's Touch.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Gain a stack (max {{ e6 }}) every {{ stackcooldown }} seconds and when hitting a <spellName>Bravado</spellName> Attack.<br /><br /><spellActive>Active:</spellActive> Consume all stacks to restore <healing>{{ healingperstack }} Health</healing> per stack to nearby ally champions (<healing>{{ maxstackhealing }}</healing> at {{ e6 }} stacks).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Max Charges", "Max Healing"],
-            "effect": ["{{ e6 }} -> {{ e6NL }}", "{{ e5 }} -> {{ e5NL }}"]
+            "label": [
+              "Max Charges",
+              "Max Healing"
+            ],
+            "effect": [
+              "{{ e6 }} -> {{ e6NL }}",
+              "{{ e5 }} -> {{ e5NL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [3, 3, 3, 3, 3],
+          "cooldown": [
+            3,
+            3,
+            3,
+            3,
+            3
+          ],
           "cooldownBurn": "3",
-          "cost": [60, 60, 60, 60, 60],
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [25, 25, 25, 25, 25],
-            [1, 1, 1, 1, 1],
-            [0.15, 0.3, 0.45, 0.6, 0.75],
-            [0.75, 1.5, 2.25, 3, 3.75],
-            [25, 50, 75, 100, 125],
-            [1, 2, 3, 4, 5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              25,
+              25,
+              25,
+              25,
+              25
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0.15,
+              0.3,
+              0.45,
+              0.6,
+              0.75
+            ],
+            [
+              0.75,
+              1.5,
+              2.25,
+              3,
+              3.75
+            ],
+            [
+              25,
+              50,
+              75,
+              100,
+              125
+            ],
+            [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -349,7 +430,13 @@
           "vars": [],
           "costType": " Mana, all Charges",
           "maxammo": "-1",
-          "range": [325, 325, 325, 325, 325],
+          "range": [
+            325,
+            325,
+            325,
+            325,
+            325
+          ],
           "rangeBurn": "325",
           "image": {
             "full": "TaricQ.png",
@@ -368,30 +455,105 @@
           "description": "Passively increase the Armor of Taric and any allied champion with Bastion.<br><br>Actively shields an ally and grants them Bastion for as long as they remain near Taric. Taric's spells also cast off the ally with Bastion.",
           "tooltip": "<spellPassive>Passive: </spellPassive>Taric gains <scaleArmor>{{ bonusarmor }} Armor</scaleArmor> and forms a tether between him and the ally bound by this Ability. As long as they are near each other, the ally gains <scaleArmor>{{ bonusarmor }} Armor</scaleArmor> and Taric casts all his Abilities from both himself and his linked ally.<br /><br /><spellPassive>Active: </spellPassive>Taric binds to an ally champion, granting a <shield>{{ e2 }}% max Health Shield</shield> for {{ e3 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Passive Armor", "Shield Ratio"],
+            "label": [
+              "Passive Armor",
+              "Shield Ratio"
+            ],
             "effect": [
               "{{ armorbonuspercentage*100.000000 }}% -> {{ armorbonuspercentagenl*100.000000 }}%",
               "{{ e2 }}% -> {{ e2NL }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [15, 15, 15, 15, 15],
+          "cooldown": [
+            15,
+            15,
+            15,
+            15,
+            15
+          ],
           "cooldownBurn": "15",
-          "cost": [60, 60, 60, 60, 60],
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [7, 8, 9, 10, 11],
-            [2.5, 2.5, 2.5, 2.5, 2.5],
-            [1000, 1000, 1000, 1000, 1000],
-            [1300, 1300, 1300, 1300, 1300],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            [
+              2.5,
+              2.5,
+              2.5,
+              2.5,
+              2.5
+            ],
+            [
+              1000,
+              1000,
+              1000,
+              1000,
+              1000
+            ],
+            [
+              1300,
+              1300,
+              1300,
+              1300,
+              1300
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -409,7 +571,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "TaricW.png",
@@ -428,30 +596,105 @@
           "description": "Taric readies a beam of starlight that, after a brief delay, deals magic damage and stuns enemies.",
           "tooltip": "Taric projects a beam of starlight, bursting after {{ e3 }} second to deal <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Stun</status> enemies for {{ e2 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 15, 14, 13, 12],
+          "cooldown": [
+            16,
+            15,
+            14,
+            13,
+            12
+          ],
           "cooldownBurn": "16/15/14/13/12",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [90, 130, 170, 210, 250],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [1, 1, 1, 1, 1],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              90,
+              130,
+              170,
+              210,
+              250
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -469,7 +712,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [610, 610, 610, 610, 610],
+          "range": [
+            610,
+            610,
+            610,
+            610,
+            610
+          ],
           "rangeBurn": "610",
           "image": {
             "full": "TaricE.png",
@@ -488,27 +737,79 @@
           "description": "Pulses cosmic energy onto nearby allied champions after a delay, making them invulnerable for a short duration.",
           "tooltip": "Taric calls down protection from the heavens. After {{ initialdelay }} seconds, nearby ally champions become invulnerable for {{ invulnduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
+            "label": [
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
-          "cooldown": [180, 150, 120],
+          "cooldown": [
+            180,
+            150,
+            120
+          ],
           "cooldownBurn": "180/150/120",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -526,7 +827,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400],
+          "range": [
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "TaricR.png",

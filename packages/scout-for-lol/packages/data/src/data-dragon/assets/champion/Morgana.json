@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Morgana": {
       "id": "Morgana",
@@ -587,7 +587,10 @@
         "Morgana often needs to land Dark Binding to setup her other attacks. Use your minions as shields against Dark Binding.",
         "Black Shield makes Morgana immune to disabling effects, but can be broken with magic damage."
       ],
-      "tags": ["Support", "Mage"],
+      "tags": [
+        "Support",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 1,
@@ -624,7 +627,11 @@
           "description": "Morgana binds an enemy in place with dark magic, forcing them to feel the pain they've caused and dealing magic damage. ",
           "tooltip": "Morgana hurls a blast of starfire that <status>Roots</status> the first enemy hit for {{ rootduration }} seconds and deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Root Duration", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Root Duration",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ damage }} -> {{ damageNL }}",
               "{{ rootduration }} -> {{ rootdurationNL }}",
@@ -632,23 +639,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 10, 10, 10, 10],
+          "cooldown": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
           "cooldownBurn": "10",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -666,7 +745,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1250, 1250, 1250, 1250, 1250],
+          "range": [
+            1250,
+            1250,
+            1250,
+            1250,
+            1250
+          ],
           "rangeBurn": "1250",
           "image": {
             "full": "MorganaQ.png",
@@ -685,30 +770,105 @@
           "description": "Morgana casts a cursed shadow on an area, damaging enemies who dare stand in her dark circle. They receive magic damage over time, which increases the lower health they are.",
           "tooltip": "Morgana ignites the ground for {{ wduration }} seconds, dealing <magicDamage>{{ totalmindamage }} magic damage</magicDamage> per second, increased by up to <magicDamage>{{ totalmaxdamage }}</magicDamage> based on the targets' missing Health.<br /><br />This Ability's Cooldown is reduced by {{ cdrefundpercent*100 }}% every time Morgana is healed by <spellName>Soul Siphon</spellName>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage Per Second", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage Per Second",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 12, 12, 12, 12],
+          "cooldown": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
           "cooldownBurn": "12",
-          "cost": [70, 80, 90, 100, 110],
+          "cost": [
+            70,
+            80,
+            90,
+            100,
+            110
+          ],
           "costBurn": "70/80/90/100/110",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -726,7 +886,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [900, 900, 900, 900, 900],
+          "range": [
+            900,
+            900,
+            900,
+            900,
+            900
+          ],
           "rangeBurn": "900",
           "image": {
             "full": "MorganaW.png",
@@ -745,30 +911,105 @@
           "description": "Morgana anoints an ally with a protective barrier of starfire, which absorbs magical damage and disabling effects until it is broken.",
           "tooltip": "Morgana grants an ally champion <shield>{{ totalshieldstrength }} Magic Shield</shield> for {{ shieldduration }} seconds. The shield prevents <status>Disabling</status> and <status>Immobilizing</status> effects until it breaks.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Shield Amount", "Cooldown"],
+            "label": [
+              "Shield Amount",
+              "Cooldown"
+            ],
             "effect": [
               "{{ shieldstrength }} -> {{ shieldstrengthNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [26, 23.5, 21, 18.5, 16],
+          "cooldown": [
+            26,
+            23.5,
+            21,
+            18.5,
+            16
+          ],
           "cooldownBurn": "26/23.5/21/18.5/16",
-          "cost": [80, 80, 80, 80, 80],
+          "cost": [
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
           "costBurn": "80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -786,7 +1027,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "MorganaE.png",
@@ -805,7 +1052,12 @@
           "description": "Morgana unleashes the full force of her Celestial power as she unbinds her wings and hovers above the ground. She lashes chains of dark pain onto nearby enemy champions, gaining Move Speed. The chains slow and deal initial damage and, after a delay, stun those who are unable to break them.",
           "tooltip": "Morgana chains herself to nearby enemy Champions, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slowing</status> them by {{ slowpercent }}%. After {{ chainduration }} seconds, enemies unable to break the chains take an additional <magicDamage>{{ totaldamage }} magic damage</magicDamage> and are <status>Stunned</status> for {{ stunduration }} seconds.<br /><br />While casting this Ability, Morgana gains <speed>{{ hastepercent }}% Move Speed</speed>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Move Speed", "Stun Duration:", "Cooldown"],
+            "label": [
+              "Damage",
+              "Move Speed",
+              "Stun Duration:",
+              "Cooldown"
+            ],
             "effect": [
               "{{ damage }} -> {{ damageNL }}",
               "{{ hastepercent }}% -> {{ hastepercentNL }}%",
@@ -814,23 +1066,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 110, 100],
+          "cooldown": [
+            120,
+            110,
+            100
+          ],
           "cooldownBurn": "120/110/100",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -848,7 +1148,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [625, 625, 625],
+          "range": [
+            625,
+            625,
+            625
+          ],
           "rangeBurn": "625",
           "image": {
             "full": "MorganaR.png",

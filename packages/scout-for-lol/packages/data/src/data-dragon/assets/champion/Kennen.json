@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Kennen": {
       "id": "Kennen",
@@ -257,7 +257,9 @@
         "Consider playing a bit more cautiously around Kennen when you have a Mark of the Storm debuff. If he hits you with 3 Marks of the Storm, you will get stunned.",
         "Kennen is flimsy by nature - turn and attack him if he gets careless with Lightning Rush."
       ],
-      "tags": ["Mage"],
+      "tags": [
+        "Mage"
+      ],
       "partype": "Energy",
       "info": {
         "attack": 6,
@@ -294,7 +296,11 @@
           "description": "Kennen throws a fast moving shuriken towards a location, causing damage and adding a Mark of the Storm to any opponent that it hits.",
           "tooltip": "Kennen throws a shuriken, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first enemy hit.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "@AbilityResourceName@ Cost", "Damage"],
+            "label": [
+              "Cooldown",
+              "@AbilityResourceName@ Cost",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}",
@@ -302,23 +308,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 6.25, 5.5, 4.75, 4],
+          "cooldown": [
+            7,
+            6.25,
+            5.5,
+            4.75,
+            4
+          ],
           "cooldownBurn": "7/6.25/5.5/4.75/4",
-          "cost": [60, 55, 50, 45, 40],
+          "cost": [
+            60,
+            55,
+            50,
+            45,
+            40
+          ],
           "costBurn": "60/55/50/45/40",
           "datavalues": {},
           "effect": [
             null,
-            [75, 125, 175, 225, 275],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              75,
+              125,
+              175,
+              225,
+              275
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -336,7 +414,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [950, 950, 950, 950, 950],
+          "range": [
+            950,
+            950,
+            950,
+            950,
+            950
+          ],
           "rangeBurn": "950",
           "image": {
             "full": "KennenShurikenHurlMissile1.png",
@@ -369,23 +453,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [13, 11.25, 9.5, 7.75, 6],
+          "cooldown": [
+            13,
+            11.25,
+            9.5,
+            7.75,
+            6
+          ],
           "cooldownBurn": "13/11.25/9.5/7.75/6",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [70, 95, 120, 145, 170],
-            [25, 25, 25, 25, 25],
-            [0.7, 0.7, 0.7, 0.7, 0.7],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              70,
+              95,
+              120,
+              145,
+              170
+            ],
+            [
+              25,
+              25,
+              25,
+              25,
+              25
+            ],
+            [
+              0.7,
+              0.7,
+              0.7,
+              0.7,
+              0.7
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -403,7 +559,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [725, 725, 725, 725, 725],
+          "range": [
+            725,
+            725,
+            725,
+            725,
+            725
+          ],
           "rangeBurn": "725",
           "image": {
             "full": "KennenBringTheLight.png",
@@ -422,7 +584,11 @@
           "description": "Kennen morphs into a lightning form, enabling him to pass through units and apply a Mark of the Storm. Kennen gains Move Speed when entering this form, and attack speed when leaving it.",
           "tooltip": "Kennen turns into a ball of lightning, gaining <speed>{{ movementspeed*100 }}% Move Speed</speed>, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to enemies he passes through, and becoming Ghosted for {{ durationasball }} seconds. If Kennen damages at least one enemy, he gains {{ energyrefund }} Energy. <br /><br />After this ability ends, Kennen gains <attackSpeed>{{ attackspeed*100 }}% Attack Speed</attackSpeed> for {{ durationafterball }} seconds. Kennen can <recast>Recast</recast> to end this Ability early.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage", "Attack Speed"],
+            "label": [
+              "Cooldown",
+              "Damage",
+              "Attack Speed"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -430,23 +596,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9, 8, 7, 6],
+          "cooldown": [
+            10,
+            9,
+            8,
+            7,
+            6
+          ],
           "cooldownBurn": "10/9/8/7/6",
-          "cost": [80, 80, 80, 80, 80],
+          "cost": [
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
           "costBurn": "80",
           "datavalues": {},
           "effect": [
             null,
-            [85, 125, 165, 205, 245],
-            [40, 40, 40, 40, 40],
-            [10, 20, 30, 40, 50],
-            [1, 1, 1, 1, 1],
-            [2, 2, 2, 2, 2],
-            [0, 0, 0, 0, 0],
-            [4, 4, 4, 4, 4],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              85,
+              125,
+              165,
+              205,
+              245
+            ],
+            [
+              40,
+              40,
+              40,
+              40,
+              40
+            ],
+            [
+              10,
+              20,
+              30,
+              40,
+              50
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -464,7 +702,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [170, 170, 170, 170, 170],
+          "range": [
+            170,
+            170,
+            170,
+            170,
+            170
+          ],
           "rangeBurn": "170",
           "image": {
             "full": "KennenLightningRush.png",
@@ -483,7 +727,11 @@
           "description": "Kennen summons a storm that strikes at nearby enemy champions for magical damage.",
           "tooltip": "Kennen unleashes a magical storm, dealing <magicDamage>{{ pertickdamagecalculated }} magic damage</magicDamage> to all nearby enemies every {{ kennenrtickrate }} seconds, and gaining <scaleArmor>{{ kennenrdefenses }} Armor</scaleArmor> and <scaleMR>{{ kennenrdefenses }} Magic Resist</scaleMR> for {{ kennenrduration }} seconds. Successive hits deal {{ damageamp*100 }}% increased damage for each hit the enemy has already suffered.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Armor Bonus", "Magic Resist Bonus"],
+            "label": [
+              "Damage",
+              "Armor Bonus",
+              "Magic Resist Bonus"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ kennenrdefenses }} -> {{ kennenrdefensesNL }}",
@@ -491,23 +739,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 120, 120],
+          "cooldown": [
+            120,
+            120,
+            120
+          ],
           "cooldownBurn": "120",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -525,7 +821,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [550, 550, 550],
+          "range": [
+            550,
+            550,
+            550
+          ],
           "rangeBurn": "550",
           "image": {
             "full": "KennenShurikenStorm.png",

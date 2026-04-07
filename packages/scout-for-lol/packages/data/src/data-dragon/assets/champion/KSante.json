@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "KSante": {
       "id": "KSante",
@@ -153,7 +153,10 @@
         "Lee Sin has powerful tools to combat physical damage in Iron Will and Cripple but he is still vulnerable to magic damage.",
         "Lee Sin relies heavily on following up with his abilities. Use disables to prevent him from chaining together his abilities and attacks."
       ],
-      "tags": ["Tank", "Fighter"],
+      "tags": [
+        "Tank",
+        "Fighter"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 8,
@@ -190,27 +193,103 @@
           "description": "K'Sante strikes, damaging and slowing enemies in a short line.<br><br>On hit, grants a stack of Ntofo Strikes. At 2 stacks, K'Sante fires a shockwave that pulls enemies in.<br><br>When All Out, cooldown is reduced.",
           "tooltip": "K'Sante slams his weapon, dealing <physicalDamage>{{ basedamage }} physical damage</physicalDamage> and <status>Slowing</status> enemies by {{ slowpercent*100 }}% for {{ slowduration }}s. If he hits, he gains a stack of Ntofo Strikes for {{ recastwindow }} seconds. At 2 stacks, he instead fires a shockwave that <status>Stuns</status> and <status>Pulls</status> enemies for {{ stunduration }} second.<br /><br /><keywordMajor>All Out</keywordMajor>: Cooldown is reduced by {{ rcooldownreduction.0*100 }}%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage"],
-            "effect": ["{{ flatdamage }} -> {{ flatdamageNL }}"]
+            "label": [
+              "Damage"
+            ],
+            "effect": [
+              "{{ flatdamage }} -> {{ flatdamageNL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [3.5, 3.5, 3.5, 3.5, 3.5],
+          "cooldown": [
+            3.5,
+            3.5,
+            3.5,
+            3.5,
+            3.5
+          ],
           "cooldownBurn": "3.5",
-          "cost": [20, 20, 20, 20, 20],
+          "cost": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
           "costBurn": "20",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -228,7 +307,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [450, 450, 450, 450, 450],
+          "range": [
+            450,
+            450,
+            450,
+            450,
+            450
+          ],
           "rangeBurn": "450",
           "image": {
             "full": "KSanteQ.png",
@@ -247,7 +332,11 @@
           "description": "K'Sante charges up, taking reduced damage, then dashes, knocking back and stunning enemies.<br><br>When All Out, deals increased damage and no longer knocks back or stuns.",
           "tooltip": "K'Sante raises his weapons defensively for {{ mindurationtooltip }}-{{ maxduration.1 }}s, becoming Unstoppable and reducing incoming damage by {{ damagereduction*100 }}%. Then, he rams forward, dealing <physicalDamage>{{ basedamage }} + {{ totalmaxhealthdamage }} max Health physical damage</physicalDamage>. Enemies hit are <status>Knocked Back</status> and <status>Stunned</status> for {{ minknockbackduration }}-{{ maxknockbackduration }}s (based on charge time).<br /><br /><keywordMajor>All Out:</keywordMajor> Cooldown is refreshed. Deals an additional {{ rdamageincreasemin*100 }}-{{ rdamageincreasemax*100 }}% damage as <trueDamage>true damage</trueDamage> (based on charge time), damage reduction is increased to {{ rdamagereduction*100 }}% and dash speed is increased, but no longer <status>Knocks Back</status> or <status>Stuns</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -255,23 +344,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 13, 12, 11, 10],
+          "cooldown": [
+            14,
+            13,
+            12,
+            11,
+            10
+          ],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [40, 45, 50, 55, 60],
+          "cost": [
+            40,
+            45,
+            50,
+            55,
+            60
+          ],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -289,7 +450,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "KSanteW.png",
@@ -308,7 +475,11 @@
           "description": "K'Sante dashes and gains a shield. If targeting an ally, K'Sante dashes to the ally with increased range and both gain a shield.<br><br>When All Out, cooldown is reduced and speed is increased.",
           "tooltip": "K'Sante dashes, gaining <shield>{{ totalshield }} Shield</shield> for {{ shieldduration }} seconds. If dashing to an ally, the distance of the dash is significantly increased and the ally is also <shield>Shielded</shield>.<br /><br /><keywordMajor>All Out</keywordMajor>: Cooldown is decreased by {{ cooldownmodao*100 }}% and dash speed is increased.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Shield", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Shield",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ shieldbaseamountfast }} -> {{ shieldbaseamountfastNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -316,23 +487,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9.5, 9, 8.5, 8],
+          "cooldown": [
+            10,
+            9.5,
+            9,
+            8.5,
+            8
+          ],
           "cooldownBurn": "10/9.5/9/8.5/8",
-          "cost": [45, 50, 55, 60, 65],
+          "cost": [
+            45,
+            50,
+            55,
+            60,
+            65
+          ],
           "costBurn": "45/50/55/60/65",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -350,7 +593,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [525, 525, 525, 525, 525],
+          "range": [
+            525,
+            525,
+            525,
+            525,
+            525
+          ],
           "rangeBurn": "525",
           "image": {
             "full": "KSanteE.png",
@@ -369,7 +618,12 @@
           "description": "K'Sante knocks an enemy back, launching them through any wall in their path. Then, K'Sante goes All Out and dashes after them, gaining increased damage, healing, and transformed abilities at the cost of reduced defenses.",
           "tooltip": "K'Sante shatters his ntofos to <status>Knock Back</status> an enemy champion, dealing <physicalDamage>{{ basedamage }} physical damage</physicalDamage>, then dashes behind them and goes <keywordMajor>All Out</keywordMajor> for {{ alloutduration }}s. If the enemy would hit a wall, they are <status>Knocked Back</status> through the wall and K'Sante strikes them again for <physicalDamage>{{ totaldamageslamdown }} physical damage</physicalDamage>.<br /><br />While <keywordMajor>All Out</keywordMajor>, K'Sante's Abilities are upgraded and he gains <attackSpeed>{{ attackspeed*100 }}% Attack Speed</attackSpeed>, {{ armorpenpercent*100 }}% Bonus Armor Penetration, and <omnivamp>{{ omnivamp*100 }}% Omnivamp</omnivamp>, but loses <healing>{{ healthlost*100 }}% max Health</healing>, <scaleArmor>{{ defenseslost*100 }}% Bonus Armor</scaleArmor>, and <scaleMR>{{ defenseslost*100 }}% Bonus Magic Resistance</scaleMR>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Follow-Up Damage", "Cooldown", "Attack Speed"],
+            "label": [
+              "Damage",
+              "Follow-Up Damage",
+              "Cooldown",
+              "Attack Speed"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ slamdownstrikedamage }} -> {{ slamdownstrikedamageNL }}",
@@ -378,23 +632,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -412,7 +714,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [250, 250, 250],
+          "range": [
+            250,
+            250,
+            250
+          ],
           "rangeBurn": "250",
           "image": {
             "full": "KSanteR.png",

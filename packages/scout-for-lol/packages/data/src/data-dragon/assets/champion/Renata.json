@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Renata": {
       "id": "Renata",
@@ -241,7 +241,10 @@
       "blurb": "Renata Glasc rose from the ashes of her childhood home with nothing but her name and her parents' alchemical research. In the decades since, she has become Zaun's wealthiest chem-baron, a business magnate who built her power by tying everyone's...",
       "allytips": [],
       "enemytips": [],
-      "tags": ["Support", "Mage"],
+      "tags": [
+        "Support",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -278,27 +281,103 @@
           "description": "Renata sends out a missile rooting the first enemy hit, and can recast the ability to throw the unit in a direction.",
           "tooltip": "Renata sends out a missile from her arm, <status>Rooting</status> the first enemy hit for {{ rootduration }} second and dealing <magicDamage>{{ totaldamage }}</magicDamage> <magicDamage>magic damage</magicDamage>.<br /><br /><recast>Recast:</recast> Renata <status>Pulls</status> the enemy in a direction, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to enemies they are thrown into and <status>Stunning</status> for {{ stunduration }} seconds if the thrown enemy is a champion.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage"],
-            "effect": ["{{ damage }} -> {{ damageNL }}"]
+            "label": [
+              "Damage"
+            ],
+            "effect": [
+              "{{ damage }} -> {{ damageNL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [16, 16, 16, 16, 16],
+          "cooldown": [
+            16,
+            16,
+            16,
+            16,
+            16
+          ],
           "cooldownBurn": "16",
-          "cost": [80, 80, 80, 80, 80],
+          "cost": [
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
           "costBurn": "80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -316,7 +395,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [900, 900, 900, 900, 900],
+          "range": [
+            900,
+            900,
+            900,
+            900,
+            900
+          ],
           "rangeBurn": "900",
           "image": {
             "full": "RenataQ.png",
@@ -335,7 +420,11 @@
           "description": "Renata buffs an allied champion to fight harder, delaying their death and potentially saving them if they get a takedown.",
           "tooltip": "Renata infuses an ally champion, granting <attackSpeed>{{ ascalc }} Attack Speed</attackSpeed> and <speed>{{ mscalc }} Move Speed</speed> towards enemies, increasing to <attackSpeed>{{ finalascalc }} Attack Speed</attackSpeed> and <speed>{{ finalmscalc }} Move Speed</speed> over {{ duration }} seconds. Takedowns refresh the duration of the buff.<br /><br />If the ally would die, they instead return to full Health, which then decays over 3 seconds.<br /><br />If they get a Takedown while decaying, they will be set to <healing>{{ triumphpercent }}% max Health</healing> and stop decaying.<br /><br /><rules>The Champion's death can be delayed by healing or similar effects while in the decaying state, but cannot be prevented unless the Champion gets a Takedown. Champions can only delay their death once.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Attack Speed", "Move Speed", "Cooldown"],
+            "label": [
+              "Attack Speed",
+              "Move Speed",
+              "Cooldown"
+            ],
             "effect": [
               "{{ bonusattackspeed }}% -> {{ bonusattackspeedNL }}%",
               "{{ bonusmovespeed }}% -> {{ bonusmovespeedNL }}%",
@@ -343,23 +432,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [28, 27, 26, 25, 24],
+          "cooldown": [
+            28,
+            27,
+            26,
+            25,
+            24
+          ],
           "cooldownBurn": "28/27/26/25/24",
-          "cost": [80, 80, 80, 80, 80],
+          "cost": [
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
           "costBurn": "80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -377,7 +538,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "RenataW.png",
@@ -410,23 +577,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 13, 12, 11, 10],
+          "cooldown": [
+            14,
+            13,
+            12,
+            11,
+            10
+          ],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [70, 80, 90, 100, 110],
+          "cost": [
+            70,
+            80,
+            90,
+            100,
+            110
+          ],
           "costBurn": "70/80/90/100/110",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -444,7 +683,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "RenataE.png",
@@ -463,30 +708,81 @@
           "description": "Renata sends out a wave of chemicals, causing any enemies hit to go Berserk.",
           "tooltip": "Renata sends out a wave of chemicals, <status>Berserking</status> enemies for {{ berserkduration }} seconds, causing them to Attack the nearest unit, prioritizing their allies.<br /><br />While <status>Berserk</status>, enemies gain <attackSpeed>{{ bonusattackspeed*100 }}% Attack Speed</attackSpeed>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Duration"],
+            "label": [
+              "Cooldown",
+              "Duration"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ berserkduration }} -> {{ berserkdurationNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [150, 130, 110],
+          "cooldown": [
+            150,
+            130,
+            110
+          ],
           "cooldownBurn": "150/130/110",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -504,7 +800,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [2000, 2000, 2000],
+          "range": [
+            2000,
+            2000,
+            2000
+          ],
           "rangeBurn": "2000",
           "image": {
             "full": "RenataR.png",

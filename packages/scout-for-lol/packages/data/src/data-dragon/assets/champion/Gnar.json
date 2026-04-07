@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Gnar": {
       "id": "Gnar",
@@ -328,7 +328,10 @@
         "Gnar's animations and resource bar change as he gets closer to transforming.  ",
         "Gnar's ultimate stuns if he hits you into a wall. Be careful when fighting him near one."
       ],
-      "tags": ["Fighter", "Tank"],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
       "partype": "Rage",
       "info": {
         "attack": 6,
@@ -381,23 +384,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 14.5, 13, 11.5, 10],
+          "cooldown": [
+            16,
+            14.5,
+            13,
+            11.5,
+            10
+          ],
           "cooldownBurn": "16/14.5/13/11.5/10",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -415,7 +490,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [1100, 1100, 1100, 1100, 1100],
+          "range": [
+            1100,
+            1100,
+            1100,
+            1100,
+            1100
+          ],
           "rangeBurn": "1100",
           "image": {
             "full": "GnarQ.png",
@@ -434,7 +515,11 @@
           "description": "Gnar's attacks and spells hype him up, dealing bonus damage and granting him Move Speed.<br><br>Mega Gnar is too enraged to be hyper and instead can rear up on his hind legs and smash down on the area in front of him, stunning enemies in an area.",
           "tooltip": "<keywordMajor>Mini Gnar Passive:</keywordMajor> Every third Attack or Ability on the same enemy deals an additional <magicDamage>{{ spell.gnarw:minitotaldamage }} plus {{ spell.gnarw:minipercenthpdamage*100 }}% max Health magic damage</magicDamage> and grants <speed>{{ spell.gnarr:rhypermovementspeedpercent }}% Move Speed</speed> decaying over {{ spell.gnarw:minihasteduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Hyper Damage", "Hyper % Health Damage", "Wallop Damage"],
+            "label": [
+              "Hyper Damage",
+              "Hyper % Health Damage",
+              "Wallop Damage"
+            ],
             "effect": [
               "{{ minibasedamage }} -> {{ minibasedamageNL }}",
               "{{ minipercenthpdamage*100.000000 }}% -> {{ minipercenthpdamagenl*100.000000 }}%",
@@ -442,23 +527,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 7, 7, 7, 7],
+          "cooldown": [
+            7,
+            7,
+            7,
+            7,
+            7
+          ],
           "cooldownBurn": "7",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -476,7 +633,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [0, 0, 0, 0, 0],
+          "range": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "rangeBurn": "0",
           "image": {
             "full": "GnarW.png",
@@ -509,23 +672,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [22, 19.5, 17, 14.5, 12],
+          "cooldown": [
+            22,
+            19.5,
+            17,
+            14.5,
+            12
+          ],
           "cooldownBurn": "22/19.5/17/14.5/12",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -543,7 +778,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [475, 475, 475, 475, 475],
+          "range": [
+            475,
+            475,
+            475,
+            475,
+            475
+          ],
           "rangeBurn": "475",
           "image": {
             "full": "GnarE.png",
@@ -576,23 +817,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [90, 60, 30],
+          "cooldown": [
+            90,
+            60,
+            30
+          ],
           "cooldownBurn": "90/60/30",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -610,7 +899,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [590, 590, 590],
+          "range": [
+            590,
+            590,
+            590
+          ],
           "rangeBurn": "590",
           "image": {
             "full": "GnarR.png",

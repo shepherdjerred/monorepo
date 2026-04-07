@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Shyvana": {
       "id": "Shyvana",
@@ -192,8 +192,8 @@
           "parentSkin": 17
         }
       ],
-      "lore": "Shyvana is a creature with the magic of a rune shard burning within her heart. Though she often appears humanoid, she can take her true form as a fearsome dragon, incinerating her foes with fiery breath. Having saved the life of the crown prince Jarvan IV, Shyvana now serves uneasily in his royal guard, struggling to find acceptance among the suspicious people of Demacia.",
-      "blurb": "Shyvana is a creature with the magic of a rune shard burning within her heart. Though she often appears humanoid, she can take her true form as a fearsome dragon, incinerating her foes with fiery breath. Having saved the life of the crown prince Jarvan...",
+      "lore": "Shyvana is a fearsome half-dragon warrior. Though she often appears humanoid, she also rules the skies as a dragon, incinerating her foes with fiery breath. Having saved the life of the crown prince Jarvan IV, Shyvana now serves uneasily in his royal guard, struggling to find acceptance among the suspicious people of Demacia.",
+      "blurb": "Shyvana is a fearsome half-dragon warrior. Though she often appears humanoid, she also rules the skies as a dragon, incinerating her foes with fiery breath. Having saved the life of the crown prince Jarvan IV, Shyvana now serves uneasily in his royal...",
       "allytips": [
         "Shyvana's abilities all benefit from attacking units. As a result, Attack Speed items are more valuable on her than most champions.",
         "Flame Breath is great to level-up against difficult lane opponents.",
@@ -205,7 +205,10 @@
         "All of Shyvana's basic abilities hit multiple enemies in dragon form. It's important for opposing champions to not cluster while fighting her.",
         "Shyvana's Fury Bar indicate her ultimate can be activated. Harassing her when she's low on Fury can be very effective."
       ],
-      "tags": ["Fighter", "Tank"],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
       "partype": "Fury",
       "info": {
         "attack": 8,
@@ -240,32 +243,107 @@
           "id": "ShyvanaQ",
           "name": "Emberstrike",
           "description": "Shyvana's next attack strikes both the target and the surrounding area. This Ability can be recast. While in Dragon Form, it gains an additional recast, dealing massive damage to a single target.",
-          "tooltip": "<spellPassive>Passive:</spellPassive> Shyvana's Attacks deal <magicDamage>{{ calc_max_health_damage }} max Health magic damage</magicDamage> <OnHit>%i:OnHit% On-Hit</OnHit> and reduce this Ability's cooldown by {{ cooldown_reduction }} seconds.<br /><br /><spellActive>Active:</spellActive> Shyvana's next Attack strikes the target and the surrounding area dealing <physicalDamage>{{ calc_damage }} physical damage</physicalDamage>. This Ability may be <recast>Recast</recast> after an Attack or short delay within the next {{ recastduration }} seconds.<br /><br /><keywordMajor>Dragon Form:</keywordMajor> Shyvana gains an additional <recast>Recast</recast>, causing her to bite the target of her next Attack dealing <trueDamage>{{ calc_dragon_form_damage }} true damage</trueDamage>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Shyvana's Attacks deal <magicDamage>{{ calc_max_health_damage }} max Health magic damage</magicDamage> <OnHit>%i:OnHit% On-Hit</OnHit> and reduce this Ability's Cooldown by {{ cooldown_reduction }} seconds.<br /><br /><spellActive>Active:</spellActive> Shyvana's next Attack strikes the target and the surrounding area dealing <physicalDamage>{{ calc_damage }} physical damage</physicalDamage>. This Ability may be <recast>Recast</recast> after an Attack or short delay within the next {{ recastduration }} seconds.<br /><br /><keywordMajor>Dragon Form:</keywordMajor> Shyvana gains an additional <recast>Recast</recast>, causing her to bite the target of her next Attack dealing <trueDamage>{{ calc_dragon_form_damage }} true damage</trueDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage"],
+            "label": [
+              "Cooldown",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ base_damage }} -> {{ base_damageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9, 8, 7, 6],
+          "cooldown": [
+            10,
+            9,
+            8,
+            7,
+            6
+          ],
           "cooldownBurn": "10/9/8/7/6",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -283,7 +361,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [25000, 25000, 25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "ShyvanaQ.png",
@@ -300,9 +384,13 @@
           "id": "ShyvanaW",
           "name": "Inferno Aegis",
           "description": "Shyvana gains a shield, movement speed, and after a short delay, the area around her detonates.  While in Dragon Form, the explosion will heal her if it strikes an enemy champion.",
-          "tooltip": "Shyvana wraps herself in flames for {{ duration }} seconds, gaining <shield>{{ calc_shield }} Shield</shield>, increased by <shield>{{ calc_shield_per_nearby_champion }}</shield> per nearby enemy champion and <speed>{{ movespeed }} Move Speed</speed>, increased to <speed>{{ movespeedtowardsenemies }}</speed> when moving towards enemy champions.<br /><br />When the effect ends, the <shield>shield</shield> is broken, or upon <recast>Recast</recast> the area around her detonates, dealing <magicDamage>{{ damage }} magic damage</magicDamage>.<br /><br /><keywordMajor>Dragon Form:</keywordMajor> If the detonation hits an enemy champion Shyvana <healing>restores from {{ calc_heal_min }} to {{ calc_heal_max }}</healing> Health based on her missing Health.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Shyvana wraps herself in flames for {{ duration }} seconds, gaining <shield>{{ calc_shield }} Shield</shield>, increased by <shield>{{ calc_shield_per_nearby_champion }}</shield> per nearby enemy champion and <speed>{{ movespeed }} Move Speed</speed>, increased to <speed>{{ movespeedtowardsenemies }}</speed> when moving towards enemy champions.<br /><br />When the effect ends, the <shield>Shield</shield> is broken, or upon <recast>Recast</recast> the area around her detonates, dealing <magicDamage>{{ damage }} magic damage</magicDamage>.<br /><br /><keywordMajor>Dragon Form:</keywordMajor> If the detonation hits an enemy champion Shyvana <healing>restores from {{ calc_heal_min }} to {{ calc_heal_max }} Health</healing> based on her missing Health.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Shield Amount", "Damage"],
+            "label": [
+              "Cooldown",
+              "Shield Amount",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ shield }} -> {{ shieldNL }}",
@@ -310,23 +398,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 13.5, 13, 12.5, 12],
+          "cooldown": [
+            14,
+            13.5,
+            13,
+            12.5,
+            12
+          ],
           "cooldownBurn": "14/13.5/13/12.5/12",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -344,7 +504,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [350, 350, 350, 350, 350],
+          "range": [
+            350,
+            350,
+            350,
+            350,
+            350
+          ],
           "rangeBurn": "350",
           "image": {
             "full": "ShyvanaW.png",
@@ -363,7 +529,11 @@
           "description": "Shyvana launches a fireball that explodes upon striking a large target and slows them. In Dragon Form, it passes through and explodes upon striking large enemies, leaving behind a trail of fire.",
           "tooltip": "Shyvana launches a fireball at the target location dealing <magicDamage>{{ damage }} magic damage</magicDamage> and <status>Slowing by {{ calc_slow }} for {{ slowduration }} seconds</status>. It explodes upon striking an enemy or reaching its terminus.<br /><br /><keywordMajor>Dragon Form:</keywordMajor> Shyvana's fireball is larger and pierces through enemies. Upon striking a champion, large monster, or reaching its terminus it triggers a pulse of fire that deals <magicDamage>{{ calc_dragon_damage }} magic damage</magicDamage> and <status>Slows by {{ calc_slow_dragon }} for {{ slowduration }} seconds</status>. The fireball leaves behind a trail for {{ groundlingerduration }} seconds that deals <magicDamage>{{ damagepersecond }} magic damage per second</magicDamage>. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage", "Slow"],
+            "label": [
+              "Cooldown",
+              "Damage",
+              "Slow"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -371,23 +541,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11.5, 11, 10.5, 10],
+          "cooldown": [
+            12,
+            11.5,
+            11,
+            10.5,
+            10
+          ],
           "cooldownBurn": "12/11.5/11/10.5/10",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -405,7 +647,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "ShyvanaE.png",
@@ -422,7 +670,7 @@
           "id": "ShyvanaR",
           "name": "Dragon's Descent",
           "description": "Shyvana transforms into a Dragon and leaps forward causing enemies along her path to flee. While in Dragon form she becomes larger and her basic abilities are empowered.",
-          "tooltip": "<spellPassive>Passive</spellPassive>: Shyvana generates <keywordMajor>{{ fury_generation }} Dragon Fury</keywordMajor> by striking enemies with Attacks and Abilities, increased by {{ tt_fury_mult }} while in <keywordMajor>Dragon Form</keywordMajor>, and reduced {{ tt_fury_aoe_penalty }} by when striking in an area against non-champions.<br /><br /><spellActive>Active</spellActive>: Shyvana transforms into her <keywordMajor>Dragon Form</keywordMajor>, becoming <attention>Unstoppable</attention>, and flying to the target location breathing fire on enemies below dealing <magicDamage>{{ damage }} magic damage</magicDamage> and causing them <status>Flee for {{ fearduration }} second</status>.<br /><br />While transformed, Shyvana's basic Abilities are upgraded, she gains <scaleHealth>{{ calc_bonus_health }} bonus Health</scaleHealth>, size, and Attack Range. Shyvana loses <keywordMajor>Dragon Fury</keywordMajor> over time and her transformation ends when she has no <keywordMajor>Dragon Fury</keywordMajor> remaining.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive</spellPassive>: Shyvana generates <keywordMajor>{{ fury_generation }} Dragon Fury</keywordMajor> by striking enemies with Attacks and Abilities, increased by {{ tt_fury_mult }} while in <keywordMajor>Dragon Form</keywordMajor>, and reduced {{ tt_fury_aoe_penalty }} by when striking in an area against non-champions.<br /><br /><spellActive>Active</spellActive>: Shyvana transforms into her <keywordMajor>Dragon Form</keywordMajor>, becoming <attention>Unstoppable</attention>, and flying to the target location breathing fire on enemies below dealing <magicDamage>{{ damage }} magic damage</magicDamage> and causing them <status>Flee for {{ fearduration }} seconds</status>.<br /><br />While transformed, Shyvana's basic Abilities are upgraded, she gains <scaleHealth>{{ calc_bonus_health }} bonus Health</scaleHealth>, size, and Attack Range. Shyvana loses <keywordMajor>Dragon Fury</keywordMajor> over time and her transformation ends when she has no <keywordMajor>Dragon Fury</keywordMajor> remaining.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Dragon Fury Generation per Second",
@@ -440,23 +688,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [0, 0, 0],
+          "cooldown": [
+            0,
+            0,
+            0
+          ],
           "cooldownBurn": "0",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -474,7 +770,11 @@
           "vars": [],
           "costType": "Requires 100 Dragon Fury",
           "maxammo": "-1",
-          "range": [1050, 1050, 1050],
+          "range": [
+            1050,
+            1050,
+            1050
+          ],
           "rangeBurn": "1050",
           "image": {
             "full": "ShyvanaR.png",

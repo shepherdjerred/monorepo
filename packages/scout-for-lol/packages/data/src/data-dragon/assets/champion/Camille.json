@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Camille": {
       "id": "Camille",
@@ -391,7 +391,10 @@
         "Camille's shield only works against one damage type, so hit her when she's vulnerable to your damage.",
         "The Hextech Ultimatum has a very short range to cast, so try to flash away from her before she gets close."
       ],
-      "tags": ["Fighter", "Assassin"],
+      "tags": [
+        "Fighter",
+        "Assassin"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 8,
@@ -428,7 +431,11 @@
           "description": "Camille's next attack deals bonus damage and grants bonus Move Speed. This spell can be recast for a short period of time, doing significantly increased bonus damage if Camille delays a period of time between the two attacks.",
           "tooltip": "Camille's next Attack deals an additional <physicalDamage>{{ bonusdamage }} physical damage</physicalDamage> and grants her <speed>{{ msbonus*100 }}% Move Speed</speed> for {{ msduration }} second. This ability can be <recast>Recast</recast> in the next {{ qtotalrecasttime }} seconds.<br /><br />If the <recast>Recast</recast> Attack hits at least {{ qrampuptime }} seconds after the first, the bonus damage is increased to <physicalDamage>{{ empoweredbonusdamage }}</physicalDamage> and {{ damageconversionpercentage }} of the Attack's damage is converted into <trueDamage>true damage</trueDamage>.<br /><br /><rules>This Ability triggers spell effects upon dealing damage.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Total AD Ratio", "Move Speed", "Cooldown"],
+            "label": [
+              "Total AD Ratio",
+              "Move Speed",
+              "Cooldown"
+            ],
             "effect": [
               "{{ tadratio*100.000000 }}% -> {{ tadrationl*100.000000 }}%",
               "{{ msbonus*100.000000 }}% -> {{ msbonusnl*100.000000 }}%",
@@ -436,23 +443,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 8, 7, 6, 5],
+          "cooldown": [
+            9,
+            8,
+            7,
+            6,
+            5
+          ],
           "cooldownBurn": "9/8/7/6/5",
-          "cost": [25, 25, 25, 25, 25],
+          "cost": [
+            25,
+            25,
+            25,
+            25,
+            25
+          ],
           "costBurn": "25",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -470,7 +549,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [325, 325, 325, 325, 325],
+          "range": [
+            325,
+            325,
+            325,
+            325,
+            325
+          ],
           "rangeBurn": "325",
           "image": {
             "full": "CamilleQ.png",
@@ -503,23 +588,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [15, 14, 13, 12, 11],
+          "cooldown": [
+            15,
+            14,
+            13,
+            12,
+            11
+          ],
           "cooldownBurn": "15/14/13/12/11",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -537,7 +694,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [610, 610, 610, 610, 610],
+          "range": [
+            610,
+            610,
+            610,
+            610,
+            610
+          ],
           "rangeBurn": "610",
           "image": {
             "full": "CamilleW.png",
@@ -556,7 +719,11 @@
           "description": "Camille pulls herself to a wall, leaping off and knocking up enemy champions upon landing.",
           "tooltip": "Camille fires a hookshot that attaches to terrain, pulling her to it for 1 second and allowing this Ability to be <recast>Recast</recast>.<br /><br /><recast>Recast:</recast> Camille dashes from the wall, colliding with the first enemy champion hit. Upon landing, she gains <attackSpeed>{{ asbuff*100 }}% Attack Speed</attackSpeed> for {{ asduration }} seconds, deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to nearby enemies, and <status>Stuns</status> enemy champions for {{ knockupduration }} seconds. Dashes towards enemy champions travel twice as far.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage", "Attack Speed"],
+            "label": [
+              "Cooldown",
+              "Damage",
+              "Attack Speed"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -564,23 +731,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 15, 14, 13, 12],
+          "cooldown": [
+            16,
+            15,
+            14,
+            13,
+            12
+          ],
           "cooldownBurn": "16/15/14/13/12",
-          "cost": [70, 70, 70, 70, 70],
+          "cost": [
+            70,
+            70,
+            70,
+            70,
+            70
+          ],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -598,7 +837,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "CamilleE.png",
@@ -617,7 +862,11 @@
           "description": "Camille dashes to target champion, anchoring them to the area. She also deals bonus magic damage to the target with her basic attacks.",
           "tooltip": "Camille briefly becomes Untargetable and leaps onto an enemy champion, interrupting channels and locking them into an area they cannot escape by any means for {{ rduration }} seconds. Other nearby enemies are <status>Knocked Away</status>. Her Attacks against the trapped enemy deal an additional <magicDamage>{{ rpercentcurrenthpdamage }}% current Health magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Current Health Damage", "Duration", "Cooldown"],
+            "label": [
+              "Current Health Damage",
+              "Duration",
+              "Cooldown"
+            ],
             "effect": [
               "{{ rpercentcurrenthpdamage }}% -> {{ rpercentcurrenthpdamageNL }}%",
               "{{ rduration }} -> {{ rdurationNL }}",
@@ -625,23 +874,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [140, 115, 90],
+          "cooldown": [
+            140,
+            115,
+            90
+          ],
           "cooldownBurn": "140/115/90",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -659,7 +956,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [475, 475, 475],
+          "range": [
+            475,
+            475,
+            475
+          ],
           "rangeBurn": "475",
           "image": {
             "full": "CamilleR.png",

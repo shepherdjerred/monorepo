@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Leblanc": {
       "id": "Leblanc",
@@ -431,7 +431,10 @@
         "Attacking LeBlanc first avoids most of her tricks, especially if she's recently used her dash, Distortion.",
         "Stunning or silencing LeBlanc will prevent her from activating the return part of Distortion."
       ],
-      "tags": ["Assassin", "Mage"],
+      "tags": [
+        "Assassin",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 1,
@@ -468,30 +471,105 @@
           "description": "LeBlanc projects a sigil, dealing damage and marking the target for 3.5 seconds. Damaging the marked target with an ability detonates the sigil, dealing additional damage. If either part kills the target, Leblanc refunds the Mana cost and part of this spell's remaining Cooldown.",
           "tooltip": "LeBlanc projects a sigil to an enemy, dealing <magicDamage>{{ damage }} magic damage</magicDamage> and marking them for {{ markduration }} seconds.<br /><br />Damaging the marked enemy with an Ability detonates the sigil, dealing <magicDamage>{{ markdamage }} magic damage</magicDamage>.<br /><br />If either part kills the target, Leblanc refunds {{ manarefund*100 }}% of the Mana cost and {{ cooldownrefund*100 }}% of this spell's remaining Cooldown.<br /><br /><rules>The initial sigil deals an additional {{ bonusminiondamage }} damage to minions. </rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Sigil Damage", "Detonation Damage"],
+            "label": [
+              "Sigil Damage",
+              "Detonation Damage"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ basemarkdamage }} -> {{ basemarkdamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [6, 6, 6, 6, 6],
+          "cooldown": [
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
           "cooldownBurn": "6",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -509,7 +587,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [700, 700, 700, 700, 700],
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "LeblancQ.png",
@@ -528,7 +612,11 @@
           "description": "LeBlanc dashes to a location, dealing damage to enemies near her destination. For the next 4 seconds, activate Distortion again to return LeBlanc to her starting location.",
           "tooltip": "LeBlanc dashes then deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to nearby enemies. For {{ e3 }} seconds after dashing, LeBlanc can <recast>Recast</recast>.<br /><br /><recast>Recast:</recast> LeBlanc returns to her starting location.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -536,23 +624,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [15, 13.75, 12.5, 11.25, 10],
+          "cooldown": [
+            15,
+            13.75,
+            12.5,
+            11.25,
+            10
+          ],
           "cooldownBurn": "15/13.75/12.5/11.25/10",
-          "cost": [60, 70, 80, 90, 100],
+          "cost": [
+            60,
+            70,
+            80,
+            90,
+            100
+          ],
           "costBurn": "60/70/80/90/100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [2, 2, 2, 2, 2],
-            [4, 4, 4, 4, 4],
-            [600, 600, 600, 600, 600],
-            [0.2, 0.2, 0.2, 0.2, 0.2],
-            [0.2, 0.2, 0.2, 0.2, 0.2],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              600,
+              600,
+              600,
+              600,
+              600
+            ],
+            [
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2
+            ],
+            [
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -570,7 +730,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "LeblancW.png",
@@ -589,7 +755,11 @@
           "description": "LeBlanc launches a chain that shackles the first enemy hit. If the target remains shackled for 1.5 seconds, LeBlanc roots them and deals additional damage.",
           "tooltip": "LeBlanc launches a chain that shackles the first enemy hit, dealing <magicDamage>{{ initialdamage }} magic damage</magicDamage> and granting <keywordStealth>True Sight</keywordStealth>.<br /><br />If they remain shackled for {{ e3 }} seconds, LeBlanc <status>Roots</status> them for {{ e4 }} seconds and deals an additional <magicDamage>{{ delayeddamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Chain Damage", "Root Damage", "Cooldown"],
+            "label": [
+              "Chain Damage",
+              "Root Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ baseinitialdamage }} -> {{ baseinitialdamageNL }}",
               "{{ basedelayeddamage }} -> {{ basedelayeddamageNL }}",
@@ -597,23 +767,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 13.25, 12.5, 11.75, 11],
+          "cooldown": [
+            14,
+            13.25,
+            12.5,
+            11.75,
+            11
+          ],
           "cooldownBurn": "14/13.25/12.5/11.75/11",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [865, 865, 865, 865, 865],
-            [14, 13.25, 12.5, 11.75, 11],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              865,
+              865,
+              865,
+              865,
+              865
+            ],
+            [
+              14,
+              13.25,
+              12.5,
+              11.75,
+              11
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -631,7 +873,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [925, 925, 925, 925, 925],
+          "range": [
+            925,
+            925,
+            925,
+            925,
+            925
+          ],
           "rangeBurn": "925",
           "image": {
             "full": "LeblancE.png",
@@ -664,23 +912,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [45, 35, 25],
+          "cooldown": [
+            45,
+            35,
+            25
+          ],
           "cooldownBurn": "45/35/25",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -698,7 +994,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "2",
-          "range": [25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "LeblancR.png",

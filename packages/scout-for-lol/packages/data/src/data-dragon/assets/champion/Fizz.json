@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Fizz": {
       "id": "Fizz",
@@ -324,7 +324,10 @@
         "Fizz's attacks becomes more deadly for a few seconds after he uses his empowered attack - keep him away while his trident is glowing!",
         "Fizz is a slippery target when his abilities are not on cooldown - bait him into using them early and follow up with crowd control or hard-hitting attacks!"
       ],
-      "tags": ["Assassin", "Fighter"],
+      "tags": [
+        "Assassin",
+        "Fighter"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 6,
@@ -361,30 +364,105 @@
           "description": "Fizz dashes through his target, dealing magic damage and applying on hit effects.",
           "tooltip": "Fizz dashes through an enemy, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> plus <magicDamage>{{ qdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 7.5, 7, 6.5, 6],
+          "cooldown": [
+            8,
+            7.5,
+            7,
+            6.5,
+            6
+          ],
           "cooldownBurn": "8/7.5/7/6.5/6",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [10, 25, 40, 55, 70],
-            [0, 0, 0, 0, 0],
-            [650, 750, 850, 950, 1050],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [600, 600, 600, 600, 600],
-            [1, 1, 1, 1, 1],
-            [0.35, 0.35, 0.35, 0.35, 0.35],
-            [40, 40, 40, 40, 40],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              10,
+              25,
+              40,
+              55,
+              70
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              650,
+              750,
+              850,
+              950,
+              1050
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              600,
+              600,
+              600,
+              600,
+              600
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0.35,
+              0.35,
+              0.35,
+              0.35,
+              0.35
+            ],
+            [
+              40,
+              40,
+              40,
+              40,
+              40
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -402,7 +480,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [550, 550, 550, 550, 550],
+          "range": [
+            550,
+            550,
+            550,
+            550,
+            550
+          ],
           "rangeBurn": "550",
           "image": {
             "full": "FizzQ.png",
@@ -439,23 +523,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 6, 5, 4, 3],
+          "cooldown": [
+            7,
+            6,
+            5,
+            4,
+            3
+          ],
           "cooldownBurn": "7/6/5/4/3",
-          "cost": [30, 40, 50, 60, 70],
+          "cost": [
+            30,
+            40,
+            50,
+            60,
+            70
+          ],
           "costBurn": "30/40/50/60/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -473,7 +629,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "FizzW.png",
@@ -506,23 +668,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 14, 12, 10, 8],
+          "cooldown": [
+            16,
+            14,
+            12,
+            10,
+            8
+          ],
           "cooldownBurn": "16/14/12/10/8",
-          "cost": [75, 80, 85, 90, 95],
+          "cost": [
+            75,
+            80,
+            85,
+            90,
+            95
+          ],
           "costBurn": "75/80/85/90/95",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -540,7 +774,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400, 400, 400],
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "FizzE.png",
@@ -573,23 +813,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -607,7 +895,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1300, 1300, 1300],
+          "range": [
+            1300,
+            1300,
+            1300
+          ],
           "rangeBurn": "1300",
           "image": {
             "full": "FizzR.png",

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Ryze": {
       "id": "Ryze",
@@ -289,7 +289,9 @@
         "Use Realm Warp's windup time to figure out how to deal with what may be coming out of the portal.",
         "Crowd controlling Ryze during Realm Warp's windup will cancel the portal."
       ],
-      "tags": ["Mage"],
+      "tags": [
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -326,7 +328,11 @@
           "description": "Passively, Ryze's other basic abilities reset the cooldown of Overload and charge a rune. When Ryze casts Overload with 2 runes charged, he gains a brief burst of Move Speed.<br><br>On cast, Ryze throws a charge of pure energy in a line, dealing damage to the first enemy struck. If the target has Flux on it, Overload deals extra damage and bounces to nearby enemies with Flux.",
           "tooltip": "<spellPassive>Passive:</spellPassive> <spellName>Rune Prison</spellName> and <spellName>Spell Flux</spellName> refresh this Ability's Cooldown and charge a rune for {{ runeduration }} seconds (max {{ maximumrunes }} runes).<br /><br /><spellActive>Active:</spellActive> Ryze unleashes a blast, dealing <magicDamage>{{ qdamagecalc }} magic damage</magicDamage> to the first enemy hit. If the target has <keywordMajor>Flux</keywordMajor> on it, it is consumed, causing this Ability to deal {{ spell.ryzer:overloaddamagebonus }}% increased damage and bounces to nearby enemies with <keywordMajor>Flux</keywordMajor>.<br /><br />Ryze also discharges all runes, granting Ryze <speed>{{ movementspeedamount }}% Move Speed</speed> for {{ movementspeedduration }} seconds if {{ maximumrunes }} runes were charged.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Move Speed", "Mana Cost"],
+            "label": [
+              "Damage",
+              "Move Speed",
+              "Mana Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ movementspeedamount }}% -> {{ movementspeedamountNL }}%",
@@ -334,23 +340,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [5, 5, 5, 5, 5],
+          "cooldown": [
+            5,
+            5,
+            5,
+            5,
+            5
+          ],
           "cooldownBurn": "5",
-          "cost": [40, 38, 36, 34, 32],
+          "cost": [
+            40,
+            38,
+            36,
+            34,
+            32
+          ],
           "costBurn": "40/38/36/34/32",
           "datavalues": {},
           "effect": [
             null,
-            [70, 110, 150, 190, 230],
-            [25, 40, 55, 70, 85],
-            [50, 75, 100, 125, 150],
-            [25, 28, 31, 24, 37],
-            [2, 2, 2, 2, 2],
-            [2, 2, 2, 2, 2],
-            [3, 3, 3, 3, 3],
-            [0.015, 0.015, 0.015, 0.015, 0.015],
-            [2, 2, 2, 2, 2],
-            [0, 0, 0, 0, 0]
+            [
+              70,
+              110,
+              150,
+              190,
+              230
+            ],
+            [
+              25,
+              40,
+              55,
+              70,
+              85
+            ],
+            [
+              50,
+              75,
+              100,
+              125,
+              150
+            ],
+            [
+              25,
+              28,
+              31,
+              24,
+              37
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              0.015,
+              0.015,
+              0.015,
+              0.015,
+              0.015
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -368,7 +446,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1000, 1000, 1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "RyzeQWrapper.png",
@@ -387,7 +471,11 @@
           "description": "Ryze traps a target in a cage of runes, damaging them and slowing their movement. If the target has Flux on it, they are instead rooted.",
           "tooltip": "Ryze deals <magicDamage>{{ wdamagecalc }} magic damage</magicDamage> and <status>Slows</status> by {{ slowamount*100 }}% for {{ ccduration }} seconds. If the target has <keywordMajor>Flux</keywordMajor>, it is consumed and this Ability <status>Roots</status> instead of <status>Slowing</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "Mana Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "Mana Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -395,23 +483,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 10.5, 10, 9.5, 9],
+          "cooldown": [
+            11,
+            10.5,
+            10,
+            9.5,
+            9
+          ],
           "cooldownBurn": "11/10.5/10/9.5/9",
-          "cost": [50, 60, 70, 80, 90],
+          "cost": [
+            50,
+            60,
+            70,
+            80,
+            90
+          ],
           "costBurn": "50/60/70/80/90",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -429,7 +589,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [615, 615, 615, 615, 615],
+          "range": [
+            615,
+            615,
+            615,
+            615,
+            615
+          ],
           "rangeBurn": "615",
           "image": {
             "full": "RyzeW.png",
@@ -448,7 +614,11 @@
           "description": "Ryze releases an orb of pure magical power that damages an enemy and debuffs all nearby enemies. Ryze's spells have additional effects against the debuffed enemy.",
           "tooltip": "Ryze fires an orb, dealing <magicDamage>{{ edamagecalc }} magic damage</magicDamage> and applies <keywordMajor>Flux</keywordMajor> for {{ debuffduration }} seconds to the target and nearby enemies. Enemies already afflicted with <keywordMajor>Flux</keywordMajor> will cause it to spread further.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "Mana Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "Mana Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -456,23 +626,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [3.5, 3.25, 3, 2.75, 2.5],
+          "cooldown": [
+            3.5,
+            3.25,
+            3,
+            2.75,
+            2.5
+          ],
           "cooldownBurn": "3.5/3.25/3/2.75/2.5",
-          "cost": [35, 45, 55, 65, 75],
+          "cost": [
+            35,
+            45,
+            55,
+            65,
+            75
+          ],
           "costBurn": "35/45/55/65/75",
           "datavalues": {},
           "effect": [
             null,
-            [80, 90, 100, 110, 120],
-            [40, 50, 60, 70, 80],
-            [100, 100, 100, 100, 100],
-            [0.1, 0.1, 0.1, 0.1, 0.1],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [4, 4, 4, 4, 4],
-            [1, 1, 1, 1, 1],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              80,
+              90,
+              100,
+              110,
+              120
+            ],
+            [
+              40,
+              50,
+              60,
+              70,
+              80
+            ],
+            [
+              100,
+              100,
+              100,
+              100,
+              100
+            ],
+            [
+              0.1,
+              0.1,
+              0.1,
+              0.1,
+              0.1
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -490,7 +732,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [615, 615, 615, 615, 615],
+          "range": [
+            615,
+            615,
+            615,
+            615,
+            615
+          ],
           "rangeBurn": "615",
           "image": {
             "full": "RyzeE.png",
@@ -509,30 +757,81 @@
           "description": "Passively, Overload deals even more damage against targets with Flux.<br><br>On cast, Ryze creates a portal to a nearby location. After a few seconds, allies standing near the portal are teleported to the target location.",
           "tooltip": "<spellPassive>Passive:</spellPassive> <spellName>Overload</spellName> damage bonus against targets with <keywordMajor>Flux</keywordMajor> increased to {{ overloaddamagebonus }}%.<br /><br /><spellActive>Active:</spellActive> Ryze opens a portal to another location. After {{ chargetimetooltip }} seconds, all allies near the portal are teleported to that location.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Overload Damage Increase"],
+            "label": [
+              "Cooldown",
+              "Overload Damage Increase"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ overloaddamagebonus }}% -> {{ overloaddamagebonusNL }}%"
             ]
           },
           "maxrank": 3,
-          "cooldown": [180, 160, 140],
+          "cooldown": [
+            180,
+            160,
+            140
+          ],
           "cooldownBurn": "180/160/140",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [6, 6, 6],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              6,
+              6,
+              6
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -550,7 +849,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [3000, 3000, 3000],
+          "range": [
+            3000,
+            3000,
+            3000
+          ],
           "rangeBurn": "3000",
           "image": {
             "full": "RyzeR.png",

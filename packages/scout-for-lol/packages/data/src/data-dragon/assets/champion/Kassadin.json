@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Kassadin": {
       "id": "Kassadin",
@@ -245,7 +245,10 @@
         "Each time Kassadin consecutively uses Riftwalk, he pays more and more mana. Keep this in mind as you chase him.",
         "It takes 6 spell casts for Kassadin's slow, Force Pulse, to become castable. If he levels up that ability, judiciously use your own skills while laning against him."
       ],
-      "tags": ["Assassin", "Mage"],
+      "tags": [
+        "Assassin",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 3,
@@ -296,23 +299,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9.5, 9, 8.5, 8],
+          "cooldown": [
+            10,
+            9.5,
+            9,
+            8.5,
+            8
+          ],
           "cooldownBurn": "10/9.5/9/8.5/8",
-          "cost": [60, 65, 70, 75, 80],
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [65, 95, 125, 155, 185],
-            [0, 0, 0, 0, 0],
-            [80, 110, 140, 170, 200],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              65,
+              95,
+              125,
+              155,
+              185
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              80,
+              110,
+              140,
+              170,
+              200
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -330,7 +405,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "NullLance.png",
@@ -361,23 +442,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 7, 7, 7, 7],
+          "cooldown": [
+            7,
+            7,
+            7,
+            7,
+            7
+          ],
           "cooldownBurn": "7",
-          "cost": [1, 1, 1, 1, 1],
+          "cost": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
           "costBurn": "1",
           "datavalues": {},
           "effect": [
             null,
-            [4, 4.5, 5, 5.5, 6],
-            [20, 20, 20, 20, 20],
-            [50, 75, 100, 125, 150],
-            [20, 22.5, 25, 27.5, 30],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              4,
+              4.5,
+              5,
+              5.5,
+              6
+            ],
+            [
+              20,
+              20,
+              20,
+              20,
+              20
+            ],
+            [
+              50,
+              75,
+              100,
+              125,
+              150
+            ],
+            [
+              20,
+              22.5,
+              25,
+              27.5,
+              30
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -395,7 +548,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1, 1, 1, 1, 1],
+          "range": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
           "rangeBurn": "1",
           "image": {
             "full": "NetherBlade.png",
@@ -428,23 +587,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [21, 20, 19, 18, 17],
+          "cooldown": [
+            21,
+            20,
+            19,
+            18,
+            17
+          ],
           "cooldownBurn": "21/20/19/18/17",
-          "cost": [60, 65, 70, 75, 80],
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [50, 55, 60, 65, 70],
-            [1, 1, 1, 1, 1],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              50,
+              55,
+              60,
+              65,
+              70
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -462,7 +693,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400, 400, 400],
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "ForcePulse.png",
@@ -481,7 +718,11 @@
           "description": "Kassadin teleports to a nearby location dealing damage to nearby enemy units. Multiple Riftwalks in a short period of time cost additional Mana but also deal additional damage.",
           "tooltip": "Kassadin teleports to a nearby location, dealing <magicDamage>{{ basedamage }} magic damage</magicDamage>.<br /><br />Each subsequent use of this Ability within the next {{ rstackduration }} seconds doubles the Mana cost and deals an additional <magicDamage>{{ bonusdamage }} magic damage</magicDamage>. The cost and damage increases can stack up to {{ maxstacks }} times.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Damage Per Stack", "Cooldown"],
+            "label": [
+              "Damage",
+              "Damage Per Stack",
+              "Cooldown"
+            ],
             "effect": [
               "{{ rbasedamage }} -> {{ rbasedamageNL }}",
               "{{ stackdamage }} -> {{ stackdamageNL }}",
@@ -489,23 +730,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [5, 3.5, 2],
+          "cooldown": [
+            5,
+            3.5,
+            2
+          ],
           "cooldownBurn": "5/3.5/2",
-          "cost": [40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -523,7 +812,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [500, 500, 500],
+          "range": [
+            500,
+            500,
+            500
+          ],
           "rangeBurn": "500",
           "image": {
             "full": "RiftWalk.png",

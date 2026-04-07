@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Viego": {
       "id": "Viego",
@@ -316,7 +316,10 @@
       "blurb": "Once ruler of a long-lost kingdom, Viego perished over a thousand years ago when his attempt to bring his wife back from the dead triggered the magical catastrophe known as the Ruination. Transformed into a powerful, unliving specter tortured by an...",
       "allytips": [],
       "enemytips": [],
-      "tags": ["Fighter", "Assassin"],
+      "tags": [
+        "Fighter",
+        "Assassin"
+      ],
       "partype": "None",
       "info": {
         "attack": 6,
@@ -367,23 +370,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [5, 4.5, 4, 3.5, 3],
+          "cooldown": [
+            5,
+            4.5,
+            4,
+            3.5,
+            3
+          ],
           "cooldownBurn": "5/4.5/4/3.5/3",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -401,7 +476,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "ViegoQ.png",
@@ -420,27 +501,103 @@
           "description": "Viego charges up before dashing forward, releasing a ball of concentrated Black Mist that stuns the first enemy hit.",
           "tooltip": "<charge>Begin Charging:</charge> Viego begins gathering Mist, <status>Slowing</status> himself by {{ selfslowpercent*100 }}%.<br /><br /><release>Release:</release> Viego dashes forward and hurls the gathered Mist. Deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Stuns</status> the first enemy hit for {{ stunduration }} to {{ maxstuntt }} seconds based on charge time.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage"],
-            "effect": ["{{ damage }} -> {{ damageNL }}"]
+            "label": [
+              "Damage"
+            ],
+            "effect": [
+              "{{ damage }} -> {{ damageNL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [8, 8, 8, 8, 8],
+          "cooldown": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
           "cooldownBurn": "8",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -458,7 +615,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [400, 400, 400, 400, 400],
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "ViegoW.png",
@@ -477,7 +640,11 @@
           "description": "Viego commands the Black Mist to haunt and surround a piece of terrain. Viego can hide in the Mist as a wraith, gaining camouflage, Move Speed, and Attack Speed.",
           "tooltip": "Viego sends forth a spectre to haunt the first terrain hit, surrounding it with Mist for {{ mistduration }} seconds. Viego gains <keywordStealth>Camouflage</keywordStealth>, <speed>{{ totalmovespeed }} Move Speed</speed>, and <attackSpeed>{{ attackspeed*100 }}% Attack Speed</attackSpeed> while inside the Mist.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Move Speed", "Attack Speed", "Cooldown"],
+            "label": [
+              "Move Speed",
+              "Attack Speed",
+              "Cooldown"
+            ],
             "effect": [
               "{{ movespeed*100.000000 }}% -> {{ movespeednl*100.000000 }}%",
               "{{ attackspeed*100.000000 }}% -> {{ attackspeednl*100.000000 }}%",
@@ -485,23 +652,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 12, 10, 8, 6],
+          "cooldown": [
+            14,
+            12,
+            10,
+            8,
+            6
+          ],
           "cooldownBurn": "14/12/10/8/6",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -519,7 +758,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [750, 750, 750, 750, 750],
+          "range": [
+            750,
+            750,
+            750,
+            750,
+            750
+          ],
           "rangeBurn": "750",
           "image": {
             "full": "ViegoE.png",
@@ -538,30 +783,81 @@
           "description": "Viego teleports to a nearby location and executes an enemy champion on arrival, piercing their heart and causing a destructive shockwave around them that knocks away their allies.",
           "tooltip": "Viego discards any souls he is currently <keywordMajor>Possessing</keywordMajor> and teleports. On arrival he Attacks the champion with the lowest percent Health, briefly <status>Slowing</status> them by {{ slowpercent*100 }}% and dealing <physicalDamage>{{ totaldamage }} + {{ totalpercenthealth }}% missing Health physical damage</physicalDamage>. Other nearby enemies are <status>Knocked Back</status> and take <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Missing Health Damage", "Cooldown"],
+            "label": [
+              "Missing Health Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ maxhealthdamage }}% -> {{ maxhealthdamageNL }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -579,7 +875,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [500, 500, 500],
+          "range": [
+            500,
+            500,
+            500
+          ],
           "rangeBurn": "500",
           "image": {
             "full": "ViegoR.png",

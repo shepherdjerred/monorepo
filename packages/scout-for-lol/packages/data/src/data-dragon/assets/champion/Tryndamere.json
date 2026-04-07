@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Tryndamere": {
       "id": "Tryndamere",
@@ -346,7 +346,10 @@
         "Remember, Tryndamere can only slow you if you are facing away from him.",
         "Most of Tryndamere's damage is physical. If he's getting too strong, consider buying a Thornmail."
       ],
-      "tags": ["Fighter", "Assassin"],
+      "tags": [
+        "Fighter",
+        "Assassin"
+      ],
       "partype": "Fury",
       "info": {
         "attack": 10,
@@ -383,7 +386,11 @@
           "description": "Tryndamere thrives on the thrills of combat, increasing his Attack Damage as he is more and more wounded. He can cast Bloodlust to consume his Fury and heal himself.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Tryndamere thirsts for blood, gaining up to <scaleAD>{{ maximumbonusad }} Attack Damage</scaleAD> based on his missing Health.<br /><br /><spellActive>Active:</spellActive> Tryndamere consumes his <keywordMajor>Fury</keywordMajor>, restoring <healing>{{ baseheal }} plus {{ healperfury }} Health per Fury (max: {{ maximumheal }})</healing>. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Maximum Damage", "Healing", "Heal Per Fury"],
+            "label": [
+              "Maximum Damage",
+              "Healing",
+              "Heal Per Fury"
+            ],
             "effect": [
               "{{ maximumbonusad }} -> {{ maximumbonusadNL }}",
               "{{ basehealing }} -> {{ basehealingNL }}",
@@ -391,23 +398,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 12, 12, 12, 12],
+          "cooldown": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
           "cooldownBurn": "12",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -425,7 +504,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [400, 400, 400, 400, 400],
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "TryndamereQ.png",
@@ -444,30 +529,105 @@
           "description": "Tryndamere lets out an insulting cry, decreasing surrounding champions' Attack Damage. Enemies with their backs turned to Tryndamere also have their Move Speed reduced.",
           "tooltip": "Tryndamere hurls insults, reducing champions' Attack Damage by {{ adreduction*-1 }} for {{ reductionduration }} seconds and <status>Slowing</status> by {{ slowpotency*-100 }}% while cowering from him for {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Physical Damage Reduction", "Slow"],
+            "label": [
+              "Physical Damage Reduction",
+              "Slow"
+            ],
             "effect": [
               "{{ adreduction*-1.000000 }} -> {{ adreductionnl*-1.000000 }}",
               "{{ slowpotency*-100.000000 }}% -> {{ slowpotencynl*-100.000000 }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 14, 14, 14, 14],
+          "cooldown": [
+            14,
+            14,
+            14,
+            14,
+            14
+          ],
           "cooldownBurn": "14",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -485,7 +645,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [850, 850, 850, 850, 850],
+          "range": [
+            850,
+            850,
+            850,
+            850,
+            850
+          ],
           "rangeBurn": "850",
           "image": {
             "full": "TryndamereW.png",
@@ -504,30 +670,105 @@
           "description": "Tryndamere slices toward a target unit, dealing damage to enemies in his path.",
           "tooltip": "Tryndamere spins through his enemies, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and generating <keywordMajor>{{ nonchampfurygain }} Fury</keywordMajor> per enemy hit, increased to <keywordMajor>{{ champfurygain }} Fury</keywordMajor> against enemy champions.<br /><br />This Ability's Cooldown is reduced by {{ nonchampcdrefund }} seconds when Tryndamere critically strikes, and reduced by {{ champcdrefund }} seconds when critically striking a champion.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ damage }} -> {{ damageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11, 10, 9, 8],
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -545,7 +786,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "TryndamereE.png",
@@ -564,7 +811,11 @@
           "description": "Tryndamere's lust for battle becomes so strong that he is unable to die, no matter how wounded he becomes.",
           "tooltip": "Tryndamere becomes completely immune to death for {{ e3 }} seconds, refusing to be reduced below {{ e2 }} Health, and instantly gains <keywordMajor>{{ e1 }} Fury</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Minimum Health", "Fury Gained"],
+            "label": [
+              "Cooldown",
+              "Minimum Health",
+              "Fury Gained"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ e2 }} -> {{ e2NL }}",
@@ -572,23 +823,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [50, 75, 100],
-            [30, 50, 70],
-            [5, 5, 5],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              50,
+              75,
+              100
+            ],
+            [
+              30,
+              50,
+              70
+            ],
+            [
+              5,
+              5,
+              5
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -606,7 +905,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [400, 400, 400],
+          "range": [
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "UndyingRage.png",

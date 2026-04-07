@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Milio": {
       "id": "Milio",
@@ -230,7 +230,10 @@
         "Champions with crowd control that can be applied quickly excel against Milio.",
         "Catching Milio with no allies around severely inhibits his mobility. Try to find him alone."
       ],
-      "tags": ["Support", "Mage"],
+      "tags": [
+        "Support",
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -267,7 +270,11 @@
           "description": "Kick a ball that knocks back an enemy. The ball launches upward on hit and falls toward the enemy, damaging and slowing enemies in the area upon impact.",
           "tooltip": "Milio kicks a fireball, <status>Knocking Back</status> the first enemy hit. If it hits, the ball bounces past them and explodes, dealing <magicDamage>{{ damage }} magic damage</magicDamage> to surrounding enemies and <status>Slowing</status> them by {{ slowamountpercent }} for {{ slowduration }} seconds.<br /><br />Hitting at least one enemy champion with <spellName>Ultra Mega Fire Kick</spellName> refunds {{ refundratio*100 }}% of it's Mana cost.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow", "Mana Cost"],
+            "label": [
+              "Damage",
+              "Slow",
+              "Mana Cost"
+            ],
             "effect": [
               "{{ falldamage }} -> {{ falldamageNL }}",
               "{{ slowamount*100.000000 }}% -> {{ slowamountnl*100.000000 }}%",
@@ -275,23 +282,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 10, 10, 10, 10],
+          "cooldown": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
           "cooldownBurn": "10",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -309,7 +388,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1200, 1200, 1200, 1200, 1200],
+          "range": [
+            1200,
+            1200,
+            1200,
+            1200,
+            1200
+          ],
           "rangeBurn": "1200",
           "image": {
             "full": "MilioQ.png",
@@ -328,7 +413,12 @@
           "description": "Create an empowering zone that heals allies and increases attack range to those inside. The zone follows the ally nearest to the cast point.",
           "tooltip": "Milio creates a hearth that follows ally champions for {{ zoneduration }} seconds. Ally champions nearby gain {{ rangepercent }} Attack Range and restore <healing>{{ healingovertime }} Health</healing> over the duration. The hearth also applies <spellName>Fired Up!</spellName> every {{ healfrequencyseconds }} seconds.<br /><br /><recast>Recast:</recast> Change the hearth's follow ally.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Range", "Healing", "Cooldown", "Mana Cost"],
+            "label": [
+              "Range",
+              "Healing",
+              "Cooldown",
+              "Mana Cost"
+            ],
             "effect": [
               "{{ rangepctincrease*100.000000 }}% -> {{ rangepctincreasenl*100.000000 }}%",
               "{{ totalhealingovertime }} -> {{ totalhealingovertimeNL }}",
@@ -337,23 +427,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [29, 27, 25, 23, 21],
+          "cooldown": [
+            29,
+            27,
+            25,
+            23,
+            21
+          ],
           "cooldownBurn": "29/27/25/23/21",
-          "cost": [90, 100, 110, 120, 130],
+          "cost": [
+            90,
+            100,
+            110,
+            120,
+            130
+          ],
           "costBurn": "90/100/110/120/130",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -371,7 +533,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [350, 350, 350, 350, 350],
+          "range": [
+            350,
+            350,
+            350,
+            350,
+            350
+          ],
           "rangeBurn": "350",
           "image": {
             "full": "MilioW.png",
@@ -404,23 +572,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [0.5, 0.5, 0.5, 0.5, 0.5],
+          "cooldown": [
+            0.5,
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
           "cooldownBurn": "0.5",
-          "cost": [50, 60, 70, 80, 90],
+          "cost": [
+            50,
+            60,
+            70,
+            80,
+            90
+          ],
           "costBurn": "50/60/70/80/90",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -438,7 +678,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "2",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "MilioE.png",
@@ -457,30 +703,81 @@
           "description": "Milio unleashes a wave of soothing flames that heal and remove crowd control effects from allies in range.",
           "tooltip": "Milio unleashes a wave of soothing flames on nearby ally champions, cleansing <status>Disabling</status> and <status>Immobilizing</status> effects, restoring <healing>{{ healcalc }} Health</healing>, and granting {{ tenacityamount*100 }}% Tenacity for {{ tenacityduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Healing", "Cooldown"],
+            "label": [
+              "Healing",
+              "Cooldown"
+            ],
             "effect": [
               "{{ healbase }} -> {{ healbaseNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [160, 145, 130],
+          "cooldown": [
+            160,
+            145,
+            130
+          ],
           "cooldownBurn": "160/145/130",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -498,7 +795,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [700, 700, 700],
+          "range": [
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "MilioR.png",

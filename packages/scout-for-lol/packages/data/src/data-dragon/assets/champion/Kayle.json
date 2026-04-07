@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Kayle": {
       "id": "Kayle",
@@ -629,7 +629,10 @@
         "Kayle is usually a fragile target. If you see her ultimate cast on an ally, switch to attacking her.",
         "Kayle starts the game as a weaker melee champion. Try to put her behind before she ascends to her ranged form."
       ],
-      "tags": ["Mage", "Marksman"],
+      "tags": [
+        "Mage",
+        "Marksman"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 6,
@@ -680,23 +683,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11, 10, 9, 8],
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [60, 70, 80, 90, 100],
+          "cost": [
+            60,
+            70,
+            80,
+            90,
+            100
+          ],
           "costBurn": "60/70/80/90/100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -714,7 +789,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [900, 900, 900, 900, 900],
+          "range": [
+            900,
+            900,
+            900,
+            900,
+            900
+          ],
           "rangeBurn": "900",
           "image": {
             "full": "KayleQ.png",
@@ -733,7 +814,11 @@
           "description": "Blessed by the divine, Kayle heals and grants Move Speed to herself and the nearest ally.",
           "tooltip": "Kayle infuses herself and an allied champion with light, restoring <healing>{{ totalheal }} Health</healing> and granting <speed>{{ totalhaste }} Move Speed</speed> for {{ hasteduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Healing", "Move Speed", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Healing",
+              "Move Speed",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ heal }} -> {{ healNL }}",
               "{{ haste*100.000000 }}% -> {{ hastenl*100.000000 }}%",
@@ -741,23 +826,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [15, 15, 15, 15, 15],
+          "cooldown": [
+            15,
+            15,
+            15,
+            15,
+            15
+          ],
           "cooldownBurn": "15",
-          "cost": [70, 75, 80, 85, 90],
+          "cost": [
+            70,
+            75,
+            80,
+            85,
+            90
+          ],
           "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -775,7 +932,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [900, 900, 900, 900, 900],
+          "range": [
+            900,
+            900,
+            900,
+            900,
+            900
+          ],
           "rangeBurn": "900",
           "image": {
             "full": "KayleW.png",
@@ -794,7 +957,11 @@
           "description": "Passive: Kayle's celestial sword, Virtue, deals bonus magic damage to enemies she attacks.<br><br>Active: Kayle's next attack smites her target with celestial fire, dealing bonus damage proportionate to their missing health.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Attacks deal an additional <magicDamage>{{ epassivetotaldamage }} magic damage</magicDamage>.<br /><br /><spellActive>Active:</spellActive> Kayle's next attack becomes ranged and deals an additional <magicDamage>{{ activetotalexecutedamage }} missing Health magic damage</magicDamage>. This attack upgrades when Kayle reaches <scaleLevel>Level {{ spell.kaylepassive:levelforpassiverank2 }}</scaleLevel>, causing it to explode when it hits the target, dealing damage to nearby enemies.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Passive Damage", "Missing Health Damage", "Cooldown"],
+            "label": [
+              "Passive Damage",
+              "Missing Health Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ passivedamage }} -> {{ passivedamageNL }}",
               "{{ activeexecutepercent }}% -> {{ activeexecutepercentNL }}%",
@@ -802,23 +969,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 7.5, 7, 6.5, 6],
+          "cooldown": [
+            8,
+            7.5,
+            7,
+            6.5,
+            6
+          ],
           "cooldownBurn": "8/7.5/7/6.5/6",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -836,7 +1075,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [550, 550, 550, 550, 550],
+          "range": [
+            550,
+            550,
+            550,
+            550,
+            550
+          ],
           "rangeBurn": "550",
           "image": {
             "full": "KayleE.png",
@@ -869,23 +1114,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [160, 120, 80],
+          "cooldown": [
+            160,
+            120,
+            80
+          ],
           "cooldownBurn": "160/120/80",
-          "cost": [100, 50, 0],
+          "cost": [
+            100,
+            50,
+            0
+          ],
           "costBurn": "100/50/0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -903,7 +1196,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [900, 900, 900],
+          "range": [
+            900,
+            900,
+            900
+          ],
           "rangeBurn": "900",
           "image": {
             "full": "KayleR.png",

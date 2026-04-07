@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "LeeSin": {
       "id": "LeeSin",
@@ -564,7 +564,10 @@
         "Lee Sin has powerful tools to combat physical damage in Iron Will and Cripple but he is still vulnerable to magic damage.",
         "Lee Sin relies heavily on following up with his abilities. Use disables to prevent him from chaining together his abilities and attacks."
       ],
-      "tags": ["Fighter", "Assassin"],
+      "tags": [
+        "Fighter",
+        "Assassin"
+      ],
       "partype": "Energy",
       "info": {
         "attack": 8,
@@ -615,23 +618,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9, 8, 7, 6],
+          "cooldown": [
+            10,
+            9,
+            8,
+            7,
+            6
+          ],
           "cooldownBurn": "10/9/8/7/6",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -649,7 +724,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1100, 1100, 1100, 1100, 1100],
+          "range": [
+            1100,
+            1100,
+            1100,
+            1100,
+            1100
+          ],
           "rangeBurn": "1100",
           "image": {
             "full": "LeeSinQOne.png",
@@ -668,30 +749,105 @@
           "description": "Safeguard: Lee Sin rushes to target ally, shielding himself from damage. If the ally is a champion, they are also shielded. After using Safeguard, Lee Sin can cast Iron Will.<br>Iron Will: Lee Sin's intense training allows him to thrive in battle. Lee Sin gains Omnivamp.",
           "tooltip": "Lee Sin dashes to an ally or ward. If the target is a champion, Lee Sin grants them and himself <shield>{{ shieldamount }} Shield</shield> for {{ shieldduration }} seconds and reduces this Ability's Cooldown by {{ w1cooldownrecovered*100 }}%. Lee Sin may <recast>Recast</recast> for the next {{ w1reactivatetime }} seconds.<br /><br /><recast>Recast:</recast> Lee Sin gains {{ lifestealandspellvamp }}% Omnivamp for {{ lifestealandspellvamptime }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Safeguard Shield Absorption", "Iron Will Omnivamp %"],
+            "label": [
+              "Safeguard Shield Absorption",
+              "Iron Will Omnivamp %"
+            ],
             "effect": [
               "{{ shieldvalue }} -> {{ shieldvalueNL }}",
               "{{ lifestealandspellvamp }}% -> {{ lifestealandspellvampNL }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 12, 12, 12, 12],
+          "cooldown": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
           "cooldownBurn": "12",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -709,7 +865,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [700, 700, 700, 700, 700],
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "LeeSinWOne.png",
@@ -728,30 +890,105 @@
           "description": "Tempest: Lee Sin smashes the ground, sending out a shockwave that deals magic damage and reveals enemy units hit. If Tempest hits an enemy, Lee Sin can cast cripple.<br>Cripple: Lee Sin cripples nearby enemies damaged by Tempest, reducing their Move Speed. Move Speed recovers gradually over the duration.",
           "tooltip": "Lee Sin smashes the ground, sending out a shockwave that deals <magicDamage>{{ initialdamage }} magic damage</magicDamage> and reveals them for {{ slowduration }} seconds. If this hits an enemy, Lee Sin can <recast>Recast</recast> for the next {{ reactivatetime }} seconds.<br /><br /><recast>Recast:</recast> Lee Sin <status>Slows</status> nearby enemies struck by the shockwave by {{ slowamount }}% decaying over {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Tempest Damage", "Cripple Slow"],
+            "label": [
+              "Tempest Damage",
+              "Cripple Slow"
+            ],
             "effect": [
               "{{ e1damage }} -> {{ e1damageNL }}",
               "{{ slowamount }}% -> {{ slowamountNL }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 8, 8, 8, 8],
+          "cooldown": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
           "cooldownBurn": "8",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -769,7 +1006,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [450, 450, 450, 450, 450],
+          "range": [
+            450,
+            450,
+            450,
+            450,
+            450
+          ],
           "rangeBurn": "450",
           "image": {
             "full": "LeeSinEOne.png",
@@ -788,7 +1031,11 @@
           "description": "Lee Sin performs a powerful roundhouse kick launching his target back, dealing physical damage to the target and any enemies they collide with. Enemies the target collides with are knocked into the air for a short duration. This technique was taught to him by Jesse Perring, although Lee Sin does not kick players off the map.",
           "tooltip": "Lee Sin performs a powerful roundhouse kick <status>Knocking Back</status> an enemy champion and dealing <physicalDamage>{{ damage }} physical damage</physicalDamage>.<br /><br />Enemies the target collides with are briefly <status>Knocked Up</status> and take <physicalDamage>{{ damage }} plus {{ percenthpcarrythrough }}% of the kicked enemy's bonus Health as physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Bonus Health Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Bonus Health Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ percenthpcarrythrough }}% -> {{ percenthpcarrythroughNL }}%",
@@ -796,23 +1043,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [110, 85, 60],
+          "cooldown": [
+            110,
+            85,
+            60
+          ],
           "cooldownBurn": "110/85/60",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -830,7 +1125,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [375, 375, 375],
+          "range": [
+            375,
+            375,
+            375
+          ],
           "rangeBurn": "375",
           "image": {
             "full": "LeeSinR.png",
