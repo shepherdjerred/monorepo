@@ -143,7 +143,7 @@ async function ensureTools(): Promise<void> {
   const miseConfigs = await findMiseConfigs();
   log("Tools", `Found ${String(miseConfigs.length)} mise config files`);
   await Promise.all(
-    miseConfigs.map((cfg) => $`mise trust ${cfg}`.quiet().catch(() => {})),
+    miseConfigs.map((cfg) => $`mise trust -y ${cfg}`.quiet().catch(() => {})),
   );
   log("Tools", "Trusted all mise configs");
 
