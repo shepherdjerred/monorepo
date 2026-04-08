@@ -6,6 +6,8 @@ import {
   MatchIdSchema,
   type MatchId,
   LeagueAccountSchema,
+  DiscordChannelIdSchema,
+  DiscordAccountIdSchema,
 } from "@scout-for-lol/data";
 import { uniqueBy } from "remeda";
 import * as Sentry from "@sentry/bun";
@@ -76,7 +78,7 @@ export async function getChannelsSubscribedToPlayers(
       accounts.flatMap((account) =>
         account.player.subscriptions.map(
           (subscription): { channel: DiscordChannelId; serverId: string } => ({
-            channel: subscription.channelId,
+            channel: DiscordChannelIdSchema.parse(subscription.channelId),
             serverId: subscription.serverId,
           }),
         ),
@@ -137,7 +139,10 @@ export async function getAccountsWithState(
             leagueAccount,
           },
           discordAccount: {
-            id: player.discordId ?? undefined,
+            id:
+              player.discordId === null
+                ? undefined
+                : DiscordAccountIdSchema.parse(player.discordId),
           },
         };
 

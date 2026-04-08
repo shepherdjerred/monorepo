@@ -81,7 +81,7 @@ export async function createSmartctlMonitoring(chart: Chart) {
       # Run the script every 5 minutes
       while true; do
         echo "Collecting SMART metrics using official prometheus-community script..."
-        /tmp/smartmon.sh > /host/var/lib/node_exporter/textfile_collector/smartmon.prom.tmp 2>/dev/null || echo "# SMART collection failed" > /host/var/lib/node_exporter/textfile_collector/smartmon.prom.tmp
+        /tmp/smartmon.sh > /host/var/lib/node_exporter/textfile_collector/smartmon.prom.tmp || echo "# SMART collection failed" > /host/var/lib/node_exporter/textfile_collector/smartmon.prom.tmp
         mv /host/var/lib/node_exporter/textfile_collector/smartmon.prom.tmp /host/var/lib/node_exporter/textfile_collector/smartmon.prom
         echo "SMART metrics collected at $(date)"
         sleep 300

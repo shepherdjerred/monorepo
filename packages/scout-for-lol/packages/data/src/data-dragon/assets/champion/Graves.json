@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Graves": {
       "id": "Graves",
@@ -418,7 +418,7 @@
         "mpregenperlevel": 0.7,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 68,
+        "attackdamage": 66,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 3,
         "attackspeed": 0.475

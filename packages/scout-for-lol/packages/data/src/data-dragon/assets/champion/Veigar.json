@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Veigar": {
       "id": "Veigar",
@@ -722,8 +722,8 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [100, 80, 60],
-          "cooldownBurn": "100/80/60",
+          "cooldown": [120, 90, 60],
+          "cooldownBurn": "120/90/60",
           "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},

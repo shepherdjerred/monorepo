@@ -69,13 +69,19 @@ export function createKyvernoApp(chart: Chart) {
           "RespectIgnoreDifferences=true",
         ],
       },
-      // Kyverno 3.7.1 renders `labels: {}` on new policies.kyverno.io CRDs;
-      // Kubernetes normalizes it away, causing perpetual OutOfSync.
+      // Kyverno 3.7.1 renders `labels: {}` and `annotations: {}` on CRDs;
+      // Kubernetes normalizes these away and injects conversion.strategy and status,
+      // causing perpetual OutOfSync.
       ignoreDifferences: [
         {
           group: "apiextensions.k8s.io",
           kind: "CustomResourceDefinition",
-          jqPathExpressions: [".metadata.labels"],
+          jqPathExpressions: [
+            ".metadata.labels",
+            ".metadata.annotations",
+            ".spec.conversion",
+            ".status",
+          ],
         },
       ],
     },

@@ -27,7 +27,7 @@ export function createTemporalChart(app: App) {
   const dynamicConfigMap = createTemporalDynamicConfig(chart);
   const server = createTemporalServerDeployment(chart, { dynamicConfigMap });
   createTemporalUiDeployment(chart, { serverService: server.service });
-  createTemporalNamespaceInitJob(chart);
+  createTemporalNamespaceInitJob(chart, { serverService: server.service });
 
   // NetworkPolicy for Temporal Server
   new KubeNetworkPolicy(chart, "temporal-server-netpol", {

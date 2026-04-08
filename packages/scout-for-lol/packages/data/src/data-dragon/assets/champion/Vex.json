@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Vex": {
       "id": "Vex",
@@ -216,6 +216,68 @@
           "name": "Stargazer Vex (Tanzanite)",
           "chromas": false,
           "parentSkin": 20
+        },
+        {
+          "id": "711029",
+          "num": 29,
+          "name": "Surprise Party Vex",
+          "chromas": true
+        },
+        {
+          "id": "711030",
+          "num": 30,
+          "name": "Surprise Party Vex (Ruby)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "711031",
+          "num": 31,
+          "name": "Surprise Party Vex (Catseye)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "711032",
+          "num": 32,
+          "name": "Surprise Party Vex (Emerald)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "711033",
+          "num": 33,
+          "name": "Surprise Party Vex (Turquoise)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "711034",
+          "num": 34,
+          "name": "Surprise Party Vex (Sapphire)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "711035",
+          "num": 35,
+          "name": "Surprise Party Vex (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "711036",
+          "num": 36,
+          "name": "Surprise Party Vex (Pearl)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "711037",
+          "num": 37,
+          "name": "Surprise Party Vex (Obsidian)",
+          "chromas": false,
+          "parentSkin": 29
         }
       ],
       "lore": "In the black heart of the Shadow Isles, a lone yordle trudges through the spectral fog, content in its murky misery. With an endless supply of teen angst and a powerful shadow in tow, Vex lives in her own self-made slice of gloom, far from the revolting cheer of the “normie” world. Though she lacks ambition, she is quick to strike down color and happiness, stopping all would-be interlopers with her magical malaise.",

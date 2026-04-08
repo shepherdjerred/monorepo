@@ -25,6 +25,7 @@ export function buildImageHelper(
   depDirs: Directory[] = [],
   version: string = "dev",
   gitSha: string = "unknown",
+  usePrisma: boolean = false,
 ): Container {
   const excludes = ["node_modules", "dist", ".eslintcache"];
 
@@ -58,7 +59,11 @@ export function buildImageHelper(
     .withLabel("org.opencontainers.image.revision", gitSha)
     .withEnvVariable("VERSION", version)
     .withEnvVariable("GIT_SHA", gitSha)
-    .withEntrypoint(["bun", "run", "src/index.ts"]);
+    .withEntrypoint(
+      usePrisma
+        ? ["/bin/sh", "-c", "bunx prisma db push && bun run src/index.ts"]
+        : ["bun", "run", "src/index.ts"],
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -474,7 +479,11 @@ export function buildScoutImageHelper(
     .withLabel("org.opencontainers.image.revision", gitSha)
     .withEnvVariable("VERSION", version)
     .withEnvVariable("GIT_SHA", gitSha)
-    .withEntrypoint(["bun", "run", "src/index.ts"]);
+    .withEntrypoint([
+      "/bin/sh",
+      "-c",
+      "bunx prisma migrate deploy && bun run src/index.ts",
+    ]);
 }
 
 /**
@@ -689,6 +698,7 @@ export async function pushImageHelper(
   depDirs: Directory[] = [],
   version: string = "dev",
   gitSha: string = "unknown",
+  usePrisma: boolean = false,
 ): Promise<string> {
   if (tags.length === 0) {
     throw new Error("pushImageHelper requires at least one tag");
@@ -700,6 +710,7 @@ export async function pushImageHelper(
     depDirs,
     version,
     gitSha,
+    usePrisma,
   ).withRegistryAuth("ghcr.io", registryUsername, registryPassword);
 
   const digest = await image.publish(tags[0]);

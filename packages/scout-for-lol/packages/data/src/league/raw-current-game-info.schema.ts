@@ -27,14 +27,14 @@ export type RawBannedChampion = z.infer<typeof RawBannedChampionSchema>;
 export const RawCurrentGameParticipantSchema = z
   .object({
     championId: z.number(),
-    puuid: z.string(),
+    puuid: z.string().nullable(),
     teamId: z.number(),
-    summonerName: z.string(),
+    summonerName: z.string().optional(),
     spell1Id: z.number(),
     spell2Id: z.number(),
     bot: z.boolean(),
     profileIconId: z.number(),
-    summonerId: z.string(),
+    summonerId: z.string().optional(),
     gameCustomizationObjects: z
       .array(
         z
@@ -52,6 +52,8 @@ export const RawCurrentGameParticipantSchema = z
         perkSubStyle: z.number().optional(),
       })
       .optional(),
+    riotId: z.string().optional(),
+    lastSelectedSkinIndex: z.number().optional(),
   })
   .strict();
 

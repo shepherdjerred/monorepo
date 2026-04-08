@@ -1,8 +1,8 @@
 # iOS/RN Best Practices Audit: Tasks for Obsidian
 
-## Status: In Progress
+## Status: Mostly Complete — Xcode config remaining
 
-Last updated: 2026-02-25
+Last updated: 2026-04-05
 
 ---
 

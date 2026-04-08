@@ -9,6 +9,7 @@ import {
 } from "#src/league/tasks/prematch/active-game-queries.ts";
 import { sendPrematchNotification } from "#src/league/tasks/prematch/prematch-notification.ts";
 import { MAX_PLAYERS_PER_RUN } from "@scout-for-lol/data/polling-config.ts";
+import { shouldCheckPlayer } from "#src/utils/polling-intervals.ts";
 import { createLogger } from "#src/logger.ts";
 import {
   prematchDetectionsTotal,
@@ -97,10 +98,35 @@ export async function checkActiveGames(): Promise<void> {
     );
     const allPlayerConfigs = accountsWithState.map((a) => a.config);
 
-    // Filter to players not already in a tracked game, limit to MAX_PLAYERS_PER_RUN
-    const playersToCheck = accountsWithState
-      .filter((a) => !trackedPuuids.has(a.config.league.leagueAccount.puuid))
-      .slice(0, MAX_PLAYERS_PER_RUN);
+    const currentTime = new Date();
+
+    // Filter to players not already in a tracked game and eligible based on polling interval
+    const notInGame = accountsWithState.filter(
+      (a) => !trackedPuuids.has(a.config.league.leagueAccount.puuid),
+    );
+    const eligible = notInGame.filter(({ lastMatchTime, lastCheckedAt }) =>
+      shouldCheckPlayer(lastMatchTime, lastCheckedAt, currentTime),
+    );
+
+    logger.info(
+      `📊 ${eligible.length.toString()} / ${notInGame.length.toString()} account(s) eligible this cycle`,
+    );
+
+    // Sort by lastCheckedAt ascending (oldest first), then limit
+    const sorted = eligible.toSorted((a, b) => {
+      if (a.lastCheckedAt === undefined && b.lastCheckedAt === undefined)
+        return 0;
+      if (a.lastCheckedAt === undefined) return -1;
+      if (b.lastCheckedAt === undefined) return 1;
+      return a.lastCheckedAt.getTime() - b.lastCheckedAt.getTime();
+    });
+    const playersToCheck = sorted.slice(0, MAX_PLAYERS_PER_RUN);
+
+    if (eligible.length > MAX_PLAYERS_PER_RUN) {
+      logger.info(
+        `⚠️  Limiting to ${MAX_PLAYERS_PER_RUN.toString()} players (${(eligible.length - MAX_PLAYERS_PER_RUN).toString()} deferred to next run)`,
+      );
+    }
 
     logger.info(
       `📊 Checking ${playersToCheck.length.toString()} player(s) this run (${(accountsWithState.length - playersToCheck.length).toString()} skipped)`,

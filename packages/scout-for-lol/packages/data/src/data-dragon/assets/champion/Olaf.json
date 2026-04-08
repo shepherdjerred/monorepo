@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Olaf": {
       "id": "Olaf",
@@ -424,7 +424,7 @@
           "id": "OlafAxeThrowCast",
           "name": "Undertow",
           "description": "Olaf throws an axe into the ground at a target location, dealing damage to enemies it passes through and reducing their Armor and Move Speed. If Olaf picks up the axe, the ability's cooldown is reset.",
-          "tooltip": "Olaf throws an axe, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>Slowing</status> by {{ slowamount*100 }}% for up to {{ e3 }} seconds (based on distance travelled). Champions hit lose <scaleArmor>{{ shredamount*100 }}% Armor</scaleArmor> for {{ debuffduration }} seconds.<br /><br />If Olaf picks up the axe, this Ability's Cooldown is reduced to {{ tooltipcdrefund }} seconds, or fully refunded if {{ tooltipcdrefund }} seconds has elapsed.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Olaf throws an axe, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>Slowing</status> by {{ slowamount*100 }}% for up to {{ maxslowduration }} seconds (based on distance travelled). Champions hit lose <scaleArmor>{{ shredamount*100 }}% Armor</scaleArmor> for {{ debuffduration }} seconds.<br /><br />If Olaf picks up the axe, this Ability's Cooldown is reduced to {{ tooltipcdrefund }} seconds, or fully refunded if {{ tooltipcdrefund }} seconds has elapsed.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Slow", "Monster Damage", "Mana Cost"],
             "effect": [
@@ -444,7 +444,7 @@
             null,
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
-            [3, 3, 3, 3, 3],
+            [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
@@ -457,7 +457,7 @@
             null,
             "0",
             "0",
-            "3",
+            "0",
             "0",
             "0",
             "0",

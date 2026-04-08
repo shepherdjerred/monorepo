@@ -57,17 +57,13 @@ export async function executePlayerList(
     );
 
     const lines: string[] = [];
-    lines.push(
-      `# 👥 All Players (${players.length.toString()})`,
-    );
+    lines.push(`# 👥 All Players (${players.length.toString()})`);
     lines.push("");
 
     for (const player of players) {
       const accountCount = player.accounts.length;
       const subCount = player.subscriptions.length;
-      const discordLink = player.discordId
-        ? ` · <@${player.discordId}>`
-        : "";
+      const discordLink = player.discordId ? ` · <@${player.discordId}>` : "";
       const accountText = `${accountCount.toString()} account${accountCount === 1 ? "" : "s"}`;
       const subText = `${subCount.toString()} sub${subCount === 1 ? "" : "s"}`;
 

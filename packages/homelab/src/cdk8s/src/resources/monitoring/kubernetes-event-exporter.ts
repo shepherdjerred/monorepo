@@ -5,10 +5,16 @@ import {
   KubeConfigMap,
   KubeDeployment,
   KubeServiceAccount,
+  Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import { escapeHelmGoTemplate } from "./monitoring/rules/shared.ts";
-
 const EVENT_EXPORTER_IMAGE = "ghcr.io/resmoio/kubernetes-event-exporter:v1.7";
+
+// Escapes Go template syntax for JSON-rendered Helm templates (cdk8s outputs JSON).
+// Uses backtick-based Go template strings which survive JSON encoding, unlike
+// the standard escapeHelmGoTemplate which uses double quotes that get JSON-escaped.
+function escapeGoTemplateForJson(template: string): string {
+  return template.replaceAll(/\{\{(.*?)\}\}/g, "{{ `{{` }}$1{{ `}}` }}");
+}
 
 export function createKubernetesEventExporter(chart: Chart) {
   const namespace = "prometheus";
@@ -72,7 +78,7 @@ export function createKubernetesEventExporter(chart: Chart) {
       namespace,
     },
     data: {
-      "config.yaml": escapeHelmGoTemplate(`
+      "config.yaml": escapeGoTemplateForJson(`
 logLevel: info
 logFormat: json
 maxEventAgeSeconds: 60
@@ -135,6 +141,16 @@ receivers:
                   readOnly: true,
                 },
               ],
+              resources: {
+                requests: {
+                  cpu: Quantity.fromString("50m"),
+                  memory: Quantity.fromString("64Mi"),
+                },
+                limits: {
+                  cpu: Quantity.fromString("100m"),
+                  memory: Quantity.fromString("128Mi"),
+                },
+              },
               securityContext: {
                 runAsNonRoot: true,
                 readOnlyRootFilesystem: true,

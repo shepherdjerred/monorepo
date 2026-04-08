@@ -43,6 +43,7 @@ docs/
 - Name files with `<date>_kebab-case` (e.g., `2026-02-22_ci-pipeline.md`)
 - Update `index.md` when adding new docs
 - Prefer updating existing docs over creating new ones
+- Plans must be raw Markdown — do not generate PDF or Typst renderings alongside `.md` files
 
 ## Keeping Things Tidy
 

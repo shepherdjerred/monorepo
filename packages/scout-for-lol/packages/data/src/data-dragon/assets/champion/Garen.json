@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Garen": {
       "id": "Garen",
@@ -305,6 +305,12 @@
           "parentSkin": 33
         },
         {
+          "id": "86043",
+          "num": 43,
+          "name": "Pengu Garen",
+          "chromas": false
+        },
+        {
           "id": "86044",
           "num": 44,
           "name": "Fallen God-King Garen",
@@ -321,13 +327,13 @@
           "id": "86046",
           "num": 46,
           "name": "Visions of the Fallen Garen",
-          "chromas": false
+          "chromas": true
         },
         {
           "id": "86047",
           "num": 47,
           "name": "Visions of the Fallen Garen (Ruby)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 46
         },
         {

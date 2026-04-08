@@ -360,8 +360,17 @@ export class Monorepo {
     depDirs: Directory[] = [],
     version: string = "dev",
     gitSha: string = "unknown",
+    usePrisma: boolean = false,
   ): Container {
-    return buildImageHelper(pkgDir, pkg, depNames, depDirs, version, gitSha);
+    return buildImageHelper(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      version,
+      gitSha,
+      usePrisma,
+    );
   }
 
   /** Push a built image to a registry under one or more tags. Returns digest of the first tag. */
@@ -376,6 +385,7 @@ export class Monorepo {
     depDirs: Directory[] = [],
     version: string = "dev",
     gitSha: string = "unknown",
+    usePrisma: boolean = false,
   ): Promise<string> {
     return pushImageHelper(
       pkgDir,
@@ -387,6 +397,7 @@ export class Monorepo {
       depDirs,
       version,
       gitSha,
+      usePrisma,
     );
   }
 
@@ -978,7 +989,7 @@ export class Monorepo {
     ).stdout();
   }
 
-  /** Publish an npm package. Set devVersion for dev releases (--tag dev), leave empty for prod (--tag latest). */
+  /** Publish an npm package. Set devSuffix for dev releases (--tag dev, version becomes <pkg-version>-dev.<suffix>), leave empty for prod (--tag latest). */
   @func({ cache: "never" })
   async publishNpm(
     pkgDir: Directory,
@@ -988,7 +999,7 @@ export class Monorepo {
     depDirs: Directory[] = [],
     dryrun = false,
     tsconfig: File | null = null,
-    devVersion: string = "",
+    devSuffix: string = "",
   ): Promise<string> {
     return publishNpmHelper(
       pkgDir,
@@ -998,7 +1009,7 @@ export class Monorepo {
       depDirs,
       dryrun,
       tsconfig,
-      devVersion,
+      devSuffix,
     ).stdout();
   }
 

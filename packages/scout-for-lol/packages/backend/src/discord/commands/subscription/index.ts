@@ -77,9 +77,7 @@ export const subscriptionCommand = new SlashCommandBuilder()
   .addSubcommand((subcommand) =>
     subcommand
       .setName("add-channel")
-      .setDescription(
-        "Add an existing player to an additional channel",
-      )
+      .setDescription("Add an existing player to an additional channel")
       .addStringOption((option) =>
         option
           .setName("alias")
@@ -96,7 +94,9 @@ export const subscriptionCommand = new SlashCommandBuilder()
   .addSubcommand((subcommand) =>
     subcommand
       .setName("move")
-      .setDescription("Move a player's subscription from one channel to another")
+      .setDescription(
+        "Move a player's subscription from one channel to another",
+      )
       .addStringOption((option) =>
         option
           .setName("alias")

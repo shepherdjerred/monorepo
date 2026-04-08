@@ -52,14 +52,10 @@ if (normalizedDbPath) {
 // Remove CLAUDECODE env var: Prisma v6+ blocks db push when it detects
 // an AI agent environment. This is a local test database, not production.
 const { CLAUDECODE: _, CLAUDE_CODE_ENTRYPOINT: _2, ...cleanEnv } = Bun.env;
-spawnSync(
-  "bunx",
-  ["prisma", "db", "push", "--skip-generate", "--accept-data-loss"],
-  {
-    stdio: "pipe",
-    env: {
-      ...cleanEnv,
-      DATABASE_URL: `file:${normalizedDbPath}`,
-    },
+spawnSync("bunx", ["prisma", "db", "push", "--accept-data-loss"], {
+  stdio: "pipe",
+  env: {
+    ...cleanEnv,
+    DATABASE_URL: `file:${normalizedDbPath}`,
   },
-);
+});

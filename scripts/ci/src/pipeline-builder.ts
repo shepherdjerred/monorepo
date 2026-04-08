@@ -233,7 +233,9 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
         affected.buildAll,
       );
       if (npmToPublish.length > 0) {
-        steps.push(publishNpmGroup(npmToPublish, pkgKeyMap));
+        steps.push(
+          publishNpmGroup(npmToPublish, pkgKeyMap, affected.releasePleaseMerge),
+        );
       }
     }
 

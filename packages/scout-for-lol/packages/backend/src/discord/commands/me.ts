@@ -77,10 +77,10 @@ export async function executeMe(
   await interaction.deferReply({ ephemeral: true });
 
   try {
-    if (alias !== undefined) {
-      await lookupByAlias(interaction, guildId, alias);
-    } else {
+    if (alias === undefined) {
       await lookupByDiscordId(interaction, guildId, userId);
+    } else {
+      await lookupByAlias(interaction, guildId, alias);
     }
   } catch (error) {
     logger.error(`❌ Error in /me command:`, error);
@@ -153,9 +153,7 @@ function formatPlayerInfo(player: PlayerQueryResult): string {
   }
 
   // Accounts
-  sections.push(
-    `\n## 🎮 Accounts (${player.accounts.length.toString()})`,
-  );
+  sections.push(`\n## 🎮 Accounts (${player.accounts.length.toString()})`);
   if (player.accounts.length > 0) {
     for (const account of player.accounts) {
       sections.push(`• **${account.alias}** (${account.region.toUpperCase()})`);

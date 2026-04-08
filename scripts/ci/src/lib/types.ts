@@ -13,6 +13,8 @@ export interface AffectedPackages {
   hasNpmPackages: Set<string>;
   /** True when only version strings changed (commit-back). Skips image builds and version-commit-back. */
   versionBumpOnly: boolean;
+  /** True when the current commit is a release-please merge. Triggers prod npm publishes alongside dev. */
+  releasePleaseMerge: boolean;
 }
 
 /** A single Buildkite step. */

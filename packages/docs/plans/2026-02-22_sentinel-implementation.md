@@ -1,5 +1,9 @@
 # Implementation Plan: Sentinel — Autonomous Agent System
 
+## Status: On Hold
+
+Last updated: 2026-04-05
+
 ## Context
 
 Build an always-on autonomous agent system (`packages/sentinel`) that automates operational tasks: fix CI on main/release-please, triage PagerDuty alerts, investigate Scout for LoL/Bugsink failures, check cluster/app health, and act as a personal assistant. Agents investigate and propose — humans approve before write actions execute.

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Blitzcrank": {
       "id": "Blitzcrank",
@@ -456,6 +456,68 @@
           "name": "Beezcrank (Rainbow)",
           "chromas": false,
           "parentSkin": 56
+        },
+        {
+          "id": "53066",
+          "num": 66,
+          "name": "Bubble Bash Blitzcrank",
+          "chromas": false
+        },
+        {
+          "id": "53067",
+          "num": 67,
+          "name": "Bubble Bash Blitzcrank (Ruby)",
+          "chromas": true,
+          "parentSkin": 66
+        },
+        {
+          "id": "53068",
+          "num": 68,
+          "name": "Bubble Bash Blitzcrank (Catseye)",
+          "chromas": false,
+          "parentSkin": 66
+        },
+        {
+          "id": "53069",
+          "num": 69,
+          "name": "Bubble Bash Blitzcrank (Emerald)",
+          "chromas": false,
+          "parentSkin": 66
+        },
+        {
+          "id": "53070",
+          "num": 70,
+          "name": "Bubble Bash Blitzcrank (Turquoise)",
+          "chromas": false,
+          "parentSkin": 66
+        },
+        {
+          "id": "53071",
+          "num": 71,
+          "name": "Bubble Bash Blitzcrank (Pearl)",
+          "chromas": false,
+          "parentSkin": 66
+        },
+        {
+          "id": "53072",
+          "num": 72,
+          "name": "Bubble Bash Blitzcrank (Obsidian)",
+          "chromas": false,
+          "parentSkin": 66
+        },
+        {
+          "id": "53073",
+          "num": 73,
+          "name": "Bubble Bash Blitzcrank (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 66
+        },
+        {
+          "id": "53074",
+          "num": 74,
+          "name": "Bubble Bash Blitzcrank (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 66
         }
       ],
       "lore": "Blitzcrank is an enormous, near-indestructible automaton from Zaun, originally built to dispose of hazardous waste. However, he found this primary purpose too restricting, and modified his own form to better serve the fragile people of the Sump. Blitzcrank selflessly uses his strength and durability to protect others, extending a helpful metal fist or burst of energy to subdue any troublemakers.",

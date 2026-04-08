@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.6.1",
+  "version": "16.7.1",
   "data": {
     "Sejuani": {
       "id": "Sejuani",
@@ -340,6 +340,68 @@
           "name": "Poro Rider Sejuani (Tenfold Triumph)",
           "chromas": false,
           "parentSkin": 5
+        },
+        {
+          "id": "113048",
+          "num": 48,
+          "name": "Pug Trainer Sejuani",
+          "chromas": true
+        },
+        {
+          "id": "113049",
+          "num": 49,
+          "name": "Pug Trainer Sejuani (Ruby)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "113050",
+          "num": 50,
+          "name": "Pug Trainer Sejuani (Sapphire)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "113051",
+          "num": 51,
+          "name": "Pug Trainer Sejuani (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "113052",
+          "num": 52,
+          "name": "Pug Trainer Sejuani (Emerald)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "113053",
+          "num": 53,
+          "name": "Pug Trainer Sejuani (Catseye)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "113054",
+          "num": 54,
+          "name": "Pug Trainer Sejuani (Turquoise)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "113055",
+          "num": 55,
+          "name": "Pug Trainer Sejuani (Pearl)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "113056",
+          "num": 56,
+          "name": "Pug Trainer Sejuani (Obsidian)",
+          "chromas": false,
+          "parentSkin": 48
         }
       ],
       "lore": "Sejuani is the brutal, unforgiving Iceborn warmother of the Winter's Claw, one of the most feared tribes of the Freljord. Her people's survival is a constant, desperate battle against the elements, forcing them to raid Noxians, Demacians, and Avarosans alike to survive the harsh winters. Sejuani herself spearheads the most dangerous of these attacks from the saddle of her drüvask boar Bristle, using her True Ice flail to freeze and shatter her enemies.",
