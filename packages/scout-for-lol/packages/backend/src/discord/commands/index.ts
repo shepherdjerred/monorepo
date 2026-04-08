@@ -48,6 +48,10 @@ import { executeDebugForcePairingUpdate } from "#src/discord/commands/debug/forc
 import { executeSubscriptionAdd } from "#src/discord/commands/subscription/add.ts";
 import { executeSubscriptionDelete } from "#src/discord/commands/subscription/delete.ts";
 import { executeSubscriptionList } from "#src/discord/commands/subscription/list.ts";
+import { executeSubscriptionAddChannel } from "#src/discord/commands/subscription/add-channel.ts";
+import { executeSubscriptionMove } from "#src/discord/commands/subscription/move.ts";
+import { executeMe } from "#src/discord/commands/me.ts";
+import { executePlayerList } from "#src/discord/commands/admin/player-list.ts";
 
 export function handleCommands(client: Client) {
   logger.info("⚡ Setting up Discord command handlers");
@@ -121,6 +125,10 @@ export function handleCommands(client: Client) {
               .with("add", () => executeSubscriptionAdd(interaction))
               .with("delete", () => executeSubscriptionDelete(interaction))
               .with("list", () => executeSubscriptionList(interaction))
+              .with("add-channel", () =>
+                executeSubscriptionAddChannel(interaction),
+              )
+              .with("move", () => executeSubscriptionMove(interaction))
               .otherwise(() => {
                 logger.warn(
                   `⚠️  Unknown subscription subcommand: ${subcommandName}`,
@@ -207,6 +215,7 @@ export function handleCommands(client: Client) {
                 executePlayerUnlinkDiscord(interaction),
               )
               .with("player-view", () => executePlayerView(interaction))
+              .with("player-list", () => executePlayerList(interaction))
               .otherwise(() => {
                 logger.warn(`⚠️  Unknown admin subcommand: ${subcommandName}`);
                 return interaction.reply({
@@ -261,6 +270,12 @@ export function handleCommands(client: Client) {
                   ephemeral: true,
                 });
               });
+
+            break;
+          }
+          case "me": {
+            logger.info("👤 Executing me command");
+            await executeMe(interaction);
 
             break;
           }
