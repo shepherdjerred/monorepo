@@ -25,7 +25,7 @@ resource "github_repository_ruleset" "monorepo_main" {
       strict_required_status_checks_policy = false
 
       required_check {
-        context = "buildkite/monorepo/ci-complete"
+        context = "buildkite/monorepo/pr/white-check-mark-ci-complete"
       }
     }
   }
