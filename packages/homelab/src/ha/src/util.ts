@@ -242,13 +242,14 @@ export function startRoombaWithVerification(
   roomba: ByIdProxy<"vacuum.roomba">,
   options?: { delayMinutes?: number },
 ) {
-  const delay = options?.delayMinutes ?? 3;
+  const delay = options?.delayMinutes ?? 5;
 
   verifyAfterDelay({
     entityId: "vacuum.roomba",
     workflowName: "roomba_start",
     getActualState: () => roomba.state,
-    check: "cleaning",
+    check: (state) => state === "cleaning" || state === "returning",
+    description: "cleaning or returning",
     delay: { amount: delay, unit: "m" },
     retries: 3,
     retryDelay: { amount: 1, unit: "m" },

@@ -82,6 +82,8 @@ export function createBugsinkHousekeepingCronJob(
                   args: [
                     `
 export DATABASE_URL=$(cat /db-url/url)
+echo "Deleting events older than 180 days..."
+bugsink-manage delete_old_events --days 180
 echo "Running vacuum_tags..."
 bugsink-manage vacuum_tags
 echo "Running vacuum_files..."

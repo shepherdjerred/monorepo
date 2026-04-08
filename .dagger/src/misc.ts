@@ -394,12 +394,19 @@ export async function smokeTestCaddyS3ProxyHelper(): Promise<string> {
 
 /**
  * Smoke test obsidian-headless image.
- * Verifies: bun runtime works and obsidian-headless CLI is installed.
+ * Verifies: Node runtime works, obsidian-headless CLI is installed,
+ * and the better-sqlite3 native addon loads successfully.
+ * The native module check is critical — better-sqlite3 is a compiled
+ * Node addon that fails under non-Node runtimes (e.g. Bun).
  */
 export async function smokeTestObsidianHeadlessHelper(): Promise<string> {
   const container = buildObsidianHeadlessImageHelper()
     .withEntrypoint([])
-    .withExec(["ob", "--help"]);
+    // Verify the CLI is installed and responds
+    .withExec(["ob", "--help"])
+    // Verify the better-sqlite3 native addon loads — this is the check
+    // that would have caught the oven/bun:slim breakage.
+    .withExec(["node", "-e", "require('better-sqlite3')"]);
 
   return runSmokeTest(container, []);
 }

@@ -387,7 +387,9 @@ export async function pushCaddyS3ProxyImageHelper(
 
 /**
  * Build the obsidian-headless image.
- * Bun-based, installs obsidian-headless CLI globally for Obsidian vault sync.
+ * Node-based, installs obsidian-headless CLI globally for Obsidian vault sync.
+ * Uses Node instead of Bun because obsidian-headless depends on better-sqlite3,
+ * a native Node addon that Bun does not support.
  */
 export function buildObsidianHeadlessImageHelper(
   version: string = "dev",
@@ -395,13 +397,13 @@ export function buildObsidianHeadlessImageHelper(
 ): Container {
   return dag
     .container()
-    .from("oven/bun:slim")
+    .from("node:22-slim")
     .withExec([
       "sh",
       "-c",
       "apt-get update && apt-get install -y python3 build-essential && rm -rf /var/lib/apt/lists/*",
     ])
-    .withExec(["bun", "add", "-g", "obsidian-headless"])
+    .withExec(["npm", "install", "-g", "obsidian-headless"])
     .withExec(["mkdir", "-p", "/vault"])
     .withLabel(
       "org.opencontainers.image.source",
