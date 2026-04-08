@@ -10,6 +10,7 @@ import {
 import { sendPrematchNotification } from "#src/league/tasks/prematch/prematch-notification.ts";
 import { MAX_PLAYERS_PER_RUN } from "@scout-for-lol/data/polling-config.ts";
 import { shouldCheckPlayer } from "#src/utils/polling-intervals.ts";
+import { CircuitBreaker } from "#src/utils/circuit-breaker.ts";
 import { createLogger } from "#src/logger.ts";
 import {
   prematchDetectionsTotal,
@@ -19,6 +20,13 @@ import {
 import * as Sentry from "@sentry/bun";
 
 const logger = createLogger("prematch-active-game-detection");
+
+/**
+ * Circuit breaker for the Riot spectator API. When the API returns repeated
+ * 502/503 errors the circuit opens and remaining players in the current
+ * polling cycle are skipped, reducing wasted requests and Bugsink noise.
+ */
+const spectatorCircuit = new CircuitBreaker("spectator-api");
 
 let isCheckInProgress = false;
 let checkStartTime: number | undefined;
@@ -134,12 +142,36 @@ export async function checkActiveGames(): Promise<void> {
 
     let gamesDetected = 0;
 
+    let playersSkippedByCircuit = 0;
+
     for (const { config: player } of playersToCheck) {
       const puuid = player.league.leagueAccount.puuid;
       const region = player.league.leagueAccount.region;
 
+      // Circuit breaker: skip remaining players when the spectator API is down
+      if (spectatorCircuit.shouldSkip()) {
+        playersSkippedByCircuit++;
+        prematchPollingSkipsTotal.inc({ reason: "circuit_open" });
+        continue;
+      }
+
       try {
-        const gameInfo = await getActiveGame(puuid, region);
+        const { game: gameInfo, upstreamError } = await getActiveGame(
+          puuid,
+          region,
+        );
+
+        if (upstreamError) {
+          // Feed the failure into the circuit breaker (rate-limited Sentry reporting)
+          spectatorCircuit.recordFailure(
+            new Error(`Spectator API upstream error for ${puuid}`),
+            { source: "spectator", puuid, region },
+          );
+          continue;
+        }
+
+        // Any non-upstream response (success, 404, validation error) means the API is reachable
+        spectatorCircuit.recordSuccess();
 
         if (!gameInfo) {
           continue;
@@ -193,6 +225,12 @@ export async function checkActiveGames(): Promise<void> {
           },
         });
       }
+    }
+
+    if (playersSkippedByCircuit > 0) {
+      logger.warn(
+        `⚡ Circuit breaker skipped ${playersSkippedByCircuit.toString()} player(s) due to spectator API outage`,
+      );
     }
 
     // Cleanup expired entries

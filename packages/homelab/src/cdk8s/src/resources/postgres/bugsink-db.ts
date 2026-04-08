@@ -37,7 +37,7 @@ export function createBugsinkPostgreSQLDatabase(chart: Chart) {
           random_page_cost: "1.1",
           effective_io_concurrency: "200",
           work_mem: "4MB",
-          min_wal_size: "512MB",
+          min_wal_size: "128MB",
           max_wal_size: "2GB",
           log_statement: "none",
           log_min_duration_statement: "1000",
