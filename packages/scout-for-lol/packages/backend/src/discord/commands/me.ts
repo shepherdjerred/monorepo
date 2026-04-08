@@ -77,11 +77,9 @@ export async function executeMe(
   await interaction.deferReply({ ephemeral: true });
 
   try {
-    if (alias === undefined) {
-      await lookupByDiscordId(interaction, guildId, userId);
-    } else {
-      await lookupByAlias(interaction, guildId, alias);
-    }
+    await (alias === undefined
+      ? lookupByDiscordId(interaction, guildId, userId)
+      : lookupByAlias(interaction, guildId, alias));
   } catch (error) {
     logger.error(`❌ Error in /me command:`, error);
     await interaction.editReply({
