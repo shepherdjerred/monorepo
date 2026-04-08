@@ -1,3 +1,3 @@
 // Bun Snapshot v1, https://bun.sh/docs/test/snapshots
 
-exports[`loading screen renders image for ranked-flex-5v5.json 1`] = `"8957746b89fb3b1ec76b4d97bd223e7a3adc60ff0c535731375238e197863a6b"`;
+exports[`loading screen renders image for ranked-flex-5v5.json 1`] = `"edebfeba797ca8a1887c7126a43ae092048a5a254673e12b8fa9938dbdea2142"`;

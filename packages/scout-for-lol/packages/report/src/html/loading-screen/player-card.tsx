@@ -14,14 +14,14 @@ import {
 import { getRuneIconUrl } from "#src/dataDragon/runes.ts";
 import { first, keys, pickBy } from "remeda";
 
+const CARD_WIDTH = 280;
+const CARD_HEIGHT = 480;
+const ICON_SIZE = 34;
+const RUNE_SIZE = 38;
+
 function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
-
-const CARD_WIDTH = 280;
-const CARD_HEIGHT = 480;
-const ICON_SIZE = 28;
-const RUNE_SIZE = 32;
 
 function resolveSpellImage(spellId: number): string | undefined {
   const name = first(
@@ -114,52 +114,13 @@ function RuneIcons({
           src={getRuneIconUrl(secondaryInfo.icon)}
           alt=""
           style={{
-            width: `${(RUNE_SIZE - 6).toString()}px`,
-            height: `${(RUNE_SIZE - 6).toString()}px`,
+            width: `${(RUNE_SIZE - 8).toString()}px`,
+            height: `${(RUNE_SIZE - 8).toString()}px`,
             borderRadius: "50%",
             backgroundColor: "rgba(0, 0, 0, 0.4)",
           }}
         />
       )}
-    </div>
-  );
-}
-
-function RankDisplay({
-  participant,
-}: {
-  participant: LoadingScreenParticipant;
-}) {
-  // Show solo queue rank, falling back to flex
-  const rank = participant.ranks?.solo ?? participant.ranks?.flex;
-  if (rank === undefined) {
-    return null;
-  }
-
-  const { tier, division } = rank;
-
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "4px",
-        backgroundColor: "rgba(0, 0, 0, 0.7)",
-        borderRadius: "4px",
-        padding: "2px 6px",
-        border: `1px solid ${palette.gold[5]}`,
-      }}
-    >
-      <span
-        style={{
-          fontSize: "12px",
-          fontFamily: font.body,
-          fontWeight: 700,
-          color: palette.gold[2],
-        }}
-      >
-        {capitalize(tier)} {divisionToString(division)}
-      </span>
     </div>
   );
 }
@@ -185,6 +146,12 @@ export function PlayerCard({
         : palette.grey[2];
 
   const borderWidth = participant.isTrackedPlayer ? "3px" : "2px";
+
+  const rank = participant.ranks?.solo ?? participant.ranks?.flex;
+  const rankText =
+    rank === undefined
+      ? "Unranked"
+      : `${capitalize(rank.tier)} ${divisionToString(rank.division)}`;
 
   return (
     <div
@@ -228,19 +195,7 @@ export function PlayerCard({
         />
       )}
 
-      {/* Rank badge (top-right) */}
-      <div
-        style={{
-          position: "absolute",
-          top: "6px",
-          right: "6px",
-          display: "flex",
-        }}
-      >
-        <RankDisplay participant={participant} />
-      </div>
-
-      {/* Bottom overlay with player info */}
+      {/* Bottom overlay with all player info */}
       <div
         style={{
           position: "absolute",
@@ -249,41 +204,87 @@ export function PlayerCard({
           right: 0,
           display: "flex",
           flexDirection: "column",
-          padding: "8px",
+          padding: "10px",
+          paddingTop: "32px",
           background: "linear-gradient(transparent, rgba(0, 0, 0, 0.85) 30%)",
         }}
       >
-        {/* Summoner name */}
-        <span
-          style={{
-            fontSize: "14px",
-            fontFamily: font.title,
-            fontWeight: 700,
-            color: participant.isTrackedPlayer
-              ? palette.gold.bright
-              : palette.gold[1],
-            textShadow: "0 1px 3px rgba(0,0,0,0.9)",
-            marginBottom: "6px",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {participant.summonerName}
-        </span>
-
-        {/* Runes and spells row */}
+        {/* Runes/spells row with name + rank in center */}
         <div
           style={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "flex-end",
+            width: "100%",
           }}
         >
           <RuneIcons
             keystoneRuneId={participant.keystoneRuneId}
             secondaryTreeId={participant.secondaryTreeId}
           />
+
+          {/* Center: champion name, summoner name, rank */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              flex: 1,
+              marginLeft: "6px",
+              marginRight: "6px",
+              overflow: "hidden",
+            }}
+          >
+            {/* Champion name */}
+            <span
+              style={{
+                fontSize: "13px",
+                fontFamily: font.body,
+                fontWeight: 400,
+                color: palette.grey[1],
+                textShadow: "0 1px 3px rgba(0,0,0,0.9)",
+                textTransform: "uppercase",
+                letterSpacing: "1px",
+              }}
+            >
+              {participant.championDisplayName}
+            </span>
+
+            {/* Summoner name */}
+            <span
+              style={{
+                fontSize: "18px",
+                fontFamily: font.title,
+                fontWeight: 700,
+                color: participant.isTrackedPlayer
+                  ? palette.gold.bright
+                  : palette.gold[1],
+                textShadow: "0 1px 3px rgba(0,0,0,0.9)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                maxWidth: "100%",
+              }}
+            >
+              {participant.summonerName}
+            </span>
+
+            {/* Rank tier text */}
+            <span
+              style={{
+                fontSize: "12px",
+                fontFamily: font.body,
+                fontWeight: 700,
+                color: palette.gold[3],
+                textShadow: "0 1px 2px rgba(0,0,0,0.9)",
+                textTransform: "uppercase",
+                letterSpacing: "1px",
+              }}
+            >
+              {rankText}
+            </span>
+          </div>
+
           <SummonerSpells
             spell1Id={participant.spell1Id}
             spell2Id={participant.spell2Id}

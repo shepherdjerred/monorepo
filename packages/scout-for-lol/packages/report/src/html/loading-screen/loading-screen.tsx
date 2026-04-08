@@ -21,7 +21,7 @@ export function LoadingScreen({ data }: { data: LoadingScreenData }) {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        padding: "32px",
+        padding: "16px 32px 32px 32px",
         background: `linear-gradient(180deg, ${palette.grey[6]} 0%, ${palette.blue[6]} 50%, ${palette.grey[6]} 100%)`,
         fontFamily: "Spiegel",
       }}

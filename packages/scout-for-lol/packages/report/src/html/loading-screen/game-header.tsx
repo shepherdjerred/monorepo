@@ -17,8 +17,8 @@ function BanIcon({ ban }: { ban: LoadingScreenBan }) {
   return (
     <div
       style={{
-        width: "36px",
-        height: "36px",
+        width: "48px",
+        height: "48px",
         display: "flex",
         position: "relative",
         borderRadius: "4px",
@@ -64,7 +64,7 @@ function BanIcon({ ban }: { ban: LoadingScreenBan }) {
       >
         <span
           style={{
-            fontSize: "24px",
+            fontSize: "32px",
             color: "#ff3333",
             fontWeight: 900,
             textShadow: "0 0 4px rgba(0,0,0,0.8)",
@@ -77,6 +77,27 @@ function BanIcon({ ban }: { ban: LoadingScreenBan }) {
   );
 }
 
+const BANS_PER_TEAM = 5;
+
+function EmptyBanSlot({ team }: { team: "blue" | "red" }) {
+  const teamColor = team === "blue" ? palette.teams.blue : palette.teams.red;
+
+  return (
+    <div
+      style={{
+        width: "48px",
+        height: "48px",
+        display: "flex",
+        borderRadius: "4px",
+        overflow: "hidden",
+        border: `1px solid ${teamColor}`,
+        opacity: 0.4,
+        backgroundColor: palette.grey[5],
+      }}
+    />
+  );
+}
+
 function BansRow({
   bans,
   team,
@@ -85,9 +106,7 @@ function BansRow({
   team: "blue" | "red";
 }) {
   const teamBans = bans.filter((b) => b.team === team);
-  if (teamBans.length === 0) {
-    return null;
-  }
+  const emptySlots = BANS_PER_TEAM - teamBans.length;
 
   return (
     <div style={{ display: "flex", gap: "4px" }}>
@@ -97,13 +116,14 @@ function BansRow({
           ban={ban}
         />
       ))}
+      {Array.from({ length: emptySlots }, (_, idx) => (
+        <EmptyBanSlot key={`empty-${team}-${idx.toString()}`} team={team} />
+      ))}
     </div>
   );
 }
 
 export function GameHeader({ data }: { data: LoadingScreenData }) {
-  const hasBans = data.bans.length > 0;
-
   return (
     <div
       style={{
@@ -114,88 +134,41 @@ export function GameHeader({ data }: { data: LoadingScreenData }) {
         marginBottom: "16px",
       }}
     >
-      {/* Mode label + ranked badge */}
+      {/* Mode label */}
+      <span
+        style={{
+          fontSize: "42px",
+          fontFamily: font.title,
+          fontWeight: 700,
+          color: palette.gold[2],
+          textTransform: "uppercase",
+          letterSpacing: "2px",
+        }}
+      >
+        {data.queueDisplayName}
+      </span>
+
+      {/* Bans row */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "12px",
+          gap: "16px",
         }}
       >
+        <BansRow bans={data.bans} team="blue" />
         <span
           style={{
-            fontSize: "28px",
-            fontFamily: font.title,
-            fontWeight: 700,
-            color: palette.gold[2],
+            fontSize: "12px",
+            fontFamily: font.body,
+            color: palette.grey[2],
             textTransform: "uppercase",
-            letterSpacing: "2px",
           }}
         >
-          {data.queueDisplayName}
+          Bans
         </span>
-
-        {data.isRanked && (
-          <div
-            style={{
-              display: "flex",
-              backgroundColor: palette.gold[6],
-              border: `1px solid ${palette.gold[4]}`,
-              borderRadius: "4px",
-              padding: "2px 10px",
-            }}
-          >
-            <span
-              style={{
-                fontSize: "14px",
-                fontFamily: font.body,
-                fontWeight: 700,
-                color: palette.gold.bright,
-                textTransform: "uppercase",
-                letterSpacing: "1px",
-              }}
-            >
-              Ranked
-            </span>
-          </div>
-        )}
+        <BansRow bans={data.bans} team="red" />
       </div>
-
-      {/* Map name */}
-      <span
-        style={{
-          fontSize: "14px",
-          fontFamily: font.body,
-          color: palette.grey[1],
-          letterSpacing: "1px",
-        }}
-      >
-        {data.mapName}
-      </span>
-
-      {/* Bans row */}
-      {hasBans && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "16px",
-          }}
-        >
-          <BansRow bans={data.bans} team="blue" />
-          <span
-            style={{
-              fontSize: "12px",
-              fontFamily: font.body,
-              color: palette.grey[2],
-              textTransform: "uppercase",
-            }}
-          >
-            Bans
-          </span>
-          <BansRow bans={data.bans} team="red" />
-        </div>
-      )}
     </div>
   );
 }

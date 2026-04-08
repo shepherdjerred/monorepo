@@ -10,7 +10,7 @@ import { svgToPng } from "#src/html/index.tsx";
 
 // Standard/ARAM: 5 cards per row × 2 rows + header/bans
 const STANDARD_WIDTH = 1600;
-const STANDARD_HEIGHT = 1200;
+const STANDARD_HEIGHT = 1350;
 // Arena: 4 rows × 2 team pairs
 const ARENA_WIDTH = 1600;
 const ARENA_HEIGHT = 1400;

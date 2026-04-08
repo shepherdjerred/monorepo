@@ -10,10 +10,10 @@ import { z } from "zod";
 import { match } from "ts-pattern";
 
 // in a Node.js environment, we want to grab these from the file system
-let images: Record<Tier, string>;
+export let rankImages: Record<Tier, string>;
 
 if (typeof Bun !== "undefined") {
-  images = z.record(TierSchema, z.string()).parse(
+  rankImages = z.record(TierSchema, z.string()).parse(
     Object.fromEntries(
       await Promise.all(
         TierSchema.options.map(async (tier): Promise<[Tier, string]> => {
@@ -46,7 +46,7 @@ export function RankedBadge({
 
   // Use the pre-loaded images in Bun environment, or construct a URL for browser
   const badge = match(environment)
-    .with("bun", () => `data:image/png;base64,${images[newRank.tier]}`)
+    .with("bun", () => `data:image/png;base64,${rankImages[newRank.tier]}`)
     .with("browser", () => {
       // Construct the import path for Vite to handle at build time
       const assetPrefix = "assets/Rank=";
