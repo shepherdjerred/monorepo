@@ -73,9 +73,7 @@ function resolveTeam(
   }
   const team = parseTeam(teamId);
   if (team === undefined) {
-    logger.warn(
-      `Unknown team ID ${teamId.toString()}, defaulting to blue`,
-    );
+    logger.warn(`Unknown team ID ${teamId.toString()}, defaulting to blue`);
     return "blue";
   }
   return team;
@@ -112,8 +110,7 @@ async function buildParticipant(
         ? undefined
         : RuneIdSchema.parse(participant.perks.perkSubStyle),
     isTrackedPlayer:
-      participant.puuid !== null &&
-      trackedPuuids.has(participant.puuid),
+      participant.puuid !== null && trackedPuuids.has(participant.puuid),
   };
 }
 
@@ -128,9 +125,7 @@ function buildBans(gameInfo: RawCurrentGameInfo): LoadingScreenBan[] {
     }
     const team = parseTeam(ban.teamId);
     if (team === undefined) {
-      logger.warn(
-        `Unknown ban team ID ${ban.teamId.toString()}, skipping`,
-      );
+      logger.warn(`Unknown ban team ID ${ban.teamId.toString()}, skipping`);
       continue;
     }
     bans.push({
@@ -160,8 +155,7 @@ export async function buildLoadingScreenData(
     ? queueTypeToDisplayString(queueType)
     : gameInfo.gameMode;
   const isRanked =
-    gameInfo.gameQueueConfigId === 420 ||
-    gameInfo.gameQueueConfigId === 440;
+    gameInfo.gameQueueConfigId === 420 || gameInfo.gameQueueConfigId === 440;
   const layout = determineLayout(gameInfo.gameQueueConfigId);
   const mapName = mapIdToName(gameInfo.mapId);
 

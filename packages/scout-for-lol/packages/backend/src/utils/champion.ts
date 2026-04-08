@@ -166,10 +166,7 @@ export function resolveChampionKey(championId: number): string {
     // Convert to PascalCase for Data Dragon key format
     const parts = rawName.split("_");
     const pascalCase = parts
-      .map(
-        (part) =>
-          part.charAt(0).toUpperCase() + part.slice(1).toLowerCase(),
-      )
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
       .join("");
 
     return normalizeChampionName(pascalCase);

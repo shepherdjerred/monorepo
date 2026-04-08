@@ -712,10 +712,7 @@
         "Duelist's Dance shows you where Fiora will try to attack from, so be ready to punish her when she tries.",
         "Be careful when casting immobilizing disables on Fiora. If her Riposte is available, she can turn their power against you."
       ],
-      "tags": [
-        "Fighter",
-        "Assassin"
-      ],
+      "tags": ["Fighter", "Assassin"],
       "partype": "Mana",
       "info": {
         "attack": 10,
@@ -752,11 +749,7 @@
           "description": "Fiora lunges in a direction and stabs a nearby enemy, dealing physical damage and applying on-hit effects.",
           "tooltip": "Fiora lunges in a direction and stabs the closest enemy, ward, or structure, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>. The strike will prioritize <keywordMajor>Vitals</keywordMajor> and enemies it will kill.<br /><br />If Fiora strikes an enemy, this Ability's Cooldown is reduced by {{ cdrefundpercent*100 }}%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Bonus AD Ratio",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Bonus AD Ratio", "Cooldown"],
             "effect": [
               "{{ damage }} -> {{ damageNL }}",
               "{{ badratio*100.000000 }}% -> {{ badrationl*100.000000 }}%",
@@ -764,95 +757,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            13,
-            11.25,
-            9.5,
-            7.75,
-            6
-          ],
+          "cooldown": [13, 11.25, 9.5, 7.75, 6],
           "cooldownBurn": "13/11.25/9.5/7.75/6",
-          "cost": [
-            20,
-            20,
-            20,
-            20,
-            20
-          ],
+          "cost": [20, 20, 20, 20, 20],
           "costBurn": "20",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -870,13 +791,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            400,
-            400,
-            400,
-            400,
-            400
-          ],
+          "range": [400, 400, 400, 400, 400],
           "rangeBurn": "400",
           "image": {
             "full": "FioraQ.png",
@@ -895,105 +810,30 @@
           "description": "Fiora parries all incoming damage and disables for a short time, then stabs in a direction. This stab slows the first enemy champion hit, or stuns them if Fiora blocked an immobilizing effect with this ability.",
           "tooltip": "Fiora parries all incoming damage, disables, and negative effects for {{ parryduration }} seconds, then stabs. The stab deals <magicDamage>{{ stabdamage }} magic damage</magicDamage> to the first champion hit and <status>Slows</status> <speed>Move Speed</speed> by {{ msslowpercent*-100 }}%<attackSpeed> and Attack Speed by {{ attackslowpercent*-100 }}% </attackSpeed> for {{ ccduration }} seconds. If Fiora parries an <status>Immobilizing</status> effect, the stabbed enemy is <status>Stunned</status> rather than <status>Slowed</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Cooldown"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            24,
-            22,
-            20,
-            18,
-            16
-          ],
+          "cooldown": [24, 22, 20, 18, 16],
           "cooldownBurn": "24/22/20/18/16",
-          "cost": [
-            50,
-            50,
-            50,
-            50,
-            50
-          ],
+          "cost": [50, 50, 50, 50, 50],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -1011,13 +851,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            750,
-            750,
-            750,
-            750,
-            750
-          ],
+          "range": [750, 750, 750, 750, 750],
           "rangeBurn": "750",
           "image": {
             "full": "FioraW.png",
@@ -1036,11 +870,7 @@
           "description": "Fiora has increased attack speed for the next two attacks. The first attack slows the target, and the second attack will critically strike.",
           "tooltip": "Fiora gains <attackSpeed>{{ aspercent*100 }}% Attack Speed</attackSpeed> for her next two Attacks. The first Attack <status>Slows</status> by {{ slowpercent*-100 }}% for {{ slowduration }} second. The second Attack always critically strikes for <physicalDamage>{{ attacktwopercenttad*100 }}% damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Critical Strike Damage",
-              "Cooldown",
-              "Attack Speed"
-            ],
+            "label": ["Critical Strike Damage", "Cooldown", "Attack Speed"],
             "effect": [
               "{{ attacktwopercenttad*100.000000 }}% -> {{ attacktwopercenttadnl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -1048,95 +878,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            11,
-            10,
-            9,
-            8,
-            7
-          ],
+          "cooldown": [11, 10, 9, 8, 7],
           "cooldownBurn": "11/10/9/8/7",
-          "cost": [
-            40,
-            40,
-            40,
-            40,
-            40
-          ],
+          "cost": [40, 40, 40, 40, 40],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -1154,13 +912,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            425,
-            425,
-            425,
-            425,
-            425
-          ],
+          "range": [425, 425, 425, 425, 425],
           "rangeBurn": "425",
           "image": {
             "full": "FioraE.png",
@@ -1179,11 +931,7 @@
           "description": "Fiora reveals all four Vitals on an enemy champion and gains Move Speed while near them. If Fiora hits all four Vitals or if the target dies after she has hit at least one, Fiora and her allies in the area are healed over the next few seconds.",
           "tooltip": "<spellPassive>Passive:</spellPassive> <spellName>Duelist's Dance</spellName> <speed>Move Speed</speed> bonus is increased to {{ percentms*100 }}%.<br /><br /><spellActive>Active:</spellActive> Fiora reveals all four <keywordMajor>Vitals</keywordMajor> on a champion for a max of <trueDamage>{{ spell.fiorapassive:rdamagetotal }} max Health true damage</trueDamage> and gains <spellName>Duelist's Dance's</spellName> <speed>Move Speed</speed> bonus while near the target.<br /><br />If Fiora strikes all four <keywordMajor>Vitals</keywordMajor> within {{ markduration }} seconds or if the target dies after she has hit at least one, Fiora restores <healing>{{ healpersecondcalc }} Health per second</healing> to surrounding allied champions for {{ healduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Cooldown",
-              "Duelist Move Speed",
-              "Heal Per Second"
-            ],
+            "label": ["Cooldown", "Duelist Move Speed", "Heal Per Second"],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ percentms*100.000000 }}% -> {{ percentmsnl*100.000000 }}%",
@@ -1191,71 +939,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            110,
-            90,
-            70
-          ],
+          "cooldown": [110, 90, 70],
           "cooldownBurn": "110/90/70",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -1273,11 +973,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            500,
-            500,
-            500
-          ],
+          "range": [500, 500, 500],
           "rangeBurn": "500",
           "image": {
             "full": "FioraR.png",

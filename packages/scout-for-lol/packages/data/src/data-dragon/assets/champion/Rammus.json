@@ -263,9 +263,7 @@
         "Pay particular attention to when his Defensive Ball Curl is off. Rammus has much lower stats than a normal tank when he's out of the stance.",
         "Rammus often stacks high Armor, leaving him especially vulnerable to caster damage while not in Defensive Ball Curl."
       ],
-      "tags": [
-        "Tank"
-      ],
+      "tags": ["Tank"],
       "partype": "Mana",
       "info": {
         "attack": 4,
@@ -302,11 +300,7 @@
           "description": "Rammus accelerates in a ball towards his enemies, dealing damage and slowing targets affected by the impact.",
           "tooltip": "Rammus curls into a ball, gaining <speed>{{ minimummovespeed }} Move Speed</speed>, accelerating up to <speed>{{ maximummovespeed }} Move Speed</speed> over {{ rollduration }} seconds. Rammus stops after colliding with an enemy, dealing <magicDamage>{{ powerballdamage }} magic damage</magicDamage>, <status>Knocking Back</status>, and <status>Slowing</status> nearby enemies by {{ slowpercent }}% for {{ slowduration }} second.<br /><br /><recast>Recast</recast>: Rammus ends this Ability early.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Slow",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Slow", "Cooldown"],
             "effect": [
               "{{ qbasedamage }} -> {{ qbasedamageNL }}",
               "{{ slowpercent }}% -> {{ slowpercentNL }}%",
@@ -314,95 +308,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            12,
-            10.5,
-            9,
-            7.5,
-            6
-          ],
+          "cooldown": [12, 10.5, 9, 7.5, 6],
           "cooldownBurn": "12/10.5/9/7.5/6",
-          "cost": [
-            60,
-            60,
-            60,
-            60,
-            60
-          ],
+          "cost": [60, 60, 60, 60, 60],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              1000,
-              1000,
-              1000,
-              1000,
-              1000
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [1000, 1000, 1000, 1000, 1000]
           ],
           "effectBurn": [
             null,
@@ -420,13 +342,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            300,
-            300,
-            300,
-            300,
-            300
-          ],
+          "range": [300, 300, 300, 300, 300],
           "rangeBurn": "300",
           "image": {
             "full": "PowerBall.png",
@@ -459,95 +375,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            7,
-            7,
-            7,
-            7,
-            7
-          ],
+          "cooldown": [7, 7, 7, 7, 7],
           "cooldownBurn": "7",
-          "cost": [
-            40,
-            40,
-            40,
-            40,
-            40
-          ],
+          "cost": [40, 40, 40, 40, 40],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -565,13 +409,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            300,
-            300,
-            300,
-            300,
-            300
-          ],
+          "range": [300, 300, 300, 300, 300],
           "rangeBurn": "300",
           "image": {
             "full": "DefensiveBallCurl.png",
@@ -590,105 +428,30 @@
           "description": "Rammus taunts an enemy champion or monster into a reckless assault against him.",
           "tooltip": "Rammus <status>Taunts</status> an enemy champion or monster for {{ duration }} seconds. Monsters are dealt <magicDamage>{{ monsterdamagecalc }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Duration",
-              "Monster Damage"
-            ],
+            "label": ["Duration", "Monster Damage"],
             "effect": [
               "{{ duration }} -> {{ durationNL }}",
               "{{ monsterdamage }} -> {{ monsterdamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            12,
-            12,
-            12,
-            12,
-            12
-          ],
+          "cooldown": [12, 12, 12, 12, 12],
           "cooldownBurn": "12",
-          "cost": [
-            50,
-            50,
-            50,
-            50,
-            50
-          ],
+          "cost": [50, 50, 50, 50, 50],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -706,13 +469,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            325,
-            325,
-            325,
-            325,
-            325
-          ],
+          "range": [325, 325, 325, 325, 325],
           "rangeBurn": "325",
           "image": {
             "full": "PuncturingTaunt.png",
@@ -731,11 +488,7 @@
           "description": "Rammus hops into the air and slams down at a target area, dealing magic damage and slowing enemies. If cast while Rammus is in Powerball, Rammus knocks up enemies near the center as well.",
           "tooltip": "Rammus hops into the air and slams down in an area, dealing <magicDamage>{{ initialdamagecalc }} magic damage</magicDamage> and <status>Slowing</status> by {{ slowamount*100 }}% for {{ slowduration }} seconds. If used during <spellName>Powerball</spellName>, enemies in the center take an additional <magicDamage>{{ spell.powerball:powerballdamage }} magic damage</magicDamage> and are <status>Knocked Up</status> for {{ knockupduration }} seconds.<br /><br />Rammus then creates {{ numberofpulses }} aftershocks in the area over {{ buffduration }} seconds, repeating the <status>Slow</status>.<br /><br />The range of this Ability is increased by Rammus's <speed>Move Speed</speed>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Slow",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Slow", "Cooldown"],
             "effect": [
               "{{ initialdamage }} -> {{ initialdamageNL }}",
               "{{ slowamount*100.000000 }}% -> {{ slowamountnl*100.000000 }}%",
@@ -743,71 +496,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            120,
-            105,
-            90
-          ],
+          "cooldown": [120, 105, 90],
           "cooldownBurn": "120/105/90",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -825,11 +530,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            25000,
-            25000,
-            25000
-          ],
+          "range": [25000, 25000, 25000],
           "rangeBurn": "25000",
           "image": {
             "full": "Tremors2.png",

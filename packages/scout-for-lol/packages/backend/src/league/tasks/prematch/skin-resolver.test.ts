@@ -1,23 +1,17 @@
 import { describe, expect, test, mock } from "bun:test";
 import type { RawCurrentGameParticipant } from "@scout-for-lol/data/index.ts";
 
-// Mock resolveLoadingSkinNum to avoid needing champion-skins.json
-void mock.module("@scout-for-lol/data/index.ts", () => {
-  const actual =
-    require("@scout-for-lol/data/index.ts") as typeof import("@scout-for-lol/data/index.ts");
-  return {
-    ...actual,
-    resolveLoadingSkinNum: async (
-      _championName: string,
-      skinNum: number,
-    ) => skinNum,
-  };
-});
+// Mock resolveLoadingSkinNum to avoid needing champion-skins.json on disk.
+// We provide only the export that skin-resolver.ts uses; Bun's mock.module
+// merges this with the real module's other exports.
+void mock.module("@scout-for-lol/data/index.ts", () => ({
+  resolveLoadingSkinNum: async (_championName: string, skinNum: number) =>
+    skinNum,
+}));
 
 // Import after mock
-const { resolveSkinNum } = await import(
-  "#src/league/tasks/prematch/skin-resolver.ts"
-);
+const { resolveSkinNum } =
+  await import("#src/league/tasks/prematch/skin-resolver.ts");
 
 function makeParticipant(
   overrides: Partial<RawCurrentGameParticipant> = {},

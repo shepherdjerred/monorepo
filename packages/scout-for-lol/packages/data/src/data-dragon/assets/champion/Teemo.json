@@ -454,10 +454,7 @@
         "Teemo's Toxic Shot punishes players who get hit and back out, so stay at a safe range until you're ready to commit.",
         "It can be valuable to use Oracle's Lens(Trinket) to destroy mushrooms around key locations."
       ],
-      "tags": [
-        "Marksman",
-        "Mage"
-      ],
+      "tags": ["Marksman", "Mage"],
       "partype": "Mana",
       "info": {
         "attack": 5,
@@ -494,11 +491,7 @@
           "description": "Obscures an enemy's vision with a powerful venom, dealing damage to the target unit and blinding it for the duration.",
           "tooltip": "Teemo fires a dart, <status>Blinding</status> the target for {{ blindduration }} seconds and dealing <magicDamage>{{ calculateddamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "@AbilityResourceName@ Cost",
-              "Duration",
-              "Damage"
-            ],
+            "label": ["@AbilityResourceName@ Cost", "Duration", "Damage"],
             "effect": [
               "{{ cost }} -> {{ costNL }}",
               "{{ blindduration }} -> {{ blinddurationNL }}",
@@ -506,95 +499,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            7,
-            7,
-            7,
-            7,
-            7
-          ],
+          "cooldown": [7, 7, 7, 7, 7],
           "cooldownBurn": "7",
-          "cost": [
-            70,
-            75,
-            80,
-            85,
-            90
-          ],
+          "cost": [70, 75, 80, 85, 90],
           "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -612,13 +533,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            680,
-            680,
-            680,
-            680,
-            680
-          ],
+          "range": [680, 680, 680, 680, 680],
           "rangeBurn": "680",
           "image": {
             "full": "TeemoQ.png",
@@ -637,105 +552,30 @@
           "description": "Teemo scampers around, passively increasing his Move Speed until he is struck by an enemy champion or turret. Teemo can sprint to gain bonus Move Speed that isn't stopped by being struck for a short time.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Teemo gains <speed>{{ passivemovespeedbonus*100 }}% Move Speed</speed> while he hasn't been damaged by a champion or turret in the last {{ passivecooldownondamagetaken }} seconds.<br /><br /><spellActive>Active:</spellActive> Teemo sprints, gaining <speed>{{ activemovespeedbonus*100 }}% Move Speed</speed> that is not lost when struck for {{ activemovespeedbuffduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Passive Move Speed",
-              "Active Move Speed"
-            ],
+            "label": ["Passive Move Speed", "Active Move Speed"],
             "effect": [
               "{{ passivemovespeedbonus*100.000000 }}% -> {{ passivemovespeedbonusnl*100.000000 }}%",
               "{{ activemovespeedbonus*100.000000 }}% -> {{ activemovespeedbonusnl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            14,
-            14,
-            14,
-            14,
-            14
-          ],
+          "cooldown": [14, 14, 14, 14, 14],
           "cooldownBurn": "14",
-          "cost": [
-            40,
-            40,
-            40,
-            40,
-            40
-          ],
+          "cost": [40, 40, 40, 40, 40],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -753,13 +593,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            20,
-            20,
-            20,
-            20,
-            20
-          ],
+          "range": [20, 20, 20, 20, 20],
           "rangeBurn": "20",
           "image": {
             "full": "TeemoW.png",
@@ -778,105 +612,30 @@
           "description": "Each of Teemo's attacks will poison the target, dealing damage on impact and each second after for 4 seconds.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Teemo's Attacks apply poison, dealing an additional <magicDamage>{{ impactcalculateddamage }} magic damage</magicDamage> plus <magicDamage>{{ totaldotdamage }} magic damage</magicDamage> over {{ poisonduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Impact Damage",
-              "Damage Per Second"
-            ],
+            "label": ["Impact Damage", "Damage Per Second"],
             "effect": [
               "{{ impactbasedamage }} -> {{ impactbasedamageNL }}",
               "{{ tickbasedamage }} -> {{ tickbasedamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cooldown": [0, 0, 0, 0, 0],
           "cooldownBurn": "0",
-          "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -894,13 +653,7 @@
           "vars": [],
           "costType": "Passive",
           "maxammo": "-1",
-          "range": [
-            680,
-            680,
-            680,
-            680,
-            680
-          ],
+          "range": [680, 680, 680, 680, 680],
           "rangeBurn": "680",
           "image": {
             "full": "TeemoE.png",
@@ -937,71 +690,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            0.25,
-            0.25,
-            0.25
-          ],
+          "cooldown": [0.25, 0.25, 0.25],
           "cooldownBurn": "0.25",
-          "cost": [
-            75,
-            55,
-            35
-          ],
+          "cost": [75, 55, 35],
           "costBurn": "75/55/35",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -1019,11 +724,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "3",
-          "range": [
-            600,
-            750,
-            900
-          ],
+          "range": [600, 750, 900],
           "rangeBurn": "600/750/900",
           "image": {
             "full": "TeemoR.png",

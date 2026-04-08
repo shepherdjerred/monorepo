@@ -431,10 +431,7 @@
         "Ekko's stun zone takes 3 seconds to arm. Watch for the image he creates on cast and try to guess where the zone was placed.",
         "The second hit of Timewinder does more damage than the first; try to avoid it."
       ],
-      "tags": [
-        "Assassin",
-        "Mage"
-      ],
+      "tags": ["Assassin", "Mage"],
       "partype": "Mana",
       "info": {
         "attack": 5,
@@ -487,95 +484,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            9,
-            8.5,
-            8,
-            7.5,
-            7
-          ],
+          "cooldown": [9, 8.5, 8, 7.5, 7],
           "cooldownBurn": "9/8.5/8/7.5/7",
-          "cost": [
-            50,
-            60,
-            70,
-            80,
-            90
-          ],
+          "cost": [50, 60, 70, 80, 90],
           "costBurn": "50/60/70/80/90",
           "datavalues": {},
           "effect": [
             null,
-            [
-              70,
-              85,
-              100,
-              115,
-              130
-            ],
-            [
-              40,
-              45,
-              50,
-              55,
-              60
-            ],
-            [
-              40,
-              65,
-              90,
-              115,
-              140
-            ],
-            [
-              100,
-              100,
-              100,
-              100,
-              100
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              165,
-              165,
-              165,
-              165,
-              165
-            ],
-            [
-              1.75,
-              1.75,
-              1.75,
-              1.75,
-              1.75
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [70, 85, 100, 115, 130],
+            [40, 45, 50, 55, 60],
+            [40, 65, 90, 115, 140],
+            [100, 100, 100, 100, 100],
+            [0, 0, 0, 0, 0],
+            [165, 165, 165, 165, 165],
+            [1.75, 1.75, 1.75, 1.75, 1.75],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -593,13 +518,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1075,
-            1075,
-            1075,
-            1075,
-            1075
-          ],
+          "range": [1075, 1075, 1075, 1075, 1075],
           "rangeBurn": "1075",
           "image": {
             "full": "EkkoQ.png",
@@ -630,95 +549,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            22,
-            20,
-            18,
-            16,
-            14
-          ],
+          "cooldown": [22, 20, 18, 16, 14],
           "cooldownBurn": "22/20/18/16/14",
-          "cost": [
-            30,
-            35,
-            40,
-            45,
-            50
-          ],
+          "cost": [30, 35, 40, 45, 50],
           "costBurn": "30/35/40/45/50",
           "datavalues": {},
           "effect": [
             null,
-            [
-              375,
-              375,
-              375,
-              375,
-              375
-            ],
-            [
-              2.25,
-              2.25,
-              2.25,
-              2.25,
-              2.25
-            ],
-            [
-              3,
-              3,
-              3,
-              3,
-              3
-            ],
-            [
-              100,
-              120,
-              140,
-              160,
-              180
-            ],
-            [
-              150,
-              150,
-              150,
-              150,
-              150
-            ],
-            [
-              15,
-              15,
-              15,
-              15,
-              15
-            ],
-            [
-              1.5,
-              1.5,
-              1.5,
-              1.5,
-              1.5
-            ],
-            [
-              3,
-              3,
-              3,
-              3,
-              3
-            ],
-            [
-              2,
-              2,
-              2,
-              2,
-              2
-            ],
-            [
-              40,
-              40,
-              40,
-              40,
-              40
-            ]
+            [375, 375, 375, 375, 375],
+            [2.25, 2.25, 2.25, 2.25, 2.25],
+            [3, 3, 3, 3, 3],
+            [100, 120, 140, 160, 180],
+            [150, 150, 150, 150, 150],
+            [15, 15, 15, 15, 15],
+            [1.5, 1.5, 1.5, 1.5, 1.5],
+            [3, 3, 3, 3, 3],
+            [2, 2, 2, 2, 2],
+            [40, 40, 40, 40, 40]
           ],
           "effectBurn": [
             null,
@@ -736,13 +583,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1600,
-            1600,
-            1600,
-            1600,
-            1600
-          ],
+          "range": [1600, 1600, 1600, 1600, 1600],
           "rangeBurn": "1600",
           "image": {
             "full": "EkkoW.png",
@@ -761,11 +602,7 @@
           "description": "Ekko rolls evasively while charging up his Z-Drive. His next attack deals bonus damage and warps reality, teleporting him to his target.",
           "tooltip": "Ekko dashes and empowers his next Attack to have bonus range, teleport him to his target, and deal an additional <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown",
-              "@AbilityResourceName@ Cost"
-            ],
+            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -773,95 +610,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            9,
-            8.5,
-            8,
-            7.5,
-            7
-          ],
+          "cooldown": [9, 8.5, 8, 7.5, 7],
           "cooldownBurn": "9/8.5/8/7.5/7",
-          "cost": [
-            40,
-            45,
-            50,
-            55,
-            60
-          ],
+          "cost": [40, 45, 50, 55, 60],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [
-              50,
-              75,
-              100,
-              125,
-              150
-            ],
-            [
-              350,
-              350,
-              350,
-              350,
-              350
-            ],
-            [
-              3,
-              3,
-              3,
-              3,
-              3
-            ],
-            [
-              300,
-              300,
-              300,
-              300,
-              300
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [50, 75, 100, 125, 150],
+            [350, 350, 350, 350, 350],
+            [3, 3, 3, 3, 3],
+            [300, 300, 300, 300, 300],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -879,13 +644,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            325,
-            325,
-            325,
-            325,
-            325
-          ],
+          "range": [325, 325, 325, 325, 325],
           "rangeBurn": "325",
           "image": {
             "full": "EkkoE.png",
@@ -904,11 +663,7 @@
           "description": "Ekko shatters his timeline, becoming untargetable and rewinding to a more favorable point in time. He returns to whenever he was a few seconds ago, and heals for a percentage of the damage received in that duration. Enemies near his arrival zone take massive damage.",
           "tooltip": "Ekko turns back time, entering Stasis while teleporting to where he was 4 seconds ago and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to nearby enemies. In addition, Ekko restores <healing>{{ totalbaseheal }} Health</healing>, increased by {{ percenthealampperpercentmissinghealth }}% for each 1% Health he lost in last 4 seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Healing",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Healing", "Cooldown"],
             "effect": [
               "{{ damage }} -> {{ damageNL }}",
               "{{ flatheal }} -> {{ flathealNL }}",
@@ -916,71 +671,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            110,
-            80,
-            50
-          ],
+          "cooldown": [110, 80, 50],
           "cooldownBurn": "110/80/50",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -998,11 +705,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            850,
-            850,
-            850
-          ],
+          "range": [850, 850, 850],
           "rangeBurn": "850",
           "image": {
             "full": "EkkoR.png",

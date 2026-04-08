@@ -23,7 +23,7 @@ async function loadSkinsData(): Promise<ChampionSkinsData> {
     return skinsData;
   }
 
-  const filePath = new URL("./assets/champion-skins.json", import.meta.url)
+  const filePath = new URL("assets/champion-skins.json", import.meta.url)
     .pathname;
   const file = Bun.file(filePath);
   const exists = await file.exists();

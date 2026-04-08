@@ -25,9 +25,7 @@ const RUNE_SIZE = 32;
 
 function resolveSpellImage(spellId: number): string | undefined {
   const name = first(
-    keys(
-      pickBy(summoner.data, (spell) => spell.key === spellId.toString()),
-    ),
+    keys(pickBy(summoner.data, (spell) => spell.key === spellId.toString())),
   );
 
   if (name === undefined) {
@@ -90,9 +88,7 @@ function RuneIcons({
   secondaryTreeId: number | undefined;
 }) {
   const keystoneInfo =
-    keystoneRuneId === undefined
-      ? undefined
-      : getRuneInfo(keystoneRuneId);
+    keystoneRuneId === undefined ? undefined : getRuneInfo(keystoneRuneId);
   const secondaryInfo =
     secondaryTreeId === undefined
       ? undefined
@@ -129,7 +125,11 @@ function RuneIcons({
   );
 }
 
-function RankDisplay({ participant }: { participant: LoadingScreenParticipant }) {
+function RankDisplay({
+  participant,
+}: {
+  participant: LoadingScreenParticipant;
+}) {
   // Show solo queue rank, falling back to flex
   const rank = participant.ranks?.solo ?? participant.ranks?.flex;
   if (rank === undefined) {
@@ -176,14 +176,13 @@ export function PlayerCard({
     participant.skinNum,
   );
 
-  const borderColor =
-    participant.isTrackedPlayer
-      ? palette.gold.bright
-      : teamSide === "blue"
-        ? palette.teams.blue
-        : teamSide === "red"
-          ? palette.teams.red
-          : palette.grey[2];
+  const borderColor = participant.isTrackedPlayer
+    ? palette.gold.bright
+    : teamSide === "blue"
+      ? palette.teams.blue
+      : teamSide === "red"
+        ? palette.teams.red
+        : palette.grey[2];
 
   const borderWidth = participant.isTrackedPlayer ? "3px" : "2px";
 
@@ -251,8 +250,7 @@ export function PlayerCard({
           display: "flex",
           flexDirection: "column",
           padding: "8px",
-          background:
-            "linear-gradient(transparent, rgba(0, 0, 0, 0.85) 30%)",
+          background: "linear-gradient(transparent, rgba(0, 0, 0, 0.85) 30%)",
         }}
       >
         {/* Summoner name */}

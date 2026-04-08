@@ -1,4 +1,7 @@
-import type { LoadingScreenData, LoadingScreenParticipant } from "@scout-for-lol/data";
+import type {
+  LoadingScreenData,
+  LoadingScreenParticipant,
+} from "@scout-for-lol/data";
 import { palette } from "#src/assets/colors.ts";
 import { font } from "#src/assets/index.ts";
 import { PlayerCard } from "#src/html/loading-screen/player-card.tsx";
@@ -26,13 +29,7 @@ function groupIntoArenaTeams(
     .toSorted((a, b) => a.teamKey - b.teamKey);
 }
 
-function TeamPair({
-  team,
-  teamIndex,
-}: {
-  team: ArenaTeam;
-  teamIndex: number;
-}) {
+function TeamPair({ team, teamIndex }: { team: ArenaTeam; teamIndex: number }) {
   return (
     <div
       style={{

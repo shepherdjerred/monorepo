@@ -142,9 +142,7 @@ export async function sendPrematchNotification(
     const startTime = Date.now();
     const firstPlayer = trackedPlayers[0];
     if (firstPlayer === undefined) {
-      throw new Error(
-        `No tracked players provided for game ${gameId}`,
-      );
+      throw new Error(`No tracked players provided for game ${gameId}`);
     }
     const region = firstPlayer.league.leagueAccount.region;
     const trackedPuuidSet = new Set(
@@ -163,9 +161,9 @@ export async function sendPrematchNotification(
     ]);
 
     const attachmentName = `loading-screen-${gameId}.png`;
-    loadingScreenAttachment = new AttachmentBuilder(
-      Buffer.from(image),
-    ).setName(attachmentName);
+    loadingScreenAttachment = new AttachmentBuilder(Buffer.from(image)).setName(
+      attachmentName,
+    );
     loadingScreenEmbed = new EmbedBuilder({
       image: { url: `attachment://${attachmentName}` },
     });
@@ -231,8 +229,7 @@ export async function sendPrematchNotification(
         embeds.push(loadingScreenEmbed);
       }
 
-      const message =
-        files.length > 0 ? { embeds, files } : { embeds };
+      const message = files.length > 0 ? { embeds, files } : { embeds };
       await send(message, channel);
     } catch (error) {
       if (error instanceof ChannelSendError && error.permissionError) {

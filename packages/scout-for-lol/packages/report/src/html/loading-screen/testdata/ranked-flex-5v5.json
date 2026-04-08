@@ -17,7 +17,15 @@
       "spell2Id": 14,
       "keystoneRuneId": 8112,
       "secondaryTreeId": 8400,
-      "ranks": { "solo": { "tier": "diamond", "division": 3, "lp": 45, "wins": 120, "losses": 98 } },
+      "ranks": {
+        "solo": {
+          "tier": "diamond",
+          "division": 3,
+          "lp": 45,
+          "wins": 120,
+          "losses": 98
+        }
+      },
       "isTrackedPlayer": false
     },
     {
@@ -31,7 +39,15 @@
       "spell2Id": 6,
       "keystoneRuneId": 8010,
       "secondaryTreeId": 8200,
-      "ranks": { "solo": { "tier": "gold", "division": 2, "lp": 75, "wins": 80, "losses": 72 } },
+      "ranks": {
+        "solo": {
+          "tier": "gold",
+          "division": 2,
+          "lp": 75,
+          "wins": 80,
+          "losses": 72
+        }
+      },
       "isTrackedPlayer": false
     },
     {
@@ -58,7 +74,15 @@
       "spell2Id": 21,
       "keystoneRuneId": 8021,
       "secondaryTreeId": 8200,
-      "ranks": { "solo": { "tier": "silver", "division": 1, "lp": 50, "wins": 45, "losses": 40 } },
+      "ranks": {
+        "solo": {
+          "tier": "silver",
+          "division": 1,
+          "lp": 50,
+          "wins": 45,
+          "losses": 40
+        }
+      },
       "isTrackedPlayer": false
     },
     {
@@ -72,7 +96,15 @@
       "spell2Id": 4,
       "keystoneRuneId": 8229,
       "secondaryTreeId": 8100,
-      "ranks": { "solo": { "tier": "platinum", "division": 4, "lp": 20, "wins": 200, "losses": 190 } },
+      "ranks": {
+        "solo": {
+          "tier": "platinum",
+          "division": 4,
+          "lp": 20,
+          "wins": 200,
+          "losses": 190
+        }
+      },
       "isTrackedPlayer": false
     },
     {
@@ -86,7 +118,15 @@
       "spell2Id": 14,
       "keystoneRuneId": 8112,
       "secondaryTreeId": 8200,
-      "ranks": { "solo": { "tier": "emerald", "division": 1, "lp": 88, "wins": 150, "losses": 130 } },
+      "ranks": {
+        "solo": {
+          "tier": "emerald",
+          "division": 1,
+          "lp": 88,
+          "wins": 150,
+          "losses": 130
+        }
+      },
       "isTrackedPlayer": false
     },
     {
@@ -113,7 +153,15 @@
       "spell2Id": 11,
       "keystoneRuneId": 8008,
       "secondaryTreeId": 8300,
-      "ranks": { "solo": { "tier": "master", "division": 1, "lp": 250, "wins": 300, "losses": 220 } },
+      "ranks": {
+        "solo": {
+          "tier": "master",
+          "division": 1,
+          "lp": 250,
+          "wins": 300,
+          "losses": 220
+        }
+      },
       "isTrackedPlayer": false
     },
     {
@@ -127,7 +175,15 @@
       "spell2Id": 4,
       "keystoneRuneId": 8005,
       "secondaryTreeId": 8400,
-      "ranks": { "solo": { "tier": "gold", "division": 1, "lp": 30, "wins": 60, "losses": 55 } },
+      "ranks": {
+        "solo": {
+          "tier": "gold",
+          "division": 1,
+          "lp": 30,
+          "wins": 60,
+          "losses": 55
+        }
+      },
       "isTrackedPlayer": true
     },
     {

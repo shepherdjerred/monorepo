@@ -77,7 +77,13 @@ function BanIcon({ ban }: { ban: LoadingScreenBan }) {
   );
 }
 
-function BansRow({ bans, team }: { bans: LoadingScreenBan[]; team: "blue" | "red" }) {
+function BansRow({
+  bans,
+  team,
+}: {
+  bans: LoadingScreenBan[];
+  team: "blue" | "red";
+}) {
   const teamBans = bans.filter((b) => b.team === team);
   if (teamBans.length === 0) {
     return null;
@@ -86,7 +92,10 @@ function BansRow({ bans, team }: { bans: LoadingScreenBan[]; team: "blue" | "red
   return (
     <div style={{ display: "flex", gap: "4px" }}>
       {teamBans.map((ban, idx) => (
-        <BanIcon key={`${ban.championId.toString()}-${idx.toString()}`} ban={ban} />
+        <BanIcon
+          key={`${ban.championId.toString()}-${idx.toString()}`}
+          ban={ban}
+        />
       ))}
     </div>
   );

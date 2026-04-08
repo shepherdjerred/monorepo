@@ -561,10 +561,7 @@
         "Kai'Sa is very vulnerable to getting outranged by mages and long range carries.",
         "Make sure to place wards in your blind spots so you can see Kai'Sa coming."
       ],
-      "tags": [
-        "Marksman",
-        "Mage"
-      ],
+      "tags": ["Marksman", "Mage"],
       "partype": "Mana",
       "info": {
         "attack": 8,
@@ -601,105 +598,30 @@
           "description": "Kai'Sa shoots a swarm of missiles that seek out nearby targets.<br><br>Living Weapon: Icathian Rain is upgraded to shoot more missiles.",
           "tooltip": "Kai'Sa launches {{ e2 }} missiles that split among nearby enemies, each dealing <physicalDamage>{{ totalindividualmissiledamage }} physical damage</physicalDamage>, up to a maximum of {{ maxdamagedisplay }}. Additional missile hits on champions or monsters deal {{ extrahitreduction*100 }}% damage.<br /><br /><keywordMajor>Evolved</keywordMajor>: Kai'Sa instead fires {{ e7 }} missiles.<br />Current: <physicalDamage>{{ f11.1 }}/{{ e6 }} Bonus Attack Damage</physicalDamage>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Cooldown",
-              "Damage Per Missile"
-            ],
+            "label": ["Cooldown", "Damage Per Missile"],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            10,
-            9,
-            8,
-            7,
-            6
-          ],
+          "cooldown": [10, 9, 8, 7, 6],
           "cooldownBurn": "10/9/8/7/6",
-          "cost": [
-            55,
-            55,
-            55,
-            55,
-            55
-          ],
+          "cost": [55, 55, 55, 55, 55],
           "costBurn": "55",
           "datavalues": {},
           "effect": [
             null,
-            [
-              40,
-              55,
-              70,
-              85,
-              100
-            ],
-            [
-              6,
-              6,
-              6,
-              6,
-              6
-            ],
-            [
-              0.25,
-              0.25,
-              0.25,
-              0.25,
-              0.25
-            ],
-            [
-              2,
-              2,
-              2,
-              2,
-              2
-            ],
-            [
-              0.35,
-              0.35,
-              0.35,
-              0.35,
-              0.35
-            ],
-            [
-              100,
-              100,
-              100,
-              100,
-              100
-            ],
-            [
-              12,
-              12,
-              12,
-              12,
-              12
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [40, 55, 70, 85, 100],
+            [6, 6, 6, 6, 6],
+            [0.25, 0.25, 0.25, 0.25, 0.25],
+            [2, 2, 2, 2, 2],
+            [0.35, 0.35, 0.35, 0.35, 0.35],
+            [100, 100, 100, 100, 100],
+            [12, 12, 12, 12, 12],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -717,13 +639,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            600,
-            600,
-            600,
-            600,
-            600
-          ],
+          "range": [600, 600, 600, 600, 600],
           "rangeBurn": "600",
           "image": {
             "full": "KaisaQ.png",
@@ -742,11 +658,7 @@
           "description": "Kai'Sa shoots a long range missile, marking enemies with her passive.<br><br>Living Weapon: Void Seeker is upgraded to apply more passive marks and reduce cooldown on champion hit.",
           "tooltip": "Kai'Sa fires a void blast that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>, applies {{ e4 }} stacks of <keywordMajor>Plasma</keywordMajor>, and grants <keywordStealth>True Sight</keywordStealth> of the first enemy hit for {{ spell.kaisapassive:pduration }} seconds.<br /><br /><keywordMajor>Evolved</keywordMajor>: Kai'Sa instead applies {{ e5 }} stacks of <keywordMajor>Plasma</keywordMajor> and hitting a champion reduces the Cooldown by {{ e3 }}%.<br />Current: <scaleAP>{{ f2.1 }}/{{ e2 }} Ability Power</scaleAP>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Cooldown",
-              "Damage",
-              "Mana Cost"
-            ],
+            "label": ["Cooldown", "Damage", "Mana Cost"],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ e1 }} -> {{ e1NL }}",
@@ -754,95 +666,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            22,
-            20,
-            18,
-            16,
-            14
-          ],
+          "cooldown": [22, 20, 18, 16, 14],
           "cooldownBurn": "22/20/18/16/14",
-          "cost": [
-            55,
-            60,
-            65,
-            70,
-            75
-          ],
+          "cost": [55, 60, 65, 70, 75],
           "costBurn": "55/60/65/70/75",
           "datavalues": {},
           "effect": [
             null,
-            [
-              30,
-              55,
-              80,
-              105,
-              130
-            ],
-            [
-              100,
-              100,
-              100,
-              100,
-              100
-            ],
-            [
-              75,
-              75,
-              75,
-              75,
-              75
-            ],
-            [
-              2,
-              2,
-              2,
-              2,
-              2
-            ],
-            [
-              3,
-              3,
-              3,
-              3,
-              3
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [30, 55, 80, 105, 130],
+            [100, 100, 100, 100, 100],
+            [75, 75, 75, 75, 75],
+            [2, 2, 2, 2, 2],
+            [3, 3, 3, 3, 3],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -860,13 +700,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            3000,
-            3000,
-            3000,
-            3000,
-            3000
-          ],
+          "range": [3000, 3000, 3000, 3000, 3000],
           "rangeBurn": "3000",
           "image": {
             "full": "KaisaW.png",
@@ -885,11 +719,7 @@
           "description": "Kai'Sa briefly increases her Move Speed, then increases her Attack Speed.<br><br>Living Weapon: Supercharge is upgraded to briefly grant Invisibility.",
           "tooltip": "Kai'Sa supercharges her void energy, gaining <speed>{{ totalmovespeed }} Move Speed</speed> and becoming Ghosted while charging, then gaining <attackSpeed>{{ e5 }}% Attack Speed</attackSpeed> for {{ e2 }} seconds.<br /><br />Attacks reduce this Ability's Cooldown by {{ e4 }} seconds.<br /><br /><keywordMajor>Evolved</keywordMajor>: Kai'Sa also becomes <keywordStealth>Invisible</keywordStealth> for {{ e7 }} seconds.<br />Current: <attackSpeed>{{ f10.1 }}%/{{ e6 }}% Bonus Attack Speed</attackSpeed>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Cooldown",
-              "Move Speed",
-              "Attack Speed"
-            ],
+            "label": ["Cooldown", "Move Speed", "Attack Speed"],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ effect1amount*100.000000 }}% -> {{ effect1amountnl*100.000000 }}%",
@@ -897,95 +727,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            16,
-            14.5,
-            13,
-            11.5,
-            10
-          ],
+          "cooldown": [16, 14.5, 13, 11.5, 10],
           "cooldownBurn": "16/14.5/13/11.5/10",
-          "cost": [
-            30,
-            30,
-            30,
-            30,
-            30
-          ],
+          "cost": [30, 30, 30, 30, 30],
           "costBurn": "30",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0.55,
-              0.6,
-              0.65,
-              0.7,
-              0.75
-            ],
-            [
-              4,
-              4,
-              4,
-              4,
-              4
-            ],
-            [
-              1.2,
-              1.2,
-              1.2,
-              1.2,
-              1.2
-            ],
-            [
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5
-            ],
-            [
-              40,
-              50,
-              60,
-              70,
-              80
-            ],
-            [
-              100,
-              100,
-              100,
-              100,
-              100
-            ],
-            [
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5
-            ],
-            [
-              0.6,
-              0.6,
-              0.6,
-              0.6,
-              0.6
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0.55, 0.6, 0.65, 0.7, 0.75],
+            [4, 4, 4, 4, 4],
+            [1.2, 1.2, 1.2, 1.2, 1.2],
+            [0.5, 0.5, 0.5, 0.5, 0.5],
+            [40, 50, 60, 70, 80],
+            [100, 100, 100, 100, 100],
+            [0.5, 0.5, 0.5, 0.5, 0.5],
+            [0.6, 0.6, 0.6, 0.6, 0.6],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -1003,13 +761,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1,
-            1,
-            1,
-            1,
-            1
-          ],
+          "range": [1, 1, 1, 1, 1],
           "rangeBurn": "1",
           "image": {
             "full": "KaisaE.png",
@@ -1042,71 +794,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            130,
-            100,
-            70
-          ],
+          "cooldown": [130, 100, 70],
           "cooldownBurn": "130/100/70",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -1124,11 +828,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            2000,
-            2500,
-            3000
-          ],
+          "range": [2000, 2500, 3000],
           "rangeBurn": "2000/2500/3000",
           "image": {
             "full": "KaisaR.png",

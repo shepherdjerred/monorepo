@@ -387,10 +387,7 @@
       "blurb": "Intensely shy, the fae fawn Lillia skittishly wanders Ionia's forests. Hiding just out of sight of mortals—whose mysterious natures have long captivated, but intimidated, her—Lillia hopes to discover why their dreams no longer reach the ancient Dreaming...",
       "allytips": [],
       "enemytips": [],
-      "tags": [
-        "Fighter",
-        "Mage"
-      ],
+      "tags": ["Fighter", "Mage"],
       "partype": "Mana",
       "info": {
         "attack": 0,
@@ -427,12 +424,7 @@
           "description": "Passively, Lillia gains stacking Move Speed when hitting enemies with spells. She can activate this to deal magic damage to nearby enemies, dealing extra true damage on the edge.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Lillia's Ability hits grant <speed>{{ prancespeed }} Move Speed</speed> for {{ pranceduration }} seconds, stacking up to {{ prancemaxstacks }} times.<br /><br /><spellActive>Active:</spellActive> Lillia whirls her censer, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>, plus an additional <trueDamage>{{ bonustruedamage }} true damage</trueDamage> at the outer edge.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Cooldown",
-              "Move Speed",
-              "Magic Damage",
-              "True Damage"
-            ],
+            "label": ["Cooldown", "Move Speed", "Magic Damage", "True Damage"],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ prancebonusperstack*100.000000 }}% -> {{ prancebonusperstacknl*100.000000 }}%",
@@ -441,95 +433,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            6,
-            5.5,
-            5,
-            4.5,
-            4
-          ],
+          "cooldown": [6, 5.5, 5, 4.5, 4],
           "cooldownBurn": "6/5.5/5/4.5/4",
-          "cost": [
-            65,
-            65,
-            65,
-            65,
-            65
-          ],
+          "cost": [65, 65, 65, 65, 65],
           "costBurn": "65",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -547,13 +467,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            450,
-            450,
-            450,
-            450,
-            450
-          ],
+          "range": [450, 450, 450, 450, 450],
           "rangeBurn": "450",
           "image": {
             "full": "LilliaQ.png",
@@ -572,105 +486,30 @@
           "description": "Lillia deals damage in a nearby area, dealing heavy damage in the center.",
           "tooltip": "Lillia winds up a huge strike, dealing <magicDamage>{{ flatdamage }} magic damage</magicDamage>. Enemies in the center take <magicDamage>{{ flatdamagesweetspot }} damage</magicDamage> instead.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Cooldown"],
             "effect": [
               "{{ flatdamagebase }} -> {{ flatdamagebaseNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            14,
-            13,
-            12,
-            11,
-            10
-          ],
+          "cooldown": [14, 13, 12, 11, 10],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [
-            50,
-            50,
-            50,
-            50,
-            50
-          ],
+          "cost": [50, 50, 50, 50, 50],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -688,13 +527,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            500,
-            500,
-            500,
-            500,
-            500
-          ],
+          "range": [500, 500, 500, 500, 500],
           "rangeBurn": "500",
           "image": {
             "full": "LilliaW.png",
@@ -713,105 +546,30 @@
           "description": "Lillia hurls a seed that damages and slows those it lands on. If it doesn't hit anything, it will continue rolling until it hits a wall or target.",
           "tooltip": "Lillia lobs a swirlseed overhead, dealing <magicDamage>{{ impactdamagetotal }} magic damage</magicDamage> where it lands and revealing and <status>Slowing</status> them by {{ slowamount*100 }}% for {{ slowduration }} seconds. If no enemies are hit, the seed rolls until it hits an enemy or collides with terrain.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Cooldown"],
             "effect": [
               "{{ impactdamage }} -> {{ impactdamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            12,
-            12,
-            12,
-            12,
-            12
-          ],
+          "cooldown": [12, 12, 12, 12, 12],
           "cooldownBurn": "12",
-          "cost": [
-            70,
-            70,
-            70,
-            70,
-            70
-          ],
+          "cost": [70, 70, 70, 70, 70],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -829,13 +587,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            700,
-            700,
-            700,
-            700,
-            700
-          ],
+          "range": [700, 700, 700, 700, 700],
           "rangeBurn": "700",
           "image": {
             "full": "LilliaE.png",
@@ -854,81 +606,30 @@
           "description": "Lillia causes all enemies with Dream Dust on them to become Drowsy before falling asleep. Those enemies will take extra damage on being forcibly woken up.",
           "tooltip": "Lillia causes all enemy champions with <keywordMajor>Dream Dust</keywordMajor> to become <status>Drowsy</status> for {{ drowsyduration }} seconds. Afterward, they fall <status>Asleep</status> for {{ sleepduration }} seconds.<br /><br />When awakened by damage, they take an additional <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Cooldown",
-              "Break Damage"
-            ],
+            "label": ["Cooldown", "Break Damage"],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ breakdamagebase }} -> {{ breakdamagebaseNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            150,
-            130,
-            110
-          ],
+          "cooldown": [150, 130, 110],
           "cooldownBurn": "150/130/110",
-          "cost": [
-            50,
-            50,
-            50
-          ],
+          "cost": [50, 50, 50],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -946,11 +647,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1600,
-            1600,
-            1600
-          ],
+          "range": [1600, 1600, 1600],
           "rangeBurn": "1600",
           "image": {
             "full": "LilliaR.png",

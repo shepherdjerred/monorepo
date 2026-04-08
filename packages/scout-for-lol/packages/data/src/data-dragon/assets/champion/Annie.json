@@ -419,10 +419,7 @@
         "Summoner Smite can be used to help take down Tibbers.",
         "Keep an eye out for a white, swirling power around Annie. It means she's ready to unleash her stun."
       ],
-      "tags": [
-        "Mage",
-        "Support"
-      ],
+      "tags": ["Mage", "Support"],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -459,105 +456,30 @@
           "description": "Annie hurls a Mana infused fireball, dealing damage and refunding the Mana cost if it destroys the target.",
           "tooltip": "Annie hurls a fireball, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. If the target dies, Annie refunds the Mana cost and reduces the Cooldown by 50%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "@AbilityResourceName@ Cost"
-            ],
+            "label": ["Damage", "@AbilityResourceName@ Cost"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            4,
-            4,
-            4,
-            4,
-            4
-          ],
+          "cooldown": [4, 4, 4, 4, 4],
           "cooldownBurn": "4",
-          "cost": [
-            60,
-            65,
-            70,
-            75,
-            80
-          ],
+          "cost": [60, 65, 70, 75, 80],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -575,13 +497,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            625,
-            625,
-            625,
-            625,
-            625
-          ],
+          "range": [625, 625, 625, 625, 625],
           "rangeBurn": "625",
           "image": {
             "full": "AnnieQ.png",
@@ -600,105 +516,30 @@
           "description": "Annie casts a blazing cone of fire, dealing damage to all enemies in the area.",
           "tooltip": "Annie projects a wave of fire, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "@AbilityResourceName@ Cost"
-            ],
+            "label": ["Damage", "@AbilityResourceName@ Cost"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            7,
-            7,
-            7,
-            7,
-            7
-          ],
+          "cooldown": [7, 7, 7, 7, 7],
           "cooldownBurn": "7",
-          "cost": [
-            70,
-            75,
-            80,
-            85,
-            90
-          ],
+          "cost": [70, 75, 80, 85, 90],
           "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -716,13 +557,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            600,
-            600,
-            600,
-            600,
-            600
-          ],
+          "range": [600, 600, 600, 600, 600],
           "rangeBurn": "600",
           "image": {
             "full": "AnnieW.png",
@@ -753,95 +588,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            10,
-            10,
-            10,
-            10,
-            10
-          ],
+          "cooldown": [10, 10, 10, 10, 10],
           "cooldownBurn": "10",
-          "cost": [
-            60,
-            65,
-            70,
-            75,
-            80
-          ],
+          "cost": [60, 65, 70, 75, 80],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -859,13 +622,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            800,
-            800,
-            800,
-            800,
-            800
-          ],
+          "range": [800, 800, 800, 800, 800],
           "rangeBurn": "800",
           "image": {
             "full": "AnnieE.png",
@@ -902,71 +659,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            130,
-            115,
-            100
-          ],
+          "cooldown": [130, 115, 100],
           "cooldownBurn": "130/115/100",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -984,11 +693,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            600,
-            600,
-            600
-          ],
+          "range": [600, 600, 600],
           "rangeBurn": "600",
           "image": {
             "full": "AnnieR.png",

@@ -306,9 +306,7 @@
         "Try to engage him in short bursts instead of going toe-to-toe with him. Preventing him from attacking consecutively drastically lowers his damage output.",
         "Jax can dodge all incoming attacks for a very short amount of time and stuns enemies in melee range when it ends. Wait to strike him until after his dodge is finished."
       ],
-      "tags": [
-        "Fighter"
-      ],
+      "tags": ["Fighter"],
       "partype": "Mana",
       "info": {
         "attack": 7,
@@ -345,105 +343,30 @@
           "description": "Jax leaps toward a unit. If they are an enemy, he strikes them with his weapon.",
           "tooltip": "Jax leaps to a friendly or enemy unit or ward, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> if it is an enemy.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Cooldown"],
             "effect": [
               "{{ damage }} -> {{ damageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            8,
-            7.5,
-            7,
-            6.5,
-            6
-          ],
+          "cooldown": [8, 7.5, 7, 6.5, 6],
           "cooldownBurn": "8/7.5/7/6.5/6",
-          "cost": [
-            65,
-            65,
-            65,
-            65,
-            65
-          ],
+          "cost": [65, 65, 65, 65, 65],
           "costBurn": "65",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -461,13 +384,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            700,
-            700,
-            700,
-            700,
-            700
-          ],
+          "range": [700, 700, 700, 700, 700],
           "rangeBurn": "700",
           "image": {
             "full": "JaxQ.png",
@@ -486,105 +403,30 @@
           "description": "Jax charges his weapon with energy, causing his next attack to deal additional damage.",
           "tooltip": "Jax charges his weapon with energy, causing his next Attack or <spellName>Leap Strike</spellName> to deal an additional <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Cooldown"],
             "effect": [
               "{{ damage }} -> {{ damageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            7,
-            6,
-            5,
-            4,
-            3
-          ],
+          "cooldown": [7, 6, 5, 4, 3],
           "cooldownBurn": "7/6/5/4/3",
-          "cost": [
-            30,
-            30,
-            30,
-            30,
-            30
-          ],
+          "cost": [30, 30, 30, 30, 30],
           "costBurn": "30",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -602,13 +444,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            300,
-            300,
-            300,
-            300,
-            300
-          ],
+          "range": [300, 300, 300, 300, 300],
           "rangeBurn": "300",
           "image": {
             "full": "JaxW.png",
@@ -627,11 +463,7 @@
           "description": "Jax's combat prowess allows him to dodge all incoming attacks for a short duration and then quickly counterattack, stunning all surrounding enemies.",
           "tooltip": "Jax enters a defensive stance for up to {{ dodgeduration }} seconds, dodging incoming Attacks and taking {{ aoedamagereduction }}% less damage from area of effect Abilities. After {{ dodgeduration }} seconds or <recast>Recasting</recast>, Jax deals <magicDamage>{{ totaldamage }} + {{ percenthealthdamage }}% max Health magic damage</magicDamage> and <status>Stuns</status> nearby enemies for {{ stunduration }} second. <br /><br />The damage is increased by {{ percentincreasedperdodge*100 }}% per Attack dodged, up to a maximum of <magicDamage>{{ maxdamage }} + {{ maxpercenthealthdamage }}% max Health</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown",
-              "@AbilityResourceName@ Cost"
-            ],
+            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -639,95 +471,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            17,
-            15,
-            13,
-            11,
-            9
-          ],
+          "cooldown": [17, 15, 13, 11, 9],
           "cooldownBurn": "17/15/13/11/9",
-          "cost": [
-            50,
-            60,
-            70,
-            80,
-            90
-          ],
+          "cost": [50, 60, 70, 80, 90],
           "costBurn": "50/60/70/80/90",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -745,13 +505,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            300,
-            300,
-            300,
-            300,
-            300
-          ],
+          "range": [300, 300, 300, 300, 300],
           "rangeBurn": "300",
           "image": {
             "full": "JaxE.png",
@@ -790,71 +544,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            110,
-            100,
-            90
-          ],
+          "cooldown": [110, 100, 90],
           "cooldownBurn": "110/100/90",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -872,11 +578,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            260,
-            260,
-            260
-          ],
+          "range": [260, 260, 260],
           "rangeBurn": "260",
           "image": {
             "full": "JaxR.png",

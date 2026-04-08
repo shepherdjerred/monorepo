@@ -235,10 +235,7 @@
         "Ivern's brush has a long duration. Watch out for ambushes!",
         "Be careful when fighting Ivern alone if he has Daisy ready to help!"
       ],
-      "tags": [
-        "Support",
-        "Mage"
-      ],
+      "tags": ["Support", "Mage"],
       "partype": "Mana",
       "info": {
         "attack": 3,
@@ -275,11 +272,7 @@
           "description": "Ivern conjures a vine, dealing damage and rooting enemy targets hit. Ivern's allies can dash to the rooted target.",
           "tooltip": "Ivern conjures a vine dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Rooting</status> the first enemy hit for {{ rootduration }} seconds. Allies that Attack a <status>Rooted</status> enemy dash into Attack Range. <br /><br /><recast>Recast:</recast> Ivern dashes directly onto the <status>Rooted</status> enemy.<br /><br /><rules>Hitting non-epic monsters reduces <spellName>Rootcaller's</spellName> cooldown by 50%.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Root Duration",
-              "Damage",
-              "Cooldown"
-            ],
+            "label": ["Root Duration", "Damage", "Cooldown"],
             "effect": [
               "{{ rootduration }} -> {{ rootdurationNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -287,95 +280,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            14,
-            13,
-            12,
-            11,
-            10
-          ],
+          "cooldown": [14, 13, 12, 11, 10],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [
-            60,
-            60,
-            60,
-            60,
-            60
-          ],
+          "cost": [60, 60, 60, 60, 60],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -393,13 +314,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1125,
-            1125,
-            1125,
-            1125,
-            1125
-          ],
+          "range": [1125, 1125, 1125, 1125, 1125],
           "rangeBurn": "1125",
           "image": {
             "full": "IvernQ.png",
@@ -418,105 +333,30 @@
           "description": "In brush, Ivern and his nearby allies attacks deal bonus magic damage. Ivern can activate this ability to create a patch of brush.",
           "tooltip": "<spellPassive>Passive:</spellPassive> While in brush and for {{ buffduration }} seconds after leaving, Ivern's Attacks deal an additional <magicDamage>{{ totaldamage }} magic damage</magicDamage>. Nearby allies will gain this effect for {{ allybuffduration }} seconds and deal <magicDamage>{{ totalallydamage }} magic damage</magicDamage>.<br /><br /><spellActive>Active:</spellActive> Ivern grows a patch of Brush, revealing the area for {{ revealduration }} seconds. The Brush persists until Ivern's team loses vision within it, or up to {{ maxbrushduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Magic Damage",
-              "Ally Magic Damage"
-            ],
+            "label": ["Magic Damage", "Ally Magic Damage"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ allybasedamage }} -> {{ allybasedamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            0.5,
-            0.5,
-            0.5,
-            0.5,
-            0.5
-          ],
+          "cooldown": [0.5, 0.5, 0.5, 0.5, 0.5],
           "cooldownBurn": "0.5",
-          "cost": [
-            30,
-            30,
-            30,
-            30,
-            30
-          ],
+          "cost": [30, 30, 30, 30, 30],
           "costBurn": "30",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -534,13 +374,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "3",
-          "range": [
-            1150,
-            1150,
-            1150,
-            1150,
-            1150
-          ],
+          "range": [1150, 1150, 1150, 1150, 1150],
           "rangeBurn": "1150",
           "image": {
             "full": "IvernW.png",
@@ -559,12 +393,7 @@
           "description": "Ivern places a shield on an ally which explodes after a short duration slowing and damaging enemies. The shield refreshes if it hits no enemies.",
           "tooltip": "Ivern grants <shield>{{ totalshield }} Shield</shield> to an ally champion or Daisy. After {{ shieldduration }} seconds, it bursts, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slowing</status> enemies by {{ slowamount*100 }}% for {{ slowduration }} seconds.<br /><br />If <spellName>Triggerseed</spellName> detonates and no enemy champions are hit while the shield still persists, the ally will be shielded for <shield>{{ totalshield }} </shield>for {{ shieldduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Shield Amount",
-              "Damage",
-              "Slow",
-              "Cooldown"
-            ],
+            "label": ["Shield Amount", "Damage", "Slow", "Cooldown"],
             "effect": [
               "{{ baseshield }} -> {{ baseshieldNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -573,95 +402,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            11,
-            10,
-            9,
-            8,
-            7
-          ],
+          "cooldown": [11, 10, 9, 8, 7],
           "cooldownBurn": "11/10/9/8/7",
-          "cost": [
-            70,
-            70,
-            70,
-            70,
-            70
-          ],
+          "cost": [70, 70, 70, 70, 70],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -679,13 +436,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            750,
-            750,
-            750,
-            750,
-            750
-          ],
+          "range": [750, 750, 750, 750, 750],
           "rangeBurn": "750",
           "image": {
             "full": "IvernE.png",
@@ -718,71 +469,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            140,
-            130,
-            120
-          ],
+          "cooldown": [140, 130, 120],
           "cooldownBurn": "140/130/120",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -800,11 +503,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            600,
-            600,
-            600
-          ],
+          "range": [600, 600, 600],
           "rangeBurn": "600",
           "image": {
             "full": "IvernR.png",

@@ -361,9 +361,7 @@
         "Gwen must hit something to recast her Ultimate, try to evade her between casts.",
         "Gwen needs to attack a few times to set up her damage, so try to get the jump on her."
       ],
-      "tags": [
-        "Fighter"
-      ],
+      "tags": ["Fighter"],
       "partype": "Mana",
       "info": {
         "attack": 7,
@@ -400,105 +398,30 @@
           "description": "Gwen snips her scissors in a cone up to 6 times dealing magic damage. Gwen deals true damage to units in the center and applies her passive to them on each snip.",
           "tooltip": "<spellPassive>Passive</spellPassive>: Gwen gains 1 stack when she hits an enemy with an attack (max 4, lasts {{ buffduration }} seconds).<br /><br /><spellActive>Active</spellActive>: Consumes stacks. Gwen snips once for <magicDamage>{{ miniswipedamage }} magic damage</magicDamage>, snips again for each ammo consumed, and then snips a final time for <magicDamage>{{ finalswipedamage }} magic damage</magicDamage>. <br /><br />The center of each strikes converts {{ truedamageconversion*100 }}% of the damage into <trueDamage>true damage</trueDamage> instead and applies <spellName>A Thousand Cuts</spellName> to enemies hit.<br /><rules><br />Deals {{ minionmod*100 }}% damage to minions.<br />Minions below {{ executethreshold*100 }}% health take {{ executebonus }}% bonus damage instead of reduced damage.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Cooldown",
-              "Final Strike Damage"
-            ],
+            "label": ["Cooldown", "Final Strike Damage"],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ swipedamagebase }} -> {{ swipedamagebaseNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            6.5,
-            5.75,
-            5,
-            4.25,
-            3.5
-          ],
+          "cooldown": [6.5, 5.75, 5, 4.25, 3.5],
           "cooldownBurn": "6.5/5.75/5/4.25/3.5",
-          "cost": [
-            40,
-            40,
-            40,
-            40,
-            40
-          ],
+          "cost": [40, 40, 40, 40, 40],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -516,13 +439,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            450,
-            450,
-            450,
-            450,
-            450
-          ],
+          "range": [450, 450, 450, 450, 450],
           "rangeBurn": "450",
           "image": {
             "full": "GwenQ.png",
@@ -541,105 +458,30 @@
           "description": "Gwen summons mist that protects her from enemies outside of it. She can only be targeted by enemies who enter the mist.",
           "tooltip": "Gwen summons the Hallowed Mist, making her Untargetable to all enemies (except towers) outside the zone for {{ zoneduration }} seconds or until she leaves it. While in the Mist, Gwen gains {{ totalresists }} <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR>.<br /><br />Gwen can <recast>Recast</recast> this Ability once to call the Mist to her. This will automatically <recast>Recast</recast> the first time Gwen attempts to leave the zone.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Bonus Resistances",
-              "Cooldown"
-            ],
+            "label": ["Bonus Resistances", "Cooldown"],
             "effect": [
               "{{ baseresists }} -> {{ baseresistsNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            22,
-            21,
-            20,
-            19,
-            18
-          ],
+          "cooldown": [22, 21, 20, 19, 18],
           "cooldownBurn": "22/21/20/19/18",
-          "cost": [
-            60,
-            60,
-            60,
-            60,
-            60
-          ],
+          "cost": [60, 60, 60, 60, 60],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -657,13 +499,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "range": [0, 0, 0, 0, 0],
           "rangeBurn": "0",
           "image": {
             "full": "GwenW.png",
@@ -682,11 +518,7 @@
           "description": "Gwen dashes a short distance then gains Attack Speed, attack range, and magic damage <OnHit>On-Hit</OnHit> for a few seconds. If she hits an enemy during that time, this Ability's cooldown is partially refunded. ",
           "tooltip": "Gwen dashes and empowers her Attacks for {{ buffduration }} seconds.<br /><br />Empowered Attacks gain <attackSpeed>{{ bonusattackspeed }} Attack Speed</attackSpeed>, <magicDamage>{{ onhitdamage }} magic damage</magicDamage> %i:OnHit% <OnHit>On-Hit</OnHit>, {{ bonusattackrange }} range, and the first one to hit an enemy refunds {{ cdrefund*100 }}% of this Ability's Cooldown.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Cooldown",
-              "Attack Speed",
-              "Cooldown Refund"
-            ],
+            "label": ["Cooldown", "Attack Speed", "Cooldown Refund"],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ baseattackspeed }}% -> {{ baseattackspeedNL }}%",
@@ -694,95 +526,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            13,
-            12.5,
-            12,
-            11.5,
-            11
-          ],
+          "cooldown": [13, 12.5, 12, 11.5, 11],
           "cooldownBurn": "13/12.5/12/11.5/11",
-          "cost": [
-            35,
-            35,
-            35,
-            35,
-            35
-          ],
+          "cost": [35, 35, 35, 35, 35],
           "costBurn": "35",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -800,13 +560,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            400,
-            400,
-            400,
-            400,
-            400
-          ],
+          "range": [400, 400, 400, 400, 400],
           "rangeBurn": "400",
           "image": {
             "full": "GwenE.png",
@@ -825,11 +579,7 @@
           "description": "Gwen hurls a needle that slows enemies hit, deals magic damage, and applies A Thousand Cuts to champions hit. <br><br>This ability can be cast up to two more times, with each cast throwing additional needles and dealing more damage. ",
           "tooltip": "<spellActive>First Cast:</spellActive> Hurl a needle that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>, <status>Slows</status> by {{ initialslow*-100 }}% for {{ debuffduration }} seconds, and applies <spellName>A Thousand Cuts</spellName> to all enemies hit. Gwen can <recast>Recast</recast> this ability up to 2 additional times within 6 seconds ({{ lockouttime }}s cooldown between casts).<br /><br /><recast>Second Cast:</recast> Fire three needles to deal <magicDamage>{{ totaldamage3 }} magic damage</magicDamage><br /><recast>Third Cast:</recast> Fire five needles to deal <magicDamage>{{ totaldamage5 }} magic damage</magicDamage>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Cooldown",
-              "Base Damage",
-              "Slow"
-            ],
+            "label": ["Cooldown", "Base Damage", "Slow"],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -837,71 +587,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            120,
-            100,
-            80
-          ],
+          "cooldown": [120, 100, 80],
           "cooldownBurn": "120/100/80",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -919,11 +621,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1200,
-            1200,
-            1200
-          ],
+          "range": [1200, 1200, 1200],
           "rangeBurn": "1200",
           "image": {
             "full": "GwenR.png",

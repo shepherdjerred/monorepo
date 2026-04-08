@@ -14,7 +14,7 @@ describe("resolveChampionKey", () => {
   });
 
   test("returns fallback for unknown champion ID", () => {
-    const result = resolveChampionKey(99999);
+    const result = resolveChampionKey(99_999);
     expect(result).toStartWith("Champion");
   });
 

@@ -153,21 +153,21 @@ describe("LoadingScreenBanSchema", () => {
   });
 });
 
-describe("LoadingScreenDataSchema", () => {
-  const makeParticipant = (puuid: string, team: "blue" | "red") => ({
-    puuid,
-    summonerName: `Player-${puuid}`,
-    championName: "Aatrox",
-    championDisplayName: "Aatrox",
-    skinNum: 0,
-    team,
-    spell1Id: SummonerSpellIdSchema.parse(4),
-    spell2Id: SummonerSpellIdSchema.parse(14),
-    isTrackedPlayer: false,
-  });
+const makeParticipant = (puuid: string, team: "blue" | "red") => ({
+  puuid,
+  summonerName: `Player-${puuid}`,
+  championName: "Aatrox",
+  championDisplayName: "Aatrox",
+  skinNum: 0,
+  team,
+  spell1Id: SummonerSpellIdSchema.parse(4),
+  spell2Id: SummonerSpellIdSchema.parse(14),
+  isTrackedPlayer: false,
+});
 
+describe("LoadingScreenDataSchema", () => {
   const validData = {
-    gameId: 12345,
+    gameId: 12_345,
     queueType: "solo",
     queueDisplayName: "Ranked Solo",
     isRanked: true,
@@ -202,7 +202,7 @@ describe("LoadingScreenDataSchema", () => {
 
   test("accepts valid standard game data", () => {
     const result = LoadingScreenDataSchema.parse(validData);
-    expect(result.gameId).toBe(12345);
+    expect(result.gameId).toBe(12_345);
     expect(result.layout).toBe("standard");
     expect(result.participants).toHaveLength(10);
     expect(result.bans).toHaveLength(2);

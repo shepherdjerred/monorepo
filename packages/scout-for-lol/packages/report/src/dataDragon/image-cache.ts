@@ -145,7 +145,7 @@ export function getChampionLoadingImage(
 
 // Pre-load champion loading screen images for a list of champion/skin combos
 export async function preloadChampionLoadingImages(
-  entries: Array<{ championName: string; skinNum: number }>,
+  entries: { championName: string; skinNum: number }[],
 ): Promise<void> {
   // Deduplicate entries, also always include default skin (0) as fallback
   const keysToLoad = new Set<string>();
