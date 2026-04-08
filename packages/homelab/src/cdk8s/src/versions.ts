@@ -228,6 +228,9 @@ const versions = {
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "temporalio/admin-tools":
     "1.29.5@sha256:95f36d92249d086f0cbd1fd8662839a0c73083397529f5395f447f1c761219af",
+  // Custom temporal-worker image - updated by CI pipeline
+  // not managed by renovate
+  "shepherdjerred/temporal-worker": "dev",
 };
 
 export default versions;

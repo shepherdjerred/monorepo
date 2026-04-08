@@ -12,6 +12,7 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   resume: [],
 
   // eslint-config only
+  temporal: ["eslint-config"],
   "astro-opengraph-images": ["eslint-config"],
   webring: ["eslint-config"],
   toolkit: ["eslint-config"],

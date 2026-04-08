@@ -23,8 +23,9 @@ paths = [
   '''packages/clauderon/src/proxy/talos_gateway\.rs''',
   # JWT in README (documentation example)
   '''packages/discord-plays-pokemon/README\.md''',
-  # Google Maps API key (restricted to specific referrer, public-facing)
+  # Public Firebase web API key (client-side safe, same key as better-skill-capped fetcher)
   '''packages/better-skill-capped/fetcher/src/''',
+  '''packages/temporal/src/activities/fetcher\.ts''',
   # Patch files — git object hashes falsely flagged as sourcegraph-access-token
   '''patches/satori@.*\.patch$''',
   '''packages/.*/patches/satori@.*\.patch$''',

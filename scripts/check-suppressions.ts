@@ -46,6 +46,8 @@ const EXCLUDED_FILES = [
   "packages/birmel/src/music/extractors.ts",
   // Intentional: Sentry ErrorBoundary class types incompatible with React 19
   "packages/discord-plays-pokemon/packages/frontend/src/main.tsx",
+  // Intentional: public Firebase web API key (same as better-skill-capped fetcher)
+  "packages/temporal/src/activities/fetcher.ts",
   // Documentation: CLAUDE.md files and docs mention suppression patterns as things to avoid
   "CLAUDE.md",
   "packages/docs/",
