@@ -63,6 +63,7 @@ import {
   buildScoutImageHelper,
   buildDiscordPlaysPokemonImageHelper,
   buildBetterSkillCappedFetcherImageHelper,
+  buildTemporalWorkerImageHelper,
   pushHomelabImageHelper,
   pushDepsSummaryImageHelper,
   pushDnsAuditImageHelper,
@@ -71,6 +72,7 @@ import {
   pushScoutImageHelper,
   pushDiscordPlaysPokemonImageHelper,
   pushBetterSkillCappedFetcherImageHelper,
+  pushTemporalWorkerImageHelper,
   buildCiBaseImageHelper,
   pushCiBaseImageHelper,
 } from "./image";
@@ -677,6 +679,52 @@ export class Monorepo {
     gitSha: string = "unknown",
   ): Promise<string> {
     return pushBetterSkillCappedFetcherImageHelper(
+      pkgDir,
+      tags,
+      registryUsername,
+      registryPassword,
+      depNames,
+      depDirs,
+      version,
+      gitSha,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Temporal worker image
+  // ---------------------------------------------------------------------------
+
+  /** Build the temporal-worker image (Bun + Temporal SDK) */
+  @func()
+  buildTemporalWorkerImage(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Container {
+    return buildTemporalWorkerImageHelper(
+      pkgDir,
+      depNames,
+      depDirs,
+      version,
+      gitSha,
+    );
+  }
+
+  /** Push a temporal-worker image to a registry. Returns digest. */
+  @func({ cache: "never" })
+  async pushTemporalWorkerImage(
+    pkgDir: Directory,
+    tags: string[],
+    registryUsername: string,
+    registryPassword: Secret,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Promise<string> {
+    return pushTemporalWorkerImageHelper(
       pkgDir,
       tags,
       registryUsername,

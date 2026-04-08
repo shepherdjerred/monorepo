@@ -432,6 +432,80 @@ export async function pushObsidianHeadlessImageHelper(
 }
 
 // ---------------------------------------------------------------------------
+// Temporal worker image builder
+// ---------------------------------------------------------------------------
+
+/**
+ * Build the Temporal worker image.
+ * Standalone Bun package — simple workspace mount + install + run.
+ */
+export function buildTemporalWorkerImageHelper(
+  pkgDir: Directory,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Container {
+  const excludes = ["node_modules", "dist", ".eslintcache"];
+
+  let container = dag
+    .container()
+    .from(BUN_IMAGE)
+    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
+    .withWorkdir("/workspace")
+    .withDirectory("/workspace/packages/temporal", pkgDir, {
+      exclude: excludes,
+    });
+
+  for (let i = 0; i < depNames.length; i++) {
+    container = container.withDirectory(
+      `/workspace/packages/${depNames[i]}`,
+      depDirs[i],
+      { exclude: excludes },
+    );
+  }
+
+  return container
+    .withWorkdir("/workspace/packages/temporal")
+    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withLabel(
+      "org.opencontainers.image.source",
+      "https://github.com/shepherdjerred/monorepo",
+    )
+    .withLabel("org.opencontainers.image.version", version)
+    .withLabel("org.opencontainers.image.revision", gitSha)
+    .withEnvVariable("VERSION", version)
+    .withEnvVariable("GIT_SHA", gitSha)
+    .withEntrypoint(["bun", "run", "src/worker.ts"]);
+}
+
+/** Push a temporal-worker image to a registry. */
+export async function pushTemporalWorkerImageHelper(
+  pkgDir: Directory,
+  tags: string[],
+  registryUsername: string,
+  registryPassword: Secret,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Promise<string> {
+  const container = buildTemporalWorkerImageHelper(
+    pkgDir,
+    depNames,
+    depDirs,
+    version,
+    gitSha,
+  );
+  return pushContainerHelper(
+    container,
+    tags,
+    registryUsername,
+    registryPassword,
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Workspace-monorepo image builders (scout, discord-plays-pokemon, better-skill-capped)
 // ---------------------------------------------------------------------------
 
