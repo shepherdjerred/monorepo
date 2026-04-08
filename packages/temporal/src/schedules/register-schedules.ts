@@ -1,5 +1,8 @@
 import type { Client } from "@temporalio/client";
-import { ScheduleOverlapPolicy } from "@temporalio/client";
+import {
+  ScheduleNotFoundError,
+  ScheduleOverlapPolicy,
+} from "@temporalio/client";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 type ScheduleDefinition = {
@@ -104,8 +107,11 @@ export async function registerSchedules(client: Client): Promise<void> {
       }));
 
       console.warn(`Updated schedule: ${schedule.id}`);
-    } catch {
-      // Schedule doesn't exist, create it
+    } catch (error: unknown) {
+      if (!(error instanceof ScheduleNotFoundError)) {
+        throw error;
+      }
+      // Schedule doesn't exist yet — create it
       await scheduleClient.create({
         scheduleId: schedule.id,
         spec: {

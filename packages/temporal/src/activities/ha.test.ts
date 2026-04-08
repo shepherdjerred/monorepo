@@ -33,10 +33,10 @@ describe("haActivities", () => {
         "HA_TOKEN environment variable is required",
       );
     } finally {
-      if (originalUrl !== undefined) {
-        Bun.env["HA_URL"] = originalUrl;
-      } else {
+      if (originalUrl === undefined) {
         delete Bun.env["HA_URL"];
+      } else {
+        Bun.env["HA_URL"] = originalUrl;
       }
       if (originalToken !== undefined) {
         Bun.env["HA_TOKEN"] = originalToken;

@@ -147,13 +147,17 @@ export const depsSummaryActivities = {
     const tempDir = `/tmp/homelab-dep-summary-${id}`;
 
     try {
-      const git = simpleGit();
-      await git.clone(REPO_URL, tempDir, ["--depth", "100"]);
-
-      const repoGit = simpleGit(tempDir);
       const since = new Date();
       since.setDate(since.getDate() - daysBack);
       const sinceStr = since.toISOString().split("T")[0] ?? "";
+
+      const git = simpleGit();
+      await git.clone(REPO_URL, tempDir, [
+        `--shallow-since=${sinceStr}`,
+        "--no-single-branch",
+      ]);
+
+      const repoGit = simpleGit(tempDir);
 
       const log = await repoGit.log({
         "--since": sinceStr,

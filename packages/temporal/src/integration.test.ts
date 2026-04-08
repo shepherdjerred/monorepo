@@ -1,7 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { Client, Connection } from "@temporalio/client";
 import { Worker } from "@temporalio/worker";
-import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const TEMPORAL_ADDRESS = "localhost:7233";
 
@@ -30,14 +29,12 @@ describe("temporal integration", () => {
 
     // Start a worker with just the dns-audit activities and workflow
     const worker = await Worker.create({
-      connection: await (
-        await import("@temporalio/worker")
-      ).NativeConnection.connect({
-        address: TEMPORAL_ADDRESS,
-      }),
+      connection: await import("@temporalio/worker").then((mod) =>
+        mod.NativeConnection.connect({ address: TEMPORAL_ADDRESS }),
+      ),
       namespace: "default",
       taskQueue,
-      workflowsPath: new URL("./workflows/index.ts", import.meta.url).pathname,
+      workflowsPath: new URL("workflows/index.ts", import.meta.url).pathname,
       activities: {
         ...dnsAuditActivities,
       },
@@ -77,14 +74,12 @@ describe("temporal integration", () => {
     const { haActivities } = await import("#activities/ha.ts");
 
     const worker = await Worker.create({
-      connection: await (
-        await import("@temporalio/worker")
-      ).NativeConnection.connect({
-        address: TEMPORAL_ADDRESS,
-      }),
+      connection: await import("@temporalio/worker").then((mod) =>
+        mod.NativeConnection.connect({ address: TEMPORAL_ADDRESS }),
+      ),
       namespace: "default",
       taskQueue,
-      workflowsPath: new URL("./workflows/index.ts", import.meta.url).pathname,
+      workflowsPath: new URL("workflows/index.ts", import.meta.url).pathname,
       activities: {
         ...haActivities,
       },
