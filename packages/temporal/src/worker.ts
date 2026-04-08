@@ -1,7 +1,7 @@
+import { Client, Connection } from "@temporalio/client";
 import { NativeConnection, Worker } from "@temporalio/worker";
 import { TASK_QUEUES } from "./shared/task-queues.ts";
 import { registerSchedules } from "./schedules/register-schedules.ts";
-import { createTemporalClient } from "./client.ts";
 import { activities } from "./activities/index.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
@@ -22,8 +22,9 @@ async function main(): Promise<void> {
 
   console.warn(`Worker started on task queue "${TASK_QUEUES.DEFAULT}"`);
 
-  // Register schedules after worker is ready
-  const client = await createTemporalClient();
+  // Share the same connection for schedule registration
+  const clientConnection = await Connection.connect({ address });
+  const client = new Client({ connection: clientConnection });
   await registerSchedules(client);
   console.warn("Schedules registered");
 

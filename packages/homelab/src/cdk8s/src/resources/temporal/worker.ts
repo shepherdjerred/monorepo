@@ -125,8 +125,6 @@ export function createTemporalWorkerDeployment(
           key: "RECIPIENT_EMAIL",
         }),
         SENDER_EMAIL: EnvValue.fromValue("updates@homelab.local"),
-        // Golink
-        GOLINK_URL: EnvValue.fromValue("https://go.tailnet-1a49.ts.net"),
       },
     }),
   );

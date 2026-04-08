@@ -55,12 +55,11 @@ describe("dnsAuditActivities", () => {
         ]);
 
         expect(warnings).toHaveLength(1);
-        const parsed = JSON.parse(warnings[0] ?? "{}") as Record<
-          string,
-          unknown
-        >;
-        expect(parsed["domain"]).toBe("example.com");
-        expect(parsed["level"]).toBe("info");
+        const parsed: unknown = JSON.parse(warnings[0] ?? "{}");
+        expect(parsed).toMatchObject({
+          domain: "example.com",
+          level: "info",
+        });
       } finally {
         console.warn = original;
       }
