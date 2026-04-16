@@ -1,8 +1,8 @@
-# Type-Safe RPC Client, OpenAPI Integration, and Testing
+# OpenAPI Integration and RPC Client
 
 ## Type-Safe RPC Client
 
-### Server Setup
+### Server Setup (chain routes for type inference)
 
 ```typescript
 import { Hono } from "hono";
@@ -20,6 +20,7 @@ const app = new Hono()
     return c.json({ id, name: "John" });
   });
 
+// CRITICAL: export the type for client inference
 export type AppType = typeof app;
 export default app;
 ```
@@ -32,7 +33,7 @@ import type { AppType } from "./server";
 
 const client = hc<AppType>("http://localhost:3000");
 
-// Fully typed API calls
+// All calls are fully typed — params, body, response
 const users = await client.users.$get();
 const json = await users.json(); // { users: [] }
 
@@ -41,78 +42,28 @@ const newUser = await client.users.$post({
 });
 const created = await newUser.json(); // { id: 1, name: "John" }
 
+// Dynamic path params use bracket notation
 const user = await client.users[":id"].$get({
   param: { id: "1" },
 });
 ```
 
-## Testing
-
-### Using app.request()
+### Client with Custom Fetch (e.g., for auth headers)
 
 ```typescript
-import { describe, test, expect } from "bun:test";
-import app from "./app";
+const client = hc<AppType>("http://localhost:3000", {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+});
 
-describe("API", () => {
-  test("GET / returns hello", async () => {
-    const res = await app.request("/");
-    expect(res.status).toBe(200);
-    expect(await res.text()).toBe("Hello Hono!");
-  });
-
-  test("POST /users creates user", async () => {
-    const res = await app.request("/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: "John", email: "john@example.com" }),
-    });
-
-    expect(res.status).toBe(201);
-    const json = await res.json();
-    expect(json.name).toBe("John");
-  });
-
-  test("GET /users/:id returns user", async () => {
-    const res = await app.request("/users/123");
-    expect(res.status).toBe(200);
-    const json = await res.json();
-    expect(json.id).toBe("123");
-  });
-
-  test("returns 401 without auth", async () => {
-    const res = await app.request("/protected");
-    expect(res.status).toBe(401);
-  });
-
-  test("returns 200 with auth", async () => {
-    const res = await app.request("/protected", {
-      headers: { Authorization: "Bearer token" },
-    });
-    expect(res.status).toBe(200);
-  });
+// Or per-request with init
+const res = await client.users.$get(undefined, {
+  headers: { "X-Custom": "value" },
 });
 ```
 
-### Testing with Context
-
-```typescript
-import { testClient } from "hono/testing";
-
-describe("API with testClient", () => {
-  test("typed client testing", async () => {
-    const client = testClient(app);
-
-    const res = await client.users.$get();
-    expect(res.status).toBe(200);
-
-    const data = await res.json();
-    expect(data.users).toEqual([]);
-  });
-});
-```
-
-## OpenAPI Integration
+## OpenAPI with @hono/zod-openapi
 
 ### Setup
 
@@ -120,7 +71,7 @@ describe("API with testClient", () => {
 bun add @hono/zod-openapi
 ```
 
-### Define Routes with OpenAPI
+### Define Routes with OpenAPI Metadata
 
 ```typescript
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
@@ -157,14 +108,18 @@ app.openapi(getUserRoute, (c) => {
   const { id } = c.req.valid("param");
   return c.json({ id, name: "John" });
 });
+```
 
-// Generate OpenAPI spec
+### Generate Spec and Serve Swagger UI
+
+```typescript
+// Serve OpenAPI JSON spec
 app.doc("/openapi.json", {
   openapi: "3.0.0",
   info: { title: "My API", version: "1.0.0" },
 });
 
-// Swagger UI
+// Swagger UI endpoint
 app.get("/docs", (c) => {
   return c.html(`
     <!DOCTYPE html>
@@ -181,5 +136,38 @@ app.get("/docs", (c) => {
       </body>
     </html>
   `);
+});
+```
+
+### Reusable OpenAPI Schemas
+
+```typescript
+// Define reusable schemas with .openapi()
+const UserSchema = z.object({
+  id: z.string().openapi({ example: "user-123" }),
+  name: z.string().openapi({ example: "John Doe" }),
+  email: z.string().email().openapi({ example: "john@example.com" }),
+}).openapi("User");
+
+const CreateUserSchema = z.object({
+  name: z.string().min(1).openapi({ example: "John Doe" }),
+  email: z.string().email().openapi({ example: "john@example.com" }),
+}).openapi("CreateUser");
+
+// Use in route definitions
+const createUserRoute = createRoute({
+  method: "post",
+  path: "/users",
+  request: {
+    body: {
+      content: { "application/json": { schema: CreateUserSchema } },
+    },
+  },
+  responses: {
+    201: {
+      content: { "application/json": { schema: UserSchema } },
+      description: "User created",
+    },
+  },
 });
 ```

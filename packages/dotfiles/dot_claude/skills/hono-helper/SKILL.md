@@ -1,542 +1,128 @@
 ---
 name: hono-helper
-description: |
-  Hono web framework for edge-first, lightweight APIs - routing, middleware, validation, and multi-runtime support
-  When user works with Hono, builds APIs, creates middleware, uses Zod validation with Hono, or mentions hono patterns
+description: "Hono web framework expert — define route handlers with chained methods, validate requests with zValidator and Zod schemas, set up type-safe RPC clients with hc, configure middleware stacks, generate OpenAPI specs from Zod schemas, and deploy to Workers/Deno/Bun/Node.js runtimes"
 ---
 
-# Hono Helper Agent
+# Hono Helper
 
-## What's New in Hono (2024-2025)
+## When to Use
 
-- **Multi-runtime**: Runs on Bun, Node.js, Deno, Cloudflare Workers, AWS Lambda, Vercel
-- **RPC mode**: End-to-end type safety with `hc` client
-- **Zod OpenAPI**: Generate OpenAPI specs from Zod schemas
-- **Streaming**: First-class streaming response support
-- **JSX middleware**: Server-side JSX rendering
-- **Performance**: One of the fastest web frameworks (Bun benchmark leader)
+Activate when building APIs with Hono, setting up Zod validation, configuring RPC clients, creating middleware, generating OpenAPI specs, or deploying to edge runtimes.
 
-## Installation
+## Runtime Setup
 
-```bash
-# For Bun
-bun add hono
-
-# For Node.js
-npm install hono @hono/node-server
-
-# For Cloudflare Workers
-npm install hono
-```
-
-## Basic Application
-
-### Bun Setup
+### Bun (default export auto-serves on port 3000)
 
 ```typescript
 import { Hono } from "hono";
-
 const app = new Hono();
-
 app.get("/", (c) => c.text("Hello Hono!"));
-
 export default app;
 ```
 
-Bun automatically serves the default export on port 3000.
-
-### Node.js Setup
+### Node.js (requires @hono/node-server)
 
 ```typescript
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
-
 const app = new Hono();
-
-app.get("/", (c) => c.text("Hello Hono!"));
-
 serve({ fetch: app.fetch, port: 3000 });
 ```
 
-## Routing
-
-### HTTP Methods
+### Cloudflare Workers
 
 ```typescript
-app.get("/users", (c) => c.json({ users: [] }));
-app.post("/users", (c) => c.json({ created: true }));
-app.put("/users/:id", (c) => c.json({ updated: true }));
-app.patch("/users/:id", (c) => c.json({ patched: true }));
-app.delete("/users/:id", (c) => c.json({ deleted: true }));
-
-// All methods
-app.all("/any", (c) => c.text("Any method"));
-
-// Multiple methods
-app.on(["GET", "POST"], "/multi", (c) => c.text("GET or POST"));
+import { Hono } from "hono";
+const app = new Hono();
+export default app; // Workers runtime picks up the fetch handler
 ```
 
-### Path Parameters
+## Hono-Specific Patterns
+
+### Chained Route Definitions (enables RPC type inference)
 
 ```typescript
-// Single parameter
-app.get("/users/:id", (c) => {
-  const id = c.req.param("id");
-  return c.json({ id });
-});
+// IMPORTANT: chain routes on a single app instance for RPC type export
+const app = new Hono()
+  .get("/users", (c) => c.json({ users: [] }))
+  .post("/users", zValidator("json", CreateUserSchema), (c) => {
+    const data = c.req.valid("json");
+    return c.json({ id: 1, ...data }, 201);
+  })
+  .get("/users/:id", (c) => {
+    return c.json({ id: c.req.param("id"), name: "John" });
+  });
 
-// Multiple parameters
-app.get("/posts/:postId/comments/:commentId", (c) => {
-  const { postId, commentId } = c.req.param();
-  return c.json({ postId, commentId });
-});
-
-// Optional parameter
-app.get("/articles/:id?", (c) => {
-  const id = c.req.param("id") ?? "default";
-  return c.json({ id });
-});
+export type AppType = typeof app; // Required for RPC client
+export default app;
 ```
 
-### Wildcards and Regex
+### Route Grouping with .route()
 
 ```typescript
-// Wildcard - matches any path segment
-app.get("/files/*", (c) => {
-  const path = c.req.path;
-  return c.text(`File path: ${path}`);
-});
-
-// Regex constraint
-app.get("/users/:id{[0-9]+}", (c) => {
-  const id = c.req.param("id"); // Guaranteed to be numeric
-  return c.json({ id: Number(id) });
-});
-```
-
-### Route Grouping
-
-```typescript
-const api = new Hono();
-
-api.get("/users", (c) => c.json({ users: [] }));
-api.get("/posts", (c) => c.json({ posts: [] }));
+const users = new Hono()
+  .get("/", (c) => c.json({ users: [] }))
+  .post("/", zValidator("json", schema), (c) => c.json(c.req.valid("json"), 201));
 
 const app = new Hono();
-app.route("/api/v1", api);
-
-// Routes: GET /api/v1/users, GET /api/v1/posts
+app.route("/api/v1/users", users);
 ```
 
-### Chained Routes
+### Context Variables (typed shared state)
 
 ```typescript
-app
-  .get("/endpoint", (c) => c.text("GET"))
-  .post((c) => c.text("POST"))
-  .put((c) => c.text("PUT"));
-```
+type Env = { Variables: { userId: string; requestTime: number } };
 
-## Context API
-
-The `c` (context) object provides request/response utilities:
-
-### Request Access
-
-```typescript
-app.get("/info", (c) => {
-  // URL and path
-  const url = c.req.url;
-  const path = c.req.path;
-  const method = c.req.method;
-
-  // Query parameters
-  const page = c.req.query("page");
-  const allQueries = c.req.queries("tag"); // Array for repeated params
-
-  // Headers
-  const auth = c.req.header("Authorization");
-  const allHeaders = c.req.header(); // All headers
-
-  return c.json({ url, path, method, page, auth });
-});
-```
-
-### Body Parsing
-
-```typescript
-app.post("/data", async (c) => {
-  // JSON body
-  const json = await c.req.json();
-
-  // Form data
-  const form = await c.req.parseBody();
-
-  // Raw text
-  const text = await c.req.text();
-
-  // Array buffer
-  const buffer = await c.req.arrayBuffer();
-
-  return c.json({ received: true });
-});
-```
-
-### Response Methods
-
-```typescript
-// Text response
-app.get("/text", (c) => c.text("Plain text"));
-
-// JSON response
-app.get("/json", (c) => c.json({ message: "Hello" }));
-
-// HTML response
-app.get("/html", (c) => c.html("<h1>Hello</h1>"));
-
-// Custom status
-app.get("/created", (c) => c.json({ id: 1 }, 201));
-
-// Redirect
-app.get("/old", (c) => c.redirect("/new"));
-app.get("/permanent", (c) => c.redirect("/new", 301));
-
-// Not found
-app.get("/missing", (c) => c.notFound());
-
-// Stream response
-app.get("/stream", (c) => {
-  return c.streamText(async (stream) => {
-    await stream.write("Hello ");
-    await stream.write("World!");
-  });
-});
-```
-
-### Headers and Status
-
-```typescript
-app.get("/custom", (c) => {
-  // Set response headers
-  c.header("X-Custom-Header", "value");
-  c.header("Cache-Control", "max-age=3600");
-
-  // Set status
-  c.status(201);
-
-  return c.json({ created: true });
-});
-
-// Response with headers inline
-app.get("/inline", (c) => {
-  return c.json({ data: "value" }, 200, { "X-Custom": "header" });
-});
-```
-
-### Context Variables
-
-```typescript
-// Set variables for downstream handlers
+const app = new Hono<Env>();
 app.use(async (c, next) => {
   c.set("userId", "user-123");
-  c.set("requestTime", Date.now());
   await next();
 });
-
-app.get("/profile", (c) => {
-  const userId = c.get("userId");
-  const requestTime = c.get("requestTime");
-  return c.json({ userId, requestTime });
-});
+app.get("/me", (c) => c.json({ userId: c.get("userId") }));
 ```
 
-## Middleware
-
-### Inline Middleware
-
-```typescript
-app.use(async (c, next) => {
-  console.log(`${c.req.method} ${c.req.path}`);
-  const start = Date.now();
-  await next();
-  const ms = Date.now() - start;
-  c.header("X-Response-Time", `${ms}ms`);
-});
-```
-
-### Path-Specific Middleware
-
-```typescript
-// Apply to specific path
-app.use("/api/*", async (c, next) => {
-  const auth = c.req.header("Authorization");
-  if (!auth) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-  await next();
-});
-
-// Apply to specific method
-app.use("/admin/*", "POST", async (c, next) => {
-  // Only runs for POST requests to /admin/*
-  await next();
-});
-```
-
-### Middleware Factory Pattern
-
-```typescript
-const rateLimiter = (limit: number) => {
-  const requests = new Map<string, number>();
-
-  return async (c: Context, next: Next) => {
-    const ip = c.req.header("x-forwarded-for") ?? "unknown";
-    const count = requests.get(ip) ?? 0;
-
-    if (count >= limit) {
-      return c.json({ error: "Rate limited" }, 429);
-    }
-
-    requests.set(ip, count + 1);
-    await next();
-  };
-};
-
-app.use(rateLimiter(100));
-```
-
-### Built-in Middleware
-
-```typescript
-import { cors } from "hono/cors";
-import { logger } from "hono/logger";
-import { secureHeaders } from "hono/secure-headers";
-import { compress } from "hono/compress";
-import { etag } from "hono/etag";
-import { basicAuth } from "hono/basic-auth";
-import { bearerAuth } from "hono/bearer-auth";
-import { csrf } from "hono/csrf";
-import { timing } from "hono/timing";
-
-// CORS
-app.use(
-  cors({
-    origin: ["https://example.com"],
-    allowMethods: ["GET", "POST", "PUT", "DELETE"],
-    allowHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  }),
-);
-
-// Logging
-app.use(logger());
-
-// Security headers
-app.use(secureHeaders());
-
-// Compression
-app.use(compress());
-
-// ETag caching
-app.use(etag());
-
-// Basic auth
-app.use(
-  "/admin/*",
-  basicAuth({
-    username: "admin",
-    password: "secret",
-  }),
-);
-
-// Bearer token auth
-app.use(
-  "/api/*",
-  bearerAuth({
-    token: "my-secret-token",
-  }),
-);
-
-// CSRF protection
-app.use(csrf());
-
-// Server timing
-app.use(timing());
-```
-
-## Validation with Zod
-
-### Setup
+## Zod Validation with zValidator
 
 ```bash
 bun add @hono/zod-validator zod
 ```
 
-### Request Validation
+### Validation Targets
 
 ```typescript
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 
-const CreateUserSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().email(),
-  age: z.number().int().positive().optional(),
-});
-
-app.post("/users", zValidator("json", CreateUserSchema), (c) => {
-  const data = c.req.valid("json");
-  // data is typed: { name: string; email: string; age?: number }
-  return c.json({ created: data });
-});
-```
-
-### Multiple Validators
-
-```typescript
-const QuerySchema = z.object({
-  page: z.coerce.number().default(1),
-  limit: z.coerce.number().default(10),
-});
-
-const ParamSchema = z.object({
-  id: z.string().uuid(),
-});
-
+// Validate multiple targets on a single route
 app.get(
   "/users/:id",
-  zValidator("param", ParamSchema),
-  zValidator("query", QuerySchema),
+  zValidator("param", z.object({ id: z.string().uuid() })),
+  zValidator("query", z.object({ page: z.coerce.number().default(1) })),
   (c) => {
     const { id } = c.req.valid("param");
-    const { page, limit } = c.req.valid("query");
-    return c.json({ id, page, limit });
+    const { page } = c.req.valid("query");
+    return c.json({ id, page });
   },
 );
+
+// Available targets: "json", "query", "param", "form", "header", "cookie"
 ```
 
-### Validation Targets
-
-```typescript
-// JSON body
-zValidator("json", schema);
-
-// Query parameters
-zValidator("query", schema);
-
-// URL parameters
-zValidator("param", schema);
-
-// Form data
-zValidator("form", schema);
-
-// Headers
-zValidator("header", schema);
-
-// Cookies
-zValidator("cookie", schema);
-```
-
-### Custom Error Handling
+### Custom Validation Error Response
 
 ```typescript
 app.post(
   "/users",
   zValidator("json", CreateUserSchema, (result, c) => {
     if (!result.success) {
-      return c.json(
-        {
-          error: "Validation failed",
-          issues: result.error.issues,
-        },
-        400,
-      );
+      return c.json({ error: "Validation failed", issues: result.error.issues }, 400);
     }
   }),
-  (c) => {
-    const data = c.req.valid("json");
-    return c.json({ created: data });
-  },
+  (c) => c.json({ created: c.req.valid("json") }),
 );
 ```
 
-## Error Handling
-
-### Global Error Handler
-
-```typescript
-app.onError((err, c) => {
-  console.error(err);
-
-  if (err instanceof HTTPException) {
-    return err.getResponse();
-  }
-
-  return c.json(
-    {
-      error: "Internal Server Error",
-      message: process.env.NODE_ENV === "development" ? err.message : undefined,
-    },
-    500,
-  );
-});
-```
-
-### HTTP Exceptions
-
-```typescript
-import { HTTPException } from "hono/http-exception";
-
-app.get("/protected", (c) => {
-  const auth = c.req.header("Authorization");
-
-  if (!auth) {
-    throw new HTTPException(401, { message: "Unauthorized" });
-  }
-
-  return c.json({ data: "secret" });
-});
-```
-
-### Not Found Handler
-
-```typescript
-app.notFound((c) => {
-  return c.json(
-    {
-      error: "Not Found",
-      path: c.req.path,
-    },
-    404,
-  );
-});
-```
-
-## Type-Safe RPC Client
-
-### Server Setup
-
-```typescript
-import { Hono } from "hono";
-import { zValidator } from "@hono/zod-validator";
-import { z } from "zod";
-
-const app = new Hono()
-  .get("/users", (c) => c.json({ users: [] }))
-  .post("/users", zValidator("json", z.object({ name: z.string() })), (c) => {
-    const { name } = c.req.valid("json");
-    return c.json({ id: 1, name });
-  })
-  .get("/users/:id", (c) => {
-    const id = c.req.param("id");
-    return c.json({ id, name: "John" });
-  });
-
-export type AppType = typeof app;
-export default app;
-```
-
-### Client Usage
+## RPC Client (End-to-End Type Safety)
 
 ```typescript
 import { hc } from "hono/client";
@@ -544,274 +130,120 @@ import type { AppType } from "./server";
 
 const client = hc<AppType>("http://localhost:3000");
 
-// Fully typed API calls
-const users = await client.users.$get();
-const json = await users.json(); // { users: [] }
+// Fully typed — params, body, and response inferred from server routes
+const res = await client.users.$get();
+const data = await res.json(); // typed as { users: [] }
 
-const newUser = await client.users.$post({
-  json: { name: "John" },
-});
-const created = await newUser.json(); // { id: 1, name: "John" }
-
-const user = await client.users[":id"].$get({
-  param: { id: "1" },
-});
+const created = await client.users.$post({ json: { name: "John" } });
+const user = await client.users[":id"].$get({ param: { id: "1" } });
 ```
 
-## Testing
-
-### Using app.request()
+## Error Handling
 
 ```typescript
-import { describe, test, expect } from "bun:test";
-import app from "./app";
+import { HTTPException } from "hono/http-exception";
 
-describe("API", () => {
-  test("GET / returns hello", async () => {
-    const res = await app.request("/");
-    expect(res.status).toBe(200);
-    expect(await res.text()).toBe("Hello Hono!");
-  });
+// Throw typed HTTP errors anywhere in handlers
+throw new HTTPException(401, { message: "Unauthorized" });
 
-  test("POST /users creates user", async () => {
-    const res = await app.request("/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: "John", email: "john@example.com" }),
-    });
-
-    expect(res.status).toBe(201);
-    const json = await res.json();
-    expect(json.name).toBe("John");
-  });
-
-  test("GET /users/:id returns user", async () => {
-    const res = await app.request("/users/123");
-    expect(res.status).toBe(200);
-    const json = await res.json();
-    expect(json.id).toBe("123");
-  });
-
-  test("returns 401 without auth", async () => {
-    const res = await app.request("/protected");
-    expect(res.status).toBe(401);
-  });
-
-  test("returns 200 with auth", async () => {
-    const res = await app.request("/protected", {
-      headers: { Authorization: "Bearer token" },
-    });
-    expect(res.status).toBe(200);
-  });
+// Global error handler
+app.onError((err, c) => {
+  if (err instanceof HTTPException) return err.getResponse();
+  return c.json({ error: "Internal Server Error" }, 500);
 });
+
+// Custom 404
+app.notFound((c) => c.json({ error: "Not Found", path: c.req.path }, 404));
 ```
 
-### Testing with Context
+## Workflow: Build a New Hono API
+
+### Step 1: Scaffold and install
+
+```bash
+bun add hono @hono/zod-validator zod
+# For OpenAPI: bun add @hono/zod-openapi
+```
+
+### Step 2: Define schemas first
 
 ```typescript
-import { testClient } from "hono/testing";
-
-describe("API with testClient", () => {
-  test("typed client testing", async () => {
-    const client = testClient(app);
-
-    const res = await client.users.$get();
-    expect(res.status).toBe(200);
-
-    const data = await res.json();
-    expect(data.users).toEqual([]);
-  });
+import { z } from "zod";
+export const CreateItemSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
 });
+export type CreateItem = z.infer<typeof CreateItemSchema>;
 ```
 
-## Static Files (Bun)
+### Step 3: Build routes with chained methods + validation
 
 ```typescript
 import { Hono } from "hono";
-import { serveStatic } from "hono/bun";
+import { zValidator } from "@hono/zod-validator";
+import { CreateItemSchema } from "./schemas";
 
-const app = new Hono();
+const app = new Hono()
+  .get("/items", (c) => c.json({ items: [] }))
+  .post("/items", zValidator("json", CreateItemSchema), (c) => {
+    const data = c.req.valid("json");
+    return c.json({ id: crypto.randomUUID(), ...data }, 201);
+  });
 
-// Serve static files from ./public
-app.use("/static/*", serveStatic({ root: "./public" }));
-
-// Serve index.html for root
-app.get("/", serveStatic({ path: "./public/index.html" }));
-
-// SPA fallback
-app.use("*", serveStatic({ root: "./public" }));
-app.use("*", serveStatic({ path: "./public/index.html" }));
-
+export type AppType = typeof app;
 export default app;
 ```
 
-## OpenAPI Integration
+**Checkpoint:** Run `bun run --hot src/index.ts` and test with `curl`.
 
-### Setup
-
-```bash
-bun add @hono/zod-openapi
-```
-
-### Define Routes with OpenAPI
+### Step 4: Add middleware stack
 
 ```typescript
-import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
+import { cors } from "hono/cors";
+import { logger } from "hono/logger";
+import { secureHeaders } from "hono/secure-headers";
 
-const app = new OpenAPIHono();
-
-const getUserRoute = createRoute({
-  method: "get",
-  path: "/users/{id}",
-  request: {
-    params: z.object({
-      id: z.string().openapi({ example: "123" }),
-    }),
-  },
-  responses: {
-    200: {
-      content: {
-        "application/json": {
-          schema: z.object({
-            id: z.string(),
-            name: z.string(),
-          }),
-        },
-      },
-      description: "User found",
-    },
-    404: {
-      description: "User not found",
-    },
-  },
-});
-
-app.openapi(getUserRoute, (c) => {
-  const { id } = c.req.valid("param");
-  return c.json({ id, name: "John" });
-});
-
-// Generate OpenAPI spec
-app.doc("/openapi.json", {
-  openapi: "3.0.0",
-  info: { title: "My API", version: "1.0.0" },
-});
-
-// Swagger UI
-app.get("/docs", (c) => {
-  return c.html(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css" />
-      </head>
-      <body>
-        <div id="swagger-ui"></div>
-        <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
-        <script>
-          SwaggerUIBundle({ url: '/openapi.json', dom_id: '#swagger-ui' });
-        </script>
-      </body>
-    </html>
-  `);
-});
+app.use(logger());
+app.use(cors({ origin: ["https://example.com"], credentials: true }));
+app.use(secureHeaders());
 ```
 
-## Common Patterns
+**Checkpoint:** Verify headers in response with `curl -v`.
 
-### API Versioning
+### Step 5: Add error handling + tests
 
 ```typescript
-const v1 = new Hono();
-v1.get("/users", (c) => c.json({ version: "v1", users: [] }));
-
-const v2 = new Hono();
-v2.get("/users", (c) => c.json({ version: "v2", data: { users: [] } }));
-
-const app = new Hono();
-app.route("/api/v1", v1);
-app.route("/api/v2", v2);
+// See references/testing.md for full test patterns
+const res = await app.request("/items", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ name: "Test" }),
+});
+expect(res.status).toBe(201);
 ```
 
-### Request ID Middleware
+**Checkpoint:** Run `bun test` — all routes return expected status codes.
+
+### Step 6: Export RPC client type and wire up frontend
 
 ```typescript
-import { createMiddleware } from "hono/factory";
-
-const requestId = createMiddleware(async (c, next) => {
-  const id = crypto.randomUUID();
-  c.set("requestId", id);
-  c.header("X-Request-ID", id);
-  await next();
-});
-
-app.use(requestId);
+// Client-side — fully typed from the server definition
+import { hc } from "hono/client";
+import type { AppType } from "./server";
+const api = hc<AppType>("http://localhost:3000");
 ```
 
-### Database Integration
+## Reference Files
 
-```typescript
-import { PrismaClient } from "@prisma/client";
+- `references/middleware-patterns.md` — Built-in middleware catalog, factory pattern, auth patterns, static files
+- `references/openapi-rpc.md` — OpenAPI route definitions with @hono/zod-openapi, Swagger UI setup
+- `references/testing.md` — app.request() testing, testClient typed testing patterns
 
-const prisma = new PrismaClient();
+## Key Hono Conventions
 
-app.get("/users", async (c) => {
-  const users = await prisma.user.findMany();
-  return c.json({ users });
-});
-
-app.post("/users", zValidator("json", CreateUserSchema), async (c) => {
-  const data = c.req.valid("json");
-  const user = await prisma.user.create({ data });
-  return c.json(user, 201);
-});
-```
-
-### Authentication Pattern
-
-```typescript
-import { jwt } from "hono/jwt";
-
-// JWT middleware
-app.use("/api/*", jwt({ secret: process.env.JWT_SECRET! }));
-
-app.get("/api/me", (c) => {
-  const payload = c.get("jwtPayload");
-  return c.json({ userId: payload.sub });
-});
-
-// Login endpoint (outside protected routes)
-app.post("/login", async (c) => {
-  const { email, password } = await c.req.json();
-
-  // Validate credentials...
-  const token = await sign(
-    { sub: user.id, exp: Math.floor(Date.now() / 1000) + 60 * 60 },
-    process.env.JWT_SECRET!,
-  );
-
-  return c.json({ token });
-});
-```
-
-## Best Practices Summary
-
-1. **Use route grouping** to organize related endpoints
-2. **Apply middleware at appropriate scopes** - global vs path-specific
-3. **Validate all inputs** with Zod validators
-4. **Handle errors globally** with `app.onError()`
-5. **Use typed RPC client** for frontend-backend type safety
-6. **Test with `app.request()`** for fast, isolated tests
-7. **Export `AppType`** for end-to-end type inference
-8. **Use factory pattern** for configurable middleware
-9. **Set security headers** with `secureHeaders()` middleware
-10. **Keep handlers thin** - delegate to service functions
-
-## When to Ask for Help
-
-- WebSocket integration patterns
-- Complex authentication flows (OAuth, SAML)
-- Streaming and SSE implementations
-- Edge runtime-specific configurations
-- GraphQL integration with Hono
-- Performance optimization for high-traffic APIs
+1. **Chain routes** on a single `Hono()` instance for RPC type export
+2. **Always export `AppType`** (`typeof app`) for end-to-end type safety
+3. **Use `zValidator`** for all input validation — never parse manually
+4. **Use `createMiddleware` from `hono/factory`** for reusable typed middleware
+5. **Use `HTTPException`** for error control flow — never return error responses directly from middleware
+6. **Pick the right `serveStatic` import** for your runtime (`hono/bun`, `hono/cloudflare-workers`, etc.)

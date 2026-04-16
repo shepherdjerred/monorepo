@@ -1,6 +1,6 @@
 # Middleware, Error Handling, and Common Patterns
 
-## Middleware
+## Custom Middleware
 
 ### Inline Middleware
 
@@ -17,36 +17,44 @@ app.use(async (c, next) => {
 ### Path-Specific Middleware
 
 ```typescript
-// Apply to specific path
 app.use("/api/*", async (c, next) => {
   const auth = c.req.header("Authorization");
-  if (!auth) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
+  if (!auth) return c.json({ error: "Unauthorized" }, 401);
   await next();
 });
 
-// Apply to specific method
+// Method-specific
 app.use("/admin/*", "POST", async (c, next) => {
-  // Only runs for POST requests to /admin/*
+  // Only POST requests to /admin/*
   await next();
 });
 ```
 
-### Middleware Factory Pattern
+### Middleware Factory Pattern (createMiddleware)
+
+```typescript
+import { createMiddleware } from "hono/factory";
+
+// Typed, reusable middleware
+const requestId = createMiddleware(async (c, next) => {
+  const id = crypto.randomUUID();
+  c.set("requestId", id);
+  c.header("X-Request-ID", id);
+  await next();
+});
+
+app.use(requestId);
+```
+
+### Configurable Factory
 
 ```typescript
 const rateLimiter = (limit: number) => {
   const requests = new Map<string, number>();
-
   return async (c: Context, next: Next) => {
     const ip = c.req.header("x-forwarded-for") ?? "unknown";
     const count = requests.get(ip) ?? 0;
-
-    if (count >= limit) {
-      return c.json({ error: "Rate limited" }, 429);
-    }
-
+    if (count >= limit) return c.json({ error: "Rate limited" }, 429);
     requests.set(ip, count + 1);
     await next();
   };
@@ -55,7 +63,7 @@ const rateLimiter = (limit: number) => {
 app.use(rateLimiter(100));
 ```
 
-### Built-in Middleware
+## Built-in Middleware Catalog
 
 ```typescript
 import { cors } from "hono/cors";
@@ -67,103 +75,78 @@ import { basicAuth } from "hono/basic-auth";
 import { bearerAuth } from "hono/bearer-auth";
 import { csrf } from "hono/csrf";
 import { timing } from "hono/timing";
+import { jwt } from "hono/jwt";
 
 // CORS
-app.use(
-  cors({
-    origin: ["https://example.com"],
-    allowMethods: ["GET", "POST", "PUT", "DELETE"],
-    allowHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  }),
-);
+app.use(cors({
+  origin: ["https://example.com"],
+  allowMethods: ["GET", "POST", "PUT", "DELETE"],
+  allowHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+}));
 
-// Logging
+// Logging, security, compression, caching
 app.use(logger());
-
-// Security headers
 app.use(secureHeaders());
-
-// Compression
 app.use(compress());
-
-// ETag caching
 app.use(etag());
 
-// Basic auth
-app.use(
-  "/admin/*",
-  basicAuth({
-    username: "admin",
-    password: "secret",
-  }),
-);
+// Auth variants
+app.use("/admin/*", basicAuth({ username: "admin", password: "secret" }));
+app.use("/api/*", bearerAuth({ token: "my-secret-token" }));
+app.use("/api/*", jwt({ secret: process.env.JWT_SECRET! }));
 
-// Bearer token auth
-app.use(
-  "/api/*",
-  bearerAuth({
-    token: "my-secret-token",
-  }),
-);
-
-// CSRF protection
+// CSRF and timing
 app.use(csrf());
-
-// Server timing
 app.use(timing());
+```
+
+## Authentication Pattern (JWT)
+
+```typescript
+import { jwt } from "hono/jwt";
+import { sign } from "hono/jwt";
+
+// Protect API routes
+app.use("/api/*", jwt({ secret: process.env.JWT_SECRET! }));
+
+app.get("/api/me", (c) => {
+  const payload = c.get("jwtPayload");
+  return c.json({ userId: payload.sub });
+});
+
+// Login endpoint (outside protected routes)
+app.post("/login", async (c) => {
+  const { email, password } = await c.req.json();
+  // Validate credentials...
+  const token = await sign(
+    { sub: user.id, exp: Math.floor(Date.now() / 1000) + 60 * 60 },
+    process.env.JWT_SECRET!,
+  );
+  return c.json({ token });
+});
 ```
 
 ## Error Handling
 
-### Global Error Handler
-
-```typescript
-app.onError((err, c) => {
-  console.error(err);
-
-  if (err instanceof HTTPException) {
-    return err.getResponse();
-  }
-
-  return c.json(
-    {
-      error: "Internal Server Error",
-      message: process.env.NODE_ENV === "development" ? err.message : undefined,
-    },
-    500,
-  );
-});
-```
-
-### HTTP Exceptions
-
 ```typescript
 import { HTTPException } from "hono/http-exception";
 
-app.get("/protected", (c) => {
-  const auth = c.req.header("Authorization");
+// Throw typed exceptions
+throw new HTTPException(401, { message: "Unauthorized" });
 
-  if (!auth) {
-    throw new HTTPException(401, { message: "Unauthorized" });
-  }
-
-  return c.json({ data: "secret" });
+// Global error handler
+app.onError((err, c) => {
+  if (err instanceof HTTPException) return err.getResponse();
+  console.error(err);
+  return c.json({
+    error: "Internal Server Error",
+    message: process.env.NODE_ENV === "development" ? err.message : undefined,
+  }, 500);
 });
-```
 
-### Not Found Handler
-
-```typescript
-app.notFound((c) => {
-  return c.json(
-    {
-      error: "Not Found",
-      path: c.req.path,
-    },
-    404,
-  );
-});
+// Custom 404
+app.notFound((c) => c.json({ error: "Not Found", path: c.req.path }, 404));
 ```
 
 ## Common Patterns
@@ -182,26 +165,10 @@ app.route("/api/v1", v1);
 app.route("/api/v2", v2);
 ```
 
-### Request ID Middleware
-
-```typescript
-import { createMiddleware } from "hono/factory";
-
-const requestId = createMiddleware(async (c, next) => {
-  const id = crypto.randomUUID();
-  c.set("requestId", id);
-  c.header("X-Request-ID", id);
-  await next();
-});
-
-app.use(requestId);
-```
-
 ### Database Integration
 
 ```typescript
 import { PrismaClient } from "@prisma/client";
-
 const prisma = new PrismaClient();
 
 app.get("/users", async (c) => {
@@ -216,50 +183,20 @@ app.post("/users", zValidator("json", CreateUserSchema), async (c) => {
 });
 ```
 
-### Authentication Pattern
+### Static Files (runtime-specific imports)
 
 ```typescript
-import { jwt } from "hono/jwt";
-
-// JWT middleware
-app.use("/api/*", jwt({ secret: process.env.JWT_SECRET! }));
-
-app.get("/api/me", (c) => {
-  const payload = c.get("jwtPayload");
-  return c.json({ userId: payload.sub });
-});
-
-// Login endpoint (outside protected routes)
-app.post("/login", async (c) => {
-  const { email, password } = await c.req.json();
-
-  // Validate credentials...
-  const token = await sign(
-    { sub: user.id, exp: Math.floor(Date.now() / 1000) + 60 * 60 },
-    process.env.JWT_SECRET!,
-  );
-
-  return c.json({ token });
-});
-```
-
-## Static Files (Bun)
-
-```typescript
-import { Hono } from "hono";
+// Bun
 import { serveStatic } from "hono/bun";
+// Cloudflare Workers
+import { serveStatic } from "hono/cloudflare-workers";
+// Deno
+import { serveStatic } from "npm:hono/deno";
 
-const app = new Hono();
-
-// Serve static files from ./public
 app.use("/static/*", serveStatic({ root: "./public" }));
-
-// Serve index.html for root
 app.get("/", serveStatic({ path: "./public/index.html" }));
 
 // SPA fallback
 app.use("*", serveStatic({ root: "./public" }));
 app.use("*", serveStatic({ path: "./public/index.html" }));
-
-export default app;
 ```
