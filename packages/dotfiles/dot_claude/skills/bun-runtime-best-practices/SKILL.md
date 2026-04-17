@@ -70,7 +70,9 @@ Replace `child_process` with `Bun.spawn()`.
 ```typescript
 const proc = Bun.spawn(["ls", "-la"]);
 const output = await new Response(proc.stdout).text();
+```
 
+```typescript
 // With options
 const proc = Bun.spawn(["git", "status"], {
   cwd: "/path/to/repo",
@@ -129,18 +131,25 @@ Replace `crypto`/`node:crypto` with Bun's native APIs.
 // Password hashing
 const hashed = await Bun.password.hash("my-password");
 const isValid = await Bun.password.verify("my-password", hashed);
+```
 
+```typescript
+// Password hashing with options
 const hashed = await Bun.password.hash("my-password", {
   algorithm: "argon2id",
   memoryCost: 65536,
   timeCost: 3,
 });
+```
 
-// General hashing
+```typescript
+// General hashing (hex output)
 const hasher = new Bun.CryptoHasher("sha256");
 hasher.update("data");
 const hash = hasher.digest("hex");
+```
 
+```typescript
 // Fast integer hash
 const hash = Bun.hash("data");
 ```
@@ -212,10 +221,10 @@ await Bun.sleep(1000);
 // Find executable in PATH
 const git = Bun.which("git"); // "/usr/bin/git" or null
 
-// Peek at stream without consuming
+// Peek at stream without consuming — stream remains readable after peek
 const proc = Bun.spawn(["echo", "hello"], { stdout: "pipe" });
-const peeked = await Bun.peek(proc.stdout);
-const full = await new Response(proc.stdout).text();
+const peeked = await Bun.peek(proc.stdout); // Uint8Array — stream is still readable
+const full = await new Response(proc.stdout).text(); // proc.stdout still consumable after peek
 ```
 
 ## Testing — bun:test
