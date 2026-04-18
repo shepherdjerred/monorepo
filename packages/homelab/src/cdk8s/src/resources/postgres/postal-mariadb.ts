@@ -118,6 +118,16 @@ collation-server = utf8mb4_unicode_ci
             value: "/opt/bitnami/mysqld-exporter/secrets/mariadb-root-password",
           },
         ],
+        resources: {
+          requests: {
+            cpu: "50m",
+            memory: "64Mi",
+          },
+          limits: {
+            cpu: "200m",
+            memory: "128Mi",
+          },
+        },
         serviceMonitor: {
           enabled: true,
           additionalLabels: {

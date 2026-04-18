@@ -22,7 +22,7 @@ export function versionCommitBackStep(dependsOn: string[]): BuildkiteStep {
     label: ":bookmark: Version Commit-Back",
     key: "version-commit-back",
     // Version format: 2.0.0-BUILD (matches Docker image tags). Only updates Docker image entries in versions.ts.
-    daggerCmd: `bash .buildkite/scripts/collect-digests.sh /tmp/digests.json ${keyArgs} && dagger call version-commit-back --digests "$(cat /tmp/digests.json)" --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --gh-token 'env:GH_TOKEN?nonce=$BUILDKITE_BUILD_NUMBER'${DRYRUN_FLAG}`,
+    daggerCmd: `bash .buildkite/scripts/collect-digests.sh /tmp/digests.json ${keyArgs} && dagger call version-commit-back --digests "$(cat /tmp/digests.json)" --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
     timeoutMinutes: 10,
     condition: MAIN_ONLY,
     dependsOn,

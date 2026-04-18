@@ -10,6 +10,7 @@ import { createTemporalDynamicConfig } from "@shepherdjerred/homelab/cdk8s/src/r
 import { createTemporalServerDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/server.ts";
 import { createTemporalUiDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/ui.ts";
 import { createTemporalNamespaceInitJob } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/namespace-init.ts";
+import { createTemporalWorkerDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/worker.ts";
 
 export function createTemporalChart(app: App) {
   const chart = new Chart(app, "temporal", {
@@ -27,7 +28,10 @@ export function createTemporalChart(app: App) {
   const dynamicConfigMap = createTemporalDynamicConfig(chart);
   const server = createTemporalServerDeployment(chart, { dynamicConfigMap });
   createTemporalUiDeployment(chart, { serverService: server.service });
-  createTemporalNamespaceInitJob(chart);
+  createTemporalNamespaceInitJob(chart, { serverService: server.service });
+  createTemporalWorkerDeployment(chart, {
+    serverServiceName: server.service.name,
+  });
 
   // NetworkPolicy for Temporal Server
   new KubeNetworkPolicy(chart, "temporal-server-netpol", {
@@ -68,6 +72,17 @@ export function createTemporalChart(app: App) {
             {
               podSelector: {
                 matchLabels: { app: "temporal-namespace-init" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+        },
+        {
+          // Allow gRPC from temporal worker
+          from: [
+            {
+              podSelector: {
+                matchLabels: { app: "temporal-worker" },
               },
             },
           ],
@@ -230,6 +245,65 @@ export function createTemporalChart(app: App) {
             },
           ],
           ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+        },
+      ],
+    },
+  });
+
+  // NetworkPolicy for Temporal Worker
+  // Worker needs broad egress: Temporal server, HA, GitHub, OpenAI, Postal, S3, golink
+  new KubeNetworkPolicy(chart, "temporal-worker-netpol", {
+    metadata: { name: "temporal-worker-netpol" },
+    spec: {
+      podSelector: {
+        matchLabels: { app: "temporal-worker" },
+      },
+      policyTypes: ["Egress"],
+      egress: [
+        // DNS
+        {
+          to: [
+            {
+              namespaceSelector: {},
+              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
+            },
+          ],
+          ports: [
+            { port: IntOrString.fromNumber(53), protocol: "UDP" },
+            { port: IntOrString.fromNumber(53), protocol: "TCP" },
+          ],
+        },
+        // Temporal Server gRPC
+        {
+          to: [
+            {
+              podSelector: {
+                matchLabels: { app: "temporal-server" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+        },
+        // External HTTPS (HA, GitHub, OpenAI, Postal, S3, golink, Firestore)
+        {
+          ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }],
+        },
+        // Postal internal (HTTP within cluster)
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "postal",
+                },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(5000), protocol: "TCP" }],
+        },
+        // K8s API (for golink-sync ingress listing)
+        {
+          ports: [{ port: IntOrString.fromNumber(6443), protocol: "TCP" }],
         },
       ],
     },

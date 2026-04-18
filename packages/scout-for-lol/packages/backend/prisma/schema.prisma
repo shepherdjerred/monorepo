@@ -297,7 +297,7 @@ model BotState {
 
 model ActiveGame {
   id            Int      @id @default(autoincrement())
-  gameId        Int      @unique // Riot game ID (from Spectator V5 API)
+  gameId        BigInt   @unique // Riot game ID (from Spectator V5 API)
   trackedPuuids String // JSON array of tracked puuids detected in this game
   detectedAt    DateTime // When we first detected this game
   expiresAt     DateTime // TTL: auto-cleanup after this time (detectedAt + 2 hours)

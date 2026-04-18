@@ -69,7 +69,7 @@ export function welcomeHome({ hass, logger }: TServiceParams) {
               hass.call.vacuum.return_to_base({
                 entity_id: roomba.entity_id,
               }),
-              { amount: 30, unit: "s" },
+              { amount: 60, unit: "s" },
               "vacuum.return_to_base",
             );
           }

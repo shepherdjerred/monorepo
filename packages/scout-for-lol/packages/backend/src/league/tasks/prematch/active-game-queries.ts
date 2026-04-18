@@ -26,7 +26,7 @@ export async function getActiveGames(
   try {
     const rows = await prismaClient.activeGame.findMany();
     return rows.map((row) => ({
-      gameId: row.gameId,
+      gameId: Number(row.gameId),
       trackedPuuids: TrackedPuuidsSchema.parse(JSON.parse(row.trackedPuuids)),
       detectedAt: row.detectedAt,
       expiresAt: row.expiresAt,
@@ -56,10 +56,11 @@ export async function upsertActiveGame(
   const puuidsJson = JSON.stringify(trackedPuuids);
 
   try {
+    const gameIdBigInt = BigInt(gameId);
     await prismaClient.activeGame.upsert({
-      where: { gameId },
+      where: { gameId: gameIdBigInt },
       create: {
-        gameId,
+        gameId: gameIdBigInt,
         trackedPuuids: puuidsJson,
         detectedAt: now,
         expiresAt,

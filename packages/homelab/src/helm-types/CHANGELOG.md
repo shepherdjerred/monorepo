@@ -2,10 +2,9 @@
 
 ## [1.2.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.1.0...helm-types-v1.2.0) (2026-04-05)
 
-
 ### Features
 
-* add ESLint config and remove eslint-disable suppressions ([3cb54ff](https://github.com/shepherdjerred/monorepo/commit/3cb54ffa1e1f8b5a54c6dd8251eed29542b087cb))
+- add ESLint config and remove eslint-disable suppressions ([3cb54ff](https://github.com/shepherdjerred/monorepo/commit/3cb54ffa1e1f8b5a54c6dd8251eed29542b087cb))
 
 ## [1.1.0](https://github.com/shepherdjerred/homelab/compare/helm-types-v1.0.0...helm-types-v1.1.0) (2026-01-24)
 

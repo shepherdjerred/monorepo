@@ -27,6 +27,8 @@ function buildSummaryScript(): string {
     `set -euo pipefail`,
     `SUMMARY=/tmp/summary.md`,
     `VERSION="2.0.0-$$BUILDKITE_BUILD_NUMBER"`,
+    // Shell variable holding a literal backtick — prevents command substitution in echo
+    `BT='` + "`" + `'`,
     // Start with static header
     `cat > $$SUMMARY << 'HEADER'`,
     `## :rocket: Build Summary`,
@@ -46,7 +48,19 @@ function buildSummaryScript(): string {
     const tag = `ghcr.io/${key}:$$VERSION`;
     lines.push(
       `DIGEST=$$(buildkite-agent meta-data get "digest:${key}" --default "")`,
-      `if [ -n "$$DIGEST" ]; then echo "| [${key}](${ghcrUrl}) | \`${tag}\` | \`$$DIGEST\` |" >> $$SUMMARY; else echo "| [${key}](${ghcrUrl}) | \`${tag}\` | :x: _not pushed_ |" >> $$SUMMARY; fi`,
+      `if [ -n "$$DIGEST" ]; then echo "| [${key}](${ghcrUrl}) | $` +
+        "$${BT}" +
+        `${tag}$` +
+        "$${BT}" +
+        ` | $` +
+        "$${BT}" +
+        `$$DIGEST$` +
+        "$${BT}" +
+        ` |" >> $$SUMMARY; else echo "| [${key}](${ghcrUrl}) | $` +
+        "$${BT}" +
+        `${tag}$` +
+        "$${BT}" +
+        ` | :x: _not pushed_ |" >> $$SUMMARY; fi`,
     );
   }
 

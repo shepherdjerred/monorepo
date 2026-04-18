@@ -94,6 +94,8 @@ export function tofuApplyHelper(
     )
     .withSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyId)
     .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey)
+    // GitHub provider reads GITHUB_TOKEN; GH CLI reads GH_TOKEN — set both
+    .withSecretVariable("GITHUB_TOKEN", ghToken)
     .withSecretVariable("GH_TOKEN", ghToken);
 
   if (cloudflareAccountId != null) {
@@ -139,6 +141,8 @@ export function tofuPlanHelper(
     )
     .withSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyId)
     .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey)
+    // GitHub provider reads GITHUB_TOKEN; GH CLI reads GH_TOKEN — set both
+    .withSecretVariable("GITHUB_TOKEN", ghToken)
     .withSecretVariable("GH_TOKEN", ghToken);
 
   if (cloudflareAccountId != null) {
@@ -181,8 +185,9 @@ export function tofuPlanHelper(
  * Build and publish an npm package.
  *
  * Two modes:
- * - Dev release (devVersion set): writes devVersion to package.json, publishes with --tag dev
- * - Prod release (devVersion empty): publishes with version from package.json, --tag latest
+ * - Dev release (devSuffix set): reads version from package.json, appends -dev.<suffix>,
+ *   publishes with --tag dev (e.g. 1.15.0-dev.695)
+ * - Prod release (devSuffix empty): publishes with version from package.json, --tag latest
  *
  * Always builds from source via Dagger caching (no Buildkite artifact transfer).
  * See decisions/2026-04-04_unified-versioning-strategy.md
@@ -195,7 +200,7 @@ export function publishNpmHelper(
   depDirs: Directory[] = [],
   dryrun = false,
   tsconfig: File | null = null,
-  devVersion: string = "",
+  devSuffix: string = "",
 ): Container {
   let container = dag
     .container()
@@ -241,19 +246,19 @@ export function publishNpmHelper(
     ].join(" && "),
   ]);
 
-  // For dev releases, write the dev version to package.json (ephemeral, never committed)
-  if (devVersion !== "") {
+  // For dev releases, read version from package.json and append -dev.<suffix> (ephemeral, never committed)
+  if (devSuffix !== "") {
     container = container.withExec([
       "sh",
       "-c",
-      `bun -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync("package.json","utf8")); p.version="${devVersion}"; fs.writeFileSync("package.json",JSON.stringify(p,null,2)+"\\n")'`,
+      `bun -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync("package.json","utf8")); p.version=p.version+"-dev.${devSuffix}"; fs.writeFileSync("package.json",JSON.stringify(p,null,2)+"\\n")'`,
     ]);
   }
 
   // Build from source (Dagger caches this across runs)
   container = container.withExec(["bun", "run", "build"]);
 
-  const tag = devVersion !== "" ? "dev" : "latest";
+  const tag = devSuffix !== "" ? "dev" : "latest";
 
   if (dryrun) {
     return container.withExec([

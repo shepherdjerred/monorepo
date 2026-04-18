@@ -6,25 +6,26 @@ Repeatable procedure for a comprehensive health audit of the `torvalds` cluster.
 
 All tools must be authenticated before starting:
 
-| Tool       | Context                      | Check               |
-| ---------- | ---------------------------- | ------------------- |
-| `kubectl`  | `admin@torvalds`             | `kubectl get nodes` |
-| `talosctl` | `torvalds`                   | `talosctl version`  |
-| `argocd`   | `admin`                      | `argocd app list`   |
-| `velero`   | —                            | `velero backup get` |
-| `toolkit`  | Grafana + PagerDuty env vars | `toolkit gf alerts` |
+| Tool       | Context                                | Check               |
+| ---------- | -------------------------------------- | ------------------- |
+| `kubectl`  | `admin@torvalds`                       | `kubectl get nodes` |
+| `talosctl` | `torvalds`                             | `talosctl version`  |
+| `argocd`   | `admin`                                | `argocd app list`   |
+| `velero`   | —                                      | `velero backup get` |
+| `toolkit`  | Grafana + PagerDuty + Bugsink env vars | `toolkit gf alerts` |
 
 ## Execution Strategy
 
-Run 5 parallel agents for speed. Each section is independent and read-only.
+Run 6 parallel agents for speed. Each section is independent and read-only.
 
-| Agent | Scope               | Sections |
-| ----- | ------------------- | -------- |
-| A     | Talos + Node        | 1        |
-| B     | K8s Workloads       | 2, 3     |
-| C     | ArgoCD + Storage    | 4, 5     |
-| D     | Monitoring + Alerts | 6        |
-| E     | Hardware + Network  | 7, 8     |
+| Agent | Scope                           | Sections |
+| ----- | ------------------------------- | -------- |
+| A     | Talos + Node                    | 1        |
+| B     | K8s Workloads                   | 2, 3     |
+| C     | ArgoCD + Storage                | 4, 5     |
+| D     | Monitoring + Alerts + Incidents | 6        |
+| E     | Hardware + Network              | 7, 8     |
+| F     | Error Tracking (Bugsink)        | 9        |
 
 ## Section 1: Talos Node Health
 
@@ -124,8 +125,22 @@ toolkit gf query 'kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacit
 ```bash
 toolkit gf alerts                                          # Grafana alert rules
 toolkit gf query 'ALERTS{alertstate="firing"}'             # All firing Prometheus alerts
-toolkit pd incidents                                       # Open PagerDuty incidents
 ```
+
+### PagerDuty Incidents
+
+```bash
+toolkit pd incidents                                       # Open incidents (triggered + acknowledged)
+toolkit pd incidents --status triggered                    # Triggered only (unacknowledged)
+```
+
+For any open incident, get details and timeline:
+
+```bash
+toolkit pd incident <INCIDENT_ID>                          # Details, notes, timeline
+```
+
+Flag: any triggered (unacknowledged) incidents, incidents open for >24h, incidents without notes.
 
 ### Scrape Targets
 
@@ -173,6 +188,33 @@ kubectl get tailscaleingress -A                            # TailscaleIngress re
 
 Flag: expired or soon-to-expire certificates, Tailscale operator not running.
 
+## Section 9: Error Tracking (Bugsink)
+
+### Unresolved Issues
+
+```bash
+toolkit bugsink projects                                   # List all projects
+toolkit bugsink issues                                     # All unresolved issues
+toolkit bugsink issues --project <slug>                    # Per-project unresolved issues
+```
+
+For any high-event-count or recently active issues:
+
+```bash
+toolkit bugsink issue <ISSUE_UUID>                         # Issue details + latest event
+toolkit bugsink stacktrace <EVENT_UUID>                    # Stacktrace for root cause analysis
+```
+
+Flag: new issues since last audit, issues with rapidly growing event counts, regressions (previously resolved issues reappearing).
+
+### Recent Releases
+
+```bash
+toolkit bugsink releases --project <slug>                  # Check release tracking is current
+```
+
+Flag: projects with no recent releases (SDK may not be reporting), large gap between deploy and release record.
+
 ## Output Format
 
 Compile findings into a structured report with:
@@ -196,4 +238,6 @@ End with a "What's Working Well" section to confirm healthy systems.
 - ArgoCD status should match actual pod status (OutOfSync app but pods running = just pending sync)
 - Prometheus alerts should match observed issues (if alert fires but issue is gone, check alert duration)
 - Backup recency should match schedule (if schedule says daily but last backup is 3 days old, investigate)
-- PagerDuty incidents should correlate with firing alerts
+- PagerDuty incidents should correlate with firing alerts (open incident without firing alert = stale incident; firing alert without incident = missing integration)
+- Bugsink issues should correlate with pod health (CrashLoopBackOff pods should have corresponding error events in Bugsink)
+- Bugsink releases should match recent deployments (if ArgoCD synced a new version but no Bugsink release exists, SDK integration may be misconfigured)

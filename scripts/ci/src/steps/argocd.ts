@@ -44,7 +44,7 @@ export function argoCdHealthStep(
     key: opts.key ?? "argocd-health",
     if: MAIN_ONLY,
     depends_on: dependsOn,
-    command: `dagger call argo-cd-health-wait --app-name ${app} --argo-cd-token env:ARGOCD_AUTH_TOKEN --timeout-secs 300${DRYRUN_FLAG}`,
+    command: `dagger call argo-cd-health-wait --app-name ${app} --argo-cd-token env:ARGOCD_AUTH_TOKEN --timeout-seconds 300${DRYRUN_FLAG}`,
     timeout_in_minutes: 10,
     priority: 1,
     retry: RETRY,

@@ -92,7 +92,7 @@ export async function createNvmeMetricsMonitoring(chart: Chart) {
       # Run the script every 10 minutes (NVMe metrics don't change too frequently)
       while true; do
         echo "Collecting NVMe metrics..."
-        python3 /tmp/nvme_metrics.py > /host/var/lib/node_exporter/textfile_collector/nvme_metrics.prom.tmp 2>/dev/null || echo "# NVMe metrics collection failed" > /host/var/lib/node_exporter/textfile_collector/nvme_metrics.prom.tmp
+        python3 /tmp/nvme_metrics.py > /host/var/lib/node_exporter/textfile_collector/nvme_metrics.prom.tmp || echo "# NVMe metrics collection failed" > /host/var/lib/node_exporter/textfile_collector/nvme_metrics.prom.tmp
         mv /host/var/lib/node_exporter/textfile_collector/nvme_metrics.prom.tmp /host/var/lib/node_exporter/textfile_collector/nvme_metrics.prom
         echo "NVMe metrics collected at $(date)"
         sleep 600

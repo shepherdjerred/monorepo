@@ -31,6 +31,7 @@ const SUPPRESSION_PATTERNS = [
 const EXCLUDED_FILES = [
   "scripts/check-suppressions.ts",
   "scripts/quality-ratchet.sh",
+  "CHANGELOG.md",
   "scripts/ci/src/ci/lib/quality.py",
   "Cargo.toml",
   "clippy.toml",
@@ -45,8 +46,11 @@ const EXCLUDED_FILES = [
   "packages/birmel/src/music/extractors.ts",
   // Intentional: Sentry ErrorBoundary class types incompatible with React 19
   "packages/discord-plays-pokemon/packages/frontend/src/main.tsx",
-  // Documentation: CLAUDE.md files mention suppression patterns as things to avoid
+  // Intentional: public Firebase web API key (same as better-skill-capped fetcher)
+  "packages/temporal/src/activities/fetcher.ts",
+  // Documentation: CLAUDE.md files and docs mention suppression patterns as things to avoid
   "CLAUDE.md",
+  "packages/docs/",
   "packages/dotfiles/CLAUDE.md",
   // Contains patterns as search strings
   "scripts/check-dagger-hygiene.ts",
@@ -94,7 +98,11 @@ async function main(): Promise<void> {
       if (match) {
         currentFile = match[1];
         // Skip checking excluded files
-        if (EXCLUDED_FILES.some((f) => currentFile.endsWith(f))) {
+        if (
+          EXCLUDED_FILES.some(
+            (f) => currentFile.endsWith(f) || currentFile.startsWith(f),
+          )
+        ) {
           currentFile = "";
         }
       }

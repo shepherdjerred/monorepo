@@ -18,7 +18,6 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import { ServiceMonitor } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com.ts";
 
 export function createStatusPageDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "status-page", {
@@ -54,7 +53,7 @@ export function createStatusPageDeployment(chart: Chart) {
       image: `ghcr.io/shepherdjerred/status-page-api:${versions["shepherdjerred/status-page-api"]}`,
       command: ["/bin/sh", "-c"],
       args: [
-        "bun node_modules/prisma/build/index.js db push --skip-generate && bun run src/index.ts",
+        "bun node_modules/prisma/build/index.js db push && bun run src/index.ts",
       ],
       securityContext: {
         readOnlyRootFilesystem: false,
@@ -114,34 +113,8 @@ export function createStatusPageDeployment(chart: Chart) {
     ports: [{ port: 3000, name: "http" }],
   });
 
-  new ServiceMonitor(chart, "status-page-service-monitor", {
-    metadata: {
-      name: "status-page-service-monitor",
-      namespace: "status-page",
-      labels: {
-        release: "prometheus",
-      },
-    },
-    spec: {
-      endpoints: [
-        {
-          port: "http",
-          interval: "30s",
-          path: "/metrics",
-          authorization: {
-            type: "Bearer",
-            credentials: {
-              name: onePasswordItem.name,
-              key: "AUTH_TOKEN",
-            },
-          },
-        },
-      ],
-      selector: {
-        matchLabels: { app: "status-page" },
-      },
-    },
-  });
+  // ServiceMonitor removed: status-page app does not expose a /metrics endpoint.
+  // Re-add when metrics are implemented.
 
   createCloudflareTunnelBinding(chart, "status-page-cf-tunnel", {
     serviceName: service.name,

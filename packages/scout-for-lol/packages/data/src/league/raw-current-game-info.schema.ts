@@ -31,12 +31,16 @@ export const RawCurrentGameParticipantSchema = z.object({
   teamId: z.number(),
   /** Riot ID (e.g., "Cain#3276"). Present in V5 API responses. */
   riotId: z.string(),
+  /** Legacy summoner name — may not be present in V5 responses */
+  summonerName: z.string().optional(),
   spell1Id: z.number(),
   spell2Id: z.number(),
   /** Selected skin number for the champion loading screen art */
   lastSelectedSkinIndex: z.number(),
   bot: z.boolean(),
   profileIconId: z.number(),
+  /** Legacy summoner ID — may not be present in V5 responses */
+  summonerId: z.string().optional(),
   gameCustomizationObjects: z
     .array(
       z.object({

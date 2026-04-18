@@ -11,7 +11,7 @@
     "src"
   ],
   "scripts": {
-    "start": "bunx prisma db push --skip-generate && bun run src/index.ts",
+    "start": "bunx prisma db push && bun run src/index.ts",
     "dev": "bun run --watch src/index.ts",
     "build": "true",
     "generate": "bunx --trust prisma@6 generate",

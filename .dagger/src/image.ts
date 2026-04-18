@@ -25,6 +25,7 @@ export function buildImageHelper(
   depDirs: Directory[] = [],
   version: string = "dev",
   gitSha: string = "unknown",
+  usePrisma: boolean = false,
 ): Container {
   const excludes = ["node_modules", "dist", ".eslintcache"];
 
@@ -58,7 +59,11 @@ export function buildImageHelper(
     .withLabel("org.opencontainers.image.revision", gitSha)
     .withEnvVariable("VERSION", version)
     .withEnvVariable("GIT_SHA", gitSha)
-    .withEntrypoint(["bun", "run", "src/index.ts"]);
+    .withEntrypoint(
+      usePrisma
+        ? ["/bin/sh", "-c", "bunx prisma db push && bun run src/index.ts"]
+        : ["bun", "run", "src/index.ts"],
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -382,7 +387,9 @@ export async function pushCaddyS3ProxyImageHelper(
 
 /**
  * Build the obsidian-headless image.
- * Bun-based, installs obsidian-headless CLI globally for Obsidian vault sync.
+ * Node-based, installs obsidian-headless CLI globally for Obsidian vault sync.
+ * Uses Node instead of Bun because obsidian-headless depends on better-sqlite3,
+ * a native Node addon that Bun does not support.
  */
 export function buildObsidianHeadlessImageHelper(
   version: string = "dev",
@@ -390,13 +397,13 @@ export function buildObsidianHeadlessImageHelper(
 ): Container {
   return dag
     .container()
-    .from("oven/bun:slim")
+    .from("node:22-slim")
     .withExec([
       "sh",
       "-c",
       "apt-get update && apt-get install -y python3 build-essential && rm -rf /var/lib/apt/lists/*",
     ])
-    .withExec(["bun", "add", "-g", "obsidian-headless"])
+    .withExec(["npm", "install", "-g", "obsidian-headless"])
     .withExec(["mkdir", "-p", "/vault"])
     .withLabel(
       "org.opencontainers.image.source",
@@ -418,6 +425,80 @@ export async function pushObsidianHeadlessImageHelper(
   gitSha: string = "unknown",
 ): Promise<string> {
   const container = buildObsidianHeadlessImageHelper(version, gitSha);
+  return pushContainerHelper(
+    container,
+    tags,
+    registryUsername,
+    registryPassword,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Temporal worker image builder
+// ---------------------------------------------------------------------------
+
+/**
+ * Build the Temporal worker image.
+ * Standalone Bun package — simple workspace mount + install + run.
+ */
+export function buildTemporalWorkerImageHelper(
+  pkgDir: Directory,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Container {
+  const excludes = ["node_modules", "dist", ".eslintcache"];
+
+  let container = dag
+    .container()
+    .from(BUN_IMAGE)
+    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
+    .withWorkdir("/workspace")
+    .withDirectory("/workspace/packages/temporal", pkgDir, {
+      exclude: excludes,
+    });
+
+  for (let i = 0; i < depNames.length; i++) {
+    container = container.withDirectory(
+      `/workspace/packages/${depNames[i]}`,
+      depDirs[i],
+      { exclude: excludes },
+    );
+  }
+
+  return container
+    .withWorkdir("/workspace/packages/temporal")
+    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withLabel(
+      "org.opencontainers.image.source",
+      "https://github.com/shepherdjerred/monorepo",
+    )
+    .withLabel("org.opencontainers.image.version", version)
+    .withLabel("org.opencontainers.image.revision", gitSha)
+    .withEnvVariable("VERSION", version)
+    .withEnvVariable("GIT_SHA", gitSha)
+    .withEntrypoint(["bun", "run", "src/worker.ts"]);
+}
+
+/** Push a temporal-worker image to a registry. */
+export async function pushTemporalWorkerImageHelper(
+  pkgDir: Directory,
+  tags: string[],
+  registryUsername: string,
+  registryPassword: Secret,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Promise<string> {
+  const container = buildTemporalWorkerImageHelper(
+    pkgDir,
+    depNames,
+    depDirs,
+    version,
+    gitSha,
+  );
   return pushContainerHelper(
     container,
     tags,
@@ -474,7 +555,11 @@ export function buildScoutImageHelper(
     .withLabel("org.opencontainers.image.revision", gitSha)
     .withEnvVariable("VERSION", version)
     .withEnvVariable("GIT_SHA", gitSha)
-    .withEntrypoint(["bun", "run", "src/index.ts"]);
+    .withEntrypoint([
+      "/bin/sh",
+      "-c",
+      "bunx prisma migrate deploy && bun run src/index.ts",
+    ]);
 }
 
 /**
@@ -689,6 +774,7 @@ export async function pushImageHelper(
   depDirs: Directory[] = [],
   version: string = "dev",
   gitSha: string = "unknown",
+  usePrisma: boolean = false,
 ): Promise<string> {
   if (tags.length === 0) {
     throw new Error("pushImageHelper requires at least one tag");
@@ -700,6 +786,7 @@ export async function pushImageHelper(
     depDirs,
     version,
     gitSha,
+    usePrisma,
   ).withRegistryAuth("ghcr.io", registryUsername, registryPassword);
 
   const digest = await image.publish(tags[0]);

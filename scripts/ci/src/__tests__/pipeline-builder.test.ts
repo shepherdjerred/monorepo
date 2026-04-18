@@ -24,6 +24,7 @@ function emptyAffected(): AffectedPackages {
     hasSitePackages: new Set(),
     hasNpmPackages: new Set(),
     versionBumpOnly: false,
+    releasePleaseMerge: false,
   };
 }
 
@@ -41,6 +42,7 @@ function fullBuild(): AffectedPackages {
     hasSitePackages: new Set(Object.keys(PACKAGE_TO_SITE)),
     hasNpmPackages: new Set(PACKAGES_WITH_NPM),
     versionBumpOnly: false,
+    releasePleaseMerge: false,
   };
 }
 
@@ -680,6 +682,85 @@ describe("buildPipeline", () => {
       check(pipeline.steps);
       expect(pluginCount).toBeGreaterThan(0);
       expect(hasRunnerHost).toBe(pluginCount);
+    });
+
+    it("has unique step keys in release-please merge full build", () => {
+      const affected = fullBuild();
+      affected.releasePleaseMerge = true;
+      const pipeline = buildPipeline(affected);
+      const keys: string[] = [];
+
+      function collectKeys(steps: unknown[]) {
+        for (const s of steps) {
+          if (typeof s === "object" && s !== null) {
+            if (
+              "key" in s &&
+              typeof (s as Record<string, unknown>)["key"] === "string"
+            ) {
+              keys.push((s as Record<string, unknown>)["key"] as string);
+            }
+            if (
+              "steps" in s &&
+              Array.isArray((s as Record<string, unknown>)["steps"])
+            ) {
+              collectKeys((s as Record<string, unknown>)["steps"] as unknown[]);
+            }
+          }
+        }
+      }
+
+      collectKeys(pipeline.steps);
+
+      const seen = new Set<string>();
+      const dupes: string[] = [];
+      for (const k of keys) {
+        if (seen.has(k)) dupes.push(k);
+        seen.add(k);
+      }
+
+      expect(dupes).toEqual([]);
+    });
+  });
+
+  describe("release-please merge", () => {
+    function releasePleaseAffected(): AffectedPackages {
+      const affected = fullBuild();
+      affected.releasePleaseMerge = true;
+      return affected;
+    }
+
+    it("generates both prod and dev npm publish steps", () => {
+      const pipeline = buildPipeline(releasePleaseAffected());
+      const groups = pipeline.steps.filter(isGroup);
+      const npmGroup = groups.find((g) => g.key === "publish-npm");
+      expect(npmGroup).toBeDefined();
+      const steps = npmGroup!.steps;
+      // Should have prod + dev for each npm package (3 packages × 2 = 6 steps)
+      expect(steps.length).toBe(6);
+      const prodSteps = steps.filter((s) => s.key.endsWith("-prod"));
+      const devSteps = steps.filter((s) => !s.key.endsWith("-prod"));
+      expect(prodSteps.length).toBe(3);
+      expect(devSteps.length).toBe(3);
+    });
+
+    it("prod steps do not have --dev-suffix flag", () => {
+      const pipeline = buildPipeline(releasePleaseAffected());
+      const groups = pipeline.steps.filter(isGroup);
+      const npmGroup = groups.find((g) => g.key === "publish-npm");
+      const prodSteps = npmGroup!.steps.filter((s) => s.key.endsWith("-prod"));
+      for (const step of prodSteps) {
+        expect(step.command).not.toContain("--dev-suffix");
+      }
+    });
+
+    it("dev steps have --dev-suffix flag", () => {
+      const pipeline = buildPipeline(releasePleaseAffected());
+      const groups = pipeline.steps.filter(isGroup);
+      const npmGroup = groups.find((g) => g.key === "publish-npm");
+      const devSteps = npmGroup!.steps.filter((s) => !s.key.endsWith("-prod"));
+      for (const step of devSteps) {
+        expect(step.command).toContain("--dev-suffix");
+      }
     });
   });
 });

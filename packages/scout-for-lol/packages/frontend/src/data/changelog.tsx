@@ -140,6 +140,61 @@ function ChangelogSection({
 
 export const changelog: ChangelogEntry[] = [
   {
+    date: "2026 04 05",
+    banner: (
+      <>
+        <strong>New commands</strong> — player lookup, server management, and
+        subscription tools
+      </>
+    ),
+    text: (
+      <>
+        <ChangelogSection
+          title="New Commands"
+          color="green"
+          items={[
+            "/me — Look up your own or any player's connected accounts (no admin required)",
+            "/admin player-list — List all tracked players in your server",
+            "/subscription add-channel — Add a player to an additional channel",
+            "/subscription move — Move a subscription between channels",
+          ]}
+        />
+      </>
+    ),
+    formatted: {
+      year: 2026,
+      month: 4,
+      day: 5,
+    },
+  },
+  {
+    date: "2026 04 05",
+    banner: (
+      <>
+        <strong>Pre-match notifications</strong> — know when your friends start
+        playing
+      </>
+    ),
+    text: (
+      <>
+        <ChangelogSection
+          title="Pre-Match Detection"
+          color="teal"
+          items={[
+            "Get notified the moment your friends start a League match",
+            "See champion picks and game mode before the match ends",
+            "Multiple tracked players in the same game are grouped into one notification",
+          ]}
+        />
+      </>
+    ),
+    formatted: {
+      year: 2026,
+      month: 4,
+      day: 5,
+    },
+  },
+  {
     date: "2026 02 22",
     banner: (
       <>

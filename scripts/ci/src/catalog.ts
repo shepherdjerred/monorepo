@@ -48,6 +48,13 @@ export const IMAGE_PUSH_TARGETS: ImageTarget[] = [
     buildFn: "build-better-skill-capped-fetcher-image",
     pushFn: "push-better-skill-capped-fetcher-image",
   },
+  {
+    name: "temporal-worker",
+    package: "temporal",
+    versionKey: "shepherdjerred/temporal-worker",
+    buildFn: "build-temporal-worker-image",
+    pushFn: "push-temporal-worker-image",
+  },
 ];
 
 export const INFRA_PUSH_TARGETS: ImageTarget[] = [
@@ -323,6 +330,7 @@ export const ALL_PACKAGES: string[] = [
   "starlight-karma-bot",
   "tasknotes-server",
   "tasknotes-types",
+  "temporal",
   "tasks-for-obsidian",
   "terraform-provider-asuswrt",
   "tips",

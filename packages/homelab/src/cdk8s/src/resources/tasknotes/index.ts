@@ -74,8 +74,8 @@ export function createTasknotesDeployment(chart: Chart) {
           limit: Cpu.millis(500),
         },
         memory: {
-          request: Size.mebibytes(128),
-          limit: Size.mebibytes(512),
+          request: Size.mebibytes(256),
+          limit: Size.gibibytes(1),
         },
       },
       startup: Probe.fromHttpGet("/api/health", {

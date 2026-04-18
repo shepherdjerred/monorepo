@@ -78,6 +78,25 @@ const maxTier = POLLING_TIERS[POLLING_TIERS.length - 1]!;
           <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">Bot Commands</h2>
 
           <div class="space-y-8">
+            <!-- Me Command -->
+            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">/me <span class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/50 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:text-green-300">New</span></h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">
+                Look up your own or any player's connected accounts, active subscriptions, and competition participation. No admin permissions required.
+              </p>
+
+              <CommandBox
+                command="/me alias:[nickname]"
+              />
+
+              <h4 class="font-medium text-gray-900 dark:text-white mb-2">Optional Parameters:</h4>
+              <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 space-y-1">
+                <li>
+                  <strong>alias:</strong> Player alias to look up (leave empty to look up your own account)
+                </li>
+              </ul>
+            </div>
+
             <!-- Subscription Add Command -->
             <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
               <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">/subscription add</h3>
@@ -102,6 +121,53 @@ const maxTier = POLLING_TIERS[POLLING_TIERS.length - 1]!;
               <h4 class="font-medium text-gray-900 dark:text-white mb-2">Optional Parameters:</h4>
               <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300">
                 <li><strong>user:</strong> Associated Discord user</li>
+              </ul>
+            </div>
+
+            <!-- Subscription Add Channel Command -->
+            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">/subscription add-channel <span class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/50 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:text-green-300">New</span></h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">
+                Add a player to an additional Discord channel without creating a new subscription. Useful when you want the same player's matches posted to multiple channels.
+              </p>
+
+              <CommandBox
+                command="/subscription add-channel alias:[nickname] channel:[#channel]"
+              />
+
+              <h4 class="font-medium text-gray-900 dark:text-white mb-2">Required Parameters:</h4>
+              <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 space-y-1">
+                <li>
+                  <strong>alias:</strong> The player's alias
+                </li>
+                <li>
+                  <strong>channel:</strong> The additional Discord channel for notifications
+                </li>
+              </ul>
+            </div>
+
+            <!-- Subscription Move Command -->
+            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">/subscription move <span class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/50 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:text-green-300">New</span></h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">
+                Move a player's subscription from one channel to another.
+              </p>
+
+              <CommandBox
+                command="/subscription move alias:[nickname] from-channel:[#old] to-channel:[#new]"
+              />
+
+              <h4 class="font-medium text-gray-900 dark:text-white mb-2">Required Parameters:</h4>
+              <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 space-y-1">
+                <li>
+                  <strong>alias:</strong> The player's alias
+                </li>
+                <li>
+                  <strong>from-channel:</strong> The current channel
+                </li>
+                <li>
+                  <strong>to-channel:</strong> The destination channel
+                </li>
               </ul>
             </div>
 
@@ -317,6 +383,14 @@ const maxTier = POLLING_TIERS[POLLING_TIERS.length - 1]!;
                   </p>
                   <CommandBox command="/admin player-view alias:[alias]" variant="light" />
                 </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-2">/admin player-list <span class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/50 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:text-green-300">New</span></h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    List all tracked players in your server with their account and subscription counts.
+                  </p>
+                  <CommandBox command="/admin player-list" variant="light" />
+                </div>
               </div>
             </div>
           </div>
@@ -484,6 +558,52 @@ const maxTier = POLLING_TIERS[POLLING_TIERS.length - 1]!;
           <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">Advanced Features</h2>
 
           <div class="space-y-12">
+            <!-- Pre-Match Detection -->
+            <div>
+              <div class="flex items-center gap-3 mb-4">
+                <div class="bg-teal-100 dark:bg-teal-900/30 rounded-lg p-2 flex items-center justify-center">
+                  <svg
+                    class="h-6 w-6 text-teal-600 dark:text-teal-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"></path>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"></path>
+                  </svg>
+                </div>
+                <h3 class="text-2xl font-semibold text-gray-900 dark:text-white">Pre-Match Detection</h3>
+              </div>
+
+              <div
+                class="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-700 rounded-lg p-6"
+              >
+                <p class="text-gray-700 dark:text-gray-300 mb-4">
+                  Scout detects when tracked players <strong>enter a game in real-time</strong> and sends a notification to your Discord channel immediately — before the match ends.
+                </p>
+
+                <h4 class="font-semibold text-gray-900 dark:text-white mb-3">What's Included in Pre-Match Notifications:</h4>
+                <ul class="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300 mb-4">
+                  <li>Champion picks for each tracked player</li>
+                  <li>Game mode (Ranked Solo/Duo, Flex, Arena, Normal, etc.)</li>
+                  <li>All tracked players in the same game grouped into a single notification</li>
+                </ul>
+
+                <InfoBox variant="note">
+                  <p>
+                    <strong>Note:</strong> Pre-match detection works automatically for all subscribed players — no additional configuration needed!
+                  </p>
+                </InfoBox>
+              </div>
+            </div>
+
             <!-- Arena Support -->
             <div>
               <div class="flex items-center gap-3 mb-4">
@@ -792,6 +912,15 @@ const maxTier = POLLING_TIERS[POLLING_TIERS.length - 1]!;
               <p>
                 This means you'll get notifications within 1-2 minutes for players who are actively gaming.
                 Even for players who haven't played in a month, Scout checks at least every {maxTier.intervalMinutes} minutes.
+              </p>
+            </FAQItem>
+
+            <FAQItem question="What are pre-match notifications?">
+              <p>
+                Pre-match notifications alert you the moment a tracked player enters a League match. Scout sends a
+                Discord notification with the player's champion pick and game mode. If multiple tracked players are
+                in the same game, they're grouped into a single notification. These are separate from post-match
+                reports — you'll get both automatically.
               </p>
             </FAQItem>
 
