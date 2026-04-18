@@ -230,7 +230,8 @@ const versions = {
     "1.29.5@sha256:95f36d92249d086f0cbd1fd8662839a0c73083397529f5395f447f1c761219af",
   // Custom temporal-worker image - updated by CI pipeline
   // not managed by renovate
-  "shepherdjerred/temporal-worker": "dev",
+  "shepherdjerred/temporal-worker":
+    "2.0.0-954@sha256:bdb559fc5a4cad107fe052bc03a182159b6dc30120f217e6aec43aa475d1fac3",
 };
 
 export default versions;
