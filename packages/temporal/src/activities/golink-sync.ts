@@ -40,8 +40,9 @@ export const golinkSyncActivities = {
     });
 
     if (!response.ok) {
-      console.warn("Could not fetch existing golinks, assuming empty");
-      return [];
+      throw new Error(
+        `Failed to fetch existing golinks: ${String(response.status)}`,
+      );
     }
 
     const text = await response.text();
