@@ -103,7 +103,9 @@ async function buildParticipant(
   const skinNum = await resolveSkinNum(participant, championName);
 
   const puuid =
-    participant.puuid === null ? null : LeaguePuuidSchema.parse(participant.puuid);
+    participant.puuid === null
+      ? null
+      : LeaguePuuidSchema.parse(participant.puuid);
 
   return {
     puuid,

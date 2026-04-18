@@ -19,11 +19,7 @@ export const LoadingScreenLayoutSchema = z.enum(["standard", "aram", "arena"]);
  * Branded type for Riot game IDs (from spectator API).
  */
 export type GameId = z.infer<typeof GameIdSchema>;
-export const GameIdSchema = z
-  .number()
-  .int()
-  .positive()
-  .brand<"GameId">();
+export const GameIdSchema = z.number().int().positive().brand<"GameId">();
 
 /**
  * Branded type for summoner spell IDs (e.g., 4=Flash, 14=Ignite).
