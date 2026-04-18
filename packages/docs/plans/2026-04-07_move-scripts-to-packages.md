@@ -7,6 +7,7 @@ The monorepo convention is that all code lives under `packages/`, but `scripts/`
 ## Approach
 
 Two moves:
+
 1. `scripts/ci/` -> `packages/ci/` (already a Bun package, just relocate)
 2. Remaining loose scripts -> `packages/scripts/` (new package `@shepherdjerred/scripts`)
 
@@ -26,6 +27,7 @@ rmdir scripts  # should be empty after both moves
 ```
 
 Create `packages/scripts/package.json`:
+
 ```json
 {
   "name": "@shepherdjerred/scripts",
@@ -41,83 +43,84 @@ Create `packages/scripts/package.json`:
 
 ### Root config files
 
-| File | Change |
-|------|--------|
-| `package.json` (5 scripts) | `scripts/` -> `packages/scripts/` |
-| `.mise.toml` | `scripts/setup.ts` -> `packages/scripts/setup.ts` |
+| File                       | Change                                            |
+| -------------------------- | ------------------------------------------------- |
+| `package.json` (5 scripts) | `scripts/` -> `packages/scripts/`                 |
+| `.mise.toml`               | `scripts/setup.ts` -> `packages/scripts/setup.ts` |
 
 ### lefthook.yml (7 run commands + 1 glob)
 
-| Old | New |
-|-----|-----|
-| `bun scripts/validate-commit-msg.ts` | `bun packages/scripts/validate-commit-msg.ts` |
-| `bash scripts/check-env-var-names.sh` | `bash packages/scripts/check-env-var-names.sh` |
-| `bun scripts/check-suppressions.ts` | `bun packages/scripts/check-suppressions.ts` |
+| Old                                          | New                                                   |
+| -------------------------------------------- | ----------------------------------------------------- |
+| `bun scripts/validate-commit-msg.ts`         | `bun packages/scripts/validate-commit-msg.ts`         |
+| `bash scripts/check-env-var-names.sh`        | `bash packages/scripts/check-env-var-names.sh`        |
+| `bun scripts/check-suppressions.ts`          | `bun packages/scripts/check-suppressions.ts`          |
 | `bun scripts/guard-no-package-exclusions.ts` | `bun packages/scripts/guard-no-package-exclusions.ts` |
-| `bash scripts/compliance-check.sh` | `bash packages/scripts/compliance-check.sh` |
-| `bash scripts/check-dagger-hygiene.sh` | `bash packages/scripts/check-dagger-hygiene.sh` |
-| `bash scripts/quality-ratchet.sh` | `bash packages/scripts/quality-ratchet.sh` |
-| `"scripts/ci/src/**/*.ts"` (glob) | `"packages/ci/src/**/*.ts"` |
+| `bash scripts/compliance-check.sh`           | `bash packages/scripts/compliance-check.sh`           |
+| `bash scripts/check-dagger-hygiene.sh`       | `bash packages/scripts/check-dagger-hygiene.sh`       |
+| `bash scripts/quality-ratchet.sh`            | `bash packages/scripts/quality-ratchet.sh`            |
+| `"scripts/ci/src/**/*.ts"` (glob)            | `"packages/ci/src/**/*.ts"`                           |
 
 ### .buildkite/scripts/ (16 shell scripts)
 
 All `cd scripts/ci && ...` -> `cd packages/ci && ...`:
+
 - `generate-pipeline.sh`, `deploy-site.sh`, `clauderon-build.sh`, `release.sh`, `publish-npm-package.sh`, `cooklang-create-release.sh`, `push-image.sh`, `version-commit-back.sh`, `homelab-argocd-health.sh`, `clauderon-upload.sh`, `cooklang-build.sh`, `cooklang-push.sh`, `homelab-tofu-stack.sh`, `deploy-argocd.sh`, `homelab-cdk8s.sh`, `homelab-helm-push.sh`
 
 Plus `quality-gate.sh`: `PYTHONPATH=scripts/ci/src ... --project scripts/ci` -> `PYTHONPATH=packages/ci/src ... --project packages/ci`
 
 ### CI pipeline generator (inside packages/ci/src/ after move)
 
-| File | Lines | Change |
-|------|-------|--------|
-| `change-detection.ts:32` | `INFRA_DIRS` | `"scripts/ci/"` -> `"packages/ci/"` |
-| `steps/quality.ts:80` | command | `"bun scripts/quality-ratchet.ts"` -> `"bun packages/scripts/quality-ratchet.ts"` |
-| `steps/quality.ts:89` | command | `"bash scripts/compliance-check.sh"` -> `"bash packages/scripts/compliance-check.sh"` |
-| `steps/quality.ts:123` | command | `"bun scripts/check-suppressions.ts --ci"` -> `"bun packages/scripts/check-suppressions.ts --ci"` |
-| `steps/quality.ts:144` | command | `"bun scripts/check-dagger-hygiene.ts"` -> `"bun packages/scripts/check-dagger-hygiene.ts"` |
-| `steps/quality.ts:178` | command | `"bash scripts/check-env-var-names.sh"` -> `"bash packages/scripts/check-env-var-names.sh"` |
-| `steps/quality.ts:187` | command | `"bun scripts/guard-no-package-exclusions.ts"` -> `"bun packages/scripts/guard-no-package-exclusions.ts"` |
+| File                     | Lines        | Change                                                                                                    |
+| ------------------------ | ------------ | --------------------------------------------------------------------------------------------------------- |
+| `change-detection.ts:32` | `INFRA_DIRS` | `"scripts/ci/"` -> `"packages/ci/"`                                                                       |
+| `steps/quality.ts:80`    | command      | `"bun scripts/quality-ratchet.ts"` -> `"bun packages/scripts/quality-ratchet.ts"`                         |
+| `steps/quality.ts:89`    | command      | `"bash scripts/compliance-check.sh"` -> `"bash packages/scripts/compliance-check.sh"`                     |
+| `steps/quality.ts:123`   | command      | `"bun scripts/check-suppressions.ts --ci"` -> `"bun packages/scripts/check-suppressions.ts --ci"`         |
+| `steps/quality.ts:144`   | command      | `"bun scripts/check-dagger-hygiene.ts"` -> `"bun packages/scripts/check-dagger-hygiene.ts"`               |
+| `steps/quality.ts:178`   | command      | `"bash scripts/check-env-var-names.sh"` -> `"bash packages/scripts/check-env-var-names.sh"`               |
+| `steps/quality.ts:187`   | command      | `"bun scripts/guard-no-package-exclusions.ts"` -> `"bun packages/scripts/guard-no-package-exclusions.ts"` |
 
-### CI tests (inside packages/ci/src/__tests__/ after move)
+### CI tests (inside `packages/ci/src/__tests__/` after move)
 
-| File | Change |
-|------|--------|
-| `dagger-hygiene.test.ts:39` | `scripts/ci/src/catalog.ts` -> `packages/ci/src/catalog.ts` |
-| `change-detection.test.ts:33` | `scripts/ci/src/main.ts` -> `packages/ci/src/main.ts` |
-| `change-detection.test.ts:32` | test description string (cosmetic) |
+| File                          | Change                                                      |
+| ----------------------------- | ----------------------------------------------------------- |
+| `dagger-hygiene.test.ts:39`   | `scripts/ci/src/catalog.ts` -> `packages/ci/src/catalog.ts` |
+| `change-detection.test.ts:33` | `scripts/ci/src/main.ts` -> `packages/ci/src/main.ts`       |
+| `change-detection.test.ts:32` | test description string (cosmetic)                          |
 
 ### Dagger
 
-| File | Change |
-|------|--------|
+| File                     | Change                                                                      |
+| ------------------------ | --------------------------------------------------------------------------- |
 | `.dagger/src/misc.ts:93` | `scripts/generate-caddyfile.ts` -> `packages/scripts/generate-caddyfile.ts` |
 
 ### Example package postinstall paths
 
-| File | Old | New |
-|------|-----|-----|
-| `packages/webring/example/package.json` | `../../../scripts/copy-example-deps.ts` | `../../scripts/copy-example-deps.ts` |
+| File                                                           | Old                                        | New                                     |
+| -------------------------------------------------------------- | ------------------------------------------ | --------------------------------------- |
+| `packages/webring/example/package.json`                        | `../../../scripts/copy-example-deps.ts`    | `../../scripts/copy-example-deps.ts`    |
 | `packages/astro-opengraph-images/examples/custom/package.json` | `../../../../scripts/copy-example-deps.ts` | `../../../scripts/copy-example-deps.ts` |
 | `packages/astro-opengraph-images/examples/preset/package.json` | `../../../../scripts/copy-example-deps.ts` | `../../../scripts/copy-example-deps.ts` |
 
 ### Other config files
 
-| File | Change |
-|------|--------|
-| `knip.json` | `"scripts/**"` ignore -> `"packages/scripts/**"` |
+| File              | Change                                                                  |
+| ----------------- | ----------------------------------------------------------------------- |
+| `knip.json`       | `"scripts/**"` ignore -> `"packages/scripts/**"`                        |
 | `.conflictignore` | `scripts/ci/src/steps/quality.ts` -> `packages/ci/src/steps/quality.ts` |
 
 ### Documentation
 
-| File | Change |
-|------|--------|
-| `CLAUDE.md` | Update all `scripts/ci/` and `scripts/` references |
+| File             | Change                                                                                          |
+| ---------------- | ----------------------------------------------------------------------------------------------- |
+| `CLAUDE.md`      | Update all `scripts/ci/` and `scripts/` references                                              |
 | `packages/docs/` | Update references in docs (archive docs can be left as-is since they describe historical state) |
 
 ### CI catalog
 
-| File | Change |
-|------|--------|
+| File                         | Change                                                                                                                             |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `packages/ci/src/catalog.ts` | If `ALL_PACKAGES` doesn't already include `ci` and `scripts`, add them. Or add to `SKIP_PACKAGES` if they shouldn't have CI steps. |
 
 ## Phase 3: Verification
