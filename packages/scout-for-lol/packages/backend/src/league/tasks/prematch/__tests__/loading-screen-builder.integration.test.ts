@@ -46,7 +46,7 @@ describe("buildLoadingScreenData with real spectator payload", () => {
     const parsed = LoadingScreenDataSchema.parse(result);
 
     // Check game-level fields
-    expect(parsed.gameId).toBe(5_532_792_625);
+    expect(Number(parsed.gameId)).toBe(5_532_792_625);
     expect(parsed.queueType).toBe("flex");
     expect(parsed.isRanked).toBe(true);
     expect(parsed.layout).toBe("standard");

@@ -7,6 +7,7 @@ export * from "./lane.ts";
 export * from "./league-account.ts";
 export * from "./league-points.ts";
 export * from "./loading-screen.ts";
+export * from "./map.ts";
 export * from "./match.ts";
 export * from "./match-helpers.ts";
 export * from "./player.ts";

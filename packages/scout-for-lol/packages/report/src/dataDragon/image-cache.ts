@@ -143,33 +143,30 @@ export function getChampionLoadingImage(
   );
 }
 
-// Pre-load champion loading screen images for a list of champion/skin combos
+// Pre-load champion loading screen images for a list of champion/skin combos.
+// Skin numbers must already resolve to existing files on disk (chromas are
+// resolved to their parent skin via resolveLoadingSkinNum at the caller).
 export async function preloadChampionLoadingImages(
   entries: { championName: string; skinNum: number }[],
 ): Promise<void> {
-  // Deduplicate entries, also always include default skin (0) as fallback
-  const keysToLoad = new Set<string>();
-  for (const entry of entries) {
-    keysToLoad.add(`${entry.championName}_${entry.skinNum.toString()}`);
-    keysToLoad.add(`${entry.championName}_0`);
-  }
+  const seen = new Set<string>();
+  const uniqueEntries = entries.filter((entry) => {
+    const key = `${entry.championName}_${entry.skinNum.toString()}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
 
   await Promise.all(
-    [...keysToLoad].map(async (key) => {
-      if (!championLoadingImageCache.has(key)) {
-        const parts = key.split("_");
-        const skinNum = Number.parseInt(parts.pop() ?? "0", 10);
-        const championName = parts.join("_");
-        try {
-          const base64 = await getChampionLoadingImageBase64(
-            championName,
-            skinNum,
-          );
-          championLoadingImageCache.set(key, base64);
-        } catch {
-          // If specific skin not available, skip (fallback to default handled in getter)
-        }
+    uniqueEntries.map(async ({ championName, skinNum }) => {
+      const key = `${championName}_${skinNum.toString()}`;
+      if (championLoadingImageCache.has(key)) {
+        return;
       }
+      const base64 = await getChampionLoadingImageBase64(championName, skinNum);
+      championLoadingImageCache.set(key, base64);
     }),
   );
 }

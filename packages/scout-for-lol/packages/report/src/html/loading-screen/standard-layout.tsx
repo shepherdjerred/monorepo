@@ -39,7 +39,7 @@ function TeamRow({
       <div style={{ display: "flex", gap: "8px" }}>
         {participants.map((participant) => (
           <PlayerCard
-            key={participant.puuid}
+            key={participant.puuid ?? participant.summonerName}
             participant={participant}
             teamSide={teamSide}
           />

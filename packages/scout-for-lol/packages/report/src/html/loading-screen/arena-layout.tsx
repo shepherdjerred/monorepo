@@ -17,8 +17,13 @@ function groupIntoArenaTeams(
   const teamMap = new Map<number, LoadingScreenParticipant[]>();
 
   for (const participant of participants) {
-    // Arena team IDs are numeric
-    const teamNum = typeof participant.team === "number" ? participant.team : 0;
+    // For arena, team is { arenaTeam: 1..8 }
+    if (typeof participant.team === "string") {
+      throw new TypeError(
+        `Arena layout received standard team "${participant.team}" — expected arena team object`,
+      );
+    }
+    const teamNum = participant.team.arenaTeam;
     const existing = teamMap.get(teamNum) ?? [];
     existing.push(participant);
     teamMap.set(teamNum, existing);
@@ -54,7 +59,7 @@ function TeamPair({ team, teamIndex }: { team: ArenaTeam; teamIndex: number }) {
       <div style={{ display: "flex", gap: "6px" }}>
         {team.players.map((participant) => (
           <PlayerCard
-            key={participant.puuid}
+            key={participant.puuid ?? participant.summonerName}
             participant={participant}
             teamSide="neutral"
           />

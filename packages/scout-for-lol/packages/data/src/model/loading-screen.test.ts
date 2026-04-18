@@ -7,7 +7,15 @@ import {
   SummonerSpellIdSchema,
   RuneIdSchema,
   LoadingScreenChampionIdSchema,
+  GameIdSchema,
+  QueueDisplayNameSchema,
+  makeQueueDisplayName,
 } from "#src/model/loading-screen.ts";
+import { LeaguePuuidSchema } from "#src/model/league-account.ts";
+import { ArenaTeamIdSchema } from "#src/model/arena/arena.ts";
+
+const samplePuuid =
+  "abc123abc123abc123abc123abc123abc123abc123abc123abc123abc123abc123abc123abc123";
 
 describe("LoadingScreenLayoutSchema", () => {
   test("accepts valid layouts", () => {
@@ -22,9 +30,8 @@ describe("LoadingScreenLayoutSchema", () => {
 });
 
 describe("branded type schemas", () => {
-  test("SummonerSpellIdSchema accepts valid IDs", () => {
+  test("SummonerSpellIdSchema accepts non-negative ints", () => {
     expect(() => SummonerSpellIdSchema.parse(4)).not.toThrow();
-    expect(() => SummonerSpellIdSchema.parse(14)).not.toThrow();
     expect(() => SummonerSpellIdSchema.parse(0)).not.toThrow();
   });
 
@@ -32,7 +39,7 @@ describe("branded type schemas", () => {
     expect(() => SummonerSpellIdSchema.parse(-1)).toThrow();
   });
 
-  test("RuneIdSchema accepts valid IDs", () => {
+  test("RuneIdSchema accepts positive ints", () => {
     expect(() => RuneIdSchema.parse(8005)).not.toThrow();
   });
 
@@ -41,20 +48,37 @@ describe("branded type schemas", () => {
     expect(() => RuneIdSchema.parse(-1)).toThrow();
   });
 
-  test("LoadingScreenChampionIdSchema accepts valid IDs", () => {
+  test("LoadingScreenChampionIdSchema accepts positive ints", () => {
     expect(() => LoadingScreenChampionIdSchema.parse(1)).not.toThrow();
-    expect(() => LoadingScreenChampionIdSchema.parse(266)).not.toThrow();
   });
 
   test("LoadingScreenChampionIdSchema rejects zero and negative", () => {
     expect(() => LoadingScreenChampionIdSchema.parse(0)).toThrow();
-    expect(() => LoadingScreenChampionIdSchema.parse(-1)).toThrow();
+  });
+
+  test("GameIdSchema accepts positive ints", () => {
+    expect(() => GameIdSchema.parse(5_532_792_625)).not.toThrow();
+  });
+
+  test("GameIdSchema rejects zero and negative", () => {
+    expect(() => GameIdSchema.parse(0)).toThrow();
+    expect(() => GameIdSchema.parse(-1)).toThrow();
+  });
+
+  test("QueueDisplayNameSchema rejects empty strings", () => {
+    expect(() => QueueDisplayNameSchema.parse("")).toThrow();
+    expect(() => QueueDisplayNameSchema.parse("ranked solo")).not.toThrow();
+  });
+
+  test("makeQueueDisplayName returns branded display name", () => {
+    expect(() => makeQueueDisplayName("solo")).not.toThrow();
+    expect(() => makeQueueDisplayName("aram")).not.toThrow();
   });
 });
 
 describe("LoadingScreenParticipantSchema", () => {
   const validParticipant = {
-    puuid: "abc-123",
+    puuid: LeaguePuuidSchema.parse(samplePuuid),
     summonerName: "TestPlayer",
     championName: "Aatrox",
     championDisplayName: "Aatrox",
@@ -67,10 +91,15 @@ describe("LoadingScreenParticipantSchema", () => {
 
   test("accepts valid participant without optional fields", () => {
     const result = LoadingScreenParticipantSchema.parse(validParticipant);
-    expect(result.puuid).toBe("abc-123");
     expect(result.keystoneRuneId).toBeUndefined();
     expect(result.secondaryTreeId).toBeUndefined();
     expect(result.ranks).toBeUndefined();
+  });
+
+  test("accepts participant with null puuid", () => {
+    const withNullPuuid = { ...validParticipant, puuid: null };
+    const result = LoadingScreenParticipantSchema.parse(withNullPuuid);
+    expect(result.puuid).toBeNull();
   });
 
   test("accepts participant with runes and ranks", () => {
@@ -103,13 +132,13 @@ describe("LoadingScreenParticipantSchema", () => {
     expect(result.isTrackedPlayer).toBe(true);
   });
 
-  test("accepts arena participant with numeric team", () => {
+  test("accepts arena participant with arenaTeam object", () => {
     const arenaParticipant = {
       ...validParticipant,
-      team: 3, // Arena team number
+      team: { arenaTeam: ArenaTeamIdSchema.parse(3) },
     };
     const result = LoadingScreenParticipantSchema.parse(arenaParticipant);
-    expect(result.team).toBe(3);
+    expect(result.team).toEqual({ arenaTeam: ArenaTeamIdSchema.parse(3) });
   });
 
   test("rejects negative skin number", () => {
@@ -117,6 +146,15 @@ describe("LoadingScreenParticipantSchema", () => {
       LoadingScreenParticipantSchema.parse({
         ...validParticipant,
         skinNum: -1,
+      }),
+    ).toThrow();
+  });
+
+  test("rejects empty summonerName", () => {
+    expect(() =>
+      LoadingScreenParticipantSchema.parse({
+        ...validParticipant,
+        summonerName: "",
       }),
     ).toThrow();
   });
@@ -153,37 +191,43 @@ describe("LoadingScreenBanSchema", () => {
   });
 });
 
-const makeParticipant = (puuid: string, team: "blue" | "red") => ({
-  puuid,
-  summonerName: `Player-${puuid}`,
-  championName: "Aatrox",
-  championDisplayName: "Aatrox",
-  skinNum: 0,
-  team,
-  spell1Id: SummonerSpellIdSchema.parse(4),
-  spell2Id: SummonerSpellIdSchema.parse(14),
-  isTrackedPlayer: false,
-});
+function makePuuid(suffix: string) {
+  return LeaguePuuidSchema.parse(`${samplePuuid}${suffix}`.slice(0, 78));
+}
+
+function makeParticipant(puuid: string, team: "blue" | "red") {
+  return {
+    puuid: LeaguePuuidSchema.parse(puuid),
+    summonerName: `Player-${puuid.slice(0, 4)}`,
+    championName: "Aatrox",
+    championDisplayName: "Aatrox",
+    skinNum: 0,
+    team,
+    spell1Id: SummonerSpellIdSchema.parse(4),
+    spell2Id: SummonerSpellIdSchema.parse(14),
+    isTrackedPlayer: false,
+  };
+}
 
 describe("LoadingScreenDataSchema", () => {
   const validData = {
-    gameId: 12_345,
+    gameId: GameIdSchema.parse(12_345),
     queueType: "solo",
-    queueDisplayName: "Ranked Solo",
+    queueDisplayName: makeQueueDisplayName("solo"),
     isRanked: true,
     layout: "standard",
     mapName: "Summoner's Rift",
     participants: [
-      makeParticipant("p1", "blue"),
-      makeParticipant("p2", "blue"),
-      makeParticipant("p3", "blue"),
-      makeParticipant("p4", "blue"),
-      makeParticipant("p5", "blue"),
-      makeParticipant("p6", "red"),
-      makeParticipant("p7", "red"),
-      makeParticipant("p8", "red"),
-      makeParticipant("p9", "red"),
-      makeParticipant("p10", "red"),
+      makeParticipant(makePuuid("01"), "blue"),
+      makeParticipant(makePuuid("02"), "blue"),
+      makeParticipant(makePuuid("03"), "blue"),
+      makeParticipant(makePuuid("04"), "blue"),
+      makeParticipant(makePuuid("05"), "blue"),
+      makeParticipant(makePuuid("06"), "red"),
+      makeParticipant(makePuuid("07"), "red"),
+      makeParticipant(makePuuid("08"), "red"),
+      makeParticipant(makePuuid("09"), "red"),
+      makeParticipant(makePuuid("10"), "red"),
     ],
     bans: [
       {
@@ -202,7 +246,7 @@ describe("LoadingScreenDataSchema", () => {
 
   test("accepts valid standard game data", () => {
     const result = LoadingScreenDataSchema.parse(validData);
-    expect(result.gameId).toBe(12_345);
+    expect(Number(result.gameId)).toBe(12_345);
     expect(result.layout).toBe("standard");
     expect(result.participants).toHaveLength(10);
     expect(result.bans).toHaveLength(2);
@@ -212,7 +256,7 @@ describe("LoadingScreenDataSchema", () => {
     const aramData = {
       ...validData,
       queueType: "aram",
-      queueDisplayName: "ARAM",
+      queueDisplayName: makeQueueDisplayName("aram"),
       isRanked: false,
       layout: "aram",
       mapName: "Howling Abyss",
@@ -223,14 +267,14 @@ describe("LoadingScreenDataSchema", () => {
     expect(result.bans).toHaveLength(0);
   });
 
-  test("accepts Arena game with numeric team IDs", () => {
+  test("accepts Arena game with arenaTeam discriminated union", () => {
     const arenaParticipants = Array.from({ length: 16 }, (_, i) => ({
-      puuid: `arena-p${i.toString()}`,
+      puuid: makePuuid(`a${i.toString().padStart(2, "0")}`),
       summonerName: `ArenaPlayer${i.toString()}`,
       championName: "Aatrox",
       championDisplayName: "Aatrox",
       skinNum: 0,
-      team: (i % 8) + 1,
+      team: { arenaTeam: ArenaTeamIdSchema.parse((i % 8) + 1) },
       spell1Id: SummonerSpellIdSchema.parse(4),
       spell2Id: SummonerSpellIdSchema.parse(14),
       isTrackedPlayer: false,
@@ -238,7 +282,7 @@ describe("LoadingScreenDataSchema", () => {
     const arenaData = {
       ...validData,
       queueType: "arena",
-      queueDisplayName: "Arena",
+      queueDisplayName: makeQueueDisplayName("arena"),
       isRanked: false,
       layout: "arena",
       mapName: "Rings of Wrath",
@@ -250,19 +294,27 @@ describe("LoadingScreenDataSchema", () => {
     expect(result.participants).toHaveLength(16);
   });
 
-  test("accepts data without queueType (unknown queue)", () => {
-    const unknownQueue = {
-      ...validData,
-      queueType: undefined,
-      queueDisplayName: "CLASSIC",
-    };
-    const result = LoadingScreenDataSchema.parse(unknownQueue);
-    expect(result.queueType).toBeUndefined();
+  test("rejects unknown map name", () => {
+    expect(() =>
+      LoadingScreenDataSchema.parse({
+        ...validData,
+        mapName: "Mystery Island",
+      }),
+    ).toThrow();
   });
 
-  test("rejects negative gameId", () => {
+  test("requires queueType (no longer optional)", () => {
+    const noQueueType = { ...validData };
+    Reflect.deleteProperty(noQueueType, "queueType");
+    expect(() => LoadingScreenDataSchema.parse(noQueueType)).toThrow();
+  });
+
+  test("rejects zero gameId", () => {
     expect(() =>
-      LoadingScreenDataSchema.parse({ ...validData, gameId: -1 }),
+      LoadingScreenDataSchema.parse({
+        ...validData,
+        gameId: 0,
+      }),
     ).toThrow();
   });
 });

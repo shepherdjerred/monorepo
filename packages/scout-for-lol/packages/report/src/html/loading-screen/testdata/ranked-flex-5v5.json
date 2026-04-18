@@ -187,7 +187,7 @@
       "isTrackedPlayer": true
     },
     {
-      "puuid": "",
+      "puuid": null,
       "summonerName": "Nami",
       "championName": "Nami",
       "championDisplayName": "Nami",

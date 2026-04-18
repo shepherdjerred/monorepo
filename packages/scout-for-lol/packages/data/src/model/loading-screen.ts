@@ -1,7 +1,10 @@
 import { z } from "zod";
 import { RanksSchema } from "#src/model/rank.ts";
-import { QueueTypeSchema } from "#src/model/state.ts";
+import { QueueTypeSchema, queueTypeToDisplayString } from "#src/model/state.ts";
 import { TeamSchema } from "#src/model/team.ts";
+import { LeaguePuuidSchema } from "#src/model/league-account.ts";
+import { MapNameSchema } from "#src/model/map.ts";
+import { ArenaTeamIdSchema } from "#src/model/arena/arena.ts";
 
 /**
  * Layout mode determines how participants are arranged visually.
@@ -11,6 +14,16 @@ import { TeamSchema } from "#src/model/team.ts";
  */
 export type LoadingScreenLayout = z.infer<typeof LoadingScreenLayoutSchema>;
 export const LoadingScreenLayoutSchema = z.enum(["standard", "aram", "arena"]);
+
+/**
+ * Branded type for Riot game IDs (from spectator API).
+ */
+export type GameId = z.infer<typeof GameIdSchema>;
+export const GameIdSchema = z
+  .number()
+  .int()
+  .positive()
+  .brand<"GameId">();
 
 /**
  * Branded type for summoner spell IDs (e.g., 4=Flash, 14=Ignite).
@@ -41,6 +54,29 @@ export const LoadingScreenChampionIdSchema = z
   .brand<"LoadingScreenChampionId">();
 
 /**
+ * Discriminated team assignment:
+ * - "blue" or "red" for standard 5v5 / ARAM
+ * - { arenaTeam: 1..8 } for Arena mode
+ *
+ * Reuses ArenaTeamIdSchema from the arena model to avoid duplication.
+ */
+export type LoadingScreenTeam = z.infer<typeof LoadingScreenTeamSchema>;
+export const LoadingScreenTeamSchema = z.union([
+  TeamSchema,
+  z.strictObject({ arenaTeam: ArenaTeamIdSchema }),
+]);
+
+/**
+ * Branded display name for a queue (e.g., "ranked solo", "ARAM").
+ * Always derived from QueueType via queueTypeToDisplayString.
+ */
+export type QueueDisplayName = z.infer<typeof QueueDisplayNameSchema>;
+export const QueueDisplayNameSchema = z
+  .string()
+  .min(1)
+  .brand<"QueueDisplayName">();
+
+/**
  * A single participant on the loading screen.
  * Contains all info needed to render one player card.
  */
@@ -48,18 +84,18 @@ export type LoadingScreenParticipant = z.infer<
   typeof LoadingScreenParticipantSchema
 >;
 export const LoadingScreenParticipantSchema = z.strictObject({
-  /** Riot PUUID */
-  puuid: z.string(),
-  /** In-game summoner name */
-  summonerName: z.string(),
+  /** Riot PUUID — null for participants we cannot identify (rare, e.g., bots) */
+  puuid: LeaguePuuidSchema.nullable(),
+  /** In-game Riot ID (e.g., "Cain#3276") */
+  summonerName: z.string().min(1),
   /** Champion key for image lookup (e.g., "Aatrox", "LeeSin") */
-  championName: z.string(),
+  championName: z.string().min(1),
   /** Human-readable champion name (e.g., "Lee Sin") */
-  championDisplayName: z.string(),
+  championDisplayName: z.string().min(1),
   /** Skin number for loading screen art (0 = default) */
   skinNum: z.number().int().nonnegative(),
-  /** Team side: "blue" or "red" for standard/ARAM, or arena team number */
-  team: z.union([TeamSchema, z.number().int().positive()]),
+  /** Team assignment (discriminated by layout) */
+  team: LoadingScreenTeamSchema,
   /** Summoner spell 1 ID (e.g., 4=Flash) */
   spell1Id: SummonerSpellIdSchema,
   /** Summoner spell 2 ID (e.g., 14=Ignite) */
@@ -82,7 +118,7 @@ export const LoadingScreenBanSchema = z.strictObject({
   /** Riot champion ID */
   championId: LoadingScreenChampionIdSchema,
   /** Champion key for image lookup (e.g., "Aatrox") */
-  championName: z.string(),
+  championName: z.string().min(1),
   /** Team that made the ban */
   team: TeamSchema,
 });
@@ -94,17 +130,17 @@ export const LoadingScreenBanSchema = z.strictObject({
 export type LoadingScreenData = z.infer<typeof LoadingScreenDataSchema>;
 export const LoadingScreenDataSchema = z.strictObject({
   /** Riot game ID from spectator API */
-  gameId: z.number().int().positive(),
-  /** Parsed queue type (undefined for unknown queues) */
-  queueType: QueueTypeSchema.optional(),
-  /** Human-readable queue name (e.g., "Ranked Solo", "ARAM") */
-  queueDisplayName: z.string(),
+  gameId: GameIdSchema,
+  /** Parsed queue type */
+  queueType: QueueTypeSchema,
+  /** Human-readable queue name (e.g., "ranked solo", "ARAM") */
+  queueDisplayName: QueueDisplayNameSchema,
   /** Whether the game is ranked (solo or flex) */
   isRanked: z.boolean(),
   /** Layout mode for rendering */
   layout: LoadingScreenLayoutSchema,
-  /** Map name (e.g., "Summoner's Rift", "Howling Abyss") */
-  mapName: z.string(),
+  /** Map name */
+  mapName: MapNameSchema,
   /** All participants in the game */
   participants: z.array(LoadingScreenParticipantSchema),
   /** Banned champions (empty for ARAM/Arena) */
@@ -112,3 +148,13 @@ export const LoadingScreenDataSchema = z.strictObject({
   /** Game start timestamp in milliseconds */
   gameStartTime: z.number().int().nonnegative(),
 });
+
+/**
+ * Build a QueueDisplayName from a QueueType, ensuring we never have
+ * raw strings flowing through the system.
+ */
+export function makeQueueDisplayName(
+  queueType: z.infer<typeof QueueTypeSchema>,
+): QueueDisplayName {
+  return QueueDisplayNameSchema.parse(queueTypeToDisplayString(queueType));
+}
