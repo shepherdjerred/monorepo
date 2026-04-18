@@ -169,13 +169,19 @@ export const depsSummaryActivities = {
         /\/\/ renovate: datasource=(\S+)(?:\s+registryUrl=(\S+))?/;
 
       for (const commit of log.all) {
-        const diff = await repoGit.diff([
-          `${commit.hash}^`,
-          commit.hash,
-          "--unified=0",
-          "--",
-          VERSIONS_FILE_PATH,
-        ]);
+        let diff: string;
+        try {
+          diff = await repoGit.diff([
+            `${commit.hash}^`,
+            commit.hash,
+            "--unified=0",
+            "--",
+            VERSIONS_FILE_PATH,
+          ]);
+        } catch {
+          // Parent is outside the shallow-since history (graft boundary) — skip.
+          continue;
+        }
 
         let currentDatasource = "";
         let currentRegistryUrl: string | undefined;
