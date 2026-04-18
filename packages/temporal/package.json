@@ -13,7 +13,8 @@
     "build": "tsc",
     "typecheck": "bunx tsc --noEmit",
     "lint": "bunx eslint --cache .",
-    "test": "bun test"
+    "test": "bun test src/activities",
+    "test:integration": "bun test src/integration.test.ts"
   },
   "dependencies": {
     "firebase": "^12.5.0",
