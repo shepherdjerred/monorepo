@@ -8,6 +8,7 @@ import {
   ItemSchema,
   ChampionListSchema,
   ArenaAugmentsApiResponseSchema,
+  ChampionDetailSkinsSchema,
   rarityNumberToString,
   type SummonerData,
   type ItemData,
@@ -120,6 +121,7 @@ async function createDirectories(): Promise<void> {
   await ensureDir(`${IMG_DIR}/rune`);
   await ensureDir(`${IMG_DIR}/augment`);
   await ensureDir(`${IMG_DIR}/lane`);
+  await ensureDir(`${IMG_DIR}/champion-loading`);
   await ensureDir(`${ASSETS_DIR}/champion`);
 }
 
@@ -244,6 +246,94 @@ async function downloadChampionData(
   }
   console.log(`✓ Downloaded ${String(championDataCount)} champion data files`);
   return championDataCount;
+}
+
+/**
+ * Download champion loading screen art for all skins (excluding chromas).
+ * These are the tall portrait images shown in the LoL loading screen.
+ * URL format: https://ddragon.leagueoflegends.com/cdn/img/champion/loading/{Name}_{skinNum}.jpg
+ *
+ * Also generates champion-skins.json mapping champion names to valid skin numbers.
+ */
+async function downloadChampionLoadingImages(
+  championNames: string[],
+): Promise<{ imageCount: number; skinMapCount: number }> {
+  console.log("\nDownloading champion loading screen images...");
+
+  // baseSkins: champion → array of skin nums that have their own loading screen art
+  const baseSkins: Record<string, number[]> = {};
+  // chromaToParent: champion → { chromaNum → parentSkinNum } for resolving chroma selections
+  const chromaToParent: Record<string, Record<string, number>> = {};
+  const allImages: { url: string; path: string; name: string }[] = [];
+
+  for (const championName of championNames) {
+    try {
+      const championFilePath = `${ASSETS_DIR}/champion/${championName}.json`;
+      const fileContent = await Bun.file(championFilePath).text();
+      const data = ChampionDetailSkinsSchema.parse(JSON.parse(fileContent));
+      const championData = data.data[championName];
+
+      if (!championData) {
+        console.warn(
+          `  ⚠ No champion data found for ${championName} in detail JSON`,
+        );
+        continue;
+      }
+
+      // Separate base skins from chromas.
+      // Entries with parentSkin are chroma variants that share the parent's
+      // loading screen art. Only download images for base skins.
+      const baseSkinsForChamp: number[] = [];
+      const chromaMap: Record<string, number> = {};
+
+      for (const skin of championData.skins) {
+        if (skin.parentSkin === undefined) {
+          baseSkinsForChamp.push(skin.num);
+        } else {
+          chromaMap[String(skin.num)] = skin.parentSkin;
+        }
+      }
+
+      baseSkins[championName] = baseSkinsForChamp;
+      if (Object.keys(chromaMap).length > 0) {
+        chromaToParent[championName] = chromaMap;
+      }
+
+      for (const skinNum of baseSkinsForChamp) {
+        allImages.push({
+          url: `${BASE_URL}/cdn/img/champion/loading/${championName}_${String(skinNum)}.jpg`,
+          path: `${IMG_DIR}/champion-loading/${championName}_${String(skinNum)}.jpg`,
+          name: `${championName}_${String(skinNum)}`,
+        });
+      }
+    } catch (error) {
+      console.warn(
+        `  ⚠ Failed to parse skins for ${championName}: ${String(error)}`,
+      );
+      baseSkins[championName] = [0];
+      allImages.push({
+        url: `${BASE_URL}/cdn/img/champion/loading/${championName}_0.jpg`,
+        path: `${IMG_DIR}/champion-loading/${championName}_0.jpg`,
+        name: `${championName}_0`,
+      });
+    }
+  }
+
+  // Download all loading screen images
+  await downloadImagesInBatches(allImages, 20);
+
+  // Write champion-skins.json with both base skins and chroma-to-parent mapping
+  const skinsData = { baseSkins, chromaToParent };
+  await Bun.write(
+    `${ASSETS_DIR}/champion-skins.json`,
+    JSON.stringify(skinsData, null, 2),
+  );
+  console.log(
+    `✓ Downloaded ${String(allImages.length)} champion loading images across ${String(championNames.length)} champions`,
+  );
+  console.log(`✓ Written champion-skins.json`);
+
+  return { imageCount: allImages.length, skinMapCount: championNames.length };
 }
 
 async function downloadRuneImages(runes: RuneTreeData): Promise<number> {
@@ -433,13 +523,18 @@ async function main(): Promise<void> {
       communityDragonPositionsUrl,
     );
 
+    // Download champion loading screen images (all skins) — must run after champion data
+    const { imageCount: loadingImagesCount } =
+      await downloadChampionLoadingImages(championNames);
+
     const totalImages =
       spellImagesCount +
       itemImagesCount +
       championImagesCount +
       runeImagesCount +
       augmentImagesCount +
-      laneImagesCount;
+      laneImagesCount +
+      loadingImagesCount;
     console.log(
       `\n✅ Successfully updated Data Dragon assets to version ${version}`,
     );
@@ -448,6 +543,9 @@ async function main(): Promise<void> {
     console.log(`  - ${String(spellImagesCount)} summoner spell images`);
     console.log(`  - ${String(itemImagesCount)} item images`);
     console.log(`  - ${String(championImagesCount)} champion portrait images`);
+    console.log(
+      `  - ${String(loadingImagesCount)} champion loading screen images`,
+    );
     console.log(`  - ${String(runeImagesCount)} rune images`);
     console.log(`  - ${String(augmentImagesCount)} augment images`);
     console.log(`  - ${String(laneImagesCount)} lane position icons`);

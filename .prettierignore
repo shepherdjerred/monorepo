@@ -30,7 +30,11 @@ packages/scout-for-lol/packages/frontend/public/emulatorjs/
 # Generated
 packages/clauderon/mobile/src/types/generated/
 packages/clauderon/web/shared/src/generated/
+packages/scout-for-lol/packages/backend/generated/
 .dagger/sdk/
+
+# Release-please managed changelogs
+**/CHANGELOG.md
 
 # Coverage
 coverage/
@@ -40,6 +44,11 @@ coverage/
 
 # Generated reports
 **/playwright-report/
+
+# Test snapshots (binary/unparseable formats)
+**/__snapshots__/*.snap
+**/__snapshots__/*.svg
+**/__snapshots__/*.png
 
 # XML tileset files with .tsx extension (Tiled map editor)
 practice/bevy-experiment/assets/

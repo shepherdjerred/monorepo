@@ -1,5 +1,6 @@
 import {
   getChampionImageBase64,
+  getChampionLoadingImageBase64,
   getItemImageBase64,
   getSpellImageBase64,
   getAugmentIconBase64,
@@ -21,6 +22,11 @@ const spellImageCache = new Map<string, string>();
 
 // Augment icon cache
 const augmentIconCache = new Map<string, string>();
+
+// Champion loading screen image cache (key: "{ChampionName}_{skinNum}").
+// Pre-loaded into a sync-accessible Map because satori renders JSX
+// synchronously — it cannot do async file reads during render.
+const championLoadingImageCache = new Map<string, string>();
 
 // Pre-load spell images at module load time (static set)
 if (typeof Bun !== "undefined") {
@@ -119,6 +125,50 @@ export async function preloadAugmentIcons(iconPaths: string[]): Promise<void> {
         const base64 = await getAugmentIconBase64(iconPath);
         augmentIconCache.set(iconPath, base64);
       }
+    }),
+  );
+}
+
+// Get champion loading screen image from cache (must be pre-loaded)
+export function getChampionLoadingImage(
+  championName: string,
+  skinNum: number,
+): string {
+  const key = `${championName}_${skinNum.toString()}`;
+  const cached = championLoadingImageCache.get(key);
+  if (cached !== undefined && cached.length > 0) {
+    return cached;
+  }
+
+  throw new Error(
+    `Champion loading image for ${key} not found in cache. Call preloadChampionLoadingImages() before rendering.`,
+  );
+}
+
+// Pre-load champion loading screen images for a list of champion/skin combos.
+// Skin numbers must already resolve to existing files on disk (chromas are
+// resolved to their parent skin via resolveLoadingSkinNum at the caller).
+export async function preloadChampionLoadingImages(
+  entries: { championName: string; skinNum: number }[],
+): Promise<void> {
+  const seen = new Set<string>();
+  const uniqueEntries = entries.filter((entry) => {
+    const key = `${entry.championName}_${entry.skinNum.toString()}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+
+  await Promise.all(
+    uniqueEntries.map(async ({ championName, skinNum }) => {
+      const key = `${championName}_${skinNum.toString()}`;
+      if (championLoadingImageCache.has(key)) {
+        return;
+      }
+      const base64 = await getChampionLoadingImageBase64(championName, skinNum);
+      championLoadingImageCache.set(key, base64);
     }),
   );
 }

@@ -1,4 +1,4 @@
-import { EmbedBuilder } from "discord.js";
+import { AttachmentBuilder, EmbedBuilder } from "discord.js";
 import type {
   RawCurrentGameInfo,
   PlayerConfigEntry,
@@ -16,6 +16,20 @@ import { getChampionDisplayName } from "#src/utils/champion.ts";
 import { createLogger } from "#src/logger.ts";
 import { uniqueBy } from "remeda";
 import * as Sentry from "@sentry/bun";
+import { buildLoadingScreenData } from "#src/league/tasks/prematch/loading-screen-builder.ts";
+import {
+  loadingScreenToImage,
+  loadingScreenToSvg,
+} from "@scout-for-lol/report";
+import {
+  savePrematchDataToS3,
+  savePrematchImageToS3,
+  savePrematchSvgToS3,
+} from "#src/storage/s3.ts";
+import {
+  prematchLoadingScreenGeneratedTotal,
+  prematchLoadingScreenDurationSeconds,
+} from "#src/metrics/index.ts";
 
 const logger = createLogger("prematch-notification");
 
@@ -119,10 +133,104 @@ export async function sendPrematchNotification(
   );
 
   const embed = buildPrematchEmbed(gameInfo, trackedPlayers);
+  const queueType = parseQueueType(gameInfo.gameQueueConfigId);
+
+  // Generate loading screen image (graceful degradation — send text-only if this fails)
+  let loadingScreenAttachment: AttachmentBuilder | undefined;
+  let loadingScreenEmbed: EmbedBuilder | undefined;
+  try {
+    const startTime = Date.now();
+    const firstPlayer = trackedPlayers[0];
+    if (firstPlayer === undefined) {
+      throw new Error(`No tracked players provided for game ${gameId}`);
+    }
+    const region = firstPlayer.league.leagueAccount.region;
+    const trackedPuuidSet = new Set(
+      trackedPlayers.map((p) => p.league.leagueAccount.puuid),
+    );
+
+    const loadingScreenData = await buildLoadingScreenData(
+      gameInfo,
+      trackedPuuidSet,
+      region,
+    );
+
+    const [image, svg] = await Promise.all([
+      loadingScreenToImage(loadingScreenData),
+      loadingScreenToSvg(loadingScreenData),
+    ]);
+
+    const attachmentName = `loading-screen-${gameId}.png`;
+    loadingScreenAttachment = new AttachmentBuilder(Buffer.from(image)).setName(
+      attachmentName,
+    );
+    loadingScreenEmbed = new EmbedBuilder({
+      image: { url: `attachment://${attachmentName}` },
+    });
+
+    const duration = (Date.now() - startTime) / 1000;
+    prematchLoadingScreenDurationSeconds.observe(duration);
+    prematchLoadingScreenGeneratedTotal.inc({
+      queue_type: queueType ?? "unknown",
+      status: "success",
+    });
+    logger.info(
+      `[sendPrematchNotification] 🖼️ Loading screen generated in ${duration.toFixed(1)}s for game ${gameId}`,
+    );
+
+    // Fire-and-forget S3 saves
+    const aliases = trackedPlayers.map((p) => p.alias);
+    void (async () => {
+      try {
+        await Promise.all([
+          savePrematchDataToS3(gameInfo.gameId, gameInfo, aliases),
+          savePrematchImageToS3(
+            gameInfo.gameId,
+            image,
+            queueType ?? "unknown",
+            aliases,
+          ),
+          savePrematchSvgToS3(
+            gameInfo.gameId,
+            svg,
+            queueType ?? "unknown",
+            aliases,
+          ),
+        ]);
+      } catch (s3Error) {
+        logger.error(
+          `[sendPrematchNotification] Failed to save prematch assets to S3:`,
+          s3Error,
+        );
+      }
+    })();
+  } catch (error) {
+    prematchLoadingScreenGeneratedTotal.inc({
+      queue_type: queueType ?? "unknown",
+      status: "error",
+    });
+    logger.error(
+      `[sendPrematchNotification] ❌ Failed to generate loading screen for game ${gameId}:`,
+      error,
+    );
+    Sentry.captureException(error, {
+      tags: { source: "prematch-loading-screen", gameId },
+    });
+    // Continue with text-only notification
+  }
 
   for (const { channel } of channels) {
     try {
-      await send({ embeds: [embed] }, channel);
+      const embeds = [embed];
+      const files: AttachmentBuilder[] = [];
+
+      if (loadingScreenAttachment && loadingScreenEmbed) {
+        files.push(loadingScreenAttachment);
+        embeds.push(loadingScreenEmbed);
+      }
+
+      const message = files.length > 0 ? { embeds, files } : { embeds };
+      await send(message, channel);
     } catch (error) {
       if (error instanceof ChannelSendError && error.permissionError) {
         logger.warn(
