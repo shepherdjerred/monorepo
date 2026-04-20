@@ -11,6 +11,8 @@ import {
   withCommonProps,
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export type CreateTemporalWorkerDeploymentProps = {
@@ -24,12 +26,15 @@ export function createTemporalWorkerDeployment(
   const UID = 1000;
   const GID = 1000;
 
-  // 1Password secret for worker credentials
-  const secretName = "temporal-worker-secrets";
+  const onePasswordItem = new OnePasswordItem(chart, "temporal-worker-1p", {
+    spec: {
+      itemPath: vaultItemPath("mjgnqqh37jxyzseqrddde2jgaq"),
+    },
+  });
   const secret = Secret.fromSecretName(
     chart,
     "temporal-worker-secret",
-    secretName,
+    onePasswordItem.name,
   );
 
   const deployment = new Deployment(chart, "temporal-worker", {
