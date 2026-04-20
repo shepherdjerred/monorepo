@@ -98,8 +98,8 @@ Note: OutOfSync with Healthy status and manual sync policy is normal — just me
 ### ZFS Health (via Prometheus)
 
 ```bash
-toolkit gf query 'zfs_pool_health'
-toolkit gf query 'zfs_pool_fragmentation_ratio'
+toolkit gf query 'zfs_zpool_fragmentation'                 # Fragmentation %, alert fires > 50
+toolkit gf query 'zfs_zpool_capacity_used_ratio'           # Pool utilization
 toolkit gf query 'node_zfs_arc_hits / (node_zfs_arc_hits + node_zfs_arc_misses)'   # ARC hit rate
 ```
 
@@ -159,16 +159,24 @@ toolkit gf logs '{namespace=~".+"} |= "CrashLoopBackOff"' --limit 10
 
 ### SMART Disk Status
 
+The cluster's custom smartmon textfile exporter emits metrics under
+the `smartmon:*` prefix (colon separator = Prometheus recording rule).
+See `packages/homelab/src/cdk8s/src/resources/monitoring/smartmon.sh`.
+
 ```bash
-toolkit gf query 'smartctl_device_smart_status'
-toolkit gf query 'smartctl_device_temperature_celsius'
+toolkit gf query 'smartmon:device_healthy'                # 1 = PASSED, 0 = FAILED
+toolkit gf query 'smartmon_temperature_celsius_raw_value' # Disk temp
+toolkit gf query 'smartmon_reallocated_sector_ct_raw_value > 0'
 ```
 
 ### NVMe Health
 
+Emitted by the `nvme-metrics-collector` DaemonSet in `prometheus` ns.
+
 ```bash
-toolkit gf query 'nvme_smart_log_temperature'
-toolkit gf query 'nvme_smart_log_percent_used'            # Wear level
+toolkit gf query 'nvme_available_spare_ratio'             # Spare block health
+toolkit gf query 'nvme_percentage_used_ratio'             # Wear level (0-1)
+toolkit gf query 'nvme_composite_temperature_celsius'     # Controller temp
 ```
 
 ### CPU Thermals
@@ -181,12 +189,18 @@ toolkit gf query 'rate(node_cpu_core_throttles_total[5m]) > 0'   # Thermal throt
 ## Section 8: Network & Ingress
 
 ```bash
-kubectl get pods -n tailscale                              # Tailscale operator health
+kubectl get pods -n tailscale                              # Tailscale operator + ProxyGroup proxies health
 kubectl get certificates -A                                # Cert-manager certificate status
-kubectl get tailscaleingress -A                            # TailscaleIngress resources (if CRD exists)
+kubectl get connectors,proxygroups,proxyclasses.tailscale.com -A   # Tailscale CRDs (ingress is modeled per-service via these)
 ```
 
-Flag: expired or soon-to-expire certificates, Tailscale operator not running.
+Note: this cluster uses the `tailscale.com/v1alpha1` ProxyGroup model
+(one `ts-*-ingress-*-0` pod per exposed service in the `tailscale`
+namespace); the legacy `tailscaleingress` CRD is NOT installed. If
+you were expecting to see TailscaleIngress resources, check pods and
+`Connector`/`ProxyGroup` CRs instead.
+
+Flag: expired or soon-to-expire certificates, Tailscale operator not running, any `ts-*-ingress-*-0` pod not Ready.
 
 ## Section 9: Error Tracking (Bugsink)
 
