@@ -42,7 +42,6 @@ set -gx CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS "1"
 
 # CLI tool credentials (via 1Password) - only set if op CLI is available
 {{ if lookPath "op" -}}
-set -gx GH_TOKEN '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/kjzy27cw4ialemerahutnxis3a/password" }}'
 set -gx BUILDKITE_API_TOKEN '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/lmnwn2ul7qx3rdpzeenu5q7mau/credential" }}'
 set -gx GRAFANA_URL 'https://grafana.tailnet-1a49.ts.net'
 set -gx GRAFANA_API_KEY '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/w5y6wldczvojkh3yxe5zadkpvi/password" }}'
