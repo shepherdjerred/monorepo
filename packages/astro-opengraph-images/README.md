@@ -213,6 +213,41 @@ If you're using this project, [open a PR](https://github.com/shepherdjerred/astr
 
 - [sjer.red](https://sjer.red) ([source](https://github.com/shepherdjerred/sjer.red))
 
+## Filtering Pages
+
+By default, this integration generates an Open Graph image for every page in your build output. Pass an optional `filter` callback to skip pages — for example, the 404 page, utility routes, or sections where images don't apply.
+
+The callback receives the same `RenderFunctionInput` as your renderer (pathname, parsed DOM, Open Graph metadata). Return `true` to render the image, `false` to skip it. The callback may be synchronous or return a `Promise<boolean>`.
+
+```diff
+ import opengraphImages, { presets } from "astro-opengraph-images";
+
+ export default defineConfig({
+   integrations: [
+     opengraphImages({
+       options: { fonts: [/* ... */] },
+       render: presets.blackAndWhite,
++      // Only generate images for blog posts
++      filter: ({ pathname }) => pathname.startsWith("/blog/"),
+     }),
+   ],
+ });
+```
+
+More examples:
+
+```typescript
+// Exclude utility pages
+filter: ({ pathname }) => !["/404/", "/"].includes(pathname);
+
+// Filter on DOM content or async data
+filter: async ({ document, pathname }) =>
+  document.querySelector('meta[property="og:image"]') !== null &&
+  pathname.startsWith("/blog/");
+```
+
+When `verbose: true` is set on `options`, skipped pages are logged.
+
 ## Custom Renderers
 
 You can create your own custom images with a render function. Take a look at how [a preset](https://github.com/shepherdjerred/astro-opengraph-images/blob/main/src/presets/blackAndWhite.tsx) works.

@@ -10,6 +10,7 @@ import type {
   AstroBuildDoneHookInput as _AstroBuildDoneHookInput,
   RenderFunctionInput as _RenderFunctionInput,
   RenderFunction as _RenderFunction,
+  FilterFunction as _FilterFunction,
   PageDetails as _PageDetails,
   SatoriWeight as _SatoriWeight,
   SatoriFontStyle as _SatoriFontStyle,
@@ -29,6 +30,7 @@ export type Page = _Page;
 export type AstroBuildDoneHookInput = _AstroBuildDoneHookInput;
 export type RenderFunctionInput = _RenderFunctionInput;
 export type RenderFunction = _RenderFunction;
+export type FilterFunction = _FilterFunction;
 export type PageDetails = _PageDetails;
 export type SatoriWeight = _SatoriWeight;
 export type SatoriFontStyle = _SatoriFontStyle;

@@ -68,12 +68,13 @@ async function handlePage({
   const pageDetails = extract(document);
   const renderInput = { ...page, ...pageDetails, dir, document };
 
-  if (filter){
+  if (filter) {
     const shouldRender = await filter(renderInput);
 
     if (!shouldRender) {
-      if (options.verbose) logger.info(`Skipping ${htmlFile}.`);
-
+      if (options.verbose) {
+        logger.info(`Skipping ${htmlFile}.`);
+      }
       return;
     }
   }
