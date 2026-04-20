@@ -19,9 +19,9 @@ const versions = {
   "tailscale-operator": "1.94.2",
   // renovate: datasource=github-releases versioning=semver
   "adyanth/cloudflare-operator": "v0.13.1",
-  // renovate: datasource=docker registryUrl=https://quay.io versioning=docker
+  // renovate: datasource=docker registryUrl=https://quay.io versioning=loose
   "redlib/redlib":
-    "latest@sha256:dffb6c5a22f889d47d8e28e33411db0fb6c5694599f72cf740c912c12f5fc1c6",
+    "sha-ba98178@sha256:dffb6c5a22f889d47d8e28e33411db0fb6c5694599f72cf740c912c12f5fc1c6",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "itzg/minecraft-server":
     "2026.4.0-java21@sha256:151582e423aa604f3def91d7646a90884a016e66be642fb43dd96893ff0eab02",
