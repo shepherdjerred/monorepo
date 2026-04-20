@@ -241,12 +241,12 @@ More examples:
 
 ```typescript
 // Exclude utility pages
-filter: ({ pathname }) => !["/404/", "/"].includes(pathname)
+filter: ({ pathname }) => !["/404/", "/"].includes(pathname);
 
 // Filter on DOM content or async data
 filter: async ({ document, pathname }) =>
   document.querySelector('meta[property="og:image"]') !== null &&
-  pathname.startsWith("/blog/")
+  pathname.startsWith("/blog/");
 ```
 
 When `verbose: true` is set on `options`, skipped pages are logged.

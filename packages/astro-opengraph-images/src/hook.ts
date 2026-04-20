@@ -73,7 +73,7 @@ async function handlePage({
 
     if (!shouldRender) {
       if (options.verbose) {
-        logger.info(`Skipping ${htmlFile}.`);
+        logger.info(`Skipping page ${page.pathname}.`);
       }
       return;
     }
