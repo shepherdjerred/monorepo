@@ -55,7 +55,6 @@ import { astroCheckHelper, astroBuildHelper, viteBuildHelper } from "./astro";
 import {
   buildImageHelper,
   pushImageHelper,
-  buildHomelabImageHelper,
   buildDepsSummaryImageHelper,
   buildDnsAuditImageHelper,
   buildCaddyS3ProxyImageHelper,
@@ -64,7 +63,6 @@ import {
   buildDiscordPlaysPokemonImageHelper,
   buildBetterSkillCappedFetcherImageHelper,
   buildTemporalWorkerImageHelper,
-  pushHomelabImageHelper,
   pushDepsSummaryImageHelper,
   pushDnsAuditImageHelper,
   pushCaddyS3ProxyImageHelper,
@@ -86,12 +84,7 @@ import {
 
 import { goBuildHelper, goTestHelper, goLintHelper } from "./golang";
 
-import {
-  homelabSynthHelper,
-  haGenerateHelper,
-  haLintHelper,
-  haTypecheckHelper,
-} from "./homelab";
+import { homelabSynthHelper } from "./homelab";
 
 import { swiftLintHelper } from "./swift";
 
@@ -107,7 +100,6 @@ import {
   smokeTestBirmelHelper,
   smokeTestStarlightKarmaBotHelper,
   smokeTestTasknotesServerHelper,
-  smokeTestHomelabHelper,
   smokeTestDepsSummaryHelper,
   smokeTestDnsAuditHelper,
   smokeTestCaddyS3ProxyHelper,
@@ -237,72 +229,6 @@ export class Monorepo {
   }
 
   // ---------------------------------------------------------------------------
-  // HA type generation (requires live Home Assistant instance)
-  // ---------------------------------------------------------------------------
-
-  /** Generate Home Assistant entity types by introspecting a live HA instance */
-  @func()
-  haGenerate(
-    pkgDir: Directory,
-    hassToken: Secret,
-    depNames: string[] = [],
-    depDirs: Directory[] = [],
-    tsconfig: File | null = null,
-    homelabTsconfig: File | null = null,
-    hassBaseUrl: string = "https://homeassistant.sjer.red",
-  ): Directory {
-    return haGenerateHelper(
-      pkgDir,
-      hassToken,
-      depNames,
-      depDirs,
-      tsconfig,
-      homelabTsconfig,
-      hassBaseUrl,
-    );
-  }
-
-  /** Generate HA types then lint homelab/src/ha */
-  @func()
-  async haLint(
-    pkgDir: Directory,
-    hassToken: Secret,
-    depNames: string[] = [],
-    depDirs: Directory[] = [],
-    tsconfig: File | null = null,
-    homelabTsconfig: File | null = null,
-  ): Promise<string> {
-    return haLintHelper(
-      pkgDir,
-      hassToken,
-      depNames,
-      depDirs,
-      tsconfig,
-      homelabTsconfig,
-    ).stdout();
-  }
-
-  /** Generate HA types then typecheck homelab/src/ha */
-  @func()
-  async haTypecheck(
-    pkgDir: Directory,
-    hassToken: Secret,
-    depNames: string[] = [],
-    depDirs: Directory[] = [],
-    tsconfig: File | null = null,
-    homelabTsconfig: File | null = null,
-  ): Promise<string> {
-    return haTypecheckHelper(
-      pkgDir,
-      hassToken,
-      depNames,
-      depDirs,
-      tsconfig,
-      homelabTsconfig,
-    ).stdout();
-  }
-
-  // ---------------------------------------------------------------------------
   // Astro operations
   // ---------------------------------------------------------------------------
 
@@ -407,18 +333,6 @@ export class Monorepo {
   // Homelab sub-package image operations
   // ---------------------------------------------------------------------------
 
-  /** Build the homelab HA automation image (Bun + native deps) */
-  @func()
-  buildHomelabImage(
-    pkgDir: Directory,
-    depNames: string[] = [],
-    depDirs: Directory[] = [],
-    version: string = "dev",
-    gitSha: string = "unknown",
-  ): Container {
-    return buildHomelabImageHelper(pkgDir, depNames, depDirs, version, gitSha);
-  }
-
   /** Build the dependency-summary image (Bun + helm binary) */
   @func()
   buildDepsSummaryImage(
@@ -462,30 +376,6 @@ export class Monorepo {
     gitSha: string = "unknown",
   ): Container {
     return buildObsidianHeadlessImageHelper(version, gitSha);
-  }
-
-  /** Push a homelab HA image to a registry. Returns digest. */
-  @func({ cache: "never" })
-  async pushHomelabImage(
-    pkgDir: Directory,
-    tags: string[],
-    registryUsername: string,
-    registryPassword: Secret,
-    depNames: string[] = [],
-    depDirs: Directory[] = [],
-    version: string = "dev",
-    gitSha: string = "unknown",
-  ): Promise<string> {
-    return pushHomelabImageHelper(
-      pkgDir,
-      tags,
-      registryUsername,
-      registryPassword,
-      depNames,
-      depDirs,
-      version,
-      gitSha,
-    );
   }
 
   /** Push a dependency-summary image to a registry. Returns digest. */
@@ -880,11 +770,8 @@ export class Monorepo {
 
   /** Run lint/typecheck/test for all TS packages in parallel. Returns results summary. */
   @func({ cache: "session" })
-  async ciAll(
-    source: Directory,
-    hassToken: Secret | null = null,
-  ): Promise<string> {
-    return ciAllHelper(source, hassToken);
+  async ciAll(source: Directory): Promise<string> {
+    return ciAllHelper(source);
   }
 
   // ---------------------------------------------------------------------------
@@ -1371,16 +1258,6 @@ export class Monorepo {
     depDirs: Directory[] = [],
   ): Promise<string> {
     return smokeTestTasknotesServerHelper(pkgDir, pkg, depNames, depDirs);
-  }
-
-  /** Smoke test homelab HA: boots app, expects ECONNREFUSED to HA */
-  @func()
-  async smokeTestHomelab(
-    pkgDir: Directory,
-    depNames: string[] = [],
-    depDirs: Directory[] = [],
-  ): Promise<string> {
-    return smokeTestHomelabHelper(pkgDir, depNames, depDirs);
   }
 
   /** Smoke test dependency-summary: boots app, expects clone/API failure */

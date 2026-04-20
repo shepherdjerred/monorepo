@@ -37,10 +37,6 @@
       "entry": ["src/app.ts", "src/**/*.ts", "scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
     },
-    "packages/homelab/src/ha": {
-      "entry": ["src/**/*.ts", "generate-types.ts"],
-      "project": ["src/**/*.ts", "generate-types.ts"]
-    },
     "packages/homelab/src/deps-email": {
       "entry": ["src/main.ts", "src/index.ts"],
       "project": ["src/**/*.ts"]

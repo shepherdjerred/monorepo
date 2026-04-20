@@ -126,65 +126,6 @@ function homelabSubPackageBase(
   );
 }
 
-/**
- * Build the homelab HA automation image.
- * Bun-based, runs src/main.ts from the ha sub-package.
- * Needs apt packages for native module compilation (@digital-alchemy deps).
- */
-export function buildHomelabImageHelper(
-  pkgDir: Directory,
-  depNames: string[] = [],
-  depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
-): Container {
-  const excludes = ["node_modules", "dist", ".eslintcache"];
-
-  // HA needs build-essential + python3 for native deps (@digital-alchemy)
-  let container = dag
-    .container()
-    .from(BUN_IMAGE)
-    .withExec([
-      "sh",
-      "-c",
-      "apt-get update && apt-get install -y git build-essential python3 && rm -rf /var/lib/apt/lists/*",
-    ])
-    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
-    .withWorkdir("/workspace")
-    .withDirectory("/workspace/packages/homelab", pkgDir, {
-      exclude: excludes,
-    });
-
-  // Mount workspace dependencies (e.g. eslint-config for file: references)
-  for (let i = 0; i < depNames.length; i++) {
-    container = container.withDirectory(
-      `/workspace/packages/${depNames[i]}`,
-      depDirs[i],
-      { exclude: excludes },
-    );
-  }
-
-  return (
-    container
-      .withWorkdir("/workspace/packages/homelab")
-      .withExec(["bun", "install", "--frozen-lockfile"])
-      // Sub-packages have their own deps not in the root workspace.
-      // --ignore-scripts avoids better-sqlite3 native compilation failure
-      // (transitive dep from @digital-alchemy, not actually used at runtime).
-      .withWorkdir("/workspace/packages/homelab/src/ha")
-      .withExec(["bun", "install", "--frozen-lockfile", "--ignore-scripts"])
-      .withLabel(
-        "org.opencontainers.image.source",
-        "https://github.com/shepherdjerred/monorepo",
-      )
-      .withLabel("org.opencontainers.image.version", version)
-      .withLabel("org.opencontainers.image.revision", gitSha)
-      .withEnvVariable("VERSION", version)
-      .withEnvVariable("GIT_SHA", gitSha)
-      .withExposedPort(9090)
-      .withEntrypoint(["bun", "src/main.ts"])
-  );
-}
 
 /**
  * Build the dependency-summary image.
@@ -297,32 +238,6 @@ export async function pushContainerHelper(
     await image.publish(tag);
   }
   return digest;
-}
-
-/** Push a homelab HA image to a registry. */
-export async function pushHomelabImageHelper(
-  pkgDir: Directory,
-  tags: string[],
-  registryUsername: string,
-  registryPassword: Secret,
-  depNames: string[] = [],
-  depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
-): Promise<string> {
-  const container = buildHomelabImageHelper(
-    pkgDir,
-    depNames,
-    depDirs,
-    version,
-    gitSha,
-  );
-  return pushContainerHelper(
-    container,
-    tags,
-    registryUsername,
-    registryPassword,
-  );
 }
 
 /** Push a dependency-summary image to a registry. */

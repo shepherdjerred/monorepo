@@ -64,10 +64,6 @@ const versions = {
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=docker
   "home-assistant/home-assistant":
     "2026.4.1@sha256:8848691147f01a6eee7753de2ade21b04d6168fcd2e2a7089f6f84e3b7b86960",
-  // Custom homelab HA image - updated by CI pipeline
-  // not managed by renovate
-  "shepherdjerred/homelab":
-    "2.0.0-920@sha256:5fbe08c576a24ef388dc4d400b91d1605863d7725cf3e26679099a2e82f4dedc",
   // Custom dependency-summary image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/dependency-summary":

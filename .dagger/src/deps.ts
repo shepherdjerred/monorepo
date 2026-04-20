@@ -34,7 +34,6 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   // Homelab
   homelab: ["eslint-config"],
   "homelab/src/cdk8s": ["eslint-config", "homelab/src/helm-types"],
-  "homelab/src/ha": ["eslint-config"],
   "homelab/src/helm-types": ["eslint-config"],
 
   // Clauderon sub-packages

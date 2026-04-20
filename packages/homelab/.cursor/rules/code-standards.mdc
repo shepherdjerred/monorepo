@@ -37,7 +37,7 @@ description: TypeScript coding standards, naming conventions, git practices, and
 - Types: `feat`, `fix`, `docs`, `refactor`, `chore`, `test`
 - Examples:
   - `feat: add new nginx ingress controller`
-  - `fix: resolve memory leak in ha service`
+  - `fix: resolve memory leak in homeassistant chart`
   - `docs: update deployment instructions`
 
 ## Code Quality
@@ -50,7 +50,7 @@ description: TypeScript coding standards, naming conventions, git practices, and
 
 ## Linting & Formatting
 
-- Follow ESLint configuration in [eslint.config.mjs](mdc:src/ha/eslint.config.mjs)
-- Use Prettier configuration from [.prettierrc](mdc:src/ha/.prettierrc)
+- Follow ESLint configuration in [eslint.config.ts](mdc:eslint.config.ts)
+- Use Prettier configuration from the repo root
 - **Fix, Don't Suppress**: Do not ignore ESLint rules or TypeScript compiler errors. Always err on the side of fixing issues rather than suppressing them
 - **Suppression as Last Resort**: If suppression is absolutely necessary, request user approval first and leave a comment noting that the suppression was AI-generated with the reason for the suppression

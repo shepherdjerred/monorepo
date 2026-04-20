@@ -19,10 +19,7 @@ export interface CheckResult {
 // ---------------------------------------------------------------------------
 
 /** Format check results into a human-readable summary string. */
-export function formatSummary(
-  results: CheckResult[],
-  hassTokenPresent: boolean,
-): string {
+export function formatSummary(results: CheckResult[]): string {
   const lines: string[] = [];
   for (const r of results) {
     if (r.status === "FAIL") {
@@ -30,10 +27,6 @@ export function formatSummary(
     } else {
       lines.push(`PASS  ${r.label}`);
     }
-  }
-
-  if (!hassTokenPresent) {
-    lines.push("SKIP  homelab/ha (no hassToken)");
   }
 
   return lines.join("\n");

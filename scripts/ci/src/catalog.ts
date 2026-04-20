@@ -59,12 +59,6 @@ export const IMAGE_PUSH_TARGETS: ImageTarget[] = [
 
 export const INFRA_PUSH_TARGETS: ImageTarget[] = [
   {
-    name: "homelab",
-    versionKey: "shepherdjerred/homelab",
-    buildFn: "build-homelab-image",
-    pushFn: "push-homelab-image",
-  },
-  {
     name: "dependency-summary",
     package: "homelab",
     versionKey: "shepherdjerred/dependency-summary",
@@ -320,6 +314,7 @@ export const ALL_PACKAGES: string[] = [
   "fonts",
   "glance",
   "hn-enhancer",
+  "home-assistant",
   "homelab",
   "leetcode",
   "macos-cross-compiler",
@@ -481,7 +476,7 @@ export const DEPLOY_TARGETS: Record<string, DeployTarget> = {
   },
   home: {
     name: "home",
-    images: [imageByName("homelab")],
+    images: [],
     charts: ["home"],
     argoApps: ["home"],
   },

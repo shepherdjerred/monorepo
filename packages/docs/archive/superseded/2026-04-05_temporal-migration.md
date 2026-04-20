@@ -1,5 +1,9 @@
 # Temporal Migration Plan
 
+## Status
+
+Superseded. Phase 0–1 landed (worker deployed, fetcher / deps-summary / dns-audit / golink-sync workflows). Phase 2 (Home Assistant automations) was replaced by a different approach: all six HA workflows were ported into `packages/temporal/src/workflows/ha/` on top of a new generic `packages/home-assistant` client library (REST + WebSocket, no codegen). The old `packages/homelab/src/ha/` package was deleted. Phases 3–5 remain open and will be tracked in new plans.
+
 ## Context
 
 The monorepo has a Temporal server deployed on K8s (v1.29.5, PostgreSQL backend, gRPC on 7233, UI on 8080 via Tailscale) but zero workflows or workers. Multiple packages implement ad-hoc workflow patterns: custom job queues, cron schedulers, orchestration primitives, and K8s CronJobs. This plan consolidates them under Temporal for durability, observability, and unified scheduling.

@@ -23,9 +23,13 @@ This is a homelab infrastructure project managing Kubernetes resources using cdk
 ### Project Structure
 The project uses a workspace-based architecture:
 - [src/cdk8s/](mdc:src/cdk8s) - Kubernetes infrastructure definitions
-- [src/ha/](mdc:src/ha) - Home Assistant application code
+- [src/helm-types/](mdc:src/helm-types) - Typed Helm chart parameter generator
+- [src/deps-email/](mdc:src/deps-email) - Dependency summary email pipeline
 - [package.json](mdc:package.json) - Root workspace configuration
 - [../../dagger.json](mdc:../../dagger.json) - Dagger CI/CD configuration
+
+Note: Home Assistant automations are now hosted in `packages/temporal` and
+use the generic `packages/home-assistant` client library.
 
 ## Key Principles
 - **Infrastructure as Code**: All Kubernetes resources defined in TypeScript

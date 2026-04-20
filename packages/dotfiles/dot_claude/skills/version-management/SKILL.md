@@ -26,7 +26,7 @@ const versions = {
 
   // Custom images (not managed by Renovate)
   // not managed by renovate
-  "shepherdjerred/homelab": "latest",
+  "shepherdjerred/dependency-summary": "latest",
 };
 
 export default versions;
@@ -163,7 +163,6 @@ Some versions are updated by the Dagger CI pipeline:
 
 ```typescript
 // not managed by renovate
-"shepherdjerred/homelab": "latest",
 "shepherdjerred/dependency-summary": "latest",
 "shepherdjerred/scout-for-lol/beta": "1.0.82",
 ```

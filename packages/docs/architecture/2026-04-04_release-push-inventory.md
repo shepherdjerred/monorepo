@@ -33,11 +33,10 @@ Code: `.dagger/src/image.ts`, `scripts/ci/src/steps/images.ts`, `scripts/ci/src/
 | starlight-karma-bot         | starlight-karma-bot   | `ghcr.io/shepherdjerred/starlight-karma-bot`         |
 | better-skill-capped-fetcher | better-skill-capped   | `ghcr.io/shepherdjerred/better-skill-capped-fetcher` |
 
-### Infrastructure images (4)
+### Infrastructure images (3)
 
 | Image              | Registry Path                               |
 | ------------------ | ------------------------------------------- |
-| homelab            | `ghcr.io/shepherdjerred/homelab`            |
 | dependency-summary | `ghcr.io/shepherdjerred/dependency-summary` |
 | dns-audit          | `ghcr.io/shepherdjerred/dns-audit`          |
 | caddy-s3proxy      | `ghcr.io/shepherdjerred/caddy-s3proxy`      |

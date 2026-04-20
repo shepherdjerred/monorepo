@@ -12,7 +12,7 @@ describe("formatSummary", () => {
       { label: "pkg-a: test", status: "PASS" },
       { label: "pkg-b: lint", status: "PASS" },
     ];
-    const summary = formatSummary(results, true);
+    const summary = formatSummary(results);
     assert.strictEqual(
       summary,
       "PASS  pkg-a: lint\nPASS  pkg-a: test\nPASS  pkg-b: lint",
@@ -25,23 +25,11 @@ describe("formatSummary", () => {
       { label: "pkg-a: test", status: "FAIL", error: "test failed" },
       { label: "pkg-b: lint", status: "PASS" },
     ];
-    const summary = formatSummary(results, true);
+    const summary = formatSummary(results);
     assert.strictEqual(
       summary,
       "PASS  pkg-a: lint\nFAIL  pkg-a: test\nPASS  pkg-b: lint",
     );
-  });
-
-  it("appends SKIP line when hassToken is not present", () => {
-    const results: CheckResult[] = [{ label: "pkg-a: lint", status: "PASS" }];
-    const summary = formatSummary(results, false);
-    assert.ok(summary.includes("SKIP  homelab/ha (no hassToken)"));
-  });
-
-  it("does not append SKIP line when hassToken is present", () => {
-    const results: CheckResult[] = [{ label: "pkg-a: lint", status: "PASS" }];
-    const summary = formatSummary(results, true);
-    assert.ok(!summary.includes("SKIP"));
   });
 });
 

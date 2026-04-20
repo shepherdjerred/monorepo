@@ -36,8 +36,6 @@ const EXCLUDED_FILES = [
   "Cargo.toml",
   "clippy.toml",
   ".quality-baseline.json",
-  // Intentional: HA generated types declare media as string but HA expects object
-  "packages/homelab/src/ha/src/util.ts",
   // Intentional: @sentry/react ErrorBoundary types incompatible with React 19
   "packages/clauderon/web/frontend/src/main.tsx",
   "packages/better-skill-capped/src/components/app.tsx",

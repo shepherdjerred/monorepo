@@ -1,5 +1,0 @@
-.env
-*.db
-package-lock.json
-node_modules/
-src/hass/

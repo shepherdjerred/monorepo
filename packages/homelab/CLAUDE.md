@@ -12,9 +12,12 @@ This is a Kubernetes homelab infrastructure monorepo using CDK8s for infrastruct
 ## Workspaces
 
 - `src/cdk8s` - Kubernetes infrastructure as code
-- `src/ha` - Home Assistant automations
 - `src/helm-types` - Type-safe Helm chart parameter generator
+- `src/deps-email` - Dependency summary email pipeline
 - `../../scripts/ci/src/ci/homelab_release.py` - CI/CD release scripts
+
+Home Assistant automations live in `packages/temporal` and the generic
+`packages/home-assistant` client library — not here.
 
 ## Commands
 
