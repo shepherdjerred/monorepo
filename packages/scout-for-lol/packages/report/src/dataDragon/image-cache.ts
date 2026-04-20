@@ -23,7 +23,9 @@ const spellImageCache = new Map<string, string>();
 // Augment icon cache
 const augmentIconCache = new Map<string, string>();
 
-// Champion loading screen image cache (key: "{ChampionName}_{skinNum}")
+// Champion loading screen image cache (key: "{ChampionName}_{skinNum}").
+// Pre-loaded into a sync-accessible Map because satori renders JSX
+// synchronously — it cannot do async file reads during render.
 const championLoadingImageCache = new Map<string, string>();
 
 // Pre-load spell images at module load time (static set)
