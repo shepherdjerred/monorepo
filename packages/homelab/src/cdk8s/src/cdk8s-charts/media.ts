@@ -28,7 +28,7 @@ export function createMediaChart(app: App) {
     storage: Size.tebibytes(1),
   });
   const moviesVolume = new ZfsSataVolume(chart, "plex-movies-hdd-pvc", {
-    storage: Size.tebibytes(4),
+    storage: Size.tebibytes(6),
   });
 
   // Media services that share volumes
