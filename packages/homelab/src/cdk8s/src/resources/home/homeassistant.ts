@@ -64,6 +64,53 @@ export async function createHomeAssistantDeployment(chart: Chart) {
   config.addDirectory(`${import.meta.dir}/../../../config/homeassistant`);
   const configVolume = Volume.fromConfigMap(chart, "ha-cm-volume", config);
 
+  const eufyVersion = versions["fuatakgun/eufy_security"];
+
+  deployment.addInitContainer({
+    name: "install-eufy-security",
+    image: `docker.io/alpine:${versions["library/alpine"]}`,
+    command: ["/bin/sh"],
+    args: [
+      "-c",
+      `
+set -eu
+VERSION="${eufyVersion}"
+TARGET_DIR="/config/custom_components/eufy_security"
+MARKER="$TARGET_DIR/.installed_version"
+
+if [ -f "$MARKER" ] && [ "$(cat "$MARKER")" = "$VERSION" ]; then
+  echo "eufy_security $VERSION already installed"
+  exit 0
+fi
+
+apk add --no-cache curl tar
+STAGE=$(mktemp -d)
+curl -fSL "https://github.com/fuatakgun/eufy_security/archive/refs/tags/$VERSION.tar.gz" \
+  | tar -xz -C "$STAGE" --strip-components=1
+
+mkdir -p /config/custom_components
+rm -rf "$TARGET_DIR"
+cp -r "$STAGE/custom_components/eufy_security" "$TARGET_DIR"
+echo "$VERSION" > "$MARKER"
+echo "installed eufy_security $VERSION"
+`,
+    ],
+    securityContext: {
+      ensureNonRoot: false,
+      user: ROOT_UID,
+      group: ROOT_GID,
+      readOnlyRootFilesystem: false,
+      privileged: false,
+      allowPrivilegeEscalation: false,
+    },
+    volumeMounts: [
+      {
+        path: "/config",
+        volume,
+      },
+    ],
+  });
+
   deployment.addContainer(
     withCommonProps({
       securityContext: {
