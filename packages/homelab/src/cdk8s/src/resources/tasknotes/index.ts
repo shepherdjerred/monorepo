@@ -146,7 +146,7 @@ export function createTasknotesDeployment(chart: Chart) {
       resources: {
         cpu: {
           request: Cpu.millis(100),
-          limit: Cpu.millis(500),
+          limit: Cpu.millis(1000),
         },
         memory: {
           request: Size.mebibytes(128),
