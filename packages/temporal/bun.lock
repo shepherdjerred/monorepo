@@ -7,6 +7,7 @@
       "dependencies": {
         "@kubernetes/client-node": "^1.1.2",
         "@sentry/bun": "^10.0.0",
+        "@shepherdjerred/home-assistant": "file:../home-assistant",
         "@temporalio/activity": "^1.12.2",
         "@temporalio/client": "^1.12.2",
         "@temporalio/worker": "^1.12.2",
@@ -354,6 +355,8 @@
     "@sentry/opentelemetry": ["@sentry/opentelemetry@10.47.0", "", { "dependencies": { "@sentry/core": "10.47.0" }, "peerDependencies": { "@opentelemetry/api": "^1.9.0", "@opentelemetry/context-async-hooks": "^1.30.1 || ^2.1.0", "@opentelemetry/core": "^1.30.1 || ^2.1.0", "@opentelemetry/sdk-trace-base": "^1.30.1 || ^2.1.0", "@opentelemetry/semantic-conventions": "^1.39.0" } }, "sha512-f6Hw2lrpCjlOksiosP0Z2jK/+l+21SIdoNglVeG/sttMyx8C8ywONKh0Ha50sFsvB1VaB8n94RKzzf3hkh9V3g=="],
 
     "@shepherdjerred/eslint-config": ["@shepherdjerred/eslint-config@file:../eslint-config", { "dependencies": { "@eslint-community/eslint-plugin-eslint-comments": "^4.5.0", "@eslint/js": "^9.30.1", "@typescript-eslint/utils": "^8.58.0", "eslint-config-prettier": "^10.1.8", "eslint-import-resolver-typescript": "^4.3.4", "eslint-import-resolver-typescript-bun": "^0.0.104", "eslint-plugin-astro": "^1.5.0", "eslint-plugin-import": "^2.31.0", "eslint-plugin-jsx-a11y": "^6.10.2", "eslint-plugin-no-secrets": "^2.2.1", "eslint-plugin-react": "^7.37.5", "eslint-plugin-react-hooks": "^7.0.1", "eslint-plugin-react-native": "^5.0.0", "eslint-plugin-regexp": "^2.10.0", "eslint-plugin-unicorn": "^62.0.0", "jiti": "^2.6.0", "typescript-eslint": "^8.58.0" }, "devDependencies": { "@types/eslint__js": "^8.42.3", "@types/node": "^22.0.0", "@typescript-eslint/rule-tester": "^8.58.0" }, "peerDependencies": { "eslint": "^9.0.0", "typescript": "^6" } }],
+
+    "@shepherdjerred/home-assistant": ["@shepherdjerred/home-assistant@file:../home-assistant", { "dependencies": { "zod": "^4.3.6" }, "devDependencies": { "@shepherdjerred/eslint-config": "file:../eslint-config", "@tsconfig/node-lts": "^24.0.0", "@tsconfig/recommended": "^1.0.11", "@tsconfig/strictest": "^2.0.7", "@types/bun": "^1.3.10", "eslint": "^9.39.2", "jiti": "^2.6.1", "typescript": "^6" } }],
 
     "@simple-git/args-pathspec": ["@simple-git/args-pathspec@1.0.2", "", {}, "sha512-nEFVejViHUoL8wU8GTcwqrvqfUG40S5ts6S4fr1u1Ki5CklXlRDYThPVA/qurTmCYFGnaX3XpVUmICLHdvhLaA=="],
 
@@ -1398,6 +1401,8 @@
     "@kubernetes/client-node/@types/node": ["@types/node@24.12.2", "", { "dependencies": { "undici-types": "~7.16.0" } }, "sha512-A1sre26ke7HDIuY/M23nd9gfB+nrmhtYyMINbjI1zHJxYteKR6qSMX56FsmjMcDb3SMcjJg5BiRRgOCC/yBD0g=="],
 
     "@prisma/instrumentation/@opentelemetry/instrumentation": ["@opentelemetry/instrumentation@0.207.0", "", { "dependencies": { "@opentelemetry/api-logs": "0.207.0", "import-in-the-middle": "^2.0.0", "require-in-the-middle": "^8.0.0" }, "peerDependencies": { "@opentelemetry/api": "^1.3.0" } }, "sha512-y6eeli9+TLKnznrR8AZlQMSJT7wILpXH+6EYq5Vf/4Ao+huI7EedxQHwRgVUOMLFbe7VFDvHJrX9/f4lcwnJsA=="],
+
+    "@shepherdjerred/home-assistant/@shepherdjerred/eslint-config": ["@shepherdjerred/eslint-config@file:../eslint-config", {}],
 
     "@temporalio/common/ms": ["ms@3.0.0-canary.1", "", {}, "sha512-kh8ARjh8rMN7Du2igDRO9QJnqCb2xYTJxyQYK7vJJS4TvLLmsbyhiKpSW+t+y26gyOyMd0riphX0GeWKU3ky5g=="],
 
