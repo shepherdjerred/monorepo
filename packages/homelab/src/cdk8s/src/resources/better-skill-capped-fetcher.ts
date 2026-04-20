@@ -66,6 +66,7 @@ export function createBetterSkillCappedFetcher(chart: Chart) {
       jobTemplate: {
         spec: {
           backoffLimit: 2,
+          ttlSecondsAfterFinished: 86_400,
           template: {
             spec: {
               restartPolicy: "OnFailure",
