@@ -13,6 +13,7 @@ import {
   HELM_IMAGE,
   PYTHON_ALPINE_IMAGE,
 } from "./constants";
+import versions from "./versions";
 
 /**
  * Build a Bun service OCI image. Constructs a minimal workspace with
@@ -406,8 +407,12 @@ export function buildObsidianHeadlessImageHelper(
       "-c",
       "apt-get update && apt-get install -y python3 build-essential && rm -rf /var/lib/apt/lists/*",
     ])
-    // renovate: datasource=npm depName=obsidian-headless
-    .withExec(["npm", "install", "-g", "obsidian-headless@0.0.8"])
+    .withExec([
+      "npm",
+      "install",
+      "-g",
+      `obsidian-headless@${versions["obsidian-headless"]}`,
+    ])
     .withExec(["node", "--version"])
     .withExec(["which", "ob"])
     .withExec(["mkdir", "-p", "/vault"])
