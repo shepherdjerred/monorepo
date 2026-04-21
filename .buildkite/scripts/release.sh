@@ -7,7 +7,7 @@ install_uv
 install_bun
 
 # renovate: datasource=npm depName=release-please
-RELEASE_PLEASE_VERSION="17.3.0"
+RELEASE_PLEASE_VERSION="17.6.0"
 echo "--- :package: Installing release-please ${RELEASE_PLEASE_VERSION}"
 bun add -g "release-please@${RELEASE_PLEASE_VERSION}"
 

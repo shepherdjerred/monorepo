@@ -13,22 +13,22 @@ KUBECTL_VERSION="v1.35.4"
 SHELLCHECK_VERSION="0.11.0"
 
 # renovate: datasource=github-releases depName=astral-sh/uv
-UV_VERSION="0.11.3"
+UV_VERSION="0.11.7"
 
 # renovate: datasource=github-releases depName=helm/helm
-HELM_VERSION="v4.1.3"
+HELM_VERSION="v4.1.4"
 
 # renovate: datasource=github-tags depName=aws/aws-cli versioning=semver
-AWSCLI_VERSION="2.34.24"
+AWSCLI_VERSION="2.34.33"
 
 # renovate: datasource=github-releases depName=opentofu/opentofu
-OPENTOFU_VERSION="1.11.5"
+OPENTOFU_VERSION="1.11.6"
 
 # renovate: datasource=github-releases depName=oven-sh/bun
-BUN_VERSION="1.3.11"
+BUN_VERSION="1.3.13"
 
 # renovate: datasource=github-releases depName=cli/cli
-GH_VERSION="2.89.0"
+GH_VERSION="2.90.0"
 
 # renovate: datasource=github-tags depName=rust-lang/rustup versioning=semver
 RUSTUP_VERSION="1.29.0"
@@ -37,10 +37,10 @@ RUSTUP_VERSION="1.29.0"
 GITLEAKS_VERSION="8.30.1"
 
 # renovate: datasource=github-releases depName=aquasecurity/trivy
-TRIVY_VERSION="0.69.3"
+TRIVY_VERSION="0.70.0"
 
 # renovate: datasource=pypi depName=semgrep
-SEMGREP_VERSION="1.157.0"
+SEMGREP_VERSION="1.160.0"
 
 
 install_base() {

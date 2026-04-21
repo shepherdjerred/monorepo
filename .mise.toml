@@ -3,7 +3,7 @@
 
 [tools]
 # renovate: datasource=github-releases depName=oven-sh/bun
-bun = "1.3.11"
+bun = "1.3.13"
 rust = "latest"
 java = "latest"
 
