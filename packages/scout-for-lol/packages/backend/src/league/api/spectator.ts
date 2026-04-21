@@ -11,16 +11,13 @@ import {
   updateRiotApiHealth,
 } from "#src/metrics/index.ts";
 import { withTimeout } from "#src/utils/timeout.ts";
+import {
+  extractHttpStatus,
+  isExpectedUpstreamError,
+} from "#src/league/api/upstream-errors.ts";
 import * as Sentry from "@sentry/bun";
 
 const logger = createLogger("spectator-api");
-
-/**
- * HTTP status codes from the Riot API that indicate a temporary upstream
- * outage. These are expected during maintenance windows and should not be
- * retried or reported as unexpected errors.
- */
-const EXPECTED_UPSTREAM_ERROR_STATUSES = new Set([502, 503]);
 
 /**
  * Result of a spectator API call. The `upstreamError` flag lets callers
@@ -111,14 +108,7 @@ export async function getActiveGame(
   } catch (error: unknown) {
     // 404 = player not in a game — expected/normal case
     // twisted's GenericError sets `status` from the HTTP response.
-    // Use z.coerce.number() to handle both number (404) and string ("404") status values,
-    // since twisted's error shape is not guaranteed.
-    const httpStatusResult = z
-      .object({ status: z.coerce.number().int() })
-      .safeParse(error);
-    const httpStatus = httpStatusResult.success
-      ? httpStatusResult.data.status
-      : undefined;
+    const httpStatus = extractHttpStatus(error);
 
     if (httpStatus === 404) {
       riotApiRequestsTotal.inc({ source: "spectator", status: "not_found" });
@@ -127,13 +117,10 @@ export async function getActiveGame(
       return { game: undefined, upstreamError: false };
     }
 
-    // 502/503 = Riot upstream outage — expected during maintenance windows.
+    // 502/503/504 = Riot upstream outage — expected during maintenance windows.
     // Do NOT report to Sentry here; the caller's circuit breaker handles
     // rate-limited reporting. Just log at warn level and signal upstreamError.
-    if (
-      httpStatus !== undefined &&
-      EXPECTED_UPSTREAM_ERROR_STATUSES.has(httpStatus)
-    ) {
+    if (httpStatus !== undefined && isExpectedUpstreamError(httpStatus)) {
       riotApiRequestsTotal.inc({
         source: "spectator",
         status: "upstream_error",

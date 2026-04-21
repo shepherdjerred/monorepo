@@ -11,6 +11,10 @@ import {
 } from "#src/metrics/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { withTimeout } from "#src/utils/timeout.ts";
+import {
+  extractHttpStatus,
+  isExpectedUpstreamError,
+} from "#src/league/api/upstream-errors.ts";
 import * as Sentry from "@sentry/bun";
 
 const logger = createLogger("api-match-history");
@@ -82,11 +86,32 @@ export async function getRecentMatchIds(
     });
     updateRiotApiHealth(false);
 
-    const result = z.object({ status: z.number() }).safeParse(error);
-    if (result.success) {
-      const status = result.data.status;
+    const status = extractHttpStatus(error);
+    if (status === undefined) {
+      logger.error(
+        `❌ Error fetching match history for ${playerAlias}:`,
+        error,
+      );
+      riotApiErrorsTotal.inc({
+        source: "match-history-api",
+        http_status: "unknown",
+      });
+    } else {
       if (status === 404) {
         logger.info(`ℹ️  Player ${playerAlias} has no match history (404)`);
+        return undefined;
+      }
+      // 502/503/504 = Riot upstream outage — expected during maintenance
+      // windows. Count in metrics for observability but do NOT report to
+      // Sentry; these produce thousands of duplicate events per week.
+      if (isExpectedUpstreamError(status)) {
+        logger.warn(
+          `[getRecentMatchIds] Riot API returned ${status.toString()} for ${playerAlias} (expected upstream error)`,
+        );
+        riotApiErrorsTotal.inc({
+          source: "match-history-api",
+          http_status: status.toString(),
+        });
         return undefined;
       }
       logger.error(`❌ HTTP Error ${status.toString()} for ${playerAlias}`);
@@ -101,15 +126,6 @@ export async function getRecentMatchIds(
           region: playerRegion,
           httpStatus: status.toString(),
         },
-      });
-    } else {
-      logger.error(
-        `❌ Error fetching match history for ${playerAlias}:`,
-        error,
-      );
-      riotApiErrorsTotal.inc({
-        source: "match-history-api",
-        http_status: "unknown",
       });
     }
     return undefined;

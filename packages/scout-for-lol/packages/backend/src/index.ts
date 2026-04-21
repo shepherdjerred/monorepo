@@ -18,7 +18,9 @@ if (
   Sentry.init({
     dsn: configuration.sentryDsn,
     environment: configuration.environment,
-    release: configuration.gitSha,
+    // Use image tag (e.g. "2.0.0-998") as the release so Bugsink groups
+    // events per deploy and matches what ArgoCD reports.
+    release: configuration.version,
   });
   logger.info("✅ Sentry initialized successfully");
 } else {
