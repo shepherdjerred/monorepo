@@ -15,6 +15,7 @@ import {
   withCommonProps,
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
@@ -179,6 +180,11 @@ export function createTemporalServerDeployment(
       labels: { app: "temporal-server-metrics" },
     },
     ports: [{ port: 9090, name: "metrics" }],
+  });
+
+  createServiceMonitor(chart, {
+    name: "temporal-server-metrics",
+    matchLabels: { app: "temporal-server-metrics" },
   });
 
   new TailscaleIngress(chart, "temporal-tailscale-ingress", {
