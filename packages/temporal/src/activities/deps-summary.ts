@@ -269,7 +269,11 @@ export const depsSummaryActivities = {
       );
       for (const { change, note, error } of results) {
         if (error !== undefined) {
-          failed.push({ dependency: change.name, reason: String(error) });
+          failed.push({
+            dependency: change.name,
+            reason:
+              error instanceof Error ? error.message : JSON.stringify(error),
+          });
           continue;
         }
         if (note === undefined) {
