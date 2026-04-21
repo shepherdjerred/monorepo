@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.16.0](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.15.0...astro-opengraph-images-v1.16.0) (2026-04-21)
+
+
+### Features
+
+* **astro-opengraph:** add filter function to integration input and update related hooks ([a7c636d](https://github.com/shepherdjerred/monorepo/commit/a7c636d67716ec5174c0d876f15b8a9c051acc74))
+
+
+### Bug Fixes
+
+* **scout-for-lol:** DRY prematch caption, repair prettier on main ([6295d07](https://github.com/shepherdjerred/monorepo/commit/6295d07c4342a23cccb5ca6afe716112e5c8e72c))
+* **util:** correct path handling for file retrieval in getFilePath function ([e7cb79b](https://github.com/shepherdjerred/monorepo/commit/e7cb79bfa7817d3bec9f7955e06b2a1e2d48f0d7))
+
 ## [1.15.0](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.14.3...astro-opengraph-images-v1.15.0) (2026-04-05)
 
 Maintenance release with dependency updates and build system improvements.
