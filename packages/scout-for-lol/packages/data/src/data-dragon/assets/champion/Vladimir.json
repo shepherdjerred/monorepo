@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.7.1",
+  "version": "16.8.1",
   "data": {
     "Vladimir": {
       "id": "Vladimir",
@@ -346,6 +346,68 @@
           "num": 48,
           "name": "Masque of the Black Rose Vladimir",
           "chromas": false
+        },
+        {
+          "id": "8049",
+          "num": 49,
+          "name": "PsyOps Vladimir",
+          "chromas": true
+        },
+        {
+          "id": "8050",
+          "num": 50,
+          "name": "PsyOps Vladimir (Ruby)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "8051",
+          "num": 51,
+          "name": "PsyOps Vladimir (Catseye)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "8052",
+          "num": 52,
+          "name": "PsyOps Vladimir (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "8053",
+          "num": 53,
+          "name": "PsyOps Vladimir (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "8054",
+          "num": 54,
+          "name": "PsyOps Vladimir (Sapphire)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "8055",
+          "num": 55,
+          "name": "PsyOps Vladimir (Emerald)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "8056",
+          "num": 56,
+          "name": "PsyOps Vladimir (Obsidian)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "8057",
+          "num": 57,
+          "name": "PsyOps Vladimir (Pearl)",
+          "chromas": false,
+          "parentSkin": 49
         }
       ],
       "lore": "A fiend with a thirst for mortal blood, Vladimir has influenced the affairs of Noxus since the empire's earliest days. In addition to unnaturally extending his life, his mastery of hemomancy allows him to control the minds and bodies of others as easily as his own. In the flamboyant salons of the Noxian aristocracy, this has enabled him to build a fanatical cult of personality around himself—while in the lowest back alleys, it allows him to bleed his enemies dry.",

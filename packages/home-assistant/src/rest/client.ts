@@ -1,4 +1,14 @@
 import { z } from "zod";
+import type {
+  DefaultHaSchema,
+  Domain,
+  EntityId,
+  EventDataFor,
+  EventType,
+  HaSchema,
+  Service,
+  ServiceDataFor,
+} from "#schema/types.ts";
 import type { HomeAssistantConfig } from "#shared/config.ts";
 import { normalizeBaseUrl } from "#shared/config.ts";
 import { HaApiError, HaAuthError, HaNotFoundError } from "./errors.ts";
@@ -24,7 +34,7 @@ export type HistoryOptions = {
 
 const RawJson = z.unknown();
 
-export class HomeAssistantRestClient {
+export class HomeAssistantRestClient<S extends HaSchema = DefaultHaSchema> {
   private readonly baseUrl: string;
   private readonly token: string;
 
@@ -43,19 +53,22 @@ export class HomeAssistantRestClient {
     return z.array(EntityState).parse(body);
   }
 
-  public async getState(entityId: string): Promise<EntityState> {
+  public async getState<E extends EntityId<S>>(
+    entityId: E,
+  ): Promise<Omit<EntityState, "entity_id"> & { entity_id: E }> {
+    const schema = EntityState.extend({ entity_id: z.literal(entityId) });
     const body = await this.request(
       "GET",
       `/api/states/${encodeURIComponent(entityId)}`,
       { notFoundResource: entityId },
     );
-    return EntityState.parse(body);
+    return schema.parse(body);
   }
 
-  public async callService(
-    domain: string,
-    service: string,
-    data?: Record<string, unknown>,
+  public async callService<D extends Domain<S>, V extends Service<S, D>>(
+    domain: D,
+    service: V,
+    data?: ServiceDataFor<S, D, V>,
     options?: CallServiceOptions,
   ): Promise<ServiceCallResult> {
     const path = this.buildServicePath(domain, service, options);
@@ -65,9 +78,11 @@ export class HomeAssistantRestClient {
     return ServiceCallResult.parse(body);
   }
 
-  public async fireEvent(
-    eventType: string,
-    data?: Record<string, unknown>,
+  public async fireEvent<E extends EventType<S>>(
+    eventType: E,
+    data?: EventDataFor<S, E> extends Record<string, unknown>
+      ? EventDataFor<S, E>
+      : Record<string, unknown>,
   ): Promise<FireEventResponse> {
     const body = await this.request(
       "POST",

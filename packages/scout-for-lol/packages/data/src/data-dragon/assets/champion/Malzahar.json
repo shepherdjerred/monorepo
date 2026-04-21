@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.7.1",
+  "version": "16.8.1",
   "data": {
     "Malzahar": {
       "id": "Malzahar",
@@ -458,7 +458,7 @@
           "id": "MalzaharQ",
           "name": "Call of the Void",
           "description": "Malzahar opens up two portals to the Void. After a short delay, they fire projectiles that deal Magic Damage and silence enemy champions.",
-          "tooltip": "Malzahar opens two portals to the Void that fire projectiles inward, dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> and <status>Silencing</status> for {{ e2 }} second(s).{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Malzahar opens two portals to the Void that fire projectiles inward, dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> and <status>Silencing</status> for {{ silenceduration }} second(s).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -649,7 +649,7 @@
           "id": "MalzaharR",
           "name": "Nether Grasp",
           "description": "Malzahar channels the essence of the Void to suppress an enemy champion over a zone of damaging negative energy.",
-          "tooltip": "Malzahar <status>Suppresses</status> an enemy champion and deals <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> over {{ e4 }} seconds. A zone of negative energy is created around his target dealing <magicDamage>{{ zonedamagetooltip }} max Health magic damage</magicDamage> over {{ e3 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Malzahar <status>Suppresses</status> an enemy champion and deals <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> over {{ ccduration }} seconds. A zone of negative energy is created around his target dealing <magicDamage>{{ zonedamagetooltip }} max Health magic damage</magicDamage> over {{ poolduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Nether Grasp Damage",

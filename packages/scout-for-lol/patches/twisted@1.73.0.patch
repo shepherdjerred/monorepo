@@ -1,0 +1,26 @@
+diff --git a/dist/constants/champions.d.ts b/dist/constants/champions.d.ts
+index dc866dcc2153f1523a535c450cb9d131c80cdaa9..30ed8def45a328dd47fda77ceee641d2fa865ce6 100644
+--- a/dist/constants/champions.d.ts
++++ b/dist/constants/champions.d.ts
+@@ -173,7 +173,8 @@ export declare enum Champions {
+     NAAFIRI = 950,
+     SMOLDER = 901,
+     BRIAR = 233,
+-    YUNARA = 804
++    YUNARA = 804,
++    ZAAHEN = 904
+ }
+ /**
+  * Get champion name by id
+diff --git a/dist/constants/champions.js b/dist/constants/champions.js
+index 97c7458e884ba858eba4f78f4b6a2439ed035d79..d1a638a96de17915e6fb87b28659cbd2d7654f14 100644
+--- a/dist/constants/champions.js
++++ b/dist/constants/champions.js
+@@ -184,6 +184,7 @@ var Champions;
+     Champions[Champions["SMOLDER"] = 901] = "SMOLDER";
+     Champions[Champions["BRIAR"] = 233] = "BRIAR";
+     Champions[Champions["YUNARA"] = 804] = "YUNARA";
++    Champions[Champions["ZAAHEN"] = 904] = "ZAAHEN";
+ })(Champions || (exports.Champions = Champions = {}));
+ const championIdMap = (0, lodash_1.invert)(Champions);
+ /**

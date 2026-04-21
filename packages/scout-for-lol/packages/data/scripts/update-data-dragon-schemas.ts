@@ -21,8 +21,17 @@ export type ItemData = z.infer<typeof ItemSchema>;
 export type RuneTreeData = z.infer<typeof RuneTreeSchema>;
 
 export const ChampionListSchema = z.object({
-  data: z.record(z.string(), z.unknown()),
+  data: z.record(
+    z.string(),
+    z.object({
+      id: z.string(),
+      key: z.string(),
+      name: z.string(),
+    }),
+  ),
 });
+
+export type ChampionListData = z.infer<typeof ChampionListSchema>;
 
 // Schema for CommunityDragon Arena augments API response
 export const ArenaAugmentApiSchema = z.object({

@@ -62,22 +62,15 @@ export async function getChampionList(): Promise<
     return championListCache;
   }
 
-  try {
-    // Read the champion list file (contains all champions in one file)
-    const championListPath = `${import.meta.dir}/assets/champion.json`;
-    const fileContent = await Bun.file(championListPath).text();
-    const data = ChampionListSchema.parse(JSON.parse(fileContent));
+  const championListPath = `${import.meta.dir}/assets/champion.json`;
+  const fileContent = await Bun.file(championListPath).text();
+  const data = ChampionListSchema.parse(JSON.parse(fileContent));
 
-    // Convert to array and sort by name
-    championListCache = Object.values(data.data)
-      .map((c) => ({ id: c.id, name: c.name }))
-      .toSorted((a, b) => a.name.localeCompare(b.name));
+  championListCache = Object.values(data.data)
+    .map((c) => ({ id: c.id, name: c.name }))
+    .toSorted((a, b) => a.name.localeCompare(b.name));
 
-    return championListCache;
-  } catch {
-    // Return empty array if file doesn't exist
-    return [];
-  }
+  return championListCache;
 }
 
 /**

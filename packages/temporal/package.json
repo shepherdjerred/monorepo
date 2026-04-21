@@ -6,15 +6,17 @@
   "imports": {
     "#shared/*": "./src/shared/*",
     "#activities/*": "./src/activities/*",
-    "#workflows/*": "./src/workflows/*"
+    "#workflows/*": "./src/workflows/*",
+    "#generated/*": "./src/generated/*"
   },
   "scripts": {
     "start": "bun run src/worker.ts",
-    "build": "tsc",
-    "typecheck": "bunx tsc --noEmit",
+    "build": "bun run scripts/ensure-ha-schema.ts && tsc",
+    "typecheck": "bun run scripts/ensure-ha-schema.ts && bunx tsc --noEmit",
     "lint": "bunx eslint --cache .",
-    "test": "bun test src/activities",
-    "test:integration": "bun test src/integration.test.ts"
+    "test": "bun run scripts/ensure-ha-schema.ts && bun test src/activities",
+    "test:integration": "bun run scripts/ensure-ha-schema.ts && bun test src/integration.test.ts",
+    "generate": "bun ../home-assistant/src/codegen/cli.ts --out src/generated/ha-schema.ts --name HaSchema"
   },
   "dependencies": {
     "@shepherdjerred/home-assistant": "file:../home-assistant",

@@ -232,7 +232,7 @@ exports[`toArenaMatch with real arena JSON produces valid ArenaMatch for each pr
                 "mFormulaParts": [
                   {
                     "__type": "NamedDataValueCalculationPart",
-                    "mDataValue": "{89ba3820}",
+                    "mDataValue": "InitialAmpPercent",
                   },
                   {
                     "__type": "AbilityResourceByCoefficientCalculationPart",
@@ -774,7 +774,7 @@ exports[`toArenaMatch with real arena JSON produces valid ArenaMatch for each pr
                   "mFormulaParts": [
                     {
                       "__type": "NamedDataValueCalculationPart",
-                      "mDataValue": "{89ba3820}",
+                      "mDataValue": "InitialAmpPercent",
                     },
                     {
                       "__type": "AbilityResourceByCoefficientCalculationPart",
@@ -1464,7 +1464,7 @@ exports[`toArenaMatch with real arena JSON produces valid ArenaMatch for each pr
                   "mFormulaParts": [
                     {
                       "__type": "StatByNamedDataValueCalculationPart",
-                      "mDataValue": "{a1904faf}",
+                      "mDataValue": "CritConverRatio",
                     },
                   ],
                 },
@@ -2428,7 +2428,7 @@ exports[`toArenaMatch with real arena JSON produces valid ArenaMatch for each pr
                   "mFormulaParts": [
                     {
                       "__type": "StatByNamedDataValueCalculationPart",
-                      "mDataValue": "{a1904faf}",
+                      "mDataValue": "CritConverRatio",
                     },
                   ],
                 },
@@ -2626,7 +2626,7 @@ exports[`toArenaMatch with real arena JSON produces valid ArenaMatch for each pr
                   "mFormulaParts": [
                     {
                       "__type": "StatByNamedDataValueCalculationPart",
-                      "mDataValue": "{a1904faf}",
+                      "mDataValue": "CritConverRatio",
                     },
                   ],
                 },
@@ -5816,7 +5816,7 @@ exports[`toArenaMatch with real arena JSON produces valid ArenaMatch for each pr
                   "mFormulaParts": [
                     {
                       "__type": "StatByNamedDataValueCalculationPart",
-                      "mDataValue": "{a1904faf}",
+                      "mDataValue": "CritConverRatio",
                     },
                   ],
                 },
@@ -7468,7 +7468,7 @@ exports[`toArenaMatch with real arena JSON produces valid ArenaMatch for each pr
                   "mFormulaParts": [
                     {
                       "__type": "StatByNamedDataValueCalculationPart",
-                      "mDataValue": "{a1904faf}",
+                      "mDataValue": "CritConverRatio",
                     },
                   ],
                 },

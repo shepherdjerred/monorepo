@@ -7,7 +7,7 @@ import {
   verifyState,
 } from "./util.ts";
 
-const ROOMBA = "vacuum.roomba";
+const ROOMBA = "vacuum.roomba" as const;
 
 export async function runVacuumIfNotHome(): Promise<void> {
   if (!(await everyoneAway())) {

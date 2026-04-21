@@ -3,6 +3,10 @@ import {
   type EntityState,
 } from "@shepherdjerred/home-assistant";
 
+// Activity signatures stay monomorphic (Temporal's proxyActivities rejects
+// generic methods), so the runtime client is the loose default. Compile-time
+// type safety lives in src/workflows/ha/util.ts, which wraps each activity
+// with schema-parameterized signatures that forward through as strings.
 let cachedClient: HomeAssistantRestClient | undefined;
 
 function getClient(): HomeAssistantRestClient {

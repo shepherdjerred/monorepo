@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.7.1",
+  "version": "16.8.1",
   "data": {
     "Mel": {
       "id": "Mel",
@@ -230,8 +230,8 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [35, 32, 29, 26, 23],
-          "cooldownBurn": "35/32/29/26/23",
+          "cooldown": [38, 35, 33, 29, 26],
+          "cooldownBurn": "38/35/33/29/26",
           "cost": [80, 60, 40, 20, 0],
           "costBurn": "80/60/40/20/0",
           "datavalues": {},

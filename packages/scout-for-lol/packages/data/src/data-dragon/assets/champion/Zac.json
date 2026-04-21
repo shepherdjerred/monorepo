@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.7.1",
+  "version": "16.8.1",
   "data": {
     "Zac": {
       "id": "Zac",
@@ -241,6 +241,68 @@
           "name": "Zesty Dip Zac (Dessert Dip)",
           "chromas": false,
           "parentSkin": 24
+        },
+        {
+          "id": "154033",
+          "num": 33,
+          "name": "Space Groove Zac",
+          "chromas": true
+        },
+        {
+          "id": "154034",
+          "num": 34,
+          "name": "Space Groove Zac (Ruby)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "154035",
+          "num": 35,
+          "name": "Space Groove Zac (Catseye)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "154036",
+          "num": 36,
+          "name": "Space Groove Zac (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "154037",
+          "num": 37,
+          "name": "Space Groove Zac (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "154038",
+          "num": 38,
+          "name": "Space Groove Zac (Emerald)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "154039",
+          "num": 39,
+          "name": "Space Groove Zac (Turquoise)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "154040",
+          "num": 40,
+          "name": "Space Groove Zac (Pearl)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "154041",
+          "num": 41,
+          "name": "Space Groove Zac (Obsidian)",
+          "chromas": false,
+          "parentSkin": 33
         }
       ],
       "lore": "Zac is the product of a toxic spill that ran through a chemtech seam and pooled in an isolated cavern deep in Zaun's Sump. Despite such humble origins, Zac has grown from primordial ooze into a thinking being who dwells in the city's pipes, occasionally emerging to help those who cannot help themselves or to rebuild the broken infrastructure of Zaun.",

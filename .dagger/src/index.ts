@@ -48,6 +48,7 @@ import {
   generateAndLintHelper,
   generateAndTypecheckHelper,
   generateAndTestHelper,
+  generateAndTypecheckWithSecretsHelper,
 } from "./typescript";
 
 import { astroCheckHelper, astroBuildHelper, viteBuildHelper } from "./astro";
@@ -207,6 +208,34 @@ export class Monorepo {
       depNames,
       depDirs,
       tsconfig,
+    ).stdout();
+  }
+
+  /**
+   * Generate (with HA secrets) then typecheck — for temporal, whose generate
+   * step materializes a typed HA schema by introspecting a live HA instance.
+   * Secrets are optional; without them the generate script falls back to the
+   * committed stub via `scripts/ensure-ha-schema.ts` and typecheck runs
+   * against loose DefaultHaSchema types.
+   */
+  @func()
+  async generateAndTypecheckWithSecrets(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+    haUrl: Secret | null = null,
+    haToken: Secret | null = null,
+  ): Promise<string> {
+    return generateAndTypecheckWithSecretsHelper(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      tsconfig,
+      haUrl,
+      haToken,
     ).stdout();
   }
 

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.7.1",
+  "version": "16.8.1",
   "data": {
     "Braum": {
       "id": "Braum",
@@ -365,6 +365,75 @@
           "name": "Grill Master Braum (Obsidian)",
           "chromas": false,
           "parentSkin": 42
+        },
+        {
+          "id": "201051",
+          "num": 51,
+          "name": "Victorious Braum",
+          "chromas": true
+        },
+        {
+          "id": "201052",
+          "num": 52,
+          "name": "Victorious Braum (Bronze)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "201053",
+          "num": 53,
+          "name": "Victorious Braum (Silver)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "201054",
+          "num": 54,
+          "name": "Victorious Braum (Gold)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "201055",
+          "num": 55,
+          "name": "Victorious Braum (Platinum)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "201056",
+          "num": 56,
+          "name": "Victorious Braum (Emerald)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "201057",
+          "num": 57,
+          "name": "Victorious Braum (Diamond)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "201058",
+          "num": 58,
+          "name": "Victorious Braum (Master)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "201059",
+          "num": 59,
+          "name": "Victorious Braum (Grandmaster)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "201060",
+          "num": 60,
+          "name": "Victorious Braum (Challenger)",
+          "chromas": false,
+          "parentSkin": 51
         }
       ],
       "lore": "Blessed with massive biceps and an even bigger heart, Braum is a beloved hero of the Freljord. Every mead hall north of Frostheld toasts his legendary strength, said to have felled a forest of oaks in a single night, and punched an entire mountain into rubble. Bearing an enchanted vault door as his shield, Braum roams the frozen north sporting a mustachioed smile as big as his muscles—a true friend to all those in need.",
@@ -414,7 +483,7 @@
           "id": "BraumQ",
           "name": "Winter's Bite",
           "description": "Braum propels freezing ice from his shield, slowing and dealing magic damage.<br><br>Applies a stack of <font color='#FFF673'>Concussive Blows</font>.",
-          "tooltip": "Braum propels freezing ice from his shield, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first enemy hit and <status>Slowing</status> them by {{ e2 }}% decaying over {{ e5 }} seconds.<br /><br />Applies a stack of <keywordMajor>Concussive Blows</keywordMajor>. {{ spellmodifierdescriptionappend }}",
+          "tooltip": "Braum propels freezing ice from his shield, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first enemy hit and <status>Slowing</status> them by {{ initialslow }}% decaying over {{ slowduration }} seconds.<br /><br />Applies a stack of <keywordMajor>Concussive Blows</keywordMajor>. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
             "effect": [
@@ -475,7 +544,7 @@
           "id": "BraumW",
           "name": "Stand Behind Me",
           "description": "Braum leaps to a target allied champion or minion. On arrival, Braum and the ally gain Armor and Magic Resist for a few seconds.",
-          "tooltip": "Braum leaps to an allied champion or minion. On arrival, Braum grants the target <scaleArmor>{{ grantedallyarmor }} Armor</scaleArmor> and <scaleMR>{{ grantedallymr }} Magic Resist</scaleMR> for {{ e1 }} seconds. Braum grants himself <scaleArmor>{{ grantedbraumarmor }} Armor</scaleArmor> and <scaleMR>{{ grantedbraummr }} Magic Resist</scaleMR> for the same duration.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Braum leaps to an allied champion or minion. On arrival, Braum grants the target <scaleArmor>{{ grantedallyarmor }} Armor</scaleArmor> and <scaleMR>{{ grantedallymr }} Magic Resist</scaleMR> for {{ duration }} seconds. Braum grants himself <scaleArmor>{{ grantedbraumarmor }} Armor</scaleArmor> and <scaleMR>{{ grantedbraummr }} Magic Resist</scaleMR> for the same duration.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Base Resists", "Cooldown"],
             "effect": [
@@ -535,7 +604,7 @@
           "id": "BraumE",
           "name": "Unbreakable",
           "description": "Braum raises his shield in a direction for several seconds, intercepting all projectiles causing them to hit him and be destroyed. He negates the damage of the first attack completely and reduces the damage of all subsequent attacks from this direction.",
-          "tooltip": "Braum raises his shield for {{ e2 }} seconds, intercepting enemy missiles from the chosen direction, causing them to hit Braum and then be destroyed. The first missile Braum blocks deals no damage, and subsequent projectiles deal {{ e3 }}% reduced damage.<br /><br />Braum gains <speed>{{ e4 }}% Move Speed</speed> while his shield is raised.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Braum raises his shield for {{ shieldholdduration }} seconds, intercepting enemy missiles from the chosen direction, causing them to hit Braum and then be destroyed. The first missile Braum blocks deals no damage, and subsequent projectiles deal {{ shieldfacingdramount }}% reduced damage.<br /><br />Braum gains <speed>{{ movespeedpercent }}% Move Speed</speed> while his shield is raised.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Duration",

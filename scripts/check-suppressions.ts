@@ -46,6 +46,12 @@ const EXCLUDED_FILES = [
   "packages/discord-plays-pokemon/packages/frontend/src/main.tsx",
   // Intentional: public Firebase web API key (same as better-skill-capped fetcher)
   "packages/temporal/src/activities/fetcher.ts",
+  // Intentional: ha-codegen emits `/* eslint-disable */` into the generated HA schema header
+  "packages/home-assistant/src/codegen/emit.ts",
+  // Intentional: committed stub for the generated HA schema; gets overwritten by ha-codegen
+  "packages/temporal/src/generated/ha-schema.stub.ts",
+  // Intentional: compile-time type tests — @ts-expect-error is the whole point
+  "packages/home-assistant/test/typed-client.test-d.ts",
   // Documentation: CLAUDE.md files and docs mention suppression patterns as things to avoid
   "CLAUDE.md",
   "packages/docs/",
