@@ -23,8 +23,7 @@ pub fn zellij_available() -> bool {
     Command::new("zellij")
         .arg("--version")
         .output()
-        .map(|o| o.status.success())
-        .unwrap_or(false)
+        .is_ok_and(|o| o.status.success())
 }
 
 /// Check if docker daemon is running and available
@@ -33,8 +32,7 @@ pub fn docker_available() -> bool {
     Command::new("docker")
         .arg("info")
         .output()
-        .map(|o| o.status.success())
-        .unwrap_or(false)
+        .is_ok_and(|o| o.status.success())
 }
 
 /// Initialize a git repository in the given directory with an initial commit
@@ -142,6 +140,5 @@ pub fn gh_authenticated() -> bool {
     Command::new("gh")
         .args(["auth", "status"])
         .output()
-        .map(|o| o.status.success())
-        .unwrap_or(false)
+        .is_ok_and(|o| o.status.success())
 }
