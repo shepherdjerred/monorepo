@@ -385,6 +385,28 @@ describe("buildPipeline", () => {
       expect(summary?.allow_dependency_failure).toBe(true);
     });
 
+    it("build summary command emits escaped backticks, no ${BT} leakage", () => {
+      // Regression test: build 1011 failed with `/bin/sh: ghcr: parameter not set`
+      // because the generator emitted `$$${BT}` which collapsed to a bare `$` once
+      // Buildkite stripped `${BT}` as an unset env var. Ensure the new form survives
+      // Buildkite's variable interpolation and produces literal backticks in bash.
+      const pipeline = buildPipeline(fullBuild());
+      const steps = pipeline.steps.filter(isStep);
+      const summary = steps.find((s) => s.key === "build-summary");
+      const command =
+        typeof summary?.command === "string"
+          ? summary.command
+          : (summary?.command ?? []).join("\n");
+      expect(command).toContain("\\`ghcr.io/");
+      expect(command).toContain("\\`$$DIGEST\\`");
+      expect(command).not.toContain("${BT}");
+      expect(command).not.toContain("BT=");
+      // After Buildkite $$ -> $ expansion the surviving markdown code span uses \`.
+      const postBuildkite = command.replace(/\$\$/g, "$");
+      expect(postBuildkite).toMatch(/\\`ghcr\.io\/[^`]+:\$VERSION\\`/);
+      expect(postBuildkite).toMatch(/\\`\$DIGEST\\`/);
+    });
+
     it("deploy steps have concurrency groups", () => {
       const pipeline = buildPipeline(fullBuild());
       const allSteps: BuildkiteStep[] = [];
