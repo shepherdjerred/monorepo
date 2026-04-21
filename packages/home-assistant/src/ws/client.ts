@@ -465,12 +465,21 @@ function waitForOpen(socket: WebSocketLike): Promise<void> {
       cleanup();
       reject(new HaWebSocketError("WebSocket failed to open"));
     };
+    const onClose = (): void => {
+      // If close() is called (or the server rejects the TCP/WS upgrade)
+      // while still CONNECTING, the real WebSocket emits `close` without
+      // ever firing `open`. Without this listener the promise would leak.
+      cleanup();
+      reject(new HaWebSocketClosedError());
+    };
     const cleanup = (): void => {
       socket.removeEventListener("open", onOpen);
       socket.removeEventListener("error", onError);
+      socket.removeEventListener("close", onClose);
     };
     socket.addEventListener("open", onOpen);
     socket.addEventListener("error", onError);
+    socket.addEventListener("close", onClose);
   });
 }
 

@@ -194,6 +194,28 @@ describe("HomeAssistantEventClient", () => {
 });
 
 describe("HomeAssistantEventClient lifecycle", () => {
+  it("close() during CONNECTING rejects the in-flight connect() instead of hanging", async () => {
+    const { Impl, instances } = createFakeWebSocketFactory();
+    const client = new HomeAssistantEventClient(
+      { baseUrl: "http://ha.local:8123", token: "t" },
+      { webSocketImpl: Impl, reconnect: false },
+    );
+
+    // Start connect; the fake's open event is queued as a microtask,
+    // so we can synchronously interrupt before it fires.
+    const connectPromise = client.connect();
+    const socket = instances[0];
+    expect(socket).toBeDefined();
+    if (socket === undefined) {
+      return;
+    }
+    // Still CONNECTING — call close() before the microtask runs.
+    socket.close();
+
+    // connect() must reject in bounded time, not hang forever.
+    await expect(connectPromise).rejects.toBeDefined();
+  });
+
   it("emits closed exactly once per user-initiated close", async () => {
     const { Impl, instances } = createFakeWebSocketFactory();
     const client = new HomeAssistantEventClient(

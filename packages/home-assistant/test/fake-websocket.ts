@@ -22,6 +22,11 @@ export class FakeWebSocket {
   public constructor(url: string) {
     this.url = url;
     queueMicrotask(() => {
+      // Match real WebSocket: don't transition to OPEN if close() was
+      // called (or the server aborted) before the handshake completed.
+      if (this.readyState !== FakeWebSocket.CONNECTING) {
+        return;
+      }
       this.readyState = FakeWebSocket.OPEN;
       this.emit("open", {});
     });
