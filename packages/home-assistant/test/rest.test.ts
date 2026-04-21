@@ -226,6 +226,49 @@ describe("HomeAssistantRestClient", () => {
     expect(calls[0]?.args.url).toBe("http://ha.local:8123/api/events/my_event");
   });
 
+  it("renderTemplate throws HaApiError on non-2xx instead of returning the body", async () => {
+    const { fn } = makeFetch(
+      () => new Response("bad template", { status: 400 }),
+    );
+    globalThis.fetch = fn;
+
+    const client = new HomeAssistantRestClient({
+      baseUrl: "http://ha.local:8123",
+      token: "t",
+    });
+
+    let caught: unknown;
+    try {
+      await client.renderTemplate("{{ invalid }}");
+    } catch (error_: unknown) {
+      caught = error_;
+    }
+    expect(caught).toBeInstanceOf(HaApiError);
+    if (caught instanceof HaApiError) {
+      expect(caught.status).toBe(400);
+    }
+  });
+
+  it("renderTemplate throws HaAuthError on 401", async () => {
+    const { fn } = makeFetch(
+      () => new Response("unauthorized", { status: 401 }),
+    );
+    globalThis.fetch = fn;
+
+    const client = new HomeAssistantRestClient({
+      baseUrl: "http://ha.local:8123",
+      token: "t",
+    });
+
+    let caught: unknown;
+    try {
+      await client.renderTemplate("{{ states('light.kitchen') }}");
+    } catch (error_: unknown) {
+      caught = error_;
+    }
+    expect(caught).toBeInstanceOf(HaAuthError);
+  });
+
   it("notifies handler registered with mock", async () => {
     const handler = mock(() => Response.json([]));
     const { fn, calls } = makeFetch(() => handler());

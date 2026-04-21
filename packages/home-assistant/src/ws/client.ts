@@ -114,10 +114,11 @@ export class HomeAssistantEventClient {
   public async close(): Promise<void> {
     this.closedByUser = true;
     this.stopPingTimer();
+    this.failAllPending(new HaWebSocketClosedError());
     const socket = this.socket;
     if (socket !== undefined) {
-      socket.close();
       this.socket = undefined;
+      socket.close();
     }
     this.setState("closed");
     await Promise.resolve();
@@ -127,14 +128,16 @@ export class HomeAssistantEventClient {
     eventType: string,
     handler: EventHandler,
   ): Promise<() => Promise<void>> {
-    const { id, result } = this.sendRequest({
-      type: "subscribe_events",
-      event_type: eventType,
-    });
-    await result;
-    this.subscriptions.set(id, { kind: "event", eventType, handler });
+    const subscription: Subscription = { kind: "event", eventType, handler };
+    const clientKey = this.subscriptions.register(subscription);
+    try {
+      await this.subscribeOnServer(clientKey, subscription);
+    } catch (error: unknown) {
+      this.subscriptions.unregister(clientKey);
+      throw error;
+    }
     return async () => {
-      await this.unsubscribe(id);
+      await this.unsubscribe(clientKey);
     };
   }
 
@@ -142,14 +145,16 @@ export class HomeAssistantEventClient {
     trigger: Record<string, unknown>,
     handler: EventHandler,
   ): Promise<() => Promise<void>> {
-    const { id, result } = this.sendRequest({
-      type: "subscribe_trigger",
-      trigger,
-    });
-    await result;
-    this.subscriptions.set(id, { kind: "trigger", trigger, handler });
+    const subscription: Subscription = { kind: "trigger", trigger, handler };
+    const clientKey = this.subscriptions.register(subscription);
+    try {
+      await this.subscribeOnServer(clientKey, subscription);
+    } catch (error: unknown) {
+      this.subscriptions.unregister(clientKey);
+      throw error;
+    }
     return async () => {
-      await this.unsubscribe(id);
+      await this.unsubscribe(clientKey);
     };
   }
 
@@ -181,10 +186,18 @@ export class HomeAssistantEventClient {
 
   private async openAndAuth(): Promise<void> {
     this.setState("connecting");
+    // Close any prior socket before replacing it, so its handlers can't
+    // trigger a second concurrent reconnect loop once it eventually closes.
+    const previous = this.socket;
+    if (previous !== undefined) {
+      this.socket = undefined;
+      previous.close();
+    }
     const socket = new this.webSocketImpl(this.wsUrl);
     this.socket = socket;
     this.nextId = 1;
     this.pending.clear();
+    this.subscriptions.clearServerIds();
 
     await waitForOpen(socket);
     await this.performAuth(socket);
@@ -197,6 +210,10 @@ export class HomeAssistantEventClient {
 
   private attachMessageHandler(socket: WebSocketLike): void {
     socket.addEventListener("message", (event) => {
+      if (this.socket !== socket) {
+        // Orphaned socket — ignore any late messages.
+        return;
+      }
       const parsed = MessageDataString.safeParse(extractEventData(event));
       if (!parsed.success || parsed.data === "") {
         return;
@@ -207,10 +224,16 @@ export class HomeAssistantEventClient {
 
   private attachCloseHandler(socket: WebSocketLike): void {
     socket.addEventListener("close", () => {
+      if (this.socket !== socket) {
+        // Orphaned socket closing (superseded by a reconnect or by close());
+        // the current socket — if any — has its own handler.
+        return;
+      }
+      this.socket = undefined;
       this.stopPingTimer();
       this.failAllPending(new HaWebSocketClosedError());
       if (this.closedByUser) {
-        this.setState("closed");
+        // close() already ran setState("closed"); don't double-emit.
         return;
       }
       this.setState("closed");
@@ -219,6 +242,9 @@ export class HomeAssistantEventClient {
       }
     });
     socket.addEventListener("error", (event) => {
+      if (this.socket !== socket) {
+        return;
+      }
       this.setState("error", event);
     });
   }
@@ -245,7 +271,7 @@ export class HomeAssistantEventClient {
   }
 
   private dispatchEvent(message: EventMessage): void {
-    const subscription = this.subscriptions.get(message.id);
+    const subscription = this.subscriptions.getByServerId(message.id);
     if (subscription === undefined) {
       return;
     }
@@ -294,39 +320,45 @@ export class HomeAssistantEventClient {
   }
 
   private async resubscribeAll(): Promise<void> {
-    const snapshot = this.subscriptions.snapshot();
-    this.subscriptions.clear();
-    for (const [, subscription] of snapshot) {
-      await this.resubscribe(subscription);
+    // clearServerIds already ran in openAndAuth, so server-id bindings are
+    // empty here; the clientKey → subscription map still holds every caller-
+    // registered subscription. Rebind each to a fresh server id and keep
+    // going on individual failures so one bad resubscribe doesn't drop the
+    // rest. Subscriptions that fail stay in the registry and get retried on
+    // the next reconnect.
+    for (const [clientKey, subscription] of this.subscriptions.snapshot()) {
+      try {
+        await this.subscribeOnServer(clientKey, subscription);
+      } catch (error: unknown) {
+        const detail = error instanceof Error ? error.message : String(error);
+        this.emitError(`Resubscribe failed: ${detail}`);
+      }
     }
   }
 
-  private async resubscribe(subscription: Subscription): Promise<void> {
-    if (subscription.kind === "event") {
-      const { id, result } = this.sendRequest({
-        type: "subscribe_events",
-        event_type: subscription.eventType,
-      });
-      await result;
-      this.subscriptions.set(id, subscription);
-      return;
-    }
-    const { id, result } = this.sendRequest({
-      type: "subscribe_trigger",
-      trigger: subscription.trigger,
-    });
+  private async subscribeOnServer(
+    clientKey: number,
+    subscription: Subscription,
+  ): Promise<void> {
+    const payload =
+      subscription.kind === "event"
+        ? { type: "subscribe_events", event_type: subscription.eventType }
+        : { type: "subscribe_trigger", trigger: subscription.trigger };
+    const { id, result } = this.sendRequest(payload);
+    this.subscriptions.bindServerId(clientKey, id);
     await result;
-    this.subscriptions.set(id, subscription);
   }
 
-  private async unsubscribe(id: number): Promise<void> {
-    const existing = this.subscriptions.delete(id);
-    if (existing === undefined) {
+  private async unsubscribe(clientKey: number): Promise<void> {
+    const removed = this.subscriptions.unregister(clientKey);
+    if (removed?.serverId === undefined) {
+      // No active server binding (e.g. disconnected before resubscribe
+      // completed); caller-side registry entry is gone, nothing more to do.
       return;
     }
     const { result } = this.sendRequest({
       type: "unsubscribe_events",
-      subscription: id,
+      subscription: removed.serverId,
     });
     await result;
   }

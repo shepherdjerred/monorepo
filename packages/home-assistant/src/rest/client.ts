@@ -81,6 +81,7 @@ export class HomeAssistantRestClient {
     const response = await this.rawRequest("POST", "/api/template", {
       template,
     });
+    await this.assertOk(response, "POST", "/api/template");
     return response.text();
   }
 
@@ -126,13 +127,27 @@ export class HomeAssistantRestClient {
     options: { body?: unknown; notFoundResource?: string } = {},
   ): Promise<unknown> {
     const response = await this.rawRequest(method, path, options.body);
+    await this.assertOk(response, method, path, options.notFoundResource);
+    const text = await response.text();
+    if (text === "") {
+      return undefined;
+    }
+    return RawJson.parse(JSON.parse(text));
+  }
+
+  private async assertOk(
+    response: Response,
+    method: "GET" | "POST",
+    path: string,
+    notFoundResource?: string,
+  ): Promise<void> {
     if (response.status === 401 || response.status === 403) {
       const text = await response.text();
       throw new HaAuthError(response.status, text);
     }
     if (response.status === 404) {
       const text = await response.text();
-      throw new HaNotFoundError(options.notFoundResource ?? path, text);
+      throw new HaNotFoundError(notFoundResource ?? path, text);
     }
     if (!response.ok) {
       const text = await response.text();
@@ -142,11 +157,6 @@ export class HomeAssistantRestClient {
         text,
       );
     }
-    const text = await response.text();
-    if (text === "") {
-      return undefined;
-    }
-    return RawJson.parse(JSON.parse(text));
   }
 
   private rawRequest(
