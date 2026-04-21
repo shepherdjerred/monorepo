@@ -13,6 +13,13 @@ import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
 
 const MAIN_ONLY = "build.branch == pipeline.default_branch";
 
+// Every custom build/push @func() in .dagger/src/index.ts accepts `version`
+// and `gitSha` parameters. Without these flags they fall back to "dev" /
+// "unknown", which ends up as VERSION/GIT_SHA env vars inside the image —
+// and then as the Bugsink/Sentry `release` tag — so leaving them off makes
+// release-keyed regression tracking useless. Always pass them.
+const VERSION_FLAGS = `--version "2.0.0-$BUILDKITE_BUILD_NUMBER" --git-sha "$BUILDKITE_COMMIT"`;
+
 function depFlags(pkg: string): string {
   const deps = WORKSPACE_DEPS[pkg] ?? [];
   return deps
@@ -41,10 +48,14 @@ function imageBuildStep(
   const flags = depFlags(pkg);
   let cmd: string;
   if (img.buildFn && NO_SOURCE_BUILDS.has(buildFn)) {
-    cmd = `dagger call ${buildFn}`;
+    cmd = [`dagger call ${buildFn}`, VERSION_FLAGS].join(" ");
   } else if (img.buildFn) {
     // Custom build functions take --pkg-dir + dep flags (no --pkg)
-    cmd = [`dagger call ${buildFn} --pkg-dir ./packages/${pkg}`, flags]
+    cmd = [
+      `dagger call ${buildFn} --pkg-dir ./packages/${pkg}`,
+      flags,
+      VERSION_FLAGS,
+    ]
       .filter(Boolean)
       .join(" ");
   } else {
@@ -54,6 +65,7 @@ function imageBuildStep(
       `dagger call ${buildFn} --pkg-dir ./packages/${pkg} --pkg ${img.name}`,
       prismaFlag,
       flags,
+      VERSION_FLAGS,
     ]
       .filter(Boolean)
       .join(" ");
@@ -182,10 +194,15 @@ function imagePushStep(
 
   let pushCall: string;
   if (img.pushFn && NO_SOURCE_PUSHES.has(pushFn)) {
-    pushCall = `${pushFn} ${tagFlags}`;
+    pushCall = [pushFn, tagFlags, VERSION_FLAGS].join(" ");
   } else if (img.pushFn) {
     // Custom push functions take --pkg-dir + dep flags + tags + registry creds
-    pushCall = [`${pushFn} --pkg-dir ./packages/${pkg}`, flags, tagFlags]
+    pushCall = [
+      `${pushFn} --pkg-dir ./packages/${pkg}`,
+      flags,
+      tagFlags,
+      VERSION_FLAGS,
+    ]
       .filter(Boolean)
       .join(" ");
   } else {
@@ -197,6 +214,7 @@ function imagePushStep(
       prismaFlag,
       flags,
       tagFlags,
+      VERSION_FLAGS,
     ]
       .filter(Boolean)
       .join(" ");
