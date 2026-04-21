@@ -103,6 +103,22 @@ const GithubRelease = z.object({
   html_url: z.string().optional(),
 });
 
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs = 10_000,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => {
+    controller.abort();
+  }, timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function tryFetchReleaseNote(
   repo: string,
   version: string,
@@ -115,7 +131,7 @@ async function tryFetchReleaseNote(
   ];
 
   for (const tag of tagVariants) {
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `https://api.github.com/repos/${repo}/releases/tags/${tag}`,
       { headers },
     );
@@ -225,34 +241,45 @@ export const depsSummaryActivities = {
       headers["Authorization"] = `Bearer ${ghToken}`;
     }
 
-    for (const change of changes) {
-      if (
-        change.datasource !== "github-releases" &&
-        change.datasource !== "docker" &&
-        change.datasource !== "helm"
-      ) {
-        continue;
-      }
+    const eligible = changes.filter(
+      (change) =>
+        change.datasource === "github-releases" ||
+        change.datasource === "docker" ||
+        change.datasource === "helm",
+    );
 
-      try {
-        const note = await tryFetchReleaseNote(
-          change.name,
-          change.newVersion,
-          headers,
-        );
+    // Bounded concurrency prevents serial wait times from exceeding the
+    // activity's start-to-close timeout when dozens of deps change at once.
+    const CONCURRENCY = 8;
+    for (let i = 0; i < eligible.length; i += CONCURRENCY) {
+      const batch = eligible.slice(i, i + CONCURRENCY);
+      const results = await Promise.all(
+        batch.map(async (change) => {
+          try {
+            const note = await tryFetchReleaseNote(
+              change.name,
+              change.newVersion,
+              headers,
+            );
+            return { change, note, error: undefined as unknown };
+          } catch (error) {
+            return { change, note: undefined, error };
+          }
+        }),
+      );
+      for (const { change, note, error } of results) {
+        if (error !== undefined) {
+          failed.push({ dependency: change.name, reason: String(error) });
+          continue;
+        }
         if (note === undefined) {
           failed.push({
             dependency: change.name,
             reason: "No release notes found for any tag variant",
           });
-        } else {
-          notes.push(note);
+          continue;
         }
-      } catch (error) {
-        failed.push({
-          dependency: change.name,
-          reason: String(error),
-        });
+        notes.push(note);
       }
     }
 
