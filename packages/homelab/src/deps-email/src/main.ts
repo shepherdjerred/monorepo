@@ -297,39 +297,70 @@ function cleanVersion(version: string): string {
   return version.split("@")[0] ?? version;
 }
 
+// Bounded concurrency — matches typical GitHub secondary rate-limit
+// guidance (~10 concurrent requests per token is safe).
+const FETCH_CONCURRENCY = 8;
+
 async function fetchAllReleaseNotes(
   changes: DependencyInfo[],
 ): Promise<{ notes: ReleaseNotes[]; failed: FailedFetch[] }> {
   const notes: ReleaseNotes[] = [];
   const failed: FailedFetch[] = [];
+  const phaseStart = Date.now();
 
-  for (const change of changes) {
-    try {
-      console.log(
-        `Fetching release notes for ${change.name} (${change.datasource})...`,
-      );
-      const releaseNotesList = await fetchReleaseNotesForDep(change);
-      if (releaseNotesList.length > 0) {
-        for (const note of releaseNotesList) {
-          const preview = note.notes.slice(0, 100).replaceAll("\n", " ");
-          console.log(
-            `  ✓ [${note.source}] Got ${String(note.notes.length)} chars: "${preview}..."`,
-          );
-          notes.push(note);
+  // Process in fixed-size batches to cap concurrency without pulling in a
+  // p-limit dependency. Each batch runs in parallel; next batch starts when
+  // the whole prior batch settles.
+  for (let i = 0; i < changes.length; i += FETCH_CONCURRENCY) {
+    const batch = changes.slice(i, i + FETCH_CONCURRENCY);
+    const batchStart = Date.now();
+    console.log(
+      `[phase=release-notes] batch ${String(i / FETCH_CONCURRENCY + 1)} (${String(batch.length)} deps, ${String(i + batch.length)}/${String(changes.length)})`,
+    );
+
+    const results = await Promise.all(
+      batch.map(async (change) => {
+        try {
+          const releaseNotesList = await fetchReleaseNotesForDep(change);
+          return { change, releaseNotesList, error: undefined as unknown };
+        } catch (error) {
+          return { change, releaseNotesList: [], error };
         }
-      } else {
-        console.log(`  ✗ No release notes found`);
+      }),
+    );
+
+    for (const { change, releaseNotesList, error } of results) {
+      if (error !== undefined) {
+        const reason = error instanceof Error ? error.message : "unknown error";
+        console.warn(`  ✗ ${change.name}: ${reason}`);
+        failed.push({ dependency: change.name, reason });
+        continue;
+      }
+      if (releaseNotesList.length === 0) {
+        console.log(`  ✗ ${change.name}: no release notes found`);
         failed.push({
           dependency: change.name,
           reason: "No GitHub releases found",
         });
+        continue;
       }
-    } catch (error) {
-      console.warn(`  ✗ Failed: ${String(error)}`);
-      failed.push({ dependency: change.name, reason: String(error) });
+      for (const note of releaseNotesList) {
+        const preview = note.notes.slice(0, 100).replaceAll("\n", " ");
+        console.log(
+          `  ✓ ${change.name} [${note.source}] ${String(note.notes.length)} chars: "${preview}..."`,
+        );
+        notes.push(note);
+      }
     }
+
+    console.log(
+      `[phase=release-notes] batch done in ${String(Date.now() - batchStart)}ms`,
+    );
   }
 
+  console.log(
+    `[phase=release-notes] total ${String(Date.now() - phaseStart)}ms for ${String(changes.length)} deps`,
+  );
   return { notes, failed };
 }
 

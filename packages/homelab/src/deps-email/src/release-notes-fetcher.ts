@@ -7,6 +7,7 @@ import {
   isVersionLessThanOrEqual,
   compareVersions,
 } from "./version-compare.ts";
+import { fetchWithTimeout } from "./fetch-with-timeout.ts";
 
 // Zod schemas for API responses
 const ArtifactHubChangeSchema = z.object({
@@ -93,7 +94,7 @@ export async function fetchFromArtifactHub(
 ): Promise<ReleaseNote[]> {
   try {
     const url = `https://artifacthub.io/api/v1/packages/helm/${repoName}/${chartName}`;
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: { "User-Agent": "homelab-dependency-summary" },
     });
 
@@ -170,7 +171,7 @@ async function fetchFromGitHubReleases(
     const url = `https://api.github.com/repos/${owner}/${repoName}/releases?per_page=100&page=${String(page)}`;
 
     try {
-      const response = await fetch(url, { headers });
+      const response = await fetchWithTimeout(url, { headers });
 
       if (!response.ok) {
         break;
@@ -249,7 +250,7 @@ async function fetchFromChangelog(
     for (const filename of filenames) {
       try {
         const url = `https://raw.githubusercontent.com/${owner}/${repoName}/${branch}/${filename}`;
-        const response = await fetch(url);
+        const response = await fetchWithTimeout(url);
 
         if (!response.ok) {
           continue;
@@ -367,7 +368,7 @@ async function fetchFromGitCompare(
 
       try {
         const url = `https://api.github.com/repos/${owner}/${repoName}/compare/${oldTag}...${newTag}`;
-        const response = await fetch(url, { headers });
+        const response = await fetchWithTimeout(url, { headers });
 
         if (!response.ok) {
           continue;

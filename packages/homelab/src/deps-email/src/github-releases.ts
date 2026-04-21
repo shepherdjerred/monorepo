@@ -2,6 +2,7 @@ import {
   GitHubReleaseSchema,
   GitHubReleasesArraySchema,
 } from "./main-schemas.ts";
+import { fetchWithTimeout } from "./fetch-with-timeout.ts";
 
 export function getGitHubHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
@@ -35,7 +36,7 @@ export async function fetchGitHubReleases(
   for (const tag of tagsToTry) {
     const url = `https://api.github.com/repos/${owner}/${repo}/releases/tags/${tag}`;
     try {
-      const response = await fetch(url, { headers });
+      const response = await fetchWithTimeout(url, { headers });
 
       if (response.ok) {
         const rawData: unknown = await response.json();
@@ -62,7 +63,7 @@ export async function fetchGitHubReleases(
   // Fall back to fetching recent releases and finding a match
   try {
     const url = `https://api.github.com/repos/${owner}/${repo}/releases?per_page=20`;
-    const response = await fetch(url, { headers });
+    const response = await fetchWithTimeout(url, { headers });
 
     if (response.ok) {
       const rawData: unknown = await response.json();

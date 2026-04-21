@@ -15,6 +15,7 @@ import {
 import type { FullDependencyDiff } from "./types.ts";
 import { getFullDependencyChanges } from "./version-differ.ts";
 import { fetchGitHubReleases } from "./github-releases.ts";
+import { fetchWithTimeout } from "./fetch-with-timeout.ts";
 
 export async function tryArtifactHubFallback(
   depName: string,
@@ -22,7 +23,7 @@ export async function tryArtifactHubFallback(
 ): Promise<ReleaseNotes | null> {
   try {
     const searchUrl = `https://artifacthub.io/api/v1/packages/helm/${depName}`;
-    const response = await fetch(searchUrl, {
+    const response = await fetchWithTimeout(searchUrl, {
       headers: {
         Accept: "application/json",
         "User-Agent": "homelab-dependency-summary",

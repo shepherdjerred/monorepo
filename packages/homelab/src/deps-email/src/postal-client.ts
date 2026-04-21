@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { fetchWithTimeout } from "./fetch-with-timeout.ts";
 
 // Postal API request type for sending messages
 type PostalSendMessage = {
@@ -109,11 +110,15 @@ export class PostalClient {
       headers["Host"] = this.hostHeader;
     }
 
-    const response = await fetch(`${this.baseUrl}/api/v1/send/message`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(payload),
-    });
+    const response = await fetchWithTimeout(
+      `${this.baseUrl}/api/v1/send/message`,
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload),
+      },
+      15_000,
+    );
 
     const result: unknown = await response.json();
     const parsed = PostalResponseSchema.safeParse(result);
