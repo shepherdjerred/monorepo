@@ -101,7 +101,11 @@ export async function createHomeChart(app: App) {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
           ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }],
         },
-        // Allow P2P UDP to Eufy cloud / station (dynamic ports)
+        // Allow all UDP egress (any port, any destination) for Eufy P2P.
+        // Eufy stations perform NAT traversal with dynamic ephemeral ports on
+        // both ends, so neither the destination IP nor port can be enumerated
+        // ahead of time. This is the broadest egress rule on the pod -- the
+        // P2P protocol requires it, and it is an accepted trade-off.
         {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
           ports: [{ protocol: "UDP" }],

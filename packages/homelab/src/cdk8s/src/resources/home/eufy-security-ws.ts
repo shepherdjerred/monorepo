@@ -39,11 +39,9 @@ export function createEufySecurityWsDeployment(chart: Chart) {
 
   // 1Password item holding Eufy account credentials.
   // Fields required on the item: `username`, `password`.
-  // TODO: replace the placeholder itemId with the real 1Password item UUID
-  // after creating the item in vault v64ocnykdqju4ui6j6pua56xw4.
   const credsItem = new OnePasswordItem(chart, "eufy-security-ws-creds", {
     spec: {
-      itemPath: vaultItemPath("REPLACE_WITH_EUFY_CREDS_ITEM_ID"),
+      itemPath: vaultItemPath("2hqoycz2qbpsgqmgvduzsxenzi"),
     },
   });
 
@@ -65,7 +63,7 @@ export function createEufySecurityWsDeployment(chart: Chart) {
 
   deployment.addContainer(
     withCommonProps({
-      image: `ghcr.io/bropat/eufy-security-ws:${versions["bropat/eufy-security-ws"]}`,
+      image: `docker.io/bropat/eufy-security-ws:${versions["bropat/eufy-security-ws"]}`,
       ports: [
         {
           name: "ws",

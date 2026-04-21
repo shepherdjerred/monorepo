@@ -65,6 +65,11 @@ export async function createHomeAssistantDeployment(chart: Chart) {
   const configVolume = Volume.fromConfigMap(chart, "ha-cm-volume", config);
 
   const eufyVersion = versions["fuatakgun/eufy_security"];
+  // SHA-256 of the GitHub release tarball for the eufyVersion above.
+  // Regenerate on version bump:
+  //   curl -fSL "https://github.com/fuatakgun/eufy_security/archive/refs/tags/$VERSION.tar.gz" | sha256sum
+  const eufyTarballSha256 =
+    "b744aac0ce03a8a75de5100c672957504173c20cbe2ac0fc4d09d5bc75c59411";
 
   deployment.addInitContainer({
     name: "install-eufy-security",
@@ -75,6 +80,7 @@ export async function createHomeAssistantDeployment(chart: Chart) {
       `
 set -eu
 VERSION="${eufyVersion}"
+EXPECTED_SHA256="${eufyTarballSha256}"
 TARGET_DIR="/config/custom_components/eufy_security"
 MARKER="$TARGET_DIR/.installed_version"
 
@@ -85,8 +91,12 @@ fi
 
 apk add --no-cache curl tar
 STAGE=$(mktemp -d)
+ARCHIVE="$(mktemp)"
 curl -fSL "https://github.com/fuatakgun/eufy_security/archive/refs/tags/$VERSION.tar.gz" \
-  | tar -xz -C "$STAGE" --strip-components=1
+  -o "$ARCHIVE"
+echo "$EXPECTED_SHA256  $ARCHIVE" | sha256sum -c -
+tar -xz -C "$STAGE" --strip-components=1 -f "$ARCHIVE"
+rm -f "$ARCHIVE"
 
 mkdir -p /config/custom_components
 rm -rf "$TARGET_DIR"
