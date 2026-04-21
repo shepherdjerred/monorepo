@@ -140,18 +140,30 @@ function ChangelogSection({
 
 export const changelog: ChangelogEntry[] = [
   {
-    date: "2026 04 05",
+    date: "2026 04 20",
     banner: (
       <>
-        <strong>New commands</strong> — player lookup, server management, and
-        subscription tools
+        <strong>Pre-match loading screens</strong> — full splash-art previews
+        when your friends start a game
       </>
     ),
     text: (
       <>
         <ChangelogSection
+          title="Pre-Match Detection"
+          color="teal"
+          items={[
+            "Get notified the moment your friends start a League match",
+            "Rich loading-screen image with splash art, summoner spells, runes, and live ranks for every player",
+            "Supports Summoner's Rift, ARAM, and Arena layouts — with bans for ranked and draft",
+            "Multiple tracked players in the same game are grouped into one notification",
+            "Falls back to a text-only embed if image generation fails",
+          ]}
+        />
+        <ChangelogSection
           title="New Commands"
           color="green"
+          className="mt-6"
           items={[
             "/me — Look up your own or any player's connected accounts (no admin required)",
             "/admin player-list — List all tracked players in your server",
@@ -164,34 +176,7 @@ export const changelog: ChangelogEntry[] = [
     formatted: {
       year: 2026,
       month: 4,
-      day: 5,
-    },
-  },
-  {
-    date: "2026 04 05",
-    banner: (
-      <>
-        <strong>Pre-match notifications</strong> — know when your friends start
-        playing
-      </>
-    ),
-    text: (
-      <>
-        <ChangelogSection
-          title="Pre-Match Detection"
-          color="teal"
-          items={[
-            "Get notified the moment your friends start a League match",
-            "See champion picks and game mode before the match ends",
-            "Multiple tracked players in the same game are grouped into one notification",
-          ]}
-        />
-      </>
-    ),
-    formatted: {
-      year: 2026,
-      month: 4,
-      day: 5,
+      day: 20,
     },
   },
   {

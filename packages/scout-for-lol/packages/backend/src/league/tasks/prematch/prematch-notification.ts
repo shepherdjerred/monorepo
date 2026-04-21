@@ -1,9 +1,11 @@
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
+import { z } from "zod";
 import type {
   RawCurrentGameInfo,
   PlayerConfigEntry,
   LeaguePuuid,
   DiscordGuildId,
+  QueueType,
 } from "@scout-for-lol/data/index.ts";
 import {
   parseQueueType,
@@ -48,9 +50,48 @@ function formatPlayerList(names: string[]): string {
 }
 
 /**
- * Build a Discord embed for a pre-match notification.
+ * Plain-text message paired with the loading-screen image.
+ * Mirrors post-match's `formatGameCompletionMessage`: short, unformatted content
+ * that renders above the image embed.
  */
-function buildPrematchEmbed(
+function formatPrematchMessage(
+  trackedPlayers: PlayerConfigEntry[],
+  queueType: QueueType | undefined,
+  gameMode: string,
+): string {
+  const queueName = queueType ? queueTypeToDisplayString(queueType) : gameMode;
+  const validAliases = z
+    .array(z.string().min(1))
+    .parse(
+      trackedPlayers
+        .map((p) => p.alias)
+        .filter((alias) => alias.trim().length > 0),
+    );
+
+  if (validAliases.length === 0) {
+    return `Game started: ${queueName}`;
+  }
+
+  if (validAliases.length === 1) {
+    return `${z.string().parse(validAliases[0])} started a ${queueName} game`;
+  }
+
+  if (validAliases.length === 2) {
+    const first = z.string().parse(validAliases[0]);
+    const second = z.string().parse(validAliases[1]);
+    return `${first} and ${second} started a ${queueName} game`;
+  }
+
+  const allButLast = validAliases.slice(0, -1).join(", ");
+  const last = z.string().parse(validAliases.at(-1));
+  return `${allButLast}, and ${last} started a ${queueName} game`;
+}
+
+/**
+ * Rich text embed used as a fallback when the loading-screen image cannot
+ * be generated. Preserves the prior text-only notification experience.
+ */
+function buildFallbackPrematchEmbed(
   gameInfo: RawCurrentGameInfo,
   trackedPlayers: PlayerConfigEntry[],
 ): EmbedBuilder {
@@ -59,7 +100,6 @@ function buildPrematchEmbed(
     ? queueTypeToDisplayString(queueType)
     : gameInfo.gameMode;
 
-  // Match each tracked player to their participant data
   const playerDetails = trackedPlayers.map((player) => {
     const participant = gameInfo.participants.find(
       (p) => p.puuid === player.league.leagueAccount.puuid,
@@ -73,7 +113,6 @@ function buildPrematchEmbed(
   const aliases = playerDetails.map((p) => `**${p.alias}**`);
   const playerListText = formatPlayerList(aliases);
 
-  // Title varies by player count
   const title =
     trackedPlayers.length === 1
       ? `🎮 ${trackedPlayers[0]?.alias ?? "Player"} started a ${queueName} game`
@@ -88,7 +127,6 @@ function buildPrematchEmbed(
         : new Date(),
     );
 
-  // Add champion details
   const championLines = playerDetails.map(
     (p) => `**${p.alias}** — ${p.championName}`,
   );
@@ -132,10 +170,15 @@ export async function sendPrematchNotification(
     `[sendPrematchNotification] 📺 Sending to ${channels.length.toString()} channel(s) across ${targetGuildIds.length.toString()} guild(s)`,
   );
 
-  const embed = buildPrematchEmbed(gameInfo, trackedPlayers);
   const queueType = parseQueueType(gameInfo.gameQueueConfigId);
+  const prematchMessageContent = formatPrematchMessage(
+    trackedPlayers,
+    queueType,
+    gameInfo.gameMode,
+  );
 
-  // Generate loading screen image (graceful degradation — send text-only if this fails)
+  // Generate loading screen image. Preferred delivery: image + short text.
+  // If generation fails, we fall back to a rich text embed (buildFallbackPrematchEmbed).
   let loadingScreenAttachment: AttachmentBuilder | undefined;
   let loadingScreenEmbed: EmbedBuilder | undefined;
   try {
@@ -221,15 +264,14 @@ export async function sendPrematchNotification(
 
   for (const { channel } of channels) {
     try {
-      const embeds = [embed];
-      const files: AttachmentBuilder[] = [];
-
-      if (loadingScreenAttachment && loadingScreenEmbed) {
-        files.push(loadingScreenAttachment);
-        embeds.push(loadingScreenEmbed);
-      }
-
-      const message = files.length > 0 ? { embeds, files } : { embeds };
+      const message =
+        loadingScreenAttachment && loadingScreenEmbed
+          ? {
+              content: prematchMessageContent,
+              files: [loadingScreenAttachment],
+              embeds: [loadingScreenEmbed],
+            }
+          : { embeds: [buildFallbackPrematchEmbed(gameInfo, trackedPlayers)] };
       await send(message, channel);
     } catch (error) {
       if (error instanceof ChannelSendError && error.permissionError) {
