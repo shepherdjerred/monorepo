@@ -64,8 +64,9 @@ const versions = {
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=docker
   "home-assistant/home-assistant":
     "2026.4.1@sha256:8848691147f01a6eee7753de2ade21b04d6168fcd2e2a7089f6f84e3b7b86960",
-  // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
-  "bropat/eufy-security-ws": "2.1.0",
+  // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
+  "bropat/eufy-security-ws":
+    "2.1.0@sha256:886da4bc8ff070b63bb88cea3b535e512240e54f14313fa8c2890c843abd9605",
   // renovate: datasource=github-releases versioning=semver
   "fuatakgun/eufy_security": "v8.2.4",
   // Custom homelab HA image - updated by CI pipeline
