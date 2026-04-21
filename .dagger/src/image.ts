@@ -126,7 +126,6 @@ function homelabSubPackageBase(
   );
 }
 
-
 /**
  * Build the dependency-summary image.
  * Bun-based, runs from the deps-email sub-package.

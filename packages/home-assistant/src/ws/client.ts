@@ -14,12 +14,32 @@ import { AuthMessage, ServerMessage } from "./messages.ts";
 import type { EventHandler, Subscription } from "./subscriptions.ts";
 import { SubscriptionRegistry } from "./subscriptions.ts";
 
+/**
+ * Minimal structural shape of the WebSocket API the client consumes. Narrow
+ * enough that test doubles (see test/fake-websocket.ts) can satisfy it
+ * without type assertions, but wide enough that the DOM `WebSocket` global
+ * is structurally assignable.
+ */
+export type WebSocketLike = {
+  readonly readyState: number;
+  readonly OPEN: number;
+  send: (data: string) => void;
+  close: (code?: number, reason?: string) => void;
+  addEventListener: (type: string, listener: (event: unknown) => void) => void;
+  removeEventListener: (
+    type: string,
+    listener: (event: unknown) => void,
+  ) => void;
+};
+
+export type WebSocketLikeCtor = new (url: string) => WebSocketLike;
+
 export type HomeAssistantEventClientOptions = {
   reconnect?: boolean;
   initialReconnectDelayMs?: number;
   maxReconnectDelayMs?: number;
   pingIntervalMs?: number;
-  webSocketImpl?: typeof WebSocket;
+  webSocketImpl?: WebSocketLikeCtor;
 };
 
 type PendingRequest = {
@@ -51,11 +71,11 @@ export class HomeAssistantEventClient {
   private readonly opts: Required<
     Omit<HomeAssistantEventClientOptions, "webSocketImpl">
   >;
-  private readonly webSocketImpl: typeof WebSocket;
+  private readonly webSocketImpl: WebSocketLikeCtor;
   private readonly subscriptions = new SubscriptionRegistry();
   private readonly pending = new Map<number, PendingRequest>();
   private readonly stateListeners = new Set<ConnectionStateListener>();
-  private socket: WebSocket | undefined;
+  private socket: WebSocketLike | undefined;
   private nextId = 1;
   private closedByUser = false;
   private reconnectAttempt = 0;
@@ -175,9 +195,9 @@ export class HomeAssistantEventClient {
     this.startPingTimer();
   }
 
-  private attachMessageHandler(socket: WebSocket): void {
+  private attachMessageHandler(socket: WebSocketLike): void {
     socket.addEventListener("message", (event) => {
-      const parsed = MessageDataString.safeParse(event.data);
+      const parsed = MessageDataString.safeParse(extractEventData(event));
       if (!parsed.success || parsed.data === "") {
         return;
       }
@@ -185,7 +205,7 @@ export class HomeAssistantEventClient {
     });
   }
 
-  private attachCloseHandler(socket: WebSocket): void {
+  private attachCloseHandler(socket: WebSocketLike): void {
     socket.addEventListener("close", () => {
       this.stopPingTimer();
       this.failAllPending(new HaWebSocketClosedError());
@@ -254,7 +274,7 @@ export class HomeAssistantEventClient {
     pending.reject(error);
   }
 
-  private async performAuth(socket: WebSocket): Promise<void> {
+  private async performAuth(socket: WebSocketLike): Promise<void> {
     const raw = await waitForFirstMessage(socket);
     const first = AuthMessage.parse(JSON.parse(raw));
     if (first.type !== "auth_required") {
@@ -325,9 +345,9 @@ export class HomeAssistantEventClient {
     return { id, result };
   }
 
-  private requireOpenSocket(): WebSocket {
+  private requireOpenSocket(): WebSocketLike {
     const socket = this.socket;
-    if (socket?.readyState !== this.webSocketImpl.OPEN) {
+    if (socket === undefined || socket.readyState !== socket.OPEN) {
       throw new HaWebSocketClosedError();
     }
     return socket;
@@ -357,7 +377,7 @@ export class HomeAssistantEventClient {
     this.stopPingTimer();
     this.pingTimer = setInterval(() => {
       const socket = this.socket;
-      if (socket?.readyState !== this.webSocketImpl.OPEN) {
+      if (socket === undefined || socket.readyState !== socket.OPEN) {
         return;
       }
       const id = this.nextId;
@@ -399,7 +419,7 @@ function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function waitForOpen(socket: WebSocket): Promise<void> {
+function waitForOpen(socket: WebSocketLike): Promise<void> {
   return new Promise((resolve, reject) => {
     if (socket.readyState === socket.OPEN) {
       resolve();
@@ -424,11 +444,18 @@ function waitForOpen(socket: WebSocket): Promise<void> {
 
 const MessageDataString = z.string();
 
-function waitForFirstMessage(socket: WebSocket): Promise<string> {
+const WebSocketEventShape = z.looseObject({ data: z.unknown() });
+
+function extractEventData(event: unknown): unknown {
+  const parsed = WebSocketEventShape.safeParse(event);
+  return parsed.success ? parsed.data.data : undefined;
+}
+
+function waitForFirstMessage(socket: WebSocketLike): Promise<string> {
   return new Promise((resolve, reject) => {
-    const onMessage = (event: MessageEvent<unknown>): void => {
+    const onMessage = (event: unknown): void => {
       cleanup();
-      const parsed = MessageDataString.safeParse(event.data);
+      const parsed = MessageDataString.safeParse(extractEventData(event));
       resolve(parsed.success ? parsed.data : "");
     };
     const onClose = (): void => {

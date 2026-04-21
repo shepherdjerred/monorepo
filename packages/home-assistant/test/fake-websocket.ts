@@ -1,3 +1,5 @@
+import type { WebSocketLikeCtor } from "#ws/client.ts";
+
 type Listener = (event: unknown) => void;
 
 export class FakeWebSocket {
@@ -67,7 +69,7 @@ export class FakeWebSocket {
 }
 
 export function createFakeWebSocketFactory(): {
-  Impl: typeof WebSocket;
+  Impl: WebSocketLikeCtor;
   instances: FakeWebSocket[];
 } {
   const instances: FakeWebSocket[] = [];
@@ -77,8 +79,5 @@ export function createFakeWebSocketFactory(): {
       instances.push(this);
     }
   }
-  const opaque: unknown = BoundFake;
-  // eslint-disable-next-line custom-rules/no-type-assertions -- FakeWebSocket intentionally mirrors a subset of WebSocket for injecting into the client under test
-  const Impl = opaque as typeof WebSocket;
-  return { Impl, instances };
+  return { Impl: BoundFake, instances };
 }

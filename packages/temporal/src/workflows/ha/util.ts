@@ -35,7 +35,7 @@ export async function verifyState(
   matches: (state: string) => boolean,
   options: { delaySeconds: number; retries: number; retryDelaySeconds: number },
 ): Promise<boolean> {
-  await sleep(`${String(options.delaySeconds)} seconds`);
+  await sleep(options.delaySeconds * 1000);
   for (let attempt = 0; attempt <= options.retries; attempt += 1) {
     const state = await getEntityState(entityId);
     if (matches(state.state)) {
@@ -44,7 +44,7 @@ export async function verifyState(
     if (attempt === options.retries) {
       break;
     }
-    await sleep(`${String(options.retryDelaySeconds)} seconds`);
+    await sleep(options.retryDelaySeconds * 1000);
   }
   console.warn(`Verify failed: ${entityId} did not reach expected state`);
   return false;
@@ -78,7 +78,7 @@ export async function volumeUpBy(
   for (let i = 0; i < steps; i += 1) {
     await callService("media_player", "volume_up", { entity_id: entityId });
     if (i < steps - 1) {
-      await sleep(`${String(delayBetweenSeconds)} seconds`);
+      await sleep(delayBetweenSeconds * 1000);
     }
   }
 }

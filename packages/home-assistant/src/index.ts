@@ -1,8 +1,5 @@
 export { HomeAssistantRestClient } from "./rest/client.ts";
-export type {
-  CallServiceOptions,
-  HistoryOptions,
-} from "./rest/client.ts";
+export type { CallServiceOptions, HistoryOptions } from "./rest/client.ts";
 export { HaApiError, HaAuthError, HaNotFoundError } from "./rest/errors.ts";
 export type {
   EntityState,
@@ -30,8 +27,6 @@ export {
   HaWebSocketResultError,
 } from "./ws/errors.ts";
 export type { EventEnvelope, EventMessage } from "./ws/messages.ts";
-export {
-  StateChangedEventData as StateChangedEventDataSchema,
-} from "./ws/messages.ts";
+export { StateChangedEventData as StateChangedEventDataSchema } from "./ws/messages.ts";
 export type { EventHandler, Subscription } from "./ws/subscriptions.ts";
 export type { HomeAssistantConfig } from "./shared/config.ts";

@@ -69,12 +69,18 @@ export function bunBaseContainer(
     container = container.withFile("/workspace/tsconfig.base.json", tsconfig);
   }
 
-  // Install and build deps first so dist/ exists before target's install resolves file: refs
+  // Install every mounted dep's node_modules so its own file: imports (e.g. a
+  // dep pulling in zod) resolve when the target compiles against it.
+  for (const dep of depNames) {
+    container = container
+      .withWorkdir(`/workspace/packages/${dep}`)
+      .withExec(["bun", "install", "--frozen-lockfile"]);
+  }
+  // Then build the ones that publish a dist/ consumers rely on.
   for (const dep of BUILD_TIME_DEPS) {
     if (depNames.includes(dep)) {
       container = container
         .withWorkdir(`/workspace/packages/${dep}`)
-        .withExec(["bun", "install", "--frozen-lockfile"])
         .withExec(["bun", "run", "build"]);
     }
   }

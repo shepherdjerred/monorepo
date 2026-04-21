@@ -12,16 +12,8 @@ const IosActionEventData = z.object({
 
 const StateChangedEventData = z.object({
   entity_id: z.string(),
-  new_state: z
-    .object({ state: z.string() })
-    .loose()
-    .nullable()
-    .optional(),
-  old_state: z
-    .object({ state: z.string() })
-    .loose()
-    .nullable()
-    .optional(),
+  new_state: z.object({ state: z.string() }).loose().nullable().optional(),
+  old_state: z.object({ state: z.string() }).loose().nullable().optional(),
 });
 
 const PERSON_ENTITIES = new Set(["person.jerred", "person.shuxin"]);
