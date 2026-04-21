@@ -61,15 +61,27 @@ type StringKeys<T> = Extract<keyof T, string>;
 /** Entity IDs registered in `S` (all of them if `S` is the default schema). */
 export type EntityId<S extends HaSchema> = StringKeys<S["entities"]>;
 
-/** Entity IDs whose domain is `D`. Narrowed when the schema has literal domains. */
-export type EntityIdByDomain<S extends HaSchema, D extends string> = {
-  [E in keyof S["entities"]]: S["entities"][E] extends { domain: infer DD }
-    ? DD extends D
-      ? E
-      : never
-    : never;
-}[keyof S["entities"]] &
-  string;
+/**
+ * Entity IDs whose domain is `D`. Narrowed when the schema has literal domains.
+ *
+ * For the loose {@link DefaultHaSchema} (entities keyed by `string` rather
+ * than literal IDs), no literal can extend the requested domain, so the
+ * mapped lookup collapses to `never`. Fall back to `EntityId<S>` in that
+ * case so stub-typed workflows still accept domain-prefixed literals.
+ */
+export type EntityIdByDomain<S extends HaSchema, D extends string> =
+  string extends StringKeys<S["entities"]>
+    ? EntityId<S>
+    : {
+        [E in keyof S["entities"]]: S["entities"][E] extends {
+          domain: infer DD;
+        }
+          ? DD extends D
+            ? E
+            : never
+          : never;
+      }[keyof S["entities"]] &
+        string;
 
 /** Valid domain names registered in `S`. */
 export type Domain<S extends HaSchema> = StringKeys<S["services"]>;
