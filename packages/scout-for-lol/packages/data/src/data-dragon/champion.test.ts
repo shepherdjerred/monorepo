@@ -1,4 +1,5 @@
 import { describe, test, expect } from "bun:test";
+import { championNameOverrides } from "./champion-name-overrides.generated.ts";
 import { getChampionInfo } from "./champion.ts";
 
 describe("getChampionInfo", () => {
@@ -9,23 +10,16 @@ describe("getChampionInfo", () => {
     expect(info?.passive.name.length).toBeGreaterThan(0);
   });
 
-  test("loads abilities for Rek'Sai via override (Reksai → RekSai)", async () => {
-    const info = await getChampionInfo("Reksai");
-    expect(info).toBeDefined();
-    expect(info?.spells).toHaveLength(4);
-  });
-
-  test("loads abilities for JarvanIV via override (Jarvaniv → JarvanIV)", async () => {
-    const info = await getChampionInfo("Jarvaniv");
-    expect(info).toBeDefined();
-    expect(info?.spells).toHaveLength(4);
-  });
-
-  test("loads abilities for Fiddlesticks via override (FiddleSticks → Fiddlesticks)", async () => {
-    const info = await getChampionInfo("FiddleSticks");
-    expect(info).toBeDefined();
-    expect(info?.spells).toHaveLength(4);
-  });
+  // Auto-generated override inputs — each must resolve via the normalization
+  // layer to a real on-disk champion data file.
+  test.each(Object.entries(championNameOverrides))(
+    "loads abilities for override input %s (resolves to %s)",
+    async (input) => {
+      const info = await getChampionInfo(input);
+      expect(info).toBeDefined();
+      expect(info?.spells).toHaveLength(4);
+    },
+  );
 
   test("returns undefined for unknown champion", async () => {
     const info = await getChampionInfo("NonExistentChampion");

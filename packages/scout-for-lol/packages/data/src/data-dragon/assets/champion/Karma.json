@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.7.1",
+  "version": "16.8.1",
   "data": {
     "Karma": {
       "id": "Karma",
@@ -572,7 +572,7 @@
         "mpregenperlevel": 0.8,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 51,
+        "attackdamage": 49,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 2.3,
         "attackspeed": 0.625
@@ -720,8 +720,8 @@
           "maxrank": 5,
           "cooldown": [10, 9.5, 9, 8.5, 8],
           "cooldownBurn": "10/9.5/9/8.5/8",
-          "cost": [50, 55, 60, 65, 70],
-          "costBurn": "50/55/60/65/70",
+          "cost": [60, 65, 70, 75, 80],
+          "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,

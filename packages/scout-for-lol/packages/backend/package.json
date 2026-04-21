@@ -55,7 +55,7 @@
     "sodium-native": "^5.0.10",
     "ts-pattern": "^5.7.0",
     "tslog": "^4.10.2",
-    "twisted": "^1.63.3",
+    "twisted": "^1.73.0",
     "uuid": "^13.0.0",
     "yoga-wasm-web": "^0.3.3",
     "zod": "^4.0.0",

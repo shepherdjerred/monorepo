@@ -2520,58 +2520,6 @@
         "PercentMovementSpeedMod": 0.06
       }
     },
-    "5000": {
-      "name": "Lucky Urf Statue",
-      "description": "<mainText><stats><attention>25</attention> Attack Damage<br><attention>40</attention> Ability Power<br><attention>350</attention> Health<br><attention>200%</attention> Base Health Regen<br><attention>200%</attention> Base Mana Regen<br><attention>20</attention> Gold Per 10 Seconds</stats><br><br><passive>Golden Fortune</passive><br>You are Shiny and periodically find Gold Coins! For every 1000 unspent gold you have:<li> Deal 2% increased damage<li> Take 2% reduced damage<li> Gain 3% Heal and Shield power</mainText>",
-      "plaintext": "",
-      "stats": {
-        "FlatHPPoolMod": 350,
-        "FlatMagicDamageMod": 40,
-        "FlatPhysicalDamageMod": 25
-      }
-    },
-    "5001": {
-      "name": "Heart Of Gold",
-      "description": "<mainText><stats><attention>200</attention> Health<br><attention>5</attention> Gold Per 10 Seconds</stats><br><br></mainText>",
-      "plaintext": "",
-      "stats": {
-        "FlatHPPoolMod": 200
-      }
-    },
-    "5002": {
-      "name": "Kage's Lucky Pick",
-      "description": "<mainText><stats><attention>25</attention> Ability Power<br><attention>5</attention> Gold Per 10 Seconds</stats><br><br></mainText>",
-      "plaintext": "",
-      "stats": {
-        "FlatMagicDamageMod": 25
-      }
-    },
-    "5003": {
-      "name": "Avarice Blade",
-      "description": "<mainText><stats><attention>15</attention> Attack Damage<br><attention>5</attention> Gold Per 10 Seconds</stats><br><br></mainText>",
-      "plaintext": "",
-      "stats": {
-        "FlatPhysicalDamageMod": 15
-      }
-    },
-    "5004": {
-      "name": "Philosopher's Stone",
-      "description": "<mainText><stats><attention>150%</attention> Base Health Regen<br><attention>150%</attention> Base Mana Regen<br><attention>5</attention> Gold Per 10 Seconds</stats><br><br></mainText>",
-      "plaintext": "",
-      "stats": {}
-    },
-    "5005": {
-      "name": "<font color='#C21807'>Pot</font><font color='#FFBF00'>ion</font> <font color='#00A86B'>Of</font> <font color='#40E0D0'>Col</font><font color='#8F00FF'>ors</font>",
-      "description": "<mainText><stats></stats><br><br><passive>Party Time</passive><br>For the next 5 minutes, your healthbar periodically changes color!<br><br><rules>This is for your eyes only! :)</rules></mainText>",
-      "plaintext": "",
-      "stats": {}
-    },
-    "5006": {
-      "name": "Potion? of Greed",
-      "description": "<mainText><stats></stats><br><br><passive>Blind Greed</passive><br>For the next 5 minutes:<li> While in champion combat, prevent yourself from seeing your own Healthbar and Central HUD<li> Gain 10% increased Gold and Experience</mainText>",
-      "plaintext": "",
-      "stats": {}
-    },
     "6029": {
       "name": "Ironspike Whip",
       "description": "<mainText><stats><attention>30</attention> Attack Damage</stats><br><br><br><br><active>Active -</active> <active>Crescent:</active> Deal damage to nearby enemies.</mainText>",

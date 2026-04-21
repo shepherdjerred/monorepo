@@ -35,6 +35,12 @@ import "@scout-for-lol/backend/metrics/index.ts";
 logger.info("🌐 Starting HTTP server for health checks and metrics");
 import { shutdownHttpServer } from "#src/http-server.ts";
 
+// Fail fast if Data Dragon champion assets are missing — deploy-time
+// failure beats notification-time 404 per 2026-04-20 resilience audit.
+logger.info("🖼️  Validating Data Dragon champion assets");
+import { validateChampionAssets } from "#src/league/data-dragon/validate-assets.ts";
+await validateChampionAssets();
+
 logger.info("🔌 Starting Discord bot initialization");
 import "@scout-for-lol/backend/discord/index.ts";
 

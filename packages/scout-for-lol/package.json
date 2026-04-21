@@ -50,6 +50,10 @@
     "autoprefixer": "^10.4.24",
     "openai": "^6.9.1",
     "react": "^19.1.1",
+    "twisted": "^1.73.0",
     "zod": "^4.0.0"
+  },
+  "patchedDependencies": {
+    "twisted@1.73.0": "patches/twisted@1.73.0.patch"
   }
 }

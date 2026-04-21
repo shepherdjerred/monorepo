@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.7.1",
+  "version": "16.8.1",
   "data": {
     "Sion": {
       "id": "Sion",
@@ -473,7 +473,7 @@
           "id": "SionW",
           "name": "Soul Furnace",
           "description": "Sion shields himself and can reactivate after 3 seconds to deal Magic Damage to enemies nearby. When Sion kills enemies, he passively gains maximum Health.",
-          "tooltip": "<spellPassive>Passive</spellPassive>: Sion gains <scaleHealth>{{ hpperkill }} max Health</scaleHealth> when he kills a unit, or {{ hpperchampkill }} for champion takedowns, large minions and large monsters.<br /><br /><spellActive>Active</spellActive>: Sion gains <shield>{{ totalshield }} Shield</shield> for 6 seconds. After {{ e7 }} seconds if the shield still holds, Sion can <recast>Recast</recast> to detonate the shield to deal <magicDamage>{{ totaldamage }} plus {{ e4 }}% max Health magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive</spellPassive>: Sion gains <scaleHealth>{{ hpperkill }} max Health</scaleHealth> when he kills a unit, or <scaleHealth>{{ hpperchampkill }}</scaleHealth> for champion takedowns, large minions and large monsters.<br /><br /><spellActive>Active</spellActive>: Sion gains <shield>{{ totalshield }} Shield</shield> for 6 seconds. After {{ e7 }} seconds if the shield still holds, Sion can <recast>Recast</recast> to detonate the shield to deal <magicDamage>{{ totaldamage }} plus {{ e4 }}% max Health magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Shield Amount",

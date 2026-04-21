@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.7.1",
+  "version": "16.8.1",
   "data": {
     "Poppy": {
       "id": "Poppy",
@@ -408,7 +408,7 @@
           "id": "PoppyQ",
           "name": "Hammer Shock",
           "description": "Poppy swings her hammer, dealing damage and creating a zone that will slow enemies and explode after a delay.",
-          "tooltip": "Poppy smashes the ground, dealing <physicalDamage>{{ basedamage }}</physicalDamage> plus <physicalDamage>{{ healthdamagepercent }}% max Health physical damage</physicalDamage> and making the ground unstable. <br /><br />The unstable area <status>Slows</status> enemies by {{ e3 }}% and erupts after {{ e4 }} second, dealing <physicalDamage>{{ basedamage }}</physicalDamage> plus <physicalDamage>{{ healthdamagepercent }}% max Health physical damage</physicalDamage> again.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Poppy smashes the ground, dealing <physicalDamage>{{ basedamage }}</physicalDamage> plus <physicalDamage>{{ healthdamagepercent }}% max Health physical damage</physicalDamage> and making the ground unstable. <br /><br />The unstable area <status>Slows</status> enemies by {{ slow_ }}% and erupts after {{ delaybetweentwohits }} second, dealing <physicalDamage>{{ basedamage }}</physicalDamage> plus <physicalDamage>{{ healthdamagepercent }}% max Health physical damage</physicalDamage> again.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -477,7 +477,7 @@
           "id": "PoppyW",
           "name": "Steadfast Presence",
           "description": "Poppy passively gains Armor and Magic Resist. This bonus increases when she is low on Health. Poppy can activate Steadfast Presence to gain Move Speed and stop enemy dashes around her. If a dash is stopped, the enemy is slowed and grounded.",
-          "tooltip": "<spellPassive>Passive:</spellPassive> Poppy gains <scaleArmor>{{ bonusarmor }} Armor</scaleArmor> and <scaleMR>{{ bonusmr }} Magic Resist</scaleMR>. This bonus is doubled if Poppy is below {{ passiveempoweredhealthpercent*100 }}% Health.<br /><br /><spellActive>Active:</spellActive> Poppy gains <speed>{{ e2 }}% Move Speed</speed> and projects a field around her for {{ e1 }} seconds that stops enemy dashes. Enemies who are stopped by the field are <status>Grounded</status> and <status>Slowed</status> by {{ slowamount*-100 }}% for {{ groundingduration }} seconds and take <magicDamage>{{ interruptdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Poppy gains <scaleArmor>{{ bonusarmor }} Armor</scaleArmor> and <scaleMR>{{ bonusmr }} Magic Resist</scaleMR>. This bonus is doubled if Poppy is below {{ passiveempoweredhealthpercent*100 }}% Health.<br /><br /><spellActive>Active:</spellActive> Poppy gains <speed>{{ haste }}% Move Speed</speed> and projects a field around her for {{ duration }} seconds that stops enemy dashes. Enemies who are stopped by the field are <status>Grounded</status> and <status>Slowed</status> by {{ slowamount*-100 }}% for {{ groundingduration }} seconds and take <magicDamage>{{ interruptdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Damage"],
             "effect": [
@@ -537,7 +537,7 @@
           "id": "PoppyE",
           "name": "Heroic Charge",
           "description": "Poppy dashes to the target and pushes it back. If the target is pushed into a wall, it is stunned.",
-          "tooltip": "Poppy tackles an enemy, dealing <physicalDamage>{{ tackledamage }} physical damage</physicalDamage> and carrying them forward. If Poppy tackles them into terrain, the enemy is <status>Stunned</status> for {{ e3 }} seconds and take an additional <physicalDamage>{{ tackledamage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Poppy tackles an enemy, dealing <physicalDamage>{{ tackledamage }} physical damage</physicalDamage> and carrying them forward. If Poppy tackles them into terrain, the enemy is <status>Stunned</status> for {{ stunduration }} seconds and take an additional <physicalDamage>{{ tackledamage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Initial Damage",

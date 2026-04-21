@@ -87,6 +87,7 @@ describe("Champion utilities", () => {
       [223, "TahmKench"],
       [421, "RekSai"],
       [897, "KSante"],
+      [888, "Renata"],
     ];
 
     test.each(cases)("resolveChampionKey(%i) === %s", (id, expected) => {

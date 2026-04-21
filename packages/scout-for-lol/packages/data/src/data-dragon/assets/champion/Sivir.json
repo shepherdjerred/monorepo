@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.7.1",
+  "version": "16.8.1",
   "data": {
     "Sivir": {
       "id": "Sivir",
@@ -502,6 +502,68 @@
           "name": "Mythmaker Sivir (Paragon)",
           "chromas": false,
           "parentSkin": 50
+        },
+        {
+          "id": "15072",
+          "num": 72,
+          "name": "PROJECT: Sivir",
+          "chromas": true
+        },
+        {
+          "id": "15073",
+          "num": 73,
+          "name": "PROJECT: Sivir (Ruby)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "15074",
+          "num": 74,
+          "name": "PROJECT: Sivir (Catseye)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "15075",
+          "num": 75,
+          "name": "PROJECT: Sivir (Sapphire)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "15076",
+          "num": 76,
+          "name": "PROJECT: Sivir (Emerald)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "15077",
+          "num": 77,
+          "name": "PROJECT: Sivir (Obsidian)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "15078",
+          "num": 78,
+          "name": "PROJECT: Sivir (Pearl)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "15079",
+          "num": 79,
+          "name": "PROJECT: Sivir (Turquoise)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "15080",
+          "num": 80,
+          "name": "PROJECT: Sivir (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 72
         }
       ],
       "lore": "Sivir is a renowned fortune hunter and mercenary captain who plies her trade in the deserts of Shurima. Armed with her legendary jeweled crossblade, she has fought and won countless battles for those who can afford her exorbitant price. Known for her fearless resolve and endless ambition, she prides herself on recovering buried treasures from the perilous tombs of Shurima—for a generous bounty. With ancient forces stirring the very bones of Shurima, Sivir finds herself torn between conflicting destinies.",
@@ -672,7 +734,7 @@
           "id": "SivirE",
           "name": "Spell Shield",
           "description": "Creates a magical barrier that blocks a single enemy ability cast on Sivir. She receives health and a burst of movement speed if a spell is blocked.",
-          "tooltip": "Sivir creates a magical barrier for {{ e1 }} seconds that blocks the next incoming enemy Ability. If an ability is blocked, Sivir restores <healing>{{ totalheal }} health</healing> and triggers Fleet of Foot.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Sivir creates a magical barrier for {{ spellshieldduration }} seconds that blocks the next incoming enemy Ability. If an ability is blocked, Sivir restores <healing>{{ totalheal }} health</healing> and triggers Fleet of Foot.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Total AD Ratio", "Cooldown"],
             "effect": [
@@ -732,7 +794,7 @@
           "id": "SivirR",
           "name": "On The Hunt",
           "description": "Sivir leads her allies in battle, granting them a surge of Move Speed for a period of time. In addition, Sivir's attacks reduce her spell cooldowns.",
-          "tooltip": "Sivir rallies her nearby allies, granting them <speed>{{ maxms*100 }}% Move Speed</speed> for {{ ultduration }} seconds.<br /><br />Sivir's attacks against champions while On The Hunt reduce the cooldown of her basic abilities by 0.5 seconds.<br /><br />Takedowns on recently damaged enemies refreshes the duration of the hunt.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Sivir rallies her nearby allies, granting them <speed>{{ maxms*100 }}% Move Speed</speed> for {{ ultduration }} seconds.<br /><br />Sivir's attacks against champions while On The Hunt reduce the cooldown of her basic abilities by {{ attackcooldownrefund }} seconds.<br /><br />Takedowns on recently damaged enemies refreshes the duration of the hunt.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Max Move Speed", "Duration"],
             "effect": [

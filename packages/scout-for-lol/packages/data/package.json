@@ -27,6 +27,7 @@
   "devDependencies": {
     "bun-types": "latest",
     "eslint": "^9.39.2",
+    "twisted": "^1.73.0",
     "typescript": "^6"
   },
   "imports": {

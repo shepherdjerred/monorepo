@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.7.1",
+  "version": "16.8.1",
   "data": {
     "Lucian": {
       "id": "Lucian",
@@ -694,10 +694,10 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [18, 17, 16, 15, 14],
-          "cooldownBurn": "18/17/16/15/14",
-          "cost": [40, 30, 20, 10, 0],
-          "costBurn": "40/30/20/10/0",
+          "cooldown": [16, 15.5, 15, 14.5, 14],
+          "cooldownBurn": "16/15.5/15/14.5/14",
+          "cost": [32, 24, 16, 8, 0],
+          "costBurn": "32/24/16/8/0",
           "datavalues": {},
           "effect": [
             null,

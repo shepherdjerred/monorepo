@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.7.1",
+  "version": "16.8.1",
   "data": {
     "Singed": {
       "id": "Singed",
@@ -376,7 +376,7 @@
           "id": "Fling",
           "name": "Fling",
           "description": "Damages target enemy unit and flings them into the air behind Singed. If the target Singed flings lands in his Mega Adhesive, they are also rooted.",
-          "tooltip": "Singed flings an enemy over his shoulder, dealing <magicDamage>{{ basedamage }} plus {{ e3 }}% max Health magic damage</magicDamage>.<br /><br />If Singed flings a target into his <spellName>Mega Adhesive</spellName>, they are <status>Rooted</status> for {{ e2 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Singed flings an enemy over his shoulder, dealing <magicDamage>{{ basedamage }} plus {{ maxhpdamage }}% max Health magic damage</magicDamage>.<br /><br />If Singed flings a target into his <spellName>Mega Adhesive</spellName>, they are <status>Rooted</status> for {{ rootduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",

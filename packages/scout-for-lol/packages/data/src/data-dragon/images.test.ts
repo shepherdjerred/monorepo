@@ -1,4 +1,5 @@
 import { describe, test, expect } from "bun:test";
+import { championNameOverrides } from "./champion-name-overrides.generated.ts";
 import {
   getChampionImageUrl,
   getChampionLoadingImageBase64,
@@ -13,25 +14,11 @@ import {
   validateAugmentIcon,
 } from "./images.ts";
 
-// Every entry in `championNameOverrides`. Add a row here whenever the
-// override map grows so the normalization contract stays tested.
-const championOverrides: readonly (readonly [string, string])[] = [
-  ["FiddleSticks", "Fiddlesticks"],
-  ["Reksai", "RekSai"],
-  ["Kogmaw", "KogMaw"],
-  ["Monkeyking", "MonkeyKing"],
-  ["Aurelionsol", "AurelionSol"],
-  ["Drmundo", "DrMundo"],
-  ["Leesin", "LeeSin"],
-  ["Masteryi", "MasterYi"],
-  ["Missfortune", "MissFortune"],
-  ["Tahmkench", "TahmKench"],
-  ["Twistedfate", "TwistedFate"],
-  ["Xinzhao", "XinZhao"],
-  ["Ksante", "KSante"],
-  ["JarvanIv", "JarvanIV"],
-  ["Jarvaniv", "JarvanIV"],
-];
+// Iterate every entry in the auto-generated `championNameOverrides`. The
+// generator rewrites this map on every `bun run update-data-dragon`; the
+// tests below automatically cover whatever's in the current map.
+const championOverrides: readonly (readonly [string, string])[] =
+  Object.entries(championNameOverrides);
 
 test("throws error when champion image doesn't exist", async () => {
   await expect(validateChampionImage("NonExistentChampion")).rejects.toThrow(
@@ -138,9 +125,14 @@ describe("championNameOverrides", () => {
   );
 
   test("getChampionLoadingImageBase64 returns a non-empty data URI for an overridden name", async () => {
-    const dataUri = await getChampionLoadingImageBase64("Reksai", 0);
+    const firstOverride = championOverrides[0];
+    if (!firstOverride) {
+      // No overrides in the generated map — nothing to assert.
+      return;
+    }
+    const [input] = firstOverride;
+    const dataUri = await getChampionLoadingImageBase64(input, 0);
     expect(dataUri).toStartWith("data:image/jpeg;base64,");
-    // base64 payload after the comma must be non-trivial
     const payload = dataUri.split(",", 2)[1] ?? "";
     expect(payload.length).toBeGreaterThan(100);
   });

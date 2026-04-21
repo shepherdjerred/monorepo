@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.7.1",
+  "version": "16.8.1",
   "data": {
     "Vi": {
       "id": "Vi",
@@ -409,7 +409,7 @@
           "id": "ViQ",
           "name": "Vault Breaker",
           "description": "Vi charges her gauntlets and unleashes a vault shattering punch, carrying her forward. Enemies she hits are knocked back and receive a stack of Denting Blows.",
-          "tooltip": "<charge>Begin Charging:</charge> Vi begins charging a powerful punch, <status>Slowing</status> herself by {{ e4 }}%.<br /><br /><release>Release:</release> Vi dashes forward dealing between <physicalDamage>{{ totaldamage }} and {{ maxdamagetooltip }} physical damage</physicalDamage> based on charge time and applying <spellName>Denting Blows</spellName> to all enemies hit. Vi stops upon colliding with an enemy champion, and <status>Knocks</status> them <status>Back</status>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<charge>Begin Charging:</charge> Vi begins charging a powerful punch, <status>Slowing</status> herself by {{ selfslow }}%.<br /><br /><release>Release:</release> Vi dashes forward dealing between <physicalDamage>{{ totaldamage }} and {{ maxdamagetooltip }} physical damage</physicalDamage> based on charge time and applying <spellName>Denting Blows</spellName> to all enemies hit. Vi stops upon colliding with an enemy champion, and <status>Knocks</status> them <status>Back</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Minimum Damage",
