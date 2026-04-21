@@ -33,7 +33,33 @@ export const HaConfig = z
 
 export type HaConfig = z.infer<typeof HaConfig>;
 
-export const ServiceCallResult = z.array(EntityState);
+/**
+ * Default POST /api/services/{domain}/{service} response: a list of entity
+ * states that changed as a result of the call.
+ */
+export const ServiceCallChangedStates = z.array(EntityState);
+
+export type ServiceCallChangedStates = z.infer<typeof ServiceCallChangedStates>;
+
+/**
+ * Response shape when the request includes `?return_response`. Home Assistant
+ * returns an object with `service_response` (service-provided payload) and
+ * optionally `changed_states`. We keep the schema `.loose()` so additional
+ * top-level fields HA may add in future versions don't break parsing.
+ */
+export const ServiceCallWithResponse = z
+  .object({
+    service_response: z.unknown(),
+    changed_states: z.array(EntityState).optional(),
+  })
+  .loose();
+
+export type ServiceCallWithResponse = z.infer<typeof ServiceCallWithResponse>;
+
+export const ServiceCallResult = z.union([
+  ServiceCallChangedStates,
+  ServiceCallWithResponse,
+]);
 
 export type ServiceCallResult = z.infer<typeof ServiceCallResult>;
 

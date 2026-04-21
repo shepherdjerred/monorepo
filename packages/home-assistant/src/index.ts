@@ -5,6 +5,8 @@ export type {
   EntityState,
   HaConfig,
   ServiceCallResult,
+  ServiceCallChangedStates,
+  ServiceCallWithResponse,
   HistoryResponse,
   FireEventResponse,
 } from "./rest/schemas.ts";
@@ -12,6 +14,8 @@ export {
   EntityState as EntityStateSchema,
   HaConfig as HaConfigSchema,
   ServiceCallResult as ServiceCallResultSchema,
+  ServiceCallChangedStates as ServiceCallChangedStatesSchema,
+  ServiceCallWithResponse as ServiceCallWithResponseSchema,
   HistoryResponse as HistoryResponseSchema,
   FireEventResponse as FireEventResponseSchema,
 } from "./rest/schemas.ts";

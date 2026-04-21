@@ -151,6 +151,39 @@ describe("HomeAssistantRestClient", () => {
       "http://ha.local:8123/api/services/weather/get_forecast?return_response",
     );
   });
+});
+
+describe("HomeAssistantRestClient service-response mode", () => {
+  it("parses the object payload returned when returnResponse is true", async () => {
+    const { fn } = makeFetch(() =>
+      Response.json({
+        changed_states: [],
+        service_response: {
+          "weather.home": {
+            forecast: [{ datetime: "2024-01-01T00:00:00Z", temperature: 20 }],
+          },
+        },
+      }),
+    );
+    globalThis.fetch = fn;
+
+    const client = new HomeAssistantRestClient({
+      baseUrl: "http://ha.local:8123",
+      token: "t",
+    });
+
+    const result = await client.callService(
+      "weather",
+      "get_forecast",
+      { entity_id: "weather.home" },
+      { returnResponse: true },
+    );
+
+    expect(Array.isArray(result)).toBe(false);
+    if (!Array.isArray(result)) {
+      expect(result.service_response).toBeDefined();
+    }
+  });
 
   it("throws HaAuthError on 401", async () => {
     const { fn } = makeFetch(
