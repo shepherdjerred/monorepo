@@ -37,7 +37,6 @@ AI-maintained knowledge base for the monorepo.
 - [Accelerated CI for Release-Please](plans/2026-04-05_accelerated-ci-release-please.md) - Skip redundant CI for automated version-bump PRs
 - [Homelab Ops Audit](plans/2026-04-05_homelab-ops-audit.md) - Full-stack ops audit and hardening plan
 - [OpenTofu Audit & Expansion](plans/2026-04-05_opentofu-audit-expansion.md) - Gaps in existing tofu modules + new providers
-- [Temporal Migration](plans/2026-04-05_temporal-migration.md) - Consolidate ad-hoc workflow patterns under Temporal
 - [PV Expansion](plans/2026-04-04_pv-expansion.md) - Expand PVs near capacity
 - [Sentinel Implementation](plans/2026-02-22_sentinel-implementation.md) - Autonomous agent system build plan (on hold)
 - [Autonomous Agent System Research](plans/2026-02-22_autonomous-agent-system.md) - Architecture research: memory, permissions, queue design (on hold)
@@ -68,4 +67,4 @@ AI-maintained knowledge base for the monorepo.
 Historical docs preserved for reference. These are no longer actively maintained.
 
 - [`archive/bazel/`](archive/bazel/) - 14 docs from the Bazel era (Bazel removed from monorepo)
-- [`archive/superseded/`](archive/superseded/) - 18 plans, audits, and snapshots superseded by newer docs
+- [`archive/superseded/`](archive/superseded/) - 19 plans, audits, and snapshots superseded by newer docs

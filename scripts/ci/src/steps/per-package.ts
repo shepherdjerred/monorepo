@@ -110,36 +110,9 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
     }
   }
 
-  // homelab: add HA lint/typecheck steps that generate types with HASS_TOKEN
-  // haLint/haTypecheck have no --pkg param (pkg is hardcoded in haGenerate)
+  // homelab: build helm-types (nested NPM package under homelab).
+  // No artifact upload — npm publish rebuilds via Dagger cache.
   if (pkg === "homelab") {
-    const haDeps = WORKSPACE_DEPS["homelab/src/ha"] ?? [];
-    const haFlags = [
-      `--pkg-dir ./packages/homelab/src/ha`,
-      ...haDeps.flatMap((dep) => [
-        `--dep-names ${dep}`,
-        `--dep-dirs ./packages/${dep}`,
-      ]),
-      `--tsconfig ./tsconfig.base.json`,
-      `--homelab-tsconfig ./packages/homelab/tsconfig.base.json`,
-    ].join(" ");
-    steps.push(
-      daggerCallStep(
-        `:house: HA Lint`,
-        `ha-lint-${sk}`,
-        `dagger call ha-lint ${haFlags} --hass-token env:HASS_TOKEN`,
-        resources,
-      ),
-      daggerCallStep(
-        `:house: HA Typecheck`,
-        `ha-typecheck-${sk}`,
-        `dagger call ha-typecheck ${haFlags} --hass-token env:HASS_TOKEN`,
-        resources,
-      ),
-    );
-
-    // Build helm-types (nested NPM package under homelab).
-    // No artifact upload — npm publish rebuilds via Dagger cache.
     const htPkg = "homelab/src/helm-types";
     const htFlags = daggerPkgFlags(htPkg);
     steps.push(

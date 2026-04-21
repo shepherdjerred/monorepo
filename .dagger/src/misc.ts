@@ -18,7 +18,6 @@ import {
 
 import {
   buildImageHelper,
-  buildHomelabImageHelper,
   buildDepsSummaryImageHelper,
   buildDnsAuditImageHelper,
   buildCaddyS3ProxyImageHelper,
@@ -287,32 +286,6 @@ export async function smokeTestTasknotesServerHelper(
 // ---------------------------------------------------------------------------
 // New smoke tests — homelab infra images
 // ---------------------------------------------------------------------------
-
-/**
- * Smoke test homelab HA automation image.
- * Verifies: app boots, connects to HA (expects ECONNREFUSED with dummy host).
- */
-export async function smokeTestHomelabHelper(
-  pkgDir: Directory,
-  depNames: string[] = [],
-  depDirs: Directory[] = [],
-): Promise<string> {
-  const container = buildHomelabImageHelper(pkgDir, depNames, depDirs)
-    .withEnvVariable("HASS_SERVER", "http://localhost:8123")
-    .withEnvVariable("HASS_TOKEN", "smoke-test-dummy")
-    .withEntrypoint([])
-    .withExec(["sh", "-c", "timeout 30s bun src/main.ts 2>&1"]);
-
-  return runSmokeTest(container, [
-    "ECONNREFUSED",
-    "connection refused",
-    "fetch failed",
-    "unable to connect",
-    "401",
-    "Unauthorized",
-    // timeout exit 124 is handled by runSmokeTest as a pass
-  ]);
-}
 
 /**
  * Smoke test dependency-summary image.

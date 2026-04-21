@@ -3,6 +3,7 @@ import { NativeConnection, Worker } from "@temporalio/worker";
 import { TASK_QUEUES } from "./shared/task-queues.ts";
 import { registerSchedules } from "./schedules/register-schedules.ts";
 import { activities } from "./activities/index.ts";
+import { startEventBridge } from "./event-bridge/index.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 
@@ -22,13 +23,26 @@ async function main(): Promise<void> {
 
   console.warn(`Worker started on task queue "${TASK_QUEUES.DEFAULT}"`);
 
-  // Share the same connection for schedule registration
   const clientConnection = await Connection.connect({ address });
   const client = new Client({ connection: clientConnection });
   await registerSchedules(client);
   console.warn("Schedules registered");
 
-  // Start processing
+  const eventBridge = await startEventBridge(client);
+
+  const shutdown = async (): Promise<void> => {
+    console.warn("Shutting down worker…");
+    await eventBridge.close();
+    worker.shutdown();
+  };
+
+  process.on("SIGTERM", () => {
+    void shutdown();
+  });
+  process.on("SIGINT", () => {
+    void shutdown();
+  });
+
   await worker.run();
 }
 

@@ -78,6 +78,19 @@ export function bunBaseContainer(
         .withExec(["bun", "run", "build"]);
     }
   }
+  // Non-build deps (e.g. @shepherdjerred/home-assistant) still need their own
+  // node_modules so imports inside the dep (like zod) resolve when the target
+  // compiles against it. Keep this loop separate from BUILD_TIME_DEPS so the
+  // layer hashes for BUILD_TIME_DEPS-only consumers are unchanged and their
+  // Dagger cache stays warm.
+  for (const dep of depNames) {
+    if (BUILD_TIME_DEPS.includes(dep)) {
+      continue;
+    }
+    container = container
+      .withWorkdir(`/workspace/packages/${dep}`)
+      .withExec(["bun", "install", "--frozen-lockfile"]);
+  }
 
   container = container
     .withWorkdir(`/workspace/packages/${pkg}`)

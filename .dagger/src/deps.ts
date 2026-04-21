@@ -12,7 +12,6 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   resume: [],
 
   // eslint-config only
-  temporal: ["eslint-config"],
   "astro-opengraph-images": ["eslint-config"],
   webring: ["eslint-config"],
   toolkit: ["eslint-config"],
@@ -24,6 +23,8 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   birmel: ["eslint-config"],
   "starlight-karma-bot": ["eslint-config"],
   "tasknotes-types": ["eslint-config"],
+  "home-assistant": ["eslint-config"],
+  temporal: ["eslint-config", "home-assistant"],
 
   // Multi-dep packages
   "tasknotes-server": ["eslint-config", "tasknotes-types"],
@@ -33,7 +34,6 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   // Homelab
   homelab: ["eslint-config"],
   "homelab/src/cdk8s": ["eslint-config", "homelab/src/helm-types"],
-  "homelab/src/ha": ["eslint-config"],
   "homelab/src/helm-types": ["eslint-config"],
 
   // Clauderon sub-packages

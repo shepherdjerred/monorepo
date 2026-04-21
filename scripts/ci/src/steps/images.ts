@@ -88,7 +88,6 @@ const SMOKE_TEST_FUNCTIONS: Record<string, string> = {
   "scout-for-lol": "smoke-test-scout-for-lol",
   "starlight-karma-bot": "smoke-test-starlight-karma-bot",
   "tasknotes-server": "smoke-test-tasknotes-server",
-  homelab: "smoke-test-homelab",
   "dependency-summary": "smoke-test-deps-summary",
   "dns-audit": "smoke-test-dns-audit",
   "caddy-s3proxy": "smoke-test-caddy-s-3-proxy",
@@ -106,7 +105,6 @@ const SMOKE_NO_ARGS = new Set([
 
 // Smoke test functions that take --pkg-dir + dep flags but no --pkg (custom infra images / workspace monorepos)
 const SMOKE_CUSTOM_INFRA = new Set([
-  "smoke-test-homelab",
   "smoke-test-deps-summary",
   "smoke-test-scout-for-lol",
   "smoke-test-discord-plays-pokemon",

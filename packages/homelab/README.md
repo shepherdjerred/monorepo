@@ -39,7 +39,6 @@ some things I'm proud of:
 - Static typing for:
   - [Kubernetes resources including CRDs](src/cdk8s/scripts/update-imports.ts)
   - [Helm chart parameters](src/helm-types)
-  - [Home Assistant entities](src/ha/generate-types.ts)
 
 ## Installation
 

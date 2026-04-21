@@ -13,12 +13,10 @@ description: CI/CD pipeline automation using Dagger, including build targets, qu
 
 ### Core Build Targets
 - **`build-k-8-s-manifests`** - Builds Kubernetes manifests using CDK8s
-- **`build-ha`** - Builds the Home Assistant (HA) app
 - **`build-and-apply-cdk-8-s`** - Builds manifests with CDK8s and applies them to cluster
 
 ### Quality Assurance
-- **`check-all`** - Runs type check, test, and lint for HA, and type check for CDK8s in parallel
-- **`lint-ha`** - Lints the Home Assistant app using ESLint
+- **`check-all`** - Runs type check, test, and lint for each homelab sub-package in parallel
 
 ### Deployment
 - **`apply-k-8-s-config`** - Applies Kubernetes manifests from specified directory using kubectl

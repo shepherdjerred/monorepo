@@ -533,21 +533,6 @@ pre-commit:
             glob: "packages/castle-casters/**/*.java"
             run: mvn -q test
 
-          # --- HA (homelab) ---
-          - name: ha-lint
-            root: "packages/homelab/src/ha/"
-            glob:
-              - "packages/homelab/src/ha/src/**/*.ts"
-              - "packages/homelab/src/ha/eslint.config.ts"
-            run: bun run lint
-
-          - name: ha-typecheck
-            root: "packages/homelab/src/ha/"
-            glob:
-              - "packages/homelab/src/ha/src/**/*.ts"
-              - "packages/homelab/src/ha/tsconfig.json"
-            run: bun run typecheck
-
           # --- Astro check ---
           - name: sjer-red-astro-check
             root: "packages/sjer.red/"

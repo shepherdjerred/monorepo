@@ -17,6 +17,7 @@
     "test:integration": "bun test src/integration.test.ts"
   },
   "dependencies": {
+    "@shepherdjerred/home-assistant": "file:../home-assistant",
     "firebase": "^12.5.0",
     "@kubernetes/client-node": "^1.1.2",
     "@sentry/bun": "^10.0.0",

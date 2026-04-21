@@ -4,7 +4,7 @@
  * These are plain functions (not decorated) — the @func() wrappers live in index.ts.
  * The ciAll wrapper in index.ts uses these to build the full CI pipeline.
  */
-import { dag, Container, Directory, Secret } from "@dagger.io/dagger";
+import { dag, Container, Directory } from "@dagger.io/dagger";
 
 import { BUN_IMAGE, ESLINT_CACHE, GOLANGCI_LINT_VERSION } from "./constants";
 
@@ -43,10 +43,7 @@ export function check(
 // ---------------------------------------------------------------------------
 
 /** Run lint/typecheck/test for all TS packages in parallel. Returns results summary. */
-export async function ciAllHelper(
-  source: Directory,
-  hassToken: Secret | null = null,
-): Promise<string> {
+export async function ciAllHelper(source: Directory): Promise<string> {
   const tsPackages = Object.keys(WORKSPACE_DEPS);
 
   const tsconfig = source.file("tsconfig.base.json");
@@ -171,42 +168,12 @@ export async function ciAllHelper(
     ),
   );
 
-  // homelab/ha: generate types then lint/typecheck (requires HASS_TOKEN)
-  if (hassToken != null) {
-    const haInfo = dirsFor("homelab/src/ha");
-    const haGenerated = bunBaseContainer(
-      haInfo.pkgDir,
-      "homelab/src/ha",
-      haInfo.depNames,
-      haInfo.depDirs,
-      tsconfig,
-    )
-      .withSecretVariable("HASS_TOKEN", hassToken)
-      .withEnvVariable("HASS_BASE_URL", "https://homeassistant.sjer.red")
-      .withExec(["bun", "run", "generate-types"])
-      .directory("/workspace");
-    const haContainer = dag
-      .container()
-      .from(BUN_IMAGE)
-      .withDirectory("/workspace", haGenerated)
-      .withWorkdir("/workspace/packages/homelab/src/ha");
-    allChecks.push(
-      check("homelab/ha: lint", haContainer.withExec(["bun", "run", "lint"])),
-    );
-    allChecks.push(
-      check(
-        "homelab/ha: typecheck",
-        haContainer.withExec(["bun", "run", "typecheck"]),
-      ),
-    );
-  }
-
   // Wait for all checks to complete
   const results = await Promise.all(allChecks);
 
   // Build summary
   const failures = results.filter((r) => r.status === "FAIL");
-  const summary = formatSummary(results, hassToken != null);
+  const summary = formatSummary(results);
 
   if (failures.length > 0) {
     const details = formatFailureDetails(failures);

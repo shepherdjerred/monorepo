@@ -323,14 +323,6 @@ const DAG_TASKS: DagTask[] = [
     deps: ["birmel-prisma"],
     warnOnly: false,
   },
-  {
-    id: "ha-types",
-    label: "homelab HA types",
-    cmd: ["bun", "run", "generate-types"],
-    cwd: "packages/homelab/src/ha",
-    deps: [],
-    warnOnly: true,
-  },
 ];
 
 async function runDag(

@@ -69,10 +69,6 @@ const versions = {
     "2.1.0@sha256:886da4bc8ff070b63bb88cea3b535e512240e54f14313fa8c2890c843abd9605",
   // renovate: datasource=github-releases versioning=semver
   "fuatakgun/eufy_security": "v8.2.4",
-  // Custom homelab HA image - updated by CI pipeline
-  // not managed by renovate
-  "shepherdjerred/homelab":
-    "2.0.0-977@sha256:95609464f6b7a4ae94181c8a62c7e81f06fd12e1d8e7c883c1bf7e42497a56bb",
   // Custom dependency-summary image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/dependency-summary":
