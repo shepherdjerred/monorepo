@@ -90,11 +90,14 @@ export const PagerDutyLogEntrySchema = z.object({
       type: z.string(),
       summary: z.string(),
     })
-    .nullable(),
-  channel: z.object({
-    type: z.string(),
-    summary: z.string().optional(),
-  }),
+    .nullable()
+    .optional(),
+  channel: z
+    .object({
+      type: z.string(),
+      summary: z.string().optional(),
+    })
+    .optional(),
 });
 
 export const PagerDutyIncidentsResponseSchema = z.object({

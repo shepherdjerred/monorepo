@@ -18,7 +18,17 @@ export async function getPullRequest(
     repo,
   );
 
-  if (!result.success || !result.data) {
+  if (!result.success) {
+    // Surface the gh error so callers don't mistranslate "no git remote" as
+    // "PR does not exist". Write to stderr so command output (JSON or report)
+    // still parses cleanly on stdout.
+    if (result.error !== undefined && result.error.length > 0) {
+      console.error(`gh error: ${result.error}`);
+    }
+    return null;
+  }
+
+  if (!result.data) {
     return null;
   }
 
@@ -39,7 +49,14 @@ export async function getPullRequestForBranch(
     repo,
   );
 
-  if (!result.success || !result.data) {
+  if (!result.success) {
+    if (result.error !== undefined && result.error.length > 0) {
+      console.error(`gh error: ${result.error}`);
+    }
+    return null;
+  }
+
+  if (!result.data) {
     return null;
   }
 

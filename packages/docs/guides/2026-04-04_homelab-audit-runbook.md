@@ -6,26 +6,30 @@ Repeatable procedure for a comprehensive health audit of the `torvalds` cluster.
 
 All tools must be authenticated before starting:
 
-| Tool       | Context                                | Check               |
-| ---------- | -------------------------------------- | ------------------- |
-| `kubectl`  | `admin@torvalds`                       | `kubectl get nodes` |
-| `talosctl` | `torvalds`                             | `talosctl version`  |
-| `argocd`   | `admin`                                | `argocd app list`   |
-| `velero`   | —                                      | `velero backup get` |
-| `toolkit`  | Grafana + PagerDuty + Bugsink env vars | `toolkit gf alerts` |
+| Tool       | Context                                                                   | Check                                         |
+| ---------- | ------------------------------------------------------------------------- | --------------------------------------------- |
+| `kubectl`  | `admin@torvalds`                                                          | `kubectl get nodes`                           |
+| `talosctl` | `torvalds`                                                                | `talosctl version`                            |
+| `argocd`   | `admin`                                                                   | `argocd app list`                             |
+| `velero`   | —                                                                         | `velero backup get`                           |
+| `toolkit`  | Grafana + PagerDuty + Bugsink env vars                                    | `toolkit gf alerts`                           |
+| `temporal` | `TEMPORAL_ADDRESS=localhost:7233` (after `kubectl port-forward`)          | `temporal operator cluster health`            |
+| `bk`       | `sjerred` org selected (`bk use sjerred`), token in `BUILDKITE_API_TOKEN` | `bk build list --pipeline monorepo --limit 1` |
+| `gh`       | GitHub auth (`gh auth status`)                                            | `gh pr list --limit 1`                        |
 
 ## Execution Strategy
 
-Run 6 parallel agents for speed. Each section is independent and read-only.
+Run 7 parallel agents for speed. Each section is independent and read-only.
 
-| Agent | Scope                           | Sections |
-| ----- | ------------------------------- | -------- |
-| A     | Talos + Node                    | 1        |
-| B     | K8s Workloads                   | 2, 3     |
-| C     | ArgoCD + Storage                | 4, 5     |
-| D     | Monitoring + Alerts + Incidents | 6        |
-| E     | Hardware + Network              | 7, 8     |
-| F     | Error Tracking (Bugsink)        | 9        |
+| Agent | Scope                           | Sections   |
+| ----- | ------------------------------- | ---------- |
+| A     | Talos + Node                    | 1          |
+| B     | K8s Workloads                   | 2, 3       |
+| C     | ArgoCD + Storage                | 4, 5       |
+| D     | Monitoring + Alerts + Incidents | 6          |
+| E     | Hardware + Network              | 7, 8       |
+| F     | Error Tracking (Bugsink)        | 9          |
+| G     | Temporal + CI + PRs             | 10, 11, 12 |
 
 ## Section 1: Talos Node Health
 
@@ -229,6 +233,155 @@ toolkit bugsink releases --project <slug>                  # Check release track
 
 Flag: projects with no recent releases (SDK may not be reporting), large gap between deploy and release record.
 
+## Section 10: Temporal Workflows
+
+Temporal runs in the `temporal` namespace (server + UI + worker + PostgreSQL). The UI is at `https://temporal-ui.tailnet-1a49.ts.net`. Workflow source is in `packages/temporal/` (`good-night`, `good-morning`, `golink-sync`, `fetcher`, `dns-audit`, `deps-summary`).
+
+`TailscaleIngress` only proxies HTTP, so the gRPC frontend (port 7233) is not exposed through Tailscale. Use one of the following to talk to it:
+
+```bash
+# Option A — kubectl exec (runs temporal CLI inside the server pod; no network setup needed)
+kubectl exec -n temporal deploy/temporal-temporal-server -- \
+  temporal --address temporal-temporal-server-service:7233 operator cluster health
+
+# Option B — kubectl port-forward
+kubectl port-forward -n temporal svc/temporal-temporal-server-service 7233:7233 &
+export TEMPORAL_ADDRESS=localhost:7233
+# ... run temporal commands ...
+# kill %1   # stop port-forward when done
+```
+
+The examples below assume `TEMPORAL_ADDRESS` is set (Option B) or are prefixed with `kubectl exec ...` (Option A).
+
+### Cluster & pod health
+
+```bash
+kubectl get pods -n temporal                              # server, ui, worker, postgresql all Running
+kubectl get deploy,sts -n temporal                        # replica readiness
+argocd app get temporal                                   # sync status / SyncError messages
+```
+
+Flag: any pod not Running/Ready, `CreateContainerConfigError` (missing secret — often a 1Password Connect sync issue), ArgoCD app Degraded or OutOfSync with SyncError.
+
+### Temporal frontend health
+
+```bash
+temporal operator cluster health                          # gRPC ping to frontend (expect SERVING)
+temporal operator namespace list                          # expected namespaces (default)
+```
+
+Flag: non-SERVING status, gRPC connection error despite server pods Running (NetworkPolicy change, service endpoint mismatch), missing `default` namespace.
+
+### Failed or stuck workflow executions
+
+The Temporal CLI requires RFC3339 timestamps in query clauses. Compute them inline with `date`:
+
+```bash
+# 24h ago, RFC3339 UTC. macOS uses -v; GNU date uses -d.
+DAY_AGO="$(date -u -v-24H +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ)"
+
+# Workflows that failed in the last 24h
+temporal workflow list --query "ExecutionStatus='Failed' AND CloseTime > '${DAY_AGO}'"
+
+# Running executions older than a day (possible stuck)
+temporal workflow list --query "ExecutionStatus='Running' AND StartTime < '${DAY_AGO}'"
+
+# Terminated / Canceled / TimedOut recently
+temporal workflow list --query "ExecutionStatus IN ('Terminated','Canceled','TimedOut') AND CloseTime > '${DAY_AGO}'"
+
+# Drill into a specific execution
+temporal workflow describe --workflow-id <WF_ID>
+temporal workflow show     --workflow-id <WF_ID>         # full event history
+```
+
+Flag: any recently-failed workflow, Running executions older than a day, Terminated executions not initiated by a known deploy/rotation.
+
+### Schedule health
+
+```bash
+temporal schedule list                                    # one row per scheduled workflow
+temporal schedule describe --schedule-id <SCHED_ID>       # recent actions + next fire time
+```
+
+Flag: schedules with empty recent actions (never fired), paused without a documented reason, next fire time in the past.
+
+### Prometheus view
+
+```bash
+toolkit gf query 'rate(temporal_workflow_execution_failed_total[15m])'
+toolkit gf query 'temporal_workflow_task_timeout_count'
+toolkit gf query 'up{namespace="temporal"}'
+```
+
+Flag: non-zero failure rate, scrape target down.
+
+## Section 11: CI on `main`
+
+Buildkite is the source of truth for CI (pipeline `sjerred/monorepo`). **Do not use `gh run`** — this repo does not use GitHub Actions. Requires `BUILDKITE_API_TOKEN` in env; the `sjerred` org must be configured (`bk configure --org sjerred --token $BUILDKITE_API_TOKEN`) and selected (`bk use sjerred`).
+
+### Is `main` green?
+
+```bash
+bk build list --pipeline monorepo --branch main --limit 5                  # last 5 builds on main
+bk build list --pipeline monorepo --branch main --state failed --since 24h # recent failures on main
+bk build view --pipeline monorepo <BUILD_NUMBER>                           # details + failing job output
+```
+
+Flag: latest `main` build `failed` / `canceled` / `blocked`, or a sustained streak of failures (a red `main` means deploys are stale — last-green image is still running).
+
+### In-flight builds
+
+```bash
+bk build list --pipeline monorepo --state running --limit 20               # currently running
+bk build list --pipeline monorepo --state scheduled --limit 20             # queued / waiting for agents
+```
+
+Flag: builds running >60 min (stuck), scheduled builds piling up (agent starvation — cross-check agent pool below).
+
+### Agent pool
+
+```bash
+kubectl get pods -n buildkite                             # agent stack controller + active agents
+bk agent list                                             # connected agents
+```
+
+Flag: agent controller pod not Running, zero connected agents while builds are scheduled.
+
+## Section 12: Open Pull Requests
+
+Long-lived, conflicted, or CI-failing PRs block releases and rot quickly. Check these even when `main` is green.
+
+### PR inventory & CI rollup
+
+```bash
+gh pr list --state open --limit 50 \
+  --json number,title,author,isDraft,mergeable,updatedAt,headRefName,statusCheckRollup
+
+gh pr list --state open --search "draft:false" \
+  --json number,title,updatedAt,mergeable,statusCheckRollup
+```
+
+Flag: `mergeable: "CONFLICTING"`, `statusCheckRollup` containing `FAILURE`, PRs older than ~14 days (stale), non-draft PRs with no reviewer activity.
+
+### Deep per-PR health
+
+For any PR flagged above:
+
+```bash
+toolkit pr health <PR_NUMBER>                             # bundled conflicts + CI + approval check
+toolkit pr logs <RUN_ID>                                  # Buildkite logs for the failing check
+```
+
+Flag: merge conflicts against `main`, failing required checks, missing approvals on a PR otherwise ready.
+
+### Renovate / automation PRs
+
+```bash
+gh pr list --state open --author "app/renovate" --json number,title,mergeable,statusCheckRollup
+```
+
+Flag: Renovate PRs with failing CI (broken upgrade pipeline), or a large backlog of open Renovate PRs (automerge broken).
+
 ## Output Format
 
 Compile findings into a structured report with:
@@ -255,3 +408,6 @@ End with a "What's Working Well" section to confirm healthy systems.
 - PagerDuty incidents should correlate with firing alerts (open incident without firing alert = stale incident; firing alert without incident = missing integration)
 - Bugsink issues should correlate with pod health (CrashLoopBackOff pods should have corresponding error events in Bugsink)
 - Bugsink releases should match recent deployments (if ArgoCD synced a new version but no Bugsink release exists, SDK integration may be misconfigured)
+- Temporal workflow failures should correlate with pod health: if workflows error out while `temporal-worker` pods are Healthy, check `kubectl logs -n temporal -l app=temporal-worker` — the worker is running but the workflow/activity code is failing
+- Red `main` CI should correlate with ArgoCD state for any auto-synced app tracking `main` — if `main` is red but ArgoCD is Synced and Healthy, the deployed image is the last green build (not the tip of `main`)
+- PR `statusCheckRollup` failures on Buildkite checks should match `bk build list` output for that commit; a mismatch means GitHub's check status is stale and a re-run may be needed
