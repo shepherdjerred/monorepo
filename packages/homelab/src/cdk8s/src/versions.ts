@@ -238,4 +238,20 @@ const versions = {
   "shepherdjerred/temporal-worker": "dev",
 };
 
+/**
+ * SHA-256 of the GitHub release tarball for `fuatakgun/eufy_security`, pinned
+ * to the version above. Verified at install time by the Home Assistant init
+ * container so a tampered or silently-reuploaded tag can't ship custom code
+ * onto the config PVC.
+ *
+ * Enforced by `eufy-tarball-integrity.test.ts` (CI-only): any Renovate PR that
+ * bumps `fuatakgun/eufy_security` without updating this hash will fail CI.
+ *
+ * To regenerate after a version bump:
+ *   VERSION=$(bun -e 'import v from "./src/versions.ts"; console.log(v["fuatakgun/eufy_security"])')
+ *   curl -fSL "https://github.com/fuatakgun/eufy_security/archive/refs/tags/$VERSION.tar.gz" | sha256sum
+ */
+export const EUFY_TARBALL_SHA256 =
+  "b744aac0ce03a8a75de5100c672957504173c20cbe2ac0fc4d09d5bc75c59411";
+
 export default versions;
