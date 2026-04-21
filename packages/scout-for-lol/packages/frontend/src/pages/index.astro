@@ -124,40 +124,21 @@ import ProcessStep from "../components/ProcessStep.astro";
         />
 
         <div class="space-y-16 mt-16">
-          <!-- Pre-Match Detection -->
-          <div
-            class="bg-linear-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 rounded-2xl p-8 lg:p-12"
-          >
-            <div class="text-center mb-12">
-              <span class="inline-flex items-center rounded-full bg-teal-100 dark:bg-teal-900/50 px-3 py-1 text-sm font-medium text-teal-700 dark:text-teal-300 mb-4">
-                New Feature
-              </span>
-              <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Real-Time Pre-Match Detection</h3>
-              <p class="text-lg text-gray-600 dark:text-gray-300">
-                Scout detects when tracked players enter a game and notifies your Discord channel instantly
-              </p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <StatCard
-                title="Instant Detection"
-                description="Get notified the moment a tracked player starts a match"
-                gradient="teal"
-                icon="heroicons:eye"
-              />
-              <StatCard
-                title="Champion Picks"
-                description="See what champions everyone is playing before the match ends"
-                gradient="blue"
-                icon="heroicons:user-circle"
-              />
-              <StatCard
-                title="Smart Grouping"
-                description="One notification per game, even when multiple tracked players are in the same match"
-                gradient="purple"
-                icon="heroicons:user-group"
-              />
-            </div>
-          </div>
+          <!-- Pre-Match Loading Screens -->
+          <FeatureWithImage
+            title="Pre-Match Loading Screens"
+            description="Scout detects when tracked players enter a game and posts a full loading-screen preview to your Discord channel — complete with champion splash art, summoner spells, runes, and live rank badges for every player on both teams."
+            imageSrc="/loading-screen.png"
+            imageAlt="Pre-match loading screen showing both teams' champion picks, runes, summoner spells, and ranks for a ranked flex game"
+            imagePosition="right"
+            badge={{ text: 'New Feature', icon: 'heroicons:sparkles', color: 'green' }}
+            checklist={[
+              'Full 5v5 splash art preview with bans for ranked and draft',
+              'Summoner spells, keystone runes, and live ranks for every player',
+              'ARAM and Arena layouts supported alongside Summoner\'s Rift',
+              'One notification per game, even with multiple tracked players'
+            ]}
+          />
 
           <!-- Arena Mode Reports -->
           <FeatureWithImage

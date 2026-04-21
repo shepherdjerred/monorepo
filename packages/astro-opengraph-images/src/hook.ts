@@ -2,6 +2,7 @@ import { Resvg } from "@resvg/resvg-js";
 import satori from "satori";
 import type {
   AstroBuildDoneHookInput,
+  FilterFunction,
   IntegrationOptions,
   Page,
   RenderFunction,
@@ -20,13 +21,15 @@ export async function buildDoneHook({
   options,
   dir,
   render,
+  filter,
 }: AstroBuildDoneHookInput & {
   options: IntegrationOptions;
   render: RenderFunction;
+  filter: FilterFunction | undefined;
 }) {
   logger.info("Generating Open Graph images");
   const promises = pages.map((page) =>
-    handlePage({ page, options, render, dir, logger }),
+    handlePage({ page, options, render, dir, logger, filter }),
   );
   await Promise.all(promises);
 }
@@ -37,6 +40,7 @@ type HandlePageInput = {
   render: RenderFunction;
   dir: URL;
   logger: AstroIntegrationLogger;
+  filter: FilterFunction | undefined;
 };
 
 async function handlePage({
@@ -45,6 +49,7 @@ async function handlePage({
   render,
   dir,
   logger,
+  filter,
 }: HandlePageInput) {
   // gets the absolute path to the HTML file. E.g. /home/user/project/dist/blog/index.html
   // fileURLToPath() converts the URL to a file path. Without it, the path would start with a leading slash on Windows
@@ -61,9 +66,21 @@ async function handlePage({
 
   // extract the OpenGraph properties from the HTML file
   const pageDetails = extract(document);
+  const renderInput = { ...page, ...pageDetails, dir, document };
+
+  if (filter) {
+    const shouldRender = await filter(renderInput);
+
+    if (!shouldRender) {
+      if (options.verbose) {
+        logger.info(`Skipping page ${page.pathname}.`);
+      }
+      return;
+    }
+  }
 
   // render the image using Satori and Resvg
-  const reactNode = await render({ ...page, ...pageDetails, dir, document });
+  const reactNode = await render(renderInput);
   const svg = await satori(reactNode, options);
   const resvg = new Resvg(svg, {
     font: {

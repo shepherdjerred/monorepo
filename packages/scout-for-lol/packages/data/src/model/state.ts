@@ -14,6 +14,7 @@ export const QueueTypeSchema = z.enum([
   "swiftplay",
   "arena",
   "brawl",
+  "aram mayhem",
   "draft pick",
   "easy doom bots",
   "normal doom bots",
@@ -37,6 +38,7 @@ export function parseQueueType(input: number): QueueType | undefined {
     .with(900, () => "arurf")
     .with(1700, () => "arena")
     .with(2300, () => "brawl")
+    .with(2400, () => "aram mayhem")
     .with(1900, () => "urf")
     .with(3130, () => "easy doom bots")
     .with(4220, () => "normal doom bots")
@@ -59,6 +61,7 @@ export function queueTypeToDisplayString(queueType: QueueType): string {
     .with("urf", () => "URF")
     .with("arena", () => "arena")
     .with("brawl", () => "brawl")
+    .with("aram mayhem", () => "ARAM mayhem")
     .with("easy doom bots", () => "doom bots")
     .with("normal doom bots", () => "doom bots")
     .with("hard doom bots", () => "doom bots")

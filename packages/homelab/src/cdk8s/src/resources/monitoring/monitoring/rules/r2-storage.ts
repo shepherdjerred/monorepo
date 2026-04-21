@@ -10,13 +10,13 @@ export function getR2StorageRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "R2StorageNearingLimit",
           annotations: {
-            summary: "R2 storage approaching 1TB limit",
+            summary: "R2 storage approaching 1.5TB limit",
             message: escapePrometheusTemplate(
-              "R2 bucket {{ $labels.bucket }} is at {{ $value | humanize1024 }}B (80% of 1TB limit)",
+              "R2 bucket {{ $labels.bucket }} is at {{ $value | humanize1024 }}B (80% of 1.5TB limit)",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "cloudflare_r2_storage_bytes > 800 * 1024 * 1024 * 1024",
+            "cloudflare_r2_storage_bytes > 1200 * 1024 * 1024 * 1024",
           ),
           for: "15m",
           labels: {
@@ -26,13 +26,13 @@ export function getR2StorageRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "R2StorageExceedingLimit",
           annotations: {
-            summary: "R2 storage exceeding 1TB limit",
+            summary: "R2 storage exceeding 1.5TB limit",
             message: escapePrometheusTemplate(
-              "R2 bucket {{ $labels.bucket }} has exceeded 1TB: {{ $value | humanize1024 }}B",
+              "R2 bucket {{ $labels.bucket }} has exceeded 1.5TB: {{ $value | humanize1024 }}B",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "cloudflare_r2_storage_bytes > 1024 * 1024 * 1024 * 1024",
+            "cloudflare_r2_storage_bytes > 1536 * 1024 * 1024 * 1024",
           ),
           for: "15m",
           labels: {

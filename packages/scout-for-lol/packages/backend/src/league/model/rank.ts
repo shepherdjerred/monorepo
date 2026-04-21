@@ -3,6 +3,7 @@ import type {
   PlayerConfigEntry,
   Rank,
   RawSummonerLeague,
+  Region,
 } from "@scout-for-lol/data";
 import {
   parseDivision,
@@ -59,6 +60,51 @@ export function getRank(
     wins: entry.wins,
     losses: entry.losses,
   };
+}
+
+/**
+ * Fetch ranks (solo + flex) for any player by PUUID and region.
+ * Used by the loading screen to display ranks for all participants.
+ * Returns undefined on any error (graceful — does not throw).
+ */
+export async function getRankByPuuid(
+  puuid: string,
+  region: Region,
+): Promise<Ranks | undefined> {
+  try {
+    const response = await withTimeout(
+      api.League.byPUUID(puuid, mapRegionToEnum(region)),
+    );
+    riotApiRequestsTotal.inc({
+      source: "rank-by-puuid",
+      status: "success",
+    });
+    updateRiotApiHealth(true);
+
+    const parseResult = z
+      .array(RawSummonerLeagueSchema)
+      .safeParse(response.response);
+    if (!parseResult.success) {
+      logger.warn(
+        `Failed to parse rank response for puuid ${puuid}:`,
+        parseResult.error,
+      );
+      return undefined;
+    }
+
+    return {
+      solo: getRank(parseResult.data, solo),
+      flex: getRank(parseResult.data, flex),
+    };
+  } catch (error) {
+    const status =
+      error instanceof Error && error.message.includes("timed out")
+        ? "timeout"
+        : "error";
+    riotApiRequestsTotal.inc({ source: "rank-by-puuid", status });
+    logger.warn(`Failed to fetch rank for puuid ${puuid}: ${String(error)}`);
+    return undefined;
+  }
 }
 
 export async function getRanks(player: PlayerConfigEntry): Promise<Ranks> {

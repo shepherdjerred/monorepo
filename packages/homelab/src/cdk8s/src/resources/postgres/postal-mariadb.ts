@@ -124,7 +124,7 @@ collation-server = utf8mb4_unicode_ci
             memory: "64Mi",
           },
           limits: {
-            cpu: "200m",
+            cpu: "500m",
             memory: "128Mi",
           },
         },

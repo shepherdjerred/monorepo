@@ -1,9 +1,10 @@
-import { EmbedBuilder } from "discord.js";
+import { AttachmentBuilder, EmbedBuilder } from "discord.js";
 import type {
   RawCurrentGameInfo,
   PlayerConfigEntry,
   LeaguePuuid,
   DiscordGuildId,
+  QueueType,
 } from "@scout-for-lol/data/index.ts";
 import {
   parseQueueType,
@@ -16,6 +17,20 @@ import { getChampionDisplayName } from "#src/utils/champion.ts";
 import { createLogger } from "#src/logger.ts";
 import { uniqueBy } from "remeda";
 import * as Sentry from "@sentry/bun";
+import { buildLoadingScreenData } from "#src/league/tasks/prematch/loading-screen-builder.ts";
+import {
+  loadingScreenToImage,
+  loadingScreenToSvg,
+} from "@scout-for-lol/report";
+import {
+  savePrematchDataToS3,
+  savePrematchImageToS3,
+  savePrematchSvgToS3,
+} from "#src/storage/s3.ts";
+import {
+  prematchLoadingScreenGeneratedTotal,
+  prematchLoadingScreenDurationSeconds,
+} from "#src/metrics/index.ts";
 
 const logger = createLogger("prematch-notification");
 
@@ -34,9 +49,30 @@ function formatPlayerList(names: string[]): string {
 }
 
 /**
- * Build a Discord embed for a pre-match notification.
+ * Plain-text message paired with the loading-screen image.
+ * Mirrors post-match's `formatGameCompletionMessage`: short, unformatted content
+ * that renders above the image embed.
  */
-function buildPrematchEmbed(
+function formatPrematchMessage(
+  trackedPlayers: PlayerConfigEntry[],
+  queueType: QueueType | undefined,
+  gameMode: string,
+): string {
+  const queueName = queueType ? queueTypeToDisplayString(queueType) : gameMode;
+  const aliases = trackedPlayers
+    .map((p) => p.alias)
+    .filter((alias) => alias.trim().length > 0);
+  if (aliases.length === 0) {
+    return `Game started: ${queueName}`;
+  }
+  return `${formatPlayerList(aliases)} started a ${queueName} game`;
+}
+
+/**
+ * Rich text embed used as a fallback when the loading-screen image cannot
+ * be generated. Preserves the prior text-only notification experience.
+ */
+function buildFallbackPrematchEmbed(
   gameInfo: RawCurrentGameInfo,
   trackedPlayers: PlayerConfigEntry[],
 ): EmbedBuilder {
@@ -45,7 +81,6 @@ function buildPrematchEmbed(
     ? queueTypeToDisplayString(queueType)
     : gameInfo.gameMode;
 
-  // Match each tracked player to their participant data
   const playerDetails = trackedPlayers.map((player) => {
     const participant = gameInfo.participants.find(
       (p) => p.puuid === player.league.leagueAccount.puuid,
@@ -57,13 +92,7 @@ function buildPrematchEmbed(
   });
 
   const aliases = playerDetails.map((p) => `**${p.alias}**`);
-  const playerListText = formatPlayerList(aliases);
-
-  // Title varies by player count
-  const title =
-    trackedPlayers.length === 1
-      ? `🎮 ${trackedPlayers[0]?.alias ?? "Player"} started a ${queueName} game`
-      : `🎮 ${playerListText} started a ${queueName} game`;
+  const title = `🎮 ${formatPlayerList(aliases)} started a ${queueName} game`;
 
   const embed = new EmbedBuilder()
     .setTitle(title)
@@ -74,7 +103,6 @@ function buildPrematchEmbed(
         : new Date(),
     );
 
-  // Add champion details
   const championLines = playerDetails.map(
     (p) => `**${p.alias}** — ${p.championName}`,
   );
@@ -118,11 +146,109 @@ export async function sendPrematchNotification(
     `[sendPrematchNotification] 📺 Sending to ${channels.length.toString()} channel(s) across ${targetGuildIds.length.toString()} guild(s)`,
   );
 
-  const embed = buildPrematchEmbed(gameInfo, trackedPlayers);
+  const queueType = parseQueueType(gameInfo.gameQueueConfigId);
+  const prematchMessageContent = formatPrematchMessage(
+    trackedPlayers,
+    queueType,
+    gameInfo.gameMode,
+  );
+
+  // Generate loading screen image. Preferred delivery: image + short text.
+  // If generation fails, we fall back to a rich text embed (buildFallbackPrematchEmbed).
+  let loadingScreenAttachment: AttachmentBuilder | undefined;
+  let loadingScreenEmbed: EmbedBuilder | undefined;
+  try {
+    const startTime = Date.now();
+    const firstPlayer = trackedPlayers[0];
+    if (firstPlayer === undefined) {
+      throw new Error(`No tracked players provided for game ${gameId}`);
+    }
+    const region = firstPlayer.league.leagueAccount.region;
+    const trackedPuuidSet = new Set(
+      trackedPlayers.map((p) => p.league.leagueAccount.puuid),
+    );
+
+    const loadingScreenData = await buildLoadingScreenData(
+      gameInfo,
+      trackedPuuidSet,
+      region,
+    );
+
+    const [image, svg] = await Promise.all([
+      loadingScreenToImage(loadingScreenData),
+      loadingScreenToSvg(loadingScreenData),
+    ]);
+
+    const attachmentName = `loading-screen-${gameId}.png`;
+    loadingScreenAttachment = new AttachmentBuilder(Buffer.from(image)).setName(
+      attachmentName,
+    );
+    loadingScreenEmbed = new EmbedBuilder({
+      image: { url: `attachment://${attachmentName}` },
+    });
+
+    const duration = (Date.now() - startTime) / 1000;
+    prematchLoadingScreenDurationSeconds.observe(duration);
+    prematchLoadingScreenGeneratedTotal.inc({
+      queue_type: queueType ?? "unknown",
+      status: "success",
+    });
+    logger.info(
+      `[sendPrematchNotification] 🖼️ Loading screen generated in ${duration.toFixed(1)}s for game ${gameId}`,
+    );
+
+    // Fire-and-forget S3 saves
+    const aliases = trackedPlayers.map((p) => p.alias);
+    void (async () => {
+      try {
+        await Promise.all([
+          savePrematchDataToS3(gameInfo.gameId, gameInfo, aliases),
+          savePrematchImageToS3(
+            gameInfo.gameId,
+            image,
+            queueType ?? "unknown",
+            aliases,
+          ),
+          savePrematchSvgToS3(
+            gameInfo.gameId,
+            svg,
+            queueType ?? "unknown",
+            aliases,
+          ),
+        ]);
+      } catch (s3Error) {
+        logger.error(
+          `[sendPrematchNotification] Failed to save prematch assets to S3:`,
+          s3Error,
+        );
+      }
+    })();
+  } catch (error) {
+    prematchLoadingScreenGeneratedTotal.inc({
+      queue_type: queueType ?? "unknown",
+      status: "error",
+    });
+    logger.error(
+      `[sendPrematchNotification] ❌ Failed to generate loading screen for game ${gameId}:`,
+      error,
+    );
+    Sentry.captureException(error, {
+      tags: { source: "prematch-loading-screen", gameId },
+    });
+    // Continue with text-only notification
+  }
 
   for (const { channel } of channels) {
     try {
-      await send({ embeds: [embed] }, channel);
+      const message =
+        loadingScreenAttachment && loadingScreenEmbed
+          ? {
+              content: prematchMessageContent,
+              files: [loadingScreenAttachment],
+              embeds: [loadingScreenEmbed],
+            }
+          : { embeds: [buildFallbackPrematchEmbed(gameInfo, trackedPlayers)] };
+      await send(message, channel);
     } catch (error) {
       if (error instanceof ChannelSendError && error.permissionError) {
         logger.warn(

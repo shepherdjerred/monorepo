@@ -50,6 +50,7 @@ export function createDependencySummaryCronJob(chart: Chart) {
         spec: {
           activeDeadlineSeconds: 1200,
           backoffLimit: 2,
+          ttlSecondsAfterFinished: 86_400,
           template: {
             spec: {
               restartPolicy: "OnFailure",

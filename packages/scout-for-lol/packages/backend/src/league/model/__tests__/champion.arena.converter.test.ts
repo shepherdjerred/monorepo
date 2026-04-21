@@ -67,4 +67,20 @@ describe("participantToArenaChampion", () => {
     expect(champ.arenaMetrics.playerScore0).toBe(1);
     expect(champ.arenaMetrics.playerScore8).toBe(9);
   });
+
+  // Match-v5 API returns `championName` as the Data Dragon key (camelCase
+  // for champions like Rek'Sai and KSante). The converter preserves it
+  // verbatim — Riot is the normalization boundary here, not us. Pin this
+  // so a regression to ad-hoc lowercasing is caught immediately.
+  it.each(["RekSai", "KSante", "JarvanIV", "MonkeyKing", "Fiddlesticks"])(
+    "preserves Data Dragon key %s verbatim through arena conversion",
+    async (championName) => {
+      const dto = makeTestParticipant({
+        ...baseParticipant(),
+        championName,
+      });
+      const champ = await participantToArenaChampion(dto);
+      expect(champ.championName).toBe(championName);
+    },
+  );
 });

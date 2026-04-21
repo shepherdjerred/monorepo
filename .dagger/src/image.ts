@@ -13,6 +13,7 @@ import {
   HELM_IMAGE,
   PYTHON_ALPINE_IMAGE,
 } from "./constants";
+import versions from "./versions";
 
 /**
  * Build a Bun service OCI image. Constructs a minimal workspace with
@@ -304,6 +305,9 @@ export async function pushCaddyS3ProxyImageHelper(
  * Node-based, installs obsidian-headless CLI globally for Obsidian vault sync.
  * Uses Node instead of Bun because obsidian-headless depends on better-sqlite3,
  * a native Node addon that Bun does not support.
+ * Pinned to a specific obsidian-headless npm version so the Dagger cache key
+ * changes when we bump the dependency; previous un-pinned code left a stale
+ * Bun-based image cached on CI for weeks.
  */
 export function buildObsidianHeadlessImageHelper(
   version: string = "dev",
@@ -317,7 +321,14 @@ export function buildObsidianHeadlessImageHelper(
       "-c",
       "apt-get update && apt-get install -y python3 build-essential && rm -rf /var/lib/apt/lists/*",
     ])
-    .withExec(["npm", "install", "-g", "obsidian-headless"])
+    .withExec([
+      "npm",
+      "install",
+      "-g",
+      `obsidian-headless@${versions["obsidian-headless"]}`,
+    ])
+    .withExec(["node", "--version"])
+    .withExec(["which", "ob"])
     .withExec(["mkdir", "-p", "/vault"])
     .withLabel(
       "org.opencontainers.image.source",

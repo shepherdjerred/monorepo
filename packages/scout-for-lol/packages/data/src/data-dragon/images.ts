@@ -1,8 +1,28 @@
 import type { Lane } from "#src/model/lane.ts";
 import { latestVersion } from "./version.ts";
 
+// Twisted's `getChampionName(id)` returns SCREAMING_SNAKE_CASE, and
+// `resolveChampionKey` PascalCases it for Data Dragon. Twisted is inconsistent
+// about underscores — e.g. "LEE_SIN" → "LeeSin" (matches file) but
+// "REKSAI" → "Reksai" (does NOT match on-disk `RekSai.png`). This map rewrites
+// the broken PascalCase forms to the real filenames for every camelCase
+// champion asset we ship, plus Roman-numeral cases.
 const championNameOverrides: Record<string, string> = {
   FiddleSticks: "Fiddlesticks",
+  Reksai: "RekSai",
+  Kogmaw: "KogMaw",
+  Monkeyking: "MonkeyKing",
+  Aurelionsol: "AurelionSol",
+  Drmundo: "DrMundo",
+  Leesin: "LeeSin",
+  Masteryi: "MasterYi",
+  Missfortune: "MissFortune",
+  Tahmkench: "TahmKench",
+  Twistedfate: "TwistedFate",
+  Xinzhao: "XinZhao",
+  Ksante: "KSante",
+  JarvanIv: "JarvanIV",
+  Jarvaniv: "JarvanIV",
 };
 
 export function normalizeChampionName(championName: string): string {
@@ -159,4 +179,36 @@ export async function getAugmentIconBase64(
 export async function getLaneIconBase64(lane: Lane): Promise<string> {
   const relativePath = `./assets/img/lane/${lane}.png`;
   return loadImageAsBase64(relativePath, "image/png");
+}
+
+// Champion loading screen art (tall portrait images used in LoL loading screen)
+
+export async function validateChampionLoadingImage(
+  championName: string,
+  skinNum: number,
+): Promise<void> {
+  const normalized = normalizeChampionName(championName);
+  const relativePath = `./assets/img/champion-loading/${normalized}_${skinNum.toString()}.jpg`;
+  const absolutePath = getAbsolutePath(relativePath);
+  await validateImageExists(
+    absolutePath,
+    `Champion loading image for ${normalized} skin ${skinNum.toString()}`,
+  );
+}
+
+export function getChampionLoadingImageUrl(
+  championName: string,
+  skinNum = 0,
+): string {
+  const normalized = normalizeChampionName(championName);
+  return `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${normalized}_${skinNum.toString()}.jpg`;
+}
+
+export async function getChampionLoadingImageBase64(
+  championName: string,
+  skinNum = 0,
+): Promise<string> {
+  const normalized = normalizeChampionName(championName);
+  const relativePath = `./assets/img/champion-loading/${normalized}_${skinNum.toString()}.jpg`;
+  return loadImageAsBase64(relativePath, "image/jpeg");
 }

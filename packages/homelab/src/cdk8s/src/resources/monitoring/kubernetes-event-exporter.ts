@@ -49,6 +49,11 @@ export function createKubernetesEventExporter(chart: Chart) {
         resources: ["jobs", "cronjobs"],
         verbs: ["get", "watch", "list"],
       },
+      {
+        apiGroups: ["kueue.x-k8s.io"],
+        resources: ["workloads"],
+        verbs: ["get", "watch", "list"],
+      },
     ],
   });
 

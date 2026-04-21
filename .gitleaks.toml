@@ -36,4 +36,6 @@ paths = [
   '''packages/homelab/src/cdk8s/src/resources/argo-applications/cloudflare-operator\.ts''',
   # CI step key "smoke-test-discord-plays-pokemon" falsely flagged as discord-client-secret
   '''scripts/ci/src/steps/images\.ts''',
+  # Spectator API test data — encryptionKey is a Riot game session key, not a secret
+  '''packages/scout-for-lol/.*/testdata/spectator-.*\.json''',
 ]

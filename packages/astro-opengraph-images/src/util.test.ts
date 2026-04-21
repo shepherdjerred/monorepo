@@ -56,6 +56,23 @@ test("getFilePath blog", async () => {
   expect(path.normalize(result)).toBe(path.normalize("blog/index.html"));
 });
 
+test("getFilePath without trailing slash falls back to .html sibling", async () => {
+  // some callers may pass a pathname without a trailing slash (e.g. "404");
+  // getFilePath must still locate the corresponding .html file instead of
+  // slicing off the last character of the name.
+  const tmpDir = await createTempDir();
+
+  process.chdir(tmpDir);
+
+  await writeFile(path.join(tmpDir, "404.html"), "");
+
+  const result = await getFilePath({ dir: "", page: "404" });
+
+  process.chdir(import.meta.dirname);
+
+  expect(path.normalize(result)).toBe(path.normalize("404.html"));
+});
+
 // https://sdorra.dev/posts/2024-02-12-vitest-tmpdir
 async function createTempDir() {
   const ostmpdir = tmpdir();

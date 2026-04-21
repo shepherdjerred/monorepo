@@ -27,6 +27,8 @@ import {
   buildBetterSkillCappedFetcherImageHelper,
 } from "./image";
 
+import versions from "./versions";
+
 /** Build MkDocs documentation site and return the built site/ directory. */
 export function mkdocsBuildHelper(source: Directory): Directory {
   return dag
@@ -367,19 +369,66 @@ export async function smokeTestCaddyS3ProxyHelper(): Promise<string> {
 
 /**
  * Smoke test obsidian-headless image.
- * Verifies: Node runtime works, obsidian-headless CLI is installed,
- * and the better-sqlite3 native addon loads successfully.
- * The native module check is critical — better-sqlite3 is a compiled
- * Node addon that fails under non-Node runtimes (e.g. Bun).
+ *
+ * Goal: give CI confidence that the built image will actually work in prod,
+ * where it runs `ob sync-setup` → `ob sync --continuous` against a real vault.
+ * All checks below are fully offline — no login, no remote vault, no network.
+ *
+ * Layer 1: CLI binary is installed and --help exits cleanly.
+ * Layer 2: installed version matches the pin in versions.ts. Catches the
+ *   "Dagger served a stale cached image" failure mode that #552 originally
+ *   chased; without this, a cache short-circuit silently ships an outdated ob.
+ * Layer 3: better-sqlite3 native addon loads AND round-trips a row. Runs
+ *   from obsidian-headless's install dir so require() resolves via the same
+ *   relative path the CLI uses at runtime (a bare `require('better-sqlite3')`
+ *   from / cannot see a nested dep of a globally-installed package — that's
+ *   the bug this test previously tripped on). Exercising the addon catches
+ *   ABI mismatches and the Bun-runtime failure mode the original test aimed at.
+ * Layer 4: `ob sync-list-local` on an empty vault. Exits 0 with "No vaults
+ *   configured." when offline — exercises the CLI's sync/store init path,
+ *   catching integration regressions the raw `require` test would miss.
  */
 export async function smokeTestObsidianHeadlessHelper(): Promise<string> {
+  const expectedVersion = versions["obsidian-headless"];
+
   const container = buildObsidianHeadlessImageHelper()
     .withEntrypoint([])
-    // Verify the CLI is installed and responds
+    .withEnvVariable("OBSIDIAN_HEADLESS_EXPECTED_VERSION", expectedVersion)
+    // Layer 1 — CLI binary works.
     .withExec(["ob", "--help"])
-    // Verify the better-sqlite3 native addon loads — this is the check
-    // that would have caught the oven/bun:slim breakage.
-    .withExec(["node", "-e", "require('better-sqlite3')"]);
+    // Layer 2 — installed version matches the pin.
+    .withExec([
+      "sh",
+      "-c",
+      [
+        "set -e",
+        "actual=$(ob --version)",
+        'if [ "$actual" != "$OBSIDIAN_HEADLESS_EXPECTED_VERSION" ]; then',
+        '  echo "obsidian-headless version mismatch: installed=$actual expected=$OBSIDIAN_HEADLESS_EXPECTED_VERSION" >&2',
+        "  exit 1",
+        "fi",
+        'echo "obsidian-headless version pinned: $actual"',
+      ].join("\n"),
+    ])
+    // Layer 3 — better-sqlite3 native addon loads and functions.
+    .withExec([
+      "sh",
+      "-c",
+      [
+        "set -e",
+        'cd "$(npm root -g)/obsidian-headless"',
+        "node -e \"const Database = require('better-sqlite3');" +
+          " const db = new Database(':memory:');" +
+          " db.exec('CREATE TABLE t (x INT)');" +
+          " db.prepare('INSERT INTO t VALUES (?)').run(42);" +
+          " if (db.prepare('SELECT x FROM t').get().x !== 42)" +
+          " throw new Error('better-sqlite3 round-trip failed');" +
+          " console.log('better-sqlite3 OK');\"",
+      ].join("\n"),
+    ])
+    // Layer 4 — CLI sync/store init path works offline.
+    .withExec(["mkdir", "-p", "/vault"])
+    .withExec(["ob", "sync-list-local"]);
 
   return runSmokeTest(container, []);
 }
