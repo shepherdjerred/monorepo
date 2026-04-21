@@ -69,20 +69,27 @@ export function bunBaseContainer(
     container = container.withFile("/workspace/tsconfig.base.json", tsconfig);
   }
 
-  // Install every mounted dep's node_modules so its own file: imports (e.g. a
-  // dep pulling in zod) resolve when the target compiles against it.
-  for (const dep of depNames) {
-    container = container
-      .withWorkdir(`/workspace/packages/${dep}`)
-      .withExec(["bun", "install", "--frozen-lockfile"]);
-  }
-  // Then build the ones that publish a dist/ consumers rely on.
+  // Install and build deps first so dist/ exists before target's install resolves file: refs
   for (const dep of BUILD_TIME_DEPS) {
     if (depNames.includes(dep)) {
       container = container
         .withWorkdir(`/workspace/packages/${dep}`)
+        .withExec(["bun", "install", "--frozen-lockfile"])
         .withExec(["bun", "run", "build"]);
     }
+  }
+  // Non-build deps (e.g. @shepherdjerred/home-assistant) still need their own
+  // node_modules so imports inside the dep (like zod) resolve when the target
+  // compiles against it. Keep this loop separate from BUILD_TIME_DEPS so the
+  // layer hashes for BUILD_TIME_DEPS-only consumers are unchanged and their
+  // Dagger cache stays warm.
+  for (const dep of depNames) {
+    if (BUILD_TIME_DEPS.includes(dep)) {
+      continue;
+    }
+    container = container
+      .withWorkdir(`/workspace/packages/${dep}`)
+      .withExec(["bun", "install", "--frozen-lockfile"]);
   }
 
   container = container
