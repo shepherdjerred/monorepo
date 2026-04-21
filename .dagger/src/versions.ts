@@ -1,9 +1,9 @@
 /**
  * Pinned versions for tools installed inside Dagger-built OCI images.
  *
- * Tracked by the Renovate custom manager (renovate.json →
- * managerFilePatterns: "**\/versions.ts"), which matches
- * // renovate: datasource=... "name": "value"
+ * Each entry is tracked by the Renovate custom manager defined in
+ * renovate.json (managerFilePatterns includes "**\/versions.ts"). See
+ * packages/homelab/src/cdk8s/src/versions.ts for annotation examples.
  */
 const versions = {
   // renovate: datasource=npm
