@@ -18,7 +18,9 @@ import {
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import versions, {
+  EUFY_TARBALL_SHA256,
+} from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { Glob } from "bun";
 
 export async function createHomeAssistantDeployment(chart: Chart) {
@@ -65,11 +67,6 @@ export async function createHomeAssistantDeployment(chart: Chart) {
   const configVolume = Volume.fromConfigMap(chart, "ha-cm-volume", config);
 
   const eufyVersion = versions["fuatakgun/eufy_security"];
-  // SHA-256 of the GitHub release tarball for the eufyVersion above.
-  // Regenerate on version bump:
-  //   curl -fSL "https://github.com/fuatakgun/eufy_security/archive/refs/tags/$VERSION.tar.gz" | sha256sum
-  const eufyTarballSha256 =
-    "b744aac0ce03a8a75de5100c672957504173c20cbe2ac0fc4d09d5bc75c59411";
 
   deployment.addInitContainer({
     name: "install-eufy-security",
@@ -80,7 +77,7 @@ export async function createHomeAssistantDeployment(chart: Chart) {
       `
 set -eu
 VERSION="${eufyVersion}"
-EXPECTED_SHA256="${eufyTarballSha256}"
+EXPECTED_SHA256="${EUFY_TARBALL_SHA256}"
 TARGET_DIR="/config/custom_components/eufy_security"
 MARKER="$TARGET_DIR/.installed_version"
 
