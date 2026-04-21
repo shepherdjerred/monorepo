@@ -1,22 +1,9 @@
 import { sleep } from "@temporalio/workflow";
-import {
-  callService,
-  closeCoversSequentially,
-  getEntityState,
-  openCoversSequentially,
-  sendNotification,
-} from "./util.ts";
+import { callService, getEntityState, sendNotification } from "./util.ts";
 
-const BEDROOM_MEDIA = "media_player.bedroom";
-const BEDROOM_DIMMED = "scene.bedroom_dimmed";
-const BEDROOM_LIGHT = "light.bedroom";
-const BEDROOM_COVERS = ["cover.bedroom_left", "cover.bedroom_right"] as const;
-const LIVING_ROOM_COVERS = [
-  "cover.living_room_left",
-  "cover.living_room_right",
-  "cover.tv_left",
-  "cover.tv_right",
-] as const;
+const BEDROOM_MEDIA = "media_player.bedroom" as const;
+const BEDROOM_DIMMED = "scene.bedroom_dimmed" as const;
+const BEDROOM_LIGHT = "light.bedroom" as const;
 
 const SLEEP_MEDIA = {
   media_content_id: "FV:2/7",
@@ -47,7 +34,4 @@ export async function goodNight(): Promise<void> {
       entity_id: BEDROOM_MEDIA,
     });
   }
-
-  await closeCoversSequentially(BEDROOM_COVERS);
-  await openCoversSequentially(LIVING_ROOM_COVERS);
 }

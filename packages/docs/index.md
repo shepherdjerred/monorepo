@@ -50,6 +50,8 @@ AI-maintained knowledge base for the monorepo.
 - [Local Quality Check](guides/2026-04-03_local-quality-check.md) - Full monorepo verification: all linters, tests, builds, and quality gates
 - [Is My Commit Deployed?](guides/2026-04-06_is-commit-deployed.md) - Trace a commit through CI → GHCR → ChartMuseum → ArgoCD → cluster
 - [Homelab Audit Runbook](guides/2026-04-04_homelab-audit-runbook.md) - Repeatable procedure for comprehensive cluster health audit
+- [Type-safe Home Assistant Client (2026-04-21)](guides/2026-04-21_type-safe-home-assistant-client.md) - `ha-codegen` bin + generic clients; stub/ensure flow; temporal workflow patterns; strict CI via Buildkite-secret-gated generate
+- [NVMe Wear Attribution (2026-04-21)](guides/2026-04-21_nvme-wear-attribution.md) - Byte-level accounting of NVMe writes; Buildkite+Dagger = 80% of wear, Loki/Prometheus/Postgres are negligible
 - [Homelab Health Audit (2026-04-20)](guides/2026-04-20_homelab-health-audit.md) - Cluster broadly healthy; temporal worker secret missing, Plex HDD 100%, R2 over cap, 16 open PD incidents
 - [Homelab Health Audit (2026-04-06)](guides/2026-04-06_homelab-health-audit.md) - 8 issues: Bugsink disk full, ArgoCD sync blocked by Jobs, scout spectator validation, undeployed fixes
 - [Homelab Health Audit (2026-04-05 PM)](guides/2026-04-05_homelab-health-audit-2.md) - 13 issues: OOM, Prisma entrypoint, Velero chain poison, Cloudflare secret mismatch, NVMe thermals

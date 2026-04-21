@@ -1,5 +1,6 @@
 import {
   callService,
+  callServiceUnchecked,
   getEntitiesInDomain,
   getEntityState,
   matchExact,
@@ -8,7 +9,7 @@ import {
   verifyState,
 } from "./util.ts";
 
-const ROOMBA = "vacuum.roomba";
+const ROOMBA = "vacuum.roomba" as const;
 
 export async function leavingHome(): Promise<void> {
   await sendNotification(
@@ -18,7 +19,11 @@ export async function leavingHome(): Promise<void> {
 
   const lights = await getEntitiesInDomain("light");
   for (const light of lights) {
-    await callService("light", "turn_off", { entity_id: light.entity_id });
+    // entity_id from getEntitiesInDomain is a runtime-filtered plain string —
+    // use the untyped escape hatch since TS can't prove the literal.
+    await callServiceUnchecked("light", "turn_off", {
+      entity_id: light.entity_id,
+    });
   }
   for (const light of lights) {
     await verifyState(light.entity_id, matchExact("off"), {

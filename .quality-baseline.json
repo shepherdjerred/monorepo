@@ -10,7 +10,9 @@
     "packages/better-skill-capped/fetcher/src/index.ts": 1,
     "packages/temporal/src/activities/fetcher.ts": 1
   },
-  "ts-suppressions": {},
+  "ts-suppressions": {
+    "packages/home-assistant/test/typed-client.test-d.ts": 7
+  },
   "rust-allow": {},
   "prettier-ignore": {},
   "hermeticity-exempt": {},

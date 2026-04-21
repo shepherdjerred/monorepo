@@ -72,6 +72,19 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
       ),
     );
   } else {
+    // temporal: typecheck needs HASS_URL/HASS_TOKEN to run ha-codegen against
+    // the live Home Assistant instance and produce the typed schema before
+    // tsc. Without secrets the generate script falls back to the committed
+    // stub (loose types). Secrets come from `buildkite-ci-secrets` (mounted
+    // by the k8s plugin on every step) — add HASS_URL / HASS_TOKEN fields to
+    // the 1Password item backing that secret to enable strict CI typing.
+    // Inside the Dagger container the secrets are re-bound to HA_URL /
+    // HA_TOKEN (what the ha-codegen CLI reads); only the outer env lookup
+    // uses the HASS_ prefix.
+    const typecheckCmd =
+      pkg === "temporal"
+        ? `dagger call generate-and-typecheck-with-secrets ${pf} --ha-url env:HASS_URL --ha-token env:HASS_TOKEN`
+        : `dagger call typecheck ${pf}`;
     steps.push(
       daggerCallStep(
         `:eslint: Lint`,
@@ -82,7 +95,7 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
       daggerCallStep(
         `:typescript: Typecheck`,
         `typecheck-${sk}`,
-        `dagger call typecheck ${pf}`,
+        typecheckCmd,
         resources,
       ),
     );

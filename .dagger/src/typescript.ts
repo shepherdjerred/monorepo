@@ -3,7 +3,7 @@
  *
  * These are plain functions (not decorated) — the @func() wrappers live in index.ts.
  */
-import { dag, Container, Directory, File } from "@dagger.io/dagger";
+import { dag, Container, Directory, File, Secret } from "@dagger.io/dagger";
 
 import { ESLINT_CACHE, HELM_IMAGE } from "./constants";
 
@@ -89,6 +89,59 @@ export function generateContainer(
   return bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig)
     .withWorkdir(`/workspace/packages/${pkg}`)
     .withExec(["bun", "run", "generate"]);
+}
+
+/**
+ * Run bun run generate with Home Assistant secrets injected. Used by temporal,
+ * whose generate script invokes `ha-codegen` against a live HA instance to
+ * materialize the typed schema before typecheck. Secrets are optional so local
+ * `dagger call` invocations without HA credentials fall back to the committed
+ * stub via `scripts/ensure-ha-schema.ts`.
+ */
+export function generateContainerWithSecrets(
+  pkgDir: Directory,
+  pkg: string,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  tsconfig: File | null = null,
+  haUrl: Secret | null = null,
+  haToken: Secret | null = null,
+): Container {
+  let container = bunBaseContainer(
+    pkgDir,
+    pkg,
+    depNames,
+    depDirs,
+    tsconfig,
+  ).withWorkdir(`/workspace/packages/${pkg}`);
+  if (haUrl !== null) {
+    container = container.withSecretVariable("HA_URL", haUrl);
+  }
+  if (haToken !== null) {
+    container = container.withSecretVariable("HA_TOKEN", haToken);
+  }
+  return container.withExec(["bun", "run", "generate"]);
+}
+
+/** Generate with HA secrets, then typecheck on the same container. */
+export function generateAndTypecheckWithSecretsHelper(
+  pkgDir: Directory,
+  pkg: string,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  tsconfig: File | null = null,
+  haUrl: Secret | null = null,
+  haToken: Secret | null = null,
+): Container {
+  return generateContainerWithSecrets(
+    pkgDir,
+    pkg,
+    depNames,
+    depDirs,
+    tsconfig,
+    haUrl,
+    haToken,
+  ).withExec(["bun", "run", "typecheck"]);
 }
 
 /** Generate then lint — chains on the same container to avoid SIGILL from bun install in fresh containers. */

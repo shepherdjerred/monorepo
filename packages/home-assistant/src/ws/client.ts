@@ -1,8 +1,15 @@
 import { z } from "zod";
 import type { EntityState } from "#rest/schemas.ts";
 import { EntityState as EntityStateSchema } from "#rest/schemas.ts";
+import type {
+  DefaultHaSchema,
+  Domain,
+  EventType,
+  HaSchema,
+  Service,
+  ServiceDataFor,
+} from "#schema/types.ts";
 import type { HomeAssistantConfig } from "#shared/config.ts";
-import { normalizeBaseUrl } from "#shared/config.ts";
 import {
   HaWebSocketAuthError,
   HaWebSocketClosedError,
@@ -11,28 +18,17 @@ import {
 } from "./errors.ts";
 import type { EventMessage, ResultMessage } from "./messages.ts";
 import { AuthMessage, ServerMessage } from "./messages.ts";
+import type { WebSocketLike, WebSocketLikeCtor } from "./socket-helpers.ts";
+import {
+  buildWsUrl,
+  extractEventData,
+  MessageDataString,
+  wait,
+  waitForFirstMessage,
+  waitForOpen,
+} from "./socket-helpers.ts";
 import type { EventHandler, Subscription } from "./subscriptions.ts";
 import { SubscriptionRegistry } from "./subscriptions.ts";
-
-/**
- * Minimal structural shape of the WebSocket API the client consumes. Narrow
- * enough that test doubles (see test/fake-websocket.ts) can satisfy it
- * without type assertions, but wide enough that the DOM `WebSocket` global
- * is structurally assignable.
- */
-export type WebSocketLike = {
-  readonly readyState: number;
-  readonly OPEN: number;
-  send: (data: string) => void;
-  close: (code?: number, reason?: string) => void;
-  addEventListener: (type: string, listener: (event: unknown) => void) => void;
-  removeEventListener: (
-    type: string,
-    listener: (event: unknown) => void,
-  ) => void;
-};
-
-export type WebSocketLikeCtor = new (url: string) => WebSocketLike;
 
 export type HomeAssistantEventClientOptions = {
   reconnect?: boolean;
@@ -65,7 +61,7 @@ const DEFAULTS = {
   pingIntervalMs: 30_000,
 } as const;
 
-export class HomeAssistantEventClient {
+export class HomeAssistantEventClient<S extends HaSchema = DefaultHaSchema> {
   private readonly wsUrl: string;
   private readonly token: string;
   private readonly opts: Required<
@@ -125,7 +121,7 @@ export class HomeAssistantEventClient {
   }
 
   public async subscribeEvents(
-    eventType: string,
+    eventType: EventType<S>,
     handler: EventHandler,
   ): Promise<() => Promise<void>> {
     const subscription: Subscription = { kind: "event", eventType, handler };
@@ -158,10 +154,10 @@ export class HomeAssistantEventClient {
     };
   }
 
-  public async callService(
-    domain: string,
-    service: string,
-    data?: Record<string, unknown>,
+  public async callService<D extends Domain<S>, V extends Service<S, D>>(
+    domain: D,
+    service: V,
+    data?: ServiceDataFor<S, D, V>,
     target?: Record<string, unknown>,
   ): Promise<unknown> {
     const payload: Record<string, unknown> = {
@@ -445,80 +441,4 @@ export class HomeAssistantEventClient {
   private emitError(message: string): void {
     this.setState("error", new HaWebSocketError(message));
   }
-}
-
-function wait(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function waitForOpen(socket: WebSocketLike): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (socket.readyState === socket.OPEN) {
-      resolve();
-      return;
-    }
-    const onOpen = (): void => {
-      cleanup();
-      resolve();
-    };
-    const onError = (): void => {
-      cleanup();
-      reject(new HaWebSocketError("WebSocket failed to open"));
-    };
-    const onClose = (): void => {
-      // If close() is called (or the server rejects the TCP/WS upgrade)
-      // while still CONNECTING, the real WebSocket emits `close` without
-      // ever firing `open`. Without this listener the promise would leak.
-      cleanup();
-      reject(new HaWebSocketClosedError());
-    };
-    const cleanup = (): void => {
-      socket.removeEventListener("open", onOpen);
-      socket.removeEventListener("error", onError);
-      socket.removeEventListener("close", onClose);
-    };
-    socket.addEventListener("open", onOpen);
-    socket.addEventListener("error", onError);
-    socket.addEventListener("close", onClose);
-  });
-}
-
-const MessageDataString = z.string();
-
-const WebSocketEventShape = z.looseObject({ data: z.unknown() });
-
-function extractEventData(event: unknown): unknown {
-  const parsed = WebSocketEventShape.safeParse(event);
-  return parsed.success ? parsed.data.data : undefined;
-}
-
-function waitForFirstMessage(socket: WebSocketLike): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const onMessage = (event: unknown): void => {
-      cleanup();
-      const parsed = MessageDataString.safeParse(extractEventData(event));
-      resolve(parsed.success ? parsed.data : "");
-    };
-    const onClose = (): void => {
-      cleanup();
-      reject(new HaWebSocketClosedError());
-    };
-    const cleanup = (): void => {
-      socket.removeEventListener("message", onMessage);
-      socket.removeEventListener("close", onClose);
-    };
-    socket.addEventListener("message", onMessage);
-    socket.addEventListener("close", onClose);
-  });
-}
-
-function buildWsUrl(baseUrl: string): string {
-  const normalized = normalizeBaseUrl(baseUrl);
-  if (normalized.startsWith("https://")) {
-    return `${normalized.replace(/^https:\/\//u, "wss://")}/api/websocket`;
-  }
-  if (normalized.startsWith("http://")) {
-    return `${normalized.replace(/^http:\/\//u, "ws://")}/api/websocket`;
-  }
-  return `${normalized}/api/websocket`;
 }

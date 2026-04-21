@@ -34,3 +34,21 @@ export type { EventEnvelope, EventMessage } from "./ws/messages.ts";
 export { StateChangedEventData as StateChangedEventDataSchema } from "./ws/messages.ts";
 export type { EventHandler, Subscription } from "./ws/subscriptions.ts";
 export type { HomeAssistantConfig } from "./shared/config.ts";
+export type {
+  Domain,
+  EntityAttributesFor,
+  EntityId,
+  EntityIdByDomain,
+  EntityStateFor,
+  EventDataFor,
+  EventEnvelopeFor,
+  EventType,
+  HaEntityMeta,
+  HaFieldType,
+  HaSchema,
+  HaServiceFieldMeta,
+  HaServiceMeta,
+  DefaultHaSchema,
+  Service,
+  ServiceDataFor,
+} from "./schema/types.ts";
