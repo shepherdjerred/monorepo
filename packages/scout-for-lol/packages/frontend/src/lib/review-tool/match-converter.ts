@@ -25,6 +25,7 @@ function getBaseMatch(
     case "arena":
       return getExampleMatch("arena");
     case "aram":
+    case "aram mayhem":
       return getExampleMatch("aram");
     case "solo":
     case "flex":

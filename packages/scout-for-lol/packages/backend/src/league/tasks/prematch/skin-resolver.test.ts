@@ -34,4 +34,23 @@ describe("resolveSkinNum", () => {
     const participant = makeParticipant({ lastSelectedSkinIndex: 72 });
     expect(await resolveSkinNum(participant, "Zyra")).toBe(64);
   });
+
+  // Callers pass the output of `resolveChampionKey` — which for these IDs
+  // is the normalized key ("RekSai", "KSante"). Pin that skin lookup
+  // works with the exact casing the builder produces.
+  test("accepts normalized camelCase keys (RekSai)", async () => {
+    const participant = makeParticipant({
+      championId: 421,
+      lastSelectedSkinIndex: 0,
+    });
+    expect(await resolveSkinNum(participant, "RekSai")).toBe(0);
+  });
+
+  test("accepts normalized camelCase keys (KSante)", async () => {
+    const participant = makeParticipant({
+      championId: 897,
+      lastSelectedSkinIndex: 0,
+    });
+    expect(await resolveSkinNum(participant, "KSante")).toBe(0);
+  });
 });

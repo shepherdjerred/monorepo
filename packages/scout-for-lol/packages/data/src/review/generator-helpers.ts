@@ -268,6 +268,8 @@ function buildQueueContext(queueType: string | undefined): string {
       return "This is an Arena game - a 2v2v2v2 round-based mode where four teams fight to survive. Players pick augments between rounds and the last team standing wins.";
     case "aram":
       return "This is an ARAM game - All Random All Mid on the Howling Abyss. Players get random champions and fight in a single lane. It's a more casual, chaotic mode focused on teamfighting.";
+    case "aram mayhem":
+      return "This is an ARAM: Mayhem game - a rotating ARAM variant on the Howling Abyss with chaotic buffs and modifiers. Even more casual and chaotic than standard ARAM, with unpredictable power swings.";
     case "normal":
       return "This is a Normal (unranked) game - a casual queue for practicing or playing without ranked pressure.";
     default:
