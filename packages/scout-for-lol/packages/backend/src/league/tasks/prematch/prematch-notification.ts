@@ -1,5 +1,4 @@
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
-import { z } from "zod";
 import type {
   RawCurrentGameInfo,
   PlayerConfigEntry,
@@ -60,31 +59,13 @@ function formatPrematchMessage(
   gameMode: string,
 ): string {
   const queueName = queueType ? queueTypeToDisplayString(queueType) : gameMode;
-  const validAliases = z
-    .array(z.string().min(1))
-    .parse(
-      trackedPlayers
-        .map((p) => p.alias)
-        .filter((alias) => alias.trim().length > 0),
-    );
-
-  if (validAliases.length === 0) {
+  const aliases = trackedPlayers
+    .map((p) => p.alias)
+    .filter((alias) => alias.trim().length > 0);
+  if (aliases.length === 0) {
     return `Game started: ${queueName}`;
   }
-
-  if (validAliases.length === 1) {
-    return `${z.string().parse(validAliases[0])} started a ${queueName} game`;
-  }
-
-  if (validAliases.length === 2) {
-    const first = z.string().parse(validAliases[0]);
-    const second = z.string().parse(validAliases[1]);
-    return `${first} and ${second} started a ${queueName} game`;
-  }
-
-  const allButLast = validAliases.slice(0, -1).join(", ");
-  const last = z.string().parse(validAliases.at(-1));
-  return `${allButLast}, and ${last} started a ${queueName} game`;
+  return `${formatPlayerList(aliases)} started a ${queueName} game`;
 }
 
 /**
@@ -111,12 +92,7 @@ function buildFallbackPrematchEmbed(
   });
 
   const aliases = playerDetails.map((p) => `**${p.alias}**`);
-  const playerListText = formatPlayerList(aliases);
-
-  const title =
-    trackedPlayers.length === 1
-      ? `🎮 ${trackedPlayers[0]?.alias ?? "Player"} started a ${queueName} game`
-      : `🎮 ${playerListText} started a ${queueName} game`;
+  const title = `🎮 ${formatPlayerList(aliases)} started a ${queueName} game`;
 
   const embed = new EmbedBuilder()
     .setTitle(title)

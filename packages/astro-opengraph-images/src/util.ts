@@ -25,7 +25,7 @@ export async function getFilePath({
   if (!(await fileExists(target))) {
     target = path.join(
       dir,
-      (page.endsWith("/") ? page.slice(0, -1) : page) + ".html"
+      (page.endsWith("/") ? page.slice(0, -1) : page) + ".html",
     );
   }
 
