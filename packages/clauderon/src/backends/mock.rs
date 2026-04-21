@@ -115,8 +115,7 @@ impl GitOperations for MockGitBackend {
         // Use try_read to avoid blocking
         self.worktrees
             .try_read()
-            .map(|guard| guard.contains(worktree_path))
-            .unwrap_or(false)
+            .is_ok_and(|guard| guard.contains(worktree_path))
     }
 
     async fn get_branch(&self, _worktree_path: &Path) -> anyhow::Result<String> {

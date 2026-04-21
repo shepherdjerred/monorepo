@@ -43,8 +43,7 @@ fn which(command: &str) -> bool {
     std::process::Command::new("which")
         .arg(command)
         .output()
-        .map(|output| output.status.success())
-        .unwrap_or(false)
+        .is_ok_and(|output| output.status.success())
 }
 
 /// Create a temporary file with the given content
