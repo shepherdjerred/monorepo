@@ -752,8 +752,8 @@ fn initialize_daemon_logging() -> anyhow::Result<()> {
     }
 
     // Check if JSON format is requested
-    let json_format = std::env::var("CLAUDERON_LOG_FORMAT")
-        .is_ok_and(|v| v.to_lowercase() == "json");
+    let json_format =
+        std::env::var("CLAUDERON_LOG_FORMAT").is_ok_and(|v| v.to_lowercase() == "json");
 
     // Get the RUST_LOG value once to avoid duplicate reads
     let rust_log_value = std::env::var("RUST_LOG").unwrap_or_else(|_| "clauderon=info".into());
