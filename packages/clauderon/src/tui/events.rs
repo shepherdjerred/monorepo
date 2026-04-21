@@ -299,39 +299,29 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
         KeyCode::Esc => {
             app.close_create_dialog();
         }
-        KeyCode::PageUp => {
+        KeyCode::PageUp if app.create_dialog.focus == CreateDialogFocus::Prompt => {
             // Scroll prompt field up
-            if app.create_dialog.focus == CreateDialogFocus::Prompt {
-                app.create_dialog.scroll_prompt_up();
-            }
+            app.create_dialog.scroll_prompt_up();
         }
-        KeyCode::PageDown => {
+        KeyCode::PageDown if app.create_dialog.focus == CreateDialogFocus::Prompt => {
             // Scroll prompt field down
-            if app.create_dialog.focus == CreateDialogFocus::Prompt {
-                let visible_lines = app.create_dialog.prompt_visible_lines();
-                app.create_dialog.scroll_prompt_down(visible_lines);
-            }
+            let visible_lines = app.create_dialog.prompt_visible_lines();
+            app.create_dialog.scroll_prompt_down(visible_lines);
         }
-        KeyCode::Home => {
-            if app.create_dialog.focus == CreateDialogFocus::Prompt {
-                (
-                    app.create_dialog.prompt_cursor_line,
-                    app.create_dialog.prompt_cursor_col,
-                ) = super::text_input::move_cursor_to_line_start(
-                    app.create_dialog.prompt_cursor_line,
-                );
-            }
+        KeyCode::Home if app.create_dialog.focus == CreateDialogFocus::Prompt => {
+            (
+                app.create_dialog.prompt_cursor_line,
+                app.create_dialog.prompt_cursor_col,
+            ) = super::text_input::move_cursor_to_line_start(app.create_dialog.prompt_cursor_line);
         }
-        KeyCode::End => {
-            if app.create_dialog.focus == CreateDialogFocus::Prompt {
-                (
-                    app.create_dialog.prompt_cursor_line,
-                    app.create_dialog.prompt_cursor_col,
-                ) = super::text_input::move_cursor_to_line_end(
-                    &app.create_dialog.prompt,
-                    app.create_dialog.prompt_cursor_line,
-                );
-            }
+        KeyCode::End if app.create_dialog.focus == CreateDialogFocus::Prompt => {
+            (
+                app.create_dialog.prompt_cursor_line,
+                app.create_dialog.prompt_cursor_col,
+            ) = super::text_input::move_cursor_to_line_end(
+                &app.create_dialog.prompt,
+                app.create_dialog.prompt_cursor_line,
+            );
         }
         KeyCode::Tab => {
             app.create_dialog.focus = match app.create_dialog.focus {
@@ -724,18 +714,16 @@ async fn handle_create_dialog_key(app: &mut App, key: KeyEvent) -> anyhow::Resul
             }
             _ => {}
         },
-        KeyCode::Delete => {
-            if app.create_dialog.focus == CreateDialogFocus::Prompt {
-                (
-                    app.create_dialog.prompt_cursor_line,
-                    app.create_dialog.prompt_cursor_col,
-                ) = super::text_input::delete_char_at_cursor_multiline(
-                    &mut app.create_dialog.prompt,
-                    app.create_dialog.prompt_cursor_line,
-                    app.create_dialog.prompt_cursor_col,
-                );
-                app.create_dialog.ensure_cursor_visible();
-            }
+        KeyCode::Delete if app.create_dialog.focus == CreateDialogFocus::Prompt => {
+            (
+                app.create_dialog.prompt_cursor_line,
+                app.create_dialog.prompt_cursor_col,
+            ) = super::text_input::delete_char_at_cursor_multiline(
+                &mut app.create_dialog.prompt,
+                app.create_dialog.prompt_cursor_line,
+                app.create_dialog.prompt_cursor_col,
+            );
+            app.create_dialog.ensure_cursor_visible();
         }
         _ => {}
     }

@@ -642,7 +642,7 @@ async fn browse_directory(
             }
 
             // Sort directories alphabetically
-            dirs.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+            dirs.sort_by_key(|a| a.name.to_lowercase());
 
             (dirs, None)
         }
@@ -708,8 +708,8 @@ async fn upload_file(
         let name = field.name().unwrap_or("").to_owned();
 
         if name == "file" {
-            content_type = field.content_type().map(std::string::ToString::to_string);
-            file_name = field.file_name().map(std::string::ToString::to_string);
+            content_type = field.content_type().map(str::to_owned);
+            file_name = field.file_name().map(str::to_owned);
             file_data = Some(
                 field
                     .bytes()

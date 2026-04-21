@@ -2061,7 +2061,7 @@ impl SessionManager {
                 session.agent,
                 session.subdirectory.clone(),
                 session.dangerous_skip_checks,
-                session.model_cli_flag().map(str::to_string),
+                session.model_cli_flag().map(str::to_owned),
             )
         };
 
@@ -2587,7 +2587,7 @@ impl SessionManager {
             // Create new container
             let create_options = crate::backends::CreateOptions {
                 agent,
-                model: session.model_cli_flag().map(str::to_string),
+                model: session.model_cli_flag().map(str::to_owned),
                 print_mode: false,
                 plan_mode: false,
                 images: vec![],
@@ -2861,7 +2861,7 @@ impl SessionManager {
         // Build creation options from session state
         let create_options = crate::backends::CreateOptions {
             agent: session.agent,
-            model: session.model_cli_flag().map(str::to_string),
+            model: session.model_cli_flag().map(str::to_owned),
             print_mode: false, // Never use print mode for recreation
             plan_mode: false,  // Don't enter plan mode - session already has context
             images: vec![],    // No images for recreation

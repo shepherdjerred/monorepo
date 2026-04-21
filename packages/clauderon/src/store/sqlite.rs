@@ -284,8 +284,7 @@ impl SqliteStore {
         )
         .fetch_one(pool)
         .await
-        .map(|count: i64| count > 0)
-        .unwrap_or(false);
+        .is_ok_and(|count: i64| count > 0);
 
         if !access_mode_exists {
             tracing::info!("Running migration: Adding access_mode column to sessions table");
@@ -302,8 +301,7 @@ impl SqliteStore {
         )
         .fetch_one(pool)
         .await
-        .map(|count: i64| count > 0)
-        .unwrap_or(false);
+        .is_ok_and(|count: i64| count > 0);
 
         if !proxy_port_exists {
             tracing::info!("Running migration: Adding proxy_port column to sessions table");
@@ -325,8 +323,7 @@ impl SqliteStore {
         )
         .fetch_one(pool)
         .await
-        .map(|count: i64| count > 0)
-        .unwrap_or(false);
+        .is_ok_and(|count: i64| count > 0);
 
         if !claude_status_exists {
             sqlx::query(
@@ -342,8 +339,7 @@ impl SqliteStore {
         )
         .fetch_one(pool)
         .await
-        .map(|count: i64| count > 0)
-        .unwrap_or(false);
+        .is_ok_and(|count: i64| count > 0);
 
         if !status_time_exists {
             sqlx::query("ALTER TABLE sessions ADD COLUMN claude_status_updated_at TEXT")
@@ -373,8 +369,7 @@ impl SqliteStore {
         )
         .fetch_one(pool)
         .await
-        .map(|count: i64| count > 0)
-        .unwrap_or(false);
+        .is_ok_and(|count: i64| count > 0);
 
         if !merge_conflict_exists {
             sqlx::query(
