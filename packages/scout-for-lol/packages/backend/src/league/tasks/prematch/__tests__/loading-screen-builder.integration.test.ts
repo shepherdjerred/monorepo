@@ -85,4 +85,41 @@ describe("buildLoadingScreenData with real spectator payload", () => {
     // Snapshot the full structure
     expect(parsed).toMatchSnapshot();
   });
+
+  test("queue 2400 (ARAM: Mayhem) with Rek'Sai resolves without throwing", async () => {
+    // Start from the ranked-flex payload and mutate just enough to simulate
+    // an ARAM Mayhem game with Rek'Sai in it — the two previously-failing
+    // code paths (queue 2400 unmapped, Reksai → RekSai asset lookup).
+    const baseGameInfo = await loadSpectatorPayload(
+      `${currentDir}testdata/spectator-ranked-flex.json`,
+    );
+
+    const gameInfo = RawCurrentGameInfoSchema.parse({
+      ...baseGameInfo,
+      gameQueueConfigId: 2400,
+      mapId: 12, // Howling Abyss
+      gameMode: "ARAM",
+      bannedChampions: [],
+      participants: baseGameInfo.participants.map((p, i) =>
+        i === 0 ? { ...p, championId: 421 } : p,
+      ),
+    });
+
+    const result = await buildLoadingScreenData(
+      gameInfo,
+      new Set(),
+      "AMERICA_NORTH",
+    );
+
+    const parsed = LoadingScreenDataSchema.parse(result);
+    expect(parsed.queueType).toBe("aram mayhem");
+    expect(String(parsed.queueDisplayName)).toBe("ARAM mayhem");
+    expect(parsed.layout).toBe("aram");
+    expect(parsed.mapName).toBe("Howling Abyss");
+    expect(parsed.bans).toHaveLength(0);
+
+    const reksai = parsed.participants.find((p) => p.championName === "RekSai");
+    expect(reksai).toBeDefined();
+    expect(reksai?.championDisplayName).toBe("Reksai");
+  });
 });

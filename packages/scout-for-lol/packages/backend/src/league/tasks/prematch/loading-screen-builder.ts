@@ -46,6 +46,7 @@ function determineLayout(gameQueueConfigId: number): LoadingScreenLayout {
   return match(gameQueueConfigId)
     .with(450, () => "aram" as const) // ARAM
     .with(720, () => "aram" as const) // ARAM Clash
+    .with(2400, () => "aram" as const) // ARAM: Mayhem
     .with(ARENA_QUEUE_ID, () => "arena" as const) // Arena
     .with(0, () => "standard" as const) // Custom
     .with(400, () => "standard" as const) // Draft Pick

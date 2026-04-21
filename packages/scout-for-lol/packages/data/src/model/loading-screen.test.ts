@@ -102,6 +102,21 @@ describe("LoadingScreenParticipantSchema", () => {
     expect(result.puuid).toBeNull();
   });
 
+  // Callers must pass the normalized Data Dragon key (`RekSai`, `KSante`,
+  // `JarvanIV`) — the schema stores the key verbatim and downstream
+  // consumers look up files by that exact string. This pins the contract.
+  test.each(["RekSai", "KSante", "JarvanIV", "MonkeyKing", "Fiddlesticks"])(
+    "accepts normalized Data Dragon key %s",
+    (championName) => {
+      const result = LoadingScreenParticipantSchema.parse({
+        ...validParticipant,
+        championName,
+        championDisplayName: championName,
+      });
+      expect(result.championName).toBe(championName);
+    },
+  );
+
   test("accepts participant with runes and ranks", () => {
     const withOptionals = {
       ...validParticipant,

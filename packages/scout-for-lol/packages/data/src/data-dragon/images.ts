@@ -1,8 +1,28 @@
 import type { Lane } from "#src/model/lane.ts";
 import { latestVersion } from "./version.ts";
 
+// Twisted's `getChampionName(id)` returns SCREAMING_SNAKE_CASE, and
+// `resolveChampionKey` PascalCases it for Data Dragon. Twisted is inconsistent
+// about underscores — e.g. "LEE_SIN" → "LeeSin" (matches file) but
+// "REKSAI" → "Reksai" (does NOT match on-disk `RekSai.png`). This map rewrites
+// the broken PascalCase forms to the real filenames for every camelCase
+// champion asset we ship, plus Roman-numeral cases.
 const championNameOverrides: Record<string, string> = {
   FiddleSticks: "Fiddlesticks",
+  Reksai: "RekSai",
+  Kogmaw: "KogMaw",
+  Monkeyking: "MonkeyKing",
+  Aurelionsol: "AurelionSol",
+  Drmundo: "DrMundo",
+  Leesin: "LeeSin",
+  Masteryi: "MasterYi",
+  Missfortune: "MissFortune",
+  Tahmkench: "TahmKench",
+  Twistedfate: "TwistedFate",
+  Xinzhao: "XinZhao",
+  Ksante: "KSante",
+  JarvanIv: "JarvanIV",
+  Jarvaniv: "JarvanIV",
 };
 
 export function normalizeChampionName(championName: string): string {
