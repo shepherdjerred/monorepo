@@ -35,6 +35,7 @@
     "cron-parser": "^5.5.0",
     "discord-player": "7.2.0",
     "discord-player-youtubei": "^2.0.0",
+    "youtube-dl-exec": "^3.1.5",
     "discord.js": "^14.26.3",
     "hono": "^4.12.14",
     "mediaplex": "^1.0.0",
