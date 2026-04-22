@@ -23,7 +23,7 @@
     "eslint": "^9.39.4",
     "jiti": "^2.6.1",
     "typescript": "^6.0.3",
-    "vite": "^7.3.2"
+    "vite": "^8.0.9"
   },
   "repository": {
     "type": "git",
