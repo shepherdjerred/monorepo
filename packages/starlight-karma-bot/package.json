@@ -22,7 +22,7 @@
   "dependencies": {
     "@sentry/bun": "^10.49.0",
     "discord.js": "^14.26.3",
-    "dotenv": "^16.6.1",
+    "dotenv": "^17.4.2",
     "env-var": "^7.5.0",
     "lodash": "4.18.1",
     "reflect-metadata": "^0.2.2",

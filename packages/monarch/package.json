@@ -15,7 +15,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
     "monarch-money-api": "^0.0.7",
-    "pdfjs-dist": "4.10.38",
+    "pdfjs-dist": "^5.6.205",
     "playwright": "^1.59.1",
     "zod": "^4.3.6"
   },

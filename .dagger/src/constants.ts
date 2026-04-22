@@ -46,13 +46,13 @@ export const BUN_VERSION = "1.3.13";
 export const RELEASE_PLEASE_VERSION = "17.3.0";
 
 // renovate: datasource=npm depName=@anthropic-ai/claude-code
-export const CLAUDE_CODE_VERSION = "2.1.92";
+export const CLAUDE_CODE_VERSION = "2.1.117";
 
 // renovate: datasource=github-releases depName=golangci/golangci-lint
 export const GOLANGCI_LINT_VERSION = "v2.1.6";
 
 // renovate: datasource=github-releases depName=cli/cli
-export const GH_CLI_VERSION = "2.87.3";
+export const GH_CLI_VERSION = "2.91.0";
 
 // ---------------------------------------------------------------------------
 // Cache volume names (stable — never include version numbers)

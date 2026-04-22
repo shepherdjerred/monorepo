@@ -19,7 +19,7 @@ UV_VERSION="0.11.7"
 HELM_VERSION="v4.1.4"
 
 # renovate: datasource=github-tags depName=aws/aws-cli versioning=semver
-AWSCLI_VERSION="2.34.33"
+AWSCLI_VERSION="2.34.34"
 
 # renovate: datasource=github-releases depName=opentofu/opentofu
 OPENTOFU_VERSION="1.11.6"
@@ -28,7 +28,7 @@ OPENTOFU_VERSION="1.11.6"
 BUN_VERSION="1.3.13"
 
 # renovate: datasource=github-releases depName=cli/cli
-GH_VERSION="2.90.0"
+GH_VERSION="2.91.0"
 
 # renovate: datasource=github-tags depName=rust-lang/rustup versioning=semver
 RUSTUP_VERSION="1.29.0"
