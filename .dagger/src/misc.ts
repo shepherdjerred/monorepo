@@ -479,4 +479,3 @@ enabled = false
     "Used disallowed intents",
   ]);
 }
-
