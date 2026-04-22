@@ -73,7 +73,7 @@
     "@types/jsdom": "^28.0.1",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
-    "astro": "^5.18.1",
+    "astro": "^6.1.9",
     "eslint": "^9.39.4",
     "jiti": "^2.6.1",
     "typescript": "^6.0.3",
