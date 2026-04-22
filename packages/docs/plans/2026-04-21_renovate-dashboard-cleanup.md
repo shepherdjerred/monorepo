@@ -15,16 +15,22 @@
 - `be57b1143` — discord-player-youtubei v2 + youtubei.js v17 in birmel
 - `b58c8cd64` — Wave 4 partial: webring Zod 4 (standalone, no cross-package cascade)
 
-**Deferred to dedicated sessions:**
+**Session 2 continued — landed pushes for the remaining cascades:**
 
-- **Wave 2a (ESLint 10)** — blocked upstream by `eslint-plugin-react@7.37.5` peer cap at `^9.7`. The `contextOrFilename.getFilename is not a function` error at rule load is the symptom. Revisit once plugin ships v10 support.
-- **Wave 3 (Prisma v7)** — requires schema.prisma migration: `url` field moved from datasource to prisma.config.ts with explicit adapter (e.g., `@prisma/adapter-better-sqlite3`). 2 packages affected (birmel, scout-for-lol/backend), both with non-trivial Prisma client usage.
-- **Wave 3 (sjer.red Astro v6)** — blocked on Zod v4 migration; content collection schemas use external `zod` which conflicts with Astro v6's Zod v4 internal shapes.
-- **Wave 4 (Zod v4 bulk)** — tasknotes-types ↔ tasks-for-obsidian + tasknotes-server cascade. Zod v4 removed `z.function()` which native bridges (live-activity-bridge, widget-bridge) rely on; monorepo's strict custom ESLint rules (`no-type-assertions`, `no-type-guards`, `prefer-zod-validation`) make the rewrite awkward. Also blocks discord-plays-pokemon, clauderon/mobile, sjer.red.
-- **Wave 5 (React Native 0.84 + 5 closed PRs)** — requires native `ios/` + `android/` patches via React Native Upgrade Helper, pod install, simulator builds. Mobile-focused session.
-- **Wave 5 (Prod image promotions)** — scout-for-lol/prod 2.0.0-998 and starlight-karma-bot/prod 2.0.0-829 → current (2.0.0-1050+). Triggers real ArgoCD deployments, needs explicit user coordination.
+- `c8efae8e3` — Wave 4: Zod v4 across tasknotes-types/server/tasks-for-obsidian (schema cascade, z.function → z.custom, z.record shape change, .passthrough → z.looseObject)
+- `3c4271c6b` — Wave 3b + 4: Zod 4 in clauderon/mobile + sjer.red, Astro 6 in sjer.red (z.string().url() → z.url(), BlogContent.astro imports z from 'zod' directly now that Astro 6 no longer re-exports it)
+- `9ad14ec53` — Wave 5: React Native 0.85.2 cluster in tasks-for-obsidian + clauderon/mobile (RN, community/cli v20, async-storage v3 with multiRemove→removeMany, netinfo v12, sentry-rn cross-major, reanimated v4, haptic-feedback v3, image-picker v8, react-macos 19.2)
+- `2df0bc015` — DPP lockfile fix after Zod 4 attempt/revert
 
-Higher-risk framework/RN majors deferred. Dagger CI has pre-existing infra issues unrelated to these dep updates — see "Dagger CI state" at the bottom.
+**Still deferred (upstream-blocked):**
+
+- **Wave 2a (ESLint 10)** — `eslint-plugin-react@7.37.5` peer caps at `^9.7`; `contextOrFilename.getFilename is not a function` at rule load under v10. Revisit once plugin ships v10.
+- **Wave 3 (Prisma v7)** — attempted via `@prisma/adapter-libsql` + prisma.config.ts but blocked by [Bun's incomplete better-sqlite3 support](https://github.com/oven-sh/bun/issues/4290). Tests need explicit `prisma db push` under the new adapter pattern. Reverted for now; will need tests infra rework alongside the Prisma 7 migration.
+- **Wave 4 (DPP Zod v4)** — `@d6v/zconf@0.0.4` (latest) signature uses `ZodType<any, ZodTypeDef, any>` which isn't v4-compatible. Affects discord-plays-pokemon/{backend,common,frontend}. Needs upstream update or zconf replacement.
+- **Vector-icons deprecation** — `@react-native-vector-icons/<font>` namespaced packages enforce narrow icon-name union types. `AppIcon` / `BrowseItem` / `SavedViewCard` pass `string` through props; migration requires cascading type narrowing across the component tree. Deferred.
+- **Wave 5 (prod image promotions)** — scout-for-lol/prod 2.0.0-998 → current (2.0.0-1050+) and starlight-karma-bot/prod 2.0.0-829 → current. Triggers real ArgoCD deployments; needs coordinated maintenance window with user.
+
+Higher-risk framework/RN majors largely handled. Dagger CI has pre-existing infra issues unrelated to these dep updates — see "Dagger CI state" at the bottom.
 
 ## Context
 
