@@ -122,7 +122,7 @@ export const BookmarkSchema = z.object({
 
 export type Bookmark = z.infer<typeof BookmarkSchema>;
 
-export const BookmarksSchema = z.record(z.string().url(), BookmarkSchema);
+export const BookmarksSchema = z.record(z.url(), BookmarkSchema);
 
 export type Bookmarks = z.infer<typeof BookmarksSchema>;
 

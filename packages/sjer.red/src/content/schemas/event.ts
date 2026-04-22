@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const LocationSchema = z.object({
   text: z.string(),
-  url: z.string().url(),
+  url: z.url(),
   parking: z.string().optional(),
 });
 

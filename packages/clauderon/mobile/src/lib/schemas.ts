@@ -92,9 +92,11 @@ const ContentBlockSchema = z.object({
   text: z.string().optional(),
   id: z.string().optional(),
   name: z.string().optional(),
-  input: z.record(z.unknown()).optional(),
+  input: z.record(z.string(), z.unknown()).optional(),
   tool_use_id: z.string().optional(),
-  content: z.union([z.string(), z.array(z.unknown()), z.record(z.unknown())]).optional(),
+  content: z
+    .union([z.string(), z.array(z.unknown()), z.record(z.string(), z.unknown())])
+    .optional(),
   is_error: z.boolean().optional(),
 });
 

@@ -1,5 +1,8 @@
 import type { Client } from "@temporalio/client";
-import { HomeAssistantEventClient } from "@shepherdjerred/home-assistant";
+import {
+  HomeAssistantEventClient,
+  HomeAssistantRestClient,
+} from "@shepherdjerred/home-assistant";
 import { handleIosAction, handleStateChanged } from "./triggers.ts";
 
 export type EventBridgeHandle = {
@@ -19,6 +22,7 @@ export async function startEventBridge(
   }
 
   const events = new HomeAssistantEventClient({ baseUrl, token });
+  const rest = new HomeAssistantRestClient({ baseUrl, token });
   events.onConnectionChange((state, detail) => {
     if (state === "error") {
       const message =
@@ -31,7 +35,10 @@ export async function startEventBridge(
 
   await events.connect();
   await events.subscribeEvents("ios.action_fired", handleIosAction(client));
-  await events.subscribeEvents("state_changed", handleStateChanged(client));
+  await events.subscribeEvents(
+    "state_changed",
+    handleStateChanged(client, rest),
+  );
   console.warn("HA event bridge subscriptions active");
 
   return {

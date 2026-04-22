@@ -6,12 +6,17 @@ import {
   DeploymentStrategy,
   EnvValue,
   Secret,
+  ServiceAccount,
 } from "cdk8s-plus-31";
 import {
   withCommonProps,
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import {
+  KubeClusterRole,
+  KubeClusterRoleBinding,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
@@ -37,9 +42,44 @@ export function createTemporalWorkerDeployment(
     onePasswordItem.name,
   );
 
+  // ServiceAccount + RBAC for the golink-sync workflow, which lists Tailscale
+  // Ingresses cluster-wide via @kubernetes/client-node's in-cluster config.
+  const serviceAccount = new ServiceAccount(chart, "temporal-worker-sa", {
+    metadata: { name: "temporal-worker" },
+  });
+
+  new KubeClusterRole(chart, "temporal-worker-ingress-reader", {
+    metadata: { name: "temporal-worker-ingress-reader" },
+    rules: [
+      {
+        apiGroups: ["networking.k8s.io"],
+        resources: ["ingresses"],
+        verbs: ["get", "list", "watch"],
+      },
+    ],
+  });
+
+  new KubeClusterRoleBinding(chart, "temporal-worker-ingress-reader-binding", {
+    metadata: { name: "temporal-worker-ingress-reader" },
+    roleRef: {
+      apiGroup: "rbac.authorization.k8s.io",
+      kind: "ClusterRole",
+      name: "temporal-worker-ingress-reader",
+    },
+    subjects: [
+      {
+        kind: "ServiceAccount",
+        name: serviceAccount.name,
+        namespace: chart.namespace ?? "temporal",
+      },
+    ],
+  });
+
   const deployment = new Deployment(chart, "temporal-worker", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
+    serviceAccount,
+    automountServiceAccountToken: true,
     securityContext: {
       fsGroup: GID,
     },

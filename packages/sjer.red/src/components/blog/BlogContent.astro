@@ -1,6 +1,6 @@
 ---
 import FormattedDate from "@components/FormattedDate.astro";
-import type { z } from "astro:content";
+import type { z } from "zod";
 import type { BlogSchema } from "src/content/schemas";
 
 type Props = z.infer<typeof BlogSchema>;

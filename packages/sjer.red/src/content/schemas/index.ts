@@ -10,7 +10,7 @@ export const BasePostSchema = z.object({
 
 export const BlogSchema = BasePostSchema.extend({
   image: z.string().optional(),
-  hackerNews: z.string().url().optional(),
+  hackerNews: z.url().optional(),
 }).transform((val) => ({
   ...val,
   description: val.description ?? val.title,
@@ -19,7 +19,7 @@ export const BlogSchema = BasePostSchema.extend({
 
 export const TilSchema = BasePostSchema.extend({
   title: z.string().transform((val) => `TIL: ${val}`),
-  hackerNews: z.string().url().optional(),
+  hackerNews: z.url().optional(),
 }).transform((val) => ({
   ...val,
   description: val.description ?? val.title,

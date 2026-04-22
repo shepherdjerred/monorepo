@@ -1,7 +1,10 @@
 import { z } from "zod";
 import type { Client } from "@temporalio/client";
 import { WorkflowIdReusePolicy } from "@temporalio/client";
-import type { EventEnvelope } from "@shepherdjerred/home-assistant";
+import type {
+  EventEnvelope,
+  HomeAssistantRestClient,
+} from "@shepherdjerred/home-assistant";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const IOS_ACTION_ID_GOOD_NIGHT = "A91A15AA-479E-416C-8F51-BD983A999266";
@@ -16,7 +19,8 @@ const StateChangedEventData = z.object({
   old_state: z.object({ state: z.string() }).loose().nullable().optional(),
 });
 
-const PERSON_ENTITIES = new Set(["person.jerred", "person.shuxin"]);
+const PERSON_ENTITIES = ["person.jerred", "person.shuxin"] as const;
+const PERSON_ENTITY_SET = new Set<string>(PERSON_ENTITIES);
 
 function dayKey(): string {
   const now = new Date();
@@ -45,6 +49,19 @@ async function startWorkflow(
   }
 }
 
+// True if every person except `transitioningEntityId` is `not_home`, i.e.
+// the transitioning person is alone on their side of the home/not-home split.
+// welcomeHome fires on first-arrival (others all away → house was empty).
+// leavingHome fires on last-departure (others all away → house is now empty).
+async function othersAllAway(
+  rest: HomeAssistantRestClient,
+  transitioningEntityId: string,
+): Promise<boolean> {
+  const others = PERSON_ENTITIES.filter((e) => e !== transitioningEntityId);
+  const states = await Promise.all(others.map((e) => rest.getState(e)));
+  return states.every((s) => s.state === "not_home");
+}
+
 export function handleIosAction(
   client: Client,
 ): (event: EventEnvelope) => Promise<void> {
@@ -62,13 +79,14 @@ export function handleIosAction(
 
 export function handleStateChanged(
   client: Client,
+  rest: HomeAssistantRestClient,
 ): (event: EventEnvelope) => Promise<void> {
   return async (event) => {
     const parsed = StateChangedEventData.safeParse(event.data);
     if (!parsed.success) {
       return;
     }
-    if (!PERSON_ENTITIES.has(parsed.data.entity_id)) {
+    if (!PERSON_ENTITY_SET.has(parsed.data.entity_id)) {
       return;
     }
     const oldState = parsed.data.old_state?.state;
@@ -77,6 +95,12 @@ export function handleStateChanged(
       return;
     }
     if (oldState === "not_home" && newState === "home") {
+      if (!(await othersAllAway(rest, parsed.data.entity_id))) {
+        console.warn(
+          `welcomeHome skipped: ${parsed.data.entity_id} arrived but others are home`,
+        );
+        return;
+      }
       await startWorkflow(
         client,
         "welcomeHome",
@@ -85,6 +109,12 @@ export function handleStateChanged(
       return;
     }
     if (oldState === "home" && newState === "not_home") {
+      if (!(await othersAllAway(rest, parsed.data.entity_id))) {
+        console.warn(
+          `leavingHome skipped: ${parsed.data.entity_id} left but others are still home`,
+        );
+        return;
+      }
       await startWorkflow(
         client,
         "leavingHome",

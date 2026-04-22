@@ -5,6 +5,9 @@ import {
 } from "@temporalio/client";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
+// All cron expressions below are wall-clock local time for the homelab.
+const SCHEDULE_TIMEZONE = "America/Los_Angeles";
+
 type ScheduleDefinition = {
   id: string;
   workflowType: string;
@@ -148,6 +151,7 @@ export async function registerSchedules(client: Client): Promise<void> {
         ...prev,
         spec: {
           cronExpressions: [schedule.cronExpression],
+          timezone: SCHEDULE_TIMEZONE,
         },
         action: {
           type: "startWorkflow",
@@ -170,6 +174,7 @@ export async function registerSchedules(client: Client): Promise<void> {
         scheduleId: schedule.id,
         spec: {
           cronExpressions: [schedule.cronExpression],
+          timezone: SCHEDULE_TIMEZONE,
         },
         action: {
           type: "startWorkflow",

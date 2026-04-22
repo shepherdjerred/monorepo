@@ -72,7 +72,7 @@ function handleFunctionCallPayload(
 ): Message {
   let parsedInput: Record<string, unknown> | undefined;
   try {
-    parsedInput = z.record(z.unknown()).parse(JSON.parse(payload.arguments));
+    parsedInput = z.record(z.string(), z.unknown()).parse(JSON.parse(payload.arguments));
   } catch {
     parsedInput = { raw: payload.arguments };
   }
