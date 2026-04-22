@@ -44,6 +44,7 @@ AI-maintained knowledge base for the monorepo.
 - [Bedrock Waker](plans/2026-03-01_bedrock-waker.md) - Minecraft Bedrock server wake-on-LAN
 - [Scout User Outreach](plans/2026-03-27_scout-user-outreach.md) - User engagement plan for Discord bot
 - [Renovate Dashboard Cleanup (2026-04-21)](plans/2026-04-21_renovate-dashboard-cleanup.md) - Six-wave cleanup of Renovate #481 backlog; lower/medium-risk waves in progress, high-risk framework/RN migrations deferred
+- [Dagger CI Infrastructure Fixes (2026-04-21)](plans/2026-04-21_dagger-ci-infra-fixes.md) - Punch list for ciAllHelper bugs: Rust/Go workdir, helm binary, clauderon/web workspace, scout-for-lol tsconfig extends
 
 ## Guides
 
