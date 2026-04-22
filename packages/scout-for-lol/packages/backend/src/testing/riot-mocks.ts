@@ -178,7 +178,7 @@ export function makeTestParticipant(
 export function makeTestChallenges(
   overrides: Partial<RawChallenges> = {},
 ): RawChallenges {
-  const result = {
+  const result: RawChallenges = {
     "12AssistStreakCount": 0,
     abilityUses: 0,
     acesBefore15Minutes: 0,
@@ -294,6 +294,5 @@ export function makeTestChallenges(
     wardsGuarded: 0,
     ...overrides,
   };
-  // eslint-disable-next-line custom-rules/no-type-assertions -- test mock with Partial spread requires assertion
-  return result as unknown as RawChallenges;
+  return result;
 }
