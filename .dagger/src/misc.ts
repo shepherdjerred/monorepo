@@ -18,13 +18,10 @@ import {
 
 import {
   buildImageHelper,
-  buildDepsSummaryImageHelper,
-  buildDnsAuditImageHelper,
   buildCaddyS3ProxyImageHelper,
   buildObsidianHeadlessImageHelper,
   buildScoutImageHelper,
   buildDiscordPlaysPokemonImageHelper,
-  buildBetterSkillCappedFetcherImageHelper,
 } from "./image";
 
 import versions from "./versions";
@@ -288,61 +285,6 @@ export async function smokeTestTasknotesServerHelper(
 // ---------------------------------------------------------------------------
 
 /**
- * Smoke test dependency-summary image.
- * Verifies: app boots, TypeScript loads, begins cloning repo.
- * Expects: git clone to fail (no auth) or network failure — proves the app
- * started, parsed args, and reached business logic.
- */
-export async function smokeTestDepsSummaryHelper(
-  pkgDir: Directory,
-  depNames: string[] = [],
-  depDirs: Directory[] = [],
-): Promise<string> {
-  // git is installed in the production image via homelabSubPackageBase
-  const container = buildDepsSummaryImageHelper(pkgDir, depNames, depDirs)
-    .withEntrypoint([])
-    .withExec(["sh", "-c", "timeout 30s bun run src/main.ts 2>&1"]);
-
-  return runSmokeTest(container, [
-    // Expected: clone succeeds (public repo) but email send fails (no Postal API)
-    "ECONNREFUSED",
-    "fetch failed",
-    "Failed to generate dependency summary",
-    "fatal",
-    "authentication",
-    "POSTAL",
-    "getaddrinfo",
-  ]);
-}
-
-/**
- * Smoke test dns-audit image.
- * Verifies: Python + checkdmarc installed correctly, all submodules importable,
- * and the CLI entry point runs (--help exits 0).
- */
-export async function smokeTestDnsAuditHelper(): Promise<string> {
-  const container = buildDnsAuditImageHelper()
-    .withEntrypoint([])
-    .withExec([
-      "python3",
-      "-c",
-      // Import all key submodules and run a real DNS check against a known domain.
-      // This proves the full package works end-to-end, not just that it imports.
-      [
-        "import checkdmarc",
-        "import checkdmarc.dmarc",
-        "import checkdmarc.spf",
-        "import checkdmarc.smtp",
-        "print('checkdmarc ' + checkdmarc.__version__)",
-        "result = checkdmarc.check_domains(['example.com'])",
-        "print('DNS check completed for example.com')",
-      ].join("; "),
-    ]);
-
-  return runSmokeTest(container, []);
-}
-
-/**
  * Smoke test caddy-s3proxy image.
  * Verifies: custom Caddy binary starts, includes s3proxy module, and can validate config.
  */
@@ -538,30 +480,3 @@ enabled = false
   ]);
 }
 
-/**
- * Smoke test better-skill-capped-fetcher image.
- * Verifies: app boots, attempts Firebase/S3 operations (expects failure).
- */
-export async function smokeTestBetterSkillCappedFetcherHelper(
-  pkgDir: Directory,
-  depNames: string[] = [],
-  depDirs: Directory[] = [],
-): Promise<string> {
-  const container = buildBetterSkillCappedFetcherImageHelper(
-    pkgDir,
-    depNames,
-    depDirs,
-  )
-    .withEnvVariable("OUTPUT_PATH", "/tmp/smoke-manifest.json")
-    .withEntrypoint([])
-    .withExec(["sh", "-c", "timeout 30s bun run src/index.ts 2>&1"]);
-
-  return runSmokeTest(container, [
-    "PERMISSION_DENIED",
-    "Missing or insufficient permissions",
-    "fetch failed",
-    "ECONNREFUSED",
-    "Firestore",
-    "firebase",
-  ]);
-}

@@ -56,21 +56,15 @@ import { astroCheckHelper, astroBuildHelper, viteBuildHelper } from "./astro";
 import {
   buildImageHelper,
   pushImageHelper,
-  buildDepsSummaryImageHelper,
-  buildDnsAuditImageHelper,
   buildCaddyS3ProxyImageHelper,
   buildObsidianHeadlessImageHelper,
   buildScoutImageHelper,
   buildDiscordPlaysPokemonImageHelper,
-  buildBetterSkillCappedFetcherImageHelper,
   buildTemporalWorkerImageHelper,
-  pushDepsSummaryImageHelper,
-  pushDnsAuditImageHelper,
   pushCaddyS3ProxyImageHelper,
   pushObsidianHeadlessImageHelper,
   pushScoutImageHelper,
   pushDiscordPlaysPokemonImageHelper,
-  pushBetterSkillCappedFetcherImageHelper,
   pushTemporalWorkerImageHelper,
   buildCiBaseImageHelper,
   pushCiBaseImageHelper,
@@ -101,12 +95,9 @@ import {
   smokeTestBirmelHelper,
   smokeTestStarlightKarmaBotHelper,
   smokeTestTasknotesServerHelper,
-  smokeTestDepsSummaryHelper,
-  smokeTestDnsAuditHelper,
   smokeTestCaddyS3ProxyHelper,
   smokeTestObsidianHeadlessHelper,
   smokeTestDiscordPlaysPokemonHelper,
-  smokeTestBetterSkillCappedFetcherHelper,
 } from "./misc";
 
 @object()
@@ -362,33 +353,6 @@ export class Monorepo {
   // Homelab sub-package image operations
   // ---------------------------------------------------------------------------
 
-  /** Build the dependency-summary image (Bun + helm binary) */
-  @func()
-  buildDepsSummaryImage(
-    pkgDir: Directory,
-    depNames: string[] = [],
-    depDirs: Directory[] = [],
-    version: string = "dev",
-    gitSha: string = "unknown",
-  ): Container {
-    return buildDepsSummaryImageHelper(
-      pkgDir,
-      depNames,
-      depDirs,
-      version,
-      gitSha,
-    );
-  }
-
-  /** Build the dns-audit image (Python + checkdmarc) */
-  @func()
-  buildDnsAuditImage(
-    version: string = "dev",
-    gitSha: string = "unknown",
-  ): Container {
-    return buildDnsAuditImageHelper(version, gitSha);
-  }
-
   /** Build the caddy-s3proxy image (custom Caddy build with S3 proxy plugin) */
   @func()
   buildCaddyS3ProxyImage(
@@ -405,48 +369,6 @@ export class Monorepo {
     gitSha: string = "unknown",
   ): Container {
     return buildObsidianHeadlessImageHelper(version, gitSha);
-  }
-
-  /** Push a dependency-summary image to a registry. Returns digest. */
-  @func({ cache: "never" })
-  async pushDepsSummaryImage(
-    pkgDir: Directory,
-    tags: string[],
-    registryUsername: string,
-    registryPassword: Secret,
-    depNames: string[] = [],
-    depDirs: Directory[] = [],
-    version: string = "dev",
-    gitSha: string = "unknown",
-  ): Promise<string> {
-    return pushDepsSummaryImageHelper(
-      pkgDir,
-      tags,
-      registryUsername,
-      registryPassword,
-      depNames,
-      depDirs,
-      version,
-      gitSha,
-    );
-  }
-
-  /** Push a dns-audit image to a registry. Returns digest. */
-  @func({ cache: "never" })
-  async pushDnsAuditImage(
-    tags: string[],
-    registryUsername: string,
-    registryPassword: Secret,
-    version: string = "dev",
-    gitSha: string = "unknown",
-  ): Promise<string> {
-    return pushDnsAuditImageHelper(
-      tags,
-      registryUsername,
-      registryPassword,
-      version,
-      gitSha,
-    );
   }
 
   /** Push a caddy-s3proxy image to a registry. Returns digest. */
@@ -556,48 +478,6 @@ export class Monorepo {
     gitSha: string = "unknown",
   ): Promise<string> {
     return pushDiscordPlaysPokemonImageHelper(
-      pkgDir,
-      tags,
-      registryUsername,
-      registryPassword,
-      depNames,
-      depDirs,
-      version,
-      gitSha,
-    );
-  }
-
-  /** Build the better-skill-capped fetcher image (Bun + fetcher subdirectory) */
-  @func()
-  buildBetterSkillCappedFetcherImage(
-    pkgDir: Directory,
-    depNames: string[] = [],
-    depDirs: Directory[] = [],
-    version: string = "dev",
-    gitSha: string = "unknown",
-  ): Container {
-    return buildBetterSkillCappedFetcherImageHelper(
-      pkgDir,
-      depNames,
-      depDirs,
-      version,
-      gitSha,
-    );
-  }
-
-  /** Push a better-skill-capped-fetcher image to a registry. Returns digest. */
-  @func({ cache: "never" })
-  async pushBetterSkillCappedFetcherImage(
-    pkgDir: Directory,
-    tags: string[],
-    registryUsername: string,
-    registryPassword: Secret,
-    depNames: string[] = [],
-    depDirs: Directory[] = [],
-    version: string = "dev",
-    gitSha: string = "unknown",
-  ): Promise<string> {
-    return pushBetterSkillCappedFetcherImageHelper(
       pkgDir,
       tags,
       registryUsername,
@@ -1289,22 +1169,6 @@ export class Monorepo {
     return smokeTestTasknotesServerHelper(pkgDir, pkg, depNames, depDirs);
   }
 
-  /** Smoke test dependency-summary: boots app, expects clone/API failure */
-  @func()
-  async smokeTestDepsSummary(
-    pkgDir: Directory,
-    depNames: string[] = [],
-    depDirs: Directory[] = [],
-  ): Promise<string> {
-    return smokeTestDepsSummaryHelper(pkgDir, depNames, depDirs);
-  }
-
-  /** Smoke test dns-audit: verifies Python + checkdmarc installed */
-  @func()
-  async smokeTestDnsAudit(): Promise<string> {
-    return smokeTestDnsAuditHelper();
-  }
-
   /** Smoke test caddy-s3proxy: verifies custom Caddy binary works */
   @func()
   async smokeTestCaddyS3Proxy(): Promise<string> {
@@ -1325,15 +1189,5 @@ export class Monorepo {
     depDirs: Directory[] = [],
   ): Promise<string> {
     return smokeTestDiscordPlaysPokemonHelper(pkgDir, depNames, depDirs);
-  }
-
-  /** Smoke test better-skill-capped-fetcher: build production image, boots app, expects Firebase auth failure */
-  @func()
-  async smokeTestBetterSkillCappedFetcher(
-    pkgDir: Directory,
-    depNames: string[] = [],
-    depDirs: Directory[] = [],
-  ): Promise<string> {
-    return smokeTestBetterSkillCappedFetcherHelper(pkgDir, depNames, depDirs);
   }
 }

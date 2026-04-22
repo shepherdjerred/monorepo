@@ -1,8 +1,0 @@
-apiVersion: v2
-name: better-skill-capped-fetcher
-description: better-skill-capped manifest fetcher cronjob
-
-type: application
-
-version: "$version"
-appVersion: "$appVersion"

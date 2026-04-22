@@ -35,7 +35,6 @@ import { createPostgresOperatorApp } from "@shepherdjerred/homelab/cdk8s/src/res
 import { createSeaweedfsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/seaweedfs.ts";
 import { createAllGrafanaDashboards } from "@shepherdjerred/homelab/cdk8s/src/resources/grafana/index.ts";
 import { createDdnsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ddns.ts";
-import { createDependencySummaryCronJob } from "@shepherdjerred/homelab/cdk8s/src/resources/home/dependency-summary.ts";
 import { createAppsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps.ts";
 import { createScoutBetaApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/scout-beta.ts";
 import { createScoutProdApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/scout-prod.ts";
@@ -43,7 +42,6 @@ import { createStarlightKarmaBotBetaApp } from "@shepherdjerred/homelab/cdk8s/sr
 import { createStarlightKarmaBotProdApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/starlight-karma-bot-prod.ts";
 import { createProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/project.ts";
 import { createRedlibApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/redlib.ts";
-import { createBetterSkillCappedFetcherApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/better-skill-capped-fetcher.ts";
 import { createPlausibleApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/plausible.ts";
 import { createBirmelApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/birmel.ts";
 import { createCloudflareTunnelApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/cloudflare-tunnel.ts";
@@ -63,7 +61,6 @@ import { createKyvernoApp } from "@shepherdjerred/homelab/cdk8s/src/resources/ar
 import { createKyvernoPoliciesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/kyverno-policies.ts";
 import { createMcpGatewayApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/mcp-gateway.ts";
 import { createBugsinkApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/bugsink.ts";
-import { createDnsAuditApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/dns-audit.ts";
 import { createTasknotesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/tasknotes.ts";
 import { createStatusPageApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/status-page.ts";
 import { createDaggerApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/dagger.ts";
@@ -134,7 +131,6 @@ export async function createAppsChart(app: App) {
 
   // Stateless services
   createRedlibApp(chart);
-  createBetterSkillCappedFetcherApp(chart);
 
   // S3-backed static sites (served via Caddy s3proxy)
   createS3StaticSitesApp(chart);
@@ -156,7 +152,6 @@ export async function createAppsChart(app: App) {
   createGrafanaDbApp(chart);
   createMcpGatewayApp(chart);
   createBugsinkApp(chart);
-  createDnsAuditApp(chart);
   createTasknotesApp(chart);
   createStatusPageApp(chart);
   createDaggerApp(chart);
@@ -164,7 +159,4 @@ export async function createAppsChart(app: App) {
 
   // ArgoCD AppProject
   createProject(chart);
-
-  // Weekly dependency summary email
-  createDependencySummaryCronJob(chart);
 }

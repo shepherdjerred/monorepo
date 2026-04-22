@@ -24,7 +24,6 @@ This is a homelab infrastructure project managing Kubernetes resources using cdk
 The project uses a workspace-based architecture:
 - [src/cdk8s/](mdc:src/cdk8s) - Kubernetes infrastructure definitions
 - [src/helm-types/](mdc:src/helm-types) - Typed Helm chart parameter generator
-- [src/deps-email/](mdc:src/deps-email) - Dependency summary email pipeline
 - [package.json](mdc:package.json) - Root workspace configuration
 - [../../dagger.json](mdc:../../dagger.json) - Dagger CI/CD configuration
 

@@ -7,7 +7,6 @@ description: Guidelines for working with the CDK8s and helm-types workspaces in 
 The homelab package contains these workspaces:
 - **[src/cdk8s/](mdc:src/cdk8s)** - Kubernetes infrastructure definitions
 - **[src/helm-types/](mdc:src/helm-types)** - Typed Helm chart parameter generator
-- **[src/deps-email/](mdc:src/deps-email)** - Dependency summary email pipeline
 - **[src/tofu/](mdc:src/tofu)** - OpenTofu modules (Cloudflare DNS, etc.)
 - **[src/talos/](mdc:src/talos)** - Talos Linux control plane configuration
 

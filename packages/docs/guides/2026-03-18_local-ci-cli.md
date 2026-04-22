@@ -217,7 +217,6 @@ Notable mappings:
 - `pokemon` pushes the `discord-plays-pokemon` image
 - `home` pushes the `homelab` infra image
 - `s3-static-sites` pushes the `caddy-s3proxy` infra image
-- `dependency-summary` pushes its image but routes to the `apps` chart (the CronJob lives there)
 - `scout-prod` and `starlight-karma-bot-prod` have no images (promoted via Renovate, not CI push)
 
 Run `ci-local list-targets` for the full mapping.

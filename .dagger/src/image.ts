@@ -10,8 +10,6 @@ import {
   BUN_CACHE,
   CADDY_BUILDER_IMAGE,
   CADDY_IMAGE,
-  HELM_IMAGE,
-  PYTHON_ALPINE_IMAGE,
 } from "./constants";
 import versions from "./versions";
 
@@ -65,116 +63,6 @@ export function buildImageHelper(
         ? ["/bin/sh", "-c", "bunx prisma db push && bun run src/index.ts"]
         : ["bun", "run", "src/index.ts"],
     );
-}
-
-// ---------------------------------------------------------------------------
-// Homelab sub-package image builders
-// ---------------------------------------------------------------------------
-
-/**
- * Shared base for homelab sub-package images.
- * Mounts the entire homelab package, installs deps at the root level,
- * then sets the workdir to the target sub-package.
- */
-function homelabSubPackageBase(
-  pkgDir: Directory,
-  subPackage: string,
-  depNames: string[] = [],
-  depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
-): Container {
-  const excludes = ["node_modules", "dist", ".eslintcache"];
-
-  let container = dag
-    .container()
-    .from(BUN_IMAGE)
-    // git is needed at runtime by deps-email (simple-git clones the homelab repo)
-    .withExec([
-      "sh",
-      "-c",
-      "apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*",
-    ])
-    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
-    .withWorkdir("/workspace")
-    .withDirectory("/workspace/packages/homelab", pkgDir, {
-      exclude: excludes,
-    });
-
-  for (let i = 0; i < depNames.length; i++) {
-    container = container.withDirectory(
-      `/workspace/packages/${depNames[i]}`,
-      depDirs[i],
-      { exclude: excludes },
-    );
-  }
-
-  return (
-    container
-      .withWorkdir("/workspace/packages/homelab")
-      .withExec(["bun", "install", "--frozen-lockfile"])
-      // Sub-packages have their own deps not in the root workspace
-      .withWorkdir(`/workspace/packages/homelab/src/${subPackage}`)
-      .withExec(["bun", "install", "--frozen-lockfile"])
-      .withLabel(
-        "org.opencontainers.image.source",
-        "https://github.com/shepherdjerred/monorepo",
-      )
-      .withLabel("org.opencontainers.image.version", version)
-      .withLabel("org.opencontainers.image.revision", gitSha)
-      .withEnvVariable("VERSION", version)
-      .withEnvVariable("GIT_SHA", gitSha)
-  );
-}
-
-/**
- * Build the dependency-summary image.
- * Bun-based, runs from the deps-email sub-package.
- * Needs the helm binary for chart version fetching.
- */
-export function buildDepsSummaryImageHelper(
-  pkgDir: Directory,
-  depNames: string[] = [],
-  depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
-): Container {
-  // Get helm binary from the official helm image
-  const helmBinary = dag.container().from(HELM_IMAGE).file("/usr/bin/helm");
-
-  return homelabSubPackageBase(
-    pkgDir,
-    "deps-email",
-    depNames,
-    depDirs,
-    version,
-    gitSha,
-  )
-    .withFile("/usr/local/bin/helm", helmBinary)
-    .withEntrypoint(["bun", "run", "src/main.ts"]);
-}
-
-/**
- * Build the dns-audit image.
- * Python-based, installs checkdmarc for DNS record auditing.
- */
-export function buildDnsAuditImageHelper(
-  version: string = "dev",
-  gitSha: string = "unknown",
-): Container {
-  return dag
-    .container()
-    .from(PYTHON_ALPINE_IMAGE)
-    .withExec(["pip", "install", "--no-cache-dir", "checkdmarc"])
-    .withLabel(
-      "org.opencontainers.image.source",
-      "https://github.com/shepherdjerred/monorepo",
-    )
-    .withLabel("org.opencontainers.image.version", version)
-    .withLabel("org.opencontainers.image.revision", gitSha)
-    .withEnvVariable("VERSION", version)
-    .withEnvVariable("GIT_SHA", gitSha)
-    .withEntrypoint(["python3"]);
 }
 
 /**
@@ -238,49 +126,6 @@ export async function pushContainerHelper(
     await image.publish(tag);
   }
   return digest;
-}
-
-/** Push a dependency-summary image to a registry. */
-export async function pushDepsSummaryImageHelper(
-  pkgDir: Directory,
-  tags: string[],
-  registryUsername: string,
-  registryPassword: Secret,
-  depNames: string[] = [],
-  depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
-): Promise<string> {
-  const container = buildDepsSummaryImageHelper(
-    pkgDir,
-    depNames,
-    depDirs,
-    version,
-    gitSha,
-  );
-  return pushContainerHelper(
-    container,
-    tags,
-    registryUsername,
-    registryPassword,
-  );
-}
-
-/** Push a dns-audit image to a registry. */
-export async function pushDnsAuditImageHelper(
-  tags: string[],
-  registryUsername: string,
-  registryPassword: Secret,
-  version: string = "dev",
-  gitSha: string = "unknown",
-): Promise<string> {
-  const container = buildDnsAuditImageHelper(version, gitSha);
-  return pushContainerHelper(
-    container,
-    tags,
-    registryUsername,
-    registryPassword,
-  );
 }
 
 /** Push a caddy-s3proxy image to a registry. */
@@ -433,7 +278,7 @@ export async function pushTemporalWorkerImageHelper(
 }
 
 // ---------------------------------------------------------------------------
-// Workspace-monorepo image builders (scout, discord-plays-pokemon, better-skill-capped)
+// Workspace-monorepo image builders (scout, discord-plays-pokemon)
 // ---------------------------------------------------------------------------
 
 /**
@@ -534,53 +379,6 @@ export function buildDiscordPlaysPokemonImageHelper(
     .withEntrypoint(["bun", "run", "src/index.ts"]);
 }
 
-/**
- * Build the better-skill-capped fetcher image.
- * The fetcher is a subdirectory with its own package.json — mount the full package,
- * install deps at root, then install deps in the fetcher sub-directory.
- */
-export function buildBetterSkillCappedFetcherImageHelper(
-  pkgDir: Directory,
-  depNames: string[] = [],
-  depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
-): Container {
-  const excludes = ["node_modules", "dist", ".eslintcache"];
-
-  let container = dag
-    .container()
-    .from(BUN_IMAGE)
-    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
-    .withWorkdir("/workspace")
-    .withDirectory("/workspace/packages/better-skill-capped", pkgDir, {
-      exclude: excludes,
-    });
-
-  for (let i = 0; i < depNames.length; i++) {
-    container = container.withDirectory(
-      `/workspace/packages/${depNames[i]}`,
-      depDirs[i],
-      { exclude: excludes },
-    );
-  }
-
-  return container
-    .withWorkdir("/workspace/packages/better-skill-capped")
-    .withExec(["bun", "install", "--frozen-lockfile"])
-    .withWorkdir("/workspace/packages/better-skill-capped/fetcher")
-    .withExec(["bun", "install", "--frozen-lockfile"])
-    .withLabel(
-      "org.opencontainers.image.source",
-      "https://github.com/shepherdjerred/monorepo",
-    )
-    .withLabel("org.opencontainers.image.version", version)
-    .withLabel("org.opencontainers.image.revision", gitSha)
-    .withEnvVariable("VERSION", version)
-    .withEnvVariable("GIT_SHA", gitSha)
-    .withEntrypoint(["bun", "run", "src/index.ts"]);
-}
-
 // ---------------------------------------------------------------------------
 // Push helpers for workspace-monorepo images
 // ---------------------------------------------------------------------------
@@ -623,32 +421,6 @@ export async function pushDiscordPlaysPokemonImageHelper(
   gitSha: string = "unknown",
 ): Promise<string> {
   const container = buildDiscordPlaysPokemonImageHelper(
-    pkgDir,
-    depNames,
-    depDirs,
-    version,
-    gitSha,
-  );
-  return pushContainerHelper(
-    container,
-    tags,
-    registryUsername,
-    registryPassword,
-  );
-}
-
-/** Push a better-skill-capped-fetcher image to a registry. */
-export async function pushBetterSkillCappedFetcherImageHelper(
-  pkgDir: Directory,
-  tags: string[],
-  registryUsername: string,
-  registryPassword: Secret,
-  depNames: string[] = [],
-  depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
-): Promise<string> {
-  const container = buildBetterSkillCappedFetcherImageHelper(
     pkgDir,
     depNames,
     depDirs,

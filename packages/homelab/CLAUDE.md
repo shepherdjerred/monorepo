@@ -13,11 +13,11 @@ This is a Kubernetes homelab infrastructure monorepo using CDK8s for infrastruct
 
 - `src/cdk8s` - Kubernetes infrastructure as code
 - `src/helm-types` - Type-safe Helm chart parameter generator
-- `src/deps-email` - Dependency summary email pipeline
-- `../../scripts/ci/src/ci/homelab_release.py` - CI/CD release scripts
+- `../../scripts/ci/src/` - TypeScript CI pipeline generator
 
-Home Assistant automations live in `packages/temporal` and the generic
-`packages/home-assistant` client library — not here.
+Home Assistant automations and the other migrated schedules (dependency summary,
+DNS audit, Better Skill Capped fetcher, golink sync) live in `packages/temporal`,
+built on the generic `packages/home-assistant` client library — not here.
 
 ## Commands
 
@@ -127,8 +127,8 @@ When adding a new Kubernetes service/chart, you MUST complete ALL of these steps
    appVersion: "$appVersion"
    ```
 
-3. **Helm Charts List** - `../../scripts/ci/src/ci/homelab_release.py`
-   - Add `"{name}"` to the `HELM_CHARTS` list
+3. **Helm Charts List** - `../../scripts/ci/src/catalog.ts`
+   - Add `"{name}"` to the `HELM_CHARTS` array
 
 4. **ArgoCD Application** - `src/cdk8s/src/resources/argo-applications/{name}.ts`
    - Export a `create{Name}App(chart: Chart)` function
