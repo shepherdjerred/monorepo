@@ -294,6 +294,5 @@ export function makeTestChallenges(
     wardsGuarded: 0,
     ...overrides,
   };
-  // eslint-disable-next-line custom-rules/no-type-assertions -- test mock with Partial spread requires assertion
-  return result as unknown as RawChallenges;
+  return result;
 }
