@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "@shepherdjerred/eslint-config": "file:../eslint-config",
-    "@types/node": "^22.19.17",
+    "@types/node": "^25.6.0",
     "builtin-modules": "^5.1.0",
     "esbuild": "^0.28.0",
     "obsidian": "latest",
