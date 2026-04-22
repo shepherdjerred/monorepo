@@ -7,7 +7,7 @@ set -euo pipefail
 RIPGREP_VERSION="15.1.0"
 
 # renovate: datasource=github-releases depName=kubernetes/kubernetes
-KUBECTL_VERSION="v1.35.4"
+KUBECTL_VERSION="v1.36.0"
 
 # renovate: datasource=github-releases depName=koalaman/shellcheck
 SHELLCHECK_VERSION="0.11.0"
