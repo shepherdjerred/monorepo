@@ -10,6 +10,7 @@
     "allowImportingTsExtensions": true,
     "types": ["vite/client", "bun"],
     "noEmit": true,
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]

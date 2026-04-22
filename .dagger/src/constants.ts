@@ -10,7 +10,7 @@
 // ---------------------------------------------------------------------------
 
 // renovate: datasource=docker depName=oven/bun
-export const BUN_IMAGE = "oven/bun:1.3.11";
+export const BUN_IMAGE = "oven/bun:1.3.13";
 // renovate: datasource=docker depName=rust
 export const RUST_IMAGE = "rust:1.89.0-bookworm";
 // renovate: datasource=docker depName=golang
@@ -43,7 +43,7 @@ export const HELM_IMAGE =
 
 // Pinned Bun version for containers that install Bun manually (e.g. Playwright)
 // renovate: datasource=npm depName=bun
-export const BUN_VERSION = "1.3.11";
+export const BUN_VERSION = "1.3.13";
 
 // renovate: datasource=npm depName=release-please
 export const RELEASE_PLEASE_VERSION = "17.3.0";
