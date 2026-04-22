@@ -6,7 +6,7 @@ export type ParsedFile = {
   readonly content: string;
 };
 
-const FrontmatterDataSchema = z.record(z.unknown());
+const FrontmatterDataSchema = z.record(z.string(), z.unknown());
 
 export function parseFrontmatter(raw: string): ParsedFile {
   const result = matter(raw);

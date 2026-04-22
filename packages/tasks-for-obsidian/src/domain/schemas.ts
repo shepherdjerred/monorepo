@@ -55,7 +55,7 @@ export const TaskSchema = z
     isBlocking: z.boolean().default(false),
     googleCalendarEventId: z.string().optional(),
     icsEventId: z.string().optional(),
-    extraFields: z.record(z.unknown()).default({}),
+    extraFields: z.record(z.string(), z.unknown()).default({}),
     details: z.string().optional(),
   })
   .transform(

@@ -1,11 +1,9 @@
 import { z } from "zod";
 import type { Context, Next } from "hono";
 
-const EnvelopeSchema = z
-  .object({
-    success: z.boolean(),
-  })
-  .passthrough();
+const EnvelopeSchema = z.looseObject({
+  success: z.boolean(),
+});
 
 export async function envelopeMiddleware(
   c: Context,

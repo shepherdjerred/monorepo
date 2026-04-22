@@ -1,10 +1,20 @@
 import { NativeModules, Platform } from "react-native";
 import { z } from "zod";
 
+type StartFn = (
+  taskId: string,
+  title: string,
+  project: string | null,
+) => Promise<unknown>;
+type UpdateFn = (elapsedSeconds: number, isPaused: boolean) => Promise<unknown>;
+type StopFn = (elapsedSeconds: number) => Promise<unknown>;
+
+const isFn = (v: unknown): boolean => typeof v === "function";
+
 const BridgeSchema = z.object({
-  startTimeTracking: z.function(),
-  updateTimeTracking: z.function(),
-  stopTimeTracking: z.function(),
+  startTimeTracking: z.custom<StartFn>(isFn),
+  updateTimeTracking: z.custom<UpdateFn>(isFn),
+  stopTimeTracking: z.custom<StopFn>(isFn),
 });
 
 type Bridge = z.infer<typeof BridgeSchema>;

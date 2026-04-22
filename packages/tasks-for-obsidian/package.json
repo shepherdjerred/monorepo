@@ -40,7 +40,7 @@
     "zeego": "^3.0.6",
     "tasknotes-types": "file:../tasknotes-types",
     "ts-pattern": "^5.9.0",
-    "zod": "^3.25.76"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",

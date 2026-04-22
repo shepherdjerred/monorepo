@@ -1,4 +1,4 @@
-import { z, type ZodType, type ZodTypeDef } from "zod";
+import { z, type ZodType } from "zod";
 
 import type {
   CalendarEvent,
@@ -225,7 +225,7 @@ export class TaskNotesClient {
   private async request<T>(
     method: string,
     path: string,
-    schema: ZodType<T, ZodTypeDef, unknown>,
+    schema: ZodType<T>,
     body?: unknown,
   ): Promise<Result<T, AppError>> {
     const url = `${this.baseUrl}${path}`;

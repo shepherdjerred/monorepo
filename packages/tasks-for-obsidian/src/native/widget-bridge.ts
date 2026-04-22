@@ -21,8 +21,12 @@ export type WidgetData = {
   stats: WidgetStats;
 };
 
+type UpdateFn = (data: WidgetData) => void;
+
+const isFn = (v: unknown): boolean => typeof v === "function";
+
 const BridgeSchema = z.object({
-  updateWidgetData: z.function(),
+  updateWidgetData: z.custom<UpdateFn>(isFn),
 });
 
 export function updateWidgetData(data: WidgetData): void {

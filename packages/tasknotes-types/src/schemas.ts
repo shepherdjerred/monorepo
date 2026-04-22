@@ -76,7 +76,7 @@ export const TaskSchema = z.object({
   isBlocking: z.boolean().default(false),
   googleCalendarEventId: z.string().optional(),
   icsEventId: z.string().optional(),
-  extraFields: z.record(z.unknown()).default({}),
+  extraFields: z.record(z.string(), z.unknown()).default({}),
   details: z.string().optional(),
 });
 export type Task = z.infer<typeof TaskSchema>;
@@ -96,7 +96,7 @@ export const CreateTaskRequestSchema = z.object({
   recurrence: z.string().optional(),
   recurrenceAnchor: RecurrenceAnchorSchema.optional(),
   timeEstimate: z.number().optional(),
-  extraFields: z.record(z.unknown()).optional(),
+  extraFields: z.record(z.string(), z.unknown()).optional(),
 });
 export type CreateTaskRequest = z.infer<typeof CreateTaskRequestSchema>;
 
@@ -113,7 +113,7 @@ export const UpdateTaskRequestSchema = z.object({
   recurrence: z.string().nullable().optional(),
   recurrenceAnchor: RecurrenceAnchorSchema.nullable().optional(),
   timeEstimate: z.number().nullable().optional(),
-  extraFields: z.record(z.unknown()).optional(),
+  extraFields: z.record(z.string(), z.unknown()).optional(),
 });
 export type UpdateTaskRequest = z.infer<typeof UpdateTaskRequestSchema>;
 
