@@ -2,7 +2,7 @@
 
 ## Status
 
-**Wave 1 + Wave 5 (safe subset) + Wave 6 complete, uncommitted (2026-04-21)** — Lower/medium-risk waves done this session. High-risk framework/RN majors deferred.
+**Wave 1 + Wave 5 (safe subset) + Wave 6 complete, committed (2026-04-21)** — two commits: `92683837` (main batch) and `26ac538c` (TS 6 follow-ups + Dagger bun image). Higher-risk framework/RN majors deferred. Dagger CI has pre-existing infra issues unrelated to these dep updates — see "Dagger CI state" at the bottom.
 
 ## Context
 
@@ -121,6 +121,25 @@ cd packages/homelab && bun run synth # cdk8s render check
 | #521 | cli-platform-ios            | Deferred to Wave 4 session           |
 
 All 6 were manually closed 2026-04-05 — Renovate will not recreate. In-repo upgrade is the only path.
+
+## Dagger CI state (2026-04-21)
+
+Ran `dagger call ci-all --source .` twice after the Wave 1/5/6 commits. Both fail, but NOT due to dep updates. Documented pre-existing ciAllHelper bugs in `.dagger/src/ci.ts` that should be fixed in a separate CI-infra PR:
+
+1. **Rust containers wrong workdir.** `rustBaseContainer(source)` mounts at `/workspace` but `Cargo.toml` lives at `packages/clauderon/`. All `cargo fmt/clippy/test --all-features` fail with "could not find `Cargo.toml`".
+2. **Go containers wrong workdir.** Same issue: `go build/test/lint ./...` at `/workspace` fails because `go.mod` is at `packages/terraform-provider-asuswrt/`.
+3. **Helm tests need `helm` binary.** `homelab/src/cdk8s/src/helm-template.test.ts` spawns `helm template ...` but bunBaseContainer's apt-get install list does not include `helm`. 8 "Helm Escaping" tests fail with `Executable not found in $PATH: "helm"`.
+4. **Clauderon/web workspace deps.** ciAllHelper treats `clauderon/web/client` and `clauderon/web/frontend` as independent packages and only mounts their direct deps from `WORKSPACE_DEPS`. But the real bun workspace root is `packages/clauderon/web/` with a root `package.json` + `bun.lock` linking `@clauderon/shared`, `@clauderon/client`. In Dagger they can't resolve each other → `TS2307: Cannot find module '@clauderon/shared'`.
+5. **Scout-for-lol/frontend TS5097 (223 errors).** Locally `astro check` passes cleanly (tsconfig extends `../../tsconfig.base.json` which has `allowImportingTsExtensions: true`). In Dagger the same config fails — suggests `source.directory("packages/scout-for-lol")` may not be exporting the parent `tsconfig.base.json` correctly, or `astro check` uses different resolution in containers.
+6. **Pre-existing lint debt.** `clauderon/web/client`, `clauderon/web/frontend`, `clauderon/mobile` have ~15-20 `@typescript-eslint/no-redundant-type-constituents` + `@typescript-eslint/no-unsafe-assignment` errors (from unresolved `@clauderon/shared` types cascading). These appear only in Dagger because shared types resolve locally.
+
+**Fixed in `26ac538c`:**
+
+- `TS5101: Option 'baseUrl' is deprecated` → added `"ignoreDeprecations": "6.0"` to `clauderon/docs`, `clauderon/mobile`, `clauderon/web/frontend` tsconfigs
+- `TS5107: moduleResolution=node10 is deprecated` → same fix propagates via `ignoreDeprecations`
+- BUN_IMAGE 1.3.11 → 1.3.13 in `.dagger/src/constants.ts`, which should address the "lockfile had changes, but lockfile is frozen" errors (lockfile format mismatch between bun versions)
+
+None of these CI infra issues are regressions from the dep updates in commit `92683837`; they exist on main `4b77c05f` independently.
 
 ## Links
 
