@@ -24,7 +24,7 @@
     "clean": "rm -rf shared/dist client/dist frontend/dist shared/src/generated/*"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.18",
+    "@tailwindcss/postcss": "^4.2.4",
     "concurrently": "^9.2.1",
     "jiti": "^2.6.1"
   }

@@ -16,15 +16,15 @@
     "@anthropic-ai/sdk": "^0.90.0",
     "monarch-money-api": "^0.0.7",
     "pdfjs-dist": "4.10.38",
-    "playwright": "^1.52.0",
+    "playwright": "^1.59.1",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@shepherdjerred/eslint-config": "file:../eslint-config",
-    "bun-types": "^1.3.5",
-    "eslint": "^9.39.2",
+    "bun-types": "^1.3.13",
+    "eslint": "^9.39.4",
     "jiti": "^2.6.1",
-    "typescript": "^6"
+    "typescript": "^6.0.3"
   },
   "author": "Jerred Shepherd",
   "license": "GPL-3.0",

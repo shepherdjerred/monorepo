@@ -18,22 +18,22 @@
     "diff": "bun run build && bun run scripts/helm-render.ts --diff"
   },
   "dependencies": {
-    "cdk8s": "^2.69.60",
-    "cdk8s-plus-31": "^2.2.4",
-    "constructs": "^10.4.2",
-    "cron-parser": "^5.4.0",
+    "cdk8s": "^2.70.58",
+    "cdk8s-plus-31": "^2.6.43",
+    "constructs": "^10.6.0",
+    "cron-parser": "^5.5.0",
     "lodash": "4.18.1",
-    "remeda": "^2.22.5",
-    "ts-pattern": "^5.7.1",
-    "zod": "^4.1.11",
+    "remeda": "^2.33.7",
+    "ts-pattern": "^5.9.0",
+    "zod": "^4.3.6",
     "@shepherdjerred/helm-types": "file:../helm-types",
     "@grafana/grafana-foundation-sdk": "11.6.0-cogv0.0.x.1769699379"
   },
   "devDependencies": {
-    "@types/bun": "^1.3.11",
-    "@types/lodash": "^4.17.17",
+    "@types/bun": "^1.3.12",
+    "@types/lodash": "^4.17.24",
     "jiti": "^2.6.1",
-    "type-fest": "^5.0.0",
-    "yaml": "^2.8.1"
+    "type-fest": "^5.6.0",
+    "yaml": "^2.8.3"
   }
 }

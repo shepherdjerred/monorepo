@@ -2,7 +2,7 @@ const versions = {
   // renovate: datasource=helm registryUrl=https://1password.github.io/connect-helm-charts/ versioning=semver
   connect: "2.4.1",
   // renovate: datasource=helm registryUrl=https://argoproj.github.io/argo-helm versioning=semver
-  "argo-cd": "9.5.2",
+  "argo-cd": "9.5.3",
   // renovate: datasource=helm registryUrl=https://charts.jetstack.io versioning=semver-coerced
   "cert-manager": "v1.20.2",
   // renovate: datasource=helm registryUrl=https://intel.github.io/helm-charts/ versioning=semver
@@ -10,7 +10,7 @@ const versions = {
   // renovate: datasource=helm registryUrl=https://kubernetes-sigs.github.io/node-feature-discovery/charts versioning=semver
   "node-feature-discovery": "0.18.3",
   // renovate: datasource=helm registryUrl=https://prometheus-community.github.io/helm-charts versioning=semver
-  "kube-prometheus-stack": "82.18.0",
+  "kube-prometheus-stack": "83.7.0",
   // renovate: datasource=helm registryUrl=https://prometheus-community.github.io/helm-charts versioning=semver
   "prometheus-adapter": "5.3.0",
   // renovate: datasource=helm registryUrl=https://prometheus-community.github.io/helm-charts versioning=semver
@@ -27,7 +27,7 @@ const versions = {
     "2026.4.2-java21@sha256:55d2d31aed9848756c0051dea0b001a36ea0fa2afdce892f1aab0655a6dff87b",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=loose
   "plexinc/pms-docker":
-    "1.43.0.10492-121068a07@sha256:1131c4cd21fa22f8196f749f1dbb69af306776c3c83c7f5b061e51dc49bcff7f",
+    "1.43.0.10492-121068a07-amd64@sha256:b59f6e65a3ec5fad1f5ad417f9911340b71f34efe333338429eeb2dbac5e524e",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=docker
   "linuxserver/tautulli":
     "2.17.0@sha256:f8a0c2069bf4393f13731e9f98835f32b0a21659686f88223836c1693036f2be",
@@ -154,7 +154,7 @@ const versions = {
   "postgres-operator": "1.15.1",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "cooperspencer/gickup":
-    "0.10.39@sha256:3d0dabf3180ac8d3cc1939161e8b55947d697e453abeda29bdc42bb0319a9ed1",
+    "0.10.40@sha256:ad28da5fefb031633ef2e23bceaf07bdbfb8e3034ad1b87f36339ae402f531e5",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "esanchezm/prometheus-qbittorrent-exporter":
     "v1.6.0@sha256:b987d19693a5b2fe7314b22009c6302e084ec801fcf96afaf14065b4cdafc842",

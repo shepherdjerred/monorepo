@@ -11,11 +11,11 @@
     "postinstall": "bun run ../../../scripts/copy-example-deps.ts ../ webring ."
   },
   "dependencies": {
-    "@astrojs/mdx": "^4.1.1",
-    "@astrojs/rss": "^4.0.11",
-    "@astrojs/sitemap": "^3.2.1",
-    "astro": "^5.4.3",
-    "@astrojs/check": "^0.9.4",
-    "typescript": "^6"
+    "@astrojs/mdx": "^4.3.14",
+    "@astrojs/rss": "^4.0.18",
+    "@astrojs/sitemap": "^3.7.2",
+    "astro": "^5.18.1",
+    "@astrojs/check": "^0.9.8",
+    "typescript": "^6.0.3"
   }
 }

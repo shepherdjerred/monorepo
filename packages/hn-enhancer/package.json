@@ -17,13 +17,13 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@crxjs/vite-plugin": "^2.3.0",
+    "@crxjs/vite-plugin": "^2.4.0",
     "@shepherdjerred/eslint-config": "file:../eslint-config",
-    "@types/chrome": "^0.1.0",
-    "eslint": "^9.39.1",
+    "@types/chrome": "^0.1.40",
+    "eslint": "^9.39.4",
     "jiti": "^2.6.1",
-    "typescript": "^6",
-    "vite": "^7.2.6"
+    "typescript": "^6.0.3",
+    "vite": "^7.3.2"
   },
   "repository": {
     "type": "git",
