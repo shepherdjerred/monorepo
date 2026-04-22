@@ -74,6 +74,6 @@ export const TypedStorage = {
   },
 
   async clear(): Promise<void> {
-    await AsyncStorage.multiRemove(Object.values(KEYS));
+    await AsyncStorage.removeMany(Object.values(KEYS));
   },
 };
