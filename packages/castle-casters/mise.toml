@@ -1,6 +1,6 @@
 [tools]
 bun = "latest"
-java = "21"
+java = "25"
 
 [tasks.dev]
 description = "Set up development environment"
