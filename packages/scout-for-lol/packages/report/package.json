@@ -23,7 +23,7 @@
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
     "@scout-for-lol/data": "file:../data",
-    "react": "^19.1.1",
+    "react": "^19.2.5",
     "remeda": "^2.21.2",
     "satori": "^0.26.0",
     "ts-pattern": "^5.7.0",
@@ -31,7 +31,7 @@
     "zod": "^4.0.0"
   },
   "devDependencies": {
-    "@types/react": "^19.1.13",
+    "@types/react": "^19.2.14",
     "bun-types": "latest",
     "eslint": "^9.39.4",
     "typescript": "^6"

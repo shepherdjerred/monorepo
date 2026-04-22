@@ -61,7 +61,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@types/bun": "^1.3.12",
+    "@types/bun": "^1.3.13",
     "jiti": "^2.6.1"
   }
 }

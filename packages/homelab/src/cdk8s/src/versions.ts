@@ -134,7 +134,7 @@ const versions = {
   "openebs/velero-plugin":
     "3.6.0@sha256:9ea3331d891e436a7239e37e68ca4c8888500cb122be7cdc9d8400f345555c76",
   // renovate: datasource=github-releases versioning=semver
-  "kubernetes/kubernetes": "v1.35.4",
+  "kubernetes/kubernetes": "v1.36.0",
   // renovate: datasource=custom.papermc versioning=semver
   paper: "26.1.2",
   // renovate: datasource=docker registryUrl=https://ghcr.io/recyclarr versioning=docker
@@ -154,7 +154,7 @@ const versions = {
   "jsclayton/prometheus-plex-exporter":
     "main@sha256:18ef1b2197efbcb75bd7276380955760995f10a9fbe55106809a6fcff91c2940",
   // renovate: datasource=helm registryUrl=https://charts.bitnami.com/bitnami versioning=semver
-  redis: "25.3.12",
+  redis: "25.4.0",
   // renovate: datasource=helm registryUrl=https://seaweedfs.github.io/seaweedfs/helm versioning=semver
   seaweedfs: "4.21.0",
   // renovate: datasource=helm registryUrl=https://charts.bitnami.com/bitnami versioning=semver
@@ -213,7 +213,7 @@ const versions = {
     "1.29.6@sha256:d33d1402e8b895329e27a0d0e7cc2f034e0aa70f0dab6aa95b306d7ae2716f67",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "temporalio/ui":
-    "2.48.4@sha256:b01df917af27067914b716a347eff78d232dfd47cc2c8527c621ce85e5bc15e3",
+    "2.49.0@sha256:a8b78ea822ae3b0e6079acf84b521ecb75bdd6554c2716aaa97dc0c521364a57",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "temporalio/admin-tools":
     "1.30.4@sha256:9ac15d500f4020f7cc694ecc17085dfcfc2d4b1d0d2020dbe83b6f3d49e156e0",
