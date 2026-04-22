@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.2.0...helm-types-v1.2.1) (2026-04-22)
+
+
+### Bug Fixes
+
+* **root:** prettier format CHANGELOG, exclude CHANGELOGs from suppression check ([882eb12](https://github.com/shepherdjerred/monorepo/commit/882eb12e22cedeb00a205d887c69a4c0c92ba18d))
+
 ## [1.2.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.1.0...helm-types-v1.2.0) (2026-04-05)
 
 ### Features
