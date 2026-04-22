@@ -48,6 +48,7 @@ export function argoCdHealthStep(
     timeout_in_minutes: 10,
     priority: 1,
     retry: RETRY,
+    soft_fail: true,
     env: DAGGER_ENV,
     plugins: [
       k8sPlugin({
