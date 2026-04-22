@@ -2,7 +2,29 @@
 
 ## Status
 
-**Wave 1 + Wave 5 (safe subset) + Wave 6 complete, committed (2026-04-21)** — two commits: `92683837` (main batch) and `26ac538c` (TS 6 follow-ups + Dagger bun image). Higher-risk framework/RN majors deferred. Dagger CI has pre-existing infra issues unrelated to these dep updates — see "Dagger CI state" at the bottom.
+**Session 1 (2026-04-21):** Wave 1 + Wave 5 (safe subset) + Wave 6 complete. Commits `45a995ce1`, `26ac538c`, `ba6b3f768` (hotfix), `e6fbe8f5`, `4b4271b2`, `72c05b240`, `8bc6483b`, `2f09b71c`, `9a555422c`, `297896c7a`.
+
+**Session 2 (2026-04-22):** Additional partial work landed:
+
+- `45a995ce1` — Wave 1 extension (argo-cd 9.5.4, mariadb 25.0.9, redis 25.3.12, plex 1.43.1.10611, bazarr/prowlarr/ubuntu/debian digest refreshes, lombok 1.18.46, Shiki v4 in 2 packages, 10 singleton majors including lucide-react, react-markdown, jsdom, chevrotain, dotenv, pdfjs-dist, uuid, unplugin-fonts)
+- `c285f88a7` — Preserve-caught-error improvements in homelab + lockfile refresh (ESLint 10 attempt reverted, blocked upstream by eslint-plugin-react peer)
+- `ebd000044` — Fixed 13 scout-for-lol eslint violations (preserve-caught-error + no-useless-assignment; these are core ESLint 9.39+ rules that surfaced after lockfile refresh)
+- `f3922d098` — Wave 2b: Vite 8, Vitest 4, @vitejs/plugin-react 6, ts-morph 28, builtin-modules 5
+- `da7f0cd30` — @types/node 22→25 in cooklang-for-obsidian + eslint-config (unifying at v25)
+- `771446d39` — Wave 3a: Astro v6 in 4 packages (cooklang-rich-preview, astro-opengraph-images, scout-for-lol/frontend, webring/example)
+- `be57b1143` — discord-player-youtubei v2 + youtubei.js v17 in birmel
+- `b58c8cd64` — Wave 4 partial: webring Zod 4 (standalone, no cross-package cascade)
+
+**Deferred to dedicated sessions:**
+
+- **Wave 2a (ESLint 10)** — blocked upstream by `eslint-plugin-react@7.37.5` peer cap at `^9.7`. The `contextOrFilename.getFilename is not a function` error at rule load is the symptom. Revisit once plugin ships v10 support.
+- **Wave 3 (Prisma v7)** — requires schema.prisma migration: `url` field moved from datasource to prisma.config.ts with explicit adapter (e.g., `@prisma/adapter-better-sqlite3`). 2 packages affected (birmel, scout-for-lol/backend), both with non-trivial Prisma client usage.
+- **Wave 3 (sjer.red Astro v6)** — blocked on Zod v4 migration; content collection schemas use external `zod` which conflicts with Astro v6's Zod v4 internal shapes.
+- **Wave 4 (Zod v4 bulk)** — tasknotes-types ↔ tasks-for-obsidian + tasknotes-server cascade. Zod v4 removed `z.function()` which native bridges (live-activity-bridge, widget-bridge) rely on; monorepo's strict custom ESLint rules (`no-type-assertions`, `no-type-guards`, `prefer-zod-validation`) make the rewrite awkward. Also blocks discord-plays-pokemon, clauderon/mobile, sjer.red.
+- **Wave 5 (React Native 0.84 + 5 closed PRs)** — requires native `ios/` + `android/` patches via React Native Upgrade Helper, pod install, simulator builds. Mobile-focused session.
+- **Wave 5 (Prod image promotions)** — scout-for-lol/prod 2.0.0-998 and starlight-karma-bot/prod 2.0.0-829 → current (2.0.0-1050+). Triggers real ArgoCD deployments, needs explicit user coordination.
+
+Higher-risk framework/RN majors deferred. Dagger CI has pre-existing infra issues unrelated to these dep updates — see "Dagger CI state" at the bottom.
 
 ## Context
 
