@@ -34,12 +34,12 @@
     "chrono-node": "^2.9.0",
     "cron-parser": "^5.5.0",
     "discord-player": "7.2.0",
-    "discord-player-youtubei": "^1.5.0",
+    "discord-player-youtubei": "^2.0.0",
     "discord.js": "^14.26.3",
     "hono": "^4.12.14",
     "mediaplex": "^1.0.0",
     "playwright": "^1.59.1",
-    "youtubei.js": "^16.0.1",
+    "youtubei.js": "^17.0.1",
     "zod": "^4.3.6"
   },
   "devDependencies": {
