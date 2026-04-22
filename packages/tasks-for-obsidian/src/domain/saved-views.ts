@@ -1,9 +1,10 @@
+import type { FeatherIconName } from "@react-native-vector-icons/feather";
 import type { FilterConfig } from "./filters";
 
 export type SavedView = {
   readonly id: string;
   readonly name: string;
-  readonly icon: string;
+  readonly icon: FeatherIconName;
   readonly filter: FilterConfig;
   readonly color: string;
 };

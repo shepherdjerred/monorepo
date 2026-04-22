@@ -1,11 +1,12 @@
 import React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
+import type { FeatherIconName } from "@react-native-vector-icons/feather";
 import { AppIcon } from "./AppIcon";
 import { useSettings } from "../../hooks/use-settings";
 
 type Props = {
   name: string;
-  icon: string;
+  icon: FeatherIconName;
   count: number;
   color: string;
   onPress: () => void;

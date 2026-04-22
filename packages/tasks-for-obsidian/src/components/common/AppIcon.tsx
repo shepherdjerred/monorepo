@@ -1,8 +1,11 @@
 import React from "react";
-import Feather from "react-native-vector-icons/Feather";
+import {
+  Feather,
+  type FeatherIconName,
+} from "@react-native-vector-icons/feather";
 
 type AppIconProps = {
-  name: string;
+  name: FeatherIconName;
   size?: number;
   color?: string;
 };
