@@ -24,7 +24,7 @@ export const ALPINE_IMAGE = "alpine:3.21";
 // renovate: datasource=docker depName=hashicorp/terraform
 export const TOFU_IMAGE = "ghcr.io/opentofu/opentofu:1.11.5";
 // renovate: datasource=docker depName=maven
-export const MAVEN_IMAGE = "maven:3.9.9-eclipse-temurin-21";
+export const MAVEN_IMAGE = "maven:3.9.15-eclipse-temurin-25";
 // renovate: datasource=docker depName=texlive/texlive
 export const TEXLIVE_IMAGE = "texlive/texlive:TL2024-historic";
 // renovate: datasource=docker depName=caddy
