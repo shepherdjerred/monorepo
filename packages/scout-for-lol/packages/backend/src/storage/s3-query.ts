@@ -343,6 +343,7 @@ export async function queryMatchesByDateRange(
           );
           throw new Error(
             `S3 query failed after ${consecutiveErrors.toString()} consecutive errors. Last error: ${getErrorMessage(error)}`,
+            { cause: error },
           );
         }
 

@@ -145,6 +145,7 @@ export async function saveCachedLeaderboard(
     // Re-throw the error so the caller can handle it appropriately
     throw new Error(
       `Failed to cache leaderboard for competition ${leaderboard.competitionId.toString()}: ${getErrorMessage(error)}`,
+      { cause: error },
     );
   }
 }

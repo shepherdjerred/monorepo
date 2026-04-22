@@ -197,7 +197,6 @@ export function splitMessageIntoChunks(
     // Save current chunk if it has content
     if (currentChunk.length > 0) {
       chunks.push(currentChunk.trim());
-      currentChunk = "";
     }
 
     // Section itself exceeds limit - split by lines

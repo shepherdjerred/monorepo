@@ -119,6 +119,7 @@ export async function saveToS3(
     );
     throw new Error(
       `Failed to save ${errorContext} ${matchId} to S3: ${getErrorMessage(error)}`,
+      { cause: error },
     );
   }
 }

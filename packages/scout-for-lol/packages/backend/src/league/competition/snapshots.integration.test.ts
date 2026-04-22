@@ -166,6 +166,7 @@ describe("createSnapshot - START snapshot", () => {
         throw new Error(
           `Riot API unavailable or returned invalid data. This integration test requires API access. ` +
             `Original error: ${errorStr}`,
+          { cause: error },
         );
       }
       // Re-throw any other errors

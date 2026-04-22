@@ -105,7 +105,9 @@ export class VoiceManager {
       await entersState(connection, VoiceConnectionStatus.Ready, 30_000);
     } catch (error) {
       connection.destroy();
-      throw new Error(`Failed to connect to voice channel: ${String(error)}`);
+      throw new Error(`Failed to connect to voice channel: ${String(error)}`, {
+        cause: error,
+      });
     }
 
     this.connections.set(guildId, connection);

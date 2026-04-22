@@ -365,6 +365,7 @@ export function parseCompetition(raw: Competition): CompetitionWithCriteria {
   } catch (error) {
     throw new Error(
       `Invalid criteriaConfig JSON for competition ${raw.id.toString()}: ${String(error)}`,
+      { cause: error },
     );
   }
 

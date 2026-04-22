@@ -120,7 +120,7 @@ describe("Leaderboard Cache Timestamp Display", () => {
     const ageHours = Math.floor(ageMs / (1000 * 60 * 60));
     const ageMinutes = Math.floor((ageMs % (1000 * 60 * 60)) / (1000 * 60));
 
-    let ageText = "";
+    let ageText: string;
     if (ageHours > 0) {
       ageText = `${ageHours.toString()} hour${ageHours === 1 ? "" : "s"} ago`;
     } else if (ageMinutes > 0) {
@@ -139,7 +139,7 @@ describe("Leaderboard Cache Timestamp Display", () => {
     const ageHours = Math.floor(ageMs / (1000 * 60 * 60));
     const ageMinutes = Math.floor((ageMs % (1000 * 60 * 60)) / (1000 * 60));
 
-    let ageText = "";
+    let ageText: string;
     if (ageHours > 0) {
       ageText = `${ageHours.toString()} hour${ageHours === 1 ? "" : "s"} ago`;
     } else if (ageMinutes > 0) {
@@ -159,7 +159,7 @@ describe("Leaderboard Cache Timestamp Display", () => {
     const ageHours = Math.floor(ageMs / (1000 * 60 * 60));
     const ageMinutes = Math.floor((ageMs % (1000 * 60 * 60)) / (1000 * 60));
 
-    let ageText = "";
+    let ageText: string;
     if (ageHours > 0) {
       ageText = `${ageHours.toString()} hour${ageHours === 1 ? "" : "s"} ago`;
     } else if (ageMinutes > 0) {
@@ -179,7 +179,7 @@ describe("Leaderboard Cache Timestamp Display", () => {
     const ageHours = Math.floor(ageMs / (1000 * 60 * 60));
     const ageMinutes = Math.floor((ageMs % (1000 * 60 * 60)) / (1000 * 60));
 
-    let ageText = "";
+    let ageText: string;
     if (ageHours > 0) {
       ageText = `${ageHours.toString()} hour${ageHours === 1 ? "" : "s"} ago`;
     } else if (ageMinutes > 0) {
@@ -199,7 +199,7 @@ describe("Leaderboard Cache Timestamp Display", () => {
     const ageHours = Math.floor(ageMs / (1000 * 60 * 60));
     const ageMinutes = Math.floor((ageMs % (1000 * 60 * 60)) / (1000 * 60));
 
-    let ageText = "";
+    let ageText: string;
     if (ageHours > 0) {
       ageText = `${ageHours.toString()} hour${ageHours === 1 ? "" : "s"} ago`;
     } else if (ageMinutes > 0) {

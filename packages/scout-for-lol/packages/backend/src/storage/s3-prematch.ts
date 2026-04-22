@@ -112,6 +112,7 @@ export async function savePrematchToS3(
     );
     throw new Error(
       `Failed to save ${errorContext} game ${gameIdStr} to S3: ${getErrorMessage(error)}`,
+      { cause: error },
     );
   }
 }
