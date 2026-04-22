@@ -121,6 +121,6 @@ export function simpleToCron(
     case "monthly":
       return `${String(minute ?? 0)} ${String(hour ?? 0)} 1 * *`; // 1st of month
     default:
-      throw new Error(`Unknown schedule type: ${String(schedule as unknown)}`); // exhaustive check
+      throw new Error(`Unknown schedule type: ${String(schedule)}`); // exhaustive check
   }
 }
