@@ -33,7 +33,7 @@
   "devDependencies": {
     "@types/react": "^19.1.13",
     "bun-types": "latest",
-    "eslint": "^9.39.2",
+    "eslint": "^9.39.4",
     "typescript": "^6"
   },
   "description": "Generate report images for League of Legends",

@@ -5,21 +5,21 @@
     "": {
       "name": "tasknotes-server",
       "dependencies": {
-        "@sentry/bun": "^10.47.0",
-        "gray-matter": "^4",
-        "hono": "^4.12.0",
-        "prom-client": "^15",
+        "@sentry/bun": "^10.49.0",
+        "gray-matter": "^4.0.3",
+        "hono": "^4.12.14",
+        "prom-client": "^15.1.3",
         "tasknotes-types": "file:../tasknotes-types",
-        "yaml": "^2",
-        "zod": "^3.24",
+        "yaml": "^2.8.3",
+        "zod": "^3.25.76",
       },
       "devDependencies": {
         "@shepherdjerred/eslint-config": "file:../eslint-config",
         "@types/bun": "latest",
-        "eslint": "^9.39.2",
+        "eslint": "^9.39.4",
         "jiti": "^2.6.1",
-        "typescript": "^6",
-        "typescript-eslint": "^8.53.1",
+        "typescript": "^6.0.3",
+        "typescript-eslint": "^8.59.0",
       },
     },
   },
@@ -960,7 +960,7 @@
 
     "node-exports-info/semver": ["semver@6.3.1", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA=="],
 
-    "tasknotes-types/@shepherdjerred/eslint-config": ["@shepherdjerred/eslint-config@file:../eslint-config", {}],
+    "tasknotes-types/@shepherdjerred/eslint-config": ["@shepherdjerred/eslint-config@file:../eslint-config", { "dependencies": { "@eslint-community/eslint-plugin-eslint-comments": "^4.7.1", "@eslint/js": "^9.39.4", "@typescript-eslint/utils": "^8.59.0", "eslint-config-prettier": "^10.1.8", "eslint-import-resolver-typescript": "^4.4.4", "eslint-import-resolver-typescript-bun": "^0.0.104", "eslint-plugin-astro": "^1.7.0", "eslint-plugin-import": "^2.32.0", "eslint-plugin-jsx-a11y": "^6.10.2", "eslint-plugin-no-secrets": "^2.3.3", "eslint-plugin-react": "^7.37.5", "eslint-plugin-react-hooks": "^7.1.1", "eslint-plugin-react-native": "^5.0.0", "eslint-plugin-regexp": "^2.10.0", "eslint-plugin-unicorn": "^62.0.0", "jiti": "^2.6.1", "typescript-eslint": "^8.59.0" }, "devDependencies": { "@types/node": "^22.19.17", "@typescript-eslint/rule-tester": "^8.59.0" }, "peerDependencies": { "eslint": "^9.39.4", "typescript": "^5.9.3" } }],
 
     "@eslint/eslintrc/js-yaml/argparse": ["argparse@2.0.1", "", {}, "sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q=="],
 

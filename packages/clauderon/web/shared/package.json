@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@shepherdjerred/eslint-config": "file:../../../eslint-config",
-    "eslint": "^9.39.2",
+    "eslint": "^9.39.4",
     "jiti": "^2.6.1",
     "typescript": "^6"
   }

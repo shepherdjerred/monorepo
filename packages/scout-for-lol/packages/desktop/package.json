@@ -51,7 +51,7 @@
     "@vitejs/plugin-react": "^5.0.0",
     "autoprefixer": "^10.4.22",
     "bun-types": "latest",
-    "eslint": "^9.39.2",
+    "eslint": "^9.39.4",
     "postcss": "^8.5.8",
     "tailwindcss": "^4.1.17",
     "typescript": "^6",

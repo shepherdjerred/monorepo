@@ -57,6 +57,7 @@ async function runCommand(command: string, args: string[]): Promise<string> {
       : String(error);
     throw new Error(
       `Failed to spawn command "${command} ${args.join(" ")}": ${errorMessage}`,
+      { cause: error },
     );
   }
 }

@@ -56,12 +56,14 @@ async function loadServerConfigs(
       } catch (fileError: unknown) {
         throw new Error(
           `Failed to read config file '${entry}': ${String(fileError)}`,
+          { cause: fileError },
         );
       }
     }
   } catch (error: unknown) {
     throw new Error(
       `Failed to load ${serverName} configs from '${configDir}': ${String(error)}`,
+      { cause: error },
     );
   }
 
