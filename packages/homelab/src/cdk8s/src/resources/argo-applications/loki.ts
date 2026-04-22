@@ -97,61 +97,6 @@ groups:
           description: "More than 50 warning events in the last 5 minutes ({{ "{{" }} $value {{ "}}" }} events). This may indicate a cluster issue."
 `;
 
-// Loki alerting rules for DNS audit
-// Uses namespace label (always available) instead of app label (requires relabeling)
-// Note: Go template syntax escaped for Helm compatibility ({{ "{{" }} ... {{ "}}" }})
-const dnsAuditAlertRules = `
-groups:
-  - name: dns-audit
-    rules:
-      - alert: DNSAuditError
-        expr: |
-          count_over_time({namespace="dns-audit"} | json | level="error" [1h]) > 0
-        for: 0m
-        labels:
-          severity: critical
-        annotations:
-          summary: "DNS audit found errors"
-          description: "DNS audit detected configuration errors. Check dns-audit logs for details."
-          runbook_url: "https://grafana.tailnet-1a49.ts.net/explore?schemaVersion=1&panes=%7B%22v1d%22:%7B%22datasource%22:%22loki%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22expr%22:%22%7Bnamespace%3D%5C%22dns-audit%5C%22%7D%20%7C%20json%20%7C%20level%3D%5C%22error%5C%22%22%7D%5D%7D%7D"
-      - alert: DNSAuditSPFError
-        expr: |
-          count_over_time({namespace="dns-audit"} | json | level="error" | type="spf" [1h]) > 0
-        for: 0m
-        labels:
-          severity: critical
-        annotations:
-          summary: "SPF record error detected"
-          description: "SPF record validation failed. This may cause email delivery issues."
-      - alert: DNSAuditDMARCError
-        expr: |
-          count_over_time({namespace="dns-audit"} | json | level="error" | type="dmarc" [1h]) > 0
-        for: 0m
-        labels:
-          severity: critical
-        annotations:
-          summary: "DMARC record error detected"
-          description: "DMARC record validation failed. Domain is vulnerable to email spoofing."
-      - alert: DNSAuditDMARCPolicyNone
-        expr: |
-          count_over_time({namespace="dns-audit"} | json | level="warning" | type="dmarc" | policy="none" [1h]) > 0
-        for: 0m
-        labels:
-          severity: warning
-        annotations:
-          summary: "DMARC policy is set to none"
-          description: "DMARC policy is in monitoring mode (p=none). Consider upgrading to p=quarantine or p=reject for full protection."
-      - alert: DNSAuditWarnings
-        expr: |
-          sum(count_over_time({namespace="dns-audit"} | json | level="warning" [1h])) > 5
-        for: 0m
-        labels:
-          severity: warning
-        annotations:
-          summary: "DNS audit found multiple warnings"
-          description: "DNS audit detected {{ "{{" }} $value {{ "}}" }} warnings. Review dns-audit logs for details."
-`;
-
 // Loki alerting rules for Home Assistant logs
 // Note: Go template syntax escaped for Helm compatibility ({{ "{{" }} ... {{ "}}" }})
 const lokiAlertRules = `
@@ -229,7 +174,6 @@ export function createLokiApp(chart: Chart) {
     data: {
       "homeassistant-rules.yaml": lokiAlertRules,
       "kubernetes-events-rules.yaml": kubernetesEventsAlertRules,
-      "dns-audit-rules.yaml": dnsAuditAlertRules,
       "tasknotes-rules.yaml": tasknotesAlertRules,
     },
   });

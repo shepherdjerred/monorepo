@@ -4,7 +4,6 @@ import { createScoutChart } from "./cdk8s-charts/scout.ts";
 import { createStarlightKarmaBotChart } from "./cdk8s-charts/starlight-karma-bot.ts";
 import { createDdnsChart } from "./cdk8s-charts/ddns.ts";
 import { createRedlibChart } from "./cdk8s-charts/redlib.ts";
-import { createBetterSkillCappedFetcherChart } from "./cdk8s-charts/better-skill-capped-fetcher.ts";
 import { createPlausibleChart } from "./cdk8s-charts/plausible.ts";
 import { createBirmelChart } from "./cdk8s-charts/birmel.ts";
 import { createCloudflareTunnelChart } from "./cdk8s-charts/cloudflare-tunnel.ts";
@@ -21,7 +20,6 @@ import { createS3StaticSitesChart } from "./cdk8s-charts/s3-static-sites.ts";
 import { createKyvernoPoliciesChart } from "./cdk8s-charts/kyverno-policies.ts";
 import { createMcpGatewayChart } from "./cdk8s-charts/mcp-gateway.ts";
 import { createBugsinkChart } from "./cdk8s-charts/bugsink.ts";
-import { createDnsAuditChart } from "./cdk8s-charts/dns-audit.ts";
 import { createTasknotesChart } from "./cdk8s-charts/tasknotes.ts";
 import { createStatusPageChart } from "./cdk8s-charts/status-page.ts";
 import { createTemporalChart } from "./cdk8s-charts/temporal.ts";
@@ -39,7 +37,6 @@ export async function setupCharts(app: App): Promise<void> {
   // Per-service charts
   createDdnsChart(app);
   createRedlibChart(app);
-  createBetterSkillCappedFetcherChart(app);
 
   // S3-backed static sites
   createS3StaticSitesChart(app);
@@ -64,7 +61,6 @@ export async function setupCharts(app: App): Promise<void> {
   createGrafanaDbChart(app);
   await createMcpGatewayChart(app);
   createBugsinkChart(app);
-  createDnsAuditChart(app);
   createTasknotesChart(app);
   createStatusPageChart(app);
   createTemporalChart(app);

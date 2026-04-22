@@ -13,7 +13,7 @@
     "patch": "bun run scripts/patch.ts",
     "update-imports": "bun run scripts/update-imports.ts",
     "generate-helm-types": "bun run scripts/generate-helm-types.ts",
-    "up": "bun run build && kubectl delete job golink-sync -n golink --ignore-not-found; kubectl delete job dagger-zfs-tuning docker-config-builder -n dagger --ignore-not-found; bun run scripts/helm-render.ts --apply",
+    "up": "bun run build && kubectl delete job dagger-zfs-tuning docker-config-builder -n dagger --ignore-not-found; bun run scripts/helm-render.ts --apply",
     "render": "bun run build && bun run scripts/helm-render.ts --render",
     "diff": "bun run build && bun run scripts/helm-render.ts --diff"
   },

@@ -26,7 +26,7 @@ const versions = {
 
   // Custom images (not managed by Renovate)
   // not managed by renovate
-  "shepherdjerred/dependency-summary": "latest",
+  "shepherdjerred/temporal-worker": "latest",
 };
 
 export default versions;
@@ -159,21 +159,20 @@ docker inspect ghcr.io/org/image:1.0.0 --format='{{index .RepoDigests 0}}'
 
 ## CI-Updated Versions
 
-Some versions are updated by the Dagger CI pipeline:
+Some versions are updated by the Dagger CI pipeline after each image push:
 
 ```typescript
 // not managed by renovate
-"shepherdjerred/dependency-summary": "latest",
+"shepherdjerred/temporal-worker":
+  "2.0.0-1020@sha256:…",
 "shepherdjerred/scout-for-lol/beta": "1.0.82",
 ```
 
-The pipeline updates these via:
-
-```typescript
-// In .dagger/src/index.ts
-this.updateHaVersion(source, chartVersion);
-this.updateDependencySummaryVersion(updatedSource, chartVersion);
-```
+The pipeline computes a new tag (`2.0.0-$BUILDKITE_BUILD_NUMBER`), pushes the image,
+captures the digest from the push output, then rewrites the matching entry in
+`packages/homelab/src/cdk8s/src/versions.ts`. The image-push generators live in
+`.dagger/src/image.ts`, `.dagger/src/index.ts`, and the Buildkite step generator
+at `scripts/ci/src/steps/images.ts`.
 
 ## Renovate Configuration
 

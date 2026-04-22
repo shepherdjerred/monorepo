@@ -69,14 +69,6 @@ const versions = {
     "2.1.0@sha256:886da4bc8ff070b63bb88cea3b535e512240e54f14313fa8c2890c843abd9605",
   // renovate: datasource=github-releases versioning=semver
   "fuatakgun/eufy_security": "v8.2.4",
-  // Custom dependency-summary image - updated by CI pipeline
-  // not managed by renovate
-  "shepherdjerred/dependency-summary":
-    "2.0.0-1020@sha256:3d542b2c163fea7a702a9e81a58e3095ba387cd35bc551f7529d7b59802001e8",
-  // Custom better-skill-capped-fetcher image - updated by CI pipeline
-  // not managed by renovate
-  "shepherdjerred/better-skill-capped-fetcher":
-    "2.0.0-1020@sha256:226ad65a086c3cd9c1ab37f642e006eb76a851c5e33d7ca2c2f63be7ac6b594e",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "linuxserver/syncthing":
     "2.0.16@sha256:de6958feb8caf81217832744ae9a4843efbb4dd432c6cea90077ed7a0cf97fc3",
@@ -200,10 +192,6 @@ const versions = {
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "bugsink/bugsink":
     "2.1.2@sha256:3ec70835215cd515cbe39d5d3b36575c415abf7d122112508afe94f8047ad886",
-  // Custom dns-audit image - Python with checkdmarc pre-installed for DNS auditing
-  // not managed by renovate
-  "shepherdjerred/dns-audit":
-    "2.0.0-1020@sha256:62da157f9e21ebf5249574dedb5787bc7238bb934f2ed96f21d1076d39cf6aae",
   // Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3
   // not managed by renovate
   "shepherdjerred/caddy-s3proxy":

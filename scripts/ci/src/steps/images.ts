@@ -40,7 +40,6 @@ function imageBuildStep(
 
   // Custom build functions that need no local source (built from upstream images only)
   const NO_SOURCE_BUILDS = new Set([
-    "build-dns-audit-image",
     "build-caddy-s-3-proxy-image",
     "build-obsidian-headless-image",
   ]);
@@ -100,27 +99,21 @@ const SMOKE_TEST_FUNCTIONS: Record<string, string> = {
   "scout-for-lol": "smoke-test-scout-for-lol",
   "starlight-karma-bot": "smoke-test-starlight-karma-bot",
   "tasknotes-server": "smoke-test-tasknotes-server",
-  "dependency-summary": "smoke-test-deps-summary",
-  "dns-audit": "smoke-test-dns-audit",
   "caddy-s3proxy": "smoke-test-caddy-s-3-proxy",
   "obsidian-headless": "smoke-test-obsidian-headless",
   "discord-plays-pokemon": "smoke-test-discord-plays-pokemon",
-  "better-skill-capped-fetcher": "smoke-test-better-skill-capped-fetcher",
 };
 
 // Smoke test functions that take no arguments (standalone images)
 const SMOKE_NO_ARGS = new Set([
-  "smoke-test-dns-audit",
   "smoke-test-caddy-s-3-proxy",
   "smoke-test-obsidian-headless",
 ]);
 
 // Smoke test functions that take --pkg-dir + dep flags but no --pkg (custom infra images / workspace monorepos)
 const SMOKE_CUSTOM_INFRA = new Set([
-  "smoke-test-deps-summary",
   "smoke-test-scout-for-lol",
   "smoke-test-discord-plays-pokemon",
-  "smoke-test-better-skill-capped-fetcher",
 ]);
 
 function smokeTestStep(
@@ -186,7 +179,6 @@ function imagePushStep(
   ].join(" ");
 
   const NO_SOURCE_PUSHES = new Set([
-    "push-dns-audit-image",
     "push-caddy-s-3-proxy-image",
     "push-obsidian-headless-image",
   ]);

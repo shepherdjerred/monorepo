@@ -24,22 +24,21 @@ Code: `.dagger/src/image.ts`, `scripts/ci/src/steps/images.ts`, `scripts/ci/src/
 
 ### Application images (6)
 
-| Image                       | Package               | Registry Path                                        |
-| --------------------------- | --------------------- | ---------------------------------------------------- |
-| birmel                      | birmel                | `ghcr.io/shepherdjerred/birmel`                      |
-| tasknotes-server            | tasknotes-server      | `ghcr.io/shepherdjerred/tasknotes-server`            |
-| scout-for-lol               | scout-for-lol         | `ghcr.io/shepherdjerred/scout-for-lol`               |
-| discord-plays-pokemon       | discord-plays-pokemon | `ghcr.io/shepherdjerred/discord-plays-pokemon`       |
-| starlight-karma-bot         | starlight-karma-bot   | `ghcr.io/shepherdjerred/starlight-karma-bot`         |
-| better-skill-capped-fetcher | better-skill-capped   | `ghcr.io/shepherdjerred/better-skill-capped-fetcher` |
+| Image                 | Package               | Registry Path                                  |
+| --------------------- | --------------------- | ---------------------------------------------- |
+| birmel                | birmel                | `ghcr.io/shepherdjerred/birmel`                |
+| tasknotes-server      | tasknotes-server      | `ghcr.io/shepherdjerred/tasknotes-server`      |
+| scout-for-lol         | scout-for-lol         | `ghcr.io/shepherdjerred/scout-for-lol`         |
+| discord-plays-pokemon | discord-plays-pokemon | `ghcr.io/shepherdjerred/discord-plays-pokemon` |
+| starlight-karma-bot   | starlight-karma-bot   | `ghcr.io/shepherdjerred/starlight-karma-bot`   |
+| temporal-worker       | temporal              | `ghcr.io/shepherdjerred/temporal-worker`       |
 
-### Infrastructure images (3)
+### Infrastructure images (2)
 
-| Image              | Registry Path                               |
-| ------------------ | ------------------------------------------- |
-| dependency-summary | `ghcr.io/shepherdjerred/dependency-summary` |
-| dns-audit          | `ghcr.io/shepherdjerred/dns-audit`          |
-| caddy-s3proxy      | `ghcr.io/shepherdjerred/caddy-s3proxy`      |
+| Image             | Registry Path                              |
+| ----------------- | ------------------------------------------ |
+| caddy-s3proxy     | `ghcr.io/shepherdjerred/caddy-s3proxy`     |
+| obsidian-headless | `ghcr.io/shepherdjerred/obsidian-headless` |
 
 ### CI base image (1, manually pushed)
 
@@ -51,7 +50,7 @@ Code: `.dagger/src/image.ts`, `scripts/ci/src/steps/images.ts`, `scripts/ci/src/
 
 Code: `.dagger/src/release.ts`, `scripts/ci/src/steps/helm.ts`
 
-ddns, apps, scout-beta, scout-prod, starlight-karma-bot-beta, starlight-karma-bot-prod, redlib, better-skill-capped-fetcher, plausible, birmel, cloudflare-tunnel, media, home, postal, syncthing, golink, freshrss, pokemon, gickup, grafana-db, mcp-gateway, s3-static-sites, kyverno-policies, bugsink, dns-audit, tasknotes
+ddns, apps, scout-beta, scout-prod, starlight-karma-bot-beta, starlight-karma-bot-prod, redlib, plausible, birmel, cloudflare-tunnel, media, home, postal, syncthing, golink, freshrss, pokemon, gickup, grafana-db, mcp-gateway, s3-static-sites, kyverno-policies, bugsink, tasknotes, status-page, temporal
 
 ## npm Packages → npm Registry
 

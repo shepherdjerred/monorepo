@@ -42,13 +42,6 @@ export const IMAGE_PUSH_TARGETS: ImageTarget[] = [
     versionKey: "shepherdjerred/starlight-karma-bot",
   },
   {
-    name: "better-skill-capped-fetcher",
-    package: "better-skill-capped",
-    versionKey: "shepherdjerred/better-skill-capped-fetcher",
-    buildFn: "build-better-skill-capped-fetcher-image",
-    pushFn: "push-better-skill-capped-fetcher-image",
-  },
-  {
     name: "temporal-worker",
     package: "temporal",
     versionKey: "shepherdjerred/temporal-worker",
@@ -58,20 +51,6 @@ export const IMAGE_PUSH_TARGETS: ImageTarget[] = [
 ];
 
 export const INFRA_PUSH_TARGETS: ImageTarget[] = [
-  {
-    name: "dependency-summary",
-    package: "homelab",
-    versionKey: "shepherdjerred/dependency-summary",
-    buildFn: "build-deps-summary-image",
-    pushFn: "push-deps-summary-image",
-  },
-  {
-    name: "dns-audit",
-    package: "homelab",
-    versionKey: "shepherdjerred/dns-audit",
-    buildFn: "build-dns-audit-image",
-    pushFn: "push-dns-audit-image",
-  },
   {
     name: "caddy-s3proxy",
     package: "homelab",
@@ -247,7 +226,6 @@ export const HELM_CHARTS: string[] = [
   "starlight-karma-bot-beta",
   "starlight-karma-bot-prod",
   "redlib",
-  "better-skill-capped-fetcher",
   "plausible",
   "birmel",
   "cloudflare-tunnel",
@@ -264,7 +242,6 @@ export const HELM_CHARTS: string[] = [
   "s3-static-sites",
   "kyverno-policies",
   "bugsink",
-  "dns-audit",
   "tasknotes",
   "status-page",
   "temporal",
@@ -468,34 +445,16 @@ export const DEPLOY_TARGETS: Record<string, DeployTarget> = {
     charts: ["pokemon"],
     argoApps: ["pokemon"],
   },
-  "better-skill-capped-fetcher": {
-    name: "better-skill-capped-fetcher",
-    images: [imageByName("better-skill-capped-fetcher")],
-    charts: ["better-skill-capped-fetcher"],
-    argoApps: ["better-skill-capped-fetcher"],
-  },
   home: {
     name: "home",
     images: [],
     charts: ["home"],
     argoApps: ["home"],
   },
-  "dns-audit": {
-    name: "dns-audit",
-    images: [imageByName("dns-audit")],
-    charts: ["dns-audit"],
-    argoApps: ["dns-audit"],
-  },
   "s3-static-sites": {
     name: "s3-static-sites",
     images: [imageByName("caddy-s3proxy")],
     charts: ["s3-static-sites"],
     argoApps: ["s3-static-sites"],
-  },
-  "dependency-summary": {
-    name: "dependency-summary",
-    images: [imageByName("dependency-summary")],
-    charts: ["apps"],
-    argoApps: ["apps"],
   },
 };
