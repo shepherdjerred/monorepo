@@ -173,3 +173,41 @@ None of these CI infra issues are regressions from the dep updates in commit `92
 
 - Dashboard issue: shepherdjerred/monorepo#481
 - Original session plan: `~/.claude/plans/let-s-work-on-these-replicated-gadget.md`
+
+---
+
+## Session 4 (2026-04-22) — Full sweep + blocked-major disposition
+
+User directive: upgrade ALL dashboard items this session.
+
+### Waves landed
+
+| Wave | Commit      | Scope                                                                                                                                                                                                                                                                                                                             |
+| ---- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | `495c30cc3` | `@opentelemetry/{exporter-trace-otlp-http,sdk-node}` 0.213 → 0.215 in birmel; `@anthropic-ai/sdk` 0.82 → 0.90 in poc/interview-practice                                                                                                                                                                                           |
+| 2    | `710797103` | `eslint-plugin-unicorn` ^62 → ^64 in eslint-config, homelab, scout-for-lol (latest is v64, past dashboard's v63 target)                                                                                                                                                                                                           |
+| 3    | `9af9faf8f` | `astro-seo` ^0.8 → ^1.1 in astro-opengraph-images examples (preset, custom)                                                                                                                                                                                                                                                       |
+| 4    | `b38a62e95` | `SEMGREP_VERSION` 1.160.0 → 1.161.0 in `.buildkite/scripts/setup-tools.sh` (other CI tool pins re-verified at latest)                                                                                                                                                                                                             |
+| 5a   | `a422ea64b` | `io.jenetics:jenetics` 4.4.0 → 9.0.0 in castle-casters. 5-major jump; real API migrations: `DoubleRange.of(int,int)` → `new DoubleRange(double,double)` (record ctor), `Genotype.get(int,int)` → `chromosome.get(int)`, `getBestPhenotype().getGenotype()` → `bestPhenotype().genotype()`. 99 tests pass on Java 25 + jenetics 9. |
+| 5b   | `14d885924` | `renovate.json` packageRules disables for `eslint`+`@eslint/js` v10, `prisma`+`@prisma/client` v7, `gradle` v9, and `zod` v4 scoped to `packages/discord-plays-pokemon/**`. Each with a reason comment linking to the blocking upstream condition.                                                                                |
+| 6    | `575cd381b` | Pin `@sha256:...` digests on `agent-stack-k8s`, `kueue`, `bitnamilegacy/kubectl` in versions.ts; `ghcr.io/shepherdjerred/dotfiles` in dotfiles/scout/homelab devcontainer+cursor Dockerfiles. Consumer sites strip digest via `.split("@")[0]` where Helm `targetRevision` or image `tag` is passed.                              |
+| 7    | `56dd52df2` | Replace deprecated `@github/webauthn-json` with `@simplewebauthn/browser@13` in clauderon/web/frontend (login + registration pages). Two call sites migrated.                                                                                                                                                                     |
+| 8    | `923726cb0` | Promote `scout-for-lol/prod` + `starlight-karma-bot/prod` (and betas) from 2.0.0-1038 → 2.0.0-1061, matching current dashboard target.                                                                                                                                                                                            |
+
+### Still-blocked (disabled in renovate.json, session 4)
+
+- **ESLint 10** — `eslint-plugin-react@7.37.5` peer still `eslint: ^9.7`. Re-verify when `eslint-plugin-react@8` ships.
+- **Prisma 7** — `@prisma/adapter-better-sqlite3@7.8.0` hits `ERR_DLOPEN_FAILED` (Bun #4290). Re-verify when better-sqlite3 works in Bun or a Bun-native Prisma adapter lands.
+- **Gradle 9** — React Native 0.85 gradle plugin targets gradle 8.x. Re-verify when RN 0.86 ships with gradle-9 support.
+- **DPP Zod 4** — `@d6v/zconf@0.0.4` still pins `zod: ^3.21.4`. Re-verify when upstream bumps zod.
+
+Each has an `enabled: false` packageRule with a `description` field referencing the blocker, so the dashboard doesn't re-flag them until the condition changes. Remove the rule when the upstream unblocks.
+
+### Out of session 4 (nothing to do)
+
+- `vite@8`, `@vitejs/plugin-react@6`, `discord-player-youtubei@2`, `typescript@6`, `lucide-react@1`, `astro-seo@1` (in sjer.red), `grdb@7.10`, `swift-markdown@0.7.3`, `yams@6.2.1`, `eslint-plugin-react-hooks@7`, `eslint-plugin-regexp@3` — all already at-or-past dashboard target from prior sessions. Dashboard will self-clear on next Renovate scan.
+- `linuxserver/qbittorrent` v20 — already suppressed by existing regex rule.
+
+### Commit count
+
+8 commits across 10 actionable waves (wave 9 verification folded into the others; wave 10 renovate.json false-positive cleanup folded into wave 5b).
