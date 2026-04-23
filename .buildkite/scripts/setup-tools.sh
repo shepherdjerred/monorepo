@@ -40,7 +40,7 @@ GITLEAKS_VERSION="8.30.1"
 TRIVY_VERSION="0.70.0"
 
 # renovate: datasource=pypi depName=semgrep
-SEMGREP_VERSION="1.160.0"
+SEMGREP_VERSION="1.161.0"
 
 
 install_base() {
