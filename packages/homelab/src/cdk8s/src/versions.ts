@@ -93,22 +93,22 @@ const versions = {
   openebs: "4.4.0",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/scout-for-lol/beta":
-    "2.0.0-1064@sha256:a550b39f457915e12df8243f4191486789748a77fb489d48e9136a548a5aa79b",
+    "2.0.0-1076@sha256:28ef1ab6583e87d69a503397900b6b0ed46c3702b2f7e06e7d480fff4b677dd7",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
   "shepherdjerred/scout-for-lol/prod":
-    "2.0.0-1064@sha256:a550b39f457915e12df8243f4191486789748a77fb489d48e9136a548a5aa79b",
+    "2.0.0-1076@sha256:28ef1ab6583e87d69a503397900b6b0ed46c3702b2f7e06e7d480fff4b677dd7",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
-    "2.0.0-1064@sha256:23a178e7bdd12d404d8c1a61db59047a2635113dc3a7d5603274ae960d08e213",
+    "2.0.0-1076@sha256:09a68ad7b5e311727005fb70b1754bf454f4e929e2423e49c8cc7893d6a7fe31",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/starlight-karma-bot
   "shepherdjerred/starlight-karma-bot/prod":
-    "2.0.0-1064@sha256:23a178e7bdd12d404d8c1a61db59047a2635113dc3a7d5603274ae960d08e213",
+    "2.0.0-1076@sha256:09a68ad7b5e311727005fb70b1754bf454f4e929e2423e49c8cc7893d6a7fe31",
   // not managed by renovate
   "shepherdjerred/birmel":
-    "2.0.0-1064@sha256:0f3afc3921082b0d64ef1303676b9570063c48c7a937aac5e35e06b5868fbf5d",
+    "2.0.0-1076@sha256:34562bfca98545d0a338ecbecdee2b5972ef4931e29db3ebf7d51807411e81bf",
   // not managed by renovate
   "shepherdjerred/discord-plays-pokemon":
-    "2.0.0-1064@sha256:1977882926823480a397ef0182560e358af5b8201589e777cb1fd7c8ce74b524",
+    "2.0.0-1076@sha256:60ebb96c36c819605a5cdbc2cecd36dabf225daed7387ee9b623805a3d7f1818",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "freshrss/freshrss":
     "1.28.1@sha256:9100f649f5c946f589f54cdb9be7a65996528f48f691ef90eb262a0e06e5a522",
@@ -198,15 +198,15 @@ const versions = {
   // Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3
   // not managed by renovate
   "shepherdjerred/caddy-s3proxy":
-    "2.0.0-1064@sha256:937313a56d656ae1a2ee15e1afcdb9e8431f8b8aa0e11091a13080a7910d7164",
+    "2.0.0-1076@sha256:12966c1c98c7e0fe8e3dd35bb67a23232e39d7e6f2c6ce4c880b010b219da21d",
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
-    "2.0.0-1064@sha256:3555bc6a394c56c5ffc35047147d7f58baa00b062b6f44450ba0291bab59559b",
+    "2.0.0-1076@sha256:7390810ccd1b1056fcf9433e18bbb2533ea712c84f4250332dd6022bdedd154e",
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
-    "2.0.0-1064@sha256:0c48600c1a9fd3cc8708fa32ae3a7ebe12d2b9ad366566d37f07c85fe87e58a4",
+    "2.0.0-1076@sha256:e22d989a80f5003f142f33c492b3d077aa75976afb8532df8bdceed3658eee7a",
   // Custom status-page-api image - Status page API
   // not managed by renovate
   "shepherdjerred/status-page-api":
@@ -216,14 +216,14 @@ const versions = {
     "1.29.6@sha256:d33d1402e8b895329e27a0d0e7cc2f034e0aa70f0dab6aa95b306d7ae2716f67",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "temporalio/ui":
-    "2.49.0@sha256:a8b78ea822ae3b0e6079acf84b521ecb75bdd6554c2716aaa97dc0c521364a57",
+    "2.49.1@sha256:a066bdf5c4de689cabaf80cc357871f1db5e6d750a6bcfc42e877b913e31ef24",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "temporalio/admin-tools":
     "1.30.4@sha256:9ac15d500f4020f7cc694ecc17085dfcfc2d4b1d0d2020dbe83b6f3d49e156e0",
   // Custom temporal-worker image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/temporal-worker":
-    "2.0.0-1064@sha256:b960442f64f206f842e59a2c70474aefa8d44cff031d8ee93c4a61d06c8ac1ff",
+    "2.0.0-1076@sha256:7066cd5ff739862b5e6e30c7982e33072c74213a33b397afcbeebd8d269ae98e",
 };
 
 /**
