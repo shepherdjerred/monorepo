@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.1](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.16.0...astro-opengraph-images-v1.16.1) (2026-04-23)
+
+
+### Bug Fixes
+
+* **root:** regenerate bun lockfiles after eslint-plugin-unicorn bump ([6f0102f](https://github.com/shepherdjerred/monorepo/commit/6f0102f4b042e67dbd3867c41f878668d6fb3531))
+
 ## [1.16.0](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.15.0...astro-opengraph-images-v1.16.0) (2026-04-22)
 
 
