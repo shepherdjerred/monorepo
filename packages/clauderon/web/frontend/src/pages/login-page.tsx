@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { get } from "@github/webauthn-json";
+import { startAuthentication } from "@simplewebauthn/browser";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
@@ -19,8 +19,11 @@ export function LoginPage() {
       const response = await apiClient.loginStart({ username });
 
       // Trigger passkey authentication
-      // response.options is 'any' from the generated type, get() accepts CredentialRequestOptionsJSON
-      const credential = await get(response.options);
+      // response.options is 'any' from the generated type; startAuthentication
+      // accepts PublicKeyCredentialRequestOptionsJSON under optionsJSON.
+      const credential = await startAuthentication({
+        optionsJSON: response.options.publicKey ?? response.options,
+      });
 
       // Finish login flow - credential field accepts 'any' in the generated type
       await apiClient.loginFinish({

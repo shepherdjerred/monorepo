@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { create } from "@github/webauthn-json";
+import { startRegistration } from "@simplewebauthn/browser";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
@@ -25,8 +25,11 @@ export function RegistrationPage() {
       });
 
       // Trigger passkey creation
-      // response.options is 'any' from the generated type, create() accepts CredentialCreationOptionsJSON
-      const credential = await create(response.options);
+      // response.options is 'any' from the generated type; startRegistration
+      // accepts PublicKeyCredentialCreationOptionsJSON under optionsJSON.
+      const credential = await startRegistration({
+        optionsJSON: response.options.publicKey ?? response.options,
+      });
 
       // Finish registration flow - credential field accepts 'any' in the generated type
       const trimmedDeviceName = deviceName.trim();
