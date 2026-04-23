@@ -189,19 +189,19 @@ User directive: upgrade ALL dashboard items this session.
 | 3    | `9af9faf8f` | `astro-seo` ^0.8 → ^1.1 in astro-opengraph-images examples (preset, custom)                                                                                                                                                                                                                                                       |
 | 4    | `b38a62e95` | `SEMGREP_VERSION` 1.160.0 → 1.161.0 in `.buildkite/scripts/setup-tools.sh` (other CI tool pins re-verified at latest)                                                                                                                                                                                                             |
 | 5a   | `a422ea64b` | `io.jenetics:jenetics` 4.4.0 → 9.0.0 in castle-casters. 5-major jump; real API migrations: `DoubleRange.of(int,int)` → `new DoubleRange(double,double)` (record ctor), `Genotype.get(int,int)` → `chromosome.get(int)`, `getBestPhenotype().getGenotype()` → `bestPhenotype().genotype()`. 99 tests pass on Java 25 + jenetics 9. |
-| 5b   | `14d885924` | `renovate.json` packageRules disables for `eslint`+`@eslint/js` v10, `prisma`+`@prisma/client` v7, `gradle` v9, and `zod` v4 scoped to `packages/discord-plays-pokemon/**`. Each with a reason comment linking to the blocking upstream condition.                                                                                |
+| 5b   | reverted    | Initially added `renovate.json` disables for the four still-blocked majors, but reverted at user direction — silencing the dashboard hides the problem. Blocked items stay surfaced so Renovate keeps re-flagging them; we re-check each session until the upstream clears.                                                       |
 | 6    | `575cd381b` | Pin `@sha256:...` digests on `agent-stack-k8s`, `kueue`, `bitnamilegacy/kubectl` in versions.ts; `ghcr.io/shepherdjerred/dotfiles` in dotfiles/scout/homelab devcontainer+cursor Dockerfiles. Consumer sites strip digest via `.split("@")[0]` where Helm `targetRevision` or image `tag` is passed.                              |
 | 7    | `56dd52df2` | Replace deprecated `@github/webauthn-json` with `@simplewebauthn/browser@13` in clauderon/web/frontend (login + registration pages). Two call sites migrated.                                                                                                                                                                     |
 | 8    | `923726cb0` | Promote `scout-for-lol/prod` + `starlight-karma-bot/prod` (and betas) from 2.0.0-1038 → 2.0.0-1061, matching current dashboard target.                                                                                                                                                                                            |
 
-### Still-blocked (disabled in renovate.json, session 4)
+### Still-blocked (left surfaced in the dashboard)
 
 - **ESLint 10** — `eslint-plugin-react@7.37.5` peer still `eslint: ^9.7`. Re-verify when `eslint-plugin-react@8` ships.
 - **Prisma 7** — `@prisma/adapter-better-sqlite3@7.8.0` hits `ERR_DLOPEN_FAILED` (Bun #4290). Re-verify when better-sqlite3 works in Bun or a Bun-native Prisma adapter lands.
 - **Gradle 9** — React Native 0.85 gradle plugin targets gradle 8.x. Re-verify when RN 0.86 ships with gradle-9 support.
 - **DPP Zod 4** — `@d6v/zconf@0.0.4` still pins `zod: ^3.21.4`. Re-verify when upstream bumps zod.
 
-Each has an `enabled: false` packageRule with a `description` field referencing the blocker, so the dashboard doesn't re-flag them until the condition changes. Remove the rule when the upstream unblocks.
+These are **deliberately not disabled** in `renovate.json`. Silencing the dashboard hides a live upstream constraint; leaving it surfaced keeps the reminder in front of us every scan so we re-check and upgrade as soon as the block clears.
 
 ### Out of session 4 (nothing to do)
 
