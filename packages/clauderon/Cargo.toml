@@ -71,7 +71,7 @@ http = "1"
 base64 = "0.22"
 
 # TLS (used by reqwest, rustls crypto provider)
-rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
+rustls = { version = "0.23.39", default-features = false, features = ["ring", "std", "tls12", "logging"] }
 
 # Config files
 toml = "1"
