@@ -113,6 +113,16 @@ export function createTemporalWorkerDeployment(
       },
       envVariables: {
         TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
+        // Make the cluster CA globally trusted. @kubernetes/client-node hands
+        // its `ca` to node-fetch via an https.Agent; Bun's node-fetch polyfill
+        // doesn't reliably honor per-agent CA bundles, which surfaced as
+        // "unable to verify the first certificate" from listTailscaleIngresses.
+        // NODE_EXTRA_CA_CERTS is read once at process startup (by both Node
+        // and Bun) and appended to the default root set, so every TLS call
+        // — fetch, https, undici — trusts it.
+        NODE_EXTRA_CA_CERTS: EnvValue.fromValue(
+          "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
+        ),
         // Home Assistant
         HA_URL: EnvValue.fromSecretValue({
           secret,
