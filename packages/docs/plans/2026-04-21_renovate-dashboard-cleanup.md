@@ -211,3 +211,48 @@ These are **deliberately not disabled** in `renovate.json`. Silencing the dashbo
 ### Commit count
 
 8 commits across 10 actionable waves (wave 9 verification folded into the others; wave 10 renovate.json false-positive cleanup folded into wave 5b).
+
+---
+
+## Session 5 (2026-04-22) — Targeted drift cleanup
+
+Three real bumps, two probe-only waves. No renovate.json edits (per user feedback: never silence the dashboard).
+
+### Waves landed
+
+| Wave | Commit      | Scope                                                                                                                                                                                                                                              |
+| ---- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | `d0b7ad406` | `temporalio/ui` 2.49.0 → 2.49.1; all `shepherdjerred/*` image digests (prod+beta) 2.0.0-1064 → 2.0.0-1076 (scout-for-lol, starlight-karma-bot, birmel, discord-plays-pokemon, caddy-s3proxy, tasknotes-server, obsidian-headless, temporal-worker) |
+| 2    | `647dde821` | `rustls` declared range `0.23` → `0.23.39` in `packages/clauderon/Cargo.toml`; `cargo update -p rustls` + `cargo check` clean                                                                                                                      |
+| 3    | `d021c2769` | `pino` `^9.6.0` → `^10.0.0` in `poc/sentinel/package.json`; only usage is `pino({ level })` which is unchanged across the major                                                                                                                    |
+
+### Wave 4 — CI tool probes (no commit)
+
+Re-probed all renovate-annotated pins in `.buildkite/scripts/setup-tools.sh` + `.buildkite/ci-image/Dockerfile`:
+
+- ripgrep 15.1.0, kubectl v1.36.0, shellcheck v0.11.0, uv 0.11.7, helm v4.1.4, opentofu v1.11.6, bun v1.3.13, gh v2.91.0, gitleaks v8.30.1, trivy v0.70.0, semgrep 1.161.0, node v24.15.0 — all at latest release.
+- `@opentelemetry/sdk-node`, `@opentelemetry/exporter-trace-otlp-http` still 0.215.0 (birmel's pin, bumped session 4).
+- `java = "25"` in `packages/castle-casters/mise.toml` — mise auto-resolves to latest 25.x; Renovate dashboard target `25.0.3+9.0.lts` doesn't match any mise-installable naming.
+
+Nothing to commit.
+
+### Wave 5 — Blocked-major re-probe (no commit, no silencing)
+
+Verified the four upstream-blocked majors are still blocked at identical state as session 4:
+
+- **ESLint v10**: `eslint-plugin-react@7.37.5` peer still `eslint: ^9.7`.
+- **Prisma v7**: `@prisma/adapter-better-sqlite3@7.8.0` unchanged; still hits `ERR_DLOPEN_FAILED` in Bun (#4290).
+- **Gradle v9**: `react-native@0.85.2` still latest; gradle plugin targets 8.x.
+- **DPP Zod v4**: `@d6v/zconf@0.0.4` still pins `zod: ^3.21.4`.
+
+These stay surfaced in the Renovate dashboard — no `enabled: false` rules added. Re-probe each session until the upstream condition clears.
+
+### Out of session 5 (dashboard will self-clear)
+
+All other dashboard entries are already at-or-past target from prior sessions: `@ai-sdk/openai`, `ai`, `discord.js`, `hono`, `@sentry/node`, `@voltagent/core`, `@typescript-eslint/utils`, `@types/bun`, `typescript`, `@anthropic-ai/claude-code`, `react monorepo`, `vite`, `@vitejs/plugin-react`, `discord-player-youtubei`, `eslint-plugin-react-hooks`, `eslint-plugin-regexp`, `lucide-react`, `astro-seo`, `grdb`, `swift-markdown`, `yams`, `astro` monorepo (already on v6; no v7 yet).
+
+Pin-dependency bucket (`debian`, DPP image, `node`) — all already have `@sha256` digests (from session 4 wave 6).
+
+### Commit count
+
+3 commits landed, 0 silenced, 4 still-blocked documented as re-probe targets.
