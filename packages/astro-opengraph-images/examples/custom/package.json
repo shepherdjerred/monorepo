@@ -14,7 +14,7 @@
     "@astrojs/check": "^0.9.4",
     "@fontsource/roboto": "^5.2.5",
     "astro": "^5.4.3",
-    "astro-seo": "^0.8.4",
+    "astro-seo": "^1.1.0",
     "react": "^19.0.0",
     "typescript": "^6"
   }
