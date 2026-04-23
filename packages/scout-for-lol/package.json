@@ -36,7 +36,7 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-regexp": "^3.1.0",
-    "eslint-plugin-unicorn": "^62.0.0",
+    "eslint-plugin-unicorn": "^64.0.0",
     "jiti": "^2.6.1",
     "jscpd": "^4.0.9",
     "knip": "^6.6.0",
