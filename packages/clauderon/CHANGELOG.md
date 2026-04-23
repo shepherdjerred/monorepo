@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/shepherdjerred/monorepo/compare/clauderon-v0.2.1...clauderon-v0.2.2) (2026-04-23)
+
+
+### Bug Fixes
+
+* **root:** regenerate bun lockfiles after eslint-plugin-unicorn bump ([6f0102f](https://github.com/shepherdjerred/monorepo/commit/6f0102f4b042e67dbd3867c41f878668d6fb3531))
+
 ## [0.2.1](https://github.com/shepherdjerred/monorepo/compare/clauderon-v0.2.0...clauderon-v0.2.1) (2026-04-22)
 
 

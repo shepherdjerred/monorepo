@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.1](https://github.com/shepherdjerred/monorepo/compare/webring-v1.6.0...webring-v1.6.1) (2026-04-23)
+
+
+### Bug Fixes
+
+* **root:** regenerate bun lockfiles after eslint-plugin-unicorn bump ([6f0102f](https://github.com/shepherdjerred/monorepo/commit/6f0102f4b042e67dbd3867c41f878668d6fb3531))
+
 ## [1.6.0](https://github.com/shepherdjerred/monorepo/compare/webring-v1.5.1...webring-v1.6.0) (2026-04-05)
 
 Maintenance release with dependency updates and build system improvements.
