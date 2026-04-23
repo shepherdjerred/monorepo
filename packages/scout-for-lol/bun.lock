@@ -3005,6 +3005,16 @@
 
     "@rollup/pluginutils/estree-walker": ["estree-walker@2.0.2", "", {}, "sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w=="],
 
+    "@scout-for-lol/backend/@scout-for-lol/data": ["@scout-for-lol/data@file:packages/data", { "dependencies": { "date-fns": "^4.1.0", "remeda": "^2.21.2", "ts-pattern": "^5.7.0", "zod": "^4.0.0" }, "devDependencies": { "bun-types": "latest", "eslint": "^9.39.4", "twisted": "^1.73.0", "typescript": "^6" } }],
+
+    "@scout-for-lol/desktop/@scout-for-lol/data": ["@scout-for-lol/data@file:packages/data", { "dependencies": { "date-fns": "^4.1.0", "remeda": "^2.21.2", "ts-pattern": "^5.7.0", "zod": "^4.0.0" }, "devDependencies": { "bun-types": "latest", "eslint": "^9.39.4", "twisted": "^1.73.0", "typescript": "^6" } }],
+
+    "@scout-for-lol/frontend/@scout-for-lol/data": ["@scout-for-lol/data@file:packages/data", { "dependencies": { "date-fns": "^4.1.0", "remeda": "^2.21.2", "ts-pattern": "^5.7.0", "zod": "^4.0.0" }, "devDependencies": { "bun-types": "latest", "eslint": "^9.39.4", "twisted": "^1.73.0", "typescript": "^6" } }],
+
+    "@scout-for-lol/report/@scout-for-lol/data": ["@scout-for-lol/data@file:packages/data", { "dependencies": { "date-fns": "^4.1.0", "remeda": "^2.21.2", "ts-pattern": "^5.7.0", "zod": "^4.0.0" }, "devDependencies": { "bun-types": "latest", "eslint": "^9.39.4", "twisted": "^1.73.0", "typescript": "^6" } }],
+
+    "@scout-for-lol/ui/@scout-for-lol/data": ["@scout-for-lol/data@file:packages/data", { "dependencies": { "date-fns": "^4.1.0", "remeda": "^2.21.2", "ts-pattern": "^5.7.0", "zod": "^4.0.0" }, "devDependencies": { "bun-types": "latest", "eslint": "^9.39.4", "twisted": "^1.73.0", "typescript": "^6" } }],
+
     "@shepherdjerred/eslint-config/eslint-plugin-regexp": ["eslint-plugin-regexp@2.10.0", "", { "dependencies": { "@eslint-community/eslint-utils": "^4.2.0", "@eslint-community/regexpp": "^4.11.0", "comment-parser": "^1.4.0", "jsdoc-type-pratt-parser": "^4.0.0", "refa": "^0.12.1", "regexp-ast-analysis": "^0.7.1", "scslre": "^0.3.0" }, "peerDependencies": { "eslint": ">=8.44.0" } }, "sha512-ovzQT8ESVn5oOe5a7gIDPD5v9bCSjIFJu57sVPDqgPRXicQzOnYfFN21WoQBQF18vrhT5o7UMKFwJQVVjyJ0ng=="],
 
     "@sinonjs/samsam/type-detect": ["type-detect@4.1.0", "", {}, "sha512-Acylog8/luQ8L7il+geoSxhEkazvkslg7PSNKOX59mbB9cOveP5aq9h74Y7YU8yDpJwetzQQrfIwtf4Wp4LKcw=="],
