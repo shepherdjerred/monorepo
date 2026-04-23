@@ -99,31 +99,6 @@
       "description": "Ignore bogus Ubuntu base image tags for qBittorrent",
       "matchPackageNames": ["linuxserver/qbittorrent"],
       "allowedVersions": "/^[0-9]+\\.[0-9]+\\.[0-9]+$/"
-    },
-    {
-      "description": "ESLint v10 blocked: eslint-plugin-react@7.37.5 peer caps at eslint ^9.7. Re-enable after eslint-plugin-react v8.",
-      "matchPackageNames": ["eslint", "@eslint/js"],
-      "matchUpdateTypes": ["major"],
-      "enabled": false
-    },
-    {
-      "description": "Prisma v7 blocked: @prisma/adapter-better-sqlite3 hits ERR_DLOPEN_FAILED in Bun (oven-sh/bun#4290). Re-enable when better-sqlite3 works in Bun or a Bun-native adapter ships.",
-      "matchPackageNames": ["prisma", "@prisma/client"],
-      "matchUpdateTypes": ["major"],
-      "enabled": false
-    },
-    {
-      "description": "Gradle v9 blocked: React Native 0.85 gradle plugin targets gradle 8.x. Re-enable after RN 0.86 ships with gradle-9 support.",
-      "matchPackageNames": ["gradle"],
-      "matchUpdateTypes": ["major"],
-      "enabled": false
-    },
-    {
-      "description": "Zod v4 blocked in DPP: @d6v/zconf still pins zod ^3.21. Re-enable for DPP after upstream bumps.",
-      "matchPackageNames": ["zod"],
-      "matchFileNames": ["packages/discord-plays-pokemon/**"],
-      "matchUpdateTypes": ["major"],
-      "enabled": false
     }
   ],
   "minimumReleaseAge": "30 days",
