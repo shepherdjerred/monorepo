@@ -53,12 +53,15 @@ public class WeightsProblem implements Problem<EvaluatorWeights, DoubleGene, Int
   @Override
   public Codec<EvaluatorWeights, DoubleGene> codec() {
     return Codec.of(
-        Genotype.of(DoubleChromosome.of(DoubleRange.of(-10000, 10000), 5)),
-        gt -> new EvaluatorWeights(gt.get(0, 0).doubleValue(),
-            gt.get(0, 1).doubleValue(),
-            gt.get(0, 2).doubleValue(),
-            gt.get(0, 3).doubleValue(),
-            gt.get(0, 4).doubleValue())
+        Genotype.of(DoubleChromosome.of(new DoubleRange(-10000d, 10000d), 5)),
+        gt -> {
+          var chromosome = gt.chromosome();
+          return new EvaluatorWeights(chromosome.get(0).doubleValue(),
+              chromosome.get(1).doubleValue(),
+              chromosome.get(2).doubleValue(),
+              chromosome.get(3).doubleValue(),
+              chromosome.get(4).doubleValue());
+        }
     );
   }
 

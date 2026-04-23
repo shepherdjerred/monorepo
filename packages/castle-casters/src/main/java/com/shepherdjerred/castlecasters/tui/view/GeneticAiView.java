@@ -34,11 +34,11 @@ public class GeneticAiView implements View {
 
     // create the initial population using the IdealWeights
     final Genotype<DoubleGene> initialGenotype = Genotype.of(DoubleChromosome.of(
-        DoubleGene.of(IdealWeights.getIdealWeights().adjacentPawnsWeight(), -10000, 10000),
-        DoubleGene.of(IdealWeights.getIdealWeights().opponentsShortestPathWeight(), -10000, 10000),
-        DoubleGene.of(IdealWeights.getIdealWeights().remainingWallsWeight(), -10000, 10000),
-        DoubleGene.of(IdealWeights.getIdealWeights().shortestPathWeight(), -10000, 10000),
-        DoubleGene.of(IdealWeights.getIdealWeights().wallsNearbyWeight(), -10000, 10000)
+        DoubleGene.of(IdealWeights.getIdealWeights().adjacentPawnsWeight(), -10000d, 10000d),
+        DoubleGene.of(IdealWeights.getIdealWeights().opponentsShortestPathWeight(), -10000d, 10000d),
+        DoubleGene.of(IdealWeights.getIdealWeights().remainingWallsWeight(), -10000d, 10000d),
+        DoubleGene.of(IdealWeights.getIdealWeights().shortestPathWeight(), -10000d, 10000d),
+        DoubleGene.of(IdealWeights.getIdealWeights().wallsNearbyWeight(), -10000d, 10000d)
     ));
 
     final Genotype<DoubleGene> gt = engine.stream(Collections.singleton(initialGenotype))
@@ -47,7 +47,7 @@ public class GeneticAiView implements View {
         .peek(result -> {
           var weights = problem.codec()
               .decoder()
-              .apply(result.getBestPhenotype().getGenotype());
+              .apply(result.bestPhenotype().genotype());
           log.info(weights);
         })
         .peek(r -> {
