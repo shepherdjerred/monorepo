@@ -27,13 +27,17 @@ export function createKyvernoApp(chart: Chart) {
     policyReportsCleanup: {
       image: {
         repository: "bitnamilegacy/kubectl",
-        tag: versions["bitnamilegacy/kubectl"],
+        tag:
+          versions["bitnamilegacy/kubectl"].split("@")[0] ??
+          versions["bitnamilegacy/kubectl"],
       },
     },
     webhooksCleanup: {
       image: {
         repository: "bitnamilegacy/kubectl",
-        tag: versions["bitnamilegacy/kubectl"],
+        tag:
+          versions["bitnamilegacy/kubectl"].split("@")[0] ??
+          versions["bitnamilegacy/kubectl"],
       },
     },
   };

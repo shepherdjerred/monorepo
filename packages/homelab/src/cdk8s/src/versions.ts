@@ -113,16 +113,19 @@ const versions = {
   "freshrss/freshrss":
     "1.28.1@sha256:9100f649f5c946f589f54cdb9be7a65996528f48f691ef90eb262a0e06e5a522",
   // renovate: datasource=docker registryUrl=https://ghcr.io/buildkite/helm versioning=semver packageName=agent-stack-k8s
-  "agent-stack-k8s": "0.42.0",
+  "agent-stack-k8s":
+    "0.42.0@sha256:a7ef0f2ffd8a2830e57fe5d266087ddd835e4c6a44370804240821a57cb4eb63",
   // renovate: datasource=docker registryUrl=https://registry.dagger.io versioning=semver packageName=dagger-helm
   "dagger-helm": "0.20.6",
   // renovate: datasource=docker registryUrl=https://registry.k8s.io versioning=semver packageName=kueue/charts/kueue
-  kueue: "0.17.1",
+  kueue:
+    "0.17.1@sha256:34ad12be27594547c60c0f7cd9c1d032d904d1790dd971afc17570ce518f682c",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "library/python":
     "3.14-alpine@sha256:dd4d2bd5b53d9b25a51da13addf2be586beebd5387e289e798e4083d94ca837a",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
-  "bitnamilegacy/kubectl": "1.33.4",
+  "bitnamilegacy/kubectl":
+    "1.33.4@sha256:ed0b31a0508da84ee655c5c6e01bd3897fc56ad6cf69debb27fa1893a06d2246",
   // renovate: datasource=helm registryUrl=https://vmware-tanzu.github.io/helm-charts versioning=semver
   velero: "12.0.0",
   // renovate: datasource=helm registryUrl=https://kyverno.github.io/kyverno versioning=semver

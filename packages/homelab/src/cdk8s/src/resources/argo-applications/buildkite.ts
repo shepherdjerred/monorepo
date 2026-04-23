@@ -83,7 +83,9 @@ export function createBuildkiteApp(chart: Chart) {
       source: {
         repoUrl: "ghcr.io/buildkite/helm",
         chart: "agent-stack-k8s",
-        targetRevision: versions["agent-stack-k8s"],
+        targetRevision:
+          versions["agent-stack-k8s"].split("@")[0] ??
+          versions["agent-stack-k8s"],
         helm: {
           valuesObject: {
             agentStackSecret: "buildkite-agent-token",

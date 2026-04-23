@@ -58,7 +58,7 @@ export function createKueueApp(chart: Chart) {
       source: {
         repoUrl: "registry.k8s.io/kueue/charts",
         chart: "kueue",
-        targetRevision: versions.kueue,
+        targetRevision: versions.kueue.split("@")[0] ?? versions.kueue,
         helm: {
           valuesObject: {
             controllerManager: {
