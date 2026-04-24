@@ -8,6 +8,26 @@ function getK8sClient(): k8s.NetworkingV1Api {
   return kc.makeApiClient(k8s.NetworkingV1Api);
 }
 
+// golink validates an XSRF token, scoped to the target path, on every
+// state-changing POST. The token is embedded in the HTML form on each page.
+// Tagged-device identities get JSON responses when Sec-Golink is set, which
+// strips the form, so the token fetch must use Accept: text/html and omit
+// Sec-Golink. The POST itself still uses Sec-Golink to flag it as API traffic.
+async function fetchXsrfToken(pageUrl: string): Promise<string> {
+  const response = await fetch(pageUrl, { headers: { Accept: "text/html" } });
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch XSRF token from ${pageUrl}: ${String(response.status)}`,
+    );
+  }
+  const html = await response.text();
+  const match = /name="xsrf" value="([^"]*)"/.exec(html);
+  if (match?.[1] === undefined || match[1] === "") {
+    throw new Error(`No XSRF token in response from ${pageUrl}`);
+  }
+  return match[1];
+}
+
 export type GolinkSyncActivities = typeof golinkSyncActivities;
 
 export const golinkSyncActivities = {
@@ -74,13 +94,15 @@ export const golinkSyncActivities = {
     short: string,
     long: string,
   ): Promise<void> {
+    const xsrfToken = await fetchXsrfToken(`${golinkUrl}/`);
+
     const response = await fetch(`${golinkUrl}/`, {
       method: "POST",
       headers: {
         "Sec-Golink": "1",
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: `short=${encodeURIComponent(short)}&long=${encodeURIComponent(long)}`,
+      body: `short=${encodeURIComponent(short)}&long=${encodeURIComponent(long)}&xsrf=${encodeURIComponent(xsrfToken)}`,
     });
 
     if (!response.ok) {
@@ -93,24 +115,7 @@ export const golinkSyncActivities = {
   },
 
   async deleteStaleGolink(golinkUrl: string, short: string): Promise<void> {
-    // Fetch detail page to get XSRF token
-    const detailResponse = await fetch(`${golinkUrl}/.detail/${short}`, {
-      headers: { "Sec-Golink": "1" },
-    });
-
-    if (!detailResponse.ok) {
-      console.warn(`Could not fetch detail page for go/${short}`);
-      return;
-    }
-
-    const html = await detailResponse.text();
-    const xsrfMatch = /name="xsrf" value="([^"]*)"/.exec(html);
-    const xsrfToken = xsrfMatch?.[1];
-
-    if (xsrfToken === undefined) {
-      console.warn(`Could not find XSRF token for go/${short}`);
-      return;
-    }
+    const xsrfToken = await fetchXsrfToken(`${golinkUrl}/.detail/${short}`);
 
     const deleteResponse = await fetch(`${golinkUrl}/.delete/${short}`, {
       method: "POST",
@@ -122,10 +127,9 @@ export const golinkSyncActivities = {
     });
 
     if (!deleteResponse.ok) {
-      console.warn(
+      throw new Error(
         `Failed to delete go/${short}: ${String(deleteResponse.status)}`,
       );
-      return;
     }
 
     console.warn(`Deleted stale: go/${short}`);
