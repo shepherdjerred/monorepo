@@ -309,6 +309,7 @@ export class Monorepo {
     version: string = "dev",
     gitSha: string = "unknown",
     usePrisma: boolean = false,
+    installEditorClis: boolean = false,
   ): Container {
     return buildImageHelper(
       pkgDir,
@@ -318,6 +319,7 @@ export class Monorepo {
       version,
       gitSha,
       usePrisma,
+      installEditorClis,
     );
   }
 
@@ -334,6 +336,7 @@ export class Monorepo {
     version: string = "dev",
     gitSha: string = "unknown",
     usePrisma: boolean = false,
+    installEditorClis: boolean = false,
   ): Promise<string> {
     return pushImageHelper(
       pkgDir,
@@ -346,6 +349,7 @@ export class Monorepo {
       version,
       gitSha,
       usePrisma,
+      installEditorClis,
     );
   }
 

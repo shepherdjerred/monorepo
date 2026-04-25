@@ -5,7 +5,11 @@
  * Push steps (release-phase) publish to GHCR, reusing the cached build.
  */
 import type { ImageTarget } from "../catalog.ts";
-import { IMAGE_PUSH_TARGETS, PRISMA_PACKAGES } from "../catalog.ts";
+import {
+  IMAGE_PUSH_TARGETS,
+  PRISMA_PACKAGES,
+  EDITOR_CLI_PACKAGES,
+} from "../catalog.ts";
 import { safeKey, RETRY, DAGGER_ENV } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
@@ -60,9 +64,13 @@ function imageBuildStep(
   } else {
     // Default build-image takes --pkg-dir, --pkg, and dep flags
     const prismaFlag = PRISMA_PACKAGES.has(img.name) ? "--use-prisma" : "";
+    const editorClisFlag = EDITOR_CLI_PACKAGES.has(img.name)
+      ? "--install-editor-clis"
+      : "";
     cmd = [
       `dagger call ${buildFn} --pkg-dir ./packages/${pkg} --pkg ${img.name}`,
       prismaFlag,
+      editorClisFlag,
       flags,
       VERSION_FLAGS,
     ]
@@ -201,9 +209,13 @@ function imagePushStep(
     // Default push-image takes --pkg-dir, --pkg, dep flags, tags, registry creds
     const flags = depFlags(pkg);
     const prismaFlag = PRISMA_PACKAGES.has(img.name) ? "--use-prisma" : "";
+    const editorClisFlag = EDITOR_CLI_PACKAGES.has(img.name)
+      ? "--install-editor-clis"
+      : "";
     pushCall = [
       `push-image --pkg-dir ./packages/${pkg} --pkg ${img.name}`,
       prismaFlag,
+      editorClisFlag,
       flags,
       tagFlags,
       VERSION_FLAGS,
