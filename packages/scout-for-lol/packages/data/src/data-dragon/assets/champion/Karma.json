@@ -547,7 +547,10 @@
         "Karma's Soulflare erupts for bonus damage in the area in which it's placed. React quickly and escape the circle to avoid taking heavy damage.",
         "Focused Resolve is a strong disengage tool. Create distance to avoid being rooted and seek to engage afterwards."
       ],
-      "tags": ["Mage", "Support"],
+      "tags": [
+        "Mage",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 1,
@@ -584,7 +587,11 @@
           "description": "Karma sends forth a ball of spirit energy that explodes and deals damage upon hitting an enemy unit.<br><br>Mantra Bonus: In addition to the explosion, Mantra increases the destructive power of her Inner Flame, creating a cataclysm which deals damage after a short delay.",
           "tooltip": "Karma fires a blast of energy, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first target hit and surrounding enemies, and <status>Slowing</status> them by {{ slowamount*-100 }}% for {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -592,23 +599,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 8, 7, 6, 5],
+          "cooldown": [
+            9,
+            8,
+            7,
+            6,
+            5
+          ],
           "cooldownBurn": "9/8/7/6/5",
-          "cost": [40, 50, 60, 70, 80],
+          "cost": [
+            40,
+            50,
+            60,
+            70,
+            80
+          ],
           "costBurn": "40/50/60/70/80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -626,7 +705,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [950, 950, 950, 950, 950],
+          "range": [
+            950,
+            950,
+            950,
+            950,
+            950
+          ],
           "rangeBurn": "950",
           "image": {
             "full": "KarmaQ.png",
@@ -645,7 +730,11 @@
           "description": "Karma creates a tether between herself and a targeted enemy, dealing damage and revealing them. If the tether is not broken, the enemy will be rooted and damaged again.<br><br>Mantra Bonus: Karma strengthens the link, healing herself and extending the root duration.",
           "tooltip": "Karma tethers herself to a champion or jungle monster, dealing <magicDamage>{{ initialdamage }} magic damage</magicDamage> and revealing them for {{ tetherduration }}s. If the tether remains unbroken, the target takes <magicDamage>{{ initialdamage }} magic damage</magicDamage> again and is <status>Rooted</status> for {{ rootduration }}s.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Root Duration", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Root Duration",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ rootduration }} -> {{ rootdurationNL }}",
@@ -653,23 +742,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 12, 12, 12, 12],
+          "cooldown": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
           "cooldownBurn": "12",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -687,7 +848,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [675, 675, 675, 675, 675],
+          "range": [
+            675,
+            675,
+            675,
+            675,
+            675
+          ],
           "rangeBurn": "675",
           "image": {
             "full": "KarmaSpiritBind.png",
@@ -718,23 +885,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9.5, 9, 8.5, 8],
+          "cooldown": [
+            10,
+            9.5,
+            9,
+            8.5,
+            8
+          ],
           "cooldownBurn": "10/9.5/9/8.5/8",
-          "cost": [60, 65, 70, 75, 80],
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -752,7 +991,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "KarmaSolKimShield.png",
@@ -787,23 +1032,83 @@
             ]
           },
           "maxrank": 4,
-          "cooldown": [40, 38, 36, 34],
+          "cooldown": [
+            40,
+            38,
+            36,
+            34
+          ],
           "cooldownBurn": "40/38/36/34",
-          "cost": [0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -821,7 +1126,12 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [1100, 1100, 1100, 1100],
+          "range": [
+            1100,
+            1100,
+            1100,
+            1100
+          ],
           "rangeBurn": "1100",
           "image": {
             "full": "KarmaMantra.png",

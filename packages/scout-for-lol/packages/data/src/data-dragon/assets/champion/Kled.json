@@ -215,7 +215,9 @@
         "Watch Kled's courage bar when he's off his mount - when it reaches 100%, he will remount and regain a significant amount of health.",
         "Kled is much more threatening when he has Violent Tendencies ready."
       ],
-      "tags": ["Fighter"],
+      "tags": [
+        "Fighter"
+      ],
       "partype": "Courage",
       "info": {
         "attack": 8,
@@ -252,7 +254,12 @@
           "description": "Kled throws a bear trap that damages and hooks an enemy champion. If shackled for a short duration, the target takes additional physical damage and is yanked toward Kled.<br><br>When dismounted, this ability is replaced by Pocket Pistol, a ranged gun blast that knocks back Kled and restores courage.",
           "tooltip": "<keywordMajor>Mounted:</keywordMajor> Kled throws a bear trap that deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and hooks onto the first enemy champion or large jungle monster hit.<br /><br />If Kled stays near a hooked enemy for {{ tetherpoptime }} seconds, he yanks out the trap, dealing <physicalDamage>{{ totalyankdamage }} physical damage</physicalDamage>, <status>Pulling</status> them, and <status>Slowing</status> by {{ slowamount*-100 }}% for {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Throw Damage", "Rip Damage", "Slow", "Cooldown"],
+            "label": [
+              "Throw Damage",
+              "Rip Damage",
+              "Slow",
+              "Cooldown"
+            ],
             "effect": [
               "{{ firsthitbasedamage }} -> {{ firsthitbasedamageNL }}",
               "{{ firsthitbasedamage*2.000000 }} -> {{ firsthitbasedamagenl*2.000000 }}",
@@ -261,23 +268,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 10, 9, 8, 7],
+          "cooldown": [
+            11,
+            10,
+            9,
+            8,
+            7
+          ],
           "cooldownBurn": "11/10/9/8/7",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -295,7 +374,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "KledQ.png",
@@ -314,7 +399,11 @@
           "description": "Kled gains massive attack speed for four attacks. The fourth attack deals more damage.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Kled's next Attack grants <attackSpeed>{{ attackspeed*100 }}% Attack Speed</attackSpeed> for four Attacks or {{ activeduration }} seconds.<br /><br />The fourth hit deals an additional <physicalDamage>{{ baseflatdamage }} plus {{ percentdamage }} max Health physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Flat Damage", "Percentage Damage", "Cooldown"],
+            "label": [
+              "Flat Damage",
+              "Percentage Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ baseflatdamage }} -> {{ baseflatdamageNL }}",
               "{{ 4hitmaxhealthdamage }}% -> {{ 4hitmaxhealthdamageNL }}%",
@@ -322,23 +411,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [13, 12, 11, 10, 9],
+          "cooldown": [
+            13,
+            12,
+            11,
+            10,
+            9
+          ],
           "cooldownBurn": "13/12/11/10/9",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -356,7 +517,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [0, 0, 0, 0, 0],
+          "range": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "rangeBurn": "0",
           "image": {
             "full": "KledW.png",
@@ -375,30 +542,105 @@
           "description": "Kled dashes, dealing physical damage and gaining a short burst of speed. Kled can cast this ability again to dash back through his initial target, dealing the same damage.",
           "tooltip": "Kled dashes, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to enemies he passes through, pulling minions and small monsters towards him.<br /><br />If this Ability hits an enemy champion or large jungle monster, Kled gains <speed>{{ movespeed*100 }}% Move Speed</speed> for {{ movespeedduration }} second(s) and can <recast>Recast</recast> within {{ recastwindow }} seconds to dash back through the same target.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [13, 12, 11, 10, 9],
+          "cooldown": [
+            13,
+            12,
+            11,
+            10,
+            9
+          ],
           "cooldownBurn": "13/12/11/10/9",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -416,7 +658,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [550, 550, 550, 550, 550],
+          "range": [
+            550,
+            550,
+            550,
+            550,
+            550
+          ],
           "rangeBurn": "550",
           "image": {
             "full": "KledE.png",
@@ -449,23 +697,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [140, 125, 110],
+          "cooldown": [
+            140,
+            125,
+            110
+          ],
           "cooldownBurn": "140/125/110",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -483,7 +779,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [3500, 4000, 4500],
+          "range": [
+            3500,
+            4000,
+            4500
+          ],
           "rangeBurn": "3500/4000/4500",
           "image": {
             "full": "KledR.png",

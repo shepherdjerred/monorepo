@@ -346,7 +346,10 @@
         "Be careful near Pantheon if your health is low - a thrown Comet Spear executes low health enemies.",
         "Grand Starfall gives several seconds of warning before Pantheon arrives. Use this time to get out of the way or to form a plan to deal with him."
       ],
-      "tags": ["Fighter", "Assassin"],
+      "tags": [
+        "Fighter",
+        "Assassin"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 9,
@@ -383,7 +386,11 @@
           "description": "Pantheon either thrusts his spear or throws his spear in the chosen direction.",
           "tooltip": "<span class=\"colorFF8C00\">Tap:</span> Pantheon thrusts his spear, dealing <physicalDamage>{{ tapdamagecalc }} physical damage</physicalDamage> to enemies hit. Refunds {{ tapcooldownrefund*100 }}% of this Ability's Cooldown.<br /><br /><span class=\"colorFF8C00\">Hold:</span> Pantheon hurls his spear, dealing <physicalDamage>{{ holddamagecalc }} physical damage</physicalDamage> to the first enemy hit and {{ damagefalloff*100 }}% less to further targets. <br /><br />This Ability is enhanced against enemies below {{ crithealththreshold*100 }}% Health to deal <physicalDamage>{{ executedamagecalcmodified }} physical damage</physicalDamage> instead.<br /><br /><span class=\"colorEDDA74\">Mortal Will Bonus:</span> Deals an additional <physicalDamage>{{ empowereddamagecalc }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Base Damage", "Execute Base Damage", "Cooldown"],
+            "label": [
+              "Base Damage",
+              "Execute Base Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ tapdamage }} -> {{ tapdamageNL }}",
               "{{ executebasedamage }} -> {{ executebasedamageNL }}",
@@ -391,23 +398,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 10.25, 9.5, 8.75, 8],
+          "cooldown": [
+            11,
+            10.25,
+            9.5,
+            8.75,
+            8
+          ],
           "cooldownBurn": "11/10.25/9.5/8.75/8",
-          "cost": [25, 25, 25, 25, 25],
+          "cost": [
+            25,
+            25,
+            25,
+            25,
+            25
+          ],
           "costBurn": "25",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -425,7 +504,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [575, 575, 575, 575, 575],
+          "range": [
+            575,
+            575,
+            575,
+            575,
+            575
+          ],
           "rangeBurn": "575",
           "image": {
             "full": "PantheonQ.png",
@@ -444,30 +529,105 @@
           "description": "Pantheon dashes to a target, damaging and stunning them.",
           "tooltip": "Pantheon leaps on his target, <status>Stunning</status> for {{ stunduration }} second and dealing <physicalDamage>{{ maxhealthdamagecalc }} max Health physical damage</physicalDamage>.<br /><br /><keywordMajor>Mortal Will Bonus:</keywordMajor> Pantheon's next Attack strikes {{ empowerednumhits }} times, dealing a total of <physicalDamage>{{ empowereddamagemultcalcmodified }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Max Health %", "Cooldown"],
+            "label": [
+              "Max Health %",
+              "Cooldown"
+            ],
             "effect": [
               "{{ maxhealthdamage*100.000000 }}% -> {{ maxhealthdamagenl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [13, 12, 11, 10, 9],
+          "cooldown": [
+            13,
+            12,
+            11,
+            10,
+            9
+          ],
           "cooldownBurn": "13/12/11/10/9",
-          "cost": [55, 55, 55, 55, 55],
+          "cost": [
+            55,
+            55,
+            55,
+            55,
+            55
+          ],
           "costBurn": "55",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -485,7 +645,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "PantheonW.png",
@@ -504,30 +670,105 @@
           "description": "Pantheon sets his shield, becoming invulnerable to damage from the front and striking repeatedly with his spear.",
           "tooltip": "Pantheon braces his shield and engages enemies in a chosen direction for {{ shieldduration }} seconds, becoming immune to non-tower damage from that direction and dealing <physicalDamage>{{ damagecalc }} physical damage</physicalDamage> over the duration. After channeling Pantheon slams with his shield, dealing <physicalDamage>{{ shielddamagecalc }} physical damage</physicalDamage>.<br /><br /><span class=\"colorEDDA74\">Mortal Will Bonus:</span> When Pantheon slams his shield he gains <scaleArmor>{{ resistscalc }} Armor</scaleArmor> and <scaleMR>{{ resistscalc }} Magic Resist</scaleMR> for {{ resistsduration }} seconds, and <speed>{{ speedamount*100 }}% Move Speed</speed> for {{ speedduration }} seconds. <br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Shield Slam Damage"],
+            "label": [
+              "Cooldown",
+              "Shield Slam Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ shieldbasedamage }} -> {{ shieldbasedamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [22, 21, 20, 19, 18],
+          "cooldown": [
+            22,
+            21,
+            20,
+            19,
+            18
+          ],
           "cooldownBurn": "22/21/20/19/18",
-          "cost": [80, 80, 80, 80, 80],
+          "cost": [
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
           "costBurn": "80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -545,7 +786,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400, 400, 400],
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "PantheonE.png",
@@ -564,7 +811,11 @@
           "description": "Pantheon composes himself and then leaps into the air, landing at a chosen location as a comet.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Pantheon gains {{ armorpenetration*100 }}% Armor Penetration.<br /><br /><spellActive>Active:</spellActive> Pantheon gathers his strength to leap high into the air. He throws his spear from above which in a small area deals <physicalDamage>{{ spell.pantheonq:holddamagecalc }} physical damage</physicalDamage> and <status>Slows</status> by {{ spearslow*100 }}% for {{ spearslowduration }} seconds. <br /><br />Pantheon then crashes down as a meteor at the target area. Deals up to <magicDamage>{{ damagecalc }} magic damage</magicDamage> to enemies in a line (decreased by up to {{ edgedamagereduction*100 }}% at the edges of the area).<br /><br />This Ability instantly readies <span class=\"colorEDDA74\">Mortal Will</span>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "Armor Penetration"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "Armor Penetration"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -572,23 +823,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [180, 165, 150],
+          "cooldown": [
+            180,
+            165,
+            150
+          ],
           "cooldownBurn": "180/165/150",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -606,7 +905,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [5500, 5500, 5500],
+          "range": [
+            5500,
+            5500,
+            5500
+          ],
           "rangeBurn": "5500",
           "image": {
             "full": "PantheonR.png",

@@ -336,7 +336,9 @@
         "Zoe must return to her starting point after casting Portal Jump, making her vulnerable to a counterattack.",
         "Sleepy Trouble Bubble travels further over walls. Stop Zoe from hiding in fog of war to prevent her from setting the spell up."
       ],
-      "tags": ["Mage"],
+      "tags": [
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 1,
@@ -373,7 +375,11 @@
           "description": "Zoe fires a missile that she can redirect in flight. Deals more damage the longer it flies in a straight line.",
           "tooltip": "Zoe fires a star that deals increasing damage the further it travels to the first enemy hit and surrounding enemies -- between <magicDamage>{{ totaldamagetooltip }} to {{ maxdamagetooltip }} magic damage</magicDamage>.<br /><br />Zoe can <recast>Recast</recast> this Ability to redirect the missile to a new position near Zoe.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Base Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Base Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -381,23 +387,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8.5, 8, 7.5, 7, 6.5],
+          "cooldown": [
+            8.5,
+            8,
+            7.5,
+            7,
+            6.5
+          ],
           "cooldownBurn": "8.5/8/7.5/7/6.5",
-          "cost": [40, 45, 50, 55, 60],
+          "cost": [
+            40,
+            45,
+            50,
+            55,
+            60
+          ],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -415,7 +493,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "ZoeQ.png",
@@ -434,7 +518,11 @@
           "description": "Zoe can pick up the remnants of enemy summoner spell and active item casts and cast them once herself. Whenever she casts a summoner spell, she gains 3 missiles that fire at the nearest target.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Enemies drop spell shards when casting a Summoner Spell or using an Active Item. Specific minions also drop a spell shard when Zoe or a nearby ally kills them. Zoe can pick up this shard to cast that ability once.<br /><br /><spellPassive>Passive:</spellPassive> When Zoe casts this Ability or any Summoner Spell, she gains <speed>{{ e9 }}% Move Speed</speed> for {{ e0 }} seconds and tosses 3 missiles at the target she Attacked most recently. These missiles deal <magicDamage>{{ missiledamagetooltip }} magic damage</magicDamage> each.<br /><br /><spellActive>Active:</spellActive> Cast the Ability from a spell shard Zoe has picked up.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Total Damage", "Move Speed", "Speed Duration"],
+            "label": [
+              "Total Damage",
+              "Move Speed",
+              "Speed Duration"
+            ],
             "effect": [
               "{{ totalbasedamage*3.000000 }} -> {{ totalbasedamagenl*3.000000 }}",
               "{{ movespeedmod*100.000000 }}% -> {{ movespeedmodnl*100.000000 }}%",
@@ -442,23 +530,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [0.25, 0.25, 0.25, 0.25, 0.25],
+          "cooldown": [
+            0.25,
+            0.25,
+            0.25,
+            0.25,
+            0.25
+          ],
           "cooldownBurn": "0.25",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [3000, 4500, 6000, 0, 0],
-            [0.1, 0.1, 0.1, 0.1, 0.1],
-            [2500, 2500, 2500, 2500, 2500],
-            [60, 60, 60, 60, 60],
-            [20, 50, 80, 110, 140],
-            [0.2, 0.2, 0.2, 0.2, 0.2],
-            [0, 0, 0, 0, 0],
-            [30, 40, 50, 60, 70],
-            [2, 2.25, 2.5, 2.75, 3]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              3000,
+              4500,
+              6000,
+              0,
+              0
+            ],
+            [
+              0.1,
+              0.1,
+              0.1,
+              0.1,
+              0.1
+            ],
+            [
+              2500,
+              2500,
+              2500,
+              2500,
+              2500
+            ],
+            [
+              60,
+              60,
+              60,
+              60,
+              60
+            ],
+            [
+              20,
+              50,
+              80,
+              110,
+              140
+            ],
+            [
+              0.2,
+              0.2,
+              0.2,
+              0.2,
+              0.2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              30,
+              40,
+              50,
+              60,
+              70
+            ],
+            [
+              2,
+              2.25,
+              2.5,
+              2.75,
+              3
+            ]
           ],
           "effectBurn": [
             null,
@@ -476,7 +636,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [3000, 4500, 6000, 3000, 3000],
+          "range": [
+            3000,
+            4500,
+            6000,
+            3000,
+            3000
+          ],
           "rangeBurn": "3000/4500/6000/3000/3000",
           "image": {
             "full": "ZoeW.png",
@@ -495,7 +661,11 @@
           "description": "Causes the target to become drowsy, then fall asleep. While asleep, the target's Magic Resist is reduced. The first source of damage that breaks the sleep is doubled, up to a cap.",
           "tooltip": "Zoe dropkicks a bubble that deals <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage>, lingering as a trap if it hits nothing. The bubble's range is extended when flying over terrain.<br /><br />After a delay, the victim falls <status>Asleep</status> and have their <scaleMR>Magic Resist</scaleMR> reduced by {{ percentpen*100 }}% for 2 seconds. Attacks and Ability hits wake them up but deal double damage, up to <trueDamage>{{ breakdamagetooltip }} true damage</trueDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Bonus Damage Cap", "Cooldown"],
+            "label": [
+              "Damage",
+              "Bonus Damage Cap",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -503,23 +673,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 15, 14, 13, 12],
+          "cooldown": [
+            16,
+            15,
+            14,
+            13,
+            12
+          ],
           "cooldownBurn": "16/15/14/13/12",
-          "cost": [80, 80, 80, 80, 80],
+          "cost": [
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
           "costBurn": "80",
           "datavalues": {},
           "effect": [
             null,
-            [70, 110, 150, 190, 230],
-            [0.1, 0.15, 0.2, 0.25, 0.3],
-            [5, 15, 25, 35, 45],
-            [5, 5, 5, 5, 5],
-            [0.1, 0.15, 0.2, 0.25, 0.3],
-            [70, 110, 150, 190, 230],
-            [0.45, 0.45, 0.45, 0.45, 0.45],
-            [1.4, 1.4, 1.4, 1.4, 1.4],
-            [2.25, 2.25, 2.25, 2.25, 2.25],
-            [1, 1, 1, 1, 1]
+            [
+              70,
+              110,
+              150,
+              190,
+              230
+            ],
+            [
+              0.1,
+              0.15,
+              0.2,
+              0.25,
+              0.3
+            ],
+            [
+              5,
+              15,
+              25,
+              35,
+              45
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              0.1,
+              0.15,
+              0.2,
+              0.25,
+              0.3
+            ],
+            [
+              70,
+              110,
+              150,
+              190,
+              230
+            ],
+            [
+              0.45,
+              0.45,
+              0.45,
+              0.45,
+              0.45
+            ],
+            [
+              1.4,
+              1.4,
+              1.4,
+              1.4,
+              1.4
+            ],
+            [
+              2.25,
+              2.25,
+              2.25,
+              2.25,
+              2.25
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ]
           ],
           "effectBurn": [
             null,
@@ -537,7 +779,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "ZoeE.png",
@@ -556,27 +804,79 @@
           "description": "Blink to a nearby position for 1 second. Then blink back.",
           "tooltip": "Zoe teleports to a nearby position for 1 second. Afterwards, she teleports back. Zoe can use Abilities and Attack, but can't move during this time.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
+            "label": [
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
-          "cooldown": [11, 8, 5],
+          "cooldown": [
+            11,
+            8,
+            5
+          ],
           "cooldownBurn": "11/8/5",
-          "cost": [40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [-0.3, -0.4, -0.5],
-            [1.5, 2, 2.5],
-            [4, 4, 4],
-            [0.5, 0.5, 0.5],
-            [3, 3, 3],
-            [100, 200, 300],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              -0.3,
+              -0.4,
+              -0.5
+            ],
+            [
+              1.5,
+              2,
+              2.5
+            ],
+            [
+              4,
+              4,
+              4
+            ],
+            [
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              3,
+              3,
+              3
+            ],
+            [
+              100,
+              200,
+              300
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -594,7 +894,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [575, 575, 575],
+          "range": [
+            575,
+            575,
+            575
+          ],
           "rangeBurn": "575",
           "image": {
             "full": "ZoeR.png",

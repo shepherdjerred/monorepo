@@ -284,7 +284,9 @@
       "blurb": "In the black heart of the Shadow Isles, a lone yordle trudges through the spectral fog, content in its murky misery. With an endless supply of teen angst and a powerful shadow in tow, Vex lives in her own self-made slice of gloom, far from the revolting...",
       "allytips": [],
       "enemytips": [],
-      "tags": ["Mage"],
+      "tags": [
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 0,
@@ -321,7 +323,11 @@
           "description": "Launch a damaging missile that accelerates mid-flight.",
           "tooltip": "Vex launches a wave of mist that deals <magicDamage>{{ qdamagecalc }} magic damage</magicDamage>. After a delay, the wave becomes smaller and faster.<br /><br />Consumes <keywordMajor>Gloom</keywordMajor> on enemies hit.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["@AbilityResourceName@ Cost", "Cooldown", "Damage"],
+            "label": [
+              "@AbilityResourceName@ Cost",
+              "Cooldown",
+              "Damage"
+            ],
             "effect": [
               "{{ cost }} -> {{ costNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -329,23 +335,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 7, 6, 5, 4],
+          "cooldown": [
+            8,
+            7,
+            6,
+            5,
+            4
+          ],
           "cooldownBurn": "8/7/6/5/4",
-          "cost": [45, 50, 55, 60, 65],
+          "cost": [
+            45,
+            50,
+            55,
+            60,
+            65
+          ],
           "costBurn": "45/50/55/60/65",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -363,7 +441,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1200, 1200, 1200, 1200, 1200],
+          "range": [
+            1200,
+            1200,
+            1200,
+            1200,
+            1200
+          ],
           "rangeBurn": "1200",
           "image": {
             "full": "VexQ.png",
@@ -382,7 +466,11 @@
           "description": "Gain a shield and damage nearby enemies.",
           "tooltip": "Vex gains <shield>{{ shieldcalc }} Shield</shield> for {{ shieldduration }} seconds and emits a shockwave that deals <magicDamage>{{ wdamagecalc }} magic damage</magicDamage>.<br /><br />Consumes <keywordMajor>Gloom</keywordMajor> on enemies hit.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Shield Amount", "Cooldown"],
+            "label": [
+              "Damage",
+              "Shield Amount",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ shieldamount }} -> {{ shieldamountNL }}",
@@ -390,23 +478,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 15, 14, 13, 12],
+          "cooldown": [
+            16,
+            15,
+            14,
+            13,
+            12
+          ],
           "cooldownBurn": "16/15/14/13/12",
-          "cost": [75, 75, 75, 75, 75],
+          "cost": [
+            75,
+            75,
+            75,
+            75,
+            75
+          ],
           "costBurn": "75",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -424,7 +584,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [475, 475, 475, 475, 475],
+          "range": [
+            475,
+            475,
+            475,
+            475,
+            475
+          ],
           "rangeBurn": "475",
           "image": {
             "full": "VexW.png",
@@ -443,7 +609,11 @@
           "description": "Summon a damaging and slowing zone that applies Gloom to enemies.",
           "tooltip": "Vex commands Shadow to fly to a location, increasing in size as it travels. Upon arriving, it deals <magicDamage>{{ edamagecalc }} magic damage</magicDamage> and <status>Slows</status> by {{ slowamount*100 }}% for {{ slowduration }} seconds.<br /><br />Killing an enemy with this ability reduces <keywordMajor>Doom'n Gloom's</keywordMajor> Cooldown by {{ gloomcdnonchamptooltip*100 }}%.<br /><br />Applies <keywordMajor>Gloom</keywordMajor> to enemies hit.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow", "Total AP Ratio"],
+            "label": [
+              "Damage",
+              "Slow",
+              "Total AP Ratio"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ slowamount*100.000000 }}% -> {{ slowamountnl*100.000000 }}%",
@@ -451,23 +621,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [13, 13, 13, 13, 13],
+          "cooldown": [
+            13,
+            13,
+            13,
+            13,
+            13
+          ],
           "cooldownBurn": "13",
-          "cost": [70, 80, 90, 100, 110],
+          "cost": [
+            70,
+            80,
+            90,
+            100,
+            110
+          ],
           "costBurn": "70/80/90/100/110",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -485,7 +727,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "VexE.png",
@@ -504,7 +752,12 @@
           "description": "Fire a missile that marks an enemy champion.  Recast to dash to them and deal damage.",
           "tooltip": "Shadow excitedly surges forward, dealing <magicDamage>{{ spell.vexr:rdamagecalc }} magic damage</magicDamage> and marking the first enemy champion hit for 4 seconds.<br /><br /><recast>Recast</recast>: Dash to the marked champion, dealing <magicDamage>{{ spell.vexr:recastdamagecalc }} magic damage</magicDamage> on arrival.<br /><br />If the marked champion dies within {{ spell.vexr:takedownwindow }} seconds of taking damage from this Ability, its Cooldown is temporarily reset.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage", "Recast Damage", "Range"],
+            "label": [
+              "Cooldown",
+              "Damage",
+              "Recast Damage",
+              "Range"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -513,23 +766,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [140, 120, 100],
+          "cooldown": [
+            140,
+            120,
+            100
+          ],
           "cooldownBurn": "140/120/100",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -547,7 +848,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [2000, 2500, 3000],
+          "range": [
+            2000,
+            2500,
+            3000
+          ],
           "rangeBurn": "2000/2500/3000",
           "image": {
             "full": "VexR.png",

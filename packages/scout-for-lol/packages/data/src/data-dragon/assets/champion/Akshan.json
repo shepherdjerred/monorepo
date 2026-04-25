@@ -168,7 +168,10 @@
         "Raising an eyebrow in the face of danger, Akshan fights evil with dashing charisma, righteous vengeance, and a conspicuous lack of shirts. He is highly skilled in the art of stealth combat, able to evade the eyes of his enemies and reappear when they least expect him. With a keen sense of justice and a legendary death-reversing weapon, he rights the wrongs of Runeterra's many scoundrels while living by his own moral code: “Don't be an ass.”"
       ],
       "enemytips": [],
-      "tags": ["Marksman", "Assassin"],
+      "tags": [
+        "Marksman",
+        "Assassin"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 0,
@@ -219,23 +222,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 8, 7, 6, 5],
+          "cooldown": [
+            9,
+            8,
+            7,
+            6,
+            5
+          ],
           "cooldownBurn": "9/8/7/6/5",
-          "cost": [60, 65, 70, 75, 80],
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -253,7 +328,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [850, 850, 850, 850, 850],
+          "range": [
+            850,
+            850,
+            850,
+            850,
+            850
+          ],
           "rangeBurn": "850",
           "image": {
             "full": "AkshanQ.png",
@@ -272,7 +353,11 @@
           "description": "Akshan passively marks enemy champions as Scoundrels when they kill his ally champions. If Akshan kills a Scoundrel, he resurrects the allies they killed, gains bonus gold, and clears all marks.<br><br>When activated, Akshan enters camouflage and gains Move Speed and Mana Regen while moving towards Scoundrels. Akshan loses the camouflage quickly while he is not in brush or near terrain.",
           "tooltip": "{{ Spell_AkshanW_Tooltip_{{ gamemodeinteger }} }}{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "@AbilityResourceName@ Cost", "Move Speed"],
+            "label": [
+              "Cooldown",
+              "@AbilityResourceName@ Cost",
+              "Move Speed"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}",
@@ -280,23 +365,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [18, 14, 10, 6, 2],
+          "cooldown": [
+            18,
+            14,
+            10,
+            6,
+            2
+          ],
           "cooldownBurn": "18/14/10/6/2",
-          "cost": [40, 30, 20, 10, 0],
+          "cost": [
+            40,
+            30,
+            20,
+            10,
+            0
+          ],
           "costBurn": "40/30/20/10/0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -314,7 +471,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [5500, 5500, 5500, 5500, 5500],
+          "range": [
+            5500,
+            5500,
+            5500,
+            5500,
+            5500
+          ],
           "rangeBurn": "5500",
           "image": {
             "full": "AkshanW.png",
@@ -333,30 +496,105 @@
           "description": "Akshan fires a grappling hook into terrain then swings around it, repeatedly firing at the nearest enemy while swinging. He can jump off early or gets knocked off when colliding with champions or terrain.",
           "tooltip": "<spellActive>First Cast:</spellActive> Akshan fires a grappling hook, attaching to the first terrain hit.<br /><br /><spellActive>Second Cast:</spellActive> Akshan swings around the terrain, repeatedly firing at the nearest enemy for <physicalDamage>{{ damagetodeal }} physical damage</physicalDamage> per shot.<br /><br /><spellActive>Third Cast:</spellActive> Akshan dives off the rope, firing a final shot.<br /><br />Colliding with an enemy Champion or terrain ends the swing early.<br /><br />Champion takedowns refresh this Ability's Cooldown.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage"],
+            "label": [
+              "Cooldown",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [18, 16.5, 15, 13.5, 12],
+          "cooldown": [
+            18,
+            16.5,
+            15,
+            13.5,
+            12
+          ],
           "cooldownBurn": "18/16.5/15/13.5/12",
-          "cost": [70, 70, 70, 70, 70],
+          "cost": [
+            70,
+            70,
+            70,
+            70,
+            70
+          ],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -374,7 +612,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "AkshanE.png",
@@ -393,7 +637,11 @@
           "description": "Akshan locks onto an enemy champion and starts storing bullets. When released, he fires all stored bullets, dealing damage based on missing health to the first champion, minion, or structure hit.",
           "tooltip": "Akshan locks onto a champion and begins overcharging his gun for up to {{ channelduration }} seconds, storing up to {{ numberofbullets }} bullets.<br /><br /><recast>Recast:</recast> Akshan unleashes the stored bullets, each dealing at least <physicalDamage>{{ damageperbulletwithcrit }} physical damage</physicalDamage> to the first enemy or structure hit, increased up to <physicalDamage>{{ maxdamageperbullet }} physical damage</physicalDamage> based on missing Health.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Maximum Bullets", "Damage"],
+            "label": [
+              "Cooldown",
+              "Maximum Bullets",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ numberofbullets }} -> {{ numberofbulletsNL }}",
@@ -401,23 +649,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [100, 85, 70],
+          "cooldown": [
+            100,
+            85,
+            70
+          ],
           "cooldownBurn": "100/85/70",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -435,7 +731,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [2500, 2500, 2500],
+          "range": [
+            2500,
+            2500,
+            2500
+          ],
           "rangeBurn": "2500",
           "image": {
             "full": "AkshanR.png",

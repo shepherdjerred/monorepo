@@ -574,7 +574,10 @@
         "Lux has powerful zone control abilities. Try to spread out and attack from different directions so she cannot lock down a specific area.",
         "When retreating with low health, be prepared to dodge Lux's Final Spark, a red targeting beam fires prior to the main beam, so try to move to the side if possible."
       ],
-      "tags": ["Mage", "Support"],
+      "tags": [
+        "Mage",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -611,27 +614,103 @@
           "description": "Lux releases a sphere of light that binds and deals damage to up to two enemy units.",
           "tooltip": "Lux fires a ball of light, <status>Rooting</status> the first two enemies for {{ e3 }} seconds and dealing <magicDamage>{{ totaldamagett }} magic damage</magicDamage> to each.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}"]
+            "label": [
+              "Damage"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [10, 10, 10, 10, 10],
+          "cooldown": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
           "cooldownBurn": "10",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [2, 2, 2, 2, 2],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -649,7 +728,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1175, 1175, 1175, 1175, 1175],
+          "range": [
+            1175,
+            1175,
+            1175,
+            1175,
+            1175
+          ],
           "rangeBurn": "1175",
           "image": {
             "full": "LuxLightBinding.png",
@@ -680,23 +765,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11.5, 11, 10.5, 10],
+          "cooldown": [
+            12,
+            11.5,
+            11,
+            10.5,
+            10
+          ],
           "cooldownBurn": "12/11.5/11/10.5/10",
-          "cost": [60, 65, 70, 75, 80],
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [2, 4, 6, 8, 10],
-            [0, 0, 0, 0, 0],
-            [2.5, 2.5, 2.5, 2.5, 2.5],
-            [100, 100, 100, 100, 100],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              2,
+              4,
+              6,
+              8,
+              10
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              2.5,
+              2.5,
+              2.5,
+              2.5,
+              2.5
+            ],
+            [
+              100,
+              100,
+              100,
+              100,
+              100
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -714,7 +871,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1150, 1150, 1150, 1150, 1150],
+          "range": [
+            1150,
+            1150,
+            1150,
+            1150,
+            1150
+          ],
           "rangeBurn": "1150",
           "image": {
             "full": "LuxPrismaticWave.png",
@@ -747,23 +910,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9.5, 9, 8.5, 8],
+          "cooldown": [
+            10,
+            9.5,
+            9,
+            8.5,
+            8
+          ],
           "cooldownBurn": "10/9.5/9/8.5/8",
-          "cost": [70, 80, 90, 100, 110],
+          "cost": [
+            70,
+            80,
+            90,
+            100,
+            110
+          ],
           "costBurn": "70/80/90/100/110",
           "datavalues": {},
           "effect": [
             null,
-            [25, 30, 35, 40, 45],
-            [65, 115, 165, 215, 265],
-            [5, 5, 5, 5, 5],
-            [310, 310, 310, 310, 310],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              25,
+              30,
+              35,
+              40,
+              45
+            ],
+            [
+              65,
+              115,
+              165,
+              215,
+              265
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              310,
+              310,
+              310,
+              310,
+              310
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -781,7 +1016,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1100, 1100, 1100, 1100, 1100],
+          "range": [
+            1100,
+            1100,
+            1100,
+            1100,
+            1100
+          ],
           "rangeBurn": "1100",
           "image": {
             "full": "LuxLightStrikeKugel.png",
@@ -800,30 +1041,81 @@
           "description": "After gathering energy, Lux fires a beam of light that deals damage to all targets in the area. In addition, triggers Lux's passive ability and refreshes the Illumination debuff duration.",
           "tooltip": "Lux fires a dazzling ray of light, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to all enemies in a line.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ damage }} -> {{ damageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [60, 50, 40],
+          "cooldown": [
+            60,
+            50,
+            40
+          ],
           "cooldownBurn": "60/50/40",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -841,7 +1133,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [3340, 3340, 3340],
+          "range": [
+            3340,
+            3340,
+            3340
+          ],
           "rangeBurn": "3340",
           "image": {
             "full": "LuxR.png",

@@ -248,7 +248,10 @@
         "Rumble's ultimate can deal a lot of damage if you stay inside the area of effect. When you see the missiles falling, move out of the way as quickly as possible.",
         "Rumble deals almost entirely magic damage. Build some Magic Resistance to reduce his damage."
       ],
-      "tags": ["Fighter", "Mage"],
+      "tags": [
+        "Fighter",
+        "Mage"
+      ],
       "partype": "Heat",
       "info": {
         "attack": 3,
@@ -285,7 +288,11 @@
           "description": "Rumble torches opponents in front of him, dealing magic damage in a cone for 3 seconds. While in Danger Zone this damage is increased.",
           "tooltip": "Rumble ignites his flamethrower, dealing <magicDamage>{{ flatdamage }} plus {{ healthdamage*100 }}% max Health magic damage</magicDamage> over {{ flamespitterduration }} seconds, reduced to <attention>{{ minionmod*100 }}%</attention> against minions.<br /><br /><keywordMajor>Danger Zone:</keywordMajor> Damage is increased to <magicDamage>{{ empowereddamage }} plus {{ empoweredhealth }} max Health</magicDamage>.<br /><br /><rules>Percent damage is limited to {{ monstercap }} damage on Monsters. </rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "% Max Health", "Cooldown"],
+            "label": [
+              "Damage",
+              "% Max Health",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ healthdamage*100.000000 }}% -> {{ healthdamagenl*100.000000 }}%",
@@ -293,23 +300,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9, 8, 7, 6],
+          "cooldown": [
+            10,
+            9,
+            8,
+            7,
+            6
+          ],
           "cooldownBurn": "10/9/8/7/6",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -327,7 +406,13 @@
           "vars": [],
           "costType": " Heat",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "RumbleFlameThrower.png",
@@ -346,30 +431,105 @@
           "description": "Rumble pulls up a shield, protecting him from damage and granting him a quick burst of speed. While in Danger Zone, the shield strength and speed bonus is increased.",
           "tooltip": "Rumble tosses up a barrier, gaining <shield>{{ totalshield }} Shield</shield> for {{ shieldduration.1 }} seconds and <speed>{{ movespeed*100 }}% Move Speed</speed> for {{ movespeedduration }} second.<br /><br /><keywordMajor>Danger Zone:</keywordMajor> The barrier grants <shield>{{ empoweredshield }} Shield</shield> and <speed>{{ empoweredms }} Move Speed</speed> instead.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Shield Amount", "Move Speed"],
+            "label": [
+              "Shield Amount",
+              "Move Speed"
+            ],
             "effect": [
               "{{ baseshield }} -> {{ baseshieldNL }}",
               "{{ movespeed*100.000000 }}% -> {{ movespeednl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [6, 6, 6, 6, 6],
+          "cooldown": [
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
           "cooldownBurn": "6",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [60, 90, 120, 150, 180],
-            [10, 15, 20, 25, 30],
-            [20, 20, 20, 20, 20],
-            [0, 0, 0, 0, 0],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [1, 1, 1, 1, 1],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              60,
+              90,
+              120,
+              150,
+              180
+            ],
+            [
+              10,
+              15,
+              20,
+              25,
+              30
+            ],
+            [
+              20,
+              20,
+              20,
+              20,
+              20
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -387,7 +547,13 @@
           "vars": [],
           "costType": " Heat",
           "maxammo": "-1",
-          "range": [20, 20, 20, 20, 20],
+          "range": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
           "rangeBurn": "20",
           "image": {
             "full": "RumbleShield.png",
@@ -406,7 +572,11 @@
           "description": "Rumble launches a harpoon, electrocuting his target with magic damage, slowing their Move Speed, and reducing their Magic Resist. Rumble can carry 2 harpoons at a time. While in Danger Zone the damage and slow percentage is increased.",
           "tooltip": "Rumble launches an electrified harpoon, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>, <status>Slowing</status> by {{ baseslowamount }}% for {{ slowduration }} seconds, and reducing the enemy's <scaleMR>Magic Resist</scaleMR> by {{ percmagicpen*100 }}% for {{ shredduration }} seconds.<br /><br />Hitting an enemy who's already <status>Slowed</status> by this Ability increases the <status>Slow</status> to {{ empoweredslowamount }}% and reduces the enemy's <scaleMR>Magic Resist</scaleMR> by {{ enhancedmagicpen*100 }}%<br /><br /><keywordMajor>Danger Zone:</keywordMajor> The harpoon deals <magicDamage>{{ empdamage }} magic damage</magicDamage> instead and the <status>Slow</status> and reduced <scaleMR>Magic Resist</scaleMR> are increased by 50%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow", "Magic Resist Shred"],
+            "label": [
+              "Damage",
+              "Slow",
+              "Magic Resist Shred"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ baseslowamount }}% -> {{ baseslowamountNL }}%",
@@ -414,23 +584,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [0.5, 0.5, 0.5, 0.5, 0.5],
+          "cooldown": [
+            0.5,
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
           "cooldownBurn": "0.5",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -448,7 +690,13 @@
           "vars": [],
           "costType": " Heat",
           "maxammo": "2",
-          "range": [850, 850, 850, 850, 850],
+          "range": [
+            850,
+            850,
+            850,
+            850,
+            850
+          ],
           "rangeBurn": "850",
           "image": {
             "full": "RumbleGrenade.png",
@@ -467,30 +715,81 @@
           "description": "Rumble fires off a group of rockets, creating a wall of flames that damages and slows enemies.",
           "tooltip": "Rumble launches a line of rockets, creating a burning trail that lasts {{ trailduration }} seconds, <status>Slowing</status> by {{ slowamount }}% and dealing <magicDamage>{{ damagepersecond }} magic damage</magicDamage> per second.<br /><br />Rumble can control the direction of the trail by clicking and dragging while casting this Ability.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage Per Second", "Cooldown"],
+            "label": [
+              "Damage Per Second",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamagepersecond }} -> {{ basedamagepersecondNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [130, 105, 80],
+          "cooldown": [
+            130,
+            105,
+            80
+          ],
           "cooldownBurn": "130/105/80",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [6, 6, 6],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              6,
+              6,
+              6
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -508,7 +807,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [1750, 1750, 1750],
+          "range": [
+            1750,
+            1750,
+            1750
+          ],
           "rangeBurn": "1750",
           "image": {
             "full": "RumbleCarpetBomb.png",

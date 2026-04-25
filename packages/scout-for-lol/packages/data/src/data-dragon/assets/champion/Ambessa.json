@@ -77,7 +77,10 @@
       "blurb": "All who know the name Medarda respect and fear the family's leader, Ambessa. As a Noxian general, she embodies a deadly combination of ruthless strength and fearless resolve in battle. Her role as matriarch is no different, requiring great cunning to...",
       "allytips": [],
       "enemytips": [],
-      "tags": ["Fighter", "Assassin"],
+      "tags": [
+        "Fighter",
+        "Assassin"
+      ],
       "partype": "Energy",
       "info": {
         "attack": 9,
@@ -130,23 +133,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 13, 12, 11, 10],
+          "cooldown": [
+            14,
+            13,
+            12,
+            11,
+            10
+          ],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [70, 70, 70, 70, 70],
+          "cost": [
+            70,
+            70,
+            70,
+            70,
+            70
+          ],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -164,7 +239,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "AmbessaQ.png",
@@ -183,30 +264,105 @@
           "description": "Ambessa gains a shield, briefly braces herself, and then slams the ground to damage nearby enemies. If she blocked any non-minion damage while bracing herself, this ability will deal increased damage.",
           "tooltip": "Ambessa gains <shield>{{ calc_shield }} Shield</shield> for {{ shield_duration }} seconds and braces herself for {{ buff_duration }} seconds. She then slams the ground, dealing <physicalDamage>{{ calc_damage_low }} physical damage</physicalDamage> to nearby enemies, which increases to <physicalDamage>{{ calc_damage_high }} physical damage</physicalDamage> if she braced herself from damage from an enemy champion, large monster, or structure.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage"],
+            "label": [
+              "Cooldown",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [18, 17, 16, 15, 14],
+          "cooldown": [
+            18,
+            17,
+            16,
+            15,
+            14
+          ],
           "cooldownBurn": "18/17/16/15/14",
-          "cost": [70, 70, 70, 70, 70],
+          "cost": [
+            70,
+            70,
+            70,
+            70,
+            70
+          ],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -224,7 +380,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [325, 325, 325, 325, 325],
+          "range": [
+            325,
+            325,
+            325,
+            325,
+            325
+          ],
           "rangeBurn": "325",
           "image": {
             "full": "AmbessaW.png",
@@ -243,30 +405,105 @@
           "description": "Ambessa whips her twin drakehounds around herself, damaging and slowing nearby enemies. Initiating Drakehound's Step from this ability causes her to strike a second time at the end of its dash.",
           "tooltip": "Ambessa whips her chains around, dealing <physicalDamage>{{ calc_damage_flat }} physical damage</physicalDamage> and <status>Slowing</status> enemies by <status>{{ slow_amount*100 }}%</status>, which decays over {{ slow_duration }} second. Initiating <spellName>Drakehound's Step</spellName> from this Ability will trigger an additional strike.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage"],
+            "label": [
+              "Cooldown",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ damage_flat_base }} -> {{ damage_flat_baseNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [13, 12, 11, 10, 9],
+          "cooldown": [
+            13,
+            12,
+            11,
+            10,
+            9
+          ],
           "cooldownBurn": "13/12/11/10/9",
-          "cost": [70, 70, 70, 70, 70],
+          "cost": [
+            70,
+            70,
+            70,
+            70,
+            70
+          ],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -284,7 +521,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [325, 325, 325, 325, 325],
+          "range": [
+            325,
+            325,
+            325,
+            325,
+            325
+          ],
           "rangeBurn": "325",
           "image": {
             "full": "AmbessaE.png",
@@ -303,7 +546,12 @@
           "description": "Ambessa blinks to the farthest enemy champion in a line of her choosing and suppresses them upon her arrival. She then slams the enemy into the ground where they take damage and are stunned.",
           "tooltip": "<spellPassive>Passive</spellPassive>: Ambessa gains <armorPen>{{ armor_penetration*100 }}% %i:scaleAPen% Armor Penetration</armorPen> and her Abilities <healing>heal her for {{ calc_omnivamp }} of the damage she dealt</healing>.<br /><br /><spellActive>Active</spellActive>: Ambessa becomes <attention>Unstoppable</attention> and blinks to the farthest enemy champion in a line, <status>Suppressing</status> the target for {{ suppress_duration }} seconds and then slamming them into the ground, dealing <physicalDamage>{{ calc_damage }} physical damage</physicalDamage> and <status>Stunning</status> them for {{ stun_duration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Armor Penetration", "Healing", "Damage"],
+            "label": [
+              "Cooldown",
+              "Armor Penetration",
+              "Healing",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ armor_penetration*100.000000 }}% -> {{ armor_penetrationnl*100.000000 }}%",
@@ -312,23 +560,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [130, 115, 100],
+          "cooldown": [
+            130,
+            115,
+            100
+          ],
           "cooldownBurn": "130/115/100",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -346,7 +642,11 @@
           "vars": [],
           "costType": "No cost",
           "maxammo": "-1",
-          "range": [1250, 1250, 1250],
+          "range": [
+            1250,
+            1250,
+            1250
+          ],
           "rangeBurn": "1250",
           "image": {
             "full": "AmbessaR.png",

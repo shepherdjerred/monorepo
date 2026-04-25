@@ -255,7 +255,9 @@
         "Kalista cannot cancel her basic attack wind up. While she is very mobile, this offers a window to land spells on her if you anticipate when she will begin attacking.",
         "If you can break line of sight from Kalista, including through brush, her basic attacks will miss you, falling harmlessly to the ground."
       ],
-      "tags": ["Marksman"],
+      "tags": [
+        "Marksman"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 8,
@@ -292,30 +294,105 @@
           "description": "Throw a fast moving spear that passes through enemies it kills.",
           "tooltip": "Kalista hurls a spear, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to the first target hit. If this kills the target, the spear continues onward, carrying any <spellName>Rend</spellName> stacks to the next target hit.<br /><br />Kalista can dash after using this Ability using <spellName>Martial Poise</spellName>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["@AbilityResourceName@ Cost", "Damage"],
+            "label": [
+              "@AbilityResourceName@ Cost",
+              "Damage"
+            ],
             "effect": [
               "{{ cost }} -> {{ costNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 9, 9, 9, 9],
+          "cooldown": [
+            9,
+            9,
+            9,
+            9,
+            9
+          ],
           "cooldownBurn": "9",
-          "cost": [60, 65, 70, 75, 80],
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -333,7 +410,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1150, 1150, 1150, 1150, 1150],
+          "range": [
+            1150,
+            1150,
+            1150,
+            1150,
+            1150
+          ],
           "rangeBurn": "1150",
           "image": {
             "full": "KalistaMysticShot.png",
@@ -364,23 +447,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [30, 30, 30, 30, 30],
+          "cooldown": [
+            30,
+            30,
+            30,
+            30,
+            30
+          ],
           "cooldownBurn": "30",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [80, 80, 80, 80, 80],
-            [0, 0, 0, 0, 0],
-            [125, 150, 175, 200, 225],
-            [90, 80, 70, 60, 50],
-            [0, 0, 0, 0, 0],
-            [75, 100, 125, 150, 175],
-            [10, 10, 10, 10, 10],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              125,
+              150,
+              175,
+              200,
+              225
+            ],
+            [
+              90,
+              80,
+              70,
+              60,
+              50
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              75,
+              100,
+              125,
+              150,
+              175
+            ],
+            [
+              10,
+              10,
+              10,
+              10,
+              10
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -398,7 +553,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "2",
-          "range": [5000, 5000, 5000, 5000, 5000],
+          "range": [
+            5000,
+            5000,
+            5000,
+            5000,
+            5000
+          ],
           "rangeBurn": "5000",
           "image": {
             "full": "KalistaW.png",
@@ -435,23 +596,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [0, 0, 0, 0, 0],
+          "cooldown": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "cooldownBurn": "0",
-          "cost": [30, 30, 30, 30, 30],
+          "cost": [
+            30,
+            30,
+            30,
+            30,
+            30
+          ],
           "costBurn": "30",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [2, 2, 2, 2, 2],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -469,7 +702,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1000, 1000, 1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "KalistaExpungeWrapper.png",
@@ -488,30 +727,81 @@
           "description": "Kalista teleports the Oathsworn ally to herself. They gain the ability to dash toward a position, knocking enemy champions back.",
           "tooltip": "Kalista puts her <keywordMajor>Oathsworn</keywordMajor> into Stasis and draws them to herself for up to 4 seconds. The <keywordMajor>Oathsworn</keywordMajor> can click to launch themselves, stopping at the first champion hit and <status>Knocking Back</status> all nearby enemies. If the <keywordMajor>Oathsworn</keywordMajor> hits a champion, they are placed at their maximum attack range from it.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Knockup Duration"],
+            "label": [
+              "Cooldown",
+              "Knockup Duration"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ e2 }} -> {{ e2NL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [160, 140, 120],
+          "cooldown": [
+            160,
+            140,
+            120
+          ],
           "cooldownBurn": "160/140/120",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [1, 1.5, 2],
-            [40, 60, 80],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              1.5,
+              2
+            ],
+            [
+              40,
+              60,
+              80
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -529,7 +819,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "KalistaRx.png",

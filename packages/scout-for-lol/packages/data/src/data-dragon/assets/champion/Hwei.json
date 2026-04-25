@@ -174,7 +174,10 @@
         "Hwei's lightning is deadly but slow; it deals more damage when you are alone or unable to move.",
         "After Hwei paints a Torment spell he is vulnerable to being rushed down."
       ],
-      "tags": ["Mage", "Support"],
+      "tags": [
+        "Mage",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 7,
@@ -233,23 +236,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9, 8, 7, 6],
+          "cooldown": [
+            10,
+            9,
+            8,
+            7,
+            6
+          ],
           "cooldownBurn": "10/9/8/7/6",
-          "cost": [80, 90, 100, 110, 120],
+          "cost": [
+            80,
+            90,
+            100,
+            110,
+            120
+          ],
           "costBurn": "80/90/100/110/120",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -267,7 +342,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [0, 0, 0, 0, 0],
+          "range": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "rangeBurn": "0",
           "image": {
             "full": "HweiQ.png",
@@ -306,23 +387,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [18, 17.5, 17, 16.5, 16],
+          "cooldown": [
+            18,
+            17.5,
+            17,
+            16.5,
+            16
+          ],
           "cooldownBurn": "18/17.5/17/16.5/16",
-          "cost": [90, 95, 100, 105, 110],
+          "cost": [
+            90,
+            95,
+            100,
+            105,
+            110
+          ],
           "costBurn": "90/95/100/105/110",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -340,7 +493,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [0, 0, 0, 0, 0],
+          "range": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "rangeBurn": "0",
           "image": {
             "full": "HweiW.png",
@@ -381,23 +540,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [13, 12.5, 12, 11.5, 11],
+          "cooldown": [
+            13,
+            12.5,
+            12,
+            11.5,
+            11
+          ],
           "cooldownBurn": "13/12.5/12/11.5/11",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -415,7 +646,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [0, 0, 0, 0, 0],
+          "range": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "rangeBurn": "0",
           "image": {
             "full": "HweiE.png",
@@ -434,7 +671,11 @@
           "description": "Hwei paints a vision of pure despair. The first enemy champion struck becomes the center of an expanding painting that slows and damages nearby enemies. The vision explodes after reaching its maximum size or when the champion dies.",
           "tooltip": "Hwei launches a vision of pure despair that sticks to an enemy champion for {{ duration }} seconds. The vision expands over time applying a <status>Slow</status> to enemies for {{ slowpercentperstack }}% stacking every 0.25 seconds, and dealing <magicDamage>{{ damageovertime }} magic damage per second</magicDamage>.<br /><br />Upon completion, the vision shatters, dealing <magicDamage>{{ damage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Damage Per Second", "Cooldown"],
+            "label": [
+              "Damage",
+              "Damage Per Second",
+              "Cooldown"
+            ],
             "effect": [
               "{{ rbasedamage }} -> {{ rbasedamageNL }}",
               "{{ basedamageovertime }} -> {{ basedamageovertimeNL }}",
@@ -442,23 +683,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -476,7 +765,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1300, 1300, 1300],
+          "range": [
+            1300,
+            1300,
+            1300
+          ],
           "rangeBurn": "1300",
           "image": {
             "full": "HweiR.png",

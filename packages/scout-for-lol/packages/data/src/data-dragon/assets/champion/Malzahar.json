@@ -423,7 +423,9 @@
         "Avoid minion waves that have been affected by Malefic Visions. You never know when they may die and pass the Visions onto you.",
         "Malzahar is especially dangerous when he has built up his Void Swarm."
       ],
-      "tags": ["Mage"],
+      "tags": [
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -472,23 +474,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [6, 6, 6, 6, 6],
+          "cooldown": [
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
           "cooldownBurn": "6",
-          "cost": [60, 65, 70, 75, 80],
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [70, 105, 140, 175, 210],
-            [1, 1.25, 1.5, 1.75, 2],
-            [0.4, 0.4, 0.4, 0.4, 0.4],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              70,
+              105,
+              140,
+              175,
+              210
+            ],
+            [
+              1,
+              1.25,
+              1.5,
+              1.75,
+              2
+            ],
+            [
+              0.4,
+              0.4,
+              0.4,
+              0.4,
+              0.4
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -506,7 +580,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [900, 900, 900, 900, 900],
+          "range": [
+            900,
+            900,
+            900,
+            900,
+            900
+          ],
           "rangeBurn": "900",
           "image": {
             "full": "MalzaharQ.png",
@@ -537,23 +617,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 8, 8, 8, 8],
+          "cooldown": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
           "cooldownBurn": "8",
-          "cost": [40, 45, 50, 55, 60],
+          "cost": [
+            40,
+            45,
+            50,
+            55,
+            60
+          ],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [25000, 25000, 25000, 25000, 25000],
-            [2, 2, 2, 2, 2],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              25000,
+              25000,
+              25000,
+              25000,
+              25000
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -571,7 +723,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "0",
-          "range": [150, 150, 150, 150, 150],
+          "range": [
+            150,
+            150,
+            150,
+            150,
+            150
+          ],
           "rangeBurn": "150",
           "image": {
             "full": "MalzaharW.png",
@@ -590,7 +748,11 @@
           "description": "Malzahar infects his target's mind with cruel visions of their demise, dealing damage over time. Using Malzahar's other spells on the target will refresh the visions.<br><br>If the target dies while afflicted by the visions, they pass on to a nearby enemy unit and Malzahar gains Mana. Malzahar's Voidlings are attracted to affected units.",
           "tooltip": "Malzahar inflicts terrible visions, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> over {{ duration }} seconds. Applying <spellName>Call of the Void</spellName> or <spellName>Nether Grasp</spellName> to the victim during this time refreshes the visions.<br /><br />If the victim dies, Malzahar gains <scaleMana>{{ manarestore }} Mana</scaleMana> and the visions spread to the nearest enemy.<br /><br /><rules>Malefic Visions executes minions below {{ minionexecutethreshold }} Health.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -598,23 +760,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 10, 9, 8, 7],
+          "cooldown": [
+            11,
+            10,
+            9,
+            8,
+            7
+          ],
           "cooldownBurn": "11/10/9/8/7",
-          "cost": [60, 70, 80, 90, 100],
+          "cost": [
+            60,
+            70,
+            80,
+            90,
+            100
+          ],
           "costBurn": "60/70/80/90/100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [8, 8, 8, 8, 8],
-            [2, 2, 2, 2, 2],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              8,
+              8,
+              8,
+              8,
+              8
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -632,7 +866,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "MalzaharE.png",
@@ -663,23 +903,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [140, 110, 80],
+          "cooldown": [
+            140,
+            110,
+            80
+          ],
           "cooldownBurn": "140/110/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [5, 5, 5],
-            [2.5, 2.5, 2.5],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              5,
+              5,
+              5
+            ],
+            [
+              2.5,
+              2.5,
+              2.5
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -697,7 +985,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [700, 700, 700],
+          "range": [
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "MalzaharR.png",

@@ -337,7 +337,10 @@
         "Watch out for the Pulverize-Headbutt combo when around turrets.",
         "When Alistar uses his ultimate, it's often better to move back and wait until the effect wears off before attacking him."
       ],
-      "tags": ["Tank", "Support"],
+      "tags": [
+        "Tank",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 6,
@@ -374,7 +377,11 @@
           "description": "Alistar smashes the ground, dealing damage to nearby enemies and tossing them into the air.",
           "tooltip": "Alistar smashes the ground, <status>Knocking Up</status> enemies for {{ knockupduration }} second and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "@AbilityResourceName@ Cost", "Damage"],
+            "label": [
+              "Cooldown",
+              "@AbilityResourceName@ Cost",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}",
@@ -382,23 +389,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 13, 12, 11, 10],
+          "cooldown": [
+            14,
+            13,
+            12,
+            11,
+            10
+          ],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -416,7 +495,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [365, 365, 365, 365, 365],
+          "range": [
+            365,
+            365,
+            365,
+            365,
+            365
+          ],
           "rangeBurn": "365",
           "image": {
             "full": "Pulverize.png",
@@ -435,7 +520,11 @@
           "description": "Alistar rams a target with his head, dealing damage and knocking the target back.",
           "tooltip": "Alistar rams into an enemy, <status>Knocking</status> them <status>Back</status> and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "@AbilityResourceName@ Cost", "Damage"],
+            "label": [
+              "Cooldown",
+              "@AbilityResourceName@ Cost",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}",
@@ -443,23 +532,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 13, 12, 11, 10],
+          "cooldown": [
+            14,
+            13,
+            12,
+            11,
+            10
+          ],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [700, 700, 700, 700, 700],
-            [0.75, 0.75, 0.75, 0.75, 0.75],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              700,
+              700,
+              700,
+              700,
+              700
+            ],
+            [
+              0.75,
+              0.75,
+              0.75,
+              0.75,
+              0.75
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -477,7 +638,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "Headbutt.png",
@@ -496,7 +663,11 @@
           "description": "Alistar tramples nearby enemy units, ignoring unit collision and gaining stacks if he damages an enemy champion. At full stacks Alistar's next basic attack against an enemy champion deals additional magic damage and stuns them.",
           "tooltip": "Alistar begins trampling the ground, becoming Ghosted and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> over {{ duration }} seconds to nearby enemies. Each pulse that damages a champion grants a stack.<br /><br />At {{ maxstacks }} stacks, Alistar's next Attack against champions <status>Stuns</status> for {{ stunduration }} second and deals an additional <magicDamage>{{ attackbonusdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "@AbilityResourceName@ Cost", "Damage"],
+            "label": [
+              "Cooldown",
+              "@AbilityResourceName@ Cost",
+              "Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}",
@@ -504,23 +675,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11.5, 11, 10.5, 10],
+          "cooldown": [
+            12,
+            11.5,
+            11,
+            10.5,
+            10
+          ],
           "cooldownBurn": "12/11.5/11/10.5/10",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [80, 110, 140, 170, 200],
-            [50, 50, 50, 50, 50],
-            [5, 5, 5, 5, 5],
-            [350, 350, 350, 350, 350],
-            [5, 5, 5, 5, 5],
-            [1, 1, 1, 1, 1],
-            [5, 5, 5, 5, 5],
-            [20, 20, 20, 20, 20],
-            [15, 15, 15, 15, 15],
-            [0, 0, 0, 0, 0]
+            [
+              80,
+              110,
+              140,
+              170,
+              200
+            ],
+            [
+              50,
+              50,
+              50,
+              50,
+              50
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              350,
+              350,
+              350,
+              350,
+              350
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              20,
+              20,
+              20,
+              20,
+              20
+            ],
+            [
+              15,
+              15,
+              15,
+              15,
+              15
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -538,7 +781,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [350, 350, 350, 350, 350],
+          "range": [
+            350,
+            350,
+            350,
+            350,
+            350
+          ],
           "rangeBurn": "350",
           "image": {
             "full": "AlistarE.png",
@@ -557,30 +806,81 @@
           "description": "Alistar lets out a wild roar, removing all crowd control effects on himself, and reducing incoming physical and magical damage for the duration.",
           "tooltip": "Alistar immediately cleanses all <status>Disabling</status> effects and takes {{ rdamagereduction }}% reduced damage for {{ rduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage Reduction"],
+            "label": [
+              "Cooldown",
+              "Damage Reduction"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ rdamagereduction }}% -> {{ rdamagereductionNL }}%"
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -598,7 +898,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1, 1, 1],
+          "range": [
+            1,
+            1,
+            1
+          ],
           "rangeBurn": "1",
           "image": {
             "full": "FerociousHowl.png",

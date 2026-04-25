@@ -448,7 +448,10 @@
         "Braum's ultimate has a long cast time, use that extra time to dodge. Walking over the frozen ground left behind will slow you, position so that you don't need to cross it.",
         "Unbreakable gives Braum extremely strong directional defense, either wait until it is down or outposition the ability."
       ],
-      "tags": ["Tank", "Support"],
+      "tags": [
+        "Tank",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 3,
@@ -485,7 +488,11 @@
           "description": "Braum propels freezing ice from his shield, slowing and dealing magic damage.<br><br>Applies a stack of <font color='#FFF673'>Concussive Blows</font>.",
           "tooltip": "Braum propels freezing ice from his shield, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first enemy hit and <status>Slowing</status> them by {{ initialslow }}% decaying over {{ slowduration }} seconds.<br /><br />Applies a stack of <keywordMajor>Concussive Blows</keywordMajor>. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -493,23 +500,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 7.5, 7, 6.5, 6],
+          "cooldown": [
+            8,
+            7.5,
+            7,
+            6.5,
+            6
+          ],
           "cooldownBurn": "8/7.5/7/6.5/6",
-          "cost": [45, 50, 55, 60, 65],
+          "cost": [
+            45,
+            50,
+            55,
+            60,
+            65
+          ],
           "costBurn": "45/50/55/60/65",
           "datavalues": {},
           "effect": [
             null,
-            [75, 120, 165, 210, 255],
-            [70, 70, 70, 70, 70],
-            [30, 30, 30, 30, 30],
-            [0.02, 0.02, 0.02, 0.02, 0.02],
-            [2, 2, 2, 2, 2],
-            [1050, 1050, 1050, 1050, 1050],
-            [4, 4, 4, 4, 4],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              75,
+              120,
+              165,
+              210,
+              255
+            ],
+            [
+              70,
+              70,
+              70,
+              70,
+              70
+            ],
+            [
+              30,
+              30,
+              30,
+              30,
+              30
+            ],
+            [
+              0.02,
+              0.02,
+              0.02,
+              0.02,
+              0.02
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              1050,
+              1050,
+              1050,
+              1050,
+              1050
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -527,7 +606,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1000, 1000, 1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "BraumQ.png",
@@ -546,30 +631,105 @@
           "description": "Braum leaps to a target allied champion or minion. On arrival, Braum and the ally gain Armor and Magic Resist for a few seconds.",
           "tooltip": "Braum leaps to an allied champion or minion. On arrival, Braum grants the target <scaleArmor>{{ grantedallyarmor }} Armor</scaleArmor> and <scaleMR>{{ grantedallymr }} Magic Resist</scaleMR> for {{ duration }} seconds. Braum grants himself <scaleArmor>{{ grantedbraumarmor }} Armor</scaleArmor> and <scaleMR>{{ grantedbraummr }} Magic Resist</scaleMR> for the same duration.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Base Resists", "Cooldown"],
+            "label": [
+              "Base Resists",
+              "Cooldown"
+            ],
             "effect": [
               "{{ baseresists }} -> {{ baseresistsNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11, 10, 9, 8],
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [3, 3, 3, 3, 3],
-            [750, 750, 750, 750, 750],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [40, 40, 40, 40, 40],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              750,
+              750,
+              750,
+              750,
+              750
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              40,
+              40,
+              40,
+              40,
+              40
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -587,7 +747,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "BraumW.png",
@@ -620,23 +786,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [16, 14, 12, 10, 8],
+          "cooldown": [
+            16,
+            14,
+            12,
+            10,
+            8
+          ],
           "cooldownBurn": "16/14/12/10/8",
-          "cost": [30, 35, 40, 45, 50],
+          "cost": [
+            30,
+            35,
+            40,
+            45,
+            50
+          ],
           "costBurn": "30/35/40/45/50",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [3, 3.25, 3.5, 3.75, 4],
-            [35, 40, 45, 50, 55],
-            [10, 10, 10, 10, 10],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              3.25,
+              3.5,
+              3.75,
+              4
+            ],
+            [
+              35,
+              40,
+              45,
+              50,
+              55
+            ],
+            [
+              10,
+              10,
+              10,
+              10,
+              10
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -654,7 +892,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [25000, 25000, 25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "BraumE.png",
@@ -673,7 +917,12 @@
           "description": "Braum slams the ground, knocking up enemies nearby and in a line in front of him. A fissure is left along the line that slows enemies.",
           "tooltip": "Braum slams the ground sending forth a fissure that <status>Knocks Up</status> enemies in its path and nearby Braum, and deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>. The first target hit is <status>Knocked Up</status> for between {{ minknockup }} and {{ maxknockup }} seconds, increasing with distance from Braum. All others hit are <status>Knocked Up</status> for {{ minknockup }} seconds.<br /><br />The fissure also creates a zone for {{ slowzoneduration }} seconds, that <status>Slows</status> by {{ movespeedmod }}%.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Knockup Duration", "Slow", "Cooldown"],
+            "label": [
+              "Damage",
+              "Knockup Duration",
+              "Slow",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ firstknockupduration }} -> {{ firstknockupdurationNL }}",
@@ -682,23 +931,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [130, 115, 100],
+          "cooldown": [
+            130,
+            115,
+            100
+          ],
           "cooldownBurn": "130/115/100",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -716,7 +1013,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1250, 1250, 1250],
+          "range": [
+            1250,
+            1250,
+            1250
+          ],
           "rangeBurn": "1250",
           "image": {
             "full": "BraumRWrapper.png",

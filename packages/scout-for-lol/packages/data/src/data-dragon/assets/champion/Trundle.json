@@ -231,7 +231,10 @@
         "Trundle is very powerful at location-based combat. Try to draw him off of his Frozen Domain.",
         "Make sure to get out of his Pillar of Ice as quickly as possible, as it significantly slows you down."
       ],
-      "tags": ["Fighter", "Tank"],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 7,
@@ -282,23 +285,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [3.5, 3.5, 3.5, 3.5, 3.5],
+          "cooldown": [
+            3.5,
+            3.5,
+            3.5,
+            3.5,
+            3.5
+          ],
           "cooldownBurn": "3.5",
-          "cost": [20, 20, 20, 20, 20],
+          "cost": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
           "costBurn": "20",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -316,7 +391,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [300, 300, 300, 300, 300],
+          "range": [
+            300,
+            300,
+            300,
+            300,
+            300
+          ],
           "rangeBurn": "300",
           "image": {
             "full": "TrundleTrollSmash.png",
@@ -335,7 +416,11 @@
           "description": "Trundle turns target location into his domain, gaining Attack Speed, Move Speed, and increased healing from all sources while on it.",
           "tooltip": "Trundle freezes an area for {{ e4 }} seconds. While inside he gains <speed>{{ e1 }}% Move Speed</speed>, <attackSpeed>{{ e2 }}% Attack Speed</attackSpeed>, and {{ e3 }}% increased healing.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Move Speed", "Attack Speed", "Cooldown"],
+            "label": [
+              "Move Speed",
+              "Attack Speed",
+              "Cooldown"
+            ],
             "effect": [
               "{{ effect1amount*100.000000 }}% -> {{ effect1amountnl*100.000000 }}%",
               "{{ effect2amount*100.000000 }}% -> {{ effect2amountnl*100.000000 }}%",
@@ -343,23 +428,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [18, 17, 16, 15, 14],
+          "cooldown": [
+            18,
+            17,
+            16,
+            15,
+            14
+          ],
           "cooldownBurn": "18/17/16/15/14",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [20, 28, 36, 44, 52],
-            [30, 45, 60, 75, 90],
-            [25, 25, 25, 25, 25],
-            [8, 8, 8, 8, 8],
-            [775, 775, 775, 775, 775],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              20,
+              28,
+              36,
+              44,
+              52
+            ],
+            [
+              30,
+              45,
+              60,
+              75,
+              90
+            ],
+            [
+              25,
+              25,
+              25,
+              25,
+              25
+            ],
+            [
+              8,
+              8,
+              8,
+              8,
+              8
+            ],
+            [
+              775,
+              775,
+              775,
+              775,
+              775
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -377,7 +534,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [750, 750, 750, 750, 750],
+          "range": [
+            750,
+            750,
+            750,
+            750,
+            750
+          ],
           "rangeBurn": "750",
           "image": {
             "full": "trundledesecrate.png",
@@ -396,30 +559,105 @@
           "description": "Trundle creates an ice pillar at target location, becoming impassable terrain and slowing all nearby enemy units.",
           "tooltip": "Trundle creates an icy pillar for {{ e1 }} seconds, briefly <status>Knocking Back</status> enemies directly over it and <status>Slowing</status> nearby enemies by {{ e2 }}%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Slow"],
+            "label": [
+              "Cooldown",
+              "Slow"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ e2 }}% -> {{ e2NL }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [21, 19.5, 18, 16.5, 15],
+          "cooldown": [
+            21,
+            19.5,
+            18,
+            16.5,
+            15
+          ],
           "cooldownBurn": "21/19.5/18/16.5/15",
-          "cost": [75, 75, 75, 75, 75],
+          "cost": [
+            75,
+            75,
+            75,
+            75,
+            75
+          ],
           "costBurn": "75",
           "datavalues": {},
           "effect": [
             null,
-            [6, 6, 6, 6, 6],
-            [34, 38, 42, 46, 50],
-            [360, 360, 360, 360, 360],
-            [225, 225, 225, 225, 225],
-            [150, 150, 150, 150, 150],
-            [225, 225, 225, 225, 225],
-            [400, 400, 400, 400, 400],
-            [60, 60, 60, 60, 60],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              6,
+              6,
+              6,
+              6,
+              6
+            ],
+            [
+              34,
+              38,
+              42,
+              46,
+              50
+            ],
+            [
+              360,
+              360,
+              360,
+              360,
+              360
+            ],
+            [
+              225,
+              225,
+              225,
+              225,
+              225
+            ],
+            [
+              150,
+              150,
+              150,
+              150,
+              150
+            ],
+            [
+              225,
+              225,
+              225,
+              225,
+              225
+            ],
+            [
+              400,
+              400,
+              400,
+              400,
+              400
+            ],
+            [
+              60,
+              60,
+              60,
+              60,
+              60
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -437,7 +675,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1000, 1000, 1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "TrundleCircle.png",
@@ -456,30 +700,81 @@
           "description": "Trundle immediately steals a percent of his target's Health, Armor and Magic Resistance. Over the next 4 seconds the amount of Health, Armor, and Magic Resistance stolen is doubled.",
           "tooltip": "Trundle drains the lifeforce of an enemy champion, dealing <magicDamage>{{ totalpercenthpdamage }} max Health magic damage</magicDamage> and stealing <scaleArmor>{{ armormrshred*100 }}% Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> over {{ actualdurationofdrainbuff }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Health Drain", "Cooldown"],
+            "label": [
+              "Health Drain",
+              "Cooldown"
+            ],
             "effect": [
               "{{ percenthpdamage*100.000000 }}% -> {{ percenthpdamagenl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -497,7 +792,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650],
+          "range": [
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "TrundlePain.png",

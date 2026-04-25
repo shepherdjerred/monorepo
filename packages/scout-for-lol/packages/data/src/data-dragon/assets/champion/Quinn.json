@@ -194,7 +194,10 @@
         "Keep tabs on Quinn's position. Behind Enemy Lines can enable Valor to cross the map very quickly and attack you by surprise.",
         "When Quinn is using Behind Enemy Lines, damaging her removes her Move Speed bonus temporarily."
       ],
-      "tags": ["Marksman", "Assassin"],
+      "tags": [
+        "Marksman",
+        "Assassin"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 9,
@@ -245,23 +248,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 10.5, 10, 9.5, 9],
+          "cooldown": [
+            11,
+            10.5,
+            10,
+            9.5,
+            9
+          ],
           "cooldownBurn": "11/10.5/10/9.5/9",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [-1000, -1000, -1000, -1000, -1000],
-            [1.75, 1.75, 1.75, 1.75, 1.75],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              -1000,
+              -1000,
+              -1000,
+              -1000,
+              -1000
+            ],
+            [
+              1.75,
+              1.75,
+              1.75,
+              1.75,
+              1.75
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -279,7 +354,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1025, 1025, 1025, 1025, 1025],
+          "range": [
+            1025,
+            1025,
+            1025,
+            1025,
+            1025
+          ],
           "rangeBurn": "1025",
           "image": {
             "full": "QuinnQ.png",
@@ -298,7 +379,11 @@
           "description": "Passively grants Quinn Attack Speed and Move Speed after she attacks a <font color='#FFF673'>Vulnerable</font> target. Activate to have Valor reveal a large area nearby.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Attacking a <keywordMajor>Vulnerable</keywordMajor> target grants Quinn <attackSpeed>{{ attackspeedbonus*100 }}% Attack Speed</attackSpeed> and <speed>{{ e3 }}% Move Speed</speed> for {{ e1 }} seconds.<br /><br /><spellActive>Active:</spellActive> Valor reveals a large area nearby for {{ e5 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Attack Speed", "Move Speed", "Cooldown"],
+            "label": [
+              "Attack Speed",
+              "Move Speed",
+              "Cooldown"
+            ],
             "effect": [
               "{{ attackspeedbonus*100.000000 }}% -> {{ attackspeedbonusnl*100.000000 }}%",
               "{{ effect3amount*100.000000 }}% -> {{ effect3amountnl*100.000000 }}%",
@@ -306,23 +391,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [50, 45, 40, 35, 30],
+          "cooldown": [
+            50,
+            45,
+            40,
+            35,
+            30
+          ],
           "cooldownBurn": "50/45/40/35/30",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [2, 2, 2, 2, 2],
-            [0, 0, 0, 0, 0],
-            [20, 25, 30, 35, 40],
-            [2100, 2100, 2100, 2100, 2100],
-            [2, 2, 2, 2, 2],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              20,
+              25,
+              30,
+              35,
+              40
+            ],
+            [
+              2100,
+              2100,
+              2100,
+              2100,
+              2100
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -340,7 +497,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [2100, 2100, 2100, 2100, 2100],
+          "range": [
+            2100,
+            2100,
+            2100,
+            2100,
+            2100
+          ],
           "rangeBurn": "2100",
           "image": {
             "full": "QuinnW.png",
@@ -359,30 +522,105 @@
           "description": "Quinn dashes to an enemy, dealing physical damage and slowing the target's Move Speed. Upon reaching the target, she leaps off the target, briefly interrupting it, and lands near her maximum Attack Range away from the target.",
           "tooltip": "Quinn dashes to an enemy, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and marking them <keywordMajor>Vulnerable</keywordMajor>. Quinn then leaps backwards from the target, slightly <status>Knocking</status> them <status>Back</status> and <status>Slowing</status> them by {{ e1 }}%, decaying over {{ e3 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e2 }} -> {{ e2NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11, 10, 9, 8],
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [50, 50, 50, 50, 50],
+          "cost": [
+            50,
+            50,
+            50,
+            50,
+            50
+          ],
           "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
-            [50, 50, 50, 50, 50],
-            [40, 65, 90, 115, 140],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              50,
+              50,
+              50,
+              50,
+              50
+            ],
+            [
+              40,
+              65,
+              90,
+              115,
+              140
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -400,7 +638,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [675, 675, 675, 675, 675],
+          "range": [
+            675,
+            675,
+            675,
+            675,
+            675
+          ],
           "rangeBurn": "675",
           "image": {
             "full": "QuinnE.png",
@@ -419,7 +663,11 @@
           "description": "Quinn and Valor team up to fly around at great speed.  Ending the ability casts Skystrike, which deals damage to nearby enemies and marks champions as Vulnerable.",
           "tooltip": "Quinn calls to Valor, pairing up after channeling for 2 seconds gaining <speed>{{ movementspeedmod*100 }}% Move Speed</speed> and allowing her to <recast>Recast</recast> this Ability. Attacking or using <spellName>Blinding Assault</spellName> or <spellName>Vault</spellName> automatically <recast>Recasts</recast> this Ability.<br /><br /><recast>Recast</recast>: Quinn and Valor perform an aerial maneuver, dealing <physicalDamage>{{ damage }} physical damage</physicalDamage>, marking champions as <keywordMajor>Vulnerable</keywordMajor>, and ending this Ability.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Move Speed", "Mana Cost"],
+            "label": [
+              "Damage",
+              "Move Speed",
+              "Mana Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ movementspeedmod*100.000000 }}% -> {{ movementspeedmodnl*100.000000 }}%",
@@ -427,23 +675,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [3, 3, 3],
+          "cooldown": [
+            3,
+            3,
+            3
+          ],
           "cooldownBurn": "3",
-          "cost": [100, 50, 0],
+          "cost": [
+            100,
+            50,
+            0
+          ],
           "costBurn": "100/50/0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -461,7 +757,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [700, 700, 700],
+          "range": [
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "QuinnR.png",
