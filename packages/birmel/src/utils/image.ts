@@ -105,7 +105,7 @@ export async function downloadImage(url: string): Promise<Buffer> {
     clearTimeout(timeoutId);
 
     if (error instanceof Error && error.name === "AbortError") {
-      throw new Error("Image download timeout");
+      throw new Error("Image download timeout", { cause: error });
     }
 
     throw error;

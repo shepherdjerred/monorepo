@@ -118,23 +118,58 @@ export async function handleCreateStandalone(
     };
   }
   const channel = await client.channels.fetch(channelId);
-  if (channel?.type !== ChannelType.GuildText) {
-    return { success: false, message: "Channel must be a text channel" };
+  // threads.create is supported on guild text + announcement channels.
+  // Announcement channels only allow public/announcement threads; private
+  // threads are restricted to GuildText.
+  if (channel?.type === ChannelType.GuildText) {
+    const autoArchiveDuration = parseAutoArchiveDuration(
+      autoArchiveDurationStr,
+    );
+    const thread = await channel.threads.create({
+      name,
+      autoArchiveDuration,
+      type:
+        type === "private"
+          ? ChannelType.PrivateThread
+          : ChannelType.PublicThread,
+      ...(messageContent != null &&
+        messageContent.length > 0 && { message: { content: messageContent } }),
+    });
+    logger.info("Standalone thread created", { threadId: thread.id });
+    return {
+      success: true,
+      message: `Thread "${name}" created successfully`,
+      data: { threadId: thread.id, threadName: thread.name },
+    };
   }
-  const autoArchiveDuration = parseAutoArchiveDuration(autoArchiveDurationStr);
-  const thread = await channel.threads.create({
-    name,
-    autoArchiveDuration,
-    type:
-      type === "private" ? ChannelType.PrivateThread : ChannelType.PublicThread,
-    ...(messageContent != null &&
-      messageContent.length > 0 && { message: { content: messageContent } }),
-  });
-  logger.info("Standalone thread created", { threadId: thread.id });
+  if (channel?.type === ChannelType.GuildAnnouncement) {
+    if (type === "private") {
+      return {
+        success: false,
+        message:
+          "Announcement channels only support announcement (public) threads",
+      };
+    }
+    const autoArchiveDuration = parseAutoArchiveDuration(
+      autoArchiveDurationStr,
+    );
+    const thread = await channel.threads.create({
+      name,
+      autoArchiveDuration,
+      ...(messageContent != null &&
+        messageContent.length > 0 && { message: { content: messageContent } }),
+    });
+    logger.info("Standalone thread created", { threadId: thread.id });
+    return {
+      success: true,
+      message: `Thread "${name}" created successfully`,
+      data: { threadId: thread.id, threadName: thread.name },
+    };
+  }
   return {
-    success: true,
-    message: `Thread "${name}" created successfully`,
-    data: { threadId: thread.id, threadName: thread.name },
+    success: false,
+    message:
+      "Channel must be a guild text or announcement channel to create threads",
   };
 }
 

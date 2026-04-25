@@ -2,7 +2,7 @@ import { describe, test, expect } from "bun:test";
 import {
   DiscordConfigSchema,
   OpenAIConfigSchema,
-  MastraConfigSchema,
+  AgentConfigSchema,
   TelemetryConfigSchema,
   DailyPostsConfigSchema,
   ExternalApisSchema,
@@ -49,8 +49,8 @@ describe("OpenAIConfigSchema", () => {
     });
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.model).toBe("gpt-5-mini");
-      expect(result.data.classifierModel).toBe("gpt-5-nano");
+      expect(result.data.model).toBe("gpt-5.4-mini");
+      expect(result.data.classifierModel).toBe("gpt-5.4-nano");
       expect(result.data.maxTokens).toBe(4096);
     }
   });
@@ -74,31 +74,22 @@ describe("OpenAIConfigSchema", () => {
   });
 });
 
-describe("MastraConfigSchema", () => {
+describe("AgentConfigSchema", () => {
   test("uses defaults", () => {
-    const result = MastraConfigSchema.safeParse({});
+    const result = AgentConfigSchema.safeParse({});
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.memoryDbPath).toBe("file:/app/data/mastra-memory.db");
-      expect(result.data.studioEnabled).toBe(true);
-      expect(result.data.studioPort).toBe(4111);
-      expect(result.data.studioHost).toBe("0.0.0.0");
+      expect(result.data.memoryDbPath).toBe("file:/app/data/birmel-memory.db");
     }
   });
 
-  test("allows custom values", () => {
-    const result = MastraConfigSchema.safeParse({
+  test("allows custom memoryDbPath", () => {
+    const result = AgentConfigSchema.safeParse({
       memoryDbPath: "file:/custom/path/memory.db",
-      studioEnabled: false,
-      studioPort: 8080,
-      studioHost: "127.0.0.1",
     });
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.memoryDbPath).toBe("file:/custom/path/memory.db");
-      expect(result.data.studioEnabled).toBe(false);
-      expect(result.data.studioPort).toBe(8080);
-      expect(result.data.studioHost).toBe("127.0.0.1");
     }
   });
 });
@@ -218,7 +209,7 @@ describe("ConfigSchema (full)", () => {
       openai: {
         apiKey: "test-openai-key",
       },
-      mastra: {},
+      agent: {},
       telemetry: {},
       dailyPosts: {},
       externalApis: {},

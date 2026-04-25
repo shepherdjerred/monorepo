@@ -2,7 +2,7 @@ import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.t
 import { z } from "zod";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { withToolSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
-import { getRequestContext } from "@shepherdjerred/birmel/mastra/tools/request-context.ts";
+import { getRequestContext } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import {
   isEditorEnabled,
   getAllowedRepos,

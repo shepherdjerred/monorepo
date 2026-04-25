@@ -1,10 +1,13 @@
 import { toError } from "@shepherdjerred/birmel/utils/errors.ts";
 import type { GuildMember, OAuth2Guild } from "discord.js";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
-import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
+import {
+  runScheduledJob,
+  throwIfAborted,
+} from "@shepherdjerred/birmel/scheduler/utils/job-runner.ts";
 
 const logger = loggers.scheduler.child("activity-aggregator");
 
@@ -110,18 +113,21 @@ async function processGuildActivity(
 
 /**
  * Aggregate activity metrics and assign/remove activity-based roles
- * Runs every hour
+ * Runs every hour.
  */
 export async function aggregateActivityMetrics(): Promise<void> {
-  return withSpan("job.aggregate-activity", {}, async () => {
-    try {
+  return runScheduledJob(
+    { name: "aggregate-activity", timeoutMs: 5 * 60 * 1000 },
+    async (signal) => {
       logger.info("Starting activity aggregation");
 
       const client = getDiscordClient();
       const config = getConfig();
       const guilds = await client.guilds.fetch();
+      throwIfAborted(signal);
 
       for (const [guildId, guild] of guilds) {
+        throwIfAborted(signal);
         await processGuildActivity(
           guild,
           guildId,
@@ -138,8 +144,6 @@ export async function aggregateActivityMetrics(): Promise<void> {
       logger.info("Activity aggregation completed", {
         cleanedRecords: deleted.count,
       });
-    } catch (error) {
-      logger.error("Activity aggregator job failed", toError(error));
-    }
-  });
+    },
+  );
 }

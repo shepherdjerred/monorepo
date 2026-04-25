@@ -1,88 +1,121 @@
-import { Agent } from "@voltagent/core";
+import { Agent, createSubagent } from "@voltagent/core";
 import { openai } from "@ai-sdk/openai";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { createMemory } from "@shepherdjerred/birmel/voltagent/memory/index.ts";
+import { OPENAI_RESPONSES_PROVIDER_OPTIONS } from "@shepherdjerred/birmel/voltagent/openai-provider-options.ts";
+import { sanitizeReplayHook } from "@shepherdjerred/birmel/voltagent/agents/hooks.ts";
 import {
-  SYSTEM_PROMPT,
-  buildSystemPromptWithPersona,
-} from "./system-prompt.ts";
+  buildSupervisorPrompt,
+  type PersonaContext,
+} from "@shepherdjerred/birmel/voltagent/agents/system-prompt.ts";
+import { createMessagingAgent } from "./specialized/messaging-agent.ts";
+import { createServerAgent } from "./specialized/server-agent.ts";
+import { createModerationAgent } from "./specialized/moderation-agent.ts";
+import { createMusicAgent } from "./specialized/music-agent.ts";
+import { createAutomationAgent } from "./specialized/automation-agent.ts";
+import { createEditorAgent } from "./specialized/editor-agent.ts";
 
-import { messagingAgent } from "./specialized/messaging-agent.ts";
-import { serverAgent } from "./specialized/server-agent.ts";
-import { moderationAgent } from "./specialized/moderation-agent.ts";
-import { musicAgent } from "./specialized/music-agent.ts";
-import { automationAgent } from "./specialized/automation-agent.ts";
-import { editorAgent } from "./specialized/editor-agent.ts";
+type ForwardedStreamEventType = "text-delta" | "tool-call" | "tool-result";
 
-const config = getConfig();
+const FORWARDED_STREAM_EVENT_TYPES: ForwardedStreamEventType[] = [
+  "text-delta",
+  "tool-call",
+  "tool-result",
+];
+
+const SUPERVISOR_CONFIG = {
+  // Forward text-delta events from sub-agents for progressive streaming
+  fullStreamEventForwarding: {
+    types: FORWARDED_STREAM_EVENT_TYPES,
+  },
+};
 
 /**
- * The routing agent coordinates all specialized agents.
- * It uses LLM reasoning to interpret requests and delegate to the appropriate agent(s).
- * Uses VoltAgent's supervisor pattern with subAgents.
+ * Wrap a sub-agent so the supervisor's `delegate_task` invocation passes the
+ * OpenAI Responses provider options (store: false + reasoning encrypted_content)
+ * through to the sub-agent's underlying `streamText` call. Without this,
+ * sub-agents hit the same legacy reasoning-item-replay bug as the supervisor.
  */
-export const routingAgent = new Agent({
-  name: "birmel-router",
-  instructions: SYSTEM_PROMPT,
-  model: openai(config.openai.model),
-  subAgents: [
-    messagingAgent,
-    serverAgent,
-    moderationAgent,
-    musicAgent,
-    automationAgent,
-    editorAgent,
-  ],
-  supervisorConfig: {
-    // Forward text-delta events from sub-agents for progressive streaming
-    fullStreamEventForwarding: {
-      types: ["text-delta", "tool-call", "tool-result"],
+function wrapWithStreamOptions(agent: Agent) {
+  return createSubagent({
+    agent,
+    method: "streamText",
+    options: {
+      providerOptions: OPENAI_RESPONSES_PROVIDER_OPTIONS,
     },
-  },
-  memory: createMemory(),
-  hooks: {
-    // Skip supervisor post-processing - return sub-agent result directly
-    // This saves tokens and reduces latency
-    onHandoffComplete: ({ bail }) => {
-      bail(); // Return sub-agent result directly without supervisor summarizing
-    },
-  },
-});
+  });
+}
 
-/**
- * Create a routing agent instance with persona-embedded instructions.
- * This is useful for dynamic persona injection per-request.
- */
-export function createRoutingAgentWithPersona(
-  personaContext?: {
-    name: string;
-    voice: string;
-    markers: string;
-    samples: string[];
-  } | null,
-) {
+function buildSubAgents(persona: PersonaContext | null) {
+  return [
+    wrapWithStreamOptions(createMessagingAgent(persona)),
+    wrapWithStreamOptions(createServerAgent(persona)),
+    wrapWithStreamOptions(createModerationAgent(persona)),
+    wrapWithStreamOptions(createMusicAgent(persona)),
+    wrapWithStreamOptions(createAutomationAgent(persona)),
+    wrapWithStreamOptions(createEditorAgent(persona)),
+  ];
+}
+
+function buildRoutingAgent(persona: PersonaContext | null): Agent {
+  const config = getConfig();
   return new Agent({
     name: "birmel-router",
-    instructions: buildSystemPromptWithPersona(personaContext),
+    instructions: buildSupervisorPrompt(persona),
     model: openai(config.openai.model),
-    subAgents: [
-      messagingAgent,
-      serverAgent,
-      moderationAgent,
-      musicAgent,
-      automationAgent,
-      editorAgent,
-    ],
-    supervisorConfig: {
-      fullStreamEventForwarding: {
-        types: ["text-delta", "tool-call", "tool-result"],
-      },
-    },
+    subAgents: buildSubAgents(persona),
+    supervisorConfig: SUPERVISOR_CONFIG,
     memory: createMemory(),
     hooks: {
+      onPrepareMessages: sanitizeReplayHook,
+      // Skip supervisor post-processing — return sub-agent result directly.
+      // Persona is injected into each sub-agent so the user gets consistent
+      // voice across delegation without a second LLM round-trip.
       onHandoffComplete: ({ bail }) => {
         bail();
       },
     },
   });
 }
+
+/**
+ * Per-persona Agent cache. There are at most 10 personas (one per style card),
+ * so this is bounded; a fresh entry costs ~7 Agent allocations (1 supervisor +
+ * 6 sub-agents) but only happens once per persona ever.
+ *
+ * The `null` persona key handles the "persona disabled" / "no owner" case.
+ */
+const routerCache = new Map<string | null, Agent>();
+
+function personaCacheKey(persona: PersonaContext | null): string | null {
+  return persona?.name ?? null;
+}
+
+/**
+ * Get a routing agent configured for the given persona, reusing a cached
+ * instance when one already exists.
+ */
+export function getRoutingAgent(persona: PersonaContext | null): Agent {
+  const key = personaCacheKey(persona);
+  let cached = routerCache.get(key);
+  if (cached == null) {
+    cached = buildRoutingAgent(persona);
+    routerCache.set(key, cached);
+  }
+  return cached;
+}
+
+/**
+ * @deprecated kept for backwards compatibility — prefer {@link getRoutingAgent}.
+ */
+export function createRoutingAgentWithPersona(
+  persona: PersonaContext | null,
+): Agent {
+  return getRoutingAgent(persona);
+}
+
+/**
+ * Default no-persona router. Use {@link getRoutingAgent} when you have a
+ * persona to inject.
+ */
+export const routingAgent = getRoutingAgent(null);

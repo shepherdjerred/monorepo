@@ -1,4 +1,7 @@
 [test]
 coverage = true
 coverageThreshold = { line = 0.50 }
-preload = ["./tests/setup.ts", "./src/mastra/tools/automation/test-setup.ts"]
+preload = [
+  "./tests/setup.ts",
+  "./src/agent-tools/tools/automation/test-setup.ts",
+]

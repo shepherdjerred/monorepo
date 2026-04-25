@@ -2,7 +2,7 @@ import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.t
 import { z } from "zod";
 import type { ButtonBuilder as ButtonBuilderType } from "discord.js";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
-import { getRequestContext } from "@shepherdjerred/birmel/mastra/tools/request-context.ts";
+import { getRequestContext } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import {
   hasValidAuth,
   deleteAuth,

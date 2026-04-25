@@ -1,10 +1,13 @@
 import { toError } from "@shepherdjerred/birmel/utils/errors.ts";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { getBirthdaysToday } from "@shepherdjerred/birmel/database/repositories/birthdays.ts";
-import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import type { Guild, GuildMember, OAuth2Guild } from "discord.js";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
+import {
+  runScheduledJob,
+  throwIfAborted,
+} from "@shepherdjerred/birmel/scheduler/utils/job-runner.ts";
 
 const logger = loggers.scheduler.child("birthday-checker");
 
@@ -127,23 +130,24 @@ async function processGuildBirthdays(
 }
 
 /**
- * Check for birthdays today and send celebration messages
- * Runs daily at a configured time (default: 09:00 UTC)
+ * Check for birthdays today and send celebration messages.
+ * Runs daily at a configured time (default: 09:00 UTC).
  */
 export async function checkAndPostBirthdays(): Promise<void> {
-  return withSpan("job.check-birthdays", {}, async () => {
-    try {
+  return runScheduledJob(
+    { name: "check-birthdays", timeoutMs: 5 * 60 * 1000 },
+    async (signal) => {
       logger.info("Starting birthday check");
 
       const guilds = await getDiscordClient().guilds.fetch();
+      throwIfAborted(signal);
 
       for (const [guildId, guild] of guilds) {
+        throwIfAborted(signal);
         await processGuildBirthdays(guild, guildId);
       }
 
       logger.info("Birthday check completed");
-    } catch (error) {
-      logger.error("Birthday checker job failed", toError(error));
-    }
-  });
+    },
+  );
 }

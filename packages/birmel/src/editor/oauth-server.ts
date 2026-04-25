@@ -13,9 +13,8 @@ let server: ReturnType<typeof Bun.serve> | null = null;
 
 /**
  * Start a minimal OAuth-only server for GitHub authentication.
- * This server should be exposed via Tailscale Funnel for public access.
- *
- * Runs on a separate port from the Mastra Studio server.
+ * This server is exposed via Tailscale Funnel + a Cloudflare tunnel binding
+ * so users can complete the GitHub OAuth dance from outside the homelab.
  */
 export async function startOAuthServer(): Promise<void> {
   const config = getConfig();

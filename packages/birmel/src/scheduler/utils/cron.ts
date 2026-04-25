@@ -33,7 +33,7 @@ export function getNextCronRun(pattern: string, from?: Date): Date {
     logger.error(`Failed to parse cron pattern: ${pattern}`, {
       error: String(error),
     });
-    throw new Error(`Invalid cron pattern: ${pattern}`);
+    throw new Error(`Invalid cron pattern: ${pattern}`, { cause: error });
   }
 }
 

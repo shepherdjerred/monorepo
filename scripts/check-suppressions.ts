@@ -42,6 +42,8 @@ const EXCLUDED_FILES = [
   "packages/better-skill-capped/src/components/router.tsx",
   // Intentional: discord-player-youtubei types incompatible without --preserveSymlinks
   "packages/birmel/src/music/extractors.ts",
+  // Intentional: Zod-validated discord.js Channel stub (60+ properties impractical to mock)
+  "packages/birmel/tests/agent-tools/tools/discord/channel-resolver.test.ts",
   // Intentional: Sentry ErrorBoundary class types incompatible with React 19
   "packages/discord-plays-pokemon/packages/frontend/src/main.tsx",
   // Intentional: public Firebase web API key (same as better-skill-capped fetcher)

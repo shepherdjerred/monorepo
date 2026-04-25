@@ -1,5 +1,5 @@
 /**
- * Discord ID validation utilities for Mastra tools.
+ * Discord ID validation utilities for the Discord agent tools.
  * Discord IDs (snowflakes) are numeric strings, typically 17-20 digits.
  */
 

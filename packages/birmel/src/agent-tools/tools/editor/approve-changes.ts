@@ -7,7 +7,7 @@ import { z } from "zod";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
 import { withToolSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
-import { getRequestContext } from "@shepherdjerred/birmel/mastra/tools/request-context.ts";
+import { getRequestContext } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import { isEditorEnabled } from "@shepherdjerred/birmel/editor/config.ts";
 import {
   getSession,

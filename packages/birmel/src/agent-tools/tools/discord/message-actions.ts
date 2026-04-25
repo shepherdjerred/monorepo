@@ -1,10 +1,14 @@
-import { ChannelType, type Client, type TextChannel } from "discord.js";
+import type { Client, Message, SendableChannels } from "discord.js";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import {
   getRequestContext,
   hasReplySent,
   markReplySent,
-} from "@shepherdjerred/birmel/mastra/tools/request-context.ts";
+} from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
+import {
+  resolveSendableChannel,
+  describeChannelResolutionFailure,
+} from "./channel-resolver.ts";
 
 const logger = loggers.tools.child("discord.messages");
 
@@ -25,19 +29,24 @@ type MessageResult = {
       };
 };
 
-async function fetchTextChannel(
+type ChannelOpResult<T> =
+  | { ok: true; value: T }
+  | { ok: false; message: string };
+
+async function withSendableChannel<T>(
   client: Client,
   channelId: string,
-): Promise<TextChannel | null> {
-  const channel = await client.channels.fetch(channelId);
-  if (channel == null) {
-    return null;
+  body: (channel: SendableChannels) => Promise<T>,
+): Promise<ChannelOpResult<T>> {
+  const resolution = await resolveSendableChannel(client, channelId);
+  if (resolution.kind !== "ok") {
+    return {
+      ok: false,
+      message: describeChannelResolutionFailure(resolution, channelId),
+    };
   }
-  // Narrow to GuildText channel type which has concrete .send() and .messages types
-  if (channel.type === ChannelType.GuildText) {
-    return channel;
-  }
-  return null;
+  const value = await body(resolution.channel);
+  return { ok: true, value };
 }
 
 export async function handleSend(
@@ -56,16 +65,19 @@ export async function handleSend(
       message: "channelId and content are required for send",
     };
   }
-  const channel = await fetchTextChannel(client, channelId);
-  if (channel == null) {
-    return { success: false, message: "Channel is not a text channel" };
+  const result = await withSendableChannel<Message>(
+    client,
+    channelId,
+    async (channel) => channel.send(content),
+  );
+  if (!result.ok) {
+    return { success: false, message: result.message };
   }
-  const sent = await channel.send(content);
-  logger.info("Message sent", { channelId, messageId: sent.id });
+  logger.info("Message sent", { channelId, messageId: result.value.id });
   return {
     success: true,
     message: "Message sent successfully",
-    data: { messageId: sent.id },
+    data: { messageId: result.value.id },
   };
 }
 
@@ -99,18 +111,21 @@ export async function handleReply(
         "No message context available to reply to. Use 'send' action instead.",
     };
   }
-  const channel = await fetchTextChannel(
+  const result = await withSendableChannel(
     client,
     requestContext.sourceChannelId,
+    async (channel) => {
+      const originalMessage = await channel.messages.fetch(
+        requestContext.sourceMessageId,
+      );
+      return originalMessage.reply(content);
+    },
   );
-  if (channel == null) {
-    return { success: false, message: "Channel is not a text channel" };
+  if (!result.ok) {
+    return { success: false, message: result.message };
   }
-  const originalMessage = await channel.messages.fetch(
-    requestContext.sourceMessageId,
-  );
-  const sent = await originalMessage.reply(content);
   markReplySent();
+  const sent: Message = result.value;
   logger.info("Reply sent", {
     channelId: requestContext.sourceChannelId,
     messageId: sent.id,
@@ -169,12 +184,17 @@ export async function handleEdit(
       message: "channelId, messageId, and content are required for edit",
     };
   }
-  const channel = await fetchTextChannel(client, channelId);
-  if (channel == null) {
-    return { success: false, message: "Channel is not a text channel" };
+  const result = await withSendableChannel(
+    client,
+    channelId,
+    async (channel) => {
+      const message = await channel.messages.fetch(messageId);
+      await message.edit(content);
+    },
+  );
+  if (!result.ok) {
+    return { success: false, message: result.message };
   }
-  const message = await channel.messages.fetch(messageId);
-  await message.edit(content);
   logger.info("Message edited", { channelId, messageId });
   return { success: true, message: "Message edited successfully" };
 }
@@ -195,12 +215,17 @@ export async function handleDelete(
       message: "channelId and messageId are required for delete",
     };
   }
-  const channel = await fetchTextChannel(client, channelId);
-  if (channel == null) {
-    return { success: false, message: "Channel is not a text channel" };
+  const result = await withSendableChannel(
+    client,
+    channelId,
+    async (channel) => {
+      const message = await channel.messages.fetch(messageId);
+      await message.delete();
+    },
+  );
+  if (!result.ok) {
+    return { success: false, message: result.message };
   }
-  const message = await channel.messages.fetch(messageId);
-  await message.delete();
   logger.info("Message deleted", { channelId, messageId });
   return { success: true, message: "Message deleted successfully" };
 }
@@ -226,11 +251,21 @@ export async function handleBulkDelete(
       message: "Cannot delete more than 100 messages at once (Discord limit)",
     };
   }
-  const channel = await fetchTextChannel(client, channelId);
-  if (channel == null) {
-    return { success: false, message: "Channel is not a text channel" };
+  const result = await withSendableChannel(
+    client,
+    channelId,
+    async (channel) => {
+      if (!("bulkDelete" in channel)) {
+        throw new Error(
+          "Bulk delete is only supported on guild text-based channels",
+        );
+      }
+      await channel.bulkDelete(messageIds);
+    },
+  );
+  if (!result.ok) {
+    return { success: false, message: result.message };
   }
-  await channel.bulkDelete(messageIds);
   logger.info("Messages bulk deleted", { channelId, count: messageIds.length });
   return {
     success: true,
@@ -256,12 +291,17 @@ export async function handlePinUnpin(
       message: `channelId and messageId are required for ${action}`,
     };
   }
-  const channel = await fetchTextChannel(client, channelId);
-  if (channel == null) {
-    return { success: false, message: "Channel is not a text channel" };
+  const result = await withSendableChannel(
+    client,
+    channelId,
+    async (channel) => {
+      const message = await channel.messages.fetch(messageId);
+      await (pin ? message.pin() : message.unpin());
+    },
+  );
+  if (!result.ok) {
+    return { success: false, message: result.message };
   }
-  const message = await channel.messages.fetch(messageId);
-  await (pin ? message.pin() : message.unpin());
   logger.info(`Message ${action}ned`, { channelId, messageId });
   return { success: true, message: `Message ${action}ned successfully` };
 }
@@ -285,12 +325,17 @@ export async function handleAddReaction(
       message: "channelId, messageId, and emoji are required for add-reaction",
     };
   }
-  const channel = await fetchTextChannel(client, channelId);
-  if (channel == null) {
-    return { success: false, message: "Channel is not a text channel" };
+  const result = await withSendableChannel(
+    client,
+    channelId,
+    async (channel) => {
+      const message = await channel.messages.fetch(messageId);
+      await message.react(emoji);
+    },
+  );
+  if (!result.ok) {
+    return { success: false, message: result.message };
   }
-  const message = await channel.messages.fetch(messageId);
-  await message.react(emoji);
   logger.info("Reaction added", { channelId, messageId, emoji });
   return { success: true, message: "Reaction added successfully" };
 }
@@ -321,18 +366,27 @@ export async function handleRemoveReaction(
         "channelId, messageId, and emoji are required for remove-reaction",
     };
   }
-  const channel = await fetchTextChannel(client, channelId);
-  if (channel == null) {
-    return { success: false, message: "Channel is not a text channel" };
+  const result = await withSendableChannel(
+    client,
+    channelId,
+    async (channel) => {
+      const message = await channel.messages.fetch(messageId);
+      const reaction = message.reactions.cache.get(emoji);
+      if (reaction == null) {
+        return { reactionMissing: true } as const;
+      }
+      await (userId != null && userId.length > 0
+        ? reaction.users.remove(userId)
+        : reaction.users.remove());
+      return { reactionMissing: false } as const;
+    },
+  );
+  if (!result.ok) {
+    return { success: false, message: result.message };
   }
-  const message = await channel.messages.fetch(messageId);
-  const reaction = message.reactions.cache.get(emoji);
-  if (reaction == null) {
+  if (result.value.reactionMissing) {
     return { success: false, message: "Reaction not found" };
   }
-  await (userId != null && userId.length > 0
-    ? reaction.users.remove(userId)
-    : reaction.users.remove());
   logger.info("Reaction removed", { channelId, messageId, emoji });
   return { success: true, message: "Reaction removed successfully" };
 }
@@ -346,29 +400,34 @@ export async function handleGetMessages(
   if (channelId == null || channelId.length === 0) {
     return { success: false, message: "channelId is required for get" };
   }
-  const channel = await fetchTextChannel(client, channelId);
-  if (channel == null) {
-    return { success: false, message: "Channel is not a text channel" };
-  }
   const fetchLimit = Math.min(100, Math.max(1, limit ?? 20));
-  const messages = await channel.messages.fetch({
-    limit: fetchLimit,
-    ...(before != null && before.length > 0 && { before }),
-  });
-  const formatted = messages
-    .map((msg) => ({
-      id: msg.id,
-      authorId: msg.author.id,
-      authorName: msg.author.displayName || msg.author.username,
-      isBot: msg.author.bot,
-      content: msg.content,
-      createdAt: msg.createdAt.toISOString(),
-    }))
-    .reverse();
-  logger.info("Messages fetched", { channelId, count: formatted.length });
+  const result = await withSendableChannel(
+    client,
+    channelId,
+    async (channel) => {
+      const messages = await channel.messages.fetch({
+        limit: fetchLimit,
+        ...(before != null && before.length > 0 && { before }),
+      });
+      return messages
+        .map((msg) => ({
+          id: msg.id,
+          authorId: msg.author.id,
+          authorName: msg.author.displayName || msg.author.username,
+          isBot: msg.author.bot,
+          content: msg.content,
+          createdAt: msg.createdAt.toISOString(),
+        }))
+        .reverse();
+    },
+  );
+  if (!result.ok) {
+    return { success: false, message: result.message };
+  }
+  logger.info("Messages fetched", { channelId, count: result.value.length });
   return {
     success: true,
-    message: `Fetched ${String(formatted.length)} messages`,
-    data: { messages: formatted },
+    message: `Fetched ${String(result.value.length)} messages`,
+    data: { messages: result.value },
   };
 }

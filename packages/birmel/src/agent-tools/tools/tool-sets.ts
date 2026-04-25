@@ -147,8 +147,11 @@ export function getAgentDescription(agentType: AgentType): string {
 }
 
 /**
- * Convert a tool array to a record for Mastra Agent.
- * Uses unknown type to avoid strict type checking issues with different tool schemas.
+ * Convert a tool array to a record keyed by tool id.
+ *
+ * Uses `unknown` for the value type because tool schemas differ across the
+ * tool set; callers that need the concrete shape should narrow at the call
+ * site with Zod or a type guard.
  */
 export function toolsToRecord(
   tools: { id: string }[],
