@@ -236,7 +236,7 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
   });
 
-  // Create Temporal rules
+  // Create Temporal + docs-groom rules
   new PrometheusRule(chart, "prometheus-temporal-rules", {
     metadata: {
       name: "prometheus-temporal-rules",
