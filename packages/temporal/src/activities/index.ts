@@ -6,6 +6,7 @@ import { haActivities } from "./ha.ts";
 import { zfsMaintenanceActivities } from "./zfs-maintenance.ts";
 import { bugsinkHousekeepingActivities } from "./bugsink.ts";
 import { dataDragonActivities } from "./data-dragon.ts";
+import { docsGroomActivities } from "./docs-groom.ts";
 
 export const activities = {
   ...fetcherActivities,
@@ -16,4 +17,5 @@ export const activities = {
   ...zfsMaintenanceActivities,
   ...bugsinkHousekeepingActivities,
   ...dataDragonActivities,
+  ...docsGroomActivities,
 };
