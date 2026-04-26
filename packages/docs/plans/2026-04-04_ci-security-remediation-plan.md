@@ -1,5 +1,9 @@
 # CI Security Audit: Buildkite + Dagger
 
+## Status
+
+Planned. Fork PR builds remain disabled; complete this before enabling external contributor CI.
+
 ## Context
 
 You want to allow external contributors to your monorepo without risking secret exfiltration, infrastructure compromise, or supply chain attacks. Fork PR builds are already disabled in Buildkite settings, so the critical external attacker vector is closed. This plan addresses remaining defense-in-depth issues and enables safe fork PR builds.

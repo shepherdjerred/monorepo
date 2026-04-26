@@ -1,20 +1,14 @@
 # Monorepo Structure
 
-Bun workspaces monorepo. All commands use `bun` (never npm/yarn/pnpm).
+Bun-first monorepo. All JavaScript/TypeScript commands use `bun` (never npm/yarn/pnpm).
 
-## Workspace Members
+## Package Discovery
 
-Configured in root `package.json`:
+The root `package.json` owns only repo-level scripts and dev dependencies. Package discovery is handled by local tooling:
 
-```
-packages/*
-packages/better-skill-capped/*
-packages/clauderon/web/*
-packages/clauderon/docs
-packages/discord-plays-pokemon/packages/*
-packages/homelab/src/*
-packages/scout-for-lol/packages/*
-```
+- `scripts/run-package-script.ts` walks `packages/**/package.json` recursively and runs matching scripts.
+- `scripts/ci/src/catalog.ts` is the CI source of truth for build, deploy, Helm, image, site, npm, and OpenTofu targets.
+- Nested package families live under paths such as `packages/scout-for-lol/packages/*`, `packages/discord-plays-pokemon/packages/*`, `packages/clauderon/web/*`, and `packages/homelab/src/*`.
 
 ### Not Workspace Members
 

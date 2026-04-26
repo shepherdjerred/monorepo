@@ -1,6 +1,6 @@
 # Homelab Infrastructure Health Audit — 2026-04-20
 
-Produced by running the [Homelab Audit Runbook](2026-04-04_homelab-audit-runbook.md) across 5 parallel agents. All checks were read-only; no remediation has been applied.
+Produced by running the [Homelab Audit Runbook](../../guides/2026-04-04_homelab-audit-runbook.md) across 5 parallel agents. All checks were read-only; no remediation has been applied.
 
 ## Cluster Overview
 
@@ -21,7 +21,7 @@ Produced by running the [Homelab Audit Runbook](2026-04-04_homelab-audit-runbook
 Unlike the 2026-04-05 audit, there is no single cascading failure. Three **independent** problems dominate the findings:
 
 1. **Temporal worker secret missing** — `temporal/temporal-worker-secrets` does not exist in the `temporal` namespace; the deployment has been stuck in `CreateContainerConfigError` for ~43h with 4985 retries. Almost every firing K8s alert (`KubeContainerWaiting`, `KubeDeploymentReplicasMismatch`, `KubeDeploymentRolloutStuck`, `KubePodNotReady`) is this one workload. Likely a 1Password Connect `OnePasswordItem` CR misconfiguration or credential rotation — no other 1Password-backed workloads are unhealthy, so the Connect server itself is probably fine.
-2. **Plex HDD volume at 100%** — `media/plex-movies-hdd-pvc` is fully consumed. Any new library write will fail. Needs cleanup or PV expansion (see existing plan [PV Expansion](../plans/2026-04-04_pv-expansion.md)).
+2. **Plex HDD volume at 100%** — `media/plex-movies-hdd-pvc` is fully consumed. Any new library write will fail. Needs cleanup or PV expansion (see existing plan [PV Expansion](../completed/2026-04-04_pv-expansion.md)).
 3. **R2 object storage over 1 TB cap** — `R2StorageExceedingLimit` (critical) is firing, escalated to PagerDuty (#3582). Outside the cluster but part of backup/media ingest capacity.
 
 ## Critical Issues (5)
@@ -39,7 +39,7 @@ Unlike the 2026-04-05 audit, there is no single cascading failure. Three **indep
 - **Resource:** `PersistentVolumeClaim plex-movies-hdd-pvc` in ns `media`
 - **Evidence:** `kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes == 1.00` (sustained; only PVC over the 85% threshold)
 - **Impact:** Plex library volume is full; further writes will fail. No alert currently firing for this specific PVC.
-- **Action:** Either prune media or expand the PV per [PV Expansion plan](../plans/2026-04-04_pv-expansion.md).
+- **Action:** Either prune media or expand the PV per [PV Expansion plan](../completed/2026-04-04_pv-expansion.md).
 
 ### 3. R2 Storage Exceeding 1 TB Cap
 
@@ -113,7 +113,7 @@ All incidents are triggered and assigned to the user, none acknowledged. Beyond 
 
 - Alert `ReleasedPVsAccumulating` firing (PD #3688). OpenEBS logs show `not able to get the ZFSVolume pvc-... not found` repeatedly (~22 of 30 recent error-log lines).
 - **Cross-validation caveat:** `kubectl get pv` returned empty at the moment Agent B sampled — the accumulator likely tracks a churn window rather than current instantaneous state, and the orphans may be cleaned between polls.
-- Existing plan [ZFS Orphan Cleanup](../plans/2026-03-26_zfs-orphan-cleanup.md) is already tracking this.
+- Existing plan [ZFS Orphan Cleanup](../superseded/2026-03-26_zfs-orphan-cleanup.md) is already tracking this.
 
 ### 8. `dagger` Engine PVC at 66.8%
 
@@ -156,7 +156,7 @@ All incidents are triggered and assigned to the user, none acknowledged. Beyond 
 
 ### Minor items (not called out above)
 
-- Kueue `default` ClusterQueue is saturated (expected by design — see [Kueue for Buildkite](../decisions/2026-03-18_kueue-buildkite-resource-management.md)). Worth reviewing quota sizing if queue wait times hurt CI velocity.
+- Kueue `default` ClusterQueue is saturated (expected by design — see [Kueue for Buildkite](../../decisions/2026-03-18_kueue-buildkite-resource-management.md)). Worth reviewing quota sizing if queue wait times hurt CI velocity.
 - RBAC gap: `prometheus`-SA-backed `kubernetes-event-exporter` cannot list `workloads.kueue.x-k8s.io` in the `buildkite` namespace (1 log line). Grant read on the Kueue API in `buildkite` if event-export for those workloads is desired.
 - `tailscaleingress` CRD not installed — the cluster uses the `tailscale.com/v1alpha1` ProxyGroup model (36 `ts-*-ingress-*-0` pods). Treat runbook Section 8's `tailscaleingress` check as n/a here; update the runbook to verify the `tailscale` namespace pods + `Connector`/`ProxyGroup` CRs instead.
 - `cloudflare-operator-metrics-certs` + `cloudflare-operator-serving-cert` renew in ~2 days. Auto-renewal via cert-manager; confirm revision bumps successfully.
@@ -176,13 +176,11 @@ All incidents are triggered and assigned to the user, none acknowledged. Beyond 
 
 ## Cross-Validation Notes
 
-| Check                                       | Result                                                                                                                                                                                                                                                      |
-| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ArgoCD reported health vs actual pod state  | **Matches.** Degraded apps (`temporal`, `apps`) each isolate to the exact child resource identified by pod-level probes.                                                                                                                                    |
-| Firing Prometheus alerts vs observed issues | **Matches** for deployment-stuck / replica mismatch / job failures. **Mismatch** for redlib crash loop: Agent D's alerts + PagerDuty show it active, Agent B's unhealthy-pod grep did not surface it. Verify directly before remediation (see Critical #4). |
-| Backup recency vs declared schedule         | **Matches.** 6-hourly within the hour; daily within 16h; weekly within 14h; monthly on 2026-04-01 (next due 2026-05-01 — on schedule).                                                                                                                      |
-| PagerDuty incidents vs firing alerts        | **Matches.** Every critical firing alert (R2StorageExceedingLimit) has a corresponding open PD incident. Deployment + crashloop alerts map 1:1 to their PD pages.                                                                                           |
-| Released PVs alert vs `kubectl get pv`      | **Divergence.** Alert fires + OpenEBS logs show orphans, but instantaneous `get pv` was empty. Orphans likely transient or the alert tracks a historical window. Defer to the [ZFS orphan cleanup plan](../plans/2026-03-26_zfs-orphan-cleanup.md).         |
+- **ArgoCD reported health vs actual pod state:** Matches. Degraded apps (`temporal`, `apps`) each isolate to the exact child resource identified by pod-level probes.
+- **Firing Prometheus alerts vs observed issues:** Matches for deployment-stuck / replica mismatch / job failures. Mismatch for redlib crash loop: Agent D's alerts + PagerDuty show it active, Agent B's unhealthy-pod grep did not surface it. Verify directly before remediation (see Critical #4).
+- **Backup recency vs declared schedule:** Matches. 6-hourly within the hour; daily within 16h; weekly within 14h; monthly on 2026-04-01 (next due 2026-05-01 — on schedule).
+- **PagerDuty incidents vs firing alerts:** Matches. Every critical firing alert (R2StorageExceedingLimit) has a corresponding open PD incident. Deployment + crashloop alerts map 1:1 to their PD pages.
+- **Released PVs alert vs `kubectl get pv`:** Divergence. Alert fires + OpenEBS logs show orphans, but instantaneous `get pv` was empty. Orphans likely transient or the alert tracks a historical window. Defer to the [ZFS orphan cleanup plan](../superseded/2026-03-26_zfs-orphan-cleanup.md).
 
 ## Summary
 

@@ -1,10 +1,10 @@
 # Homelab Health Audit — 2026-04-06
 
-Comprehensive audit of the `torvalds` cluster using the [audit runbook](2026-04-04_homelab-audit-runbook.md). Run with 6 parallel agents covering Talos, K8s workloads, ArgoCD/storage, monitoring/alerts/PagerDuty, hardware/network, and Bugsink.
+Comprehensive audit of the `torvalds` cluster using the [audit runbook](../../guides/2026-04-04_homelab-audit-runbook.md). Run with 6 parallel agents covering Talos, K8s workloads, ArgoCD/storage, monitoring/alerts/PagerDuty, hardware/network, and Bugsink.
 
 ## Key Finding: Last Audit Fixes Not Deployed
 
-All fixes from the [2026-04-05 audit](2026-04-05_homelab-health-audit-2.md) were committed (`be49fdd3`) and built into images (2.0.0-899), but the version bump PR (#532) was never merged. The cluster is still running 2.0.0-891. See [Is My Commit Deployed?](2026-04-06_is-commit-deployed.md) for the verification process.
+All fixes from the [2026-04-05 audit](2026-04-05_homelab-health-audit-2.md) were committed (`be49fdd3`) and built into images (2.0.0-899), but the version bump PR (#532) was never merged. The cluster is still running 2.0.0-891. See [Is My Commit Deployed?](../../guides/2026-04-06_is-commit-deployed.md) for the verification process.
 
 ## Issues Found: 8
 

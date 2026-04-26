@@ -1,5 +1,9 @@
 # Add Missing Branded Types to scout-for-lol
 
+## Status
+
+Not Started. Loading-screen-specific branded IDs exist, but this broader domain branding plan remains open.
+
 ## Context
 
 The scout-for-lol project uses Zod `.brand()` extensively for type-safe IDs (database IDs, Discord IDs, League account IDs, MatchId, ChampionId, LeaguePoints). However, several domain concepts still use plain `z.number()` where branded types would prevent ID mixups at compile time: item IDs, summoner spell IDs, rune IDs, rune tree IDs, augment IDs, and queue IDs.

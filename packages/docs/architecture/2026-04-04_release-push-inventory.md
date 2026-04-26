@@ -2,14 +2,16 @@
 
 Complete inventory of everything this monorepo publishes externally. Central source of truth: `scripts/ci/src/catalog.ts`.
 
+Last verified against `scripts/ci/src/catalog.ts` on 2026-04-25.
+
 All targets are orchestrated via **Buildkite CI** using **Dagger** as the build engine.
 
 ## Summary
 
 | Category             | Count | Destination                              | Auth         |
 | -------------------- | ----- | ---------------------------------------- | ------------ |
-| Docker / OCI images  | 11    | `ghcr.io/shepherdjerred/*`               | GH_TOKEN     |
-| Helm charts          | 27    | ChartMuseum (`chartmuseum.sjer.red`)     | HTTP Basic   |
+| Docker / OCI images  | 9     | `ghcr.io/shepherdjerred/*`               | GH_TOKEN     |
+| Helm charts          | 26    | ChartMuseum (`chartmuseum.sjer.red`)     | HTTP Basic   |
 | npm packages         | 3     | npm registry                             | NPM_TOKEN    |
 | Static sites (S3)    | 8     | SeaweedFS + Cloudflare R2                | AWS creds    |
 | GitHub releases      | 2     | GitHub API                               | GH_TOKEN     |
@@ -46,7 +48,7 @@ Code: `.dagger/src/image.ts`, `scripts/ci/src/steps/images.ts`, `scripts/ci/src/
 
 ## Helm Charts → ChartMuseum
 
-27 charts from `packages/homelab/src/cdk8s/helm/`. Version: `2.0.0-{BUILD_NUMBER}`.
+26 charts from `packages/homelab/src/cdk8s/helm/`. Version: `2.0.0-{BUILD_NUMBER}`.
 
 Code: `.dagger/src/release.ts`, `scripts/ci/src/steps/helm.ts`
 

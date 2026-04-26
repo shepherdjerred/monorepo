@@ -4,7 +4,7 @@
 
 Last updated: 2026-04-05
 
-Research and design decisions for the Sentinel autonomous agent system. This document captures the architectural reasoning, technology choices, and design patterns that informed the [implementation plan](sentinel-implementation.md).
+Research and design decisions for the Sentinel autonomous agent system. This document captures the architectural reasoning, technology choices, and design patterns that informed the [implementation plan](2026-02-22_sentinel-implementation.md).
 
 ## Context: What We Want to Build and Why
 

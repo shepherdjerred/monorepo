@@ -1,5 +1,9 @@
 # Expose Temporal gRPC over Tailscale (no port-forward)
 
+## Status
+
+Not Started. The Temporal runbook still uses port-forwarding, and no `TailscaleService` helper exists yet.
+
 **Problem:** `temporal` CLI can't reach the cluster from a dev machine. The current `TailscaleIngress` for `temporal` terminates HTTPS on :443 and doesn't pass gRPC through on :7233, so connecting to `temporal.tailnet-1a49.ts.net:7233` hits a closed port. The runbook workaround (`kubectl port-forward`) works but is annoying for daily use.
 
 **Goal:** Make `TEMPORAL_ADDRESS=temporal-server.tailnet-1a49.ts.net:7233 temporal ...` work directly from any tailnet device.

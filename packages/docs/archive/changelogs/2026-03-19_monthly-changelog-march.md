@@ -22,7 +22,7 @@ Solved a cluster stability problem where ResourceQuota caused etcd event storms 
 - Added ClusterQueue (16 CPU / 64Gi budget) for the buildkite namespace
 - Created 3 priority classes: `infrastructure-critical`, `service-standard` (default), `batch-low` (CI)
 - Removed the old ResourceQuota approach
-- See [decision record](../decisions/2026-03-18_kueue-buildkite-resource-management.md) for details
+- See [decision record](../../decisions/2026-03-18_kueue-buildkite-resource-management.md) for details
 
 ## 3. Local CI CLI
 
@@ -32,7 +32,7 @@ Built `ci-local` — a Python CLI for running deploy/release workflows locally w
 - Central target catalog (`catalog.py`) replacing hardcoded lists in pipeline_generator
 - Dry-run support, auto-generated prerelease versions
 - Pipeline generator now finds last green build via Buildkite API (validates ≥40 bazel jobs)
-- See [local CI CLI guide](2026-03-18_local-ci-cli.md) for usage
+- See [local CI CLI guide](../stale/2026-03-18_local-ci-cli.md) for usage
 
 ## 4. New Apps & Extensions
 

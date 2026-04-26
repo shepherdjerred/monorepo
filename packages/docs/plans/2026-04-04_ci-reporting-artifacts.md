@@ -1,5 +1,9 @@
 # CI Reporting & Artifact Collection
 
+## Status
+
+Planned. This is an implementation plan for structured CI reports and artifacts.
+
 Date: 2026-04-04
 
 ## Current State

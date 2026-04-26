@@ -1,5 +1,9 @@
 # Plan: Move `scripts/` to `packages/`
 
+## Status
+
+Not Started. Root `scripts/` still exists; `packages/ci/` and `packages/scripts/` do not.
+
 ## Context
 
 The monorepo convention is that all code lives under `packages/`, but `scripts/` sits at the root as a holdover. `scripts/ci/` is already a proper Bun package (`@shepherdjerred/ci`). Moving everything under `packages/` makes the repo structure consistent and aligns with the workspace model.
@@ -10,6 +14,8 @@ Two moves:
 
 1. `scripts/ci/` -> `packages/ci/` (already a Bun package, just relocate)
 2. Remaining loose scripts -> `packages/scripts/` (new package `@shepherdjerred/scripts`)
+
+This plan also owns the archived `scripts/ci` ESLint follow-up. Add CI-script linting after the path move so the new `packages/ci` location is the only target to wire into lint and CI.
 
 ## Phase 1: Move files
 
