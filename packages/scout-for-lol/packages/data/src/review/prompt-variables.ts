@@ -87,12 +87,32 @@ export const STAGE_PROMPT_VARIABLES = {
   reviewText: {
     system: [
       {
+        name: "REVIEWER_NAME",
+        description:
+          "Personality / reviewer alias that the model is writing as (e.g., 'Aaron')",
+      },
+      {
+        name: "PLAYER_NAME",
+        description:
+          "Player being reviewed by alias (e.g., 'Jerred') so the system prompt can tie them to the lore",
+      },
+      {
         name: "PERSONALITY_INSTRUCTIONS",
         description: "Personality instructions text (how the reviewer talks)",
       },
       {
         name: "STYLE_CARD",
         description: "Minified JSON style card (AI analysis of writing style)",
+      },
+      {
+        name: "FRIEND_GROUP_HISTORY",
+        description:
+          "Multi-year shared timeline of the Glitter Boys friend group",
+      },
+      {
+        name: "RELATIONSHIP_GRAPH",
+        description:
+          "Graphviz DOT graph describing how friend group members know each other",
       },
     ],
     user: [

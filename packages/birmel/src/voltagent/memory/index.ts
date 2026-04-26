@@ -2,6 +2,9 @@ import { Memory } from "@voltagent/core";
 import { LibSQLMemoryAdapter, LibSQLVectorAdapter } from "@voltagent/libsql";
 import { openai } from "@ai-sdk/openai";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
+
+const logger = loggers.memory;
 
 let memoryInstance: Memory | null = null;
 
@@ -40,11 +43,11 @@ export function createMemory(): Memory {
 
   memoryInstance = new Memory({
     storage: new LibSQLMemoryAdapter({
-      url: config.mastra.memoryDbPath,
+      url: config.agent.memoryDbPath,
     }),
     embedding: openai.embedding("text-embedding-3-small"),
     vector: new LibSQLVectorAdapter({
-      url: config.mastra.memoryDbPath,
+      url: config.agent.memoryDbPath,
     }),
     workingMemory: {
       enabled: true,
@@ -70,26 +73,16 @@ export function getMemory(): Memory {
 const SYSTEM_USER_ID = "system";
 
 /**
- * SERVER MEMORY - Permanent server-wide rules and instructions
+ * SERVER MEMORY — permanent server-wide rules and instructions.
  * Persists regardless of owner. Used for "remember to always X".
- * Uses conversationId-based storage.
  */
 export function getServerConversationId(guildId: string): string {
   return `guild:${guildId}:server`;
 }
 
-// Legacy alias
-export const getGlobalThreadId = getServerConversationId;
-export const getServerThreadId = getServerConversationId;
-
-export function getGlobalResourceId(guildId: string): string {
-  return `guild:${guildId}`;
-}
-
 /**
- * OWNER MEMORY - Owner-specific preferences and rules
- * Tied to the current elected owner. Switches when ownership changes.
- * Uses conversationId-based storage.
+ * OWNER MEMORY — owner-specific preferences and rules.
+ * Tied to the current elected owner; switches when ownership changes.
  */
 export function getOwnerConversationId(
   guildId: string,
@@ -98,65 +91,13 @@ export function getOwnerConversationId(
   return `guild:${guildId}:owner:${ownerPersona}`;
 }
 
-// Legacy alias
-export const getOwnerThreadId = getOwnerConversationId;
-
-export function getOwnerResourceId(guildId: string): string {
-  return `guild:${guildId}`;
-}
-
 /**
- * CHANNEL MEMORY - Per-channel conversation context
+ * CHANNEL MEMORY — per-channel conversation context.
  * Shared by all users in a channel. Tracks the channel's conversation.
  * VoltAgent auto-manages this via conversationId in streamText calls.
  */
 export function getChannelConversationId(channelId: string): string {
   return `channel:${channelId}`;
-}
-
-export function getChannelResourceId(guildId: string): string {
-  return `guild:${guildId}`;
-}
-
-/**
- * USER MEMORY - Per-user preferences and history
- * Persists across all channels for a specific user.
- */
-export function getUserThreadId(userId: string): string {
-  return `user:${userId}`;
-}
-
-export function getUserResourceId(userId: string): string {
-  return `user:${userId}`;
-}
-
-/**
- * Context needed for the three-tier memory system.
- */
-export type MemoryContext = {
-  guildId: string;
-  channelId: string;
-  userId: string;
-};
-
-/**
- * Get all memory IDs for a given context.
- */
-export function getMemoryIds(ctx: MemoryContext) {
-  return {
-    global: {
-      conversationId: getServerConversationId(ctx.guildId),
-      resourceId: getGlobalResourceId(ctx.guildId),
-    },
-    channel: {
-      conversationId: getChannelConversationId(ctx.channelId),
-      resourceId: getChannelResourceId(ctx.guildId),
-    },
-    user: {
-      conversationId: getUserThreadId(ctx.userId),
-      resourceId: getUserResourceId(ctx.userId),
-    },
-  };
 }
 
 // =============================================================================
@@ -165,21 +106,32 @@ export function getMemoryIds(ctx: MemoryContext) {
 
 /**
  * Get server working memory for a guild.
+ *
+ * A return of `null` means "no working memory has been written for this
+ * guild yet" — that is a normal, non-error state. If the storage layer
+ * itself fails (DB IO, schema migration mid-flight, etc.) we log a warning
+ * and still return `null`: working memory is non-essential context, so a
+ * single failed read should not blow up message handling. The warning is
+ * surfaced — never silenced — so the failure shows up in Loki.
  */
 export async function getServerWorkingMemory(
   guildId: string,
 ): Promise<string | null> {
-  try {
-    const memory = getMemory();
-    const conversationId = getServerConversationId(guildId);
+  const memory = getMemory();
+  const conversationId = getServerConversationId(guildId);
 
+  try {
     const result = await memory.getWorkingMemory({
       conversationId,
       userId: SYSTEM_USER_ID,
     });
-
     return result ?? null;
-  } catch {
+  } catch (error) {
+    logger.warn("Failed to read server working memory", {
+      guildId,
+      conversationId,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return null;
   }
 }
@@ -203,22 +155,30 @@ export async function updateServerWorkingMemory(
 
 /**
  * Get owner working memory for a guild.
+ *
+ * Same `null` semantics as {@link getServerWorkingMemory}: missing data is
+ * normal, but storage errors are logged at warn level rather than swallowed.
  */
 export async function getOwnerWorkingMemory(
   guildId: string,
   persona: string,
 ): Promise<string | null> {
-  try {
-    const memory = getMemory();
-    const conversationId = getOwnerConversationId(guildId, persona);
+  const memory = getMemory();
+  const conversationId = getOwnerConversationId(guildId, persona);
 
+  try {
     const result = await memory.getWorkingMemory({
       conversationId,
       userId: SYSTEM_USER_ID,
     });
-
     return result ?? null;
-  } catch {
+  } catch (error) {
+    logger.warn("Failed to read owner working memory", {
+      guildId,
+      persona,
+      conversationId,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return null;
   }
 }
@@ -239,13 +199,4 @@ export async function updateOwnerWorkingMemory(
     userId: SYSTEM_USER_ID,
     content,
   });
-}
-
-// Legacy exports for backwards compatibility
-export function getThreadId(channelId: string, userId: string): string {
-  return `channel:${channelId}:user:${userId}`;
-}
-
-export function getResourceId(userId: string): string {
-  return `user:${userId}`;
 }

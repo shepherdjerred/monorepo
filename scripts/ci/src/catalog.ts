@@ -362,6 +362,14 @@ export const PRISMA_PACKAGES: Set<string> = new Set([
   "scout-for-lol",
 ]);
 
+/**
+ * Packages whose runtime image needs the `gh` and `claude` CLIs preinstalled.
+ *
+ * Birmel's editor sub-agent shells out to both — without them the image
+ * runs but the editor agent's tools no-op with a runtime warning.
+ */
+export const EDITOR_CLI_PACKAGES: Set<string> = new Set(["birmel"]);
+
 /** Packages that are Astro sites. */
 export const ASTRO_PACKAGES: Set<string> = new Set([
   "sjer.red",

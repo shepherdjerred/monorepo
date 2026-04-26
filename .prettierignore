@@ -60,3 +60,6 @@ archive/herd/web/src/components/confirmationPage/ConfirmationPage.js
 # Vendored/scraped HTML data
 packages/dotfiles/dot_claude/skills/apple-hig-helper/data/
 packages/discord-plays-pokemon/packages/frontend/public/emulatorjs/
+
+# Vendored Data Dragon snapshot (League of Legends static data)
+packages/scout-for-lol/packages/data/src/data-dragon/assets/

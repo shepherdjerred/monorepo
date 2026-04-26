@@ -434,7 +434,10 @@
         "Try to thin out Yorick's minions before you engage him, Mist Walkers will die from a basic attack or a single target spell.",
         "You can attack Dark Procession to break the wall down."
       ],
-      "tags": ["Fighter", "Tank"],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 6,
@@ -471,7 +474,11 @@
           "description": "Yorick deals bonus damage on his next attack and heals himself. If the target is a champion or large monster or if the target dies, a grave will be dug.",
           "tooltip": "Yorick's next Attack deals an additional <physicalDamage>{{ bonusdamage }} physical damage</physicalDamage> and restores <healing>{{ qheal }} plus {{ missinghealthratio }}% of his missing Health</healing>, reduced by {{ healreduction }}% against non-Champions. If this Attack hits a Champion or large Monster or kills the target, it leaves a grave.<br /><br />When there are 3 or more graves nearby and this Ability has already been used, Yorick can <recast>Recast</recast> to raise <keywordMajor>Mist Walkers</keywordMajor> from all nearby graves.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Bonus Damage:", "Healing", "Cooldown"],
+            "label": [
+              "Bonus Damage:",
+              "Healing",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ missinghealthratio }}% -> {{ missinghealthratioNL }}%",
@@ -479,23 +486,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [6, 5.5, 5, 4.5, 4],
+          "cooldown": [
+            6,
+            5.5,
+            5,
+            4.5,
+            4
+          ],
           "cooldownBurn": "6/5.5/5/4.5/4",
-          "cost": [20, 20, 20, 20, 20],
+          "cost": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
           "costBurn": "20",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -513,7 +592,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [0, 0, 0, 0, 0],
+          "range": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "rangeBurn": "0",
           "image": {
             "full": "YorickQ.png",
@@ -532,30 +617,105 @@
           "description": "Yorick summons a destructible wall at target location that will block enemy movement.",
           "tooltip": "Yorick summons a wall of spirits blocking enemies' path, but not allies'. The wall has <healing>{{ wallhealthtooltip }} Health</healing> and disappears after {{ circleduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Health"],
+            "label": [
+              "Cooldown",
+              "Health"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ wallhealthtooltip }} -> {{ wallhealthtooltipNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [20, 18, 16, 14, 12],
+          "cooldown": [
+            20,
+            18,
+            16,
+            14,
+            12
+          ],
           "cooldownBurn": "20/18/16/14/12",
-          "cost": [70, 70, 70, 70, 70],
+          "cost": [
+            70,
+            70,
+            70,
+            70,
+            70
+          ],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -573,7 +733,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "YorickW.png",
@@ -608,23 +774,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11, 10, 9, 8],
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -642,7 +880,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [700, 700, 700, 700, 700],
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "YorickE.png",
@@ -675,23 +919,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [160, 130, 100],
+          "cooldown": [
+            160,
+            130,
+            100
+          ],
           "cooldownBurn": "160/130/100",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -709,7 +1001,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600],
+          "range": [
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "YorickR.png",

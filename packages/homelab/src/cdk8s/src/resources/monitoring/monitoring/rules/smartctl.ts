@@ -28,10 +28,52 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
         },
+        // NVMe (Samsung 990 PRO): rated operating max 70°C per Samsung spec.
+        // 62°C is normal under high write load — 60°C threshold was a false positive.
+        {
+          alert: "SmartNvmeTemperatureHigh",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'smartmon_temperature_celsius_value{device=~".*/nvme[0-9].*"} > 65',
+          ),
+          for: "5m",
+          labels: {
+            severity: "warning",
+            category: "hardware",
+          },
+          annotations: {
+            summary: escapePrometheusTemplate(
+              "Elevated NVMe temperature on {{ $labels.device }}",
+            ),
+            description: escapePrometheusTemplate(
+              "NVMe {{ $labels.device }} ({{ $labels.model_name }}) is {{ $value }}°C. Samsung 990 PRO rated operating max is 70°C.",
+            ),
+          },
+        },
+        {
+          alert: "SmartNvmeTemperatureCritical",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'smartmon_temperature_celsius_value{device=~".*/nvme[0-9].*"} > 70',
+          ),
+          for: "1m",
+          labels: {
+            severity: "critical",
+            category: "hardware",
+          },
+          annotations: {
+            summary: escapePrometheusTemplate(
+              "NVMe temperature at rated operating limit on {{ $labels.device }}",
+            ),
+            description: escapePrometheusTemplate(
+              "NVMe {{ $labels.device }} ({{ $labels.model_name }}) is {{ $value }}°C — at Samsung 990 PRO rated limit; Dynamic Thermal Guard will throttle the drive.",
+            ),
+          },
+        },
+        // SATA (Samsung 870 EVO): keep 60°C/70°C thresholds. SATA drives in a
+        // homelab should not reach 60°C; if they do it indicates a real problem.
         {
           alert: "SmartDeviceTemperatureHigh",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "smartmon_temperature_celsius_value > 60",
+            'smartmon_temperature_celsius_value{device!~".*/nvme[0-9].*"} > 60',
           ),
           for: "5m",
           labels: {
@@ -50,7 +92,7 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "SmartDeviceTemperatureCritical",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "smartmon_temperature_celsius_value > 70",
+            'smartmon_temperature_celsius_value{device!~".*/nvme[0-9].*"} > 70',
           ),
           for: "1m",
           labels: {

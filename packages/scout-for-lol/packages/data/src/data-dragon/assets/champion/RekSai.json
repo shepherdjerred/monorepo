@@ -277,7 +277,10 @@
         "Rek'Sai's Furious Bite gains damage as she builds Fury. Be very careful around her when her Fury is full.",
         "When Rek'Sai is near, she can see the position of you and your allies, but only if you're moving."
       ],
-      "tags": ["Fighter", "Tank"],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
       "partype": "Rage",
       "info": {
         "attack": 8,
@@ -326,23 +329,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [4, 3.5, 3, 2.5, 2],
+          "cooldown": [
+            4,
+            3.5,
+            3,
+            2.5,
+            2
+          ],
           "cooldownBurn": "4/3.5/3/2.5/2",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [12, 11, 10, 9, 8],
-            [5, 5, 5, 5, 5],
-            [3, 3, 3, 3, 3],
-            [300, 300, 300, 300, 300],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              12,
+              11,
+              10,
+              9,
+              8
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              300,
+              300,
+              300,
+              300,
+              300
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -360,7 +435,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [325, 325, 325, 325, 325],
+          "range": [
+            325,
+            325,
+            325,
+            325,
+            325
+          ],
           "rangeBurn": "325",
           "image": {
             "full": "RekSaiQ.png",
@@ -391,23 +472,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [4, 4, 4, 4, 4],
+          "cooldown": [
+            4,
+            4,
+            4,
+            4,
+            4
+          ],
           "cooldownBurn": "4",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [1500, 1500, 1500, 1500, 1500],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [1, 1, 1, 1, 1],
-            [10, 10, 10, 10, 10],
-            [250, 250, 250, 250, 250],
-            [175, 175, 175, 175, 175],
-            [3, 3, 3, 3, 3],
-            [0.3, 0.3, 0.3, 0.3, 0.3]
+            [
+              1500,
+              1500,
+              1500,
+              1500,
+              1500
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              10,
+              10,
+              10,
+              10,
+              10
+            ],
+            [
+              250,
+              250,
+              250,
+              250,
+              250
+            ],
+            [
+              175,
+              175,
+              175,
+              175,
+              175
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              0.3,
+              0.3,
+              0.3,
+              0.3,
+              0.3
+            ]
           ],
           "effectBurn": [
             null,
@@ -425,7 +578,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [1650, 1650, 1650, 1650, 1650],
+          "range": [
+            1650,
+            1650,
+            1650,
+            1650,
+            1650
+          ],
           "rangeBurn": "1650",
           "image": {
             "full": "RekSaiW.png",
@@ -458,23 +617,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [6, 6, 6, 6, 6],
+          "cooldown": [
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
           "cooldownBurn": "6",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -492,7 +723,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [250, 250, 250, 250, 250],
+          "range": [
+            250,
+            250,
+            250,
+            250,
+            250
+          ],
           "rangeBurn": "250",
           "image": {
             "full": "RekSaiE.png",
@@ -511,7 +748,11 @@
           "description": "Rek'Sai passively marks targets by damaging them. She can activate this ability to become briefly untargetable and lunge at a marked target for heavy damage based on their maximum health.",
           "tooltip": "Rek'Sai targets an enemy damaged by her in the last {{ preymarkduration }} seconds and then dives underground, becoming Untargetable. Moments later, she leaps unstoppably at her target, dealing <physicalDamage>{{ rbasedamagecalc }} plus {{ percenthealthdamage }}% max Health physical damage</physicalDamage> and resets the cooldown of <keywordMajor>Burrow / Un-burrow</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "% Health damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "% Health damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ rbasedamage }} -> {{ rbasedamageNL }}",
               "{{ percenthealthdamage }}% -> {{ percenthealthdamageNL }}%",
@@ -519,23 +760,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -553,7 +842,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [1500, 1500, 1500],
+          "range": [
+            1500,
+            1500,
+            1500
+          ],
           "rangeBurn": "1500",
           "image": {
             "full": "RekSaiR.png",

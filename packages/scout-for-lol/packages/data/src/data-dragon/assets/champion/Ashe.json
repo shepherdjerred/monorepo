@@ -660,7 +660,10 @@
         "Ashe has very few defensive options, and she's a good target to gank.",
         "Be wary of moving around the map alone if Ashe has not recently cast her Enchanted Crystal Arrow."
       ],
-      "tags": ["Marksman", "Support"],
+      "tags": [
+        "Marksman",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 7,
@@ -697,30 +700,105 @@
           "description": "Ashe builds up Focus by attacking. At maximum Focus, Ashe can cast Ranger's Focus to consume all stacks of Focus, temporarily increasing her Attack Speed and transforming her basic attack into a powerful flurry attack for the duration.",
           "tooltip": "<spellPassive>Passive: </spellPassive>Ashe's Attacks grant a stack for {{ e1 }} seconds. At {{ e2 }} stacks, she may activate this Ability.<br /><br /><spellPassive>Active:</spellPassive> Ashe gains <attackSpeed>{{ e4 }}% Attack Speed</attackSpeed> and her Attacks deal <physicalDamage>{{ empowereddamage }} damage</physicalDamage> instead for {{ e3 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Attack Speed", "Flurry Attack Damage ratio"],
+            "label": [
+              "Attack Speed",
+              "Flurry Attack Damage ratio"
+            ],
             "effect": [
               "{{ e4 }}% -> {{ e4NL }}%",
               "{{ effect6amount*100.000000 }}% -> {{ effect6amountnl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [0, 0, 0, 0, 0],
+          "cooldown": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "cooldownBurn": "0",
-          "cost": [30, 30, 30, 30, 30],
+          "cost": [
+            30,
+            30,
+            30,
+            30,
+            30
+          ],
           "costBurn": "30",
           "datavalues": {},
           "effect": [
             null,
-            [4, 4, 4, 4, 4],
-            [4, 4, 4, 4, 4],
-            [6, 6, 6, 6, 6],
-            [20, 30, 40, 50, 60],
-            [0.22, 0.235, 0.25, 0.265, 0.28],
-            [1.1, 1.175, 1.25, 1.325, 1.4],
-            [1, 1, 1, 1, 1],
-            [1, 1, 1, 1, 1],
-            [1, 1, 1, 1, 1],
-            [0, 0, 0, 0, 0]
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              6,
+              6,
+              6,
+              6,
+              6
+            ],
+            [
+              20,
+              30,
+              40,
+              50,
+              60
+            ],
+            [
+              0.22,
+              0.235,
+              0.25,
+              0.265,
+              0.28
+            ],
+            [
+              1.1,
+              1.175,
+              1.25,
+              1.325,
+              1.4
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -738,7 +816,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400, 400, 400],
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "AsheQ.png",
@@ -771,23 +855,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [18, 14.5, 11, 7.5, 4],
+          "cooldown": [
+            18,
+            14.5,
+            11,
+            7.5,
+            4
+          ],
           "cooldownBurn": "18/14.5/11/7.5/4",
-          "cost": [75, 70, 65, 60, 55],
+          "cost": [
+            75,
+            70,
+            65,
+            60,
+            55
+          ],
           "costBurn": "75/70/65/60/55",
           "datavalues": {},
           "effect": [
             null,
-            [5, 7, 9, 11, 13],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              5,
+              7,
+              9,
+              11,
+              13
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -805,7 +961,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1200, 1200, 1200, 1200, 1200],
+          "range": [
+            1200,
+            1200,
+            1200,
+            1200,
+            1200
+          ],
           "rangeBurn": "1200",
           "image": {
             "full": "Volley.png",
@@ -824,27 +986,103 @@
           "description": "Ashe sends her Hawk Spirit on a scouting mission anywhere on the map.",
           "tooltip": "Ashe sends forth a hawk to grant vision for 5 seconds anywhere on the map. It also reveals the area around it as it flies.<br /><br />This Ability has 2 charges ({{ chargecooldown }} second recharge).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Recharge Time"],
-            "effect": ["{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"]
+            "label": [
+              "Recharge Time"
+            ],
+            "effect": [
+              "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [5, 5, 5, 5, 5],
+          "cooldown": [
+            5,
+            5,
+            5,
+            5,
+            5
+          ],
           "cooldownBurn": "5",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [3, 3, 3, 3, 3],
-            [50, 90, 130, 170, 210],
-            [25000, 25000, 25000, 25000, 25000],
-            [5, 5, 5, 5, 5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              50,
+              90,
+              130,
+              170,
+              210
+            ],
+            [
+              25000,
+              25000,
+              25000,
+              25000,
+              25000
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -862,7 +1100,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "2",
-          "range": [25000, 25000, 25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "AsheSpiritOfTheHawk.png",
@@ -881,30 +1125,81 @@
           "description": "Ashe fires a missile of ice in a straight line. If the arrow collides with an enemy Champion, it deals damage and stuns the Champion, stunning for longer the farther arrow has traveled. In addition, surrounding enemy units take damage and are slowed.",
           "tooltip": "Ashe launches a crystal arrow of ice that <status>Stuns</status> the first champion hit and deals <magicDamage>{{ rmaindamage }} magic damage</magicDamage>. The <status>Stun</status> duration increases with distance travelled, up to {{ maxstunduration }} seconds. Surrounding enemies are <status>Slowed</status> by <spellName>Frost Shot</spellName>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ rbasedamage }} -> {{ rbasedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [100, 80, 60],
+          "cooldown": [
+            100,
+            80,
+            60
+          ],
           "cooldownBurn": "100/80/60",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -922,7 +1217,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "EnchantedCrystalArrow.png",

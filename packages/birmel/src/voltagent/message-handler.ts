@@ -1,16 +1,16 @@
 import { toError } from "@shepherdjerred/birmel/utils/errors.ts";
 import type { MessageContext } from "@shepherdjerred/birmel/discord/events/message-create.ts";
-import { createRoutingAgentWithPersona } from "./agents/routing-agent.ts";
+import { getRoutingAgent } from "./agents/routing-agent.ts";
 import {
+  getChannelConversationId,
   getServerWorkingMemory,
   getOwnerWorkingMemory,
-  getChannelConversationId,
 } from "./memory/index.ts";
+import { OPENAI_RESPONSES_PROVIDER_OPTIONS } from "@shepherdjerred/birmel/voltagent/openai-provider-options.ts";
 import { getGuildPersona } from "@shepherdjerred/birmel/persona/guild-persona.ts";
 import { buildPersonaPrompt } from "@shepherdjerred/birmel/persona/style-transform.ts";
-import { getRecentChannelMessages } from "@shepherdjerred/birmel/discord/utils/channel-history.ts";
-import { buildMessageContent } from "@shepherdjerred/birmel/mastra/utils/message-builder.ts";
-import { runWithRequestContext } from "@shepherdjerred/birmel/mastra/tools/request-context.ts";
+import { buildMessageContent } from "@shepherdjerred/birmel/agent-tools/utils/message-builder.ts";
+import { runWithRequestContext } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import {
   setSentryContext,
   clearSentryContext,
@@ -59,15 +59,21 @@ export async function handleMessageWithStreaming(
     // 1. Send immediate placeholder with typing cursor
     const placeholderMsg = await context.message.reply(TYPING_CURSOR.trim());
 
-    // 2. Fetch persona and memory context in parallel
+    // 2. Fetch persona and working-memory context in parallel.
+    //
+    // We deliberately do NOT fetch recent channel messages here — VoltAgent's
+    // memory layer auto-loads conversation history via the `conversationId`
+    // we pass to streamText, so manually injecting a Discord-API-fetched
+    // transcript would duplicate context, waste tokens, and risk drift.
     const persona = await getGuildPersona(context.guildId);
-    const [serverMemory, ownerMemory, recentMessages] = await Promise.all([
+    const [serverMemory, ownerMemory] = await Promise.all([
       getServerWorkingMemory(context.guildId),
       getOwnerWorkingMemory(context.guildId, persona),
-      getRecentChannelMessages(context.message, 20),
     ]);
 
-    // 3. Build memory context sections
+    // 3. Build memory context sections (working memory only — these are
+    //    durable user-defined rules/preferences, distinct from per-turn
+    //    conversation history).
     let memoryContext = "";
     if (serverMemory != null && serverMemory.length > 0) {
       memoryContext += `\n## Server Memory (permanent)\n${serverMemory}\n`;
@@ -76,13 +82,7 @@ export async function handleMessageWithStreaming(
       memoryContext += `\n## Owner Memory (${persona})\n${ownerMemory}\n`;
     }
 
-    // 4. Build conversation history
-    const conversationHistory =
-      recentMessages.length > 0
-        ? `\n## Recent Conversation\n${recentMessages.map((msg) => `${msg.authorName}${msg.isBot ? " [BOT]" : ""}: ${msg.content}`).join("\n")}\n`
-        : "";
-
-    // 5. Build prompt with context
+    // 4. Build prompt with context
     const prompt = `User ${context.username} (ID: ${context.userId}) in channel ${context.channelId} says:
 
 ${context.content}
@@ -91,14 +91,14 @@ ${context.attachments.length > 0 ? `[User attached ${String(context.attachments.
 
 Guild ID: ${context.guildId}
 Channel ID: ${context.channelId}
-${memoryContext}${conversationHistory}`;
+${memoryContext}`;
 
-    // 6. Build multimodal content if images present
+    // 5. Build multimodal content if images present
     const messageContent = await buildMessageContent(context, prompt);
 
-    // 7. Create agent with persona-embedded instructions
+    // 6. Get a routing agent for this persona (cached per persona).
     const personaPrompt = await buildPersonaPrompt(persona);
-    const agent = createRoutingAgentWithPersona(personaPrompt);
+    const agent = getRoutingAgent(personaPrompt);
 
     // 8. Stream response with progressive Discord updates
     logger.debug("Starting streaming response", { requestId, persona });
@@ -125,6 +125,10 @@ ${memoryContext}${conversationHistory}`;
         const response = await agent.streamText(inputStr, {
           userId: context.userId,
           conversationId: getChannelConversationId(context.channelId),
+          // OpenAI Responses options applied at every layer — see
+          // openai-provider-options.ts for why store:false + reasoning include
+          // is required for GPT-5 reasoning replay correctness.
+          providerOptions: OPENAI_RESPONSES_PROVIDER_OPTIONS,
         });
 
         // Process the text stream with progressive edits

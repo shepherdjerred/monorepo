@@ -7,17 +7,20 @@ export const DiscordConfigSchema = z.object({
 
 export const OpenAIConfigSchema = z.object({
   apiKey: z.string().min(1, "OPENAI_API_KEY is required"),
-  model: z.string().default("gpt-5-mini"),
-  classifierModel: z.string().default("gpt-5-nano"),
+  model: z.string().default("gpt-5.4-mini"),
+  classifierModel: z.string().default("gpt-5.4-nano"),
   maxTokens: z.number().default(4096),
 });
 
-export const MastraConfigSchema = z.object({
-  memoryDbPath: z.string().default("file:/app/data/mastra-memory.db"),
-  telemetryDbPath: z.string().default("file:/app/data/mastra-telemetry.db"),
-  studioEnabled: z.boolean().default(true),
-  studioPort: z.number().default(4111),
-  studioHost: z.string().default("0.0.0.0"),
+/**
+ * Configuration for the agent runtime (formerly the Mastra config).
+ *
+ * Currently only the memory database path. The previous schema also tracked
+ * a telemetry DB and a "Mastra Studio" admin UI; those were unused after the
+ * migration to VoltAgent and were removed in a cleanup pass.
+ */
+export const AgentConfigSchema = z.object({
+  memoryDbPath: z.string().default("file:/app/data/birmel-memory.db"),
 });
 
 export const TelemetryConfigSchema = z.object({
@@ -60,7 +63,7 @@ export const SentryConfigSchema = z.object({
 export const PersonaConfigSchema = z.object({
   enabled: z.boolean().default(true),
   defaultPersona: z.string().default("virmel"),
-  styleModel: z.string().default("gpt-4o-mini"),
+  styleModel: z.string().default("gpt-5.4-nano"),
 });
 
 export const BirthdayConfigSchema = z.object({
@@ -139,7 +142,7 @@ export const EditorConfigSchema = z.object({
 export const ConfigSchema = z.object({
   discord: DiscordConfigSchema,
   openai: OpenAIConfigSchema,
-  mastra: MastraConfigSchema,
+  agent: AgentConfigSchema,
   telemetry: TelemetryConfigSchema,
   dailyPosts: DailyPostsConfigSchema,
   externalApis: ExternalApisSchema,
@@ -158,7 +161,7 @@ export const ConfigSchema = z.object({
 export type Config = z.infer<typeof ConfigSchema>;
 export type DiscordConfig = z.infer<typeof DiscordConfigSchema>;
 export type OpenAIConfig = z.infer<typeof OpenAIConfigSchema>;
-export type MastraConfig = z.infer<typeof MastraConfigSchema>;
+export type AgentConfig = z.infer<typeof AgentConfigSchema>;
 export type TelemetryConfig = z.infer<typeof TelemetryConfigSchema>;
 export type DailyPostsConfig = z.infer<typeof DailyPostsConfigSchema>;
 export type ExternalApisConfig = z.infer<typeof ExternalApisSchema>;

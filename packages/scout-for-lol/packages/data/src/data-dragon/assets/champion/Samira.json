@@ -310,7 +310,10 @@
       "blurb": "Samira stares death in the eye with unyielding confidence, seeking thrill wherever she goes. After her Shuriman home was destroyed as a child, Samira found her true calling in Noxus, where she built a reputation as a stylish daredevil taking on...",
       "allytips": [],
       "enemytips": [],
-      "tags": ["Marksman", "Assassin"],
+      "tags": [
+        "Marksman",
+        "Assassin"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 8,
@@ -347,30 +350,105 @@
           "description": "Samira fires a shot or swings her sword, dealing damage. If cast during Wild Rush, strike all enemies in her path upon completion.",
           "tooltip": "Samira fires a shot, dealing <physicalDamage>{{ damagecalc }} physical damage</physicalDamage> to the first enemy hit.<br /><br />If this Ability is cast towards an enemy in melee range, Samira will instead slash with her sword, dealing <physicalDamage>{{ damagecalc }} physical damage</physicalDamage>. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [6, 5, 4, 3, 2],
+          "cooldown": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
           "cooldownBurn": "6/5/4/3/2",
-          "cost": [30, 30, 30, 30, 30],
+          "cost": [
+            30,
+            30,
+            30,
+            30,
+            30
+          ],
           "costBurn": "30",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -388,7 +466,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [950, 950, 950, 950, 950],
+          "range": [
+            950,
+            950,
+            950,
+            950,
+            950
+          ],
           "rangeBurn": "950",
           "image": {
             "full": "SamiraQ.png",
@@ -407,30 +491,105 @@
           "description": "Samira slashes around her, damaging enemies and destroying enemy missiles.",
           "tooltip": "Samira slashes around her for {{ slashduration }} seconds, damaging enemies twice for <physicalDamage>{{ damagecalc }} physical damage</physicalDamage> each and destroying any enemy missiles that enter the area.<br /><br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [30, 28, 26, 24, 22],
+          "cooldown": [
+            30,
+            28,
+            26,
+            24,
+            22
+          ],
           "cooldownBurn": "30/28/26/24/22",
-          "cost": [60, 60, 60, 60, 60],
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
           "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -448,7 +607,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [325, 325, 325, 325, 325],
+          "range": [
+            325,
+            325,
+            325,
+            325,
+            325
+          ],
           "rangeBurn": "325",
           "image": {
             "full": "SamiraW.png",
@@ -467,7 +632,11 @@
           "description": "Samira dashes through an enemy (including structures), slashing enemies she passes through and gaining Attack Speed. Killing an enemy champion refreshes this ability's cooldown.",
           "tooltip": "Samira dashes through an enemy (including structures), slashing enemies she passes through dealing <magicDamage>{{ dashdamage }} magic damage</magicDamage> and gaining <attackSpeed>{{ bonusattackspeed*100 }}% Attack Speed</attackSpeed> for {{ attackspeedduration }} seconds. <br /><br />If an enemy champion is killed within 3 seconds of Samira damaging them, This Ability's Cooldown is reset.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "Attack Speed"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "Attack Speed"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -475,23 +644,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [20, 18, 16, 14, 12],
+          "cooldown": [
+            20,
+            18,
+            16,
+            14,
+            12
+          ],
           "cooldownBurn": "20/18/16/14/12",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -509,7 +750,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "SamiraE.png",
@@ -528,27 +775,79 @@
           "description": "Samira unleashes a torrent of shots from her weapons, wildly shooting all enemies surrounding her.",
           "tooltip": "Samira can only use this Ability if her current <keywordMajor>Style</keywordMajor> rating is S. Using this Ability consumes all <keywordMajor>Style</keywordMajor> rating.<br /><br />Samira unleashes a torrent of shots from her weapons, wildly shooting all enemies surrounding her 10 times over 2 seconds, each shot dealing <physicalDamage>{{ damagecalc }} physical damage</physicalDamage> and applying Life Steal at {{ lifestealmod*100 }}% effectiveness. Each shot can also critically strike.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}"]
+            "label": [
+              "Damage"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}"
+            ]
           },
           "maxrank": 3,
-          "cooldown": [5, 5, 5],
+          "cooldown": [
+            5,
+            5,
+            5
+          ],
           "cooldownBurn": "5",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -566,7 +865,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600],
+          "range": [
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "SamiraR.png",

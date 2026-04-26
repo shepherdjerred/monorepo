@@ -107,7 +107,7 @@ resource "github_repository" "macos_cross_compiler" {
 
 resource "github_repository" "monorepo" {
   name                   = "monorepo"
-  description            = "Old repositories & practice projects"
+  description            = "Monorepo for all of my projects"
   visibility             = "public"
   has_issues             = true
   has_projects           = false

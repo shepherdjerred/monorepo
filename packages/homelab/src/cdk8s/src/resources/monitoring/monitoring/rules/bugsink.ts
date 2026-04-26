@@ -81,43 +81,6 @@ export function getBugsinkRuleGroups(): PrometheusRuleSpecGroups[] {
       ],
     },
     {
-      name: "bugsink-housekeeping",
-      rules: [
-        {
-          alert: "BugsinkHousekeepingFailed",
-          annotations: {
-            summary: "Bugsink housekeeping CronJob failed",
-            message: escapePrometheusTemplate(
-              "Bugsink housekeeping job has failed {{ $value }} times. Database maintenance may not be running.",
-            ),
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'kube_job_status_failed{namespace="bugsink", job_name=~"bugsink-housekeeping-.*"} > 0',
-          ),
-          for: "5m",
-          labels: {
-            severity: "warning",
-          },
-        },
-        {
-          alert: "BugsinkHousekeepingNotRunning",
-          annotations: {
-            summary: "Bugsink housekeeping has not run recently",
-            message: escapePrometheusTemplate(
-              "No successful Bugsink housekeeping job in the last 48 hours. Database may accumulate stale data.",
-            ),
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `time() - max(kube_job_status_completion_time{namespace="bugsink", job_name=~"bugsink-housekeeping-.*"}) > 172800`,
-          ),
-          for: "1h",
-          labels: {
-            severity: "warning",
-          },
-        },
-      ],
-    },
-    {
       name: "bugsink-database",
       rules: [
         {

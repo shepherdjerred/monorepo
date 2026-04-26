@@ -614,7 +614,10 @@
         "When Pyke is hidden nearby in his Ghostwater Dive, sharks will circle underneath your feet.",
         "Try not to stand near low health allies. If Pyke executes them using Death From Below, you might be next on the list."
       ],
-      "tags": ["Support", "Assassin"],
+      "tags": [
+        "Support",
+        "Assassin"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 9,
@@ -651,7 +654,11 @@
           "description": "Pyke either stabs an enemy in front of him or pulls an enemy towards him.",
           "tooltip": "<tap>Tap:</tap> Pyke stabs, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to the first enemy hit, preferring champions. They are then <status>Slowed</status> by {{ slowamount*100 }}% for {{ slowduration }} second.<br /><br /><hold>Hold: </hold>Pyke throws his harpoon, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to the first enemy hit and <status>Pulling</status> them towards him. They are then <status>Slowed</status> by {{ slowamount*100 }}% for {{ slowduration }} second.<br /><br />If Pyke successfully hits an enemy champion or the channel does not complete successfully, {{ manarefund*100 }}% of the Mana cost is refunded.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -659,23 +666,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9.5, 9, 8.5, 8],
+          "cooldown": [
+            10,
+            9.5,
+            9,
+            8.5,
+            8
+          ],
           "cooldownBurn": "10/9.5/9/8.5/8",
-          "cost": [70, 75, 80, 85, 90],
+          "cost": [
+            70,
+            75,
+            80,
+            85,
+            90
+          ],
           "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -693,7 +772,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400, 400, 400],
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "PykeQ.png",
@@ -712,27 +797,103 @@
           "description": "Pyke enters Camouflage and gains significant Move Speed that decays over time.",
           "tooltip": "Pyke gains <keywordStealth>Camouflage</keywordStealth> and <speed>{{ movespeed }}% Move Speed</speed> decaying over {{ e0 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
+            "label": [
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [14, 13, 12, 11, 10],
+          "cooldown": [
+            14,
+            13,
+            12,
+            11,
+            10
+          ],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [65, 65, 65, 65, 65],
+          "cost": [
+            65,
+            65,
+            65,
+            65,
+            65
+          ],
           "costBurn": "65",
           "datavalues": {},
           "effect": [
             null,
-            [45, 45, 45, 45, 45],
-            [0, 0, 0, 0, 0],
-            [0.3, 0.3, 0.3, 0.3, 0.3],
-            [0.03, 0.03, 0.03, 0.03, 0.03],
-            [80, 80, 80, 80, 80],
-            [0.55, 0.55, 0.55, 0.55, 0.55],
-            [8, 8, 8, 8, 8],
-            [0.01, 0.01, 0.01, 0.01, 0.01],
-            [1.15, 1.15, 1.15, 1.15, 1.15],
-            [5, 5, 5, 5, 5]
+            [
+              45,
+              45,
+              45,
+              45,
+              45
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0.3,
+              0.3,
+              0.3,
+              0.3,
+              0.3
+            ],
+            [
+              0.03,
+              0.03,
+              0.03,
+              0.03,
+              0.03
+            ],
+            [
+              80,
+              80,
+              80,
+              80,
+              80
+            ],
+            [
+              0.55,
+              0.55,
+              0.55,
+              0.55,
+              0.55
+            ],
+            [
+              8,
+              8,
+              8,
+              8,
+              8
+            ],
+            [
+              0.01,
+              0.01,
+              0.01,
+              0.01,
+              0.01
+            ],
+            [
+              1.15,
+              1.15,
+              1.15,
+              1.15,
+              1.15
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ]
           ],
           "effectBurn": [
             null,
@@ -750,7 +911,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "PykeW.png",
@@ -769,30 +936,105 @@
           "description": "Pyke dashes and leaves behind a phantom that will return to him, stunning enemy champions along its path.",
           "tooltip": "Pyke dashes, leaving a drowned phantom behind him that returns to him shortly. The phantom <status>Stuns</status> for {{ stunduration }} seconds and deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to champions.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [15, 14, 13, 12, 11],
+          "cooldown": [
+            15,
+            14,
+            13,
+            12,
+            11
+          ],
           "cooldownBurn": "15/14/13/12/11",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [100, 150, 200, 250, 300],
-            [1.25, 1.25, 1.25, 1.25, 1.25],
-            [550, 550, 550, 550, 550],
-            [1, 1, 1, 1, 1],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              100,
+              150,
+              200,
+              250,
+              300
+            ],
+            [
+              1.25,
+              1.25,
+              1.25,
+              1.25,
+              1.25
+            ],
+            [
+              550,
+              550,
+              550,
+              550,
+              550
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -810,7 +1052,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [550, 550, 550, 550, 550],
+          "range": [
+            550,
+            550,
+            550,
+            550,
+            550
+          ],
           "rangeBurn": "550",
           "image": {
             "full": "PykeE.png",
@@ -829,27 +1077,79 @@
           "description": "Pyke blinks to and executes low health enemies, allowing him to cast this spell again and granting additional gold to an ally who assists.",
           "tooltip": "Pyke strikes all enemy champions in an X, teleporting to and <danger>executing</danger> targets below <scaleAD>{{ rdamage }}</scaleAD> Health. Champions above the threshold and non-champions instead take physical damage equal to {{ reduceddamage*100 }}% of that amount (<physicalDamage>{{ reduceddamagefinal }}</physicalDamage>). <br /><br />When an enemy champion dies inside the X, Pyke can <recast>Recast</recast> this Ability for free within {{ rrecastduration }} seconds. If he executed that champion, the last assisting ally will also get kill gold. If he did not, he will still get kill gold as if he did.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
+            "label": [
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
-          "cooldown": [100, 85, 70],
+          "cooldown": [
+            100,
+            85,
+            70
+          ],
           "cooldownBurn": "100/85/70",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -867,7 +1167,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [750, 750, 750],
+          "range": [
+            750,
+            750,
+            750
+          ],
           "rangeBurn": "750",
           "image": {
             "full": "PykeR.png",

@@ -1,4 +1,5 @@
 import { createLogger } from "#src/logger.ts";
+import { circuitBreakerStateGauge } from "#src/metrics/index.ts";
 import * as Sentry from "@sentry/bun";
 
 const logger = createLogger("circuit-breaker");
@@ -21,6 +22,13 @@ const OPEN_DURATION_MS = 60 * 1000; // 1 minute
 
 type CircuitState = "closed" | "open" | "half-open";
 
+/** Numeric encoding of CircuitState for the Prometheus gauge. */
+const STATE_VALUE: Readonly<Record<CircuitState, number>> = {
+  closed: 0,
+  open: 1,
+  "half-open": 2,
+};
+
 /**
  * A circuit breaker that tracks consecutive failures for a named service.
  *
@@ -42,6 +50,14 @@ export class CircuitBreaker {
 
   constructor(name: string) {
     this.name = name;
+    // Initialise the gauge so dashboards/alerts have a value before any
+    // success/failure has been recorded.
+    circuitBreakerStateGauge.set({ name }, STATE_VALUE.closed);
+  }
+
+  private setState(next: CircuitState): void {
+    this.state = next;
+    circuitBreakerStateGauge.set({ name: this.name }, STATE_VALUE[next]);
   }
 
   /**
@@ -54,7 +70,7 @@ export class CircuitBreaker {
       );
     }
     this.consecutiveFailures = 0;
-    this.state = "closed";
+    this.setState("closed");
     this.openedAt = undefined;
   }
 
@@ -68,8 +84,8 @@ export class CircuitBreaker {
     this.consecutiveFailures++;
 
     if (this.consecutiveFailures >= OPEN_THRESHOLD && this.state === "closed") {
-      this.state = "open";
       this.openedAt = Date.now();
+      this.setState("open");
       logger.warn(
         `[${this.name}] Circuit opened after ${this.consecutiveFailures.toString()} consecutive failures`,
       );
@@ -107,7 +123,7 @@ export class CircuitBreaker {
     if (this.state === "open" && this.openedAt !== undefined) {
       const elapsed = Date.now() - this.openedAt;
       if (elapsed >= OPEN_DURATION_MS) {
-        this.state = "half-open";
+        this.setState("half-open");
         logger.info(
           `[${this.name}] Circuit half-open — allowing probe request`,
         );

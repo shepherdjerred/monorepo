@@ -258,7 +258,9 @@
         "Be careful about how close you let Viktor get to you. Viktor's control of the battlefield increases with his proximity to his opponent.",
         "Be aware of how many augments Viktor has upgraded by looking at the color of the light on his staff (purple, yellow, blue, red)."
       ],
-      "tags": ["Mage"],
+      "tags": [
+        "Mage"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -309,23 +311,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 8, 7, 6, 5],
+          "cooldown": [
+            9,
+            8,
+            7,
+            6,
+            5
+          ],
           "cooldownBurn": "9/8/7/6/5",
-          "cost": [45, 50, 55, 60, 65],
+          "cost": [
+            45,
+            50,
+            55,
+            60,
+            65
+          ],
           "costBurn": "45/50/55/60/65",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [2.5, 2.5, 2.5, 2.5, 2.5],
-            [30, 30, 30, 30, 30],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              2.5,
+              2.5,
+              2.5,
+              2.5,
+              2.5
+            ],
+            [
+              30,
+              30,
+              30,
+              30,
+              30
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -343,7 +417,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [600, 600, 600, 600, 600],
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
           "rangeBurn": "600",
           "image": {
             "full": "ViktorQ.png",
@@ -362,30 +442,105 @@
           "description": "Viktor conjures a heavy gravitational field that slows enemies caught within its radius. Enemies who stay in the field for too long become stunned.<br><br>Augment: Viktor's spells apply a slow to enemies.<br>",
           "tooltip": "Viktor deploys a gravitational imprisonment device for {{ fieldduration }} seconds, <status>Slowing</status> enemies inside it by {{ slowpotency*-1 }}%. Enemies who remain within its radius for 1.25 seconds are <status>Stunned</status> for {{ stunduration }} seconds.<br /><br /><keywordMajor>Upgraded Passive:</keywordMajor> Viktor's Abilities <status>Slow</status> by {{ augmentslow }}% for 1 second.<br /><br /><br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Movement Slow"],
+            "label": [
+              "Cooldown",
+              "Movement Slow"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ slowpotency*-1.000000 }}% -> {{ slowpotencynl*-1.000000 }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [17, 16, 15, 14, 13],
+          "cooldown": [
+            17,
+            16,
+            15,
+            14,
+            13
+          ],
           "cooldownBurn": "17/16/15/14/13",
-          "cost": [65, 65, 65, 65, 65],
+          "cost": [
+            65,
+            65,
+            65,
+            65,
+            65
+          ],
           "costBurn": "65",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -403,7 +558,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [800, 800, 800, 800, 800],
+          "range": [
+            800,
+            800,
+            800,
+            800,
+            800
+          ],
           "rangeBurn": "800",
           "image": {
             "full": "ViktorW.png",
@@ -436,23 +597,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11, 10, 9, 8],
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [60, 70, 80, 90, 100],
+          "cost": [
+            60,
+            70,
+            80,
+            90,
+            100
+          ],
           "costBurn": "60/70/80/90/100",
           "datavalues": {},
           "effect": [
             null,
-            [70, 110, 150, 190, 230],
-            [20, 60, 100, 140, 180],
-            [1, 1, 1, 1, 1],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              70,
+              110,
+              150,
+              190,
+              230
+            ],
+            [
+              20,
+              60,
+              100,
+              140,
+              180
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -470,7 +703,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [525, 525, 525, 525, 525],
+          "range": [
+            525,
+            525,
+            525,
+            525,
+            525
+          ],
           "rangeBurn": "525",
           "image": {
             "full": "ViktorE.png",
@@ -501,23 +740,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -535,7 +822,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [700, 700, 700],
+          "range": [
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "ViktorR.png",

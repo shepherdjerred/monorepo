@@ -1,5 +1,9 @@
 # OpenTofu Audit & Expansion Plan
 
+## Status
+
+Partial. GitHub ruleset work has started, but module cleanup and new providers remain open.
+
 ## Context
 
 Audit of current OpenTofu usage to identify gaps, missing resources, and new providers worth adding. The homelab has 4 tofu modules (cloudflare, github, seaweedfs, argocd) but several external services are managed manually.

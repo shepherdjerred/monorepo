@@ -3,6 +3,9 @@ import { depsSummaryActivities } from "./deps-summary.ts";
 import { dnsAuditActivities } from "./dns-audit.ts";
 import { golinkSyncActivities } from "./golink-sync.ts";
 import { haActivities } from "./ha.ts";
+import { zfsMaintenanceActivities } from "./zfs-maintenance.ts";
+import { bugsinkHousekeepingActivities } from "./bugsink.ts";
+import { dataDragonActivities } from "./data-dragon.ts";
 
 export const activities = {
   ...fetcherActivities,
@@ -10,4 +13,7 @@ export const activities = {
   ...dnsAuditActivities,
   ...golinkSyncActivities,
   ...haActivities,
+  ...zfsMaintenanceActivities,
+  ...bugsinkHousekeepingActivities,
+  ...dataDragonActivities,
 };

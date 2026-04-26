@@ -102,3 +102,25 @@ export const ChampionDetailSkinsSchema = z.object({
 });
 
 export type ChampionDetailSkins = z.infer<typeof ChampionDetailSkinsSchema>;
+
+/**
+ * Subset of CommunityDragon's per-champion JSON we consume for fallback
+ * loading-screen art when Riot's Data Dragon CDN doesn't host a skin's JPG
+ * (newer "tier" skins like Praetorian/Star Nemesis return 403 from Data
+ * Dragon but are mirrored on CommunityDragon).
+ *
+ * Source: https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champions/{championId}.json
+ */
+export const CDragonChampionSchema = z.object({
+  id: z.number(),
+  alias: z.string(),
+  skins: z.array(
+    z.object({
+      id: z.number(),
+      /** loadScreenPath is null for very old/unused entries; we skip those */
+      loadScreenPath: z.string().nullable(),
+    }),
+  ),
+});
+
+export type CDragonChampion = z.infer<typeof CDragonChampionSchema>;

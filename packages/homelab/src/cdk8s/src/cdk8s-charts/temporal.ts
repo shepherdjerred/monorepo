@@ -258,7 +258,22 @@ export function createTemporalChart(app: App) {
       podSelector: {
         matchLabels: { app: "temporal-worker" },
       },
-      policyTypes: ["Egress"],
+      policyTypes: ["Ingress", "Egress"],
+      ingress: [
+        {
+          // Allow Prometheus scraping worker SDK metrics
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "prometheus",
+                },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(9464), protocol: "TCP" }],
+        },
+      ],
       egress: [
         // DNS
         {

@@ -49,6 +49,65 @@ export function createZfsDashboard() {
     .editable()
     .withVariable(instanceVariable);
 
+  // Row 0: Scrub Status
+  builder.withRow(new dashboard.RowBuilder("Scrub Status"));
+
+  // Last Scrub (days ago) per pool
+  builder.withPanel(
+    new stat.PanelBuilder()
+      .title("Last Scrub (days ago)")
+      .description(
+        "Days since last completed scrub per pool. Red > 14d, yellow > 7d.",
+      )
+      .datasource(prometheusDatasource)
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr(
+            "(time() - zfs_zpool_last_scrub_completion_timestamp{zfs_zpool_last_scrub_completion_timestamp > 0}) / 86400",
+          )
+          .legendFormat("{{zpool_name}}"),
+      )
+      .unit("d")
+      .decimals(1)
+      .colorMode(common.BigValueColorMode.Value)
+      .graphMode(common.BigValueGraphMode.None)
+      .thresholds(
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 7, color: "yellow" },
+            { value: 14, color: "red" },
+          ]),
+      )
+      .gridPos({ x: 0, y: 1, w: 12, h: 4 }),
+  );
+
+  // Scrub State per pool
+  builder.withPanel(
+    new stat.PanelBuilder()
+      .title("Scrub State")
+      .description("0 = idle, 1 = scrubbing, 2 = resilvering")
+      .datasource(prometheusDatasource)
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr("zfs_zpool_scan_state")
+          .legendFormat("{{zpool_name}}"),
+      )
+      .colorMode(common.BigValueColorMode.Value)
+      .graphMode(common.BigValueGraphMode.None)
+      .thresholds(
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 1, color: "blue" },
+            { value: 2, color: "orange" },
+          ]),
+      )
+      .gridPos({ x: 12, y: 1, w: 12, h: 4 }),
+  );
+
   // Row 1: ARC Overview
   builder.withRow(new dashboard.RowBuilder("ARC Overview"));
 

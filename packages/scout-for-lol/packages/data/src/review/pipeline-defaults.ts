@@ -111,12 +111,12 @@ export const IMAGE_GENERATION_USER_PROMPT =
 /**
  * Default model config for timeline summary (Stage 1a - legacy full timeline)
  *
- * Uses gpt-5-mini (200k context) which handles large timeline data well.
+ * Uses gpt-5.4-mini (200k context) which handles large timeline data well.
  * The full raw timeline from Riot API can be 100k+ tokens (one frame per minute with
  * 10 participants' detailed stats + hundreds of events).
  */
 export const DEFAULT_TIMELINE_SUMMARY_MODEL: ModelConfig = {
-  model: "gpt-5-mini",
+  model: "gpt-5.4-mini",
   maxTokens: 6000,
   temperature: 0.3,
 };
@@ -124,13 +124,13 @@ export const DEFAULT_TIMELINE_SUMMARY_MODEL: ModelConfig = {
 /**
  * Default model config for timeline chunk summary (Stage 1a - chunked)
  *
- * Uses gpt-5-mini for each 10-minute chunk. The raw timeline data can be
+ * Uses gpt-5.4-mini for each 10-minute chunk. The raw timeline data can be
  * very large for action-packed games (50+ stats per player per frame,
  * detailed event data), so we set a higher maxTokens to ensure output
  * generation doesn't fail due to context limits.
  */
 export const DEFAULT_TIMELINE_CHUNK_MODEL: ModelConfig = {
-  model: "gpt-5-mini",
+  model: "gpt-5.4-mini",
   maxTokens: 32_000,
   temperature: 0.3,
 };
@@ -138,11 +138,11 @@ export const DEFAULT_TIMELINE_CHUNK_MODEL: ModelConfig = {
 /**
  * Default model config for timeline aggregation (Stage 1a - aggregation)
  *
- * Uses gpt-5-mini to combine chunk summaries into a cohesive narrative.
+ * Uses gpt-5.4-mini to combine chunk summaries into a cohesive narrative.
  * Input is just text summaries (~500-1000 tokens per chunk).
  */
 export const DEFAULT_TIMELINE_AGGREGATE_MODEL: ModelConfig = {
-  model: "gpt-5-mini",
+  model: "gpt-5.4-mini",
   maxTokens: 4000,
   temperature: 0.3,
 };
@@ -150,12 +150,12 @@ export const DEFAULT_TIMELINE_AGGREGATE_MODEL: ModelConfig = {
 /**
  * Default model config for match summary (Stage 1b)
  *
- * Uses gpt-5-mini (200k context) which handles large match data well.
+ * Uses gpt-5.4-mini (200k context) which handles large match data well.
  * The full raw match from Riot API can be 100k+ tokens (10 players × 150+ fields each,
  * including challenges, perks, missions).
  */
 export const DEFAULT_MATCH_SUMMARY_MODEL: ModelConfig = {
-  model: "gpt-5-mini",
+  model: "gpt-5.4-mini",
   maxTokens: 6000,
   temperature: 0.4,
 };
@@ -164,7 +164,7 @@ export const DEFAULT_MATCH_SUMMARY_MODEL: ModelConfig = {
  * Default model config for review text (Stage 2)
  */
 export const DEFAULT_REVIEW_TEXT_MODEL: ModelConfig = {
-  model: "gpt-5.1",
+  model: "gpt-5.4",
   maxTokens: 3000,
 };
 
@@ -172,7 +172,7 @@ export const DEFAULT_REVIEW_TEXT_MODEL: ModelConfig = {
  * Default model config for image description (Stage 3)
  */
 export const DEFAULT_IMAGE_DESCRIPTION_MODEL: ModelConfig = {
-  model: "gpt-5.1",
+  model: "gpt-5.4",
   maxTokens: 1800,
   temperature: 0.8,
 };

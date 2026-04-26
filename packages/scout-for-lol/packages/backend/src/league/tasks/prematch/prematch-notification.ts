@@ -30,7 +30,9 @@ import {
 import {
   prematchLoadingScreenGeneratedTotal,
   prematchLoadingScreenDurationSeconds,
+  prematchLoadingScreenSkinFallbackTotal,
 } from "#src/metrics/index.ts";
+import type { SkinFallbackEvent } from "@scout-for-lol/data/index.ts";
 
 const logger = createLogger("prematch-notification");
 
@@ -121,9 +123,25 @@ export async function sendPrematchNotification(
   trackedPlayers: PlayerConfigEntry[],
 ): Promise<void> {
   const gameId = gameInfo.gameId.toString();
+  const aliases = trackedPlayers.map((p) => p.alias);
   logger.info(
     `[sendPrematchNotification] 📢 Sending notification for game ${gameId} with ${trackedPlayers.length.toString()} tracked player(s)`,
   );
+
+  const prematchPayloadSave = await savePrematchDataToS3(
+    gameInfo.gameId,
+    gameInfo,
+    aliases,
+  );
+  if (prematchPayloadSave.status === "error") {
+    logger.warn(
+      `[sendPrematchNotification] ⚠️  Failed to persist spectator payload to S3 for game ${gameId}; continuing with notification delivery`,
+    );
+  } else if (prematchPayloadSave.status === "skipped_no_bucket") {
+    logger.info(
+      `[sendPrematchNotification] ℹ️  S3 disabled; spectator payload not persisted for game ${gameId}`,
+    );
+  }
 
   const puuids: LeaguePuuid[] = trackedPlayers.map(
     (p) => p.league.leagueAccount.puuid,
@@ -174,9 +192,25 @@ export async function sendPrematchNotification(
       region,
     );
 
+    // Observability hook for the runtime defense-in-depth fallback in
+    // getChampionLoadingImageBase64: log + meter when a participant's
+    // requested skin JPG is missing on disk and we silently render with
+    // skin 0 instead. Logged at warn (not Sentry) because it's an expected
+    // condition during the small window between Riot shipping a new skin
+    // and the next `update-data-dragon` run.
+    const onSkinFallback = (event: SkinFallbackEvent): void => {
+      prematchLoadingScreenSkinFallbackTotal.inc({
+        champion: event.championName,
+        requested_skin: event.requestedSkin.toString(),
+      });
+      logger.warn(
+        `[sendPrematchNotification] 🎨 Skin fallback for ${event.championName} skin ${event.requestedSkin.toString()} (game ${gameId}) — using base skin art instead. Run update-data-dragon to refresh.`,
+      );
+    };
+
     const [image, svg] = await Promise.all([
-      loadingScreenToImage(loadingScreenData),
-      loadingScreenToSvg(loadingScreenData),
+      loadingScreenToImage(loadingScreenData, { onSkinFallback }),
+      loadingScreenToSvg(loadingScreenData, { onSkinFallback }),
     ]);
 
     const attachmentName = `loading-screen-${gameId}.png`;
@@ -198,11 +232,9 @@ export async function sendPrematchNotification(
     );
 
     // Fire-and-forget S3 saves
-    const aliases = trackedPlayers.map((p) => p.alias);
     void (async () => {
       try {
         await Promise.all([
-          savePrematchDataToS3(gameInfo.gameId, gameInfo, aliases),
           savePrematchImageToS3(
             gameInfo.gameId,
             image,

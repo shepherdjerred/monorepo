@@ -458,7 +458,10 @@
         "Max rank Wither is a very effective counter to Attack Damage characters, so try to avoid getting caught alone by it.",
         "Nasus is prone to being kited. Try not to engage him at full Health."
       ],
-      "tags": ["Fighter", "Tank"],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 7,
@@ -495,30 +498,105 @@
           "description": "Nasus strikes his foe, dealing damage and increasing the power of his future Siphoning Strikes if he slays his target.",
           "tooltip": "Nasus' next Attack deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>. Killing an enemy with this Attack permanently increases its damage by {{ basicstacks }}, increased to {{ bigstacks }} against champions, large minions and large jungle monsters.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Base Damage", "Cooldown"],
+            "label": [
+              "Base Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ bonusdamage }} -> {{ bonusdamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [7.5, 6.5, 5.5, 4.5, 3.5],
+          "cooldown": [
+            7.5,
+            6.5,
+            5.5,
+            4.5,
+            3.5
+          ],
           "cooldownBurn": "7.5/6.5/5.5/4.5/3.5",
-          "cost": [20, 20, 20, 20, 20],
+          "cost": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
           "costBurn": "20",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -536,7 +614,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [255, 255, 255, 255, 255],
+          "range": [
+            255,
+            255,
+            255,
+            255,
+            255
+          ],
           "rangeBurn": "255",
           "image": {
             "full": "NasusQ.png",
@@ -555,30 +639,105 @@
           "description": "Nasus ages an enemy champion, decelerating their Move Speed and Attack Speed over time.",
           "tooltip": "Nasus ages a champion, <status>Slowing</status> them by {{ slowbase }}%, increasing to {{ maxslowtooltiponly }}% over {{ duration }} seconds. Their <attackSpeed>Attack Speed</attackSpeed> is also reduced by {{ attackspeedslowmult*100 }}% of the <status>Slow</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Max Slow", "Cooldown"],
+            "label": [
+              "Max Slow",
+              "Cooldown"
+            ],
             "effect": [
               "{{ maxslowtooltiponly }}% -> {{ maxslowtooltiponlyNL }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [15, 14, 13, 12, 11],
+          "cooldown": [
+            15,
+            14,
+            13,
+            12,
+            11
+          ],
           "cooldownBurn": "15/14/13/12/11",
-          "cost": [80, 80, 80, 80, 80],
+          "cost": [
+            80,
+            80,
+            80,
+            80,
+            80
+          ],
           "costBurn": "80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -596,7 +755,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [700, 700, 700, 700, 700],
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "NasusW.png",
@@ -629,23 +794,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 12, 12, 12, 12],
+          "cooldown": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
           "cooldownBurn": "12",
-          "cost": [60, 70, 80, 90, 100],
+          "cost": [
+            60,
+            70,
+            80,
+            90,
+            100
+          ],
           "costBurn": "60/70/80/90/100",
           "datavalues": {},
           "effect": [
             null,
-            [10, 16, 22, 28, 34],
-            [30, 35, 40, 45, 50],
-            [5, 5, 5, 5, 5],
-            [50, 80, 110, 140, 170],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              10,
+              16,
+              22,
+              28,
+              34
+            ],
+            [
+              30,
+              35,
+              40,
+              45,
+              50
+            ],
+            [
+              5,
+              5,
+              5,
+              5,
+              5
+            ],
+            [
+              50,
+              80,
+              110,
+              140,
+              170
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -663,7 +900,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [650, 650, 650, 650, 650],
+          "range": [
+            650,
+            650,
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "NasusE.png",
@@ -696,23 +939,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -730,7 +1021,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400],
+          "range": [
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "NasusR.png",

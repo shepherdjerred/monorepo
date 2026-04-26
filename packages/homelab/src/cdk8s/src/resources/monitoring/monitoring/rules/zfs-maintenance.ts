@@ -10,13 +10,15 @@ export function getZfsMaintenanceRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsPoolHighFragmentation",
           annotations: {
-            summary: "ZFS pool fragmentation is high",
+            summary: escapePrometheusTemplate(
+              "ZFS pool {{ $labels.zpool_name }} fragmentation is high",
+            ),
             description: escapePrometheusTemplate(
-              "ZFS pool {{ $labels.pool }} on {{ $labels.instance }} has {{ $value }}% fragmentation. Consider rebalancing or replacing the pool.",
+              "ZFS pool {{ $labels.zpool_name }} has {{ $value }}% fragmentation. Consider rebalancing or replacing the pool.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "node_zfs_zpool_fragmentation > 50",
+            "zfs_zpool_fragmentation > 50",
           ),
           for: "1d",
           labels: {
@@ -26,13 +28,15 @@ export function getZfsMaintenanceRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsPoolCriticalFragmentation",
           annotations: {
-            summary: "ZFS pool fragmentation is critical",
+            summary: escapePrometheusTemplate(
+              "ZFS pool {{ $labels.zpool_name }} fragmentation is critical",
+            ),
             description: escapePrometheusTemplate(
-              "ZFS pool {{ $labels.pool }} on {{ $labels.instance }} has {{ $value }}% fragmentation. Performance is likely degraded.",
+              "ZFS pool {{ $labels.zpool_name }} has {{ $value }}% fragmentation. Performance is likely degraded.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "node_zfs_zpool_fragmentation > 70",
+            "zfs_zpool_fragmentation > 70",
           ),
           for: "1d",
           labels: {
@@ -42,13 +46,15 @@ export function getZfsMaintenanceRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsScrubOverdue",
           annotations: {
-            summary: "ZFS scrub has not run recently",
+            summary: escapePrometheusTemplate(
+              "ZFS scrub overdue on {{ $labels.zpool_name }}",
+            ),
             description: escapePrometheusTemplate(
-              "ZFS pool on {{ $labels.instance }} has not been scrubbed in over 30 days. Schedule a scrub to verify data integrity.",
+              "ZFS pool {{ $labels.zpool_name }} has not been scrubbed in over 9 days. The weekly Temporal maintenance workflow may have failed.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "time() - node_zfs_zpool_last_scrub_timestamp > 2592000",
+            "zfs_zpool_last_scrub_completion_timestamp > 0 and (time() - zfs_zpool_last_scrub_completion_timestamp) > 777600",
           ),
           for: "1h",
           labels: {

@@ -10,12 +10,57 @@ import {
   BUN_CACHE,
   CADDY_BUILDER_IMAGE,
   CADDY_IMAGE,
+  CLAUDE_CODE_VERSION,
+  GH_CLI_VERSION,
 } from "./constants";
 import versions from "./versions";
+
+function withGitHubCli(container: Container): Container {
+  return container
+    .withExec(["apt-get", "update", "-qq"])
+    .withExec([
+      "apt-get",
+      "install",
+      "-y",
+      "-qq",
+      "--no-install-recommends",
+      "ca-certificates",
+      "curl",
+      "git",
+    ])
+    .withExec(["sh", "-c", "rm -rf /var/lib/apt/lists/*"])
+    .withExec([
+      "sh",
+      "-c",
+      `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
+    ]);
+}
+
+/**
+ * Install the GitHub CLI and Claude Code CLI into a Bun-based container.
+ *
+ * The birmel Discord bot's editor sub-agent shells out to both:
+ * - `gh` — opens pull requests on the user's behalf after an editor session
+ * - `claude` — runs the actual code edits
+ *
+ * Without these binaries the editor agent logs "feature will not work" on
+ * every restart and silently fails any user request that hits its tools.
+ */
+function withEditorClis(container: Container): Container {
+  return withGitHubCli(container).withExec([
+    "bun",
+    "add",
+    "-g",
+    `@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}`,
+  ]);
+}
 
 /**
  * Build a Bun service OCI image. Constructs a minimal workspace with
  * only the target package and its workspace deps — no file modification.
+ *
+ * `installEditorClis` opts a package into having `gh` and `claude` in PATH;
+ * required for birmel and any future package whose agent shells out to them.
  */
 export function buildImageHelper(
   pkgDir: Directory,
@@ -25,6 +70,7 @@ export function buildImageHelper(
   version: string = "dev",
   gitSha: string = "unknown",
   usePrisma: boolean = false,
+  installEditorClis: boolean = false,
 ): Container {
   const excludes = ["node_modules", "dist", ".eslintcache"];
 
@@ -32,7 +78,13 @@ export function buildImageHelper(
   let container = dag
     .container()
     .from(BUN_IMAGE)
-    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
+    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE));
+
+  if (installEditorClis) {
+    container = withEditorClis(container);
+  }
+
+  container = container
     .withWorkdir("/workspace")
     .withDirectory(`/workspace/packages/${pkg}`, pkgDir, {
       exclude: excludes,
@@ -237,7 +289,7 @@ export function buildTemporalWorkerImageHelper(
     );
   }
 
-  return container
+  return withGitHubCli(container)
     .withWorkdir("/workspace/packages/temporal")
     .withExec(["bun", "install", "--frozen-lockfile"])
     .withLabel(
@@ -472,6 +524,7 @@ export async function pushImageHelper(
   version: string = "dev",
   gitSha: string = "unknown",
   usePrisma: boolean = false,
+  installEditorClis: boolean = false,
 ): Promise<string> {
   if (tags.length === 0) {
     throw new Error("pushImageHelper requires at least one tag");
@@ -484,6 +537,7 @@ export async function pushImageHelper(
     version,
     gitSha,
     usePrisma,
+    installEditorClis,
   ).withRegistryAuth("ghcr.io", registryUsername, registryPassword);
 
   const digest = await image.publish(tags[0]);

@@ -1,5 +1,9 @@
 # Harden Trivy, Semgrep, and Knip in CI
 
+## Status
+
+Active / Not Started. Knip, Trivy, and Semgrep are still soft-failing in CI.
+
 ## Context
 
 All three quality tools are `softFail: true` in Buildkite CI. Goal: fix all findings and make them hard failures. Philosophy: **fix the code, don't suppress findings**. Only `archive/` and `practice/` may be excluded (genuinely non-production).

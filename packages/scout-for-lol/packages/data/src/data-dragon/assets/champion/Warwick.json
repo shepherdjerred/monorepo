@@ -441,7 +441,10 @@
         "Warwick is empowered versus low health enemies. Manage your health to keep him at bay.",
         "Warwick's ultimate cast range scales with his Move Speed."
       ],
-      "tags": ["Fighter", "Tank"],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 9,
@@ -492,23 +495,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 7.5, 7, 6.5, 6],
+          "cooldown": [
+            8,
+            7.5,
+            7,
+            6.5,
+            6
+          ],
           "cooldownBurn": "8/7.5/7/6.5/6",
-          "cost": [80, 85, 90, 95, 100],
+          "cost": [
+            80,
+            85,
+            90,
+            95,
+            100
+          ],
           "costBurn": "80/85/90/95/100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [100, 150, 200, 250, 300],
-            [25, 37.5, 50, 62.5, 75],
-            [150, 165, 180, 195, 210],
-            [450, 450, 450, 450, 450],
-            [200, 200, 200, 200, 200],
-            [300, 300, 300, 300, 300],
-            [425, 425, 425, 425, 425],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              100,
+              150,
+              200,
+              250,
+              300
+            ],
+            [
+              25,
+              37.5,
+              50,
+              62.5,
+              75
+            ],
+            [
+              150,
+              165,
+              180,
+              195,
+              210
+            ],
+            [
+              450,
+              450,
+              450,
+              450,
+              450
+            ],
+            [
+              200,
+              200,
+              200,
+              200,
+              200
+            ],
+            [
+              300,
+              300,
+              300,
+              300,
+              300
+            ],
+            [
+              425,
+              425,
+              425,
+              425,
+              425
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -526,7 +601,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [365, 365, 365, 365, 365],
+          "range": [
+            365,
+            365,
+            365,
+            365,
+            365
+          ],
           "rangeBurn": "365",
           "image": {
             "full": "WarwickQ.png",
@@ -545,7 +626,11 @@
           "description": "Warwick senses enemies below 50% health, gaining Move Speed toward and attack speed against them. When they fall below 25% health, he frenzies and these bonuses triple.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Warwick can sense champions below 50% Health, gaining <speed>{{ passivemsbonus }}% Move Speed</speed> towards them. Spells and attacks against enemies below 50% Health grant <speed>{{ passiveasbonus }}% Attack Speed</speed>. These effects are increased by 200% against enemies below 25% Health. <br /><br /><spellActive>Active:</spellActive> Warwick can briefly sense all enemies, and gains this Ability's passive effect against the closest champion for 8 seconds, regardless of Health. If no champions are found, this Ability's cooldown is reduced by 30%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Move Speed", "Attack Speed", "Cooldown"],
+            "label": [
+              "Move Speed",
+              "Attack Speed",
+              "Cooldown"
+            ],
             "effect": [
               "{{ passivemsbonus }}% -> {{ passivemsbonusNL }}%",
               "{{ passiveasbonus }}% -> {{ passiveasbonusNL }}%",
@@ -553,23 +638,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [80, 70, 60, 50, 40],
+          "cooldown": [
+            80,
+            70,
+            60,
+            50,
+            40
+          ],
           "cooldownBurn": "80/70/60/50/40",
-          "cost": [55, 55, 55, 55, 55],
+          "cost": [
+            55,
+            55,
+            55,
+            55,
+            55
+          ],
           "costBurn": "55",
           "datavalues": {},
           "effect": [
             null,
-            [35, 42.5, 50, 57.5, 65],
-            [70, 80, 90, 100, 110],
-            [10, 15, 20, 25, 30],
-            [80, 90, 100, 110, 120],
-            [30, 30, 30, 30, 30],
-            [8, 8, 8, 8, 8],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              35,
+              42.5,
+              50,
+              57.5,
+              65
+            ],
+            [
+              70,
+              80,
+              90,
+              100,
+              110
+            ],
+            [
+              10,
+              15,
+              20,
+              25,
+              30
+            ],
+            [
+              80,
+              90,
+              100,
+              110,
+              120
+            ],
+            [
+              30,
+              30,
+              30,
+              30,
+              30
+            ],
+            [
+              8,
+              8,
+              8,
+              8,
+              8
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -587,7 +744,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "2",
-          "range": [4000, 4000, 4000, 4000, 4000],
+          "range": [
+            4000,
+            4000,
+            4000,
+            4000,
+            4000
+          ],
           "rangeBurn": "4000",
           "image": {
             "full": "WarwickW.png",
@@ -606,30 +769,105 @@
           "description": "Warwick gains damage reduction for 2.5 seconds. At the end, or if re-activated, he howls, causing nearby enemies to flee for 1 second.",
           "tooltip": "Warwick gains {{ e1 }}% damage reduction for 2.5 seconds. After it ends, Warwick howls, <status>Fearing</status> nearby enemies for {{ e3 }} second. Warwick can <recast>Recast</recast> to end the Ability early.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage Reduction", "Cooldown"],
+            "label": [
+              "Damage Reduction",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }}% -> {{ e1NL }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [15, 14, 13, 12, 11],
+          "cooldown": [
+            15,
+            14,
+            13,
+            12,
+            11
+          ],
           "cooldownBurn": "15/14/13/12/11",
-          "cost": [40, 40, 40, 40, 40],
+          "cost": [
+            40,
+            40,
+            40,
+            40,
+            40
+          ],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [35, 40, 45, 50, 55],
-            [2.75, 2.75, 2.75, 2.75, 2.75],
-            [1, 1, 1, 1, 1],
-            [1, 1, 1, 1, 1],
-            [800, 800, 800, 800, 800],
-            [400, 400, 400, 400, 400],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              35,
+              40,
+              45,
+              50,
+              55
+            ],
+            [
+              2.75,
+              2.75,
+              2.75,
+              2.75,
+              2.75
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              800,
+              800,
+              800,
+              800,
+              800
+            ],
+            [
+              400,
+              400,
+              400,
+              400,
+              400
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -647,7 +885,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [375, 375, 375, 375, 375],
+          "range": [
+            375,
+            375,
+            375,
+            375,
+            375
+          ],
           "rangeBurn": "375",
           "image": {
             "full": "WarwickE.png",
@@ -666,30 +910,81 @@
           "description": "Warwick leaps in a direction (scaling with his bonus Move Speed), suppressing the first champion he collides with for 1.5 seconds.",
           "tooltip": "Warwick leaps a huge distance that scales with his <speed>Move Speed</speed>, <status>Suppressing</status> the first champion he collides with while he channels for {{ rduration }} seconds. He attacks that champion 3 times over the duration, dealing <magicDamage>{{ damagecumulative }} magic damage</magicDamage>. Warwick <healing>heals for 100% of all damage dealt</healing> during the channel.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ rbasedamage }} -> {{ rbasedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [110, 90, 70],
+          "cooldown": [
+            110,
+            90,
+            70
+          ],
           "cooldownBurn": "110/90/70",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -707,7 +1002,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "WarwickR.png",

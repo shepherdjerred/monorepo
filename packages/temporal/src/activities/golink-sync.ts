@@ -1,4 +1,5 @@
 import * as k8s from "@kubernetes/client-node";
+import { ApplicationFailure } from "@temporalio/activity";
 import { z } from "zod/v4";
 import type { GolinkEntry } from "#shared/types.ts";
 
@@ -60,9 +61,11 @@ export const golinkSyncActivities = {
     });
 
     if (!response.ok) {
-      throw new Error(
-        `Failed to fetch existing golinks: ${String(response.status)}`,
-      );
+      const msg = `Failed to fetch existing golinks: ${String(response.status)}`;
+      if (response.status >= 400 && response.status < 500) {
+        throw ApplicationFailure.create({ message: msg, nonRetryable: true });
+      }
+      throw new Error(msg);
     }
 
     const text = await response.text();
@@ -106,9 +109,11 @@ export const golinkSyncActivities = {
     });
 
     if (!response.ok) {
-      throw new Error(
-        `Failed to create/update golink go/${short}: ${String(response.status)}`,
-      );
+      const msg = `Failed to create/update golink go/${short}: ${String(response.status)}`;
+      if (response.status >= 400 && response.status < 500) {
+        throw ApplicationFailure.create({ message: msg, nonRetryable: true });
+      }
+      throw new Error(msg);
     }
 
     console.warn(`Created/updated: go/${short} -> ${long}`);

@@ -1,5 +1,9 @@
 # Plan: bedrock-waker — UDP proxy to wake sleeping Minecraft Bedrock servers
 
+## Status
+
+Not Started. No `packages/bedrock-waker/` package or cdk8s bedrock-waker resources exist yet.
+
 ## Context
 
 mc-router handles Java Edition (TCP) hostname-based routing with auto-scale up/down of StatefulSets. When a Java player connects, mc-router wakes the sleeping server. But Bedrock players connecting via Geyser use UDP, which mc-router doesn't handle. mc-router has no REST API for external wake triggers. When the minecraft-shuxin StatefulSet is scaled to 0, Bedrock players see a timeout with no way to wake the server.

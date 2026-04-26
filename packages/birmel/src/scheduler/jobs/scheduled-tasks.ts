@@ -2,7 +2,7 @@ import type { ScheduledTask } from "@prisma/client";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { parseJsonRecord } from "@shepherdjerred/birmel/utils/errors.ts";
-import { allTools } from "@shepherdjerred/birmel/mastra/tools/index.ts";
+import { allTools } from "@shepherdjerred/birmel/agent-tools/tools/index.ts";
 import { getNextCronRun } from "@shepherdjerred/birmel/scheduler/utils/cron.ts";
 
 const logger = loggers.scheduler;

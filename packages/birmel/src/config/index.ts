@@ -43,19 +43,19 @@ function loadCoreConfig() {
     },
     openai: {
       apiKey: Bun.env["OPENAI_API_KEY"] ?? "",
-      model: Bun.env["OPENAI_MODEL"] ?? "gpt-5-mini",
-      classifierModel: Bun.env["OPENAI_CLASSIFIER_MODEL"] ?? "gpt-5-nano",
+      model: Bun.env["OPENAI_MODEL"] ?? "gpt-5.4-mini",
+      classifierModel: Bun.env["OPENAI_CLASSIFIER_MODEL"] ?? "gpt-5.4-nano",
       maxTokens: parseNumber(Bun.env["OPENAI_MAX_TOKENS"], 4096),
     },
-    mastra: {
+    agent: {
+      // Accept the legacy MASTRA_MEMORY_DB_PATH variable as a fallback so a
+      // single deploy that hasn't yet rolled the env var rename keeps using
+      // the same database file. Once the homelab chart is rolled out
+      // everywhere, the legacy fallback can be dropped.
       memoryDbPath:
-        Bun.env["MASTRA_MEMORY_DB_PATH"] ?? "file:/app/data/mastra-memory.db",
-      telemetryDbPath:
-        Bun.env["MASTRA_TELEMETRY_DB_PATH"] ??
-        "file:/app/data/mastra-telemetry.db",
-      studioEnabled: parseBoolean(Bun.env["MASTRA_STUDIO_ENABLED"], true),
-      studioPort: parseNumber(Bun.env["MASTRA_STUDIO_PORT"], 4111),
-      studioHost: Bun.env["MASTRA_STUDIO_HOST"] ?? "0.0.0.0",
+        Bun.env["MEMORY_DB_PATH"] ??
+        Bun.env["MASTRA_MEMORY_DB_PATH"] ??
+        "file:/app/data/birmel-memory.db",
     },
     telemetry: {
       enabled: parseBoolean(Bun.env["TELEMETRY_ENABLED"], true),
@@ -92,7 +92,7 @@ function loadFeatureConfig() {
     persona: {
       enabled: parseBoolean(Bun.env["PERSONA_ENABLED"], true),
       defaultPersona: Bun.env["PERSONA_DEFAULT"] ?? "virmel",
-      styleModel: Bun.env["PERSONA_STYLE_MODEL"] ?? "gpt-4o-mini",
+      styleModel: Bun.env["PERSONA_STYLE_MODEL"] ?? "gpt-5.4-nano",
     },
     shell: {
       enabled: parseBoolean(Bun.env["SHELL_ENABLED"], true),

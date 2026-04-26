@@ -198,7 +198,10 @@
         "When Taliyah casts Unraveled Earth in the lane, be on the lookout for Seismic Shove. If she throws you into her minefield, the throws and stones will break your bones.",
         "Taliyah's Threaded Volley is locked into a direction. If she's throwing rocks at you, dodge to the side!"
       ],
-      "tags": ["Mage", "Support"],
+      "tags": [
+        "Mage",
+        "Support"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 1,
@@ -251,23 +254,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [7, 6, 5, 4, 3],
+          "cooldown": [
+            7,
+            6,
+            5,
+            4,
+            3
+          ],
           "cooldownBurn": "7/6/5/4/3",
-          "cost": [55, 60, 65, 70, 75],
+          "cost": [
+            55,
+            60,
+            65,
+            70,
+            75
+          ],
           "costBurn": "55/60/65/70/75",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [30, 30, 30, 30, 30],
-            [10, 10, 10, 10, 10],
-            [400, 400, 400, 400, 400],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              30,
+              30,
+              30,
+              30,
+              30
+            ],
+            [
+              10,
+              10,
+              10,
+              10,
+              10
+            ],
+            [
+              400,
+              400,
+              400,
+              400,
+              400
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -285,7 +360,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1000, 1000, 1000, 1000, 1000],
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
           "rangeBurn": "1000",
           "image": {
             "full": "TaliyahQ.png",
@@ -304,30 +385,105 @@
           "description": "Taliyah causes an area of ground to erupt and throws enemies within it in a direction of her choosing.",
           "tooltip": "Taliyah quakes the earth, <status>Knocking</status> enemies in an area in the chosen direction.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 12.5, 11, 9.5, 8],
+          "cooldown": [
+            14,
+            12.5,
+            11,
+            9.5,
+            8
+          ],
           "cooldownBurn": "14/12.5/11/9.5/8",
-          "cost": [40, 30, 20, 10, 0],
+          "cost": [
+            40,
+            30,
+            20,
+            10,
+            0
+          ],
           "costBurn": "40/30/20/10/0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0.5, 0.5, 0.5, 0.5, 0.5],
-            [400, 400, 400, 400, 400],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              400,
+              400,
+              400,
+              400,
+              400
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -345,7 +501,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [900, 900, 900, 900, 900],
+          "range": [
+            900,
+            900,
+            900,
+            900,
+            900
+          ],
           "rangeBurn": "900",
           "image": {
             "full": "TaliyahWVC.png",
@@ -364,30 +526,105 @@
           "description": "Taliyah creates a slowing minefield. If enemies dash through it or are knocked through it, the mines explode and stun them.",
           "tooltip": "Taliyah scatters loose stones in an area, <status>Slowing</status> enemies hit by {{ slowpercent*100 }}% and dealing <magicDamage>{{ scatterdamage }} magic damage</magicDamage>. The stones detonate when enemies dash or are <status>Knocked</status> through them, <status>Stunning</status> for the remaining movement duration + {{ stunduration }} seconds and dealing <magicDamage>{{ detonationdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Detonation Damage"],
+            "label": [
+              "Damage",
+              "Detonation Damage"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ basedetonationdamage }} -> {{ basedetonationdamageNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 14, 14, 14, 14],
+          "cooldown": [
+            14,
+            14,
+            14,
+            14,
+            14
+          ],
           "cooldownBurn": "14",
-          "cost": [90, 90, 90, 90, 90],
+          "cost": [
+            90,
+            90,
+            90,
+            90,
+            90
+          ],
           "costBurn": "90",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [4, 4, 4, 4, 4],
-            [85, 85, 85, 85, 85],
-            [0, 0, 0, 0, 0],
-            [4, 4, 4, 4, 4],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              85,
+              85,
+              85,
+              85,
+              85
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -405,7 +642,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [950, 950, 950, 950, 950],
+          "range": [
+            950,
+            950,
+            950,
+            950,
+            950
+          ],
           "rangeBurn": "950",
           "image": {
             "full": "TaliyahE.png",
@@ -424,30 +667,81 @@
           "description": "Taliyah creates a very long wall and then surfs it.",
           "tooltip": "Taliyah creates a massive earthen wall for {{ e1 }} seconds. If she immediately <recast>Recasts</recast>, she will ride along the wall as it unravels. Moving or being immobilized will end the ride.<br /><br />This ability cannot be cast if Taliyah has taken damage from Champions or structures within the last {{ damagelockouttime }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Wall length", "Cooldown"],
+            "label": [
+              "Wall length",
+              "Cooldown"
+            ],
             "effect": [
               "{{ walllength }} -> {{ walllengthNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [180, 150, 120],
+          "cooldown": [
+            180,
+            150,
+            120
+          ],
           "cooldownBurn": "180/150/120",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [4, 4, 4],
-            [2500, 4500, 6500],
-            [0.1, 0.1, 0.1],
-            [2500, 2500, 2500],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              4,
+              4,
+              4
+            ],
+            [
+              2500,
+              4500,
+              6500
+            ],
+            [
+              0.1,
+              0.1,
+              0.1
+            ],
+            [
+              2500,
+              2500,
+              2500
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -465,7 +759,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [2500, 4500, 6500],
+          "range": [
+            2500,
+            4500,
+            6500
+          ],
           "rangeBurn": "2500/4500/6500",
           "image": {
             "full": "TaliyahR.png",

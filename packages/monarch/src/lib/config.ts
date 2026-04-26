@@ -40,7 +40,7 @@ export function getConfig(): Config {
       apply: { type: "boolean", default: false },
       limit: { type: "string", default: "0" },
       "batch-size": { type: "string", default: "25" },
-      model: { type: "string", default: "claude-sonnet-4-20250514" },
+      model: { type: "string", default: "claude-sonnet-4-6" },
       "skip-amazon": { type: "boolean", default: false },
       "amazon-years": { type: "string" },
       "force-scrape": { type: "boolean", default: false },
@@ -85,7 +85,7 @@ export function getConfig(): Config {
       ? amazonYearsRaw.split(",").map(Number)
       : defaultYears;
 
-  const appleMailDir = values["apple-mail-dir"] ?? autoDetectAppleMailDir();
+  const appleMailDir = resolveAppleMailDir(values["apple-mail-dir"]);
 
   return {
     monarchToken,
@@ -120,18 +120,54 @@ export function getConfig(): Config {
   };
 }
 
-function autoDetectAppleMailDir(): string | undefined {
-  const mailmateBase = path.join(
-    homedir(),
-    "com.freron.MailMate",
-    "Messages",
-    "IMAP",
-  );
-  const glob = new Glob(
-    String.raw`*/\[Gmail\].mailbox/Archive.mailbox/Messages`,
-  );
-  for (const match of glob.scanSync(mailmateBase)) {
-    return path.join(mailmateBase, match);
+export function autoDetectAppleMailDir(
+  mailmateRoots = getMailmateMessageRoots(),
+): string | undefined {
+  const archiveMessagesGlob = new Glob("**/Archive.mailbox/Messages");
+
+  for (const mailmateRoot of mailmateRoots) {
+    try {
+      for (const match of archiveMessagesGlob.scanSync({
+        cwd: mailmateRoot,
+        onlyFiles: false,
+      })) {
+        if (match.includes("/[Gmail].mailbox/Archive.mailbox/Messages")) {
+          return path.join(mailmateRoot, match);
+        }
+      }
+    } catch {
+      continue;
+    }
   }
+
   return undefined;
+}
+
+export function resolveAppleMailDir(
+  explicitMailDir: string | undefined,
+  mailmateRoots = getMailmateMessageRoots(),
+): string | undefined {
+  return explicitMailDir ?? autoDetectAppleMailDir(mailmateRoots);
+}
+
+function getMailmateMessageRoots(): string[] {
+  return [
+    path.join(
+      homedir(),
+      "Library",
+      "Application Support",
+      "MailMate",
+      "Messages.noindex",
+      "IMAP",
+    ),
+    path.join(
+      homedir(),
+      "Library",
+      "Application Support",
+      "MailMate",
+      "Messages",
+      "IMAP",
+    ),
+    path.join(homedir(), "com.freron.MailMate", "Messages", "IMAP"),
+  ];
 }

@@ -41,7 +41,7 @@ On 2026-02-24 at ~04:53 UTC, the `node_disk_written_bytes_total` alert fired for
 
 ### Root Cause
 
-No concurrency control on Dagger engine access. The existing plan doc (`packages/docs/plans/buildkite.md`) already identifies: _"One Dagger engine pod (K8s) means all `dagger call` must be serialized."_ But serialization was never implemented.
+No concurrency control on Dagger engine access. The historical Buildkite plan (`../archive/bazel/2026-02-22_buildkite.md`) already identified: _"One Dagger engine pod (K8s) means all `dagger call` must be serialized."_ But serialization was never implemented.
 
 Additionally, the ZFS storage class has `compression=off`, meaning every byte of container layer data generates 1:1 physical writes plus ZFS copy-on-write overhead.
 
@@ -77,7 +77,7 @@ concurrency: 1
 concurrency_group: "dagger-engine"
 ```
 
-This is the most impactful fix and the simplest to implement. The full pipeline rewrite in `packages/docs/plans/buildkite.md` adds this properly across all generated steps.
+This is the most impactful fix and the simplest to implement. The full historical pipeline rewrite in `../archive/bazel/2026-02-22_buildkite.md` adds this properly across all generated steps.
 
 **Impact:** Eliminates concurrent session thrash entirely (~10x reduction in peak I/O)
 
@@ -177,7 +177,7 @@ Combined, these changes would reduce the per-build disk write impact from ~202 G
 ## References
 
 - PagerDuty Incident #3042
-- `packages/docs/plans/buildkite.md` — Pipeline serialization plan (pre-existing)
+- `../archive/bazel/2026-02-22_buildkite.md` — Historical pipeline serialization plan
 - OpenZFS tuning guide: compression, sync, logbias recommendations
 - Dagger engine GC configuration: `maxUsedSpace`, `reservedSpace`, `minFreeSpace`
 - containerd ZFS snapshotter tuning: recommends `atime=off`, `compression=lz4`, `sync=disabled`

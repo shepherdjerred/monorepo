@@ -15,6 +15,10 @@ import { welcomeHome as _welcomeHome } from "./ha/welcome-home.ts";
 import { leavingHome as _leavingHome } from "./ha/leaving-home.ts";
 import { runVacuumIfNotHome as _runVacuumIfNotHome } from "./ha/run-vacuum-if-not-home.ts";
 import { adjustClimate as _adjustClimate } from "./ha/climate-control.ts";
+import { runZfsMaintenanceWorkflow as _runZfsMaintenanceWorkflow } from "./zfs-maintenance.ts";
+import { runBugsinkHousekeepingWorkflow as _runBugsinkHousekeepingWorkflow } from "./bugsink.ts";
+import { runScoutDataDragonUpdate as _runScoutDataDragonUpdate } from "./data-dragon.ts";
+import type { DataDragonUpdateResult } from "#activities/data-dragon.ts";
 
 export async function fetchSkillCappedManifest(): Promise<void> {
   return _fetchSkillCappedManifest();
@@ -62,4 +66,24 @@ export async function runVacuumIfNotHome(): Promise<void> {
 
 export async function adjustClimate(): Promise<void> {
   return _adjustClimate();
+}
+
+export async function runZfsMaintenanceWorkflow(): Promise<void> {
+  return _runZfsMaintenanceWorkflow();
+}
+
+export async function runBugsinkHousekeepingWorkflow(): Promise<void> {
+  return _runBugsinkHousekeepingWorkflow();
+}
+
+export async function runScoutDataDragonVersionCheck(): Promise<
+  DataDragonUpdateResult | undefined
+> {
+  return _runScoutDataDragonUpdate("version-check");
+}
+
+export async function runScoutDataDragonWeeklyRefresh(): Promise<
+  DataDragonUpdateResult | undefined
+> {
+  return _runScoutDataDragonUpdate("weekly-refresh");
 }

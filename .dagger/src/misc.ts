@@ -210,19 +210,31 @@ export async function smokeTestBirmelHelper(
   depNames: string[] = [],
   depDirs: Directory[] = [],
 ): Promise<string> {
-  const container = buildImageHelper(pkgDir, pkg, depNames, depDirs)
+  const container = buildImageHelper(
+    pkgDir,
+    pkg,
+    depNames,
+    depDirs,
+    /* version */ "dev",
+    /* gitSha */ "unknown",
+    /* usePrisma */ false,
+    /* installEditorClis */ true,
+  )
     .withEnvVariable("DISCORD_TOKEN", "smoke-test-dummy")
     .withEnvVariable("DISCORD_CLIENT_ID", "smoke-test-dummy")
     .withEnvVariable("ANTHROPIC_API_KEY", "smoke-test-dummy")
     .withEnvVariable("OPENAI_API_KEY", "smoke-test-dummy")
     .withEnvVariable("DATABASE_URL", "file:/tmp/smoke-test.db")
-    .withEnvVariable("MASTRA_MEMORY_DB_PATH", "file:/tmp/mastra-memory.db")
-    .withEnvVariable(
-      "MASTRA_TELEMETRY_DB_PATH",
-      "file:/tmp/mastra-telemetry.db",
-    )
+    .withEnvVariable("MEMORY_DB_PATH", "file:/tmp/birmel-memory.db")
     .withEntrypoint([])
-    .withExec(["sh", "-c", "timeout 30s bun run start 2>&1"]);
+    .withExec([
+      "sh",
+      "-c",
+      // Verify both CLIs are installed before launching the bot. If either is
+      // missing the smoke test fails immediately rather than silently
+      // shipping an image where the editor agent will warn at runtime.
+      "command -v gh >/dev/null && command -v claude >/dev/null && timeout 30s bun run start 2>&1",
+    ]);
 
   return runSmokeTest(container, [
     "TokenInvalid",

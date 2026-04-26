@@ -416,7 +416,10 @@
         "Damage he deals can be converted into a large shield, and consumed for health",
         "Realm of Death will cut you off from your teammates completely. Try to save mobility spells to escape Mordekaiser once inside"
       ],
-      "tags": ["Fighter", "Mage"],
+      "tags": [
+        "Fighter",
+        "Mage"
+      ],
       "partype": "Shield",
       "info": {
         "attack": 4,
@@ -453,7 +456,11 @@
           "description": "Mordekaiser smashes the ground with his mace dealing damage to each enemy struck. Damage is increased when hitting a single enemy.",
           "tooltip": "Mordekaiser smashes the ground with Nightfall dealing <magicDamage>{{ qdamage }} magic damage</magicDamage>, increased to <magicDamage>{{ empowereddamagetooltip }}</magicDamage> if it hits only a single enemy.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Isolation Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Isolation Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ qbasedamage }} -> {{ qbasedamageNL }}",
               "{{ isolationscalar*100.000000 }}% -> {{ isolationscalarnl*100.000000 }}%",
@@ -461,23 +468,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 7, 6, 5, 4],
+          "cooldown": [
+            8,
+            7,
+            6,
+            5,
+            4
+          ],
           "cooldownBurn": "8/7/6/5/4",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -495,7 +574,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [675, 675, 675, 675, 675],
+          "range": [
+            675,
+            675,
+            675,
+            675,
+            675
+          ],
           "rangeBurn": "675",
           "image": {
             "full": "MordekaiserQ.png",
@@ -514,30 +599,105 @@
           "description": "Mordekaiser stores damage he deals and takes to create a shield. He may consume the shield to heal.",
           "tooltip": "<passive>Passive:</passive> Mordekaiser stores {{ damageconversion*100 }}% of the damage he deals and {{ damagetakenconversion*100 }}% of the damage he takes.<br /><br /><active>Active:</active> Mordekaiser gains the stored damage as <shield>Shield</shield>. He may <recast>Recast</recast> this Ability to restore <healing>{{ healingpercent*100 }}% of the remaining Shield as Health</healing>.<br /><br />Minimum Shield: <shield>{{ minhealthtooltip }}</shield><br />Maximum Shield: <shield>{{ maxhealthtooltip }}</shield>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Healing Percent", "Cooldown"],
+            "label": [
+              "Healing Percent",
+              "Cooldown"
+            ],
             "effect": [
               "{{ healingpercent*100.000000 }}% -> {{ healingpercentnl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11, 10, 9, 8],
+          "cooldown": [
+            12,
+            11,
+            10,
+            9,
+            8
+          ],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -555,7 +715,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [25000, 25000, 25000, 25000, 25000],
+          "range": [
+            25000,
+            25000,
+            25000,
+            25000,
+            25000
+          ],
           "rangeBurn": "25000",
           "image": {
             "full": "MordekaiserW.png",
@@ -574,7 +740,11 @@
           "description": "Mordekaiser pulls all enemies in an area.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Mordekaiser gains {{ magicpen*100 }}% Magic Penetration.<br /><br /><spellActive>Active:</spellActive> Mordekaiser pulls enemies in his direction, dealing <magicDamage>{{ totaldamage }} magic damage.</magicDamage>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Percent Magic Penetration", "Damage", "Cooldown"],
+            "label": [
+              "Percent Magic Penetration",
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ magicpen*100.000000 }}% -> {{ magicpennl*100.000000 }}%",
               "{{ damage }} -> {{ damageNL }}",
@@ -582,23 +752,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [18, 16, 14, 12, 10],
+          "cooldown": [
+            18,
+            16,
+            14,
+            12,
+            10
+          ],
           "cooldownBurn": "18/16/14/12/10",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -616,7 +858,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [700, 700, 700, 700, 700],
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "MordekaiserE.png",
@@ -635,27 +883,79 @@
           "description": "Mordekaiser drags his victim to a different dimension with him and steals a portion of their stats. If he kills them, he keeps the stats until the victim respawns.",
           "tooltip": "Mordekaiser banishes a champion to the Death Realm with him for {{ spiritrealmduration }}s, stealing {{ statstealpercentscalar*100 }}% of their core stats for the duration.<br /><br />If Mordekaiser kills that enemy in the Death Realm he consumes their soul, keeping the stats he stole until the target respawns.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}"]
+            "label": [
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
-          "cooldown": [140, 120, 100],
+          "cooldown": [
+            140,
+            120,
+            100
+          ],
           "cooldownBurn": "140/120/100",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -673,7 +973,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [650, 650, 650],
+          "range": [
+            650,
+            650,
+            650
+          ],
           "rangeBurn": "650",
           "image": {
             "full": "MordekaiserR.png",

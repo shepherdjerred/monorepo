@@ -15,6 +15,7 @@ import {
   ChannelSendError,
 } from "#src/league/discord/channel.ts";
 import { saveCachedLeaderboard } from "#src/storage/s3-leaderboard.ts";
+import { buildCompetitionChartAttachment } from "#src/league/competition/chart-builder.ts";
 import {
   createSnapshot,
   getSnapshot,
@@ -302,6 +303,12 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
         // Generate embed for the leaderboard
         const embed = generateLeaderboardEmbed(competition, leaderboard);
 
+        // Generate trend chart attachment (best-effort; null if too few snapshots)
+        const chartAttachment = await buildCompetitionChartAttachment(
+          competition,
+          leaderboard,
+        );
+
         // Post to competition channel
         logNotification(
           "DAILY_LEADERBOARD",
@@ -317,6 +324,7 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
           {
             content: `📊 **Daily Leaderboard Update** - ${competition.title}`,
             embeds: [embed],
+            files: chartAttachment ? [chartAttachment] : [],
           },
           competition.channelId,
           competition.serverId,

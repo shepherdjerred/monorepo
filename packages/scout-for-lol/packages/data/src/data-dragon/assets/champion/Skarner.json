@@ -129,7 +129,10 @@
         "Impale can be dodged. Use Flash or another ability to get out of reach.",
         "Skarner's sustained damage can eventually take you down. Be careful not to ignore him."
       ],
-      "tags": ["Tank", "Fighter"],
+      "tags": [
+        "Tank",
+        "Fighter"
+      ],
       "partype": "Mana",
       "info": {
         "attack": 7,
@@ -166,7 +169,12 @@
           "description": "Skarner rips a boulder from the earth that empowers his attacks and can be thrown as a powerful projectile.",
           "tooltip": "Skarner rips a boulder from the ground, empowering his next 3 Attacks with <attackSpeed>{{ attackspeed*100 }}% Attack Speed</attackSpeed> and dealing <physicalDamage>{{ abilitydamage }} physical damage</physicalDamage> to surrounding enemies. His final Attack will deal an additional <physicalDamage>{{ maxhppercent*100 }}% max Health physical damage</physicalDamage> and <status>Slow</status> affected foes by {{ slowpercent*100 }}% for {{ slowduration }}s.<br /><br /><recast>Recast:</recast> Skarner ends this Ability and throws his boulder, dealing <physicalDamage>{{ spell.skarnerq:abilitydamage }} + {{ spell.skarnerq:maxhppercent*100 }}% max Health physical damage</physicalDamage>, and additionally <status>Slowing</status> the first enemy hit — and any other surrounding enemies — by {{ spell.skarnerq:slowpercent*100 }}% for {{ spell.skarnerq:slowduration }}s.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Attack Speed", "Monster Cap", "Cooldown"],
+            "label": [
+              "Damage",
+              "Attack Speed",
+              "Monster Cap",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ attackspeed*100.000000 }}% -> {{ attackspeednl*100.000000 }}%",
@@ -175,23 +183,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 6.75, 5.5, 4.25, 3],
+          "cooldown": [
+            8,
+            6.75,
+            5.5,
+            4.25,
+            3
+          ],
           "cooldownBurn": "8/6.75/5.5/4.25/3",
-          "cost": [30, 30, 30, 30, 30],
+          "cost": [
+            30,
+            30,
+            30,
+            30,
+            30
+          ],
           "costBurn": "30",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -209,7 +289,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [400, 400, 400, 400, 400],
+          "range": [
+            400,
+            400,
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "SkarnerQ.png",
@@ -228,7 +314,11 @@
           "description": "Skarner gains a shield and creates an earthquake whose shockwave damages and slows foes.",
           "tooltip": "Skarner gains <shield>{{ initialshield }} Shield</shield> for {{ shieldduration }}s and triggers an earthquake that deals <magicDamage>{{ damage }} magic damage</magicDamage> and <status>Slows</status> nearby enemies by {{ sloweffect*-100 }}% for {{ slowduration }}s.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -236,23 +326,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9, 8, 7, 6],
+          "cooldown": [
+            10,
+            9,
+            8,
+            7,
+            6
+          ],
           "cooldownBurn": "10/9/8/7/6",
-          "cost": [60, 65, 70, 75, 80],
+          "cost": [
+            60,
+            65,
+            70,
+            75,
+            80
+          ],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -270,7 +432,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [700, 700, 700, 700, 700],
+          "range": [
+            700,
+            700,
+            700,
+            700,
+            700
+          ],
           "rangeBurn": "700",
           "image": {
             "full": "SkarnerW.png",
@@ -289,7 +457,11 @@
           "description": "Skarner charges forward and passes through terrain. If he collides with a champion or large monster, he'll slam them into the next wall he hits to damage and stun them.",
           "tooltip": "Skarner charges forward, steering toward the chosen direction and ignoring terrain. If he runs into a champion or large monster, Skarner drags them along for the rest of his charge.<br /><br />Colliding into a wall with an enemy in tow deals <physicalDamage>{{ pindamage }} physical damage</physicalDamage> to the enemy and <status>Stuns</status> them for {{ stunduration }}s.<br /><br />Skarner can <recast>Recast</recast> this Ability to end his charge early.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": [
+              "Damage",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
             "effect": [
               "{{ pinbasedamage }} -> {{ pinbasedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -297,23 +469,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [22, 21, 20, 19, 18],
+          "cooldown": [
+            22,
+            21,
+            20,
+            19,
+            18
+          ],
           "cooldownBurn": "22/21/20/19/18",
-          "cost": [50, 55, 60, 65, 70],
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -331,7 +575,13 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1700, 1700, 1700, 1700, 1700],
+          "range": [
+            1700,
+            1700,
+            1700,
+            1700,
+            1700
+          ],
           "rangeBurn": "1700",
           "image": {
             "full": "SkarnerE.png",
@@ -350,30 +600,81 @@
           "description": "Skarner's tails lash forward to suppress enemy champions. Once suppressed, the victims will be dragged along by Skarner as he moves around.",
           "tooltip": "Skarner's tails lash forward, dealing <magicDamage>{{ damage }} magic damage</magicDamage> and <status>Suppressing</status> the first 3 champions he hits for {{ duration }}s. Those hit are dragged along by Skarner for the duration of this Ability.<br /><br />If Skarner hits at least one champion he gains <speed>{{ speedboostamount*100 }}% Move Speed</speed> for {{ speedboostduration }} seconds.<br /><br />If <spellName>Shattered Earth</spellName> is active, Skarner will cast <spellName>Upheaval</spellName> first.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 105, 90],
+          "cooldown": [
+            120,
+            105,
+            90
+          ],
           "cooldownBurn": "120/105/90",
-          "cost": [100, 100, 100],
+          "cost": [
+            100,
+            100,
+            100
+          ],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -391,7 +692,11 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [625, 625, 625],
+          "range": [
+            625,
+            625,
+            625
+          ],
           "rangeBurn": "625",
           "image": {
             "full": "SkarnerR.png",

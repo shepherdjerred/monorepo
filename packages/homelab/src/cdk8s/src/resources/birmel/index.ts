@@ -54,10 +54,7 @@ export function createBirmelDeployment(chart: Chart) {
         readOnlyRootFilesystem: false,
         ensureNonRoot: false,
       },
-      ports: [
-        { number: 4111, name: "studio" },
-        { number: 4112, name: "oauth" },
-      ],
+      ports: [{ number: 4112, name: "oauth" }],
       volumeMounts: [
         {
           path: "/app/data",
@@ -96,8 +93,8 @@ export function createBirmelDeployment(chart: Chart) {
           ),
           key: "OPENAI_API_KEY",
         }),
-        OPENAI_MODEL: EnvValue.fromValue("gpt-5-mini"),
-        OPENAI_CLASSIFIER_MODEL: EnvValue.fromValue("gpt-5-nano"),
+        OPENAI_MODEL: EnvValue.fromValue("gpt-5.4-mini"),
+        OPENAI_CLASSIFIER_MODEL: EnvValue.fromValue("gpt-5.4-nano"),
 
         // Anthropic configuration
         ANTHROPIC_API_KEY: EnvValue.fromSecretValue({
@@ -112,14 +109,12 @@ export function createBirmelDeployment(chart: Chart) {
         // Database paths
         DATABASE_URL: EnvValue.fromValue("file:/app/data/birmel.db"),
         OPS_DATABASE_URL: EnvValue.fromValue("file:/app/data/birmel-ops.db"),
-        MASTRA_MEMORY_DB_PATH: EnvValue.fromValue(
-          "file:/app/data/mastra-memory.db",
-        ),
-
-        // Mastra Studio configuration
-        MASTRA_STUDIO_ENABLED: EnvValue.fromValue("true"),
-        MASTRA_STUDIO_PORT: EnvValue.fromValue("4111"),
-        MASTRA_STUDIO_HOST: EnvValue.fromValue("0.0.0.0"),
+        // Keep the existing on-disk filename so the production database
+        // doesn't get re-created when this rolls out. The schema config now
+        // accepts `MEMORY_DB_PATH` as the canonical name; the legacy
+        // `MASTRA_MEMORY_DB_PATH` env var is still accepted as a fallback by
+        // the bot, but every code reference uses the new name.
+        MEMORY_DB_PATH: EnvValue.fromValue("file:/app/data/mastra-memory.db"),
 
         // Telemetry configuration (OpenTelemetry)
         TELEMETRY_ENABLED: EnvValue.fromValue("true"),
@@ -183,18 +178,6 @@ export function createBirmelDeployment(chart: Chart) {
   );
 
   setRevisionHistoryLimit(deployment);
-
-  // Service for Mastra Studio
-  const studioService = new Service(chart, "birmel-studio-service", {
-    selector: deployment,
-    ports: [{ port: 4111, name: "studio" }],
-  });
-
-  // TailscaleIngress for internal access to Studio
-  new TailscaleIngress(chart, "birmel-studio-ingress", {
-    service: studioService,
-    host: "birmel-studio",
-  });
 
   // Service for Editor OAuth
   const oauthService = new Service(chart, "birmel-oauth-service", {

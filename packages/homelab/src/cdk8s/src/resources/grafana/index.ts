@@ -8,6 +8,7 @@ import { exportVeleroDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana
 import { exportTasknotesDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/tasknotes-dashboard.ts";
 import { exportBuildkiteDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/buildkite-dashboard.ts";
 import { exportZfsDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/zfs-dashboard.ts";
+import { exportTemporalDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/temporal-dashboard.ts";
 
 /**
  * Dashboard configuration for creating Grafana dashboard ConfigMaps
@@ -106,6 +107,13 @@ const BUILDKITE_DASHBOARD: DashboardConfig = {
   exportFn: exportBuildkiteDashboardJson,
 };
 
+const TEMPORAL_DASHBOARD: DashboardConfig = {
+  id: "temporal-dashboard-configmap",
+  name: "temporal-dashboard",
+  jsonFilename: "temporal.json",
+  exportFn: exportTemporalDashboardJson,
+};
+
 const ALL_DASHBOARDS: DashboardConfig[] = [
   BUILDKITE_DASHBOARD,
   GITCKUP_DASHBOARD,
@@ -113,6 +121,7 @@ const ALL_DASHBOARDS: DashboardConfig[] = [
   SCOUT_DASHBOARD,
   SMARTCTL_DASHBOARD,
   TASKNOTES_DASHBOARD,
+  TEMPORAL_DASHBOARD,
   VELERO_DASHBOARD,
   ZFS_DASHBOARD,
 ];

@@ -399,7 +399,10 @@
         "Be careful about attacking Garen in brush. It often will lead to taking full damage from Judgment.",
         "Judgment deals maximum damage when only hitting a single target. If getting out of its radius isn't possible, move through allied minions to reduce damage taken."
       ],
-      "tags": ["Fighter", "Tank"],
+      "tags": [
+        "Fighter",
+        "Tank"
+      ],
       "partype": "None",
       "info": {
         "attack": 7,
@@ -436,30 +439,105 @@
           "description": "Garen gains a burst of Move Speed, breaking free of all slows affecting him. His next attack strikes a vital area of his foe, dealing bonus damage and silencing them.",
           "tooltip": "Garen removes all <status>Slowing</status> effects on him and gains <speed>{{ movementspeedamount*100 }}% Move Speed</speed> for {{ movementspeedduration }} second(s).<br /><br />His next Attack <status>Silences</status> for {{ silenceduration }} seconds and does <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Move Speed Duration"],
+            "label": [
+              "Damage",
+              "Move Speed Duration"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ movementspeedduration }} -> {{ movementspeeddurationNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [8, 8, 8, 8, 8],
+          "cooldown": [
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
           "cooldownBurn": "8",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -477,7 +555,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [300, 300, 300, 300, 300],
+          "range": [
+            300,
+            300,
+            300,
+            300,
+            300
+          ],
           "rangeBurn": "300",
           "image": {
             "full": "GarenQ.png",
@@ -496,7 +580,11 @@
           "description": "Garen passively increases his Armor and Magic Resist by killing enemies. He may also activate this ability to give him a shield and tenacity for a brief moment followed by a lesser amount of damage reduction for a longer duration.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Garen has <scaleArmor>{{ resistsfortooltip }} bonus Armor</scaleArmor> and <scaleMR>{{ resistsfortooltip }} bonus Magic Resist</scaleMR>. Killing units permanently grants <attention>{{ resistgainonkilltooltip }} resists</attention>, up to a max of <attention>{{ resistmax }}</attention>.<br /><br /><spellActive>Active:</spellActive> Garen steels his courage for {{ drduration }} seconds, reducing incoming damage by {{ drpercent*100 }}%. He also gains <shield>{{ totalshield }} Shield</shield> and <slow>{{ upfronttenacity*100 }}% Tenacity</slow> for {{ upfrontduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Shield Amount", "Damage Reduction", "Cooldown"],
+            "label": [
+              "Shield Amount",
+              "Damage Reduction",
+              "Cooldown"
+            ],
             "effect": [
               "{{ baseshield }} -> {{ baseshieldNL }}",
               "{{ drpercent*100.000000 }}% -> {{ drpercentnl*100.000000 }}%",
@@ -504,23 +592,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [22, 19.5, 17, 14.5, 12],
+          "cooldown": [
+            22,
+            19.5,
+            17,
+            14.5,
+            12
+          ],
           "cooldownBurn": "22/19.5/17/14.5/12",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -538,7 +698,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [0, 0, 0, 0, 0],
+          "range": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "rangeBurn": "0",
           "image": {
             "full": "GarenW.png",
@@ -569,23 +735,95 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 8.25, 7.5, 6.75, 6],
+          "cooldown": [
+            9,
+            8.25,
+            7.5,
+            6.75,
+            6
+          ],
           "cooldownBurn": "9/8.25/7.5/6.75/6",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -603,7 +841,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [325, 325, 325, 325, 325],
+          "range": [
+            325,
+            325,
+            325,
+            325,
+            325
+          ],
           "rangeBurn": "325",
           "image": {
             "full": "GarenE.png",
@@ -622,7 +866,11 @@
           "description": "Garen calls upon the might of Demacia to attempt to execute an enemy champion.",
           "tooltip": "Garen calls upon the might of Demacia to slay his enemy, dealing <trueDamage>{{ basedamage }} plus {{ executedamage*100 }}% missing Health true damage</trueDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage", "Percent Missing Health Damage"],
+            "label": [
+              "Cooldown",
+              "Damage",
+              "Percent Missing Health Damage"
+            ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -630,23 +878,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 100, 80],
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
           "cooldownBurn": "120/100/80",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -664,7 +960,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [400, 400, 400],
+          "range": [
+            400,
+            400,
+            400
+          ],
           "rangeBurn": "400",
           "image": {
             "full": "GarenR.png",

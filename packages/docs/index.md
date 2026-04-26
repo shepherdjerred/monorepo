@@ -4,10 +4,9 @@ AI-maintained knowledge base for the monorepo.
 
 ## Architecture
 
-- [Monorepo Structure](architecture/2026-02-22_monorepo-structure.md) - Package layout, workspaces, and conventions
-- [Sentinel](architecture/2026-02-22_sentinel.md) - Autonomous agent system architecture
+- [Monorepo Structure](architecture/2026-02-22_monorepo-structure.md) - Package discovery, repo layout, and verification commands
 - [Monarch](architecture/2026-02-23_monarch.md) - Transaction categorization pipeline with tiered classification
-- [Release/Push/Deploy Inventory](architecture/2026-04-04_release-push-inventory.md) - Complete inventory of all external publish targets (Docker, Helm, npm, S3, GitHub, Tofu, ArgoCD)
+- [Release/Push/Deploy Inventory](architecture/2026-04-04_release-push-inventory.md) - External publish targets from the CI catalog
 
 ## Patterns
 
@@ -15,60 +14,58 @@ AI-maintained knowledge base for the monorepo.
 
 ## Decisions
 
-- [Dagger CI Three-Era Audit](decisions/2026-03-29_dagger-ci-three-era-audit.md) - Comprehensive comparison of Dagger CI across pre-monorepo, pre-Bazel, and current eras
-- [Dagger Audit: Current vs Plans](decisions/2026-04-02_dagger-audit-current-vs-plans.md) - Full audit of Dagger CI: 27 findings status, lost features, implementation plan
 - [Dagger --source . vs Plain Steps](decisions/2026-04-03_dagger-source-vs-plain-steps.md) - Tradeoff: full-repo copy cost in Dagger vs isolation loss in plain Buildkite steps
-- [CI Reporting & Artifact Collection](decisions/2026-04-04_ci-reporting-artifacts.md) - Audit of what CI collects today vs what's missing; phased plan for test analytics, coverage, lint annotations
 - [CI Security Audit](decisions/2026-04-04_ci-security-audit.md) - Buildkite + Dagger security audit for external contributor safety
-- [CI Security Remediation Plan](decisions/2026-04-04_ci-security-remediation-plan.md) - Defense-in-depth remediation for fork PR builds
-- [Unified Versioning Strategy](decisions/2026-04-04_unified-versioning-strategy.md) - Restored Era 1 versioning with `2.0.0-BUILD` format; migration plan
-- [Dagger Full Audit](decisions/2026-03-29_dagger-full-audit.md) - Line-by-line audit of all Dagger code; 27 findings across 4 tiers
-- [Env Var Naming Convention](decisions/2026-03-27_env-var-naming-convention.md) - Canonical env var names, 1Password field = K8s key = env var convention, banned names linter
-- [Kueue for Buildkite Resource Management](decisions/2026-03-18_kueue-buildkite-resource-management.md) - Why ResourceQuota caused etcd meltdowns and how Kueue replaces it with Job suspension
-- [Dagger Disk Write Amplification](decisions/2026-02-23_dagger-disk-write-amplification.md) - Identified disk I/O issue from full-monorepo source copies
+- [Unified Versioning Strategy](decisions/2026-04-04_unified-versioning-strategy.md) - Restored Era 1 versioning with `2.0.0-BUILD` format
+- [Env Var Naming Convention](decisions/2026-03-27_env-var-naming-convention.md) - Canonical env var names across 1Password, K8s, CI, and shells
+- [Kueue for Buildkite Resource Management](decisions/2026-03-18_kueue-buildkite-resource-management.md) - Why Kueue replaced ResourceQuota for CI job admission
+- [Dagger Disk Write Amplification](decisions/2026-02-23_dagger-disk-write-amplification.md) - Historical Dagger engine I/O incident and mitigation notes
 - [1Password Deduplication](decisions/2026-03-08_1password-deduplication.md) - Deduplicating 1Password secret references
-- [Renovate HA Manager Disabled](decisions/2026-04-05_renovate-homeassistant-manager-disabled.md) - Disabled homeassistant-manifest manager (no HA integrations); re-enable if adding HA custom components
+- [Renovate HA Manager Disabled](decisions/2026-04-05_renovate-homeassistant-manager-disabled.md) - Disabled homeassistant-manifest manager for non-HA manifests
 
 ## Plans
 
-- [CI Complete Fix Plan](plans/2026-04-03_ci-complete-fix-plan.md) - Complete fix plan with 5-layer DAG (52 individual tasks)
-- [CI Scripts ESLint](plans/2026-04-03_ci-scripts-eslint.md) - ESLint setup for `scripts/ci/src/`
-- [CI Quality Hardening](plans/2026-04-05_ci-quality-hardening.md) - Make Trivy, Semgrep, Knip hard failures
-- [Accelerated CI for Release-Please](plans/2026-04-05_accelerated-ci-release-please.md) - Skip redundant CI for automated version-bump PRs
-- [Homelab Ops Audit](plans/2026-04-05_homelab-ops-audit.md) - Full-stack ops audit and hardening plan
-- [OpenTofu Audit & Expansion](plans/2026-04-05_opentofu-audit-expansion.md) - Gaps in existing tofu modules + new providers
-- [PV Expansion](plans/2026-04-04_pv-expansion.md) - Expand PVs near capacity
-- [Sentinel Implementation](plans/2026-02-22_sentinel-implementation.md) - Autonomous agent system build plan (on hold)
-- [Autonomous Agent System Research](plans/2026-02-22_autonomous-agent-system.md) - Architecture research: memory, permissions, queue design (on hold)
-- [Tasks for Obsidian iOS Audit](plans/2026-02-26_tasks-for-obsidian-ios-audit.md) - iOS app compliance and review (mostly complete)
-- [Bedrock Waker](plans/2026-03-01_bedrock-waker.md) - Minecraft Bedrock server wake-on-LAN
-- [Scout User Outreach](plans/2026-03-27_scout-user-outreach.md) - User engagement plan for Discord bot
-- [Renovate Dashboard Cleanup (2026-04-21)](plans/2026-04-21_renovate-dashboard-cleanup.md) - Six-wave cleanup of Renovate #481 backlog; lower/medium-risk waves in progress, high-risk framework/RN migrations deferred
-- [Dagger CI Infrastructure Fixes (2026-04-21)](plans/2026-04-21_dagger-ci-infra-fixes.md) - Punch list for ciAllHelper bugs: Rust/Go workdir, helm binary, clauderon/web workspace, scout-for-lol tsconfig extends
+- [Bedrock Waker](plans/2026-03-01_bedrock-waker.md) - UDP proxy to wake sleeping Minecraft Bedrock servers
+- [CI Reporting & Artifact Collection](plans/2026-04-04_ci-reporting-artifacts.md) - Structured CI reports, coverage, and artifacts
+- [CI Security Remediation](plans/2026-04-04_ci-security-remediation-plan.md) - Defense-in-depth work before enabling external contributor CI
+- [Accelerated CI for Release-Please](plans/2026-04-05_accelerated-ci-release-please.md) - Fast path for automated version-bump and release PRs
+- [CI Quality Hardening](plans/2026-04-05_ci-quality-hardening.md) - Make Trivy, Semgrep, and Knip hard failures
+- [OpenTofu Audit & Expansion](plans/2026-04-05_opentofu-audit-expansion.md) - Existing tofu module gaps and candidate providers
+- [Scout Branded Types](plans/2026-04-05_scout-branded-types.md) - Add missing branded domain IDs to scout-for-lol
+- [Move Scripts to Packages](plans/2026-04-07_move-scripts-to-packages.md) - Relocate root scripts into package-owned paths
+- [Dagger CI Infrastructure Fixes](plans/2026-04-21_dagger-ci-infra-fixes.md) - Punch list for ciAllHelper and Dagger infra bugs
+- [Temporal Tailscale Exposure](plans/2026-04-21_temporal-tailscale-exposure.md) - Expose Temporal gRPC over Tailscale without port-forwarding
+- [Homelab Ops Hardening Backlog](plans/2026-04-25_homelab-ops-hardening-backlog.md) - Active follow-ups from the archived homelab ops audit
+- [Renovate Blocked Majors](plans/2026-04-25_renovate-blocked-majors.md) - Dedicated-session dependency upgrades and deploy promotions
+- [Shared Glitter-Context Package](plans/2026-04-25_shared-glitter-context-package.md) - De-duplicate style cards and lore across Birmel and Scout
+- [Tasks for Obsidian iOS Target Wiring](plans/2026-04-25_tasks-for-obsidian-ios-target-wiring.md) - Finish native iOS target wiring after the completed audit
+- [PR Review and Summary Bot](plans/2026-04-25_pr-review-and-summary-bot.md) - GH webhook → Temporal → claude -p + GitHub MCP for auto code-review and PR summaries
+- [Polyrepo → Monorepo Link Audit](plans/2026-04-25_polyrepo-link-audit.md) - Rewrite all stale polyrepo URLs to monorepo + add lychee CI link-check gate
 
 ## Guides
 
-- [Helm Escaping Pipeline](guides/2026-04-04_helm-escaping-pipeline.md) - How template-bearing content survives the multi-engine rendering pipeline
-- [Local Quality Check](guides/2026-04-03_local-quality-check.md) - Full monorepo verification: all linters, tests, builds, and quality gates
-- [Is My Commit Deployed?](guides/2026-04-06_is-commit-deployed.md) - Trace a commit through CI → GHCR → ChartMuseum → ArgoCD → cluster
-- [Homelab Audit Runbook](guides/2026-04-04_homelab-audit-runbook.md) - Repeatable procedure for comprehensive cluster health audit
-- [Type-safe Home Assistant Client (2026-04-21)](guides/2026-04-21_type-safe-home-assistant-client.md) - `ha-codegen` bin + generic clients; stub/ensure flow; temporal workflow patterns; strict CI via Buildkite-secret-gated generate
-- [NVMe Wear Attribution (2026-04-21)](guides/2026-04-21_nvme-wear-attribution.md) - Byte-level accounting of NVMe writes; Buildkite+Dagger = 80% of wear, Loki/Prometheus/Postgres are negligible
-- [Homelab Health Audit (2026-04-20)](guides/2026-04-20_homelab-health-audit.md) - Cluster broadly healthy; temporal worker secret missing, Plex HDD 100%, R2 over cap, 16 open PD incidents
-- [Homelab Health Audit (2026-04-06)](guides/2026-04-06_homelab-health-audit.md) - 8 issues: Bugsink disk full, ArgoCD sync blocked by Jobs, scout spectator validation, undeployed fixes
-- [Homelab Health Audit (2026-04-05 PM)](guides/2026-04-05_homelab-health-audit-2.md) - 13 issues: OOM, Prisma entrypoint, Velero chain poison, Cloudflare secret mismatch, NVMe thermals
-- [Dependency Risk Assessment](guides/2026-04-04_dependency-risk-assessment.md) - Renovate pending updates classified by risk/effort
-- [Network Policy Gaps](guides/2026-03-15_network-policy-gaps.md) - Kubernetes network policy analysis
-- [Minecraft Modpack Recommendations](guides/2026-03-27_minecraft-modpack-recommendations.md) - Modpack research for non-combat playstyles
-- [Monthly Changelog: March 2026](guides/2026-03-19_monthly-changelog-march.md) - Summary of major changes Feb 19 – Mar 19, 2026
-- [Local CI/Release CLI](guides/2026-03-18_local-ci-cli.md) - Run deploy/release workflows locally without Buildkite
-- [Dotfiles Update](guides/2026-03-08_dotfiles-update.md) - Dotfiles configuration and update guide
 - [Monarch Accuracy Test](guides/2026-02-22_monarch-accuracy-test.md) - Monarch transaction categorization accuracy testing
-- [Sentinel Deployment](guides/2026-02-22_sentinel-deployment.md) - Manual steps to deploy sentinel to the cluster
+- [Dotfiles Update](guides/2026-03-08_dotfiles-update.md) - Dotfiles update script and known issues
+- [Local Quality Check](guides/2026-04-03_local-quality-check.md) - Full monorepo verification commands
+- [Helm Escaping Pipeline](guides/2026-04-04_helm-escaping-pipeline.md) - Template escaping across TypeScript, cdk8s, Helm, and consumers
+- [Homelab Audit Runbook](guides/2026-04-04_homelab-audit-runbook.md) - Repeatable comprehensive cluster health audit
+- [Is My Commit Deployed?](guides/2026-04-06_is-commit-deployed.md) - Trace a commit through CI, images, charts, and ArgoCD
+- [NVMe Wear Attribution](guides/2026-04-21_nvme-wear-attribution.md) - Byte-level accounting of NVMe write sources
+- [Type-safe Home Assistant Client](guides/2026-04-21_type-safe-home-assistant-client.md) - `ha-codegen`, generated schema, and Temporal usage
+- [Birmel Remediation Follow-ups](guides/2026-04-25_birmel-remediation-followups.md) - Post-deploy checks and deferred cleanup from Birmel remediation
+- [Homelab Health Audit](guides/2026-04-25_homelab-health-audit.md) - Current cluster health audit snapshot
+- [Minecraft Server Ops](guides/2026-04-25_minecraft-server-ops.md) - Operational reference for deployed modded Minecraft servers
 
 ## Archive
 
 Historical docs preserved for reference. These are no longer actively maintained.
 
-- [`archive/bazel/`](archive/bazel/) - 14 docs from the Bazel era (Bazel removed from monorepo)
-- [`archive/superseded/`](archive/superseded/) - 19 plans, audits, and snapshots superseded by newer docs
+- [`archive/bazel/`](archive/bazel/) - 12 docs from the Bazel era
+- [`archive/changelogs/`](archive/changelogs/) - 1 historical changelog
+- [`archive/completed/`](archive/completed/) - 2 completed plans and audits
+- [`archive/dagger-migration/`](archive/dagger-migration/) - 18 Dagger migration plans and audits
+- [`archive/homelab-audits/`](archive/homelab-audits/) - 6 superseded homelab health audit snapshots
+- [`archive/on-hold/`](archive/on-hold/) - 4 on-hold Sentinel architecture and implementation docs
+- [`archive/scout-followups/`](archive/scout-followups/) - 1 time-boxed Scout follow-up checklist
+- [`archive/stale/`](archive/stale/) - 7 stale operational snapshots and superseded plans
+- [`archive/superseded/`](archive/superseded/) - 5 older superseded plans

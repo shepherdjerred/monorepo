@@ -11,6 +11,7 @@ Audited the Buildkite + Dagger CI pipeline for security vulnerabilities, specifi
 
 - **Fork PR builds are disabled** in Buildkite settings — the critical external attacker vector is closed
 - No immediate action required while the repo is single-contributor
+- Remediation work is tracked in [CI Security Remediation Plan](../plans/2026-04-04_ci-security-remediation-plan.md).
 
 ## Findings
 

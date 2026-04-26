@@ -3,6 +3,7 @@ import {
   ScheduleNotFoundError,
   ScheduleOverlapPolicy,
 } from "@temporalio/client";
+import type { Duration } from "@temporalio/common";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 // All cron expressions below are wall-clock local time for the homelab.
@@ -16,6 +17,7 @@ type ScheduleDefinition = {
   taskQueue: string;
   overlap: ScheduleOverlapPolicy;
   memo: string;
+  workflowExecutionTimeout?: Duration;
 };
 
 const SCHEDULES: ScheduleDefinition[] = [
@@ -47,12 +49,53 @@ const SCHEDULES: ScheduleDefinition[] = [
     memo: "Daily DNS record audit (SPF, DMARC, MX)",
   },
   {
+    id: "scout-data-dragon-version-check",
+    workflowType: "runScoutDataDragonVersionCheck",
+    args: [],
+    cronExpression: "0 6 * * 0-5",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "3 hours",
+    memo: "Check LoL Data Dragon version and update Scout assets when needed",
+  },
+  {
+    id: "scout-data-dragon-weekly-refresh",
+    workflowType: "runScoutDataDragonWeeklyRefresh",
+    args: [],
+    cronExpression: "0 6 * * 6",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "3 hours",
+    memo: "Weekly Scout Data Dragon refresh even when version is unchanged",
+  },
+  {
+    id: "zfs-maintenance-weekly",
+    workflowType: "runZfsMaintenanceWorkflow",
+    args: [],
+    cronExpression: "0 3 * * 0",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "15 minutes",
+    memo: "Weekly ZFS pool scrub + autotrim (zfspv-pool-nvme, zfspv-pool-hdd)",
+  },
+  {
+    id: "bugsink-housekeeping",
+    workflowType: "runBugsinkHousekeepingWorkflow",
+    args: [],
+    cronExpression: "0 3 * * *",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
+    memo: "Daily Bugsink database housekeeping (delete old events, vacuum)",
+  },
+  {
     id: "golink-sync",
     workflowType: "syncGolinks",
     args: [],
     cronExpression: "*/5 * * * *",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "4 minutes",
     memo: "Sync Tailscale ingresses to golink aliases",
   },
   {
@@ -158,6 +201,9 @@ export async function registerSchedules(client: Client): Promise<void> {
           workflowType: schedule.workflowType,
           args: schedule.args,
           taskQueue: schedule.taskQueue,
+          ...(schedule.workflowExecutionTimeout === undefined
+            ? {}
+            : { workflowExecutionTimeout: schedule.workflowExecutionTimeout }),
         },
         policies: {
           overlap: schedule.overlap,
@@ -181,6 +227,9 @@ export async function registerSchedules(client: Client): Promise<void> {
           workflowType: schedule.workflowType,
           args: schedule.args,
           taskQueue: schedule.taskQueue,
+          ...(schedule.workflowExecutionTimeout === undefined
+            ? {}
+            : { workflowExecutionTimeout: schedule.workflowExecutionTimeout }),
         },
         policies: {
           overlap: schedule.overlap,

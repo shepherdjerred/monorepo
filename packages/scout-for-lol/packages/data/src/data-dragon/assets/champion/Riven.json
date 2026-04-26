@@ -523,7 +523,10 @@
         "All of Riven's damage is physical, prioritize high Armor if an opposing Riven gets out of control.",
         "Riven excels at dueling multiple melee attackers at once, as she will be on an almost equal footing damage-wise. If pairing up against Riven, don't go in as double melee until she has expended her full combo."
       ],
-      "tags": ["Fighter", "Assassin"],
+      "tags": [
+        "Fighter",
+        "Assassin"
+      ],
       "partype": "None",
       "info": {
         "attack": 8,
@@ -560,30 +563,105 @@
           "description": "Riven lashes out in a series of strikes. This ability can be reactivated three times in a short time frame with the third hit knocking back nearby enemies.",
           "tooltip": "Riven dashes forward, dealing <physicalDamage>{{ firstslashdamage }} physical damage</physicalDamage>. She can <recast>Recast</recast> this Ability twice. The first <recast>Recast</recast> is the same as the original, but the second has a different effect:<br /><br /><recast>Recast</recast>: Riven leaps forward and slams, dealing <physicalDamage>{{ firstslashdamage }} physical damage</physicalDamage> and <status>Knocks Up</status> nearby enemies for 0.75 seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Attack Damage Ratio"],
+            "label": [
+              "Damage",
+              "Attack Damage Ratio"
+            ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ adratio*100.000000 }}% -> {{ adrationl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [13, 13, 13, 13, 13],
+          "cooldown": [
+            13,
+            13,
+            13,
+            13,
+            13
+          ],
           "cooldownBurn": "13",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [45, 75, 105, 135, 165],
-            [30, 55, 80, 105, 130],
-            [150, 225, 300, 375, 450],
-            [2, 2, 2, 2, 2],
-            [65, 70, 75, 80, 85],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              45,
+              75,
+              105,
+              135,
+              165
+            ],
+            [
+              30,
+              55,
+              80,
+              105,
+              130
+            ],
+            [
+              150,
+              225,
+              300,
+              375,
+              450
+            ],
+            [
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            [
+              65,
+              70,
+              75,
+              80,
+              85
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -601,7 +679,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [275, 275, 275, 275, 275],
+          "range": [
+            275,
+            275,
+            275,
+            275,
+            275
+          ],
           "rangeBurn": "275",
           "image": {
             "full": "RivenTriCleave.png",
@@ -620,30 +704,105 @@
           "description": "Riven emits a Ki Burst, damaging and stunning nearby enemies.",
           "tooltip": "Riven's sword emits a burst of runic energy, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>Stunning</status> for {{ e5 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
+            "label": [
+              "Damage",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 10, 9, 8, 7],
+          "cooldown": [
+            11,
+            10,
+            9,
+            8,
+            7
+          ],
           "cooldownBurn": "11/10/9/8/7",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [65, 95, 125, 155, 185],
-            [40, 70, 100, 130, 160],
-            [3, 3, 3, 3, 3],
-            [0.75, 0.75, 0.75, 0.75, 0.75],
-            [0.75, 0.75, 0.75, 0.75, 0.75],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              65,
+              95,
+              125,
+              155,
+              185
+            ],
+            [
+              40,
+              70,
+              100,
+              130,
+              160
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              0.75,
+              0.75,
+              0.75,
+              0.75,
+              0.75
+            ],
+            [
+              0.75,
+              0.75,
+              0.75,
+              0.75,
+              0.75
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -661,7 +820,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [260, 260, 260, 260, 260],
+          "range": [
+            260,
+            260,
+            260,
+            260,
+            260
+          ],
           "rangeBurn": "260",
           "image": {
             "full": "RivenMartyr.png",
@@ -680,30 +845,105 @@
           "description": "Riven steps forward a short distance and blocks incoming damage.",
           "tooltip": "Riven quickly dashes and gains <shield>{{ totalshield }} Shield</shield> for 1.5 seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Shield Amount", "Cooldown"],
+            "label": [
+              "Shield Amount",
+              "Cooldown"
+            ],
             "effect": [
               "{{ e2 }} -> {{ e2NL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [10, 9, 8, 7, 6],
+          "cooldown": [
+            10,
+            9,
+            8,
+            7,
+            6
+          ],
           "cooldownBurn": "10/9/8/7/6",
-          "cost": [0, 0, 0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [70, 95, 120, 145, 170],
-            [70, 95, 120, 145, 170],
-            [4, 4, 4, 4, 4],
-            [800, 800, 800, 800, 800],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0]
+            [
+              70,
+              95,
+              120,
+              145,
+              170
+            ],
+            [
+              70,
+              95,
+              120,
+              145,
+              170
+            ],
+            [
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            [
+              800,
+              800,
+              800,
+              800,
+              800
+            ],
+            [
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -721,7 +961,13 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [250, 250, 250, 250, 250],
+          "range": [
+            250,
+            250,
+            250,
+            250,
+            250
+          ],
           "rangeBurn": "250",
           "image": {
             "full": "RivenFeint.png",
@@ -752,23 +998,71 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [120, 90, 60],
+          "cooldown": [
+            120,
+            90,
+            60
+          ],
           "cooldownBurn": "120/90/60",
-          "cost": [0, 0, 0],
+          "cost": [
+            0,
+            0,
+            0
+          ],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [100, 150, 200],
-            [300, 450, 600],
-            [20, 20, 20],
-            [15, 15, 15],
-            [25, 25, 25],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
+            [
+              100,
+              150,
+              200
+            ],
+            [
+              300,
+              450,
+              600
+            ],
+            [
+              20,
+              20,
+              20
+            ],
+            [
+              15,
+              15,
+              15
+            ],
+            [
+              25,
+              25,
+              25
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
           ],
           "effectBurn": [
             null,
@@ -786,7 +1080,11 @@
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [200, 200, 200],
+          "range": [
+            200,
+            200,
+            200
+          ],
           "rangeBurn": "200",
           "image": {
             "full": "RivenFengShuiEngine.png",

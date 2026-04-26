@@ -11,11 +11,8 @@ type UsageTracker = {
 };
 
 const PRICING: Record<string, { input: number; output: number }> = {
-  "claude-sonnet-4-20250514": { input: 3 / 1_000_000, output: 15 / 1_000_000 },
-  "claude-haiku-3-5-20241022": {
-    input: 0.8 / 1_000_000,
-    output: 4 / 1_000_000,
-  },
+  "claude-sonnet-4-6": { input: 3 / 1_000_000, output: 15 / 1_000_000 },
+  "claude-haiku-4-5-20251001": { input: 1 / 1_000_000, output: 5 / 1_000_000 },
 };
 
 const DEFAULT_PRICING = { input: 3 / 1_000_000, output: 15 / 1_000_000 };

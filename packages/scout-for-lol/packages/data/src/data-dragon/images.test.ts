@@ -147,3 +147,42 @@ describe("validateChampionLoadingImage missing asset", () => {
     );
   });
 });
+
+describe("getChampionLoadingImageBase64 — runtime skin-0 fallback", () => {
+  test("missing skin falls back to skin 0 and fires onSkinFallback", async () => {
+    // Use a high skinNum that's vanishingly unlikely to ever exist on disk
+    // for a champion that DOES have skin 0 cached.
+    const fallbackEvents: { championName: string; requestedSkin: number }[] =
+      [];
+    const dataUri = await getChampionLoadingImageBase64(
+      "Aatrox",
+      9998,
+      (event) => {
+        fallbackEvents.push(event);
+      },
+    );
+    expect(dataUri).toStartWith("data:image/jpeg;base64,");
+    // Same payload as skin 0 (the fallback target)
+    const expected = await getChampionLoadingImageBase64("Aatrox", 0);
+    expect(dataUri).toBe(expected);
+    expect(fallbackEvents).toHaveLength(1);
+    expect(fallbackEvents[0]).toEqual({
+      championName: "Aatrox",
+      requestedSkin: 9998,
+    });
+  });
+
+  test("missing base skin (champion entirely absent) still throws", async () => {
+    await expect(
+      getChampionLoadingImageBase64("NonExistentChampion", 0),
+    ).rejects.toThrow(
+      /Image not found at .*\/champion-loading\/NonExistentChampion_0\.jpg.*Run 'bun run update-data-dragon'/,
+    );
+  });
+
+  test("requested skin 0 missing also throws (no recursion)", async () => {
+    await expect(
+      getChampionLoadingImageBase64("AlsoNonExistent", 0),
+    ).rejects.toThrow(/Image not found/);
+  });
+});

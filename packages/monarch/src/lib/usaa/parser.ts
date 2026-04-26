@@ -143,13 +143,20 @@ async function parsePdf(filePath: string): Promise<UsaaStatement> {
   return { statementDate, draftDate, totalAmount, autoAmount, rentersAmount };
 }
 
-export async function loadUsaaStatements(): Promise<UsaaStatement[]> {
+export async function loadUsaaStatements(
+  dataDir = DATA_DIR,
+): Promise<UsaaStatement[]> {
   const statements: UsaaStatement[] = [];
   const glob = new Glob("*_Auto_and_Property_Insurance_Statement.pdf");
 
   const files: string[] = [];
-  for await (const file of glob.scan(DATA_DIR)) {
-    files.push(path.join(DATA_DIR, file));
+  try {
+    for await (const file of glob.scan(dataDir)) {
+      files.push(path.join(dataDir, file));
+    }
+  } catch {
+    log.warn(`USAA PDF directory not found: ${dataDir}`);
+    return [];
   }
   files.sort();
 

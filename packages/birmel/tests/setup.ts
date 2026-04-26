@@ -1,54 +1,9 @@
 import { beforeAll, afterAll, mock } from "bun:test";
 
-// Mock @mastra/libsql
-const emptyObject: Record<string, never> = {};
-void mock.module("@mastra/libsql", () => ({
-  LibSQLStore: function MockLibSQLStore() {
-    return { ...emptyObject };
-  },
-  LibSQLVector: function MockLibSQLVector() {
-    return { ...emptyObject };
-  },
-}));
-
-// Mock @mastra/memory
-void mock.module("@mastra/memory", () => ({
-  Memory: function MockMemory() {
-    return { ...emptyObject };
-  },
-}));
-
-// Mock @mastra/core/agent
-void mock.module("@mastra/core/agent", () => ({
-  Agent: class MockAgent {
-    name: string;
-    private readonly _instructions: string;
-
-    constructor(config: {
-      name: string;
-      instructions: string;
-      [key: string]: unknown;
-    }) {
-      this.name = config.name;
-      this._instructions = config.instructions;
-    }
-
-    getInstructions(): string {
-      return this._instructions;
-    }
-  },
-}));
-
-// Mock @mastra/core/tools
-void mock.module("@mastra/core/tools", () => ({
-  createTool: (config: {
-    id: string;
-    description: string;
-    [key: string]: unknown;
-  }) => ({
-    ...config,
-  }),
-}));
+// (The previous version of this file mocked `@mastra/*` packages; the bot
+// no longer depends on them — VoltAgent's libSQL adapter is used instead and
+// is mocked indirectly by the @ai-sdk/openai mock plus the discord.js mocks.
+// The Mastra mocks were removed during the migration cleanup pass.)
 
 // Mock @ai-sdk/openai
 type ModelFn = (model: string) => { provider: string; model: string };
