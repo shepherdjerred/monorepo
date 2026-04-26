@@ -195,12 +195,19 @@ async function parsePdf(
   return { dueDate, charges };
 }
 
-export async function loadConserviceFromPdfs(): Promise<ConserviceCharge[]> {
+export async function loadConserviceFromPdfs(
+  dataDir = DATA_DIR,
+): Promise<ConserviceCharge[]> {
   const glob = new Glob("ConserviceBill*.pdf");
 
   const files: string[] = [];
-  for await (const file of glob.scan(DATA_DIR)) {
-    files.push(path.join(DATA_DIR, file));
+  try {
+    for await (const file of glob.scan(dataDir)) {
+      files.push(path.join(dataDir, file));
+    }
+  } catch {
+    log.warn(`Conservice PDF directory not found: ${dataDir}`);
+    return [];
   }
   files.sort();
 

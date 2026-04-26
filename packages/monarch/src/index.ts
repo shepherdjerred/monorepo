@@ -124,7 +124,7 @@ async function main(): Promise<void> {
 
   if (config.verbose) setLogLevel("debug");
 
-  initMonarch(config.monarchToken);
+  await initMonarch(config.monarchToken);
   initClaude(config.anthropicApiKey, config.model);
   setWebSearchEnabled(!config.skipResearch);
   const hints = await loadHints();

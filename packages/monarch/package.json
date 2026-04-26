@@ -8,6 +8,8 @@
   },
   "scripts": {
     "build": "true",
+    "login": "bun run scripts/monarch-login.ts",
+    "login:browser": "bun run scripts/monarch-browser-login.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "lint": "bunx eslint ."

@@ -1,4 +1,4 @@
-import type { Page, Locator, BrowserContext } from "playwright";
+import type { Page, Locator, BrowserContext, Browser } from "playwright";
 import { chromium } from "playwright";
 import path from "node:path";
 import { homedir } from "node:os";
@@ -168,7 +168,7 @@ export async function scrapeAmazonOrders(
   }
 
   log.info("Launching browser...");
-  const browser = await chromium.launch({ headless: false });
+  const browser = await launchBrowser();
   const savedState = await hasSavedState();
   const context = savedState
     ? await browser.newContext({ storageState: STATE_PATH })
@@ -225,6 +225,14 @@ export async function scrapeAmazonOrders(
     return allOrders;
   } finally {
     await browser.close();
+  }
+}
+
+async function launchBrowser(): Promise<Browser> {
+  try {
+    return await chromium.launch({ channel: "chrome", headless: false });
+  } catch {
+    return chromium.launch({ headless: false });
   }
 }
 

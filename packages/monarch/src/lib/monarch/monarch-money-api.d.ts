@@ -32,8 +32,8 @@ declare module "monarch-money-api" {
         reviewStatus: string;
         needsReview: boolean;
         isSplitTransaction: boolean;
-        createdAt: string;
-        updatedAt: string;
+        createdAt?: string;
+        updatedAt?: string;
         category: {
           id: string;
           name: string;

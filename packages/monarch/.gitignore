@@ -1,3 +1,4 @@
+.env
 data/
 scripts/accuracy/dataset.json
 scripts/accuracy/tool-output.json

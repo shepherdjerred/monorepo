@@ -72,12 +72,20 @@ const Tier2ClassificationSchema = z.object({
       shouldSplit: z.boolean(),
       splits: z
         .array(
-          z.object({
-            itemName: z.string(),
-            amount: z.number(),
-            categoryId: z.string(),
-            categoryName: z.string(),
-          }),
+          z
+            .object({
+              itemName: z.string().optional(),
+              amount: z.number(),
+              categoryId: z.string(),
+              categoryName: z.string(),
+            })
+            .transform((s) => ({
+              ...s,
+              itemName:
+                s.itemName !== undefined && s.itemName !== ""
+                  ? s.itemName
+                  : s.categoryName,
+            })),
         )
         .optional(),
     }),
@@ -191,12 +199,23 @@ Respond with JSON:
       "categoryName": "...",
       "confidence": "high"|"medium"|"low",
       "shouldSplit": false,
-      "splits": []
+      "splits": [
+        {
+          "itemName": "<short human-readable description of this line item>",
+          "amount": 12.34,
+          "categoryId": "...",
+          "categoryName": "..."
+        }
+      ]
     }
   ]
 }
 
-When shouldSplit is true, the categoryId/categoryName should be the primary category, and splits should contain the breakdown.`;
+When shouldSplit is true:
+- The top-level categoryId/categoryName should be the primary category for the transaction.
+- The "splits" array MUST contain the breakdown, and each split MUST include all four fields: itemName, amount, categoryId, categoryName.
+- itemName is required for every split — use the source item title, bill line, or a concise description.
+When shouldSplit is false, set "splits" to an empty array [].`;
 }
 
 export async function classifyTier2(

@@ -1,13 +1,7 @@
-import {
-  setToken,
-  getTransactions,
-  getCategories,
-  updateTransaction,
-  updateTransactionSplits,
-} from "monarch-money-api";
 import path from "node:path";
 import { homedir } from "node:os";
 import { z } from "zod";
+import type * as MonarchMoneyApi from "monarch-money-api";
 import type { MonarchCategory } from "./types.ts";
 import { MonarchTransactionSchema } from "./types.ts";
 import type { MonarchTransaction } from "./types.ts";
@@ -20,9 +14,14 @@ const TxnCacheSchema = z.object({
 
 const CACHE_DIR = path.join(homedir(), ".monarch-cache");
 const CACHE_MAX_AGE_MS = 4 * 60 * 60 * 1000; // 4 hours
+let monarchApiPromise: Promise<typeof MonarchMoneyApi> | undefined;
+const noop = (): void => undefined;
 
-export function initMonarch(token: string): void {
-  setToken(token);
+export async function initMonarch(token: string): Promise<void> {
+  const api = await getMonarchApi();
+  await withMutedConsole(() => {
+    api.setToken(token);
+  });
 }
 
 function txnCachePath(startDate: string, endDate: string): string {
@@ -86,7 +85,8 @@ export async function fetchAllTransactions(
 
   while (offset < totalCount) {
     log.progress(offset, totalCount, "transactions fetched");
-    const response = await getTransactions({
+    const api = await getMonarchApi();
+    const response = await api.getTransactions({
       limit: pageSize,
       offset,
       startDate,
@@ -107,7 +107,8 @@ export async function fetchAllTransactions(
 }
 
 export async function fetchCategories(): Promise<MonarchCategory[]> {
-  const response = await getCategories();
+  const api = await getMonarchApi();
+  const response = await api.getCategories();
   return response.categories.filter((c) => !c.isDisabled);
 }
 
@@ -135,8 +136,9 @@ export async function applyCategory(
   transactionId: string,
   categoryId: string,
 ): Promise<void> {
+  const api = await getMonarchApi();
   const result = await withRetry(`updateTransaction(${transactionId})`, () =>
-    updateTransaction({ transactionId, categoryId }),
+    api.updateTransaction({ transactionId, categoryId }),
   );
   const actualCategoryId = result.updateTransaction.transaction.category.id;
   if (actualCategoryId !== categoryId) {
@@ -148,8 +150,9 @@ export async function applyCategory(
 }
 
 export async function flagForReview(transactionId: string): Promise<void> {
+  const api = await getMonarchApi();
   await withRetry(`flagForReview(${transactionId})`, () =>
-    updateTransaction({ transactionId, needsReview: true }),
+    api.updateTransaction({ transactionId, needsReview: true }),
   );
   await sleep(500);
 }
@@ -164,8 +167,9 @@ export async function applySplits(
     date?: string;
   }[],
 ): Promise<void> {
+  const api = await getMonarchApi();
   const result = await withRetry(`applySplits(${transactionId})`, () =>
-    updateTransactionSplits(transactionId, splits),
+    api.updateTransactionSplits(transactionId, splits),
   );
   const rawErrors: unknown = result.updateTransactionSplit.errors;
   if (rawErrors === null) {
@@ -183,7 +187,7 @@ export async function applySplits(
         const dateOverride = split.date;
         log.debug(`  Moving sub-transaction ${subId} to ${dateOverride}`);
         await withRetry(`updateDate(${subId})`, () =>
-          updateTransaction({ transactionId: subId, date: dateOverride }),
+          api.updateTransaction({ transactionId: subId, date: dateOverride }),
         );
         await sleep(500);
       }
@@ -195,6 +199,36 @@ export async function applySplits(
     log.debug(`Split data: ${JSON.stringify(splits)}`);
   }
   await sleep(500);
+}
+
+async function getMonarchApi(): Promise<typeof MonarchMoneyApi> {
+  monarchApiPromise ??= importWithoutEnvToken();
+  return monarchApiPromise;
+}
+
+async function importWithoutEnvToken(): Promise<typeof MonarchMoneyApi> {
+  const token = Bun.env["MONARCH_TOKEN"];
+  delete Bun.env["MONARCH_TOKEN"];
+  try {
+    return await withMutedConsole(() => import("monarch-money-api"));
+  } finally {
+    if (token !== undefined) {
+      Bun.env["MONARCH_TOKEN"] = token;
+    }
+  }
+}
+
+async function withMutedConsole<T>(fn: () => T | Promise<T>): Promise<T> {
+  const savedConsoleLog = console.log;
+  const savedConsoleError = console.error;
+  console.log = noop;
+  console.error = noop;
+  try {
+    return await fn();
+  } finally {
+    console.log = savedConsoleLog;
+    console.error = savedConsoleError;
+  }
 }
 
 const AMAZON_MERCHANT_PATTERNS = [
