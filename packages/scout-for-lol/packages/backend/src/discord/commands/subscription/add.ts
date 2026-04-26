@@ -8,7 +8,6 @@ import {
   RiotIdSchema,
 } from "@scout-for-lol/data/index.ts";
 import { prisma } from "#src/database/index.ts";
-import { fromError } from "zod-validation-error";
 import { createLogger } from "#src/logger.ts";
 import type {
   Account,
@@ -49,13 +48,8 @@ export async function executeSubscriptionAdd(
     `🔔 Starting subscription process for user ${username} (${userId})`,
   );
 
-  const args = validateSubscriptionArgs(interaction, ArgsSchema);
+  const args = await validateSubscriptionArgs(interaction, ArgsSchema);
   if (!args) {
-    const validationError = fromError(new Error("Invalid command arguments"));
-    await interaction.reply({
-      content: validationError.toString(),
-      ephemeral: true,
-    });
     return;
   }
 

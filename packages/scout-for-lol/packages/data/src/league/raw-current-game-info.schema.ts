@@ -29,6 +29,11 @@ export const RawCurrentGameParticipantSchema = z.object({
   /** PUUID — can be null for certain participants (e.g., bots or privacy) */
   puuid: z.string().nullable(),
   teamId: z.number(),
+  /**
+   * Arena subteam ID (1-8). Only present in Spectator V5 responses for
+   * Arena (CHERRY) games — undefined for all other queues.
+   */
+  playerSubteamId: z.number().optional(),
   /** Riot ID (e.g., "Cain#3276"). Present in V5 API responses. */
   riotId: z.string(),
   /** Legacy summoner name — may not be present in V5 responses */

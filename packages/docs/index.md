@@ -56,6 +56,7 @@ AI-maintained knowledge base for the monorepo.
 - [Birmel Remediation Follow-ups](guides/2026-04-25_birmel-remediation-followups.md) - Post-deploy checks and deferred cleanup from Birmel remediation
 - [Homelab Health Audit](guides/2026-04-25_homelab-health-audit.md) - Current cluster health audit snapshot
 - [Minecraft Server Ops](guides/2026-04-25_minecraft-server-ops.md) - Operational reference for deployed modded Minecraft servers
+- [Home Assistant Kumo Troubleshooting](guides/2026-04-26_home-assistant-kumo-troubleshooting.md) - Diagnosing `device_authentication_error`, pykumo/v3 cache drift, and executor-pool starvation
 
 ## Archive
 

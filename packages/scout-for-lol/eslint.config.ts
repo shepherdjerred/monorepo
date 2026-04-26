@@ -1,4 +1,8 @@
-import { recommended, customRulesPlugin } from "@shepherdjerred/eslint-config";
+import {
+  recommended,
+  astroConfig,
+  customRulesPlugin,
+} from "@shepherdjerred/eslint-config";
 import type { TSESLint } from "@typescript-eslint/utils";
 
 const config: TSESLint.FlatConfig.ConfigArray = [
@@ -29,7 +33,6 @@ const config: TSESLint.FlatConfig.ConfigArray = [
       "**/scripts/**/*",
       "**/*.md",
       "**/*.mdx",
-      "**/*.astro",
       "**/*.mjs",
       "**/*.js",
       "**/*.cjs",
@@ -38,6 +41,7 @@ const config: TSESLint.FlatConfig.ConfigArray = [
     accessibility: true,
     customRules: { noDtoNaming: true, noShadcnThemeTokens: true },
   }),
+  ...astroConfig(),
   // Block twisted DTO imports
   {
     rules: {
@@ -99,7 +103,11 @@ const config: TSESLint.FlatConfig.ConfigArray = [
   },
   // No shadcn theme tokens in frontend marketing
   {
-    files: ["packages/frontend/src/**/*.tsx", "packages/frontend/src/**/*.ts"],
+    files: [
+      "packages/frontend/src/**/*.tsx",
+      "packages/frontend/src/**/*.ts",
+      "packages/frontend/src/**/*.astro",
+    ],
     ignores: [
       "packages/frontend/src/components/ui/**",
       "packages/frontend/src/components/review-tool/ui/**",
@@ -171,6 +179,35 @@ const config: TSESLint.FlatConfig.ConfigArray = [
       "packages/frontend/src/lib/review-tool/indexeddb-helpers.ts",
     ],
     rules: { "unicorn/prefer-add-event-listener": "off" },
+  },
+  // Astro files: enable parser + custom-rules/no-shadcn-theme-tokens (above),
+  // but defer the broader recommended() rules until they can be addressed
+  // separately. The existing .astro pages predate Astro linting in this repo
+  // and have many pre-existing import / a11y / style violations; cleanup is
+  // tracked out-of-band so this rule sweep can land without unrelated churn.
+  {
+    files: ["**/*.astro"],
+    rules: {
+      "custom-rules/no-parent-imports": "off",
+      "custom-rules/require-ts-extensions": "off",
+      "jsx-a11y/label-has-associated-control": "off",
+      "@typescript-eslint/no-non-null-assertion": "off",
+      "@typescript-eslint/strict-boolean-expressions": "off",
+      "@typescript-eslint/consistent-type-definitions": "off",
+      "@typescript-eslint/prefer-nullish-coalescing": "off",
+      "@typescript-eslint/restrict-template-expressions": "off",
+      "@typescript-eslint/no-unnecessary-condition": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/array-type": "off",
+      "unicorn/prefer-at": "off",
+      "unicorn/no-negated-condition": "off",
+      "unicorn/filename-case": "off",
+      "unicorn/text-encoding-identifier-case": "off",
+      "unicorn/prefer-switch": "off",
+      "unicorn/no-useless-switch-case": "off",
+      "max-lines": "off",
+    },
   },
 ];
 export default config;

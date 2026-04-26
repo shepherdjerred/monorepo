@@ -5,7 +5,8 @@
     "rootDir": "./src",
     "declarationDir": "./dist",
     "noEmit": false,
-    "allowImportingTsExtensions": false
+    "allowImportingTsExtensions": false,
+    "types": ["node"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "tests", "src/**/*.test.ts"]

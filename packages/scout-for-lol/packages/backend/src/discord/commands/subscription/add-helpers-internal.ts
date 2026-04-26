@@ -11,38 +11,44 @@ import { backfillLastMatchTime } from "#src/league/api/backfill-match-history.ts
 import { sendWelcomeMatch } from "#src/discord/commands/subscription/welcome-match.ts";
 import type { ArgsSchema } from "./add.ts";
 import type { z } from "zod";
+import { fromError } from "zod-validation-error";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("subscription-add-helpers-internal");
 
 type ArgsType = z.infer<typeof ArgsSchema>;
 
-export function validateSubscriptionArgs(
+export async function validateSubscriptionArgs(
   interaction: ChatInputCommandInteraction,
   schema: typeof ArgsSchema,
-): ArgsType | null {
+): Promise<ArgsType | null> {
   const username = interaction.user.username;
 
-  try {
-    const args = schema.parse({
-      channel: interaction.options.getChannel("channel")?.id,
-      region: interaction.options.getString("region"),
-      riotId: interaction.options.getString("riot-id"),
-      user: interaction.options.getUser("user")?.id,
-      alias: interaction.options.getString("alias"),
-      guildId: interaction.guildId,
+  const result = schema.safeParse({
+    channel: interaction.options.getChannel("channel")?.id,
+    region: interaction.options.getString("region"),
+    riotId: interaction.options.getString("riot-id"),
+    user: interaction.options.getUser("user")?.id,
+    alias: interaction.options.getString("alias"),
+    guildId: interaction.guildId,
+  });
+
+  if (!result.success) {
+    logger.info(`❌ Invalid command arguments from ${username}:`, result.error);
+    await interaction.reply({
+      content: fromError(result.error).toString(),
+      ephemeral: true,
     });
-
-    logger.info(`✅ Command arguments validated successfully`);
-    logger.info(
-      `📋 Args: channel=${args.channel}, region=${args.region}, riotId=${args.riotId.game_name}#${args.riotId.tag_line}, alias=${args.alias}`,
-    );
-
-    return args;
-  } catch (error) {
-    logger.error(`❌ Invalid command arguments from ${username}:`, error);
     return null;
   }
+
+  const args = result.data;
+  logger.info(`✅ Command arguments validated successfully`);
+  logger.info(
+    `📋 Args: channel=${args.channel}, region=${args.region}, riotId=${args.riotId.game_name}#${args.riotId.tag_line}, alias=${args.alias}`,
+  );
+
+  return args;
 }
 
 export async function createSubscriptionRecords(params: {

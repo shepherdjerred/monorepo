@@ -39,6 +39,8 @@ export function parseQueueType(input: number): QueueType | undefined {
     .with(1700, () => "arena")
     .with(2300, () => "brawl")
     .with(2400, () => "aram mayhem")
+    .with(3270, () => "aram mayhem")
+    .with(3100, () => "custom")
     .with(1900, () => "urf")
     .with(3130, () => "easy doom bots")
     .with(4220, () => "normal doom bots")

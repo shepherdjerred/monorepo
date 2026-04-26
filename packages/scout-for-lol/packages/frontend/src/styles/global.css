@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Beaufort for LoL - Headings/Titles */
 @font-face {
   font-family: "Beaufort for LoL";

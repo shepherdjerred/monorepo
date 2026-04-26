@@ -70,21 +70,28 @@ function determineLayout(gameQueueConfigId: number): LoadingScreenLayout {
 
 /**
  * Resolve team assignment for a participant.
- * Standard/ARAM: returns "blue" | "red" via parseTeam.
- * Arena: returns { arenaTeam: 1..8 }.
- * Throws on invalid team IDs.
+ * Standard/ARAM: returns "blue" | "red" via parseTeam (from teamId 100/200).
+ * Arena: returns { arenaTeam: 1..8 } from playerSubteamId — Spectator V5
+ * reports teamId as 100/200 even for Arena games, so the 8-team subteam
+ * must come from the dedicated playerSubteamId field.
+ * Throws on invalid IDs or missing Arena subteam info.
  */
 function resolveTeam(
-  teamId: number,
+  participant: RawCurrentGameParticipant,
   layout: LoadingScreenLayout,
 ): LoadingScreenTeam {
   if (layout === "arena") {
-    return { arenaTeam: ArenaTeamIdSchema.parse(teamId) };
+    if (participant.playerSubteamId === undefined) {
+      throw new Error(
+        `Arena participant missing playerSubteamId — Spectator V5 must provide it for Arena (CHERRY) games`,
+      );
+    }
+    return { arenaTeam: ArenaTeamIdSchema.parse(participant.playerSubteamId) };
   }
-  const team = parseTeam(teamId);
+  const team = parseTeam(participant.teamId);
   if (team === undefined) {
     throw new Error(
-      `Unknown team ID ${teamId.toString()} for ${layout} layout — expected 100 (blue) or 200 (red)`,
+      `Unknown team ID ${participant.teamId.toString()} for ${layout} layout — expected 100 (blue) or 200 (red)`,
     );
   }
   return team;
@@ -114,7 +121,7 @@ async function buildParticipant(
     championName,
     championDisplayName,
     skinNum,
-    team: resolveTeam(participant.teamId, layout),
+    team: resolveTeam(participant, layout),
     spell1Id: SummonerSpellIdSchema.parse(participant.spell1Id),
     spell2Id: SummonerSpellIdSchema.parse(participant.spell2Id),
     keystoneRuneId:
