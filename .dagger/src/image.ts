@@ -275,7 +275,13 @@ export function buildTemporalWorkerImageHelper(
   let container = dag
     .container()
     .from(BUN_IMAGE)
-    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
+    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE));
+
+  // The docs-groom workflow shells out to `gh` + `claude` from inside the
+  // worker pod, so the temporal-worker image must ship both binaries.
+  container = withEditorClis(container);
+
+  container = container
     .withWorkdir("/workspace")
     .withDirectory("/workspace/packages/temporal", pkgDir, {
       exclude: excludes,

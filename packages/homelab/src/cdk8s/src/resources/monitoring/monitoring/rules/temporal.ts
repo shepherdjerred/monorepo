@@ -136,5 +136,90 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
         },
       ],
     },
+    {
+      name: "docs-groom",
+      rules: [
+        {
+          alert: "DocsGroomScheduleNotRunning",
+          annotations: {
+            summary: "docs-groom daily workflow has not run",
+            description:
+              "The docs-groom-daily Temporal schedule has not recorded an audit run in the last 36 hours. Check the Temporal UI and worker logs.",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'sum(increase(docs_groom_runs_total{phase="audit"}[36h])) < 1',
+          ),
+          for: "30m",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
+          alert: "DocsGroomActivitiesFailing",
+          annotations: {
+            summary: escapePrometheusTemplate(
+              "docs-groom workflow {{ $labels.workflowType }} activities failing",
+            ),
+            description: escapePrometheusTemplate(
+              "docs-groom workflow {{ $labels.workflowType }} has had {{ $value }} activity failures in the last 24 hours. Check the Temporal UI and Bugsink.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'increase(activity_task_fail{namespace="default",workflowType=~"runDocsGroom.*"}[24h]) > 2',
+          ),
+          for: "30m",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
+          alert: "DocsGroomNoPrsOpened",
+          annotations: {
+            summary: "docs-groom audits succeed but produce no PRs",
+            description:
+              "The docs-groom audit has completed successfully in the last 3 days but opened zero PRs. The audit prompt may be too conservative or filterAlreadyOpen is over-filtering.",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'sum(increase(docs_groom_prs_opened_total[3d])) == 0 and sum(increase(docs_groom_runs_total{phase="audit",outcome="success"}[3d])) > 0',
+          ),
+          for: "1h",
+          labels: {
+            severity: "info",
+          },
+        },
+        {
+          alert: "DocsGroomCostBudgetExceeded",
+          annotations: {
+            summary: "docs-groom claude -p cost exceeded daily budget",
+            description: escapePrometheusTemplate(
+              "docs-groom spent ${{ $value | humanize }} on claude -p invocations in the last 24h, exceeding the $5/day budget. Tune the per-run task cap or audit prompt.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "sum(increase(docs_groom_claude_cost_usd_total[1d])) > 5",
+          ),
+          for: "10m",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
+          alert: "DocsGroomValidationSecretRejection",
+          annotations: {
+            summary:
+              "docs-groom validateChanges blocked a diff containing a secret",
+            description:
+              "validateChanges refused to push a diff because a path matched a secret pattern (.env*, *.key, id_rsa*, etc.). Investigate immediately — Claude attempted to commit a sensitive file.",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'increase(docs_groom_validate_rejections_total{reason="secret"}[1h]) > 0',
+          ),
+          for: "0m",
+          labels: {
+            severity: "critical",
+          },
+        },
+      ],
+    },
   ];
 }

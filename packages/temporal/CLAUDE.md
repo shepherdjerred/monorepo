@@ -61,7 +61,42 @@ Workflow:
 - `HA_TOKEN` — Home Assistant long-lived access token
 - `GOLINK_URL` — Golink service URL
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `S3_ENDPOINT` — S3/SeaweedFS credentials
-- `GH_TOKEN` — GitHub API token
+- `GH_TOKEN` — GitHub API token (used by docs-groom for cloning + opening PRs)
 - `OPENAI_API_KEY` — OpenAI API key
+- `ANTHROPIC_API_KEY` — Anthropic API key (used by docs-groom for `claude -p`)
 - `POSTAL_HOST`, `POSTAL_API_KEY` — Postal email service
 - `RECIPIENT_EMAIL`, `SENDER_EMAIL` — Email addresses for dependency summary
+- `TELEMETRY_ENABLED`, `OTLP_ENDPOINT`, `TELEMETRY_SERVICE_NAME` — OpenTelemetry tracing → Tempo (gated by `TELEMETRY_ENABLED`)
+- `SENTRY_DSN`, `ENVIRONMENT` — Sentry/Bugsink error tracking (init no-ops when DSN unset)
+- `APP_METRICS_PORT` — port for the application Prometheus registry (default `9465`); separate from the SDK metrics on `:9464`
+- `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, `GIT_COMMITTER_EMAIL` — bot identity for `git commit` in docs-groom
+
+## Daily docs-groom workflow
+
+`runDocsGroomAudit` runs daily at 06:30 PT (`30 6 * * *`, schedule id `docs-groom-daily`). It:
+
+1. Clones a fresh shallow worktree of `shepherdjerred/monorepo` into `/tmp/groom-<wfRunId>`
+2. Runs `claude -p GROOM_PROMPT --output-format json` over `packages/docs/`. Claude does small in-place edits (move stale → archive, add `## Status`, fix links, update `index.md`) AND returns a JSON list of larger improvement tasks
+3. Commits any inline grooming as a single draft PR labelled `docs-groom`
+4. For up to 5 easy/medium tasks (after `filterAlreadyOpen` drops slugs that already have an open or recently-closed PR), spawns one `runDocsGroomTask` child workflow per task
+5. Each child does the same prepare → claude -p → validate → typecheck → push → draft PR loop, but with `IMPLEMENT_PROMPT` and one specific task. Child PRs are labelled `docs-groom` + `docs-groom-task`
+6. Hard tasks are returned in the parent workflow result for visibility in the Temporal UI — no PR
+
+**Safety:** `validateChanges` rejects empty diffs, paths matching `.env*`/`*.key`/`*.pem`/`id_rsa*`, gitignored paths, and any branch other than the expected feature branch. `typecheckIfCodeTouched` runs `bun run typecheck` for any owning workspace package whose files were changed (failure → no PR). All PRs are draft; nothing auto-merges.
+
+**Observability** — see `src/observability/`:
+
+- All activities emit `console.warn(JSON.stringify({ level, msg, component, module: "docs-groom", phase, workflowId, runId, traceId, ... }))` for Loki
+- 8 `docs_groom_*` Prometheus metrics on `:9465`: runs, tasks-identified, prs-opened, claude duration/cost/tokens, validation rejections, filtered-already-open
+- OTel spans `docs-groom.*` per activity → Tempo
+- Sentry context attached per activity (workflow, phase, runId, taskSlug)
+- Grafana panels: "Docs Grooming" row in `temporal-dashboard.ts`
+- Alerts: `docs-groom` rule group in `monitoring/rules/temporal.ts` — schedule-not-running, activities-failing, no-prs-opened, cost-budget-exceeded, secret-rejection (critical)
+
+LogQL examples:
+
+```logql
+{namespace="temporal"} | json | workflow=~"runDocsGroom.*"               # all docs-groom activity
+{namespace="temporal"} | json | workflow=~"runDocsGroom.*" | level="error"  # failures only
+{namespace="temporal"} | json | phase="validate" | reason!=""            # rejected diffs
+```
