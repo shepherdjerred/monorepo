@@ -65,7 +65,7 @@ targets:
 packages:
   Yams:
     url: https://github.com/jpsim/Yams.git
-    from: "6.0.0"
+    from: "6.2.1"
   swift-markdown:
     url: https://github.com/swiftlang/swift-markdown.git
     from: "0.5.0"
