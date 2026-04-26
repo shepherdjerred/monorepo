@@ -17,8 +17,12 @@ const REPO_ROOT = execSync("git rev-parse --show-toplevel", {
   encoding: "utf-8",
 }).trim();
 
-/** Minimum number of dagger steps a build must have to qualify as "fully tested". */
-const MIN_GREEN_STEPS = 40;
+/**
+ * Minimum number of test steps a build must have to qualify as a valid base for diffing.
+ * Uses ":test_tube:" job names (individual script steps) since Buildkite's API does not
+ * expose group containers — ":dagger_knife:" group labels never appear in .jobs[].
+ */
+const MIN_GREEN_STEPS = 1;
 
 /** Files that, if changed, trigger a full build. */
 const INFRA_FILES = new Set([
@@ -90,10 +94,10 @@ type RenovateClassification =
  * Returns null if any file doesn't match a known Renovate pattern
  * (falls through to normal detection).
  *
- * Priority: null > all-js > scoped > noop
+ * Priority: null > scoped > noop
  */
 function classifyRenovateFiles(changedFiles: string[]): RenovateClassification {
-  let level: "noop" | "scoped" | "all-js" = "noop";
+  let level: "noop" | "scoped" = "noop";
   const scopedPackages = new Set<string>();
 
   for (const f of changedFiles) {
@@ -129,9 +133,9 @@ function classifyRenovateFiles(changedFiles: string[]): RenovateClassification {
       continue;
     }
 
-    // Root package.json — affects all JS/TS packages
+    // Root package.json — only contains markdownlint-cli2 dev tool, not consumed by any
+    // workspace package; if real shared workspace deps are ever added here, revisit this.
     if (f === "package.json") {
-      level = "all-js";
       continue;
     }
 
@@ -145,11 +149,20 @@ function classifyRenovateFiles(changedFiles: string[]): RenovateClassification {
       continue;
     }
 
+    // Dagger manifest/lockfile — tool version bumps (npm, typescript in Dagger runtime);
+    // actual pipeline logic lives in .dagger/src/ which falls through correctly.
+    if (
+      f === ".dagger/package.json" ||
+      f === ".dagger/bun.lock" ||
+      f === ".dagger/package-lock.json"
+    ) {
+      continue;
+    }
+
     // Anything else is unrecognized — fall through to normal detection
     return null;
   }
 
-  if (level === "all-js") return { kind: "all-js" };
   if (level === "scoped") return { kind: "scoped", packages: scopedPackages };
   return { kind: "noop" };
 }
@@ -183,7 +196,7 @@ async function getLastGreenCommit(): Promise<string | null> {
   const url =
     `https://api.buildkite.com/v2/organizations/${org}` +
     `/pipelines/${pipeline}/builds` +
-    `?branch=main&state=passed&per_page=10`;
+    `?branch=main&state=passed&per_page=25`;
 
   try {
     const resp = await fetch(url, {
@@ -215,20 +228,20 @@ async function getLastGreenCommit(): Promise<string | null> {
       if (String(build.number) === currentBuild) continue;
 
       const jobs = build.jobs ?? [];
-      const daggerJobs = jobs.filter((j) =>
-        (j.name ?? "").includes(":dagger_knife:"),
+      const qualifyingJobs = jobs.filter((j) =>
+        (j.name ?? "").includes(":test_tube:"),
       );
 
-      if (daggerJobs.length >= MIN_GREEN_STEPS) {
+      if (qualifyingJobs.length >= MIN_GREEN_STEPS) {
         const commit = build.commit ?? "";
         console.error(
-          `Last green build: #${build.number} (${daggerJobs.length} dagger jobs, commit ${commit.slice(0, 10)})`,
+          `Last green build: #${build.number} (${qualifyingJobs.length} test jobs, commit ${commit.slice(0, 10)})`,
         );
         return commit;
       }
 
       console.error(
-        `Build #${build.number} skipped: only ${daggerJobs.length} dagger jobs (need ${MIN_GREEN_STEPS})`,
+        `Build #${build.number} skipped: only ${qualifyingJobs.length} test jobs (need ${MIN_GREEN_STEPS})`,
       );
     }
   } catch (e) {

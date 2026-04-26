@@ -332,17 +332,33 @@ describe("classifyRenovateFiles", () => {
     });
   });
 
-  // all-js cases
-  it("returns all-js for root package.json", () => {
+  // root package.json — noop (only contains markdownlint-cli2, no workspace-consumed deps)
+  it("returns noop for root package.json", () => {
     expect(_classifyRenovateFiles(["package.json", "bun.lock"])).toEqual({
-      kind: "all-js",
+      kind: "noop",
+    });
+  });
+
+  // .dagger manifest/lockfile — noop (Dagger runtime tool versions, not workspace code)
+  it("returns noop for .dagger/package.json", () => {
+    expect(_classifyRenovateFiles([".dagger/package.json"])).toEqual({
+      kind: "noop",
+    });
+  });
+
+  it("returns noop for .dagger/bun.lock", () => {
+    expect(_classifyRenovateFiles([".dagger/bun.lock"])).toEqual({
+      kind: "noop",
+    });
+  });
+
+  it("returns noop for .dagger/package-lock.json", () => {
+    expect(_classifyRenovateFiles([".dagger/package-lock.json"])).toEqual({
+      kind: "noop",
     });
   });
 
   // null (fallthrough) cases
-  it("returns null for .dagger/package.json", () => {
-    expect(_classifyRenovateFiles([".dagger/package.json"])).toBeNull();
-  });
 
   it("returns null for unknown file", () => {
     expect(_classifyRenovateFiles(["some/random/file.ts"])).toBeNull();
@@ -364,20 +380,24 @@ describe("classifyRenovateFiles", () => {
     });
   });
 
-  it("all-js wins over scoped when mixed", () => {
+  it("scoped wins over noop when root package.json is present", () => {
+    // root package.json is noop, so scoped (packages/birmel/package.json) wins
     const result = _classifyRenovateFiles([
       "packages/birmel/package.json",
       "package.json",
       "bun.lock",
     ]);
-    expect(result).toEqual({ kind: "all-js" });
+    expect(result).toEqual({
+      kind: "scoped",
+      packages: new Set(["birmel"]),
+    });
   });
 
-  it("null wins over all-js when mixed", () => {
+  it("null wins over noop when an unrecognized file is present", () => {
     expect(
       _classifyRenovateFiles([
         "packages/homelab/src/cdk8s/src/versions.ts",
-        ".dagger/package.json",
+        "some/unrecognized/file.ts",
       ]),
     ).toBeNull();
   });

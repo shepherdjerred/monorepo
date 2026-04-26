@@ -22,6 +22,7 @@ AI-maintained knowledge base for the monorepo.
 - [Dagger Disk Write Amplification](decisions/2026-02-23_dagger-disk-write-amplification.md) - Historical Dagger engine I/O incident and mitigation notes
 - [1Password Deduplication](decisions/2026-03-08_1password-deduplication.md) - Deduplicating 1Password secret references
 - [Renovate HA Manager Disabled](decisions/2026-04-05_renovate-homeassistant-manager-disabled.md) - Disabled homeassistant-manifest manager for non-HA manifests
+- [CI Build Scoping Fixes](decisions/2026-04-26_ci-build-scoping-fixes.md) - Three bugs causing every main build to rebuild all 25 packages; fixed baseline lookup and Renovate fast-track
 
 ## Plans
 
