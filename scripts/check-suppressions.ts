@@ -62,6 +62,11 @@ const EXCLUDED_FILES = [
   "scripts/check-dagger-hygiene.ts",
   // Uses || true for grep exit code
   "scripts/quality-ratchet.ts",
+  // Prometheus exporter shell script: `2>/dev/null` falls back to a 0 metric
+  // when zpool/date are unavailable, which is the right behavior for scrape
+  // resilience. The 2>/dev/null ban is scoped to .dagger/src/ and
+  // scripts/ci/src/ per CLAUDE.md, not arbitrary shell scripts.
+  "packages/homelab/src/cdk8s/src/resources/monitoring/scripts/zfs_zpool.sh",
 ];
 
 type Finding = {

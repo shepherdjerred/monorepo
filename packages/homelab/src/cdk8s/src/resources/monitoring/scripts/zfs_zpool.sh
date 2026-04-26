@@ -45,6 +45,43 @@ done <<<$'1\tsize_bytes\tTotal size of the storage pool
 4\tdedupratio\tThe deduplication ratio
 5\tfragmentation\tThe amount of fragmentation in the pool'
 
+### zpool scan / scrub metrics ###
+
+# Month name to zero-padded number lookup (bash 4+ associative array)
+declare -A MONTH_NUM=([Jan]=01 [Feb]=02 [Mar]=03 [Apr]=04 [May]=05 [Jun]=06 [Jul]=07 [Aug]=08 [Sep]=09 [Oct]=10 [Nov]=11 [Dec]=12)
+
+echo "# HELP ${ZPOOL}_scan_state Current scan state: 0=idle/none, 1=scrub in progress, 2=resilver in progress"
+echo "# TYPE ${ZPOOL}_scan_state gauge"
+echo "# HELP ${ZPOOL}_last_scrub_completion_timestamp Unix timestamp of the last completed scrub (0 if never)"
+echo "# TYPE ${ZPOOL}_last_scrub_completion_timestamp gauge"
+
+while IFS= read -r pool; do
+  scan_line=$(zpool status "$pool" 2>/dev/null | grep -E "^\s+scan:" | head -1)
+
+  if echo "$scan_line" | grep -q "scrub in progress"; then
+    state=1
+  elif echo "$scan_line" | grep -q "resilver in progress"; then
+    state=2
+  else
+    state=0
+  fi
+  echo "${ZPOOL}_scan_state{${ZPOOL_NAME}=\"$pool\"} $state"
+
+  # Parse completed scrub timestamp from lines like:
+  #   scan: scrub repaired 0B in 01:27:52 with 0 errors on Sun Apr 21 03:29:00 2024
+  ts=0
+  if echo "$scan_line" | grep -qE "errors on [A-Z][a-z]{2} [A-Z][a-z]{2}"; then
+    date_part=$(echo "$scan_line" | grep -oE "[A-Z][a-z]{2} [A-Z][a-z]{2} +[0-9]+ [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4}")
+    if [ -n "$date_part" ]; then
+      read -r _ month day time year <<<"$date_part"
+      mon="${MONTH_NUM[$month]:-01}"
+      day=$(printf "%02d" "$day")
+      ts=$(date -d "${year}-${mon}-${day} ${time}" +%s 2>/dev/null || echo 0)
+    fi
+  fi
+  echo "${ZPOOL}_last_scrub_completion_timestamp{${ZPOOL_NAME}=\"$pool\"} $ts"
+done < <(zpool list -H -o name)
+
 ### dataset metadata ###
 
 echo "# HELP ${DATASET} Constant metric with metadata about the zfs dataset"

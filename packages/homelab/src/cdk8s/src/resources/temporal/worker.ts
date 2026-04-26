@@ -6,6 +6,7 @@ import {
   DeploymentStrategy,
   EnvValue,
   Secret,
+  Service,
   ServiceAccount,
 } from "cdk8s-plus-31";
 import {
@@ -16,9 +17,12 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import {
   KubeClusterRole,
   KubeClusterRoleBinding,
+  KubeRole,
+  KubeRoleBinding,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 
 export type CreateTemporalWorkerDeploymentProps = {
   serverServiceName: string;
@@ -75,6 +79,74 @@ export function createTemporalWorkerDeployment(
     ],
   });
 
+  // Namespace-scoped RBAC for the ZFS maintenance workflow, which execs into
+  // the zfs-zpool-collector DaemonSet pod in the prometheus namespace.
+  new KubeRole(chart, "temporal-worker-zfs-exec", {
+    metadata: { name: "temporal-worker-zfs-exec", namespace: "prometheus" },
+    rules: [
+      {
+        apiGroups: [""],
+        resources: ["pods/exec"],
+        verbs: ["create"],
+      },
+      {
+        apiGroups: [""],
+        resources: ["pods"],
+        verbs: ["get", "list"],
+      },
+    ],
+  });
+
+  new KubeRoleBinding(chart, "temporal-worker-zfs-exec-binding", {
+    metadata: { name: "temporal-worker-zfs-exec", namespace: "prometheus" },
+    roleRef: {
+      apiGroup: "rbac.authorization.k8s.io",
+      kind: "Role",
+      name: "temporal-worker-zfs-exec",
+    },
+    subjects: [
+      {
+        kind: "ServiceAccount",
+        name: serviceAccount.name,
+        namespace: chart.namespace ?? "temporal",
+      },
+    ],
+  });
+
+  // Namespace-scoped RBAC for the Bugsink housekeeping workflow, which execs
+  // into the bugsink pod to run bugsink-manage maintenance commands.
+  new KubeRole(chart, "temporal-worker-bugsink-exec", {
+    metadata: { name: "temporal-worker-bugsink-exec", namespace: "bugsink" },
+    rules: [
+      {
+        apiGroups: [""],
+        resources: ["pods/exec"],
+        verbs: ["create"],
+      },
+      {
+        apiGroups: [""],
+        resources: ["pods"],
+        verbs: ["get", "list"],
+      },
+    ],
+  });
+
+  new KubeRoleBinding(chart, "temporal-worker-bugsink-exec-binding", {
+    metadata: { name: "temporal-worker-bugsink-exec", namespace: "bugsink" },
+    roleRef: {
+      apiGroup: "rbac.authorization.k8s.io",
+      kind: "Role",
+      name: "temporal-worker-bugsink-exec",
+    },
+    subjects: [
+      {
+        kind: "ServiceAccount",
+        name: serviceAccount.name,
+        namespace: chart.namespace ?? "temporal",
+      },
+    ],
+  });
+
   const deployment = new Deployment(chart, "temporal-worker", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
@@ -96,6 +168,7 @@ export function createTemporalWorkerDeployment(
     withCommonProps({
       name: "temporal-worker",
       image: `ghcr.io/shepherdjerred/temporal-worker:${versions["shepherdjerred/temporal-worker"]}`,
+      ports: [{ number: 9464, name: "metrics" }],
       securityContext: {
         user: UID,
         group: GID,
@@ -113,6 +186,7 @@ export function createTemporalWorkerDeployment(
       },
       envVariables: {
         TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
+        TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
         // Make the cluster CA globally trusted. @kubernetes/client-node hands
         // its `ca` to node-fetch via an https.Agent; Bun's node-fetch polyfill
         // doesn't reliably honor per-agent CA bundles, which surfaced as
@@ -157,6 +231,13 @@ export function createTemporalWorkerDeployment(
           secret,
           key: "GH_TOKEN",
         }),
+        SENTRY_DSN: EnvValue.fromSecretValue(
+          {
+            secret,
+            key: "SENTRY_DSN",
+          },
+          { optional: true },
+        ),
         // OpenAI
         OPENAI_API_KEY: EnvValue.fromSecretValue({
           secret,
@@ -185,6 +266,19 @@ export function createTemporalWorkerDeployment(
   );
 
   void container;
+
+  new Service(chart, "temporal-worker-metrics-service", {
+    selector: deployment,
+    metadata: {
+      labels: { app: "temporal-worker-metrics" },
+    },
+    ports: [{ port: 9464, name: "metrics" }],
+  });
+
+  createServiceMonitor(chart, {
+    name: "temporal-worker-metrics",
+    matchLabels: { app: "temporal-worker-metrics" },
+  });
 
   return { deployment };
 }

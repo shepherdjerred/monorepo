@@ -4,6 +4,8 @@ import * as timeseries from "@grafana/grafana-foundation-sdk/timeseries";
 import * as stat from "@grafana/grafana-foundation-sdk/stat";
 import * as prometheus from "@grafana/grafana-foundation-sdk/prometheus";
 import { exportDashboardWithHelmEscaping } from "./dashboard-export.ts";
+import { addPreMatchRow } from "./scout-dashboard-prematch-panels.ts";
+import { addApiAndCompetitionRows } from "./scout-dashboard-api-competition-rows.ts";
 
 // Helper function to build filter expression
 function buildFilter() {
@@ -288,151 +290,17 @@ export function createScoutDashboard() {
       .gridPos({ x: 12, y: 17, w: 12, h: 8 }),
   );
 
-  // Row 4: API Activity
-  builder.withRow(new dashboard.RowBuilder("API Activity"));
+  // Row 4: Pre-match — extracted into addPreMatchRow to keep this function
+  // under the 400-line ESLint cap. The helper owns both the original baseline
+  // panels (active games / detection rate / loading-screen outcomes /
+  // spectator-payload save outcomes + p95) and the bug-fix observability
+  // panels (subsequent-match counter, skin-fallback rate, top fallback
+  // skins, polling-skip reasons, spectator call rate + circuit breaker).
+  addPreMatchRow(builder, prometheusDatasource);
 
-  // Riot API Request Rate
-  builder.withPanel(
-    new timeseries.PanelBuilder()
-      .title("Riot API Request Rate")
-      .description("Requests per second to Riot API")
-      .datasource(prometheusDatasource)
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            `sum by (environment) (rate(riot_api_requests_total{${buildFilter()}}[5m]))`,
-          )
-          .legendFormat("{{environment}}"),
-      )
-      .unit("reqps")
-      .lineWidth(2)
-      .fillOpacity(10)
-      .gridPos({ x: 0, y: 25, w: 12, h: 8 }),
-  );
-
-  // Database Query Rate
-  builder.withPanel(
-    new timeseries.PanelBuilder()
-      .title("Database Query Rate")
-      .description("Database queries per second")
-      .datasource(prometheusDatasource)
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            `sum by (environment) (rate(database_queries_total{${buildFilter()}}[5m]))`,
-          )
-          .legendFormat("{{environment}}"),
-      )
-      .unit("reqps")
-      .lineWidth(2)
-      .fillOpacity(10)
-      .gridPos({ x: 12, y: 25, w: 12, h: 8 }),
-  );
-
-  // Reports Generated
-  builder.withPanel(
-    new timeseries.PanelBuilder()
-      .title("Reports Generated")
-      .description("Match reports generated per minute")
-      .datasource(prometheusDatasource)
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            `sum by (environment) (rate(reports_generated_total{${buildFilter()}}[5m])) * 60`,
-          )
-          .legendFormat("{{environment}}"),
-      )
-      .unit("short")
-      .lineWidth(2)
-      .fillOpacity(10)
-      .gridPos({ x: 0, y: 33, w: 8, h: 8 }),
-  );
-
-  // Reports Failed
-  builder.withPanel(
-    new timeseries.PanelBuilder()
-      .title("Reports Failed")
-      .description("Match report generation failures per minute")
-      .datasource(prometheusDatasource)
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            `sum by (environment) (rate(reports_failed_total{${buildFilter()}}[5m])) * 60`,
-          )
-          .legendFormat("{{environment}}"),
-      )
-      .unit("short")
-      .lineWidth(2)
-      .fillOpacity(10)
-      .thresholds(
-        new dashboard.ThresholdsConfigBuilder()
-          .mode(dashboard.ThresholdsMode.Absolute)
-          .steps([
-            { value: 0, color: "green" },
-            { value: 0.01, color: "yellow" },
-            { value: 1, color: "red" },
-          ]),
-      )
-      .gridPos({ x: 8, y: 33, w: 8, h: 8 }),
-  );
-
-  // Riot API Errors
-  builder.withPanel(
-    new timeseries.PanelBuilder()
-      .title("Riot API Errors")
-      .description("All errors from Riot API by HTTP status")
-      .datasource(prometheusDatasource)
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            `sum by (environment, http_status) (rate(riot_api_errors_total{${buildFilter()}}[5m]))`,
-          )
-          .legendFormat("{{environment}} - {{http_status}}"),
-      )
-      .unit("reqps")
-      .lineWidth(2)
-      .fillOpacity(10)
-      .thresholds(
-        new dashboard.ThresholdsConfigBuilder()
-          .mode(dashboard.ThresholdsMode.Absolute)
-          .steps([
-            { value: 0, color: "green" },
-            { value: 0.01, color: "yellow" },
-            { value: 0.1, color: "red" },
-          ]),
-      )
-      .gridPos({ x: 16, y: 33, w: 8, h: 8 }),
-  );
-
-  // Participant Mismatches (known Riot API bug)
-  builder.withPanel(
-    new timeseries.PanelBuilder()
-      .title("Participant Mismatches")
-      .description(
-        "Riot API metadata/info participant inconsistencies per minute",
-      )
-      .datasource(prometheusDatasource)
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            `sum by (environment) (rate(participant_mismatch_total{${buildFilter()}}[5m])) * 60`,
-          )
-          .legendFormat("{{environment}}"),
-      )
-      .unit("short")
-      .lineWidth(2)
-      .fillOpacity(10)
-      .thresholds(
-        new dashboard.ThresholdsConfigBuilder()
-          .mode(dashboard.ThresholdsMode.Absolute)
-          .steps([
-            { value: 0, color: "green" },
-            { value: 0.01, color: "yellow" },
-            { value: 1, color: "red" },
-          ]),
-      )
-      .gridPos({ x: 0, y: 41, w: 8, h: 8 }),
-  );
+  // Rows 5 + 6: API Activity + Competition leaderboard chart — extracted
+  // for the same line-cap reason as the pre-match row above.
+  addApiAndCompetitionRows(builder, prometheusDatasource);
 
   return builder.build();
 }

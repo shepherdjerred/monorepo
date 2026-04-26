@@ -18,6 +18,7 @@ import { getTasknotesRuleGroups } from "./rules/tasknotes.ts";
 import { getClusterHygieneRuleGroups } from "./rules/cluster-hygiene.ts";
 import { getEtcdCustomRuleGroups } from "./rules/etcd-custom.ts";
 import { getZfsMaintenanceRuleGroups } from "./rules/zfs-maintenance.ts";
+import { getTemporalRuleGroups } from "./rules/temporal.ts";
 
 export function createPrometheusMonitoring(chart: Chart) {
   // Create Home Assistant rules
@@ -232,6 +233,18 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
     spec: {
       groups: getZfsMaintenanceRuleGroups(),
+    },
+  });
+
+  // Create Temporal rules
+  new PrometheusRule(chart, "prometheus-temporal-rules", {
+    metadata: {
+      name: "prometheus-temporal-rules",
+      namespace: "temporal",
+      labels: { release: "prometheus" },
+    },
+    spec: {
+      groups: getTemporalRuleGroups(),
     },
   });
 }
