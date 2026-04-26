@@ -8,6 +8,12 @@ const {
   deleteStaleGolink,
 } = proxyActivities<GolinkSyncActivities>({
   startToCloseTimeout: "1 minute",
+  retry: {
+    maximumAttempts: 5,
+    initialInterval: "1s",
+    backoffCoefficient: 2,
+    maximumInterval: "30s",
+  },
 });
 
 export async function syncGolinks(): Promise<void> {

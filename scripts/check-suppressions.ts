@@ -67,6 +67,11 @@ const EXCLUDED_FILES = [
   // resilience. The 2>/dev/null ban is scoped to .dagger/src/ and
   // scripts/ci/src/ per CLAUDE.md, not arbitrary shell scripts.
   "packages/homelab/src/cdk8s/src/resources/monitoring/scripts/zfs_zpool.sh",
+  // Intentional: writes a GIT_ASKPASS script that returns the literal string
+  // "x-access-token" as the git username (with $GH_TOKEN as the password).
+  // This is the recommended pattern that the CLAUDE.md rule actually points
+  // toward — the ban is on putting `x-access-token` in URLs, not in askpass.
+  "packages/temporal/src/activities/data-dragon.ts",
 ];
 
 type Finding = {

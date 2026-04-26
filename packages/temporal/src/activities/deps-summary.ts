@@ -353,7 +353,7 @@ Format the response in HTML for email.`;
 
     try {
       const completion = await openai.chat.completions.create({
-        model: "gpt-5.1",
+        model: "gpt-5.4",
         messages: [{ role: "user", content: prompt }],
         max_completion_tokens: 8000,
       });
