@@ -30,7 +30,7 @@ export type ModelInfo = {
 /**
  * Comprehensive list of OpenAI models with their capabilities
  * Pricing verified from https://platform.openai.com/pricing
- * Last updated: December 2025
+ * Last updated: April 2026
  */
 export const OPENAI_MODELS: Record<string, ModelInfo> = {
   // GPT-4o Series (Most capable, multimodal)
@@ -223,12 +223,76 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
     category: "gpt-3.5",
   },
 
-  // GPT-5 Series (Reasoning models - no temperature/topP support)
+  // GPT-5 Series (superseded by gpt-5.4 series)
   "gpt-5": {
     id: "gpt-5",
     name: "GPT-5",
     description:
-      "🧠 GPT-5 base model • $1.25 input / $10 output per 1M tokens • No temp control",
+      "⚠️ Superseded by gpt-5.4 • $1.25 input / $10 output per 1M tokens • No temp control",
+    capabilities: {
+      supportsTemperature: false,
+      supportsTopP: false,
+      maxTokens: 400_000,
+      costPer1MInputTokens: 1.25,
+      costPer1MOutputTokens: 10,
+    },
+    category: "other",
+    deprecated: true,
+  },
+  "gpt-5-mini": {
+    id: "gpt-5-mini",
+    name: "GPT-5 Mini",
+    description:
+      "⚠️ Superseded by gpt-5.4-mini • $0.25 input / $2 output per 1M tokens • No temp control",
+    capabilities: {
+      supportsTemperature: false,
+      supportsTopP: false,
+      maxTokens: 200_000,
+      costPer1MInputTokens: 0.25,
+      costPer1MOutputTokens: 2,
+    },
+    category: "other",
+    deprecated: true,
+  },
+  "gpt-5-nano": {
+    id: "gpt-5-nano",
+    name: "GPT-5 Nano",
+    description:
+      "⚠️ Superseded by gpt-5.4-nano • $0.05 input / $0.40 output per 1M tokens • No temp control",
+    capabilities: {
+      supportsTemperature: false,
+      supportsTopP: false,
+      maxTokens: 100_000,
+      costPer1MInputTokens: 0.05,
+      costPer1MOutputTokens: 0.4,
+    },
+    category: "other",
+    deprecated: true,
+  },
+
+  // GPT-5.1 (superseded by gpt-5.4)
+  "gpt-5.1": {
+    id: "gpt-5.1",
+    name: "GPT-5.1",
+    description:
+      "⚠️ Superseded by gpt-5.4 • 400k context • $1.25 input / $10 output per 1M tokens • No temp control",
+    capabilities: {
+      supportsTemperature: false,
+      supportsTopP: false,
+      maxTokens: 400_000,
+      costPer1MInputTokens: 1.25,
+      costPer1MOutputTokens: 10,
+    },
+    category: "other",
+    deprecated: true,
+  },
+
+  // GPT-5.4 Series (Latest - no temperature/topP support)
+  "gpt-5.4": {
+    id: "gpt-5.4",
+    name: "GPT-5.4",
+    description:
+      "🚀 Latest GPT-5.4 • 400k context • $1.25 input / $10 output per 1M tokens • No temp control",
     capabilities: {
       supportsTemperature: false,
       supportsTopP: false,
@@ -238,11 +302,11 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
     },
     category: "other",
   },
-  "gpt-5-mini": {
-    id: "gpt-5-mini",
-    name: "GPT-5 Mini",
+  "gpt-5.4-mini": {
+    id: "gpt-5.4-mini",
+    name: "GPT-5.4 Mini",
     description:
-      "💰 Balanced GPT-5 variant • $0.25 input / $2 output per 1M tokens • No temp control",
+      "💰 Balanced GPT-5.4 variant • $0.25 input / $2 output per 1M tokens • No temp control",
     capabilities: {
       supportsTemperature: false,
       supportsTopP: false,
@@ -252,9 +316,9 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
     },
     category: "other",
   },
-  "gpt-5-nano": {
-    id: "gpt-5-nano",
-    name: "GPT-5 Nano",
+  "gpt-5.4-nano": {
+    id: "gpt-5.4-nano",
+    name: "GPT-5.4 Nano",
     description:
       "⚡ Fastest, most cost-effective • $0.05 input / $0.40 output per 1M tokens • No temp control",
     capabilities: {
@@ -266,36 +330,23 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
     },
     category: "other",
   },
-
-  // GPT-5.1 (Latest flagship model - no temperature/topP support)
-  "gpt-5.1": {
-    id: "gpt-5.1",
-    name: "GPT-5.1",
-    description:
-      "🚀 Latest GPT-5.1 • 400k context • $1.25 input / $10 output per 1M tokens • No temp control",
-    capabilities: {
-      supportsTemperature: false,
-      supportsTopP: false,
-      maxTokens: 400_000,
-      costPer1MInputTokens: 1.25,
-      costPer1MOutputTokens: 10,
-    },
-    category: "other",
-  },
 };
 
 /**
  * Gemini/Imagen pricing (per image)
  * Verified from https://ai.google.dev/pricing
- * Last updated: November 2025
+ * Last updated: April 2026
  */
 export const GEMINI_PRICING = {
-  // Imagen 3 pricing (used by Gemini 2.0 Flash for image generation)
-  "gemini-2.0-flash-exp": 0.03, // $0.03 per image
-  "gemini-2.0-flash": 0.03, // $0.03 per image
+  // Gemini 2.5 image models (current stable)
+  "gemini-2.5-flash-image": 0.03, // $0.03 per image (Nano Banana stable)
+  // Preview image models
+  "gemini-3-pro-image-preview": 0.15, // $0.15 per image (Nano Banana Pro - estimated, no official pricing)
+  "gemini-3.1-flash-image-preview": 0.03, // $0.03 per image (Nano Banana 2 - estimated)
+  // Deprecated models (gemini-2.0-flash shut down)
+  "gemini-2.0-flash-exp": 0.03, // deprecated
+  "gemini-2.0-flash": 0.03, // deprecated
   "imagen-3.0-generate": 0.03, // $0.03 per image
-  // Preview/experimental models (pricing not officially documented)
-  "gemini-3-pro-image-preview": 0.15, // $0.15 per image (estimated - preview model, no official pricing yet)
   // Legacy pricing for older models (if used)
   "gemini-1.5-pro": 0.1, // $0.10 per image (estimated, not officially documented)
   "gemini-1.5-flash": 0.05, // $0.05 per image (estimated, not officially documented)

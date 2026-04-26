@@ -7,6 +7,16 @@ import type {
 import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import { saveToS3 } from "#src/storage/s3-helpers.ts";
 import { savePrematchToS3 } from "#src/storage/s3-prematch.ts";
+import configuration from "#src/configuration.ts";
+import {
+  prematchSpectatorPayloadSavesTotal,
+  prematchSpectatorPayloadSaveDurationSeconds,
+} from "#src/metrics/index.ts";
+
+export type PrematchPayloadSaveResult = {
+  status: "saved" | "skipped_no_bucket" | "error";
+  durationSeconds?: number;
+};
 
 /**
  * Save a League of Legends match to S3 storage
@@ -131,25 +141,44 @@ export async function savePrematchDataToS3(
   gameId: number,
   gameInfo: RawCurrentGameInfo,
   trackedPlayerAliases: string[],
-): Promise<void> {
+): Promise<PrematchPayloadSaveResult> {
+  if (configuration.s3BucketName === undefined) {
+    prematchSpectatorPayloadSavesTotal.inc({ status: "skipped_no_bucket" });
+    return { status: "skipped_no_bucket" };
+  }
+
   const body = JSON.stringify(gameInfo, null, 2);
-  await savePrematchToS3({
-    gameId,
-    assetType: "spectator-data",
-    extension: "json",
-    body,
-    contentType: "application/json",
-    metadata: {
-      gameId: gameId.toString(),
-      gameMode: gameInfo.gameMode,
-      queueId: gameInfo.gameQueueConfigId.toString(),
-      participantCount: gameInfo.participants.length.toString(),
-      trackedPlayers: trackedPlayerAliases.join(", "),
-    },
-    logEmoji: "📡",
-    logMessage: "Saving spectator data to S3",
-    errorContext: "prematch-data",
-  });
+  const startTime = Date.now();
+
+  try {
+    await savePrematchToS3({
+      gameId,
+      assetType: "spectator-data",
+      extension: "json",
+      body,
+      contentType: "application/json",
+      metadata: {
+        gameId: gameId.toString(),
+        gameMode: gameInfo.gameMode,
+        queueId: gameInfo.gameQueueConfigId.toString(),
+        participantCount: gameInfo.participants.length.toString(),
+        trackedPlayers: trackedPlayerAliases.join(", "),
+      },
+      logEmoji: "📡",
+      logMessage: "Saving spectator data to S3",
+      errorContext: "prematch-data",
+    });
+
+    const durationSeconds = (Date.now() - startTime) / 1000;
+    prematchSpectatorPayloadSaveDurationSeconds.observe(durationSeconds);
+    prematchSpectatorPayloadSavesTotal.inc({ status: "saved" });
+    return { status: "saved", durationSeconds };
+  } catch {
+    const durationSeconds = (Date.now() - startTime) / 1000;
+    prematchSpectatorPayloadSaveDurationSeconds.observe(durationSeconds);
+    prematchSpectatorPayloadSavesTotal.inc({ status: "error" });
+    return { status: "error", durationSeconds };
+  }
 }
 
 /**

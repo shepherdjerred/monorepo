@@ -231,6 +231,21 @@ export const prematchPollingSkipsTotal = new Counter({
 });
 
 /**
+ * Counts pre-match detections where the player's PUUID was already in a
+ * non-expired ActiveGame row with a different gameId — i.e. they finished
+ * one match and started another within the 2-hour TTL window.
+ *
+ * This branch is unreachable until the per-PUUID skip-list is removed from
+ * `checkActiveGames`. Once removed, a non-zero rate here is direct evidence
+ * that the bot now correctly notifies on back-to-back games.
+ */
+export const prematchSubsequentMatchDetectedTotal = new Counter({
+  name: "prematch_subsequent_match_detected_total",
+  help: "Pre-match detections where the player had a prior non-expired ActiveGame row with a different gameId. Direct evidence the per-PUUID skip-list removal is working.",
+  registers: [registry],
+});
+
+/**
  * Total loading screen images generated (or failed)
  */
 export const prematchLoadingScreenGeneratedTotal = new Counter({
@@ -241,12 +256,48 @@ export const prematchLoadingScreenGeneratedTotal = new Counter({
 });
 
 /**
+ * Loading-screen images that fell back to base skin (skin 0) because the
+ * requested skin's JPG was missing on disk. Most commonly triggered when
+ * Riot ships a new skin between `update-data-dragon` runs.
+ *
+ * A non-zero rate is informational, not an error. Sustained or rapidly
+ * climbing rate means it's time to refresh assets.
+ */
+export const prematchLoadingScreenSkinFallbackTotal = new Counter({
+  name: "prematch_loading_screen_skin_fallback_total",
+  help: "Loading-screen images that fell back to base skin (skin 0) because the requested skin's JPG was missing on disk.",
+  labelNames: ["champion", "requested_skin"] as const,
+  registers: [registry],
+});
+
+/**
  * Loading screen generation duration in seconds
  */
 export const prematchLoadingScreenDurationSeconds = new Histogram({
   name: "prematch_loading_screen_duration_seconds",
   help: "Time to generate loading screen image in seconds",
   buckets: [0.5, 1, 2, 5, 10, 20, 30],
+  registers: [registry],
+});
+
+/**
+ * Total attempts to persist raw prematch spectator payloads to S3.
+ */
+export const prematchSpectatorPayloadSavesTotal = new Counter({
+  name: "prematch_spectator_payload_saves_total",
+  help: "Total attempts to persist raw prematch spectator payloads to S3",
+  labelNames: ["status"] as const,
+  registers: [registry],
+});
+
+/**
+ * Duration of raw prematch spectator payload uploads to S3 in seconds.
+ * Only records attempted uploads (saved or error), not skip cases.
+ */
+export const prematchSpectatorPayloadSaveDurationSeconds = new Histogram({
+  name: "prematch_spectator_payload_save_duration_seconds",
+  help: "Time to persist raw prematch spectator payloads to S3 in seconds",
+  buckets: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10],
   registers: [registry],
 });
 
@@ -397,6 +448,17 @@ export const riotApiRequestsTotal = new Counter({
 });
 
 /**
+ * Circuit breaker state, exposed per breaker name.
+ * 0 = closed (healthy), 1 = open (skipping requests), 2 = half-open (probing).
+ */
+export const circuitBreakerStateGauge = new Gauge({
+  name: "circuit_breaker_state",
+  help: "Circuit breaker state: 0=closed (healthy), 1=open (skipping), 2=half-open (probing).",
+  labelNames: ["name"] as const,
+  registers: [registry],
+});
+
+/**
  * Total number of match reports generated
  */
 export const reportsGeneratedTotal = new Counter({
@@ -454,6 +516,69 @@ export const participantMismatchTotal = new Counter({
   name: "participant_mismatch_total",
   help: "Riot API returned participant in metadata but not in info",
   labelNames: ["queue_type"] as const,
+  registers: [registry],
+});
+
+// =======================
+// Competition Leaderboard Chart Metrics
+// =======================
+
+/**
+ * Total number of competition leaderboard chart renders.
+ * status: success | error | skipped_too_few_snapshots | skipped_disabled
+ */
+export const leaderboardChartRendersTotal = new Counter({
+  name: "leaderboard_chart_renders_total",
+  help: "Total competition leaderboard chart render attempts",
+  labelNames: ["criteria_type", "status"] as const,
+  registers: [registry],
+});
+
+/**
+ * Time to build a competition leaderboard chart attachment end-to-end
+ * (load snapshots from S3, transform per-criteria, render SVG via ECharts,
+ * rasterize via resvg).
+ */
+export const leaderboardChartRenderDurationSeconds = new Histogram({
+  name: "leaderboard_chart_render_duration_seconds",
+  help: "Time to render a competition leaderboard chart end-to-end",
+  labelNames: ["criteria_type", "status"] as const,
+  buckets: [0.1, 0.25, 0.5, 1, 2, 5, 10],
+  registers: [registry],
+});
+
+/**
+ * Size of the resulting PNG attachment in bytes.
+ * Buckets cover blank-render regression (≤10 KB) through pathological growth (>1 MB).
+ */
+export const leaderboardChartPngBytes = new Histogram({
+  name: "leaderboard_chart_png_bytes",
+  help: "Size in bytes of rendered competition leaderboard chart PNGs",
+  labelNames: ["criteria_type"] as const,
+  buckets: [10_000, 50_000, 100_000, 250_000, 500_000, 1_000_000],
+  registers: [registry],
+});
+
+/**
+ * Per-snapshot fetch outcomes when loading historical leaderboard snapshots from S3.
+ * status: success | parse_error | missing
+ */
+export const leaderboardSnapshotFetchTotal = new Counter({
+  name: "leaderboard_snapshot_fetch_total",
+  help: "Per-snapshot fetch outcomes when loading historical leaderboard snapshots from S3",
+  labelNames: ["status"] as const,
+  registers: [registry],
+});
+
+/**
+ * S3 latency for historical leaderboard snapshot operations.
+ * operation: list (ListObjectsV2 for one competition) | get (GetObject for one snapshot)
+ */
+export const leaderboardSnapshotFetchDurationSeconds = new Histogram({
+  name: "leaderboard_snapshot_fetch_duration_seconds",
+  help: "S3 latency for historical leaderboard snapshot operations",
+  labelNames: ["operation"] as const,
+  buckets: [0.05, 0.1, 0.25, 0.5, 1, 2, 5],
   registers: [registry],
 });
 

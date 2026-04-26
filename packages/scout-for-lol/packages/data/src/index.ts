@@ -141,6 +141,7 @@ export {
   validateChampionLoadingImage,
   normalizeChampionName,
 } from "./data-dragon/images.ts";
+export type { SkinFallbackEvent } from "./data-dragon/images.ts";
 
 export {
   getAvailableSkins,

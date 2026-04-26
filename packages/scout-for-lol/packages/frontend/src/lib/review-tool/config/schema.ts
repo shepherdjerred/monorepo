@@ -114,7 +114,7 @@ export type PipelineStagesConfig = z.infer<typeof PipelineStagesConfigSchema>;
  * Note: maxTokens default of 3000 matches backend DEFAULT_REVIEW_TEXT_MODEL
  */
 export const TextGenerationSettingsSchema = z.object({
-  model: z.string().default("gpt-5.1"),
+  model: z.string().default("gpt-5.4"),
   maxTokens: z.number().int().min(100).max(100_000).default(3000),
   temperature: z.number().min(0).max(2).default(1),
   topP: z.number().min(0).max(1).default(1),

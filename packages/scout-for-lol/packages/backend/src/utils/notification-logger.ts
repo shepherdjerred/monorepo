@@ -31,7 +31,8 @@ export type NotificationType =
   | "COMPETITION_ENDED"
   | "DAILY_LEADERBOARD"
   | "SNAPSHOT_ERROR"
-  | "CRON_TRIGGER";
+  | "CRON_TRIGGER"
+  | "LEADERBOARD_CHART_FAILED";
 
 /**
  * Log entry structure
@@ -84,6 +85,7 @@ export function logNotification(
     DAILY_LEADERBOARD: "📊",
     SNAPSHOT_ERROR: "⚠️",
     CRON_TRIGGER: "⏰",
+    LEADERBOARD_CHART_FAILED: "📉",
   }[type];
 
   const competitionInfo =

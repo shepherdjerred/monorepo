@@ -189,11 +189,45 @@ export function getChampionLoadingImageUrl(
   return `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${normalized}_${skinNum.toString()}.jpg`;
 }
 
+/**
+ * Fired by `getChampionLoadingImageBase64` when the requested skin's JPG is
+ * not on disk and we fall back to the base skin (skin 0). The caller is
+ * expected to log/meter — this is expected (not exceptional) behaviour for
+ * the small window between Riot releasing a new skin and the next
+ * `update-data-dragon` run.
+ */
+export type SkinFallbackEvent = {
+  championName: string;
+  requestedSkin: number;
+};
+
 export async function getChampionLoadingImageBase64(
   championName: string,
   skinNum = 0,
+  onSkinFallback?: (event: SkinFallbackEvent) => void,
 ): Promise<string> {
   const normalized = normalizeChampionName(championName);
-  const relativePath = `./assets/img/champion-loading/${normalized}_${skinNum.toString()}.jpg`;
-  return loadImageAsBase64(relativePath, "image/jpeg");
+  const requested = `./assets/img/champion-loading/${normalized}_${skinNum.toString()}.jpg`;
+  const requestedAbs = getAbsolutePath(requested);
+
+  if (await Bun.file(requestedAbs).exists()) {
+    return loadImageAsBase64(requested, "image/jpeg");
+  }
+
+  // Defense-in-depth: with the update-data-dragon CommunityDragon fallback
+  // in place this should be rare — only triggers when Riot ships a new skin
+  // between asset refreshes. When it fires we still post a real image
+  // (default skin) instead of the text-only fallback embed; the metric in
+  // the backend tells us to refresh the asset cache.
+  if (skinNum !== 0) {
+    onSkinFallback?.({ championName: normalized, requestedSkin: skinNum });
+    return loadImageAsBase64(
+      `./assets/img/champion-loading/${normalized}_0.jpg`,
+      "image/jpeg",
+    );
+  }
+
+  throw new Error(
+    `Image not found at ${requestedAbs}. Run 'bun run update-data-dragon' in packages/data to cache latest assets.`,
+  );
 }

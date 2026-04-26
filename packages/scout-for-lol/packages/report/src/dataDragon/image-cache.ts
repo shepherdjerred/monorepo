@@ -6,6 +6,7 @@ import {
   getAugmentIconBase64,
   summoner,
   items,
+  type SkinFallbackEvent,
 } from "@scout-for-lol/data";
 
 // Centralized image cache for Satori rendering
@@ -146,10 +147,17 @@ export function getChampionLoadingImage(
 }
 
 // Pre-load champion loading screen images for a list of champion/skin combos.
-// Skin numbers must already resolve to existing files on disk (chromas are
-// resolved to their parent skin via resolveLoadingSkinNum at the caller).
+// Chromas are resolved to their parent skin via resolveLoadingSkinNum at the
+// caller. If a requested skin's JPG is missing on disk (e.g. Riot just shipped
+// a new skin and we haven't refreshed assets), the loader silently falls back
+// to skin 0; pass `onSkinFallback` to log/meter those events.
+//
+// The fallback base64 is cached under the *requested* `${champion}_${skinNum}`
+// key so repeat renders within the same run hit the cache instead of doing
+// the FS-existence check again.
 export async function preloadChampionLoadingImages(
   entries: { championName: string; skinNum: number }[],
+  onSkinFallback?: (event: SkinFallbackEvent) => void,
 ): Promise<void> {
   const seen = new Set<string>();
   const uniqueEntries = entries.filter((entry) => {
@@ -167,7 +175,11 @@ export async function preloadChampionLoadingImages(
       if (championLoadingImageCache.has(key)) {
         return;
       }
-      const base64 = await getChampionLoadingImageBase64(championName, skinNum);
+      const base64 = await getChampionLoadingImageBase64(
+        championName,
+        skinNum,
+        onSkinFallback,
+      );
       championLoadingImageCache.set(key, base64);
     }),
   );

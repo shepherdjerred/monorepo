@@ -1,13 +1,22 @@
-import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import {
+  PutObjectCommand,
+  GetObjectCommand,
+  ListObjectsV2Command,
+} from "@aws-sdk/client-s3";
 import { createS3Client } from "#src/storage/s3-client.ts";
 import {
   CachedLeaderboardSchema,
   type CachedLeaderboard,
+  type CompetitionId,
 } from "@scout-for-lol/data/index.ts";
 import configuration from "#src/configuration.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
+import {
+  leaderboardSnapshotFetchTotal,
+  leaderboardSnapshotFetchDurationSeconds,
+} from "#src/metrics/index.ts";
 import { z } from "zod";
 
 // Schema for AWS S3 "not found" errors
@@ -261,4 +270,210 @@ export async function loadCachedLeaderboard(
     });
     return null;
   }
+}
+
+// ============================================================================
+// Load Historical Leaderboard Snapshots from S3
+// ============================================================================
+
+function snapshotPrefix(competitionId: CompetitionId): string {
+  return `leaderboards/competition-${competitionId.toString()}/snapshots/`;
+}
+
+/**
+ * Schema for AWS ListObjectsV2 response items we care about.
+ */
+const S3ObjectListSchema = z.object({
+  Contents: z
+    .array(
+      z.object({
+        Key: z.string(),
+      }),
+    )
+    .optional(),
+});
+
+const SNAPSHOT_FETCH_CHUNK_SIZE = 20;
+
+async function fetchSnapshotByKey(
+  bucket: string,
+  key: string,
+  competitionId: CompetitionId,
+): Promise<CachedLeaderboard | null> {
+  const start = Date.now();
+  try {
+    const client = createS3Client();
+    const command = new GetObjectCommand({ Bucket: bucket, Key: key });
+    const response = await client.send(command);
+    leaderboardSnapshotFetchDurationSeconds.observe(
+      { operation: "get" },
+      (Date.now() - start) / 1000,
+    );
+
+    if (!response.Body) {
+      leaderboardSnapshotFetchTotal.inc({ status: "missing" });
+      logger.warn(`[S3Leaderboard] No body for snapshot key ${key}`);
+      return null;
+    }
+
+    const bodyString = await response.Body.transformToString();
+    let jsonData: unknown;
+    try {
+      jsonData = JSON.parse(bodyString);
+    } catch (parseError) {
+      leaderboardSnapshotFetchTotal.inc({ status: "parse_error" });
+      logger.warn(
+        `[S3Leaderboard] ⚠️  Invalid JSON in snapshot ${key}:`,
+        parseError,
+      );
+      return null;
+    }
+
+    const result = CachedLeaderboardSchema.safeParse(jsonData);
+    if (!result.success) {
+      leaderboardSnapshotFetchTotal.inc({ status: "parse_error" });
+      logger.warn(
+        `[S3Leaderboard] ⚠️  Snapshot ${key} failed validation:`,
+        result.error.message,
+      );
+      return null;
+    }
+
+    leaderboardSnapshotFetchTotal.inc({ status: "success" });
+    return result.data;
+  } catch (error) {
+    leaderboardSnapshotFetchDurationSeconds.observe(
+      { operation: "get" },
+      (Date.now() - start) / 1000,
+    );
+
+    const notFoundResult = AwsS3NotFoundErrorSchema.safeParse(error);
+    if (notFoundResult.success) {
+      leaderboardSnapshotFetchTotal.inc({ status: "missing" });
+      return null;
+    }
+
+    leaderboardSnapshotFetchTotal.inc({ status: "parse_error" });
+    logger.warn(
+      `[S3Leaderboard] ⚠️  Failed to fetch snapshot ${key} for competition ${competitionId.toString()}:`,
+      error,
+    );
+    return null;
+  }
+}
+
+/**
+ * Load every historical leaderboard snapshot for a competition.
+ *
+ * Reads all `leaderboards/competition-{id}/snapshots/YYYY-MM-DD.json` keys
+ * from S3, validates each, and returns them sorted ascending by `calculatedAt`.
+ *
+ * Invalid or unreadable individual snapshots are skipped-and-logged (not
+ * thrown) — a single corrupted file shouldn't break the whole chart.
+ *
+ * Returns `[]` when:
+ * - `S3_BUCKET_NAME` env is not configured (matches `loadCachedLeaderboard`)
+ * - the snapshots prefix has no objects yet
+ * - listing or fetching fails entirely (logged + Sentry)
+ */
+export async function loadHistoricalLeaderboardSnapshots(
+  competitionId: CompetitionId,
+): Promise<CachedLeaderboard[]> {
+  const bucket = configuration.s3BucketName;
+  if (bucket === undefined) {
+    logger.warn(
+      `[S3Leaderboard] ⚠️  S3_BUCKET_NAME not configured, cannot load history for competition: ${competitionId.toString()}`,
+    );
+    return [];
+  }
+
+  const prefix = snapshotPrefix(competitionId);
+  logger.info(
+    `[S3Leaderboard] 📥 Loading historical snapshots from s3://${bucket}/${prefix}`,
+  );
+
+  let keys: string[];
+  const listStart = Date.now();
+  try {
+    const client = createS3Client();
+    const command = new ListObjectsV2Command({
+      Bucket: bucket,
+      Prefix: prefix,
+    });
+    const response = await client.send(command);
+    leaderboardSnapshotFetchDurationSeconds.observe(
+      { operation: "list" },
+      (Date.now() - listStart) / 1000,
+    );
+
+    const parsed = S3ObjectListSchema.safeParse(response);
+    if (!parsed.success) {
+      logger.error(
+        `[S3Leaderboard] ❌ Unexpected ListObjectsV2 response shape for competition ${competitionId.toString()}`,
+      );
+      Sentry.captureException(parsed.error, {
+        tags: {
+          source: "s3-leaderboard-list-history",
+          competitionId: competitionId.toString(),
+        },
+      });
+      return [];
+    }
+
+    keys = (parsed.data.Contents ?? [])
+      .map((obj) => obj.Key)
+      .filter((key) => key.endsWith(".json"));
+  } catch (error) {
+    leaderboardSnapshotFetchDurationSeconds.observe(
+      { operation: "list" },
+      (Date.now() - listStart) / 1000,
+    );
+    logger.error(
+      `[S3Leaderboard] ❌ Failed to list snapshots for competition ${competitionId.toString()}:`,
+      error,
+    );
+    Sentry.captureException(error, {
+      tags: {
+        source: "s3-leaderboard-list-history",
+        competitionId: competitionId.toString(),
+      },
+    });
+    return [];
+  }
+
+  if (keys.length === 0) {
+    logger.info(
+      `[S3Leaderboard] No historical snapshots found for competition ${competitionId.toString()}`,
+    );
+    return [];
+  }
+
+  // Bounded parallelism to avoid swamping S3 for season-long competitions.
+  const fetchedChunks: (CachedLeaderboard | null)[] = [];
+  for (let i = 0; i < keys.length; i += SNAPSHOT_FETCH_CHUNK_SIZE) {
+    const chunkKeys = keys.slice(i, i + SNAPSHOT_FETCH_CHUNK_SIZE);
+    const chunkResults = await Promise.all(
+      chunkKeys.map((key) => fetchSnapshotByKey(bucket, key, competitionId)),
+    );
+    fetchedChunks.push(...chunkResults);
+  }
+
+  const valid: CachedLeaderboard[] = [];
+  for (const snapshot of fetchedChunks) {
+    if (snapshot !== null) {
+      valid.push(snapshot);
+    }
+  }
+
+  // Sort ascending by calculatedAt so consumers can rely on chronological order.
+  valid.sort(
+    (a, b) =>
+      new Date(a.calculatedAt).getTime() - new Date(b.calculatedAt).getTime(),
+  );
+
+  logger.info(
+    `[S3Leaderboard] ✅ Loaded ${valid.length.toString()}/${keys.length.toString()} valid snapshots for competition ${competitionId.toString()}`,
+  );
+
+  return valid;
 }

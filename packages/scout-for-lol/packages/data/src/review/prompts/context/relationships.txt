@@ -1,0 +1,118 @@
+// Relationship graph (Graphviz DOT format) for the Glitter Boys friend group.
+// Square nodes (style=filled) are shared affiliations / origin contexts where
+// people met. Edges with bidirectional arrows (dir=both) describe how two
+// people know each other directly. Use this to reason about how members of
+// the group are connected.
+
+digraph G {
+  SPU [style=filled];
+  Mark -> SPU;
+  Matt -> SPU;
+  Erkin -> SPU;
+  Virmel -> SPU;
+  Emily -> SPU;
+  Sean -> SPU;
+
+  HighSchool [style=filled,label="High School"];
+  Edward -> HighSchool;
+  Joel -> HighSchool;
+  Wyatt -> HighSchool;
+  Danny -> HighSchool;
+  Virmel -> HighSchool;
+
+  Edward -> Cjay [label="Cousins",dir=both];
+  Edward -> Lawrence [label="Brothers",dir=both];
+  Joel -> Zach [label="Roommates",dir=both];
+  Danny -> Hannah [label="Dating",dir=both];
+  Matt -> Jerred [label="Church",dir=both];
+  Erkin -> Aaron [label="Cousins",dir=both];
+
+  COD [style=filled,label="Modern Warfares"];
+  Virmel -> COD;
+  Jake -> COD;
+  Brian -> COD;
+  Eddie -> COD;
+  Nathan -> COD;
+
+  DesertHotSprings [style=filled,label="Desert Hot Springs"];
+  Eddie -> DesertHotSprings;
+  Jordy -> DesertHotSprings;
+  James -> DesertHotSprings;
+  GayRyan -> DesertHotSprings;
+  Santana -> DesertHotSprings;
+  Juan -> DesertHotSprings;
+
+  SeattleU [style=filled,label="Seattle U"];
+  Virmel -> SeattleU;
+  Justin -> SeattleU;
+
+  Justin -> Colin [label="Hood",dir=both];
+
+  Elementary [style=filled,label="Elementary School"];
+  Justin -> Elementary;
+  Hirza -> Elementary;
+
+  Hirza -> Irfan [label="Favela Neighbors",dir=both];
+
+  HighSchool3 [style=filled,label="High School"];
+  Hirza -> HighSchool3;
+  SamKim -> HighSchool3;
+
+  UW1 [style=filled,label="UW"];
+  Justin -> UW1;
+  Hirza -> UW1;
+  Irfan -> UW1;
+  SamKim -> UW1;
+
+  Roommates [style=filled,label="UW Roommates"];
+  Justin -> Roommates;
+  SamKim -> Roommates;
+  DanielTruong -> Roommates;
+
+  DanielTruong [label="Daniel"];
+  DavidTruong [label="David"];
+  Truongs [style=filled,label="Truong Family"];
+  DanielTruong -> Truongs;
+  DavidTruong -> Truongs;
+  DanielTruong -> UW1;
+  DavidTruong -> Sarah [label="Dating",dir=both];
+  DanielTruong -> Caitlyn [label="Elementary",dir=both];
+
+  Caitlyn -> Richard [label="Dating",dir=both];
+  Richard -> Cole;
+  Richard -> Kevin;
+
+  OtherHighSchool [style=filled,label="High School"];
+  Richard -> OtherHighSchool;
+  NekoRyan -> OtherHighSchool;
+  Lisa -> OtherHighSchool;
+
+  Lisa -> Spencer [label="Married",dir=both];
+  Lisa -> Teddy [label="Coworkers",dir=both];
+  Lisa -> Zack [label="Salsa",dir=both];
+  Teddy -> Olivia [label="Dating",dir=both];
+  NekoRyan -> Olivia [label="IG Meetup",dir=both];
+
+  Kims [style=filled,label="Kim Family"];
+  MiddleSchool [style=filled,label="Middle School"];
+  SamKim -> MiddleSchool;
+  Justin -> MiddleSchool;
+
+  DanKim [label="Dan Kim"];
+  SamKim [label="Sam Kim"];
+  EstherKim [label="Esther Kim"];
+  DanKim -> Kims;
+  SamKim -> Kims;
+  EstherKim -> Kims;
+
+  Elementary2 [style=filled,label="Elementary School"];
+  EstherKim -> Elementary2;
+  Long -> Elementary2;
+
+  Long -> Aaron [label="Friends",dir=both];
+  DanielTruong -> Irfan [label="Enemies",dir=both];
+  Sydney -> NekoRyan [label="Skating",dir=both];
+  Andrea -> Edward [label="\"Friends\""];
+  Allison -> Andrea;
+  NekoRyan -> Allison [label="Not the father",dir=both];
+}

@@ -16,6 +16,7 @@ import {
   prematchDetectionsTotal,
   prematchActiveGamesGauge,
   prematchPollingSkipsTotal,
+  prematchSubsequentMatchDetectedTotal,
 } from "#src/metrics/index.ts";
 import * as Sentry from "@sentry/bun";
 
@@ -89,15 +90,35 @@ export async function checkActiveGames(): Promise<void> {
       return;
     }
 
-    // Load currently tracked active games from DB
+    // Load currently tracked active games from DB. We use these for two
+    // things only: (1) gameId-based dedup so two players in the same game
+    // produce one notification, and (2) detecting "subsequent match" cases
+    // where a player who already had an ActiveGame row enters a new game
+    // (different gameId) — that's the metric/log path that proves we
+    // correctly stopped skipping in-game players.
+    //
+    // We deliberately do NOT filter players out by PUUID just because they
+    // have a non-expired ActiveGame row. Doing so used to skip them for the
+    // row's full 2-hour TTL even after their game ended, missing every
+    // subsequent match in that window — the root cause of the "only first
+    // game of the day announces" bug.
+    //
+    // Future optimization: once the post-match task actively deletes the
+    // ActiveGame row when the corresponding match completes (instead of
+    // waiting for the TTL), we can re-introduce a PUUID skip-list as a
+    // pure Spectator API call saver — it would then accurately mean "this
+    // player is mid-match, don't waste an API call".
     const activeGames = await getActiveGames();
-    const trackedPuuids = new Set(
-      activeGames.flatMap((game) => game.trackedPuuids),
-    );
     const trackedGameIds = new Set(activeGames.map((game) => game.gameId));
+    const priorGameIdByPuuid = new Map<string, number>();
+    for (const game of activeGames) {
+      for (const puuid of game.trackedPuuids) {
+        priorGameIdByPuuid.set(puuid, game.gameId);
+      }
+    }
 
     logger.info(
-      `📊 ${activeGames.length.toString()} active game(s) currently tracked, ${trackedPuuids.size.toString()} player(s) in games`,
+      `📊 ${activeGames.length.toString()} active game(s) currently tracked across ${priorGameIdByPuuid.size.toString()} player(s)`,
     );
 
     // Build lookup of all tracked puuids for cross-referencing with game participants
@@ -108,16 +129,13 @@ export async function checkActiveGames(): Promise<void> {
 
     const currentTime = new Date();
 
-    // Filter to players not already in a tracked game and eligible based on polling interval
-    const notInGame = accountsWithState.filter(
-      (a) => !trackedPuuids.has(a.config.league.leagueAccount.puuid),
-    );
-    const eligible = notInGame.filter(({ lastMatchTime, lastCheckedAt }) =>
-      shouldCheckPlayer(lastMatchTime, lastCheckedAt, currentTime),
+    const eligible = accountsWithState.filter(
+      ({ lastMatchTime, lastCheckedAt }) =>
+        shouldCheckPlayer(lastMatchTime, lastCheckedAt, currentTime),
     );
 
     logger.info(
-      `📊 ${eligible.length.toString()} / ${notInGame.length.toString()} account(s) eligible this cycle`,
+      `📊 ${eligible.length.toString()} / ${accountsWithState.length.toString()} account(s) eligible this cycle`,
     );
 
     // Sort by lastCheckedAt ascending (oldest first), then limit
@@ -197,17 +215,44 @@ export async function checkActiveGames(): Promise<void> {
           (p) => p.league.leagueAccount.puuid,
         );
 
+        // Detect "subsequent match" — a tracked player whose PUUID was
+        // already in a (different) ActiveGame row before this run. This is
+        // the case the bug fix enables: previously these players were
+        // filtered out of polling entirely. Counting it gives us direct
+        // production evidence the fix is live.
+        const subsequentForPuuids = trackedPuuidsInGame.filter((p) => {
+          const prior = priorGameIdByPuuid.get(p);
+          return prior !== undefined && prior !== gameInfo.gameId;
+        });
+
         logger.info(
           `🎮 New game detected: ${gameInfo.gameId.toString()} with ${trackedPlayersInGame.length.toString()} tracked player(s): ${trackedPlayersInGame.map((p) => p.alias).join(", ")}`,
         );
 
-        // Persist to DB
+        if (subsequentForPuuids.length > 0) {
+          const priorGameIds = subsequentForPuuids.map((p) =>
+            (priorGameIdByPuuid.get(p) ?? 0).toString(),
+          );
+          const subsequentAliases = trackedPlayersInGame
+            .filter((p) =>
+              subsequentForPuuids.includes(p.league.leagueAccount.puuid),
+            )
+            .map((p) => p.alias);
+          logger.info(
+            `🔁 Subsequent game detected for player(s) [${subsequentAliases.join(", ")}] — prior gameId(s) [${priorGameIds.join(", ")}], new gameId ${gameInfo.gameId.toString()}`,
+          );
+          prematchSubsequentMatchDetectedTotal.inc(subsequentForPuuids.length);
+        }
+
+        // Persist to DB (gameId is unique; upsert is safe under concurrent
+        // detection of the same game from different polled players)
         await upsertActiveGame(gameInfo.gameId, trackedPuuidsInGame);
 
-        // Mark this game as tracked for the rest of this run
+        // Mark this game as tracked for the rest of this run so subsequent
+        // players in the same lobby don't re-detect it
         trackedGameIds.add(gameInfo.gameId);
         for (const p of trackedPuuidsInGame) {
-          trackedPuuids.add(p);
+          priorGameIdByPuuid.set(p, gameInfo.gameId);
         }
 
         // Send notification

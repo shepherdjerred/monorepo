@@ -8,7 +8,7 @@
 """
 LLM-driven style profiler for Discord CSV exports.
 
-Reads one author's full message history (from ./data) and asks GPT-4o mini to
+Reads one author's full message history (from ./data) and asks an LLM to
 surface representative quotes, style markers, and personality signals. The
 script is budget-aware: it estimates token usage and refuses to run if the
 projection exceeds the configured dollar budget.
@@ -31,7 +31,7 @@ from typing import Dict, Iterable, List, Sequence, Tuple
 from openai import OpenAI
 import tiktoken
 
-DEFAULT_MODEL = "gpt-4o-mini"
+DEFAULT_MODEL = "gpt-5.4-nano"
 MODEL_CONTEXT_LIMITS = {
     "gpt-4o-mini": 128_000,
     "gpt-4o": 128_000,
@@ -41,26 +41,29 @@ MODEL_CONTEXT_LIMITS = {
     "gpt-5-nano": 100_000,
     "gpt-5-mini": 400_000,
     "gpt-5.1": 400_000,
+    "gpt-5.4-nano": 100_000,
+    "gpt-5.4-mini": 200_000,
+    "gpt-5.4": 400_000,
 }
 
 MODE_CONFIGS = {
     "test": {
-        "model": "gpt-4o-mini",
-        "input_price": 0.15 / 1_000_000,
-        "output_price": 0.60 / 1_000_000,
+        "model": "gpt-5.4-nano",
+        "input_price": 0.05 / 1_000_000,
+        "output_price": 0.40 / 1_000_000,
         "temperature": 0.3,
     },
     "prod": {
-        "model": "gpt-5.1",
+        "model": "gpt-5.4",
         "input_price": 1.25 / 1_000_000,
         "output_price": 10.0 / 1_000_000,
         "temperature": 1.0,
     },
 }
 
-# Prices for gpt-4o-mini (USD per token); adjust with CLI flags if pricing changes.
-INPUT_PRICE_PER_TOKEN = 0.15 / 1_000_000
-OUTPUT_PRICE_PER_TOKEN = 0.60 / 1_000_000
+# Prices for gpt-5.4-nano (USD per token); adjust with CLI flags if pricing changes.
+INPUT_PRICE_PER_TOKEN = 0.05 / 1_000_000
+OUTPUT_PRICE_PER_TOKEN = 0.40 / 1_000_000
 
 # Optional manual overrides for how author IDs should be displayed in output.
 # Example: {"123456789012345678": "Alice"}
@@ -329,7 +332,7 @@ def main() -> None:
         "--mode",
         choices=["test", "prod"],
         default="test",
-        help="Mode: 'test' uses gpt-4o-mini (cheap), 'prod' uses o1 (expensive but better)"
+        help="Mode: 'test' uses gpt-5.4-nano (cheap), 'prod' uses gpt-5.4 (better)"
     )
     parser.add_argument("--model", default=None, help="OpenAI model name (overrides --mode default)")
     parser.add_argument("--max-input-tokens", type=int, default=115_000, help="Cap tokens for corpus (system prompt + metadata overhead reserved)")
