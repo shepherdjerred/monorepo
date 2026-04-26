@@ -20,9 +20,9 @@ import {
   KubeRole,
   KubeRoleBinding,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
-import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 
 export type CreateTemporalWorkerDeploymentProps = {
   serverServiceName: string;
@@ -168,25 +168,54 @@ export function createTemporalWorkerDeployment(
     withCommonProps({
       name: "temporal-worker",
       image: `ghcr.io/shepherdjerred/temporal-worker:${versions["shepherdjerred/temporal-worker"]}`,
-      ports: [{ number: 9464, name: "metrics" }],
+      // :9464 = Temporal SDK's built-in Prometheus bridge (workflow_completed,
+      //        activity_task_fail, etc. — see installRuntime in worker.ts)
+      // :9465 = application Prometheus registry (docs_groom_*, default Bun
+      //        process metrics — see observability/metrics.ts)
+      ports: [
+        { number: 9464, name: "metrics" },
+        { number: 9465, name: "app-metrics" },
+      ],
       securityContext: {
         user: UID,
         group: GID,
         readOnlyRootFilesystem: false,
       },
+      // Bumped from 200m/500m and 256Mi/1Gi to give headroom for in-process
+      // claude -p invocations from the docs-groom workflow.
       resources: {
         cpu: {
-          request: Cpu.millis(200),
-          limit: Cpu.millis(500),
+          request: Cpu.millis(500),
+          limit: Cpu.millis(1000),
         },
         memory: {
-          request: Size.mebibytes(256),
-          limit: Size.gibibytes(1),
+          request: Size.mebibytes(512),
+          limit: Size.gibibytes(2),
         },
       },
       envVariables: {
         TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
         TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
+        ENVIRONMENT: EnvValue.fromValue("production"),
+        // OpenTelemetry tracing → Tempo. initializeTracing() in worker.ts
+        // gates on TELEMETRY_ENABLED.
+        TELEMETRY_ENABLED: EnvValue.fromValue("true"),
+        OTLP_ENDPOINT: EnvValue.fromValue(
+          "http://tempo.tempo.svc.cluster.local:4318",
+        ),
+        TELEMETRY_SERVICE_NAME: EnvValue.fromValue("temporal-worker"),
+        // Anthropic Claude (used by the docs-groom workflow).
+        ANTHROPIC_API_KEY: EnvValue.fromSecretValue({
+          secret,
+          key: "ANTHROPIC_API_KEY",
+        }),
+        // Git identity for any workflow that runs `git commit` (docs-groom).
+        GIT_AUTHOR_NAME: EnvValue.fromValue("temporal-worker[bot]"),
+        GIT_AUTHOR_EMAIL: EnvValue.fromValue("temporal-worker@homelab.local"),
+        GIT_COMMITTER_NAME: EnvValue.fromValue("temporal-worker[bot]"),
+        GIT_COMMITTER_EMAIL: EnvValue.fromValue(
+          "temporal-worker@homelab.local",
+        ),
         // Make the cluster CA globally trusted. @kubernetes/client-node hands
         // its `ca` to node-fetch via an https.Agent; Bun's node-fetch polyfill
         // doesn't reliably honor per-agent CA bundles, which surfaced as
@@ -231,6 +260,8 @@ export function createTemporalWorkerDeployment(
           secret,
           key: "GH_TOKEN",
         }),
+        // Bugsink (Sentry-compatible) error tracking. Read by initSentry()
+        // in worker.ts; when unset, Sentry init is a no-op.
         SENTRY_DSN: EnvValue.fromSecretValue(
           {
             secret,
@@ -267,6 +298,8 @@ export function createTemporalWorkerDeployment(
 
   void container;
 
+  // Service + ServiceMonitor for the Temporal SDK's built-in Prometheus
+  // bridge on :9464.
   new Service(chart, "temporal-worker-metrics-service", {
     selector: deployment,
     metadata: {
@@ -278,6 +311,25 @@ export function createTemporalWorkerDeployment(
   createServiceMonitor(chart, {
     name: "temporal-worker-metrics",
     matchLabels: { app: "temporal-worker-metrics" },
+  });
+
+  // Service + ServiceMonitor for the application Prometheus registry on
+  // :9465 (started by observability/metrics.ts in the worker). Separate
+  // from the SDK bridge so app-level handles can evolve independently.
+  new Service(chart, "temporal-worker-app-metrics-service", {
+    metadata: {
+      name: "temporal-worker-app-metrics",
+      labels: { app: "temporal-worker-app-metrics" },
+    },
+    selector: deployment,
+    ports: [{ name: "app-metrics", port: 9465, targetPort: 9465 }],
+  });
+
+  createServiceMonitor(chart, {
+    name: "temporal-worker-app-metrics",
+    port: "app-metrics",
+    interval: "30s",
+    matchLabels: { app: "temporal-worker-app-metrics" },
   });
 
   return { deployment };

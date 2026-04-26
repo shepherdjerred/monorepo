@@ -5,6 +5,11 @@ import { TASK_QUEUES } from "./shared/task-queues.ts";
 import { registerSchedules } from "./schedules/register-schedules.ts";
 import { activities } from "./activities/index.ts";
 import { startEventBridge } from "./event-bridge/index.ts";
+import { initializeTracing, shutdownTracing } from "./observability/tracing.ts";
+import {
+  startMetricsServer,
+  stopMetricsServer,
+} from "./observability/metrics.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
@@ -67,6 +72,8 @@ function initSentry(): void {
 async function main(): Promise<void> {
   installRuntime();
   initSentry();
+  initializeTracing();
+  startMetricsServer();
 
   const address = Bun.env["TEMPORAL_ADDRESS"] ?? DEFAULT_ADDRESS;
   jsonLog("info", "Connecting to Temporal server", { address });
@@ -94,6 +101,8 @@ async function main(): Promise<void> {
     jsonLog("info", "Shutting down worker");
     await eventBridge.close();
     worker.shutdown();
+    await stopMetricsServer();
+    await shutdownTracing();
   };
 
   process.on("SIGTERM", () => {
