@@ -71,7 +71,7 @@ const versions = {
   "fuatakgun/eufy_security": "v8.2.4",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "linuxserver/syncthing":
-    "2.0.16@sha256:de6958feb8caf81217832744ae9a4843efbb4dd432c6cea90077ed7a0cf97fc3",
+    "2.0.16@sha256:6a5f5d3412f80539289cee9bd0a6df9645f8540ecaed7d34f1bd0930bfd8c55e",
   // renovate: datasource=github-releases versioning=semver-coerced
   "dotdc/grafana-dashboards-kubernetes": "v3.0.6",
   // renovate: datasource=helm registryUrl=https://chartmuseum.github.io/charts versioning=semver
