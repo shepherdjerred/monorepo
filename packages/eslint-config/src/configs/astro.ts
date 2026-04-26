@@ -8,14 +8,19 @@ import type { TSESLint } from "@typescript-eslint/utils";
  * Configuration for Astro component linting
  */
 export function astroConfig(): TSESLint.FlatConfig.ConfigArray {
+  const flatBase = (astroPlugin.configs?.["flat/base"] ??
+    []) as TSESLint.FlatConfig.ConfigArray;
   return [
+    // eslint-plugin-astro's flat/base is an array of configs (parser + plugin
+    // wiring). Spread them directly into the outer array — spreading the array
+    // into a single object produces numeric keys ("0", "1", ...) and crashes
+    // ESLint with `Unexpected key "0" found`.
+    ...flatBase,
     {
       files: ["**/*.astro"],
       plugins: {
         astro: astroPlugin,
       },
-      // Extend astro's recommended flat config which includes the parser
-      ...astroPlugin.configs?.["flat/base"],
       languageOptions: {
         parserOptions: {
           parser: "@typescript-eslint/parser",
@@ -33,5 +38,5 @@ export function astroConfig(): TSESLint.FlatConfig.ConfigArray {
         "astro/valid-compile": "error",
       },
     },
-  ] as TSESLint.FlatConfig.ConfigArray;
+  ];
 }

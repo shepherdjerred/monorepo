@@ -122,4 +122,77 @@ describe("buildLoadingScreenData with real spectator payload", () => {
     expect(reksai).toBeDefined();
     expect(reksai?.championDisplayName).toBe("Reksai");
   });
+
+  test("queue 1700 (Arena) uses playerSubteamId for arenaTeam, not teamId", async () => {
+    // Spectator V5 reports teamId as 100/200 even for Arena games — the real
+    // 1-8 subteam comes from playerSubteamId. Ensure the loading screen
+    // builder reads the correct field.
+    const baseGameInfo = await loadSpectatorPayload(
+      `${currentDir}testdata/spectator-ranked-flex.json`,
+    );
+
+    // Arena = 16 players in 8 subteams of 2. Take the first 10 from the
+    // base payload and synthesise 6 more so we hit 16 total.
+    const arenaParticipants = [
+      ...baseGameInfo.participants.slice(0, 10),
+      ...Array.from({ length: 6 }).map((_, i) => ({
+        ...baseGameInfo.participants[i % 10]!,
+        riotId: `Synthetic${(i + 1).toString()}#tag`,
+      })),
+    ].map((p, i) => ({
+      ...p,
+      teamId: i < 8 ? 100 : 200, // Spectator V5 still reports 100/200
+      playerSubteamId: Math.floor(i / 2) + 1, // 8 subteams of 2
+    }));
+
+    const gameInfo = RawCurrentGameInfoSchema.parse({
+      ...baseGameInfo,
+      gameQueueConfigId: 1700,
+      mapId: 30, // Rings of Wrath
+      gameMode: "CHERRY",
+      bannedChampions: [],
+      participants: arenaParticipants,
+    });
+
+    const result = await buildLoadingScreenData(
+      gameInfo,
+      new Set(),
+      "AMERICA_NORTH",
+    );
+    const parsed = LoadingScreenDataSchema.parse(result);
+
+    expect(parsed.layout).toBe("arena");
+    expect(parsed.queueType).toBe("arena");
+    expect(parsed.mapName).toBe("Rings of Wrath");
+    expect(parsed.participants).toHaveLength(16);
+    // Each participant's team is { arenaTeam: 1..8 } — derived from
+    // playerSubteamId, not from teamId (which was 100 or 200).
+    for (const p of parsed.participants) {
+      expect(p.team).toHaveProperty("arenaTeam");
+    }
+    // First two participants share subteam 1 (per our synthetic data).
+    expect(parsed.participants[0]?.team).toEqual({ arenaTeam: 1 });
+    expect(parsed.participants[1]?.team).toEqual({ arenaTeam: 1 });
+    expect(parsed.participants[2]?.team).toEqual({ arenaTeam: 2 });
+  });
+
+  test("queue 1700 (Arena) throws clearly when playerSubteamId is missing", async () => {
+    const baseGameInfo = await loadSpectatorPayload(
+      `${currentDir}testdata/spectator-ranked-flex.json`,
+    );
+
+    const gameInfo = RawCurrentGameInfoSchema.parse({
+      ...baseGameInfo,
+      gameQueueConfigId: 1700,
+      mapId: 30,
+      gameMode: "CHERRY",
+      bannedChampions: [],
+      // No playerSubteamId on participants — simulates the broken state
+      // that produced the ZodError flood in Bugsink.
+    });
+
+    await expect(
+      buildLoadingScreenData(gameInfo, new Set(), "AMERICA_NORTH"),
+    ).rejects.toThrow(/playerSubteamId/);
+  });
 });

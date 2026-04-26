@@ -25,10 +25,10 @@ const SCHEDULES: ScheduleDefinition[] = [
     id: "fetcher-skill-capped",
     workflowType: "fetchSkillCappedManifest",
     args: [],
-    cronExpression: "*/15 * * * *",
+    cronExpression: "0 5 * * *",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    memo: "Fetch Better Skill Capped manifest from Firestore and upload to S3",
+    memo: "Fetch Better Skill Capped manifest from Firestore and upload to S3 (daily at 05:00 PT)",
   },
   {
     id: "deps-summary-weekly",

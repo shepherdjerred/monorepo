@@ -12,6 +12,7 @@ export const MapNameSchema = z.enum([
   "Nexus Blitz",
   "Star Guardian",
   "Rings of Wrath",
+  "The Bandlewood",
 ]);
 
 /**
@@ -29,6 +30,7 @@ export function mapIdToName(mapId: number): MapName {
     .with(21, () => "Nexus Blitz")
     .with(22, () => "Star Guardian")
     .with(30, () => "Rings of Wrath")
+    .with(35, () => "The Bandlewood")
     .otherwise((id) => {
       throw new Error(`Unknown map ID: ${id.toString()}`);
     });

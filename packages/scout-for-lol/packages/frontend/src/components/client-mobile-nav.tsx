@@ -41,7 +41,10 @@ export function ClientMobileNav({ items, activePage, discordLink }: Props) {
           </svg>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left">
+      <SheetContent
+        side="left"
+        className="bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700"
+      >
         <div className="space-y-1 px-2 pb-3 pt-2">
           {items.map((item) => (
             <a
