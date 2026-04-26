@@ -19,6 +19,13 @@ import { runZfsMaintenanceWorkflow as _runZfsMaintenanceWorkflow } from "./zfs-m
 import { runBugsinkHousekeepingWorkflow as _runBugsinkHousekeepingWorkflow } from "./bugsink.ts";
 import { runScoutDataDragonUpdate as _runScoutDataDragonUpdate } from "./data-dragon.ts";
 import type { DataDragonUpdateResult } from "#activities/data-dragon.ts";
+import {
+  runDocsGroomAudit as _runDocsGroomAudit,
+  runDocsGroomTask as _runDocsGroomTask,
+  type DocsGroomAuditResult,
+  type DocsGroomTaskResult,
+} from "./docs-groom.ts";
+import type { GroomTask } from "#shared/docs-groom-types.ts";
 
 export async function fetchSkillCappedManifest(): Promise<void> {
   return _fetchSkillCappedManifest();
@@ -86,4 +93,15 @@ export async function runScoutDataDragonWeeklyRefresh(): Promise<
   DataDragonUpdateResult | undefined
 > {
   return _runScoutDataDragonUpdate("weekly-refresh");
+}
+
+export async function runDocsGroomAudit(): Promise<DocsGroomAuditResult> {
+  return _runDocsGroomAudit();
+}
+
+export async function runDocsGroomTask(input: {
+  task: GroomTask;
+  parentRunId: string;
+}): Promise<DocsGroomTaskResult> {
+  return _runDocsGroomTask(input);
 }

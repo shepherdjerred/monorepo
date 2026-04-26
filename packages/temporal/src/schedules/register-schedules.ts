@@ -89,6 +89,16 @@ const SCHEDULES: ScheduleDefinition[] = [
     memo: "Daily Bugsink database housekeeping (delete old events, vacuum)",
   },
   {
+    id: "docs-groom-daily",
+    workflowType: "runDocsGroomAudit",
+    args: [],
+    cronExpression: "30 6 * * *",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "2 hours",
+    memo: "Daily packages/docs grooming via claude -p; opens draft PRs for easy/medium tasks",
+  },
+  {
     id: "golink-sync",
     workflowType: "syncGolinks",
     args: [],

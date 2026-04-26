@@ -122,7 +122,7 @@ export function createTemporalDashboard() {
   return {
     uid: "temporal-dashboard",
     title: "Temporal - Workflows",
-    tags: ["temporal", "workflow", "scout"],
+    tags: ["temporal", "workflow", "scout", "docs-groom"],
     timezone: "browser",
     schemaVersion: 39,
     version: 1,
@@ -225,6 +225,146 @@ export function createTemporalDashboard() {
         ],
         x: 12,
         y: 12,
+        w: 12,
+        h: 8,
+      }),
+      // -----------------------------------------------------------------
+      // Docs Grooming row (y >= 20)
+      // -----------------------------------------------------------------
+      statPanel({
+        id: 100,
+        title: "Today's Grooming PR Opened",
+        description:
+          "1 if the daily docs-groom workflow opened a grooming PR in the last 24h. 0 = run failed or made no changes.",
+        expr: 'clamp_max(sum(increase(docs_groom_prs_opened_total{kind="grooming"}[24h])), 1)',
+        legend: "today",
+        x: 0,
+        y: 20,
+        w: 8,
+        h: 4,
+      }),
+      statPanel({
+        id: 101,
+        title: "Implementation PRs (7d)",
+        description:
+          "Total per-task implementation PRs opened by docs-groom in the last 7 days",
+        expr: 'sum(increase(docs_groom_prs_opened_total{kind="implementation"}[7d]))',
+        legend: "prs",
+        x: 8,
+        y: 20,
+        w: 8,
+        h: 4,
+      }),
+      statPanel({
+        id: 102,
+        title: "Tasks Identified (24h)",
+        description:
+          "Total grooming tasks the audit pass identified in the last 24h (all difficulties)",
+        expr: "sum(increase(docs_groom_tasks_identified_total[24h]))",
+        legend: "tasks",
+        x: 16,
+        y: 20,
+        w: 8,
+        h: 4,
+      }),
+      timeseriesPanel({
+        id: 103,
+        title: "Tasks Identified by Difficulty",
+        description:
+          "Daily count of tasks identified by the audit, split by easy/medium/hard",
+        targets: [
+          {
+            expr: "sum by (difficulty) (increase(docs_groom_tasks_identified_total[1d]))",
+            legend: "{{difficulty}}",
+          },
+        ],
+        x: 0,
+        y: 24,
+        w: 12,
+        h: 8,
+      }),
+      timeseriesPanel({
+        id: 104,
+        title: "Claude Duration p50 / p95 by Phase",
+        description: "claude -p wall-clock duration distribution, last 7d",
+        targets: [
+          {
+            expr: "histogram_quantile(0.5, sum by (le, phase) (rate(docs_groom_claude_duration_seconds_bucket[7d])))",
+            legend: "{{phase}} p50",
+          },
+          {
+            expr: "histogram_quantile(0.95, sum by (le, phase) (rate(docs_groom_claude_duration_seconds_bucket[7d])))",
+            legend: "{{phase}} p95",
+          },
+        ],
+        x: 12,
+        y: 24,
+        w: 12,
+        h: 8,
+        unit: "s",
+      }),
+      timeseriesPanel({
+        id: 105,
+        title: "Claude Cost ($/day) by Phase",
+        description:
+          "Sum of total_cost_usd from claude -p result messages, per phase. Drives DocsGroomCostBudgetExceeded alert.",
+        targets: [
+          {
+            expr: "sum by (phase) (increase(docs_groom_claude_cost_usd_total[1d]))",
+            legend: "{{phase}}",
+          },
+        ],
+        x: 0,
+        y: 32,
+        w: 12,
+        h: 8,
+      }),
+      timeseriesPanel({
+        id: 106,
+        title: "Claude Cache Hit Ratio (7d, by phase)",
+        description:
+          "cache_read / (input + cache_read) — higher is better. Tracks how well prompt caching is working.",
+        targets: [
+          {
+            expr: 'sum by (phase) (rate(docs_groom_claude_tokens_total{kind="cache_read"}[7d])) / (sum by (phase) (rate(docs_groom_claude_tokens_total{kind="input"}[7d])) + sum by (phase) (rate(docs_groom_claude_tokens_total{kind="cache_read"}[7d])))',
+            legend: "{{phase}}",
+          },
+        ],
+        x: 12,
+        y: 32,
+        w: 12,
+        h: 8,
+        unit: "percentunit",
+      }),
+      timeseriesPanel({
+        id: 107,
+        title: "Validation Rejections by Reason (24h)",
+        description:
+          "Why diffs were rejected before push: empty-diff, secret, gitignored, branch-main, typecheck-failed",
+        targets: [
+          {
+            expr: "sum by (reason) (increase(docs_groom_validate_rejections_total[24h]))",
+            legend: "{{reason}}",
+          },
+        ],
+        x: 0,
+        y: 40,
+        w: 12,
+        h: 8,
+      }),
+      timeseriesPanel({
+        id: 108,
+        title: "Docs-Groom Workflow Outcomes",
+        description:
+          "docs_groom_runs_total split by phase (audit/task) and outcome (success/failure/skipped)",
+        targets: [
+          {
+            expr: "sum by (phase, outcome) (increase(docs_groom_runs_total[1d]))",
+            legend: "{{phase}} {{outcome}}",
+          },
+        ],
+        x: 12,
+        y: 40,
         w: 12,
         h: 8,
       }),
