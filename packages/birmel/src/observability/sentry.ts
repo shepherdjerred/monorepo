@@ -29,6 +29,7 @@ export function initializeSentry(): void {
       ? { release: config.sentry.release }
       : {}),
     sampleRate: config.sentry.sampleRate,
+    // Bugsink does not support performance monitoring; keep traces off.
     tracesSampleRate: config.sentry.tracesSampleRate,
   });
 

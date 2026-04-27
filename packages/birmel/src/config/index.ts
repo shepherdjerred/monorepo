@@ -87,7 +87,7 @@ function loadFeatureConfig() {
       environment: Bun.env["SENTRY_ENVIRONMENT"] ?? "development",
       release: Bun.env["SENTRY_RELEASE"] ?? Bun.env["GIT_SHA"],
       sampleRate: parseNumber(Bun.env["SENTRY_SAMPLE_RATE"], 1),
-      tracesSampleRate: parseNumber(Bun.env["SENTRY_TRACES_SAMPLE_RATE"], 0.1),
+      tracesSampleRate: parseNumber(Bun.env["SENTRY_TRACES_SAMPLE_RATE"], 0),
     },
     persona: {
       enabled: parseBoolean(Bun.env["PERSONA_ENABLED"], true),

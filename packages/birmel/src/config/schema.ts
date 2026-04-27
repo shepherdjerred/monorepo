@@ -57,7 +57,8 @@ export const SentryConfigSchema = z.object({
     .default("development"),
   release: z.string().optional(),
   sampleRate: z.number().min(0).max(1).default(1),
-  tracesSampleRate: z.number().min(0).max(1).default(0.1),
+  // Bugsink does not support performance monitoring; keep traces off.
+  tracesSampleRate: z.number().min(0).max(1).default(0),
 });
 
 export const PersonaConfigSchema = z.object({
