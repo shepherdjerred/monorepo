@@ -12,7 +12,11 @@ const props = BlogSchema.parse({
 });
 ---
 
-<NavbarLayout title={props.title} description={props.description} openGraphType="article">
+<NavbarLayout
+  title={props.title}
+  description={props.description}
+  openGraphType="article"
+>
   <Container width="normal">
     <BlogContent {...props}>
       <slot />

@@ -27,14 +27,21 @@ const { variant = "default" } = Astro.props;
             </a>
           </Button>
           <Button variant="secondary" asChild>
-            <a href="https://github.com/shepherdjerred/scout-for-lol" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2">
+            <a
+              href="https://github.com/shepherdjerred/scout-for-lol"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-2"
+            >
               <Icon name="simple-icons:github" class="h-4 w-4" />
               View on GitHub
             </a>
           </Button>
         </div>
         <div class="mt-8 md:order-1 md:mt-0">
-          <p class="text-center text-xs/5 text-gray-500 dark:text-gray-400">&copy; {new Date().getFullYear()} Scout for League of Legends.</p>
+          <p class="text-center text-xs/5 text-gray-500 dark:text-gray-400">
+            &copy; {new Date().getFullYear()} Scout for League of Legends.
+          </p>
         </div>
       </div>
     </footer>
@@ -56,10 +63,14 @@ const { variant = "default" } = Astro.props;
             </Button>
             •
             <Button variant="link" asChild>
-              <a href="https://github.com/shepherdjerred/scout-for-lol">View on GitHub</a>
+              <a href="https://github.com/shepherdjerred/scout-for-lol">
+                View on GitHub
+              </a>
             </Button>
           </p>
-          <p class="mt-4 text-xs text-gray-500 dark:text-gray-400">© {new Date().getFullYear()} Scout for League of Legends.</p>
+          <p class="mt-4 text-xs text-gray-500 dark:text-gray-400">
+            © {new Date().getFullYear()} Scout for League of Legends.
+          </p>
         </div>
       </div>
     </footer>

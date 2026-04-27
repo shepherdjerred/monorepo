@@ -25,8 +25,12 @@ import ProcessStep from "../components/ProcessStep.astro";
       subtitle="Get notified when your friends start League matches and receive beautiful post-match reports with detailed stats, all delivered directly to your Discord server."
       showGradient={true}
       ctaButtons={[
-        { text: 'Add to Discord', href: 'https://discord.com/oauth2/authorize?client_id=1182800769188110366', variant: 'primary' },
-        { text: 'View Documentation', href: '/docs', variant: 'secondary' }
+        {
+          text: "Add to Discord",
+          href: "https://discord.com/oauth2/authorize?client_id=1182800769188110366",
+          variant: "primary",
+        },
+        { text: "View Documentation", href: "/docs", variant: "secondary" },
       ]}
     />
 
@@ -131,12 +135,16 @@ import ProcessStep from "../components/ProcessStep.astro";
             imageSrc="/loading-screen.png"
             imageAlt="Pre-match loading screen showing both teams' champion picks, runes, summoner spells, and ranks for a ranked flex game"
             imagePosition="right"
-            badge={{ text: 'New Feature', icon: 'heroicons:sparkles', color: 'green' }}
+            badge={{
+              text: "New Feature",
+              icon: "heroicons:sparkles",
+              color: "green",
+            }}
             checklist={[
-              'Full 5v5 splash art preview with bans for ranked and draft',
-              'Summoner spells, keystone runes, and live ranks for every player',
-              'ARAM and Arena layouts supported alongside Summoner\'s Rift',
-              'One notification per game, even with multiple tracked players'
+              "Full 5v5 splash art preview with bans for ranked and draft",
+              "Summoner spells, keystone runes, and live ranks for every player",
+              "ARAM and Arena layouts supported alongside Summoner's Rift",
+              "One notification per game, even with multiple tracked players",
             ]}
           />
 
@@ -147,11 +155,15 @@ import ProcessStep from "../components/ProcessStep.astro";
             imageSrc="/arena-discord.png"
             imageAlt="Arena mode match notification in Discord showing detailed stats for all 16 players"
             imagePosition="left"
-            badge={{ text: 'Arena Mode', icon: 'heroicons:bolt', color: 'purple' }}
+            badge={{
+              text: "Arena Mode",
+              icon: "heroicons:bolt",
+              color: "purple",
+            }}
             checklist={[
-              'Track all 16 players in each Arena match',
-              'See augment selections and synergies',
-              'Beautiful placement and ranking display'
+              "Track all 16 players in each Arena match",
+              "See augment selections and synergies",
+              "Beautiful placement and ranking display",
             ]}
           />
 
@@ -162,11 +174,15 @@ import ProcessStep from "../components/ProcessStep.astro";
             imageSrc="/solo-discord.png"
             imageAlt="Ranked match notification showing player stats, KDA, and LP gains in Discord"
             imagePosition="right"
-            badge={{ text: 'Ranked Tracking', icon: 'heroicons:bell', color: 'blue' }}
+            badge={{
+              text: "Ranked Tracking",
+              icon: "heroicons:bell",
+              color: "blue",
+            }}
             checklist={[
-              'Instant notifications for Solo Queue and Flex',
-              'LP tracking and rank change indicators',
-              'Comprehensive stats and performance metrics'
+              "Instant notifications for Solo Queue and Flex",
+              "LP tracking and rank change indicators",
+              "Comprehensive stats and performance metrics",
             ]}
           />
 
@@ -177,11 +193,15 @@ import ProcessStep from "../components/ProcessStep.astro";
             imageSrc="/leaderboard-lp.png"
             imageAlt="Server leaderboard showing LP competition rankings"
             imagePosition="left"
-            badge={{ text: 'Competitions', icon: 'heroicons:trophy', color: 'yellow' }}
+            badge={{
+              text: "Competitions",
+              icon: "heroicons:trophy",
+              color: "yellow",
+            }}
             checklist={[
-              'Flexible competition criteria (LP, wins, games played)',
-              'Support for all game modes including Arena',
-              'Use League seasons or custom date ranges'
+              "Flexible competition criteria (LP, wins, games played)",
+              "Support for all game modes including Arena",
+              "Use League seasons or custom date ranges",
             ]}
           />
 
@@ -190,7 +210,9 @@ import ProcessStep from "../components/ProcessStep.astro";
             class="bg-linear-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-8 lg:p-12"
           >
             <div class="text-center mb-12">
-              <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Support for All Queue Types</h3>
+              <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                Support for All Queue Types
+              </h3>
               <p class="text-lg text-gray-600 dark:text-gray-300">
                 Scout tracks matches across all League of Legends game modes
               </p>
@@ -229,24 +251,26 @@ import ProcessStep from "../components/ProcessStep.astro";
           centered={true}
         />
         <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
-          <dl class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
-            <ProcessStep
-              number={1}
-              title="Add Scout to your server"
-            >
-              <p class="text-gray-600 dark:text-gray-300">Click 'Add to Discord' and authorize Scout with the necessary permissions to send messages to your channels.</p>
+          <dl
+            class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3"
+          >
+            <ProcessStep number={1} title="Add Scout to your server">
+              <p class="text-gray-600 dark:text-gray-300">
+                Click 'Add to Discord' and authorize Scout with the necessary
+                permissions to send messages to your channels.
+              </p>
             </ProcessStep>
-            <ProcessStep
-              number={2}
-              title="Subscribe to players"
-            >
-              <p class="text-gray-600 dark:text-gray-300">Use /subscription add to add League players you want to track. Specify their Riot ID, region, and a friendly alias.</p>
+            <ProcessStep number={2} title="Subscribe to players">
+              <p class="text-gray-600 dark:text-gray-300">
+                Use /subscription add to add League players you want to track.
+                Specify their Riot ID, region, and a friendly alias.
+              </p>
             </ProcessStep>
-            <ProcessStep
-              number={3}
-              title="Enjoy automatic updates"
-            >
-              <p class="text-gray-600 dark:text-gray-300">Scout will automatically notify your channel when tracked players start matches and post detailed reports when games end.</p>
+            <ProcessStep number={3} title="Enjoy automatic updates">
+              <p class="text-gray-600 dark:text-gray-300">
+                Scout will automatically notify your channel when tracked
+                players start matches and post detailed reports when games end.
+              </p>
             </ProcessStep>
           </dl>
         </div>
@@ -259,8 +283,12 @@ import ProcessStep from "../components/ProcessStep.astro";
       title="Ready to track your friends' League matches?"
       description="Add Scout to your Discord server and never miss another epic play or hilarious fail from your League friends."
       buttons={[
-        { text: 'Add to Discord', href: 'https://discord.com/oauth2/authorize?client_id=1182800769188110366', variant: 'primary' },
-        { text: 'Read the docs', href: '/docs', variant: 'secondary' }
+        {
+          text: "Add to Discord",
+          href: "https://discord.com/oauth2/authorize?client_id=1182800769188110366",
+          variant: "primary",
+        },
+        { text: "Read the docs", href: "/docs", variant: "secondary" },
       ]}
     />
 

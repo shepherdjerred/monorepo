@@ -15,37 +15,46 @@ const { title, subtitle, ctaButtons = [] } = Astro.props;
 <div class="relative overflow-hidden bg-white dark:bg-gray-900">
   <div class="mx-auto max-w-7xl px-6 pb-16 pt-20 sm:pt-32 lg:px-8">
     <div class="text-center">
-      <p class="text-sm font-semibold uppercase tracking-widest text-amber-600 dark:text-amber-400">Obsidian Plugin</p>
-      <h1 class="mt-4 text-5xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-7xl">
+      <p
+        class="text-sm font-semibold uppercase tracking-widest text-amber-600 dark:text-amber-400"
+      >
+        Obsidian Plugin
+      </p>
+      <h1
+        class="mt-4 text-5xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-7xl"
+      >
         {title}
       </h1>
-      {subtitle && (
-        <p class="mx-auto mt-6 max-w-2xl text-lg text-gray-600 dark:text-gray-400">
-          {subtitle}
-        </p>
-      )}
-      {ctaButtons.length > 0 && (
-        <div class="mt-8 flex items-center justify-center gap-x-4">
-          {ctaButtons.map((button) =>
-            button.variant === "secondary" ? (
-              <a
-                href={button.href}
-                class="rounded-full border border-gray-300 dark:border-gray-600 px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-              >
-                {button.text}
-              </a>
-            ) : (
-              <a
-                href={button.href}
-                class="rounded-full bg-amber-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-amber-500 transition-colors"
-              >
-                {button.text}
-              </a>
-            ),
-          )}
-        </div>
-      )}
+      {
+        subtitle && (
+          <p class="mx-auto mt-6 max-w-2xl text-lg text-gray-600 dark:text-gray-400">
+            {subtitle}
+          </p>
+        )
+      }
+      {
+        ctaButtons.length > 0 && (
+          <div class="mt-8 flex items-center justify-center gap-x-4">
+            {ctaButtons.map((button) =>
+              button.variant === "secondary" ? (
+                <a
+                  href={button.href}
+                  class="rounded-full border border-gray-300 dark:border-gray-600 px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  {button.text}
+                </a>
+              ) : (
+                <a
+                  href={button.href}
+                  class="rounded-full bg-amber-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-amber-500 transition-colors"
+                >
+                  {button.text}
+                </a>
+              ),
+            )}
+          </div>
+        )
+      }
     </div>
-
   </div>
 </div>

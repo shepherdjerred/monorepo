@@ -14,14 +14,18 @@ import "../styles/global.css";
       // Initialize dark mode before page renders to prevent flash
       if (
         localStorage.theme === "dark" ||
-        (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches)
+        (!("theme" in localStorage) &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches)
       ) {
         document.documentElement.classList.add("dark");
       } else {
         document.documentElement.classList.remove("dark");
       }
     </script>
-    <script defer data-domain="scout-for-lol.com" src="https://plausible.sjer.red/js/script.js"></script>
+    <script
+      defer
+      data-domain="scout-for-lol.com"
+      src="https://plausible.sjer.red/js/script.js"></script>
     <script>
       import * as Sentry from "@sentry/browser";
       Sentry.init({

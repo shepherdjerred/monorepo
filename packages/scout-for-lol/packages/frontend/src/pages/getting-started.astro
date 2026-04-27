@@ -24,14 +24,19 @@ import GalleryItem from "../components/GalleryItem.astro";
         <!-- Step 1: Add Scout -->
         <ProcessStep number={1} title="Add Scout to Your Server">
           <InfoBox variant="info">
-            <p><strong>Note:</strong> You need Administrator permissions in your Discord server to add Scout.</p>
+            <p>
+              <strong>Note:</strong> You need Administrator permissions in your Discord
+              server to add Scout.
+            </p>
           </InfoBox>
 
-
           <div class="prose max-w-none mb-6 mt-6">
-            <ol class="list-decimal list-inside space-y-3 text-gray-700 dark:text-gray-300">
+            <ol
+              class="list-decimal list-inside space-y-3 text-gray-700 dark:text-gray-300"
+            >
               <li>
-                Click the <strong>"Add to Discord"</strong> button below or at the top of the page
+                Click the <strong>"Add to Discord"</strong> button below or at the
+                top of the page
               </li>
               <li>Select the Discord server where you want to add Scout</li>
               <li>Review and approve the requested permissions</li>
@@ -46,8 +51,17 @@ import GalleryItem from "../components/GalleryItem.astro";
             class="inline-flex items-center rounded-md bg-indigo-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           >
             Add Scout to Discord
-            <svg class="ml-2 -mr-1 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"></path>
+            <svg
+              class="ml-2 -mr-1 h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"></path>
             </svg>
           </a>
         </ProcessStep>
@@ -56,7 +70,8 @@ import GalleryItem from "../components/GalleryItem.astro";
         <ProcessStep number={2} title="Subscribe to a Player">
           <div class="prose max-w-none mb-6">
             <p class="text-lg text-gray-700 dark:text-gray-300 mb-4">
-              Once Scout is in your server, use the <code class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm"
+              Once Scout is in your server, use the <code
+                class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm"
                 >/subscription add</code
               > command to start tracking League players.
             </p>
@@ -66,29 +81,43 @@ import GalleryItem from "../components/GalleryItem.astro";
               variant="dark"
             />
 
-            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3 mt-6">Command Parameters:</h3>
+            <h3
+              class="text-xl font-semibold text-gray-900 dark:text-white mb-3 mt-6"
+            >
+              Command Parameters:
+            </h3>
             <ul class="space-y-3 text-gray-700 dark:text-gray-300">
               <li>
-                <strong class="text-indigo-600 dark:text-indigo-400">channel:</strong> The Discord channel where notifications
-                will be posted
+                <strong class="text-indigo-600 dark:text-indigo-400"
+                  >channel:</strong
+                > The Discord channel where notifications will be posted
               </li>
               <li>
-                <strong class="text-indigo-600 dark:text-indigo-400">region:</strong> The League region (na1, euw1, eune1,
-                kr, etc.)
+                <strong class="text-indigo-600 dark:text-indigo-400"
+                  >region:</strong
+                > The League region (na1, euw1, eune1, kr, etc.)
               </li>
               <li>
-                <strong class="text-indigo-600 dark:text-indigo-400">riot-id:</strong> The player's Riot ID in format "GameName#TagLine"
+                <strong class="text-indigo-600 dark:text-indigo-400"
+                  >riot-id:</strong
+                > The player's Riot ID in format "GameName#TagLine"
               </li>
               <li>
-                <strong class="text-indigo-600 dark:text-indigo-400">alias:</strong> A friendly name to display in notifications
+                <strong class="text-indigo-600 dark:text-indigo-400"
+                  >alias:</strong
+                > A friendly name to display in notifications
               </li>
             </ul>
           </div>
 
           <InfoBox variant="warning" title="💡 Pro Tip: Finding Riot IDs">
             <p>
-              You can find your Riot ID in the League client. It's displayed as <strong>GameName#TagLine</strong>. For
-              example: <code class="bg-yellow-100 dark:bg-yellow-800/50 px-2 py-1 rounded">Faker#KR1</code>
+              You can find your Riot ID in the League client. It's displayed as <strong
+                >GameName#TagLine</strong
+              >. For example: <code
+                class="bg-yellow-100 dark:bg-yellow-800/50 px-2 py-1 rounded"
+                >Faker#KR1</code
+              >
             </p>
           </InfoBox>
         </ProcessStep>
@@ -96,14 +125,24 @@ import GalleryItem from "../components/GalleryItem.astro";
         <!-- Step 3: Enjoy Automatic Updates -->
         <ProcessStep number={3} title="Enjoy Automatic Updates">
           <div class="prose max-w-none">
-            <p class="text-lg text-gray-700 dark:text-gray-300 mb-6">That's it! Scout will now automatically:</p>
+            <p class="text-lg text-gray-700 dark:text-gray-300 mb-6">
+              That's it! Scout will now automatically:
+            </p>
 
             <div class="space-y-4 mb-8">
               <div
                 class="bg-teal-50 dark:bg-teal-900/30 border border-teal-200 dark:border-teal-700 rounded-lg p-6"
               >
-                <h4 class="font-semibold text-teal-900 dark:text-teal-300 mb-2 flex items-center">
-                  <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <h4
+                  class="font-semibold text-teal-900 dark:text-teal-300 mb-2 flex items-center"
+                >
+                  <svg
+                    class="h-5 w-5 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                  >
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
@@ -112,21 +151,29 @@ import GalleryItem from "../components/GalleryItem.astro";
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
-                      d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-                    ></path>
+                      d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"></path>
                   </svg>
                   Pre-Match Alerts
                 </h4>
                 <p class="text-teal-700 dark:text-teal-300">
-                  Get notified the moment a tracked player starts a game, with champion picks and game mode
+                  Get notified the moment a tracked player starts a game, with
+                  champion picks and game mode
                 </p>
               </div>
 
               <div
                 class="bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg p-6"
               >
-                <h4 class="font-semibold text-purple-900 dark:text-purple-300 mb-2 flex items-center">
-                  <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <h4
+                  class="font-semibold text-purple-900 dark:text-purple-300 mb-2 flex items-center"
+                >
+                  <svg
+                    class="h-5 w-5 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                  >
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
@@ -136,13 +183,16 @@ import GalleryItem from "../components/GalleryItem.astro";
                   Post-Match Reports
                 </h4>
                 <p class="text-purple-700 dark:text-purple-300">
-                  Receive beautiful reports with detailed stats, KDA, damage, gold, items, and more
+                  Receive beautiful reports with detailed stats, KDA, damage,
+                  gold, items, and more
                 </p>
               </div>
             </div>
 
             <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 mb-6">
-              <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              <h4
+                class="text-lg font-semibold text-gray-900 dark:text-white mb-4"
+              >
                 Here's what your match notifications will look like:
               </h4>
               <GalleryItem
@@ -156,14 +206,24 @@ import GalleryItem from "../components/GalleryItem.astro";
 
         <!-- Next Steps -->
         <section class="mb-16">
-          <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">What's Next?</h2>
+          <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">
+            What's Next?
+          </h2>
 
           <div class="space-y-6">
-            <div class="border-l-4 border-indigo-600 bg-gray-50 dark:bg-gray-800 p-6">
-              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">🏆 Create Competitions</h3>
+            <div
+              class="border-l-4 border-indigo-600 bg-gray-50 dark:bg-gray-800 p-6"
+            >
+              <h3
+                class="text-xl font-semibold text-gray-900 dark:text-white mb-2"
+              >
+                🏆 Create Competitions
+              </h3>
               <p class="text-gray-700 dark:text-gray-300 mb-3">
-                Set up custom leaderboards and challenges for your server members with the <code
-                  class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm">/competition create</code
+                Set up custom leaderboards and challenges for your server
+                members with the <code
+                  class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm"
+                  >/competition create</code
                 > command.
               </p>
               <div class="mt-4 mb-4">
@@ -181,10 +241,17 @@ import GalleryItem from "../components/GalleryItem.astro";
               >
             </div>
 
-            <div class="border-l-4 border-indigo-600 bg-gray-50 dark:bg-gray-800 p-6">
-              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">📚 Read Full Documentation</h3>
+            <div
+              class="border-l-4 border-indigo-600 bg-gray-50 dark:bg-gray-800 p-6"
+            >
+              <h3
+                class="text-xl font-semibold text-gray-900 dark:text-white mb-2"
+              >
+                📚 Read Full Documentation
+              </h3>
               <p class="text-gray-700 dark:text-gray-300 mb-3">
-                Explore all features, commands, and advanced configuration options in our comprehensive documentation.
+                Explore all features, commands, and advanced configuration
+                options in our comprehensive documentation.
               </p>
               <a
                 href="/docs"
@@ -193,11 +260,19 @@ import GalleryItem from "../components/GalleryItem.astro";
               >
             </div>
 
-            <div class="border-l-4 border-indigo-600 bg-gray-50 dark:bg-gray-800 p-6">
-              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">❓ Get Help</h3>
+            <div
+              class="border-l-4 border-indigo-600 bg-gray-50 dark:bg-gray-800 p-6"
+            >
+              <h3
+                class="text-xl font-semibold text-gray-900 dark:text-white mb-2"
+              >
+                ❓ Get Help
+              </h3>
               <p class="text-gray-700 dark:text-gray-300 mb-3">
-                Need help? Use the <code class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm">/help</code> command
-                in Discord, or join our support server.
+                Need help? Use the <code
+                  class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm"
+                  >/help</code
+                > command in Discord, or join our support server.
               </p>
               <div class="flex gap-4">
                 <a
@@ -222,42 +297,70 @@ import GalleryItem from "../components/GalleryItem.astro";
           <div class="space-y-4">
             <div>
               <code class="text-indigo-300 dark:text-indigo-400">/me</code>
-              <p class="text-gray-300 dark:text-gray-400 mt-1">Look up your own or any player's accounts</p>
+              <p class="text-gray-300 dark:text-gray-400 mt-1">
+                Look up your own or any player's accounts
+              </p>
             </div>
 
             <div>
-              <code class="text-indigo-300 dark:text-indigo-400">/subscription add</code>
-              <p class="text-gray-300 dark:text-gray-400 mt-1">Start tracking a League player</p>
+              <code class="text-indigo-300 dark:text-indigo-400"
+                >/subscription add</code
+              >
+              <p class="text-gray-300 dark:text-gray-400 mt-1">
+                Start tracking a League player
+              </p>
             </div>
 
             <div>
-              <code class="text-indigo-300 dark:text-indigo-400">/subscription delete</code>
-              <p class="text-gray-300 dark:text-gray-400 mt-1">Stop tracking a player</p>
+              <code class="text-indigo-300 dark:text-indigo-400"
+                >/subscription delete</code
+              >
+              <p class="text-gray-300 dark:text-gray-400 mt-1">
+                Stop tracking a player
+              </p>
             </div>
 
             <div>
-              <code class="text-indigo-300 dark:text-indigo-400">/subscription list</code>
-              <p class="text-gray-300 dark:text-gray-400 mt-1">View all subscriptions</p>
+              <code class="text-indigo-300 dark:text-indigo-400"
+                >/subscription list</code
+              >
+              <p class="text-gray-300 dark:text-gray-400 mt-1">
+                View all subscriptions
+              </p>
             </div>
 
             <div>
-              <code class="text-indigo-300 dark:text-indigo-400">/subscription add-channel</code>
-              <p class="text-gray-300 dark:text-gray-400 mt-1">Add a player to an additional channel</p>
+              <code class="text-indigo-300 dark:text-indigo-400"
+                >/subscription add-channel</code
+              >
+              <p class="text-gray-300 dark:text-gray-400 mt-1">
+                Add a player to an additional channel
+              </p>
             </div>
 
             <div>
-              <code class="text-indigo-300 dark:text-indigo-400">/subscription move</code>
-              <p class="text-gray-300 dark:text-gray-400 mt-1">Move a subscription between channels</p>
+              <code class="text-indigo-300 dark:text-indigo-400"
+                >/subscription move</code
+              >
+              <p class="text-gray-300 dark:text-gray-400 mt-1">
+                Move a subscription between channels
+              </p>
             </div>
 
             <div>
-              <code class="text-indigo-300 dark:text-indigo-400">/competition create</code>
-              <p class="text-gray-300 dark:text-gray-400 mt-1">Create a custom leaderboard/challenge</p>
+              <code class="text-indigo-300 dark:text-indigo-400"
+                >/competition create</code
+              >
+              <p class="text-gray-300 dark:text-gray-400 mt-1">
+                Create a custom leaderboard/challenge
+              </p>
             </div>
 
             <div>
               <code class="text-indigo-300 dark:text-indigo-400">/help</code>
-              <p class="text-gray-300 dark:text-gray-400 mt-1">Get help and view available commands</p>
+              <p class="text-gray-300 dark:text-gray-400 mt-1">
+                Get help and view available commands
+              </p>
             </div>
           </div>
         </section>

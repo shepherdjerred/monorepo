@@ -12,12 +12,19 @@ type Props = {
 
 const { perspective } = Astro.props;
 const image = perspective === "student" ? student : teacher;
-const direction = perspective === "teacher" ? "md:flex-row" : "md:flex-row-reverse";
+const direction =
+  perspective === "teacher" ? "md:flex-row" : "md:flex-row-reverse";
 ---
 
-<aside class=`dark:bg-black dark:text-white flex flex-col items-center p-2 ${direction}`>
+<aside
+  class=`dark:bg-black dark:text-white flex flex-col items-center p-2 ${direction}`
+>
   <div class="grow-0 max-w-20 flex items-center flex-col gap-2">
-    <Image src={image} alt=`A drawing of a ${perspective}` class="m-0 rounded-full border-2 dark:border-white" />
+    <Image
+      src={image}
+      alt=`A drawing of a ${perspective}`
+      class="m-0 rounded-full border-2 dark:border-white"
+    />
     <span class="text-sm italic">
       {
         match(perspective)

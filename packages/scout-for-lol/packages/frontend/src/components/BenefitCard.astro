@@ -1,6 +1,6 @@
 ---
-import Card from './Card.astro';
-import type { ColorVariant } from '../lib/colors';
+import Card from "./Card.astro";
+import type { ColorVariant } from "../lib/colors";
 
 interface Props {
   title: string;
@@ -9,10 +9,10 @@ interface Props {
   color?: ColorVariant;
 }
 
-const { title, description, icon, color = 'green' } = Astro.props;
+const { title, description, icon, color = "green" } = Astro.props;
 
 // Determine if icon is an astro-icon name or HTML
-const isIconName = icon && !icon.includes('<');
+const isIconName = icon && !icon.includes("<");
 ---
 
 <Card
