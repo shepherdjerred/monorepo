@@ -661,7 +661,7 @@ export function versionCommitBackHelper(
   if (dryrun) {
     return container.withExec([
       "echo",
-      `DRYRUN: would commit version bump ${version} with digests: ${digests}`,
+      `DRYRUN: would commit version bump ${version} with digests: ${digests}, then close any existing open PRs on chore/version-bump-* branches`,
     ]);
   }
 
@@ -702,6 +702,8 @@ export function versionCommitBackHelper(
         `git push origin "chore/version-bump-${version}"`,
         `gh pr create --title "chore: bump image versions to ${version}" --body "Auto-generated version bump"`,
         `gh pr merge --auto --merge`,
+        `NEW_PR=$(gh pr view --json number -q .number)`,
+        `gh pr list --state open --search "head:chore/version-bump-" --json number,headRefName -q ".[] | select(.headRefName | startswith(\\"chore/version-bump-\\")) | select(.number != $NEW_PR) | .number" | while read -r num; do if ! gh pr close "$num" --delete-branch --comment "Superseded by #$NEW_PR"; then echo "warning: failed to close PR #$num"; fi; done`,
       ].join(" && "),
     ]);
 }
