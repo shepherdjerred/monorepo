@@ -30,12 +30,16 @@ const { title, subtitle, showGradient = true, ctaButtons = [] } = Astro.props;
 
   <div class="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
     <div class="text-center">
-      <h1 class="text-balance text-5xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-7xl">
+      <h1
+        class="text-balance text-5xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-7xl"
+      >
         {title}
       </h1>
       {
         subtitle && (
-          <p class="mt-8 text-pretty text-lg font-medium text-gray-500 dark:text-gray-400 sm:text-xl/8">{subtitle}</p>
+          <p class="mt-8 text-pretty text-lg font-medium text-gray-500 dark:text-gray-400 sm:text-xl/8">
+            {subtitle}
+          </p>
         )
       }
       {
@@ -43,7 +47,10 @@ const { title, subtitle, showGradient = true, ctaButtons = [] } = Astro.props;
           <div class="mt-10 flex items-center justify-center gap-x-6">
             {ctaButtons.map((button) =>
               button.variant === "secondary" ? (
-                <a href={button.href} class="text-sm font-semibold text-indigo-400 hover:text-indigo-300">
+                <a
+                  href={button.href}
+                  class="text-sm font-semibold text-indigo-400 hover:text-indigo-300"
+                >
                   {button.text} <span aria-hidden="true">→</span>
                 </a>
               ) : (

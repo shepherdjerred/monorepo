@@ -18,5 +18,9 @@ const { title, subtitle, badge, centered = true } = Astro.props;
   >
     {title}
   </p>
-  {subtitle && <p class="mt-6 text-lg/8 text-gray-600 dark:text-gray-300">{subtitle}</p>}
+  {
+    subtitle && (
+      <p class="mt-6 text-lg/8 text-gray-600 dark:text-gray-300">{subtitle}</p>
+    )
+  }
 </div>

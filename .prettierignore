@@ -54,8 +54,8 @@ coverage/
 practice/bevy-experiment/assets/
 packages/castle-casters/assets/
 
-# Legacy files with syntax errors
-archive/herd/web/src/components/confirmationPage/ConfirmationPage.js
+# Legacy / archived projects — repo CLAUDE.md marks archive/ as "do not modify"
+archive/
 
 # Vendored/scraped HTML data
 packages/dotfiles/dot_claude/skills/apple-hig-helper/data/
@@ -63,3 +63,15 @@ packages/discord-plays-pokemon/packages/frontend/public/emulatorjs/
 
 # Vendored Data Dragon snapshot (League of Legends static data)
 packages/scout-for-lol/packages/data/src/data-dragon/assets/
+
+# prettier-plugin-astro@0.14.1 side-effect: prettier --check . tries to parse these
+# valid Astro/MDX files with a Babel-based parser that chokes on indented code
+# blocks inside JSX, HTML comments inside JSX expressions, and shebangs in code
+# fences. Each file builds successfully via Astro/MDX itself.
+packages/scout-for-lol/packages/frontend/src/pages/whatsnew.astro
+packages/sjer.red/src/content/blog/2019/opengl.mdx
+packages/sjer.red/src/content/blog/2023/xstate.mdx
+packages/sjer.red/src/content/blog/2024/job-hunt.mdx
+packages/sjer.red/src/content/blog/2025/writing-typescript-with-ai.mdx
+packages/sjer.red/src/content/blog/drafts/homelab-2.mdx
+packages/webring/README.md

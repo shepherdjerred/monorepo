@@ -4,7 +4,9 @@ type Props = {
   backgroundCss?: string | undefined;
 };
 
-function widthToClass(width: "narrow" | "normal" | "wide" | "wide-mobile"): string {
+function widthToClass(
+  width: "narrow" | "normal" | "wide" | "wide-mobile",
+): string {
   switch (width) {
     case "narrow":
       return `md:w-2/5 w-4/5`;
@@ -21,7 +23,12 @@ const { width, backgroundCss } = Astro.props;
 ---
 
 <div class:list={[`grid grid-cols-1`, backgroundCss]}>
-  <div class:list={[`p-2 md:p-0 place-self-center max-w-full break-words`, widthToClass(width)]}>
+  <div
+    class:list={[
+      `p-2 md:p-0 place-self-center max-w-full break-words`,
+      widthToClass(width),
+    ]}
+  >
     <slot />
   </div>
 </div>

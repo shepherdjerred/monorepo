@@ -17,28 +17,35 @@ const { title, description, buttons = [] } = Astro.props;
     <h2 class="text-3xl font-bold tracking-tight text-white sm:text-4xl">
       {title}
     </h2>
-    {description && (
-      <p class="mx-auto mt-4 max-w-xl text-base text-amber-100">
-        {description}
-      </p>
-    )}
-    {buttons.length > 0 && (
-      <div class="mt-8 flex items-center justify-center gap-x-4">
-        {buttons.map((button) =>
-          button.variant === "secondary" ? (
-            <a href={button.href} class="rounded-full border border-amber-300 px-5 py-2.5 text-sm font-medium text-white hover:bg-amber-500 transition-colors">
-              {button.text}
-            </a>
-          ) : (
-            <a
-              href={button.href}
-              class="rounded-full bg-white px-6 py-2.5 text-sm font-medium text-amber-700 shadow-sm hover:bg-amber-50 transition-colors"
-            >
-              {button.text}
-            </a>
-          ),
-        )}
-      </div>
-    )}
+    {
+      description && (
+        <p class="mx-auto mt-4 max-w-xl text-base text-amber-100">
+          {description}
+        </p>
+      )
+    }
+    {
+      buttons.length > 0 && (
+        <div class="mt-8 flex items-center justify-center gap-x-4">
+          {buttons.map((button) =>
+            button.variant === "secondary" ? (
+              <a
+                href={button.href}
+                class="rounded-full border border-amber-300 px-5 py-2.5 text-sm font-medium text-white hover:bg-amber-500 transition-colors"
+              >
+                {button.text}
+              </a>
+            ) : (
+              <a
+                href={button.href}
+                class="rounded-full bg-white px-6 py-2.5 text-sm font-medium text-amber-700 shadow-sm hover:bg-amber-50 transition-colors"
+              >
+                {button.text}
+              </a>
+            ),
+          )}
+        </div>
+      )
+    }
   </div>
 </div>

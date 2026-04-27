@@ -20,7 +20,9 @@ const counts = R.pipe(
     return entry.id.replace(/\/.*/, "");
   }),
   R.entries(),
-  R.map(([difficulty, entries]) => `${entries.length.toString()} ${difficulty}`),
+  R.map(
+    ([difficulty, entries]) => `${entries.length.toString()} ${difficulty}`,
+  ),
   R.sortBy((count) => {
     const [_, difficulty] = count.split(" ");
     if (difficulty === "easy") return 3;
@@ -28,7 +30,7 @@ const counts = R.pipe(
     if (difficulty === "hard") return 1;
     return 0;
   }),
-  R.join(", ")
+  R.join(", "),
 );
 ---
 

@@ -9,7 +9,7 @@ interface Props {
 const { imageSrc, imageAlt, caption, fullWidth = false } = Astro.props;
 ---
 
-<div class={fullWidth ? 'w-full' : 'mx-auto max-w-5xl'}>
+<div class={fullWidth ? "w-full" : "mx-auto max-w-5xl"}>
   <div class="relative">
     <img
       src={imageSrc}
@@ -17,11 +17,16 @@ const { imageSrc, imageAlt, caption, fullWidth = false } = Astro.props;
       class="w-full rounded-xl shadow-xl ring-1 ring-gray-400/10 dark:ring-gray-600"
       loading="lazy"
     />
-    <div class="absolute inset-0 rounded-xl ring-1 ring-inset ring-gray-900/10 dark:ring-gray-100/10"></div>
+    <div
+      class="absolute inset-0 rounded-xl ring-1 ring-inset ring-gray-900/10 dark:ring-gray-100/10"
+    >
+    </div>
   </div>
-  {caption && (
-    <p class="text-sm text-gray-600 dark:text-gray-400 mt-3 text-center">
-      {caption}
-    </p>
-  )}
+  {
+    caption && (
+      <p class="text-sm text-gray-600 dark:text-gray-400 mt-3 text-center">
+        {caption}
+      </p>
+    )
+  }
 </div>

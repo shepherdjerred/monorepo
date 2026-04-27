@@ -4,7 +4,12 @@ import Background from "@components/Background.astro";
 import Container from "@components/Container.astro";
 import * as R from "remeda";
 import type { JSX } from "astro/jsx-runtime";
-import { bookmarks, BookmarkSchema, links, type Bookmark } from "src/bookmarks/bookmarks";
+import {
+  bookmarks,
+  BookmarkSchema,
+  links,
+  type Bookmark,
+} from "src/bookmarks/bookmarks";
 ---
 
 <NavbarLayout title="Bookmarks" description="My bookmarks">
@@ -18,7 +23,9 @@ import { bookmarks, BookmarkSchema, links, type Bookmark } from "src/bookmarks/b
           R.shuffle(links).map((link): JSX.Element => {
             const bookmark: Bookmark = BookmarkSchema.parse(bookmarks[link]);
             return (
-              <div class={`bg-white dark:bg-black dark:text-white text-black p-4 rounded-md text-xl`}>
+              <div
+                class={`bg-white dark:bg-black dark:text-white text-black p-4 rounded-md text-xl`}
+              >
                 <a
                   href={link}
                   target="_blank"

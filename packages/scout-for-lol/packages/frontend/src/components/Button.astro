@@ -87,7 +87,15 @@ const externalProps = external
   : {};
 ---
 
-<a href={href} {...externalProps} class={cn(baseClasses, variantClasses, sizeClasses, className)}>
+<a
+  href={href}
+  {...externalProps}
+  class={cn(baseClasses, variantClasses, sizeClasses, className)}
+>
   <slot />
-  {variant === "text" && !className.includes("inline-flex") && <span aria-hidden="true">→</span>}
+  {
+    variant === "text" && !className.includes("inline-flex") && (
+      <span aria-hidden="true">→</span>
+    )
+  }
 </a>
