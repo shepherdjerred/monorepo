@@ -20,7 +20,7 @@
     "@crxjs/vite-plugin": "^2.4.0",
     "@shepherdjerred/eslint-config": "file:../eslint-config",
     "@types/chrome": "^0.1.40",
-    "eslint": "^9.39.4",
+    "eslint": "^10.0.0",
     "jiti": "^2.6.1",
     "typescript": "^6.0.3",
     "vite": "^8.0.9"

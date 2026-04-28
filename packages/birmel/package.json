@@ -49,7 +49,7 @@
     "@shepherdjerred/eslint-config": "file:../eslint-config",
     "@types/bun": "^1.3.13",
     "@typescript-eslint/utils": "^8.59.0",
-    "eslint": "^9.39.4",
+    "eslint": "^10.0.0",
     "jiti": "^2.6.1",
     "prisma": "^6.19.3",
     "typescript": "^6.0.3"

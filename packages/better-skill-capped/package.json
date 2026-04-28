@@ -39,7 +39,7 @@
     "@types/react-highlight-words": "^0.20.1",
     "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^6.0.1",
-    "eslint": "^9.39.4",
+    "eslint": "^10.0.0",
     "jiti": "^2.6.1",
     "sass": "^1.99.0",
     "typescript-eslint": "^8.59.0",

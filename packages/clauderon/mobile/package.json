@@ -52,7 +52,7 @@
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/react-test-renderer": "^19.1.0",
     "babel-jest": "^30.3.0",
-    "eslint": "^9.39.4",
+    "eslint": "^10.0.0",
     "jest": "^30.3.0",
     "jiti": "^2.6.1",
     "prettier": "^3.8.3",

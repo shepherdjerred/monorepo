@@ -36,7 +36,7 @@
     "@types/chroma-js": "^3.1.2",
     "@types/react": "^19.2.14",
     "bun-types": "latest",
-    "eslint": "^9.39.4",
+    "eslint": "^10.0.0",
     "typescript": "^6"
   },
   "description": "Generate report images for League of Legends",
