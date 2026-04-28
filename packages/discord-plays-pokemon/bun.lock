@@ -64,7 +64,7 @@
         "@typescript-eslint/parser": "^8.28.0",
         "eslint": "^9.39.4",
         "eslint-config-prettier": "^10.1.1",
-        "typescript": "5.9.3",
+        "typescript": "6.0.2",
         "typescript-eslint": "^8.50.0",
       },
     },
@@ -1582,7 +1582,7 @@
 
     "@discord-plays-pokemon/backend/@shepherdjerred/eslint-config": ["@shepherdjerred/eslint-config@file:../eslint-config", { "dependencies": { "@eslint-community/eslint-plugin-eslint-comments": "^4.7.1", "@eslint/js": "^9.39.4", "@typescript-eslint/utils": "^8.59.0", "eslint-config-prettier": "^10.1.8", "eslint-import-resolver-typescript": "^4.4.4", "eslint-import-resolver-typescript-bun": "^0.0.104", "eslint-plugin-astro": "^1.7.0", "eslint-plugin-import": "^2.32.0", "eslint-plugin-jsx-a11y": "^6.10.2", "eslint-plugin-no-secrets": "^2.3.3", "eslint-plugin-react": "^7.37.5", "eslint-plugin-react-hooks": "^7.1.1", "eslint-plugin-react-native": "^5.0.0", "eslint-plugin-regexp": "^2.10.0", "eslint-plugin-unicorn": "^64.0.0", "jiti": "^2.6.1", "typescript-eslint": "^8.59.0" }, "devDependencies": { "@types/node": "^25.6.0", "@typescript-eslint/rule-tester": "^8.59.0" }, "peerDependencies": { "eslint": "^9.39.4", "typescript": "^5.9.3 || ^6" } }],
 
-    "@discord-plays-pokemon/common/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+    "@discord-plays-pokemon/common/typescript": ["typescript@6.0.2", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-bGdAIrZ0wiGDo5l8c++HWtbaNCWTS4UTv7RaTH/ThVIgjkveJt83m74bBHMJkuCbslY8ixgLBVZJIOiQlQTjfQ=="],
 
     "@discord-plays-pokemon/frontend/@discord-plays-pokemon/common": ["@discord-plays-pokemon/common@file:packages/common", { "dependencies": { "lodash": "4.18.1", "ts-pattern": "^5.7.0", "zod": "^3.24.2" }, "devDependencies": { "@eslint/js": "^9.39.4", "@tsconfig/recommended": "1.0.13", "@types/lodash": "^4.17.16", "@types/node": "^25.0.0", "@typescript-eslint/eslint-plugin": "^8.28.0", "@typescript-eslint/parser": "^8.28.0", "eslint": "^9.39.4", "eslint-config-prettier": "^10.1.1", "typescript": "5.9.3", "typescript-eslint": "^8.50.0" } }],
 
