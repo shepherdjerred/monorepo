@@ -1,6 +1,6 @@
 {
   "packages/clauderon": "0.2.2",
-  "packages/astro-opengraph-images": "1.16.1",
+  "packages/astro-opengraph-images": "1.16.2",
   "packages/webring": "1.6.1",
   "packages/homelab/src/helm-types": "1.2.1"
 }
