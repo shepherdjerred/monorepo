@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.2](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.16.1...astro-opengraph-images-v1.16.2) (2026-04-28)
+
+
+### Bug Fixes
+
+* **deps:** update astro monorepo ([b339dd0](https://github.com/shepherdjerred/monorepo/commit/b339dd02fba905204181fcf4d9e651b760685dae))
+
 ## [1.16.1](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.16.0...astro-opengraph-images-v1.16.1) (2026-04-23)
 
 
