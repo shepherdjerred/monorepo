@@ -74,7 +74,7 @@
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "astro": "^6.1.9",
-    "eslint": "^9.39.4",
+    "eslint": "^10.0.0",
     "jiti": "^2.6.1",
     "typescript": "^6.0.3",
     "vitest": "^4.1.5"

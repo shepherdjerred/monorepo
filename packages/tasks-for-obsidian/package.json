@@ -54,7 +54,7 @@
     "@react-native/typescript-config": "0.85.2",
     "@types/react": "~19.2.14",
     "@shepherdjerred/eslint-config": "file:../eslint-config",
-    "eslint": "^9.39.4",
+    "eslint": "^10.0.0",
     "jiti": "^2.6.1",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.0"

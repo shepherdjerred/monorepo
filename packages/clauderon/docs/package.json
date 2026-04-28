@@ -21,6 +21,6 @@
   "devDependencies": {
     "@shepherdjerred/eslint-config": "file:../../eslint-config",
     "@typescript-eslint/utils": "^8.59.0",
-    "eslint": "^9.39.4"
+    "eslint": "^10.0.0"
   }
 }
