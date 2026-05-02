@@ -105,7 +105,9 @@ async function main(): Promise<void> {
   // once during pod termination, and the Temporal SDK throws
   // `IllegalStateError: Not running. Current state: DRAINING` if shutdown()
   // is called against a worker that has already begun draining. Tracking
-  // this with a flag means subsequent signals are no-ops.
+  // this with a flag means subsequent signals are no-ops, and a state check
+  // on `worker` covers the case where the worker drained for a non-signal
+  // reason (e.g., lost server connection) before SIGTERM arrived.
   let shutdownStarted = false;
   const shutdown = async (signal: string): Promise<void> => {
     if (shutdownStarted) {
@@ -117,7 +119,14 @@ async function main(): Promise<void> {
     shutdownStarted = true;
     jsonLog("info", "Shutting down worker", { signal });
     await eventBridge.close();
-    worker.shutdown();
+    const workerState = worker.getState();
+    if (workerState === "RUNNING") {
+      worker.shutdown();
+    } else {
+      jsonLog("info", "Worker not RUNNING, skipping worker.shutdown()", {
+        state: workerState,
+      });
+    }
     await stopMetricsServer();
     await shutdownTracing();
   };
