@@ -1,6 +1,11 @@
+import {
+  getErrorMessage,
+  toError,
+} from "@shepherdjerred/birmel/utils/errors.ts";
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
+import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
 import { withToolSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { getRequestContext } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import { isEditorEnabled } from "@shepherdjerred/birmel/editor/config.ts";
@@ -60,91 +65,104 @@ export const getSessionTool = createTool({
     const reqCtx = getRequestContext();
 
     return withToolSpan("get-editor-session", reqCtx?.guildId, async () => {
-      // Check if editor is enabled
-      if (!isEditorEnabled()) {
-        return {
-          success: false,
-          message: "File editing feature is not enabled.",
-        };
-      }
-
-      if (reqCtx == null) {
-        return {
-          success: false,
-          message: "Could not determine request context.",
-        };
-      }
-
-      // Get specific session
-      if (sessionId != null && sessionId.length > 0) {
-        const session = await getSession(sessionId);
-
-        if (session == null) {
+      try {
+        // Check if editor is enabled
+        if (!isEditorEnabled()) {
           return {
             success: false,
-            message: `Session '${sessionId}' not found.`,
+            message: "File editing feature is not enabled.",
           };
         }
 
-        // Verify user owns the session
-        if (session.userId !== reqCtx.userId) {
+        if (reqCtx == null) {
           return {
             success: false,
-            message: "You don't have access to this session.",
+            message: "Could not determine request context.",
           };
         }
 
-        const pendingChanges = getPendingChanges(session);
-        const changedFiles = pendingChanges?.changes.map((c) => c.filePath);
+        // Get specific session
+        if (sessionId != null && sessionId.length > 0) {
+          const session = await getSession(sessionId);
 
-        logger.debug("Fetched session", { sessionId: session.id });
+          if (session == null) {
+            return {
+              success: false,
+              message: `Session '${sessionId}' not found.`,
+            };
+          }
+
+          // Verify user owns the session
+          if (session.userId !== reqCtx.userId) {
+            return {
+              success: false,
+              message: "You don't have access to this session.",
+            };
+          }
+
+          const pendingChanges = getPendingChanges(session);
+          const changedFiles = pendingChanges?.changes.map((c) => c.filePath);
+
+          logger.debug("Fetched session", { sessionId: session.id });
+
+          return {
+            success: true,
+            message: `Session for ${session.repoName} (${session.state})`,
+            data: {
+              session: {
+                id: session.id,
+                repoName: session.repoName,
+                state: session.state,
+                summary: session.summary,
+                prUrl: session.prUrl,
+                changedFiles,
+                createdAt: session.createdAt.toISOString(),
+                expiresAt: session.expiresAt.toISOString(),
+              },
+            },
+          };
+        }
+
+        // List all active sessions for user
+        const sessions = await getActiveSessionsForUser(reqCtx.userId);
+
+        if (sessions.length === 0) {
+          return {
+            success: true,
+            message: "You have no active editing sessions.",
+            data: { sessions: [] },
+          };
+        }
+
+        logger.debug("Listed user sessions", {
+          userId: reqCtx.userId,
+          count: sessions.length,
+        });
 
         return {
           success: true,
-          message: `Session for ${session.repoName} (${session.state})`,
+          message: `You have ${String(sessions.length)} active session(s).`,
           data: {
-            session: {
-              id: session.id,
-              repoName: session.repoName,
-              state: session.state,
-              summary: session.summary,
-              prUrl: session.prUrl,
-              changedFiles,
-              createdAt: session.createdAt.toISOString(),
-              expiresAt: session.expiresAt.toISOString(),
-            },
+            sessions: sessions.map((s) => ({
+              id: s.id,
+              repoName: s.repoName,
+              state: s.state,
+              createdAt: s.createdAt.toISOString(),
+            })),
           },
         };
-      }
-
-      // List all active sessions for user
-      const sessions = await getActiveSessionsForUser(reqCtx.userId);
-
-      if (sessions.length === 0) {
+      } catch (error) {
+        // Prisma/libSQL throws here would otherwise propagate up to the
+        // editor sub-agent and produce no text — silent-typing-cursor.
+        logger.error("Failed to fetch editor session", error);
+        captureException(toError(error), {
+          operation: "tool.get-editor-session",
+        });
         return {
-          success: true,
-          message: "You have no active editing sessions.",
-          data: { sessions: [] },
+          success: false,
+          message: `Failed to fetch session: ${getErrorMessage(error)}`,
         };
       }
-
-      logger.debug("Listed user sessions", {
-        userId: reqCtx.userId,
-        count: sessions.length,
-      });
-
-      return {
-        success: true,
-        message: `You have ${String(sessions.length)} active session(s).`,
-        data: {
-          sessions: sessions.map((s) => ({
-            id: s.id,
-            repoName: s.repoName,
-            state: s.state,
-            createdAt: s.createdAt.toISOString(),
-          })),
-        },
-      };
     });
   },
 });

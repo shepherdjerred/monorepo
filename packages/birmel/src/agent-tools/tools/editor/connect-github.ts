@@ -1,13 +1,21 @@
+import {
+  getErrorMessage,
+  toError,
+} from "@shepherdjerred/birmel/utils/errors.ts";
 import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
 import { z } from "zod";
 import type { ButtonBuilder as ButtonBuilderType } from "discord.js";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
+import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
 import { getRequestContext } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import {
   hasValidAuth,
   deleteAuth,
 } from "@shepherdjerred/birmel/editor/github-oauth.ts";
 import { getGitHubConfig } from "@shepherdjerred/birmel/editor/config.ts";
+
+const logger = loggers.tools.child("editor.connect-github");
 
 export const connectGitHubTool = createTool({
   id: "connect-github",
@@ -30,87 +38,98 @@ export const connectGitHubTool = createTool({
     isConnected: z.boolean().optional(),
   }),
   execute: async ({ action }) => {
-    const reqCtx = getRequestContext();
-    if (reqCtx == null) {
-      return {
-        success: false,
-        message: "Could not determine request context.",
-      };
-    }
-
-    const config = getGitHubConfig();
-    if (config == null) {
-      return { success: false, message: "GitHub OAuth is not configured." };
-    }
-    const isConnected = await hasValidAuth(reqCtx.userId);
-
-    if (action === "status") {
-      return {
-        success: true,
-        message: isConnected
-          ? "Your GitHub account is connected. You can create PRs."
-          : "GitHub not connected. Use 'connect github' to link your account.",
-        isConnected,
-      };
-    }
-
-    if (action === "disconnect") {
-      if (!isConnected) {
-        return { success: false, message: "No GitHub account is connected." };
+    try {
+      const reqCtx = getRequestContext();
+      if (reqCtx == null) {
+        return {
+          success: false,
+          message: "Could not determine request context.",
+        };
       }
-      await deleteAuth(reqCtx.userId);
-      return {
-        success: true,
-        message: "GitHub account disconnected.",
-        isConnected: false,
-      };
-    }
 
-    // action === "connect"
-    if (isConnected) {
-      return {
-        success: true,
-        message: "Your GitHub account is already connected!",
-        isConnected: true,
-      };
-    }
+      const config = getGitHubConfig();
+      if (config == null) {
+        return { success: false, message: "GitHub OAuth is not configured." };
+      }
+      const isConnected = await hasValidAuth(reqCtx.userId);
 
-    // Generate OAuth URL - derive from callback URL
-    const authUrl = config.callbackUrl.replace(
-      "/callback",
-      `?user=${reqCtx.userId}`,
-    );
+      if (action === "status") {
+        return {
+          success: true,
+          message: isConnected
+            ? "Your GitHub account is connected. You can create PRs."
+            : "GitHub not connected. Use 'connect github' to link your account.",
+          isConnected,
+        };
+      }
 
-    // Send embed with button to Discord
-    const client = getDiscordClient();
-    const channel = await client.channels.fetch(reqCtx.sourceChannelId);
+      if (action === "disconnect") {
+        if (!isConnected) {
+          return { success: false, message: "No GitHub account is connected." };
+        }
+        await deleteAuth(reqCtx.userId);
+        return {
+          success: true,
+          message: "GitHub account disconnected.",
+          isConnected: false,
+        };
+      }
 
-    if (channel != null && "send" in channel) {
-      const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } =
-        await import("discord.js");
+      // action === "connect"
+      if (isConnected) {
+        return {
+          success: true,
+          message: "Your GitHub account is already connected!",
+          isConnected: true,
+        };
+      }
 
-      const embed = new EmbedBuilder()
-        .setTitle("Connect GitHub Account")
-        .setDescription(
-          "Click the button below to connect your GitHub account. This allows the bot to create pull requests on your behalf.",
-        )
-        .setColor(5_793_266);
-
-      const row = new ActionRowBuilder<ButtonBuilderType>().addComponents(
-        new ButtonBuilder()
-          .setLabel("Connect GitHub")
-          .setStyle(ButtonStyle.Link)
-          .setURL(authUrl),
+      // Generate OAuth URL - derive from callback URL
+      const authUrl = config.callbackUrl.replace(
+        "/callback",
+        `?user=${reqCtx.userId}`,
       );
 
-      await channel.send({ embeds: [embed], components: [row] });
-    }
+      // Send embed with button to Discord
+      const client = getDiscordClient();
+      const channel = await client.channels.fetch(reqCtx.sourceChannelId);
 
-    return {
-      success: true,
-      message: "Click the link above to connect your GitHub account.",
-      authUrl,
-      isConnected: false,
-    };
+      if (channel != null && "send" in channel) {
+        const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } =
+          await import("discord.js");
+
+        const embed = new EmbedBuilder()
+          .setTitle("Connect GitHub Account")
+          .setDescription(
+            "Click the button below to connect your GitHub account. This allows the bot to create pull requests on your behalf.",
+          )
+          .setColor(5_793_266);
+
+        const row = new ActionRowBuilder<ButtonBuilderType>().addComponents(
+          new ButtonBuilder()
+            .setLabel("Connect GitHub")
+            .setStyle(ButtonStyle.Link)
+            .setURL(authUrl),
+        );
+
+        await channel.send({ embeds: [embed], components: [row] });
+      }
+
+      return {
+        success: true,
+        message: "Click the link above to connect your GitHub account.",
+        authUrl,
+        isConnected: false,
+      };
+    } catch (error) {
+      // Prisma/Discord/network throws would propagate up to the editor
+      // sub-agent and produce empty output — silent-typing-cursor bug.
+      logger.error("Failed to handle connect-github", error);
+      captureException(toError(error), { operation: "tool.connect-github" });
+      return {
+        success: false,
+        message: `Failed to handle GitHub connection: ${getErrorMessage(error)}`,
+      };
+    }
   },
 });
