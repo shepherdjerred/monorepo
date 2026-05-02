@@ -70,6 +70,23 @@ Workflow:
 - `SENTRY_DSN`, `ENVIRONMENT` — Sentry/Bugsink error tracking (init no-ops when DSN unset)
 - `APP_METRICS_PORT` — port for the application Prometheus registry (default `9465`); separate from the SDK metrics on `:9464`
 - `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, `GIT_COMMITTER_EMAIL` — bot identity for `git commit` in docs-groom
+- `GITHUB_WEBHOOK_SECRET` — HMAC secret used to verify `X-Hub-Signature-256` on incoming PR webhooks. **Required** when the webhook server is enabled; the server only starts when this is set.
+- `GITHUB_PERSONAL_ACCESS_TOKEN` — token passed to the `github-mcp-server` MCP backend used by the pr-agent activity. May be the same as `GH_TOKEN` if the existing token has the necessary `pull_requests: read+write` and `contents: read` scopes; keep separate if you want a narrower-scoped token for the bot.
+- `CLAUDE_CODE_OAUTH_TOKEN` — auth used by the `claude` CLI inside the pr-agent activity (subprocess inherits this from the parent process).
+- `GITHUB_WEBHOOK_PORT` — port for the GitHub webhook receiver (default `9466`).
+
+## PR review / summary bot
+
+`prReview` and `prSummary` workflows are triggered by GitHub `pull_request` webhook deliveries. The Hono server in `src/event-bridge/github-webhook.ts` runs alongside the HA WebSocket listener, verifies the signature, skips draft + bot-authored PRs, and starts both workflows in parallel with workflow IDs `pr-{kind}-{owner}-{repo}-{prNumber}-{commitSha}` (`WorkflowIdReusePolicy.ALLOW_DUPLICATE`).
+
+The `runPrAgent` activity (`src/activities/pr-agent.ts`) launches `claude -p --mcp-config <tempfile> --allowed-tools mcp__github__* --model <m> --max-turns <n>`. The MCP config points at `/usr/local/bin/github-mcp-server` (installed in the worker image via `withGithubMcpServer` in `.dagger/src/image.ts`). Tokens are passed via env, never written into the MCP config file. stderr is streamed line-by-line through `jsonLog` with token redaction. Heartbeats fire every 10s during the subprocess lifetime.
+
+**Component log values** (use these in `component:` and LogQL filters):
+
+- `pr-webhook` — webhook server
+- `pr-agent` — `claude -p` subprocess wrapper
+
+**Models** — review uses `claude-opus-4-7` (max-turns 30), summary uses `claude-haiku-4-5-20251001` (max-turns 10). Summary comments include the marker `<!-- pr-summary -->` so subsequent runs edit in place instead of duplicating.
 
 ## Daily docs-groom workflow
 
