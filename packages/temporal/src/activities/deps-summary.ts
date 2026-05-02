@@ -6,6 +6,11 @@ const VERSIONS_FILE_PATH = "src/cdk8s/src/versions.ts";
 const REPO_URL = "https://github.com/shepherdjerred/homelab.git";
 
 const VERSION_LINE_REGEX = /"([^"]+)":\s*"([^"]+)"/;
+export const DEPS_SUMMARY_CLONE_ARGS = [
+  "--filter=blob:none",
+  "--single-branch",
+  "--branch=main",
+] as const;
 
 function parseVersionLine(
   line: string,
@@ -168,10 +173,7 @@ export const depsSummaryActivities = {
       const sinceStr = since.toISOString().split("T")[0] ?? "";
 
       const git = simpleGit();
-      await git.clone(REPO_URL, tempDir, [
-        `--shallow-since=${sinceStr}`,
-        "--no-single-branch",
-      ]);
+      await git.clone(REPO_URL, tempDir, [...DEPS_SUMMARY_CLONE_ARGS]);
 
       const repoGit = simpleGit(tempDir);
 
@@ -195,7 +197,7 @@ export const depsSummaryActivities = {
             VERSIONS_FILE_PATH,
           ]);
         } catch {
-          // Parent is outside the shallow-since history (graft boundary) — skip.
+          // Initial/root commits do not have a parent to diff against.
           continue;
         }
 

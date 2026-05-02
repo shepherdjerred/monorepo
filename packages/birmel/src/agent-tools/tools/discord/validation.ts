@@ -3,7 +3,20 @@
  * Discord IDs (snowflakes) are numeric strings, typically 17-20 digits.
  */
 
+import { z } from "zod";
+
 const SNOWFLAKE_REGEX = /^\d{17,20}$/;
+
+/**
+ * Zod schema for a Discord channel/thread name. Trims whitespace, enforces
+ * Discord's 1–100 character limit. Use with `.optional()` when the name is
+ * conditionally required by an action.
+ */
+export const discordChannelName = z
+  .string()
+  .trim()
+  .min(1, "Channel name must not be empty")
+  .max(100, "Channel name must be 1-100 characters");
 
 /**
  * Validates that a string is a valid Discord snowflake ID.

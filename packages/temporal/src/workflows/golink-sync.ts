@@ -1,5 +1,6 @@
 import { proxyActivities } from "@temporalio/workflow";
 import type { GolinkSyncActivities } from "#activities/golink-sync.ts";
+import type { GolinkEntry } from "#shared/types.ts";
 
 const {
   listTailscaleIngresses,
@@ -25,6 +26,21 @@ const {
  * `cannot update link owned by "<other-owner>"`.
  */
 const BOT_OWNER = "tagged-devices";
+
+function canonicalizeGolinkTarget(url: string): string {
+  return url.endsWith("/") ? url.slice(0, -1) : url;
+}
+
+function hasExpectedTarget(link: GolinkEntry, expectedLong: string): boolean {
+  return (
+    canonicalizeGolinkTarget(link.long) ===
+    canonicalizeGolinkTarget(expectedLong)
+  );
+}
+
+function isSyncOwned(link: GolinkEntry): boolean {
+  return link.owner === BOT_OWNER;
+}
 
 export async function syncGolinks(): Promise<void> {
   const tailnetDomain = "tailnet-1a49.ts.net";
@@ -56,11 +72,17 @@ export async function syncGolinks(): Promise<void> {
   let skippedOwnership = 0;
   for (const [short, long] of expectedLinks) {
     const existing = existingLinks.find((link) => link.short === short);
-    if (existing !== undefined && existing.owner !== BOT_OWNER) {
+    if (existing === undefined) {
+      await createOrUpdateGolink(golinkUrl, short, long);
+      created++;
+      continue;
+    }
+
+    if (!isSyncOwned(existing)) {
       skippedOwnership++;
       continue;
     }
-    if (existing?.long !== long) {
+    if (!hasExpectedTarget(existing, long)) {
       await createOrUpdateGolink(golinkUrl, short, long);
       created++;
     }
@@ -72,7 +94,7 @@ export async function syncGolinks(): Promise<void> {
   let deleted = 0;
   for (const link of existingLinks) {
     if (
-      link.owner === BOT_OWNER &&
+      isSyncOwned(link) &&
       link.long.includes(tailnetDomain) &&
       !expectedLinks.has(link.short)
     ) {

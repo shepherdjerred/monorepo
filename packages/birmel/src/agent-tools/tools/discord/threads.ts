@@ -8,7 +8,7 @@ import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
 import { withToolSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
-import { validateSnowflakes } from "./validation.ts";
+import { discordChannelName, validateSnowflakes } from "./validation.ts";
 import {
   handleCreateFromMessage,
   handleCreateStandalone,
@@ -51,10 +51,7 @@ export const manageThreadTool = createTool({
       .string()
       .optional()
       .describe("The user ID to add (for add-member)"),
-    name: z
-      .string()
-      .min(1)
-      .max(100)
+    name: discordChannelName
       .optional()
       .describe("Thread name (for create/modify)"),
     autoArchiveDuration: z

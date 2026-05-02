@@ -11,6 +11,7 @@
     "clear": "rm -rf dist/",
     "build-app": "bun run src/app.ts",
     "patch": "bun run scripts/patch.ts",
+    "r2:inventory": "bun run scripts/r2-prefix-inventory.ts",
     "update-imports": "bun run scripts/update-imports.ts",
     "generate-helm-types": "bun run scripts/generate-helm-types.ts",
     "up": "bun run build && kubectl delete job dagger-zfs-tuning docker-config-builder -n dagger --ignore-not-found; bun run scripts/helm-render.ts --apply",

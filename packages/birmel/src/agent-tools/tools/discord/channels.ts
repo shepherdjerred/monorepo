@@ -8,7 +8,7 @@ import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
 import { withToolSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
-import { validateSnowflakes } from "./validation.ts";
+import { discordChannelName, validateSnowflakes } from "./validation.ts";
 import { parseDiscordAPIError, formatDiscordAPIError } from "./error-utils.ts";
 import {
   handleList,
@@ -46,7 +46,9 @@ export const manageChannelTool = createTool({
       .string()
       .optional()
       .describe("Channel ID (for get/modify/delete/set-permissions)"),
-    name: z.string().optional().describe("Channel name (for create/modify)"),
+    name: discordChannelName
+      .optional()
+      .describe("Channel name (for create/modify)"),
     type: z
       .enum(["text", "voice", "category"])
       .optional()

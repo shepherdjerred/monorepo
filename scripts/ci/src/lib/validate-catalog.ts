@@ -67,7 +67,8 @@ export async function validateCatalog(): Promise<void> {
   }
 
   // 4. Every IMAGE_PUSH_TARGETS name should map to a PACKAGES_WITH_IMAGES entry or have neededPackages
-  //    (This catches the better-skill-capped vs better-skill-capped-fetcher drift)
+  //    (Catches drift between an image's `name`/`package` and the catalog —
+  //    e.g. a sub-package vs its parent monorepo entry.)
   for (const img of [...IMAGE_PUSH_TARGETS, ...INFRA_PUSH_TARGETS]) {
     const resolvedPkg = img.package ?? img.name;
     if (!catalogSet.has(resolvedPkg) && !img.neededPackages?.length) {

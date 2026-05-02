@@ -3,7 +3,10 @@ import {
   RawCurrentGameInfoSchema,
   LoadingScreenDataSchema,
 } from "@scout-for-lol/data/index.ts";
-import { buildLoadingScreenData } from "#src/league/tasks/prematch/loading-screen-builder.ts";
+import {
+  RecoverableLoadingScreenDataError,
+  buildLoadingScreenData,
+} from "#src/league/tasks/prematch/loading-screen-builder.ts";
 
 // Mock the rank fetcher to avoid real API calls in tests
 void mock.module("#src/league/model/rank.ts", () => ({
@@ -123,6 +126,52 @@ describe("buildLoadingScreenData with real spectator payload", () => {
     expect(reksai?.championDisplayName).toBe("Reksai");
   });
 
+  test("queue 3270 (ARAM: Mayhem) resolves to ARAM layout", async () => {
+    const baseGameInfo = await loadSpectatorPayload(
+      `${currentDir}testdata/spectator-ranked-flex.json`,
+    );
+
+    const gameInfo = RawCurrentGameInfoSchema.parse({
+      ...baseGameInfo,
+      gameQueueConfigId: 3270,
+      mapId: 12,
+      gameMode: "ARAM",
+      bannedChampions: [],
+    });
+
+    const result = await buildLoadingScreenData(
+      gameInfo,
+      new Set(),
+      "AMERICA_NORTH",
+    );
+
+    const parsed = LoadingScreenDataSchema.parse(result);
+    expect(parsed.queueType).toBe("aram mayhem");
+    expect(parsed.layout).toBe("aram");
+  });
+
+  test("queue 3100 (Custom) resolves to standard layout", async () => {
+    const baseGameInfo = await loadSpectatorPayload(
+      `${currentDir}testdata/spectator-ranked-flex.json`,
+    );
+
+    const gameInfo = RawCurrentGameInfoSchema.parse({
+      ...baseGameInfo,
+      gameQueueConfigId: 3100,
+      gameMode: "CLASSIC",
+    });
+
+    const result = await buildLoadingScreenData(
+      gameInfo,
+      new Set(),
+      "AMERICA_NORTH",
+    );
+
+    const parsed = LoadingScreenDataSchema.parse(result);
+    expect(parsed.queueType).toBe("custom");
+    expect(parsed.layout).toBe("standard");
+  });
+
   test("queue 1700 (Arena) uses playerSubteamId for arenaTeam, not teamId", async () => {
     // Spectator V5 reports teamId as 100/200 even for Arena games — the real
     // 1-8 subteam comes from playerSubteamId. Ensure the loading screen
@@ -176,7 +225,46 @@ describe("buildLoadingScreenData with real spectator payload", () => {
     expect(parsed.participants[2]?.team).toEqual({ arenaTeam: 2 });
   });
 
-  test("queue 1700 (Arena) throws clearly when playerSubteamId is missing", async () => {
+  test("queue 1700 (Arena) infers arenaTeam when 16 participants omit playerSubteamId", async () => {
+    const baseGameInfo = await loadSpectatorPayload(
+      `${currentDir}testdata/spectator-ranked-flex.json`,
+    );
+
+    const arenaParticipants = [
+      ...baseGameInfo.participants.slice(0, 10),
+      ...Array.from({ length: 6 }).map((_, i) => ({
+        ...baseGameInfo.participants[i % 10]!,
+        riotId: `Synthetic${(i + 1).toString()}#tag`,
+      })),
+    ].map((p, i) => ({
+      ...p,
+      teamId: i < 8 ? 100 : 200,
+      playerSubteamId: undefined,
+    }));
+
+    const gameInfo = RawCurrentGameInfoSchema.parse({
+      ...baseGameInfo,
+      gameQueueConfigId: 1700,
+      mapId: 30,
+      gameMode: "CHERRY",
+      bannedChampions: [],
+      participants: arenaParticipants,
+    });
+
+    const result = await buildLoadingScreenData(
+      gameInfo,
+      new Set(),
+      "AMERICA_NORTH",
+    );
+
+    const parsed = LoadingScreenDataSchema.parse(result);
+    expect(parsed.participants[0]?.team).toEqual({ arenaTeam: 1 });
+    expect(parsed.participants[1]?.team).toEqual({ arenaTeam: 1 });
+    expect(parsed.participants[14]?.team).toEqual({ arenaTeam: 8 });
+    expect(parsed.participants[15]?.team).toEqual({ arenaTeam: 8 });
+  });
+
+  test("queue 1700 (Arena) throws recoverable error when playerSubteamId cannot be inferred", async () => {
     const baseGameInfo = await loadSpectatorPayload(
       `${currentDir}testdata/spectator-ranked-flex.json`,
     );
@@ -193,6 +281,6 @@ describe("buildLoadingScreenData with real spectator payload", () => {
 
     await expect(
       buildLoadingScreenData(gameInfo, new Set(), "AMERICA_NORTH"),
-    ).rejects.toThrow(/playerSubteamId/);
+    ).rejects.toThrow(RecoverableLoadingScreenDataError);
   });
 });

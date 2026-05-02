@@ -7,7 +7,13 @@ const {
   summarizeWithLLM,
   formatAndSendEmail,
 } = proxyActivities<DepsSummaryActivities>({
-  startToCloseTimeout: "5 minutes",
+  startToCloseTimeout: "10 minutes",
+  retry: {
+    maximumAttempts: 3,
+    initialInterval: "30 seconds",
+    backoffCoefficient: 2,
+    maximumInterval: "5 minutes",
+  },
 });
 
 export async function generateDependencySummary(daysBack = 7): Promise<void> {

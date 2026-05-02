@@ -6,7 +6,6 @@
     "packages/discord-plays-pokemon/packages/frontend/src/main.tsx": 1,
     "packages/scout-for-lol/packages/backend/src/testing/discord-mocks.ts": 2,
     "packages/toolkit/src/daemon/watch.ts": 1,
-    "packages/better-skill-capped/fetcher/src/index.ts": 1,
     "packages/temporal/src/activities/fetcher.ts": 1,
     "packages/birmel/tests/agent-tools/tools/discord/channel-resolver.test.ts": 1
   },

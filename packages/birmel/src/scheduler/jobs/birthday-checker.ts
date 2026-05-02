@@ -58,9 +58,11 @@ async function processBirthday(
   birthday: { userId: string; birthYear: number | null },
   fullGuild: Guild,
   guildId: string,
+  signal: AbortSignal,
 ): Promise<void> {
   const client = getDiscordClient();
   const config = getConfig();
+  throwIfAborted(signal);
   const member = await fullGuild.members.fetch(birthday.userId);
   const username = member.user.username;
 
@@ -83,12 +85,14 @@ async function processBirthday(
     return;
   }
 
+  throwIfAborted(signal);
   const channel = await client.channels.fetch(channelId);
   if (channel?.isTextBased() !== true) {
     return;
   }
 
   if ("send" in channel) {
+    throwIfAborted(signal);
     await channel.send(birthdayMessage);
   }
   logger.info("Sent birthday message", {
@@ -98,12 +102,14 @@ async function processBirthday(
     channelId,
   });
 
+  throwIfAborted(signal);
   await assignBirthdayRole(member, fullGuild, birthday.userId);
 }
 
 async function processGuildBirthdays(
   guild: OAuth2Guild,
   guildId: string,
+  signal: AbortSignal,
 ): Promise<void> {
   try {
     const birthdays = await getBirthdaysToday(guildId);
@@ -113,8 +119,9 @@ async function processGuildBirthdays(
     logger.info("Found birthdays", { guildId, count: birthdays.length });
     const fullGuild = await guild.fetch();
     for (const birthday of birthdays) {
+      throwIfAborted(signal);
       try {
-        await processBirthday(birthday, fullGuild, guildId);
+        await processBirthday(birthday, fullGuild, guildId, signal);
       } catch (error) {
         logger.error("Failed to process birthday", toError(error), {
           guildId,
@@ -144,7 +151,7 @@ export async function checkAndPostBirthdays(): Promise<void> {
 
       for (const [guildId, guild] of guilds) {
         throwIfAborted(signal);
-        await processGuildBirthdays(guild, guildId);
+        await processGuildBirthdays(guild, guildId, signal);
       }
 
       logger.info("Birthday check completed");

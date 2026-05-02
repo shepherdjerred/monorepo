@@ -37,6 +37,7 @@ const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 9 * * 1",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
     memo: "Weekly dependency summary email",
   },
   {

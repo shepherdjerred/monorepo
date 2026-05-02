@@ -17,7 +17,10 @@ import { getChampionDisplayName } from "#src/utils/champion.ts";
 import { createLogger } from "#src/logger.ts";
 import { uniqueBy } from "remeda";
 import * as Sentry from "@sentry/bun";
-import { buildLoadingScreenData } from "#src/league/tasks/prematch/loading-screen-builder.ts";
+import {
+  RecoverableLoadingScreenDataError,
+  buildLoadingScreenData,
+} from "#src/league/tasks/prematch/loading-screen-builder.ts";
 import {
   loadingScreenToImage,
   loadingScreenToSvg,
@@ -269,23 +272,26 @@ export async function sendPrematchNotification(
         }
       })();
     } catch (error) {
+      const isRecoverable = error instanceof RecoverableLoadingScreenDataError;
       prematchLoadingScreenGeneratedTotal.inc({
         queue_type: queueType ?? "unknown",
-        status: "error",
+        status: isRecoverable ? "fallback" : "error",
       });
       logger.error(
         `[sendPrematchNotification] ❌ Failed to generate loading screen for game ${gameId}:`,
         error,
       );
-      Sentry.captureException(error, {
-        tags: {
-          source: "prematch-loading-screen",
-          gameId,
-          gameQueueConfigId: gameInfo.gameQueueConfigId.toString(),
-          mapId: gameInfo.mapId.toString(),
-          gameMode: gameInfo.gameMode,
-        },
-      });
+      if (!isRecoverable) {
+        Sentry.captureException(error, {
+          tags: {
+            source: "prematch-loading-screen",
+            gameId,
+            gameQueueConfigId: gameInfo.gameQueueConfigId.toString(),
+            mapId: gameInfo.mapId.toString(),
+            gameMode: gameInfo.gameMode,
+          },
+        });
+      }
       // Continue with text-only notification
     }
   }

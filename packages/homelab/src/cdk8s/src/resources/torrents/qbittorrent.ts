@@ -59,7 +59,7 @@ export function createQBitTorrentDeployment(
   });
 
   const localPathVolume = new ZfsNvmeVolume(chart, "qbittorrent-pvc", {
-    storage: Size.gibibytes(16),
+    storage: Size.gibibytes(32),
   });
 
   deployment.addContainer(
