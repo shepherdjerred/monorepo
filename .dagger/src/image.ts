@@ -12,6 +12,7 @@ import {
   CADDY_IMAGE,
   CLAUDE_CODE_VERSION,
   GH_CLI_VERSION,
+  KUBECTL_VERSION,
 } from "./constants";
 import versions from "./versions";
 
@@ -61,6 +62,37 @@ function withEditorClis(container: Container): Container {
       `@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}`,
     ])
     .withExec(["claude", "--version"]);
+}
+
+/**
+ * Install kubectl into a container that already has curl + ca-certificates
+ * (e.g. one that has been through `withGitHubCli`).
+ *
+ * The temporal-worker's bugsink-housekeeping activity shells out to
+ * `kubectl exec` to drive `bugsink-manage` Django commands inside the
+ * bugsink pod. We use kubectl rather than @kubernetes/client-node's
+ * WebSocket-based Exec because the latter rejects with opaque DOM-style
+ * ErrorEvent objects under Bun (Node-only `ws` shim incompatibility).
+ *
+ * Pinned to match the cluster Kubernetes server minor (skew is ±1 minor
+ * but matching gives the cleanest behavior). Verified via the upstream
+ * SHA256 sum so a registry/CDN compromise can't substitute the binary.
+ */
+function withKubectl(container: Container): Container {
+  const base = `https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl`;
+  return container
+    .withExec([
+      "sh",
+      "-c",
+      [
+        `curl -fsSL ${base} -o /usr/local/bin/kubectl`,
+        `curl -fsSL ${base}.sha256 -o /tmp/kubectl.sha256`,
+        `echo "$(cat /tmp/kubectl.sha256)  /usr/local/bin/kubectl" | sha256sum -c -`,
+        `chmod +x /usr/local/bin/kubectl`,
+        `rm /tmp/kubectl.sha256`,
+      ].join(" && "),
+    ])
+    .withExec(["kubectl", "version", "--client"]);
 }
 
 /**
@@ -287,7 +319,9 @@ export function buildTemporalWorkerImageHelper(
 
   // The docs-groom workflow shells out to `gh` + `claude` from inside the
   // worker pod, so the temporal-worker image must ship both binaries.
-  container = withEditorClis(container);
+  // The bugsink-housekeeping workflow shells out to `kubectl` for the same
+  // reason — see the rationale on `withKubectl`.
+  container = withKubectl(withEditorClis(container));
 
   container = container
     .withWorkdir("/workspace")

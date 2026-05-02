@@ -12,6 +12,9 @@ const ENTRYWAY_MEDIA = "media_player.entryway" as const;
 const EXTRA_MEDIA_PLAYERS = [MAIN_BATHROOM_MEDIA, ENTRYWAY_MEDIA] as const;
 const BEDROOM_DIMMED = "scene.bedroom_dimmed" as const;
 const BEDROOM_BRIGHT = "scene.bedroom_bright" as const;
+const MASTER_BATHROOM_HEAT = "climate.master_bathroom" as const;
+const MORNING_HEAT_TEMP_C = 35;
+const MORNING_HEAT_DURATION = "60 minutes" as const;
 
 const WAKE_MEDIA = {
   media_content_id: "FV:2/5",
@@ -23,7 +26,18 @@ export async function goodMorningEarly(): Promise<void> {
     console.warn("good_morning_early: no one home, skipping");
     return;
   }
-  console.warn("good_morning_early: placeholder (climate disabled)");
+
+  await callService("climate", "set_temperature", {
+    entity_id: MASTER_BATHROOM_HEAT,
+    temperature: MORNING_HEAT_TEMP_C,
+    hvac_mode: "heat",
+  });
+
+  await sleep(MORNING_HEAT_DURATION);
+
+  await callService("climate", "turn_off", {
+    entity_id: MASTER_BATHROOM_HEAT,
+  });
 }
 
 export async function goodMorningWakeUp(): Promise<void> {
