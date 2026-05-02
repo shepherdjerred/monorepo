@@ -1,5 +1,6 @@
 import { proxyActivities } from "@temporalio/workflow";
 import type { GolinkSyncActivities } from "#activities/golink-sync.ts";
+import type { GolinkEntry } from "#shared/types.ts";
 
 const {
   listTailscaleIngresses,
@@ -15,6 +16,23 @@ const {
     maximumInterval: "30s",
   },
 });
+
+const SYNC_OWNER = "tagged-devices";
+
+function canonicalizeGolinkTarget(url: string): string {
+  return url.endsWith("/") ? url.slice(0, -1) : url;
+}
+
+function hasExpectedTarget(link: GolinkEntry, expectedLong: string): boolean {
+  return (
+    canonicalizeGolinkTarget(link.long) ===
+    canonicalizeGolinkTarget(expectedLong)
+  );
+}
+
+function isSyncOwned(link: GolinkEntry): boolean {
+  return link.owner === undefined || link.owner === SYNC_OWNER;
+}
 
 export async function syncGolinks(): Promise<void> {
   const tailnetDomain = "tailnet-1a49.ts.net";
@@ -43,7 +61,13 @@ export async function syncGolinks(): Promise<void> {
   let created = 0;
   for (const [short, long] of expectedLinks) {
     const existing = existingLinks.find((link) => link.short === short);
-    if (existing?.long !== long) {
+    if (existing === undefined) {
+      await createOrUpdateGolink(golinkUrl, short, long);
+      created++;
+      continue;
+    }
+
+    if (!hasExpectedTarget(existing, long) && isSyncOwned(existing)) {
       await createOrUpdateGolink(golinkUrl, short, long);
       created++;
     }
@@ -52,7 +76,11 @@ export async function syncGolinks(): Promise<void> {
   // Step 4: Delete stale links pointing to our tailnet
   let deleted = 0;
   for (const link of existingLinks) {
-    if (link.long.includes(tailnetDomain) && !expectedLinks.has(link.short)) {
+    if (
+      link.long.includes(tailnetDomain) &&
+      !expectedLinks.has(link.short) &&
+      isSyncOwned(link)
+    ) {
       await deleteStaleGolink(golinkUrl, link.short);
       deleted++;
     }

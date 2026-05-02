@@ -14,4 +14,5 @@ export type DnsRecordResult = {
 export type GolinkEntry = {
   short: string;
   long: string;
+  owner: string | undefined;
 };

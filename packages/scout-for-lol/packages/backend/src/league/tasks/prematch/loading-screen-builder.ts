@@ -37,6 +37,20 @@ const RANKED_SOLO_QUEUE_ID = 420;
 const RANKED_FLEX_QUEUE_ID = 440;
 const ARENA_QUEUE_ID = 1700;
 
+export class RecoverableLoadingScreenDataError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "RecoverableLoadingScreenDataError";
+  }
+}
+
+type BuildParticipantContext = {
+  trackedPuuids: ReadonlySet<string>;
+  layout: LoadingScreenLayout;
+  participantIndex: number;
+  participantCount: number;
+};
+
 /**
  * Determine the layout mode based on queue config ID.
  * Throws on unknown queue IDs — caller is responsible for ensuring
@@ -47,8 +61,10 @@ function determineLayout(gameQueueConfigId: number): LoadingScreenLayout {
     .with(450, () => "aram" as const) // ARAM
     .with(720, () => "aram" as const) // ARAM Clash
     .with(2400, () => "aram" as const) // ARAM: Mayhem
+    .with(3270, () => "aram" as const) // ARAM: Mayhem
     .with(ARENA_QUEUE_ID, () => "arena" as const) // Arena
     .with(0, () => "standard" as const) // Custom
+    .with(3100, () => "standard" as const) // Custom
     .with(400, () => "standard" as const) // Draft Pick
     .with(RANKED_SOLO_QUEUE_ID, () => "standard" as const) // Ranked Solo
     .with(RANKED_FLEX_QUEUE_ID, () => "standard" as const) // Ranked Flex
@@ -79,11 +95,20 @@ function determineLayout(gameQueueConfigId: number): LoadingScreenLayout {
 function resolveTeam(
   participant: RawCurrentGameParticipant,
   layout: LoadingScreenLayout,
+  participantIndex: number,
+  participantCount: number,
 ): LoadingScreenTeam {
   if (layout === "arena") {
     if (participant.playerSubteamId === undefined) {
-      throw new Error(
-        `Arena participant missing playerSubteamId — Spectator V5 must provide it for Arena (CHERRY) games`,
+      if (participantCount === 16) {
+        return {
+          arenaTeam: ArenaTeamIdSchema.parse(
+            Math.floor(participantIndex / 2) + 1,
+          ),
+        };
+      }
+      throw new RecoverableLoadingScreenDataError(
+        `Arena participant missing playerSubteamId and participant count ${participantCount.toString()} cannot be safely inferred`,
       );
     }
     return { arenaTeam: ArenaTeamIdSchema.parse(participant.playerSubteamId) };
@@ -103,8 +128,7 @@ function resolveTeam(
  */
 async function buildParticipant(
   participant: RawCurrentGameParticipant,
-  trackedPuuids: ReadonlySet<string>,
-  layout: LoadingScreenLayout,
+  context: BuildParticipantContext,
 ): Promise<Omit<LoadingScreenParticipant, "ranks">> {
   const championName = resolveChampionKey(participant.championId);
   const championDisplayName = getChampionDisplayName(participant.championId);
@@ -121,7 +145,12 @@ async function buildParticipant(
     championName,
     championDisplayName,
     skinNum,
-    team: resolveTeam(participant, layout),
+    team: resolveTeam(
+      participant,
+      context.layout,
+      context.participantIndex,
+      context.participantCount,
+    ),
     spell1Id: SummonerSpellIdSchema.parse(participant.spell1Id),
     spell2Id: SummonerSpellIdSchema.parse(participant.spell2Id),
     keystoneRuneId:
@@ -132,7 +161,7 @@ async function buildParticipant(
       participant.perks?.perkSubStyle === undefined
         ? undefined
         : RuneIdSchema.parse(participant.perks.perkSubStyle),
-    isTrackedPlayer: puuid !== null && trackedPuuids.has(puuid),
+    isTrackedPlayer: puuid !== null && context.trackedPuuids.has(puuid),
   };
 }
 
@@ -189,8 +218,13 @@ export async function buildLoadingScreenData(
 
   // Build base participant data (without ranks)
   const baseParticipants = await Promise.all(
-    gameInfo.participants.map((p) =>
-      buildParticipant(p, trackedPuuids, layout),
+    gameInfo.participants.map((p, idx) =>
+      buildParticipant(p, {
+        trackedPuuids,
+        layout,
+        participantIndex: idx,
+        participantCount: gameInfo.participants.length,
+      }),
     ),
   );
 

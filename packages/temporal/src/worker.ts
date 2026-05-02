@@ -39,7 +39,6 @@ function installRuntime(): void {
         metricPrefix: "temporal_worker_",
         globalTags: {
           temporal_namespace: "default",
-          task_queue: TASK_QUEUES.DEFAULT,
           worker: "temporal-worker",
         },
         prometheus: {

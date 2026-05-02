@@ -79,10 +79,15 @@ export const golinkSyncActivities = {
         const GolinkLine = z.object({
           Short: z.string().optional(),
           Long: z.string().optional(),
+          Owner: z.string().optional(),
         });
         const parsed = GolinkLine.parse(JSON.parse(line));
         if (parsed.Short !== undefined && parsed.Long !== undefined) {
-          entries.push({ short: parsed.Short, long: parsed.Long });
+          entries.push({
+            short: parsed.Short,
+            long: parsed.Long,
+            owner: parsed.Owner,
+          });
         }
       } catch {
         // Skip malformed lines
