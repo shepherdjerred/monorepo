@@ -42,8 +42,8 @@ const ARENA_QUEUE_ID = 1700;
  * Throws on unknown queue IDs — caller is responsible for ensuring
  * we only attempt to render known queue types.
  */
-function determineLayout(gameQueueConfigId: number): LoadingScreenLayout {
-  return match(gameQueueConfigId)
+function determineLayout(gameInfo: RawCurrentGameInfo): LoadingScreenLayout {
+  return match(gameInfo.gameQueueConfigId)
     .with(450, () => "aram" as const) // ARAM
     .with(720, () => "aram" as const) // ARAM Clash
     .with(2400, () => "aram" as const) // ARAM: Mayhem
@@ -63,7 +63,7 @@ function determineLayout(gameQueueConfigId: number): LoadingScreenLayout {
     .with(4250, () => "standard" as const) // Hard Doom Bots
     .otherwise((id) => {
       throw new Error(
-        `Unknown queue config ID ${id.toString()} — cannot determine loading screen layout`,
+        `Unknown queue config ID ${id.toString()} — cannot determine loading screen layout (gameId=${gameInfo.gameId.toString()}, mapId=${gameInfo.mapId.toString()}, gameMode=${gameInfo.gameMode})`,
       );
     });
 }
@@ -176,7 +176,7 @@ export async function buildLoadingScreenData(
   const queueType = parseQueueType(gameInfo.gameQueueConfigId);
   if (queueType === undefined) {
     throw new Error(
-      `Unknown queue type for queue config ID ${gameInfo.gameQueueConfigId.toString()}`,
+      `Unknown queue type for queue config ID ${gameInfo.gameQueueConfigId.toString()} (gameId=${gameInfo.gameId.toString()}, mapId=${gameInfo.mapId.toString()}, gameMode=${gameInfo.gameMode})`,
     );
   }
 
@@ -184,8 +184,16 @@ export async function buildLoadingScreenData(
   const isRanked =
     gameInfo.gameQueueConfigId === RANKED_SOLO_QUEUE_ID ||
     gameInfo.gameQueueConfigId === RANKED_FLEX_QUEUE_ID;
-  const layout = determineLayout(gameInfo.gameQueueConfigId);
-  const mapName = mapIdToName(gameInfo.mapId);
+  const layout = determineLayout(gameInfo);
+  let mapName: ReturnType<typeof mapIdToName>;
+  try {
+    mapName = mapIdToName(gameInfo.mapId);
+  } catch (error) {
+    throw new Error(
+      `${error instanceof Error ? error.message : String(error)} (gameId=${gameInfo.gameId.toString()}, queueConfigId=${gameInfo.gameQueueConfigId.toString()}, gameMode=${gameInfo.gameMode})`,
+      { cause: error },
+    );
+  }
 
   // Build base participant data (without ranks)
   const baseParticipants = await Promise.all(
