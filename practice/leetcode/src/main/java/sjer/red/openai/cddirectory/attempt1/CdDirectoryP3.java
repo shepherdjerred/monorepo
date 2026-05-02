@@ -19,6 +19,15 @@ import java.util.*;
  * cd("/", "/usr/local/bin", "/home/default",
  * {"/usr/local/bin"→"/opt/local/bin", "/usr"→"/system/usr"})
  * → "/opt/local/bin"  (longest match wins)
+ *
+ * cd /usr/local/bin
+ *
+ * /system/usr/local/bin
+ *
+ * "/usr/local/bin"→"/opt/local/bin"
+ * "/system/usr/local/bin -> /opt/local/bin
+ * "/usr"→"/system/usr"
+ *
  * cd("/", "/a", "/home/default", {"/a"→"/b", "/b"→"/a"})
  * → throws IllegalArgumentException (cycle detected)
  * <p>

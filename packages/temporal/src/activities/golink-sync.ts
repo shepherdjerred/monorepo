@@ -86,7 +86,7 @@ export const golinkSyncActivities = {
           entries.push({
             short: parsed.Short,
             long: parsed.Long,
-            owner: parsed.Owner,
+            owner: parsed.Owner ?? "",
           });
         }
       } catch {

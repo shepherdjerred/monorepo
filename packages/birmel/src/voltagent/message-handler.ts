@@ -11,6 +11,7 @@ import { getGuildPersona } from "@shepherdjerred/birmel/persona/guild-persona.ts
 import { buildPersonaPrompt } from "@shepherdjerred/birmel/persona/style-transform.ts";
 import { buildMessageContent } from "@shepherdjerred/birmel/agent-tools/utils/message-builder.ts";
 import { runWithRequestContext } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
+import { withConversationLock } from "@shepherdjerred/birmel/voltagent/conversation-lock.ts";
 import {
   setSentryContext,
   clearSentryContext,
@@ -26,6 +27,19 @@ const EDIT_INTERVAL_MS = 1500;
 
 // Minimum content length before showing in progressive update
 const MIN_CONTENT_LENGTH = 20;
+
+// Hard cap on a single streamText turn. If a sub-agent hangs upstream
+// (model stalls, tool deadlock) the user would otherwise stare at a typing
+// cursor forever; aborting here surfaces the failure as a visible reply.
+const STREAM_TIMEOUT_MS = 60_000;
+
+// User-visible fallback when streamText resolves with zero text. This is
+// the silent-typing-cursor case: a sub-agent reached `bail()` without
+// producing any output (sub-agent tool threw, reasoning replay was poisoned
+// by rapid concurrent turns on the same conversationId, etc.). Never
+// silently delete the placeholder — surface the failure instead.
+const EMPTY_STREAM_FALLBACK =
+  "Sorry, I came back with nothing on that one — try again, maybe rephrase.";
 
 /**
  * Handle a Discord message with VoltAgent streaming and progressive updates.
@@ -107,50 +121,63 @@ ${memoryContext}`;
     let accumulated = "";
     let lastEditTime = Date.now();
 
-    await runWithRequestContext(
-      {
-        sourceChannelId: context.channelId,
-        sourceMessageId: context.message.id,
-        guildId: context.guildId,
-        userId: context.userId,
-      },
-      async () => {
-        // Wrap multimodal content in a message object with role
-        const input = Array.isArray(messageContent)
-          ? { role: "user" as const, content: messageContent }
-          : messageContent;
+    const conversationId = getChannelConversationId(context.channelId);
 
-        const inputStr =
-          typeof input === "string" ? input : JSON.stringify(input);
-        const response = await agent.streamText(inputStr, {
+    // Serialize concurrent turns on the same channel — see conversation-lock.ts
+    // for the GPT-5 reasoning-replay race that motivates this. Without it,
+    // a user firing several pings back-to-back poisons the libSQL memory and
+    // sub-agents start bailing with empty output.
+    await withConversationLock(conversationId, async () =>
+      runWithRequestContext(
+        {
+          sourceChannelId: context.channelId,
+          sourceMessageId: context.message.id,
+          guildId: context.guildId,
           userId: context.userId,
-          conversationId: getChannelConversationId(context.channelId),
-          // OpenAI Responses options applied at every layer — see
-          // openai-provider-options.ts for why store:false + reasoning include
-          // is required for GPT-5 reasoning replay correctness.
-          providerOptions: OPENAI_RESPONSES_PROVIDER_OPTIONS,
-        });
+        },
+        async () => {
+          // Wrap multimodal content in a message object with role
+          const input = Array.isArray(messageContent)
+            ? { role: "user" as const, content: messageContent }
+            : messageContent;
 
-        // Process the text stream with progressive edits
-        for await (const chunk of response.textStream) {
-          accumulated += chunk;
+          const inputStr =
+            typeof input === "string" ? input : JSON.stringify(input);
+          const response = await agent.streamText(inputStr, {
+            userId: context.userId,
+            conversationId,
+            // OpenAI Responses options applied at every layer — see
+            // openai-provider-options.ts for why store:false + reasoning include
+            // is required for GPT-5 reasoning replay correctness.
+            providerOptions: OPENAI_RESPONSES_PROVIDER_OPTIONS,
+            // Bound the upstream call so a hang surfaces as an error reply
+            // instead of an indefinitely-stuck typing cursor.
+            abortSignal: AbortSignal.timeout(STREAM_TIMEOUT_MS),
+          });
 
-          // Edit every EDIT_INTERVAL_MS to avoid rate limits
-          const now = Date.now();
-          if (
-            now - lastEditTime >= EDIT_INTERVAL_MS &&
-            accumulated.length >= MIN_CONTENT_LENGTH
-          ) {
-            try {
-              await placeholderMsg.edit(accumulated + TYPING_CURSOR);
-              lastEditTime = now;
-            } catch (editError) {
-              // If edit fails (e.g., message deleted), log and continue
-              logger.debug("Failed to edit placeholder message", { editError });
+          // Process the text stream with progressive edits
+          for await (const chunk of response.textStream) {
+            accumulated += chunk;
+
+            // Edit every EDIT_INTERVAL_MS to avoid rate limits
+            const now = Date.now();
+            if (
+              now - lastEditTime >= EDIT_INTERVAL_MS &&
+              accumulated.length >= MIN_CONTENT_LENGTH
+            ) {
+              try {
+                await placeholderMsg.edit(accumulated + TYPING_CURSOR);
+                lastEditTime = now;
+              } catch (editError) {
+                // If edit fails (e.g., message deleted), log and continue
+                logger.debug("Failed to edit placeholder message", {
+                  editError,
+                });
+              }
             }
           }
-        }
-      },
+        },
+      ),
     );
 
     // 9. Final edit removes cursor
@@ -168,11 +195,31 @@ ${memoryContext}`;
         logger.debug("Failed to send final edit", { editError });
       }
     } else {
-      // If no content was generated, remove the placeholder
+      // Stream resolved with no text — sub-agent bailed empty. Surface the
+      // failure to the user and to Sentry/Bugsink so it stops being silent.
+      logger.warn("empty stream result", {
+        requestId,
+        persona,
+        conversationId,
+        guildId: context.guildId,
+        channelId: context.channelId,
+        userId: context.userId,
+        durationMs: genDuration,
+      });
+      captureException(new Error("streamText resolved with empty output"), {
+        operation: "handleMessageWithStreaming",
+        discord: discordContext,
+        extra: {
+          requestId,
+          persona,
+          emptyStream: true,
+          durationMs: genDuration,
+        },
+      });
       try {
-        await placeholderMsg.delete();
-      } catch {
-        // Ignore delete errors
+        await placeholderMsg.edit(EMPTY_STREAM_FALLBACK);
+      } catch (editError) {
+        logger.debug("Failed to edit empty-stream fallback", { editError });
       }
     }
 

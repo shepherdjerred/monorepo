@@ -34,6 +34,7 @@ import {
   prematchLoadingScreenGeneratedTotal,
   prematchLoadingScreenDurationSeconds,
   prematchLoadingScreenSkinFallbackTotal,
+  prematchSkippedTotal,
 } from "#src/metrics/index.ts";
 import type { SkinFallbackEvent } from "@scout-for-lol/data/index.ts";
 
@@ -178,104 +179,121 @@ export async function sendPrematchNotification(
   // If generation fails, we fall back to a rich text embed (buildFallbackPrematchEmbed).
   let loadingScreenAttachment: AttachmentBuilder | undefined;
   let loadingScreenEmbed: EmbedBuilder | undefined;
-  try {
-    const startTime = Date.now();
-    const firstPlayer = trackedPlayers[0];
-    if (firstPlayer === undefined) {
-      throw new Error(`No tracked players provided for game ${gameId}`);
-    }
-    const region = firstPlayer.league.leagueAccount.region;
-    const trackedPuuidSet = new Set(
-      trackedPlayers.map((p) => p.league.leagueAccount.puuid),
-    );
-
-    const loadingScreenData = await buildLoadingScreenData(
-      gameInfo,
-      trackedPuuidSet,
-      region,
-    );
-
-    // Observability hook for the runtime defense-in-depth fallback in
-    // getChampionLoadingImageBase64: log + meter when a participant's
-    // requested skin JPG is missing on disk and we silently render with
-    // skin 0 instead. Logged at warn (not Sentry) because it's an expected
-    // condition during the small window between Riot shipping a new skin
-    // and the next `update-data-dragon` run.
-    const onSkinFallback = (event: SkinFallbackEvent): void => {
-      prematchLoadingScreenSkinFallbackTotal.inc({
-        champion: event.championName,
-        requested_skin: event.requestedSkin.toString(),
-      });
-      logger.warn(
-        `[sendPrematchNotification] 🎨 Skin fallback for ${event.championName} skin ${event.requestedSkin.toString()} (game ${gameId}) — using base skin art instead. Run update-data-dragon to refresh.`,
-      );
-    };
-
-    const [image, svg] = await Promise.all([
-      loadingScreenToImage(loadingScreenData, { onSkinFallback }),
-      loadingScreenToSvg(loadingScreenData, { onSkinFallback }),
-    ]);
-
-    const attachmentName = `loading-screen-${gameId}.png`;
-    loadingScreenAttachment = new AttachmentBuilder(Buffer.from(image)).setName(
-      attachmentName,
-    );
-    loadingScreenEmbed = new EmbedBuilder({
-      image: { url: `attachment://${attachmentName}` },
-    });
-
-    const duration = (Date.now() - startTime) / 1000;
-    prematchLoadingScreenDurationSeconds.observe(duration);
-    prematchLoadingScreenGeneratedTotal.inc({
-      queue_type: queueType ?? "unknown",
-      status: "success",
-    });
+  // Skip the loading-screen render for Arena (CHERRY) games. Spectator V5 does
+  // not expose subteam assignments pre-game (verified empirically via S3 + Riot
+  // docs + every community library), so the arena image cannot be rendered with
+  // correct pairings. The embed-only fallback path below still posts a Discord
+  // notification with the player + champion list.
+  const isArena = gameInfo.gameMode === "CHERRY";
+  if (isArena) {
+    prematchSkippedTotal.inc({ reason: "arena_no_subteam" });
     logger.info(
-      `[sendPrematchNotification] 🖼️ Loading screen generated in ${duration.toFixed(1)}s for game ${gameId}`,
+      `[sendPrematchNotification] 🎮 Arena (CHERRY) game ${gameId} — skipping loading-screen render (Spectator V5 does not expose subteam assignments); sending embed-only notification`,
     );
-
-    // Fire-and-forget S3 saves
-    void (async () => {
-      try {
-        await Promise.all([
-          savePrematchImageToS3(
-            gameInfo.gameId,
-            image,
-            queueType ?? "unknown",
-            aliases,
-          ),
-          savePrematchSvgToS3(
-            gameInfo.gameId,
-            svg,
-            queueType ?? "unknown",
-            aliases,
-          ),
-        ]);
-      } catch (s3Error) {
-        logger.error(
-          `[sendPrematchNotification] Failed to save prematch assets to S3:`,
-          s3Error,
-        );
+  } else {
+    try {
+      const startTime = Date.now();
+      const firstPlayer = trackedPlayers[0];
+      if (firstPlayer === undefined) {
+        throw new Error(`No tracked players provided for game ${gameId}`);
       }
-    })();
-  } catch (error) {
-    prematchLoadingScreenGeneratedTotal.inc({
-      queue_type: queueType ?? "unknown",
-      status:
-        error instanceof RecoverableLoadingScreenDataError
-          ? "fallback"
-          : "error",
-    });
-    logger.error(
-      `[sendPrematchNotification] ❌ Failed to generate loading screen for game ${gameId}:`,
-      error,
-    );
-    if (!(error instanceof RecoverableLoadingScreenDataError)) {
-      Sentry.captureException(error, {
-        tags: { source: "prematch-loading-screen", gameId },
+      const region = firstPlayer.league.leagueAccount.region;
+      const trackedPuuidSet = new Set(
+        trackedPlayers.map((p) => p.league.leagueAccount.puuid),
+      );
+
+      const loadingScreenData = await buildLoadingScreenData(
+        gameInfo,
+        trackedPuuidSet,
+        region,
+      );
+
+      // Observability hook for the runtime defense-in-depth fallback in
+      // getChampionLoadingImageBase64: log + meter when a participant's
+      // requested skin JPG is missing on disk and we silently render with
+      // skin 0 instead. Logged at warn (not Sentry) because it's an expected
+      // condition during the small window between Riot shipping a new skin
+      // and the next `update-data-dragon` run.
+      const onSkinFallback = (event: SkinFallbackEvent): void => {
+        prematchLoadingScreenSkinFallbackTotal.inc({
+          champion: event.championName,
+          requested_skin: event.requestedSkin.toString(),
+        });
+        logger.warn(
+          `[sendPrematchNotification] 🎨 Skin fallback for ${event.championName} skin ${event.requestedSkin.toString()} (game ${gameId}) — using base skin art instead. Run update-data-dragon to refresh.`,
+        );
+      };
+
+      const [image, svg] = await Promise.all([
+        loadingScreenToImage(loadingScreenData, { onSkinFallback }),
+        loadingScreenToSvg(loadingScreenData, { onSkinFallback }),
+      ]);
+
+      const attachmentName = `loading-screen-${gameId}.png`;
+      loadingScreenAttachment = new AttachmentBuilder(
+        Buffer.from(image),
+      ).setName(attachmentName);
+      loadingScreenEmbed = new EmbedBuilder({
+        image: { url: `attachment://${attachmentName}` },
       });
+
+      const duration = (Date.now() - startTime) / 1000;
+      prematchLoadingScreenDurationSeconds.observe(duration);
+      prematchLoadingScreenGeneratedTotal.inc({
+        queue_type: queueType ?? "unknown",
+        status: "success",
+      });
+      logger.info(
+        `[sendPrematchNotification] 🖼️ Loading screen generated in ${duration.toFixed(1)}s for game ${gameId}`,
+      );
+
+      // Fire-and-forget S3 saves
+      void (async () => {
+        try {
+          await Promise.all([
+            savePrematchImageToS3(
+              gameInfo.gameId,
+              image,
+              queueType ?? "unknown",
+              aliases,
+            ),
+            savePrematchSvgToS3(
+              gameInfo.gameId,
+              svg,
+              queueType ?? "unknown",
+              aliases,
+            ),
+          ]);
+        } catch (s3Error) {
+          logger.error(
+            `[sendPrematchNotification] Failed to save prematch assets to S3:`,
+            s3Error,
+          );
+        }
+      })();
+    } catch (error) {
+      const isRecoverable = error instanceof RecoverableLoadingScreenDataError;
+      prematchLoadingScreenGeneratedTotal.inc({
+        queue_type: queueType ?? "unknown",
+        status: isRecoverable ? "fallback" : "error",
+      });
+      logger.error(
+        `[sendPrematchNotification] ❌ Failed to generate loading screen for game ${gameId}:`,
+        error,
+      );
+      if (!isRecoverable) {
+        Sentry.captureException(error, {
+          tags: {
+            source: "prematch-loading-screen",
+            gameId,
+            gameQueueConfigId: gameInfo.gameQueueConfigId.toString(),
+            mapId: gameInfo.mapId.toString(),
+            gameMode: gameInfo.gameMode,
+          },
+        });
+      }
+      // Continue with text-only notification
     }
-    // Continue with text-only notification
   }
 
   for (const { channel } of channels) {

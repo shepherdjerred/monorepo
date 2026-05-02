@@ -1,10 +1,4 @@
-import { NodeSDK } from "@opentelemetry/sdk-node";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
-import { resourceFromAttributes } from "@opentelemetry/resources";
-import {
-  ATTR_SERVICE_NAME,
-  ATTR_SERVICE_VERSION,
-} from "@opentelemetry/semantic-conventions";
 import {
   trace,
   diag,
@@ -20,12 +14,21 @@ import {
   type ReadableSpan,
 } from "@opentelemetry/sdk-trace-base";
 import { ExportResultCode, type ExportResult } from "@opentelemetry/core";
+import { AgentRegistry, VoltAgentObservability } from "@voltagent/core";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 
-let sdk: NodeSDK | null = null;
+// Single VoltAgentObservability instance shared across the whole process.
+// VoltAgent's `Agent.getObservability()` falls back to `createVoltAgentObservability()`
+// (in @voltagent/core) when no global is set — and that constructor calls
+// `provider.register()`, which spams `Attempted duplicate registration of API`
+// errors every time we (or any worker/sub-agent) build a new agent. Setting
+// one global instance here, before any agent is constructed, eliminates the
+// storm and gives us a single tracer provider with our OTLP exporter wired in.
+let voltAgentObservability: VoltAgentObservability | null = null;
 let tracer: Tracer | null = null;
 let batchProcessor: BatchSpanProcessor | null = null;
+let initialized = false;
 
 /**
  * DiagLogger that pipes OpenTelemetry's internal diagnostics into our
@@ -123,12 +126,21 @@ class LoggingSpanExporter implements SpanExporter {
 }
 
 export function initializeTracing(): void {
+  // Idempotent — guards against double-bootstrap from accidental re-imports.
+  // VoltAgentObservability registers the global tracer provider exactly once,
+  // and a second initializeTracing() would either spawn a competing provider
+  // or no-op silently; explicit guard makes the intent obvious.
+  if (initialized) {
+    return;
+  }
+
   const config = getConfig();
 
   if (!config.telemetry.enabled) {
     logger.info("OpenTelemetry tracing disabled", {
       module: "observability.tracing",
     });
+    initialized = true;
     return;
   }
 
@@ -145,9 +157,8 @@ export function initializeTracing(): void {
     }),
   );
 
-  // Explicit BatchSpanProcessor instead of relying on NodeSDK's default —
-  // gives us a handle to forceFlush() before shutdown so we never lose
-  // the in-flight buffer when the pod is signalled.
+  // Explicit BatchSpanProcessor so we have a handle to forceFlush() before
+  // shutdown — without it the in-flight 2s batch is lost when the pod stops.
   batchProcessor = new BatchSpanProcessor(exporter, {
     // Flush every 2s in production: keeps spans fresh in Tempo while
     // staying well under the 30s OTLP request timeout.
@@ -159,16 +170,23 @@ export function initializeTracing(): void {
     exportTimeoutMillis: 30_000,
   });
 
-  sdk = new NodeSDK({
-    resource: resourceFromAttributes({
-      [ATTR_SERVICE_NAME]: config.telemetry.serviceName,
-      [ATTR_SERVICE_VERSION]: "0.0.1",
-    }),
+  // Hand the OTLP processor to VoltAgent's observability, which registers a
+  // single NodeTracerProvider globally and runs all spans (ours + voltagent's
+  // own) through this processor list. VoltAgent owns provider.register(); we
+  // own the OTLP exporter shipped to Tempo.
+  voltAgentObservability = new VoltAgentObservability({
+    serviceName: config.telemetry.serviceName,
+    serviceVersion: "0.0.1",
     spanProcessors: [batchProcessor],
   });
 
-  sdk.start();
+  // Make this the global so every Agent (and workflow) reuses it instead of
+  // calling createVoltAgentObservability() and triggering the duplicate-
+  // registration storm we saw in production.
+  AgentRegistry.getInstance().setGlobalObservability(voltAgentObservability);
+
   tracer = trace.getTracer(config.telemetry.serviceName);
+  initialized = true;
 
   logger.info("OpenTelemetry tracing initialized", {
     module: "observability.tracing",
@@ -194,8 +212,8 @@ export async function shutdownTracing(): Promise<void> {
       });
     }
   }
-  if (sdk != null) {
-    await sdk.shutdown();
+  if (voltAgentObservability != null) {
+    await voltAgentObservability.shutdown();
   }
 }
 

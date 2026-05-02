@@ -80,6 +80,52 @@ export const docsGroomFilteredAlreadyOpenTotal = new Counter({
   registers: [register],
 });
 
+// ---------------------------------------------------------------------------
+// PR review / summary bot metrics
+// ---------------------------------------------------------------------------
+
+export const prWebhookReceivedTotal = new Counter({
+  name: "pr_webhook_received_total",
+  help: "GitHub webhook deliveries received and accepted (post signature verify), by event type and action",
+  labelNames: ["event", "action"] as const,
+  registers: [register],
+});
+
+export const prWebhookSkippedTotal = new Counter({
+  name: "pr_webhook_skipped_total",
+  help: "GitHub webhook deliveries skipped without starting workflows, by reason (draft, bot-author, action:<x>, etc.)",
+  labelNames: ["reason"] as const,
+  registers: [register],
+});
+
+export const prWebhookSignatureFailuresTotal = new Counter({
+  name: "pr_webhook_signature_failures_total",
+  help: "GitHub webhook deliveries rejected for missing or invalid X-Hub-Signature-256",
+  registers: [register],
+});
+
+export const prAgentSubprocessDurationSeconds = new Histogram({
+  name: "pr_agent_subprocess_duration_seconds",
+  help: "Wall-clock duration of `claude -p` subprocess invocations for PR review/summary agents",
+  labelNames: ["kind", "model", "exit_code"] as const,
+  buckets: [10, 30, 60, 120, 300, 600, 900, 1500],
+  registers: [register],
+});
+
+export const prAgentSubprocessExitTotal = new Counter({
+  name: "pr_agent_subprocess_exit_total",
+  help: "PR-agent claude subprocess exits, by kind (review/summary) and exit code",
+  labelNames: ["kind", "exit_code"] as const,
+  registers: [register],
+});
+
+export const prAgentTokensTotal = new Counter({
+  name: "pr_agent_tokens_total",
+  help: "Tokens consumed by PR-agent claude subprocesses, by kind, model, and direction (input/output/cache_create/cache_read)",
+  labelNames: ["kind", "model", "direction"] as const,
+  registers: [register],
+});
+
 let server: ReturnType<typeof Bun.serve> | undefined;
 
 function jsonLog(

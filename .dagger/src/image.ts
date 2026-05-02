@@ -12,6 +12,7 @@ import {
   CADDY_IMAGE,
   CLAUDE_CODE_VERSION,
   GH_CLI_VERSION,
+  GITHUB_MCP_SERVER_VERSION,
   KUBECTL_VERSION,
 } from "./constants";
 import versions from "./versions";
@@ -46,14 +47,22 @@ function withGitHubCli(container: Container): Container {
  *
  * Without these binaries the editor agent logs "feature will not work" on
  * every restart and silently fails any user request that hits its tools.
+ *
+ * `BUN_INSTALL=/usr/local` forces `bun add -g` to drop the `claude` binary
+ * into `/usr/local/bin` (world-readable) instead of `/root/.bun/bin`, which
+ * the container's non-root user (UID 1000) cannot reach. Without this the
+ * docs-groom workflow fails with `Executable not found in $PATH: claude`.
  */
 function withEditorClis(container: Container): Container {
-  return withGitHubCli(container).withExec([
-    "bun",
-    "add",
-    "-g",
-    `@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}`,
-  ]);
+  return withGitHubCli(container)
+    .withEnvVariable("BUN_INSTALL", "/usr/local")
+    .withExec([
+      "bun",
+      "add",
+      "-g",
+      `@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}`,
+    ])
+    .withExec(["claude", "--version"]);
 }
 
 /**
@@ -85,6 +94,38 @@ function withKubectl(container: Container): Container {
       ].join(" && "),
     ])
     .withExec(["kubectl", "version", "--client"]);
+}
+
+/**
+ * Install the GitHub MCP server binary. Required by the temporal-worker's
+ * pr-agent activity, which spawns `claude -p --mcp-config ...` with the MCP
+ * server as the GitHub I/O backend.
+ *
+ * Pinned and SHA-verified the same way as kubectl: download the tarball
+ * and the upstream-published checksums file, compare, then extract.
+ */
+function withGithubMcpServer(container: Container): Container {
+  const tag = `v${GITHUB_MCP_SERVER_VERSION}`;
+  const baseUrl = `https://github.com/github/github-mcp-server/releases/download/${tag}`;
+  const tarballName = "github-mcp-server_Linux_x86_64.tar.gz";
+  const checksumsName = `github-mcp-server_${GITHUB_MCP_SERVER_VERSION}_checksums.txt`;
+  return container
+    .withExec([
+      "sh",
+      "-c",
+      [
+        `curl -fsSL ${baseUrl}/${tarballName} -o /tmp/gms.tar.gz`,
+        `curl -fsSL ${baseUrl}/${checksumsName} -o /tmp/gms.checksums.txt`,
+        `expected=$(grep " ${tarballName}$" /tmp/gms.checksums.txt | awk '{print $1}')`,
+        `[ -n "$expected" ] || (echo "no checksum entry for ${tarballName}" && exit 1)`,
+        `actual=$(sha256sum /tmp/gms.tar.gz | awk '{print $1}')`,
+        `[ "$expected" = "$actual" ] || (echo "github-mcp-server checksum mismatch (expected $expected, got $actual)" && exit 1)`,
+        `tar -xzf /tmp/gms.tar.gz -C /usr/local/bin github-mcp-server`,
+        `chmod +x /usr/local/bin/github-mcp-server`,
+        `rm /tmp/gms.tar.gz /tmp/gms.checksums.txt`,
+      ].join(" && "),
+    ])
+    .withExec(["github-mcp-server", "--version"]);
 }
 
 /**
@@ -313,7 +354,10 @@ export function buildTemporalWorkerImageHelper(
   // worker pod, so the temporal-worker image must ship both binaries.
   // The bugsink-housekeeping workflow shells out to `kubectl` for the same
   // reason — see the rationale on `withKubectl`.
-  container = withKubectl(withEditorClis(container));
+  // The pr-agent activity (PR review + summary) launches `claude -p` with
+  // the GitHub MCP server as the only allowed tool source — see
+  // `withGithubMcpServer`.
+  container = withGithubMcpServer(withKubectl(withEditorClis(container)));
 
   container = container
     .withWorkdir("/workspace")
@@ -329,7 +373,7 @@ export function buildTemporalWorkerImageHelper(
     );
   }
 
-  return withGitHubCli(container)
+  return container
     .withWorkdir("/workspace/packages/temporal")
     .withExec(["bun", "install", "--frozen-lockfile"])
     .withLabel(

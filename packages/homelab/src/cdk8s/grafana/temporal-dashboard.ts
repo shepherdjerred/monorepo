@@ -368,6 +368,127 @@ export function createTemporalDashboard() {
         w: 12,
         h: 8,
       }),
+      // -----------------------------------------------------------------
+      // PR Review Bot row (y >= 48) — driven by metrics emitted by
+      // packages/temporal/src/event-bridge/github-webhook.ts and
+      // packages/temporal/src/activities/pr-agent.ts.
+      // -----------------------------------------------------------------
+      statPanel({
+        id: 200,
+        title: "PR Webhooks (24h)",
+        description:
+          "Total accepted GitHub pull_request webhook deliveries in the last 24h (post signature verify).",
+        expr: 'sum(increase(pr_webhook_received_total{event="pull_request"}[24h]))',
+        legend: "deliveries",
+        x: 0,
+        y: 48,
+        w: 6,
+        h: 4,
+      }),
+      statPanel({
+        id: 201,
+        title: "Signature Failures (24h)",
+        description:
+          "Count of webhook deliveries rejected for missing/invalid X-Hub-Signature-256. Drives PrWebhookSignatureFailures alert.",
+        expr: "sum(increase(pr_webhook_signature_failures_total[24h]))",
+        legend: "rejects",
+        x: 6,
+        y: 48,
+        w: 6,
+        h: 4,
+      }),
+      statPanel({
+        id: 202,
+        title: "Skipped (24h)",
+        description:
+          "Webhook deliveries that passed signature verification but were skipped (drafts, bot authors, irrelevant actions).",
+        expr: "sum(increase(pr_webhook_skipped_total[24h]))",
+        legend: "skipped",
+        x: 12,
+        y: 48,
+        w: 6,
+        h: 4,
+      }),
+      statPanel({
+        id: 203,
+        title: "Agent Failures (24h)",
+        description:
+          "Subprocess exits with non-zero code from the pr-agent claude wrapper.",
+        expr: 'sum(increase(pr_agent_subprocess_exit_total{exit_code!="0"}[24h]))',
+        legend: "fails",
+        x: 18,
+        y: 48,
+        w: 6,
+        h: 4,
+      }),
+      timeseriesPanel({
+        id: 204,
+        title: "Webhook Volume by Action",
+        description: "pull_request events received, broken down by action.",
+        targets: [
+          {
+            expr: 'sum by (action) (increase(pr_webhook_received_total{event="pull_request"}[1h]))',
+            legend: "{{action}}",
+          },
+        ],
+        x: 0,
+        y: 52,
+        w: 12,
+        h: 8,
+      }),
+      timeseriesPanel({
+        id: 205,
+        title: "Skipped Reasons",
+        description:
+          "Why incoming PRs are skipped (draft, bot-author, action:<x>).",
+        targets: [
+          {
+            expr: "sum by (reason) (increase(pr_webhook_skipped_total[1h]))",
+            legend: "{{reason}}",
+          },
+        ],
+        x: 12,
+        y: 52,
+        w: 12,
+        h: 8,
+      }),
+      timeseriesPanel({
+        id: 206,
+        title: "PR Agent Duration p50 / p95",
+        description:
+          "claude -p subprocess wall-clock duration distribution by kind (review/summary), last 7d.",
+        targets: [
+          {
+            expr: "histogram_quantile(0.5, sum by (le, kind) (rate(pr_agent_subprocess_duration_seconds_bucket[7d])))",
+            legend: "{{kind}} p50",
+          },
+          {
+            expr: "histogram_quantile(0.95, sum by (le, kind) (rate(pr_agent_subprocess_duration_seconds_bucket[7d])))",
+            legend: "{{kind}} p95",
+          },
+        ],
+        x: 0,
+        y: 60,
+        w: 12,
+        h: 8,
+        unit: "s",
+      }),
+      timeseriesPanel({
+        id: 207,
+        title: "PR Agent Tokens by Direction",
+        description:
+          "Token consumption of pr-agent invocations, split by direction (input/output/cache_read/cache_create).",
+        targets: [
+          {
+            expr: "sum by (kind, direction) (rate(pr_agent_tokens_total[1d]))",
+            legend: "{{kind}} {{direction}}",
+          },
+        ],
+        x: 12,
+        y: 60,
+        w: 12,
+        h: 8,
+      }),
     ],
   };
 }

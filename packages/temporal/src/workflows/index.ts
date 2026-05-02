@@ -25,6 +25,10 @@ import {
   type DocsGroomAuditResult,
   type DocsGroomTaskResult,
 } from "./docs-groom.ts";
+import { prReview as _prReview } from "./pr-review.ts";
+import { prSummary as _prSummary } from "./pr-summary.ts";
+import type { PrAgentInput } from "#shared/schemas.ts";
+import type { PrAgentResult } from "#activities/pr-agent.ts";
 import type { GroomTask } from "#shared/docs-groom-types.ts";
 
 export async function fetchSkillCappedManifest(): Promise<void> {
@@ -104,4 +108,12 @@ export async function runDocsGroomTask(input: {
   parentRunId: string;
 }): Promise<DocsGroomTaskResult> {
   return _runDocsGroomTask(input);
+}
+
+export async function prReview(input: PrAgentInput): Promise<PrAgentResult> {
+  return _prReview(input);
+}
+
+export async function prSummary(input: PrAgentInput): Promise<PrAgentResult> {
+  return _prSummary(input);
 }
