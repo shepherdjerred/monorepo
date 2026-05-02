@@ -54,6 +54,9 @@ export const GOLANGCI_LINT_VERSION = "v2.1.6";
 // renovate: datasource=github-releases depName=cli/cli
 export const GH_CLI_VERSION = "2.91.0";
 
+// renovate: datasource=github-releases depName=kubernetes/kubectl
+export const KUBECTL_VERSION = "v1.35.0";
+
 // ---------------------------------------------------------------------------
 // Cache volume names (stable — never include version numbers)
 // ---------------------------------------------------------------------------
