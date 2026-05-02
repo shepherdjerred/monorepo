@@ -22,6 +22,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export type CreateTemporalWorkerDeploymentProps = {
@@ -170,11 +171,15 @@ export function createTemporalWorkerDeployment(
       image: `ghcr.io/shepherdjerred/temporal-worker:${versions["shepherdjerred/temporal-worker"]}`,
       // :9464 = Temporal SDK's built-in Prometheus bridge (workflow_completed,
       //        activity_task_fail, etc. — see installRuntime in worker.ts)
-      // :9465 = application Prometheus registry (docs_groom_*, default Bun
-      //        process metrics — see observability/metrics.ts)
+      // :9465 = application Prometheus registry (docs_groom_*, pr_*, default
+      //        Bun process metrics — see observability/metrics.ts)
+      // :9466 = GitHub webhook receiver (Hono server in event-bridge/
+      //        github-webhook.ts) — exposed via Cloudflare Tunnel for PR
+      //        review/summary events.
       ports: [
         { number: 9464, name: "metrics" },
         { number: 9465, name: "app-metrics" },
+        { number: 9466, name: "gh-webhook" },
       ],
       securityContext: {
         user: UID,
@@ -260,6 +265,23 @@ export function createTemporalWorkerDeployment(
           secret,
           key: "GH_TOKEN",
         }),
+        // GitHub webhook ingest (pr-review / pr-summary). The pr-agent activity
+        // shells out to `claude -p` with the GitHub MCP server; the MCP server
+        // reads GITHUB_PERSONAL_ACCESS_TOKEN from its env. CLAUDE_CODE_OAUTH_TOKEN
+        // is the auth used by the claude CLI itself.
+        GITHUB_WEBHOOK_SECRET: EnvValue.fromSecretValue({
+          secret,
+          key: "GITHUB_WEBHOOK_SECRET",
+        }),
+        GITHUB_PERSONAL_ACCESS_TOKEN: EnvValue.fromSecretValue({
+          secret,
+          key: "GITHUB_PERSONAL_ACCESS_TOKEN",
+        }),
+        CLAUDE_CODE_OAUTH_TOKEN: EnvValue.fromSecretValue({
+          secret,
+          key: "CLAUDE_CODE_OAUTH_TOKEN",
+        }),
+        GITHUB_WEBHOOK_PORT: EnvValue.fromValue("9466"),
         // Bugsink (Sentry-compatible) error tracking. Read by initSentry()
         // in worker.ts; when unset, Sentry init is a no-op.
         SENTRY_DSN: EnvValue.fromSecretValue(
@@ -330,6 +352,27 @@ export function createTemporalWorkerDeployment(
     port: "app-metrics",
     interval: "30s",
     matchLabels: { app: "temporal-worker-app-metrics" },
+  });
+
+  // Service + Cloudflare Tunnel binding for the GitHub webhook receiver
+  // (Hono server on :9466). Public URL: https://pr-bot.sjer.red — register
+  // this URL with the GitHub repo webhook (events: pull_request).
+  const webhookService = new Service(
+    chart,
+    "temporal-worker-gh-webhook-service",
+    {
+      metadata: {
+        name: "temporal-worker-gh-webhook",
+        labels: { app: "temporal-worker-gh-webhook" },
+      },
+      selector: deployment,
+      ports: [{ name: "gh-webhook", port: 9466, targetPort: 9466 }],
+    },
+  );
+
+  createCloudflareTunnelBinding(chart, "temporal-worker-gh-webhook-cf-tunnel", {
+    serviceName: webhookService.name,
+    subdomain: "pr-bot",
   });
 
   return { deployment };

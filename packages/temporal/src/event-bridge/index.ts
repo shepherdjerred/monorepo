@@ -4,6 +4,7 @@ import {
   HomeAssistantRestClient,
 } from "@shepherdjerred/home-assistant";
 import { handleIosAction, handleStateChanged } from "./triggers.ts";
+import { startGithubWebhook, type WebhookHandle } from "./github-webhook.ts";
 
 export type EventBridgeHandle = {
   close: () => Promise<void>;
@@ -41,9 +42,21 @@ export async function startEventBridge(
   );
   console.warn("HA event bridge subscriptions active");
 
+  // GitHub webhook server is optional — only start when the secret is set.
+  // Local dev / smoke tests can run the worker without webhook ingest.
+  let webhook: WebhookHandle | undefined;
+  if ((Bun.env["GITHUB_WEBHOOK_SECRET"] ?? "") === "") {
+    console.warn("GITHUB_WEBHOOK_SECRET not set; skipping PR webhook server");
+  } else {
+    webhook = startGithubWebhook(client);
+  }
+
   return {
     async close() {
       await events.close();
+      if (webhook !== undefined) {
+        await webhook.close();
+      }
     },
   };
 }

@@ -221,5 +221,62 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
         },
       ],
     },
+    {
+      name: "pr-bot",
+      rules: [
+        {
+          alert: "PrWebhookSignatureFailures",
+          annotations: {
+            summary: "GitHub PR webhook is rejecting signatures",
+            description: escapePrometheusTemplate(
+              "{{ $value }} GitHub webhook deliveries failed X-Hub-Signature-256 verification in the last 30 minutes. Either the webhook secret is wrong or someone is hitting the public URL with bad payloads.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "increase(pr_webhook_signature_failures_total[30m]) > 5",
+          ),
+          for: "10m",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
+          alert: "PrAgentFailureRate",
+          annotations: {
+            summary: escapePrometheusTemplate(
+              "PR-agent claude subprocess failing ({{ $labels.kind }})",
+            ),
+            description: escapePrometheusTemplate(
+              "The pr-agent {{ $labels.kind }} subprocess has had {{ $value }} non-zero exits in the last 1h. Check Loki (component=pr-agent) and the Temporal UI for the failing workflow.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'increase(pr_agent_subprocess_exit_total{exit_code!="0"}[1h]) > 3',
+          ),
+          for: "15m",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
+          alert: "PrWorkflowActivitiesFailing",
+          annotations: {
+            summary: escapePrometheusTemplate(
+              "PR workflow {{ $labels.workflowType }} activities failing",
+            ),
+            description: escapePrometheusTemplate(
+              "Workflow {{ $labels.workflowType }} has had {{ $value }} activity failures in the last 1h. Check Bugsink and the Temporal UI.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'increase(activity_task_fail{namespace="default",workflowType=~"prReview|prSummary"}[1h]) > 2',
+          ),
+          for: "15m",
+          labels: {
+            severity: "warning",
+          },
+        },
+      ],
+    },
   ];
 }

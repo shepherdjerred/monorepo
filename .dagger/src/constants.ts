@@ -57,6 +57,9 @@ export const GH_CLI_VERSION = "2.91.0";
 // renovate: datasource=github-releases depName=kubernetes/kubectl
 export const KUBECTL_VERSION = "v1.35.0";
 
+// renovate: datasource=github-releases depName=github/github-mcp-server
+export const GITHUB_MCP_SERVER_VERSION = "1.0.3";
+
 // ---------------------------------------------------------------------------
 // Cache volume names (stable — never include version numbers)
 // ---------------------------------------------------------------------------
