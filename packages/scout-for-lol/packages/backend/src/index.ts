@@ -1,6 +1,7 @@
 import configuration from "#src/configuration.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
+import { filterScoutSentryEvent } from "#src/sentry-filters.ts";
 
 const logger = createLogger("app");
 
@@ -21,6 +22,10 @@ if (
     // Use image tag (e.g. "2.0.0-998") as the release so Bugsink groups
     // events per deploy and matches what ArgoCD reports.
     release: configuration.version,
+    // Drop expected noise (Riot upstream 5xx, boundary Riot-ID validation)
+    // before it leaves the SDK. See packages/backend/src/sentry-filters.ts
+    // for the rationale.
+    beforeSend: filterScoutSentryEvent,
   });
   logger.info("✅ Sentry initialized successfully");
 } else {

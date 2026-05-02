@@ -1,6 +1,42 @@
 import * as k8s from "@kubernetes/client-node";
 import { PassThrough } from "node:stream";
 
+import { z } from "zod";
+
+const NamedFieldSchema = z.object({
+  message: z.string().min(1).optional(),
+  reason: z.string().min(1).optional(),
+});
+
+/**
+ * Best-effort serialization for non-Error rejection values. The k8s exec
+ * client surfaces WebSocket-shaped `ErrorEvent` objects whose default
+ * `String(...)` rendering is `[object ErrorEvent]`, masking the actual
+ * cause. Pull out the most informative field we can find.
+ */
+function serializeError(value: unknown): string {
+  if (typeof value === "string") {
+    return value;
+  }
+  if (value !== null && typeof value === "object") {
+    const parsed = NamedFieldSchema.safeParse(value);
+    if (parsed.success) {
+      if (parsed.data.message !== undefined) {
+        return parsed.data.message;
+      }
+      if (parsed.data.reason !== undefined) {
+        return parsed.data.reason;
+      }
+    }
+    try {
+      return JSON.stringify(value);
+    } catch {
+      // fall through
+    }
+  }
+  return String(value);
+}
+
 function getK8sClients(): { coreApi: k8s.CoreV1Api; exec: k8s.Exec } {
   const kc = new k8s.KubeConfig();
   kc.loadFromCluster();
@@ -87,7 +123,9 @@ async function execInPod(
           },
         );
       } catch (error) {
-        reject(error instanceof Error ? error : new Error(String(error)));
+        reject(
+          error instanceof Error ? error : new Error(serializeError(error)),
+        );
       }
     };
     void run();
