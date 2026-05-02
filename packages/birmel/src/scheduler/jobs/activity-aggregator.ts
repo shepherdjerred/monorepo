@@ -13,12 +13,18 @@ const logger = loggers.scheduler.child("activity-aggregator");
 
 type RoleTier = { roleId: string; minimumActivity: number };
 
+type ProcessMemberActivityArgs = {
+  member: GuildMember;
+  guildId: string;
+  userId: string;
+  roleTiers: RoleTier[];
+  signal: AbortSignal;
+};
+
 async function processMemberActivity(
-  member: GuildMember,
-  guildId: string,
-  userId: string,
-  roleTiers: RoleTier[],
+  args: ProcessMemberActivityArgs,
 ): Promise<void> {
+  const { member, guildId, userId, roleTiers, signal } = args;
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -37,6 +43,7 @@ async function processMemberActivity(
 
   if (qualifiedTier == null) {
     for (const [roleId] of currentActivityRoles) {
+      throwIfAborted(signal);
       await member.roles.remove(roleId);
       logger.info("Removed activity role (no longer qualified)", {
         guildId,
@@ -50,6 +57,7 @@ async function processMemberActivity(
 
   const shouldHaveRole = qualifiedTier.roleId;
   if (!member.roles.cache.has(shouldHaveRole)) {
+    throwIfAborted(signal);
     await member.roles.add(shouldHaveRole);
     logger.info("Added activity role", {
       guildId,
@@ -61,6 +69,7 @@ async function processMemberActivity(
 
   for (const [roleId] of currentActivityRoles) {
     if (roleId !== shouldHaveRole) {
+      throwIfAborted(signal);
       await member.roles.remove(roleId);
       logger.info("Removed old activity role", { guildId, userId, roleId });
     }
@@ -71,13 +80,21 @@ async function processGuildMembers(
   members: Map<string, GuildMember>,
   guildId: string,
   roleTiers: RoleTier[],
+  signal: AbortSignal,
 ): Promise<void> {
   for (const [userId, member] of members) {
+    throwIfAborted(signal);
     if (member.user.bot) {
       continue;
     }
     try {
-      await processMemberActivity(member, guildId, userId, roleTiers);
+      await processMemberActivity({
+        member,
+        guildId,
+        userId,
+        roleTiers,
+        signal,
+      });
     } catch (error) {
       logger.error("Failed to process activity for member", toError(error), {
         guildId,
@@ -91,6 +108,7 @@ async function processGuildActivity(
   guild: OAuth2Guild,
   guildId: string,
   roleTiers: RoleTier[],
+  signal: AbortSignal,
 ): Promise<void> {
   try {
     if (roleTiers.length === 0) {
@@ -102,7 +120,7 @@ async function processGuildActivity(
       tierCount: roleTiers.length,
     });
     const members = await fullGuild.members.fetch();
-    await processGuildMembers(members, guildId, roleTiers);
+    await processGuildMembers(members, guildId, roleTiers, signal);
     logger.info("Activity aggregation completed for guild", { guildId });
   } catch (error) {
     logger.error("Failed to aggregate activity for guild", toError(error), {
@@ -132,6 +150,7 @@ export async function aggregateActivityMetrics(): Promise<void> {
           guild,
           guildId,
           config.activityTracking.roleTiers,
+          signal,
         );
       }
 

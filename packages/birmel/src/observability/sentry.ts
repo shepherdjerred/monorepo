@@ -1,4 +1,10 @@
-import * as Sentry from "@sentry/node";
+// Birmel runs on Bun (`bun run src/index.ts`), so we use `@sentry/bun` —
+// the matching SDK that uses Bun's native fetch transport. `@sentry/node`
+// installs Node's HTTP-module hooks that silently fail under Bun's compat
+// layer; events are captured and queued but never actually POSTed to Bugsink.
+// Confirmed by comparison with scout-for-lol/backend (working) which also
+// runs on Bun and uses @sentry/bun.
+import * as Sentry from "@sentry/bun";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 
 let sentryInitialized = false;
@@ -31,6 +37,29 @@ export function initializeSentry(): void {
     sampleRate: config.sentry.sampleRate,
     // Bugsink does not support performance monitoring; keep traces off.
     tracesSampleRate: config.sentry.tracesSampleRate,
+    // When debug is on, the SDK logs its own transport activity to stderr —
+    // the only way to see "event sent" / "event dropped" details from
+    // @sentry/bun, useful when triaging delivery issues.
+    debug: config.sentry.debug,
+    // Surface every captured event in our JSON log stream so we can correlate
+    // "we tried to send X" with "Bugsink received Y" without enabling debug.
+    // This is intentionally lightweight (no body), runs once per event, and
+    // returns the event unchanged so Sentry's own pipeline is unaffected.
+    beforeSend(event) {
+      console.log(
+        JSON.stringify({
+          timestamp: new Date().toISOString(),
+          level: "info",
+          message: "Sentry event captured",
+          module: "observability.sentry",
+          eventId: event.event_id,
+          exceptionType: event.exception?.values?.[0]?.type,
+          release: event.release,
+          environment: event.environment,
+        }),
+      );
+      return event;
+    },
   });
 
   sentryInitialized = true;

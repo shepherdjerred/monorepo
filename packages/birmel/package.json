@@ -29,7 +29,7 @@
     "@opentelemetry/sdk-trace-base": "^2.7.0",
     "@opentelemetry/semantic-conventions": "^1.40.0",
     "@prisma/client": "^6.19.3",
-    "@sentry/node": "^10.49.0",
+    "@sentry/bun": "^10.49.0",
     "@voltagent/core": "^2.7.2",
     "@voltagent/libsql": "^2.1.2",
     "ai": "^6.0.168",
@@ -53,5 +53,8 @@
     "jiti": "^2.6.1",
     "prisma": "^6.19.3",
     "typescript": "^6.0.3"
+  },
+  "overrides": {
+    "@opentelemetry/api": "1.9.1"
   }
 }

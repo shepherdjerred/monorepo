@@ -46,6 +46,25 @@ function isTransientError(error: Error): boolean {
 const consecutiveFailures = new Map<string, number>();
 
 /**
+ * Set of job names currently mid-flight. The scheduler fires every 60s
+ * regardless of prior state, so a slow job (>60s) without this guard would
+ * spawn overlapping invocations — exactly the cascade we hit on 2026-04-30
+ * when both `aggregate-activity` and `check-birthdays` exceeded the 5min
+ * timeout and the scheduler queued up 8 concurrent retries inside 4 minutes.
+ */
+const inFlight = new Set<string>();
+
+/**
+ * After the failure count crosses {@link CONSECUTIVE_FAILURE_ESCALATION_THRESHOLD},
+ * we delay the next run by an exponentially growing window (capped at 30min).
+ * Returning early without recording a new failure means the scheduler tick is a
+ * no-op, but the existing failure counter is preserved so backoff keeps growing
+ * until a successful run resets it.
+ */
+const nextAllowedRunAt = new Map<string, number>();
+const MAX_BACKOFF_MS = 30 * 60 * 1000;
+
+/**
  * Throws if the signal has been aborted; otherwise returns. Centralizes the
  * pattern callers use to surface scheduler timeouts at the next yield point.
  */
@@ -84,56 +103,90 @@ export async function runScheduledJob(
   body: (signal: AbortSignal) => Promise<void>,
 ): Promise<void> {
   const { name, timeoutMs = 5 * 60 * 1000 } = options;
-  return withSpan(`job.${name}`, {}, async () => {
-    const ac = new AbortController();
-    const timer = setTimeout(() => {
-      ac.abort(
-        new Error(
-          `Scheduled job ${name} exceeded ${String(timeoutMs)}ms timeout`,
-        ),
-      );
-    }, timeoutMs);
-    timer.unref();
 
-    try {
-      await body(ac.signal);
-      const previousFailures = consecutiveFailures.get(name) ?? 0;
-      if (previousFailures > 0) {
-        logger.info("Scheduled job recovered after failures", {
+  if (inFlight.has(name)) {
+    logger.warn("Scheduled job already running; skipping tick", { job: name });
+    return;
+  }
+
+  const backoffUntil = nextAllowedRunAt.get(name);
+  if (backoffUntil != null && Date.now() < backoffUntil) {
+    return;
+  }
+
+  inFlight.add(name);
+  try {
+    await withSpan(`job.${name}`, {}, async () => {
+      const ac = new AbortController();
+      const timer = setTimeout(() => {
+        ac.abort(
+          new Error(
+            `Scheduled job ${name} exceeded ${String(timeoutMs)}ms timeout`,
+          ),
+        );
+      }, timeoutMs);
+      timer.unref();
+
+      try {
+        await body(ac.signal);
+        const previousFailures = consecutiveFailures.get(name) ?? 0;
+        if (previousFailures > 0) {
+          logger.info("Scheduled job recovered after failures", {
+            job: name,
+            previousFailures,
+          });
+          consecutiveFailures.delete(name);
+          nextAllowedRunAt.delete(name);
+        }
+      } catch (rawError) {
+        const error = toError(rawError);
+        const failureCount = (consecutiveFailures.get(name) ?? 0) + 1;
+        consecutiveFailures.set(name, failureCount);
+
+        const transient = isTransientError(error);
+        const escalated =
+          !transient ||
+          failureCount >= CONSECUTIVE_FAILURE_ESCALATION_THRESHOLD;
+
+        if (escalated) {
+          // Exponential backoff once we've decided the failure is real:
+          // 60s, 120s, 240s, … capped at 30min. The healthy 60s cadence
+          // returns as soon as one run succeeds.
+          const exponent =
+            failureCount - CONSECUTIVE_FAILURE_ESCALATION_THRESHOLD;
+          const backoffMs = Math.min(
+            60_000 * 2 ** Math.max(0, exponent),
+            MAX_BACKOFF_MS,
+          );
+          nextAllowedRunAt.set(name, Date.now() + backoffMs);
+        }
+
+        const meta = {
           job: name,
-          previousFailures,
-        });
-        consecutiveFailures.delete(name);
+          consecutiveFailures: failureCount,
+          transient,
+          backoffMs: nextAllowedRunAt.has(name)
+            ? (nextAllowedRunAt.get(name) ?? 0) - Date.now()
+            : 0,
+        };
+
+        if (escalated) {
+          logger.error(`Scheduled job failed: ${name}`, error, meta);
+          captureException(error, {
+            operation: `scheduled.${name}`,
+            extra: meta,
+          });
+        } else {
+          logger.warn(`Scheduled job failed (transient): ${name}`, {
+            ...meta,
+            error: error.message,
+          });
+        }
+      } finally {
+        clearTimeout(timer);
       }
-    } catch (rawError) {
-      const error = toError(rawError);
-      const failureCount = (consecutiveFailures.get(name) ?? 0) + 1;
-      consecutiveFailures.set(name, failureCount);
-
-      const transient = isTransientError(error);
-      const escalated =
-        !transient || failureCount >= CONSECUTIVE_FAILURE_ESCALATION_THRESHOLD;
-
-      const meta = {
-        job: name,
-        consecutiveFailures: failureCount,
-        transient,
-      };
-
-      if (escalated) {
-        logger.error(`Scheduled job failed: ${name}`, error, meta);
-        captureException(error, {
-          operation: `scheduled.${name}`,
-          extra: meta,
-        });
-      } else {
-        logger.warn(`Scheduled job failed (transient): ${name}`, {
-          ...meta,
-          error: error.message,
-        });
-      }
-    } finally {
-      clearTimeout(timer);
-    }
-  });
+    });
+  } finally {
+    inFlight.delete(name);
+  }
 }

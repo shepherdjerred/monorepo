@@ -33,8 +33,30 @@ let batchProcessor: BatchSpanProcessor | null = null;
  * (every error is dropped on the floor) which is why we previously had
  * zero traces appearing in Tempo despite the SDK reporting "initialized".
  */
+// Messages we deliberately demote from `error` to `warn`. Both are recoverable
+// noise in our setup; promoting them to `error` triggers Sentry/PagerDuty
+// without giving us anything actionable. If a future regression breaks
+// telemetry for real, the OTLP exporter's other error paths still surface.
+//
+// - "Attempted duplicate registration" was caused by `ai` pinning a different
+//   `@opentelemetry/api` version (deduped via `overrides` in package.json).
+//   Keep this filter as a tripwire so a future re-introduction is visible
+//   without paging.
+// - ECONNREFUSED is intermittent: Tempo is single-replica and the OTLP HTTP
+//   exporter retries on its own. Lossy traces are acceptable.
+function shouldDemoteOtelError(message: string): boolean {
+  return (
+    message.includes("Attempted duplicate registration of API") ||
+    message.includes("ECONNREFUSED")
+  );
+}
+
 const otelDiagLogger: DiagLogger = {
   error(message: string, ...args: unknown[]): void {
+    if (shouldDemoteOtelError(message)) {
+      logger.warn(`otel: ${message}`, { args });
+      return;
+    }
     logger.error(`otel: ${message}`, undefined, { args });
   },
   warn(message: string, ...args: unknown[]): void {
