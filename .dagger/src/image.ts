@@ -46,14 +46,22 @@ function withGitHubCli(container: Container): Container {
  *
  * Without these binaries the editor agent logs "feature will not work" on
  * every restart and silently fails any user request that hits its tools.
+ *
+ * `BUN_INSTALL=/usr/local` forces `bun add -g` to drop the `claude` binary
+ * into `/usr/local/bin` (world-readable) instead of `/root/.bun/bin`, which
+ * the container's non-root user (UID 1000) cannot reach. Without this the
+ * docs-groom workflow fails with `Executable not found in $PATH: claude`.
  */
 function withEditorClis(container: Container): Container {
-  return withGitHubCli(container).withExec([
-    "bun",
-    "add",
-    "-g",
-    `@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}`,
-  ]);
+  return withGitHubCli(container)
+    .withEnvVariable("BUN_INSTALL", "/usr/local")
+    .withExec([
+      "bun",
+      "add",
+      "-g",
+      `@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}`,
+    ])
+    .withExec(["claude", "--version"]);
 }
 
 /**
@@ -329,7 +337,7 @@ export function buildTemporalWorkerImageHelper(
     );
   }
 
-  return withGitHubCli(container)
+  return container
     .withWorkdir("/workspace/packages/temporal")
     .withExec(["bun", "install", "--frozen-lockfile"])
     .withLabel(

@@ -37,9 +37,13 @@ function installRuntime(): void {
     telemetryOptions: {
       metrics: {
         metricPrefix: "temporal_worker_",
+        // The SDK already emits `namespace` and `task_queue` as per-metric
+        // labels. Re-declaring them in globalTags produces duplicate label
+        // names on each series, which Prometheus rejects with
+        // `label name "task_queue" is not unique: invalid sample` and the
+        // scrape target reports `up=0`. Keep globalTags to labels the SDK
+        // does NOT emit on its own.
         globalTags: {
-          temporal_namespace: "default",
-          task_queue: TASK_QUEUES.DEFAULT,
           worker: "temporal-worker",
         },
         prometheus: {
@@ -97,19 +101,41 @@ async function main(): Promise<void> {
 
   const eventBridge = await startEventBridge(client);
 
-  const shutdown = async (): Promise<void> => {
-    jsonLog("info", "Shutting down worker");
+  // Guard against double-shutdown. Kubernetes may deliver SIGTERM more than
+  // once during pod termination, and the Temporal SDK throws
+  // `IllegalStateError: Not running. Current state: DRAINING` if shutdown()
+  // is called against a worker that has already begun draining. Tracking
+  // this with a flag means subsequent signals are no-ops, and a state check
+  // on `worker` covers the case where the worker drained for a non-signal
+  // reason (e.g., lost server connection) before SIGTERM arrived.
+  let shutdownStarted = false;
+  const shutdown = async (signal: string): Promise<void> => {
+    if (shutdownStarted) {
+      jsonLog("info", "Shutdown already in progress, ignoring signal", {
+        signal,
+      });
+      return;
+    }
+    shutdownStarted = true;
+    jsonLog("info", "Shutting down worker", { signal });
     await eventBridge.close();
-    worker.shutdown();
+    const workerState = worker.getState();
+    if (workerState === "RUNNING") {
+      worker.shutdown();
+    } else {
+      jsonLog("info", "Worker not RUNNING, skipping worker.shutdown()", {
+        state: workerState,
+      });
+    }
     await stopMetricsServer();
     await shutdownTracing();
   };
 
   process.on("SIGTERM", () => {
-    void shutdown();
+    void shutdown("SIGTERM");
   });
   process.on("SIGINT", () => {
-    void shutdown();
+    void shutdown("SIGINT");
   });
 
   await worker.run();

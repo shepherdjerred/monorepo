@@ -116,6 +116,33 @@ function makeGameInfo() {
   });
 }
 
+function makeArenaGameInfo() {
+  return RawCurrentGameInfoSchema.parse({
+    gameId: 5_500_000_004,
+    gameStartTime: Date.now(),
+    gameMode: "CHERRY",
+    mapId: 30,
+    gameType: "MATCHED_GAME",
+    gameQueueConfigId: 1700,
+    gameLength: -20,
+    platformId: "NA1",
+    bannedChampions: [],
+    participants: [
+      {
+        championId: 157,
+        puuid: trackedPuuid,
+        teamId: 100,
+        riotId: "Tracked#NA1",
+        spell1Id: 2201,
+        spell2Id: 2202,
+        lastSelectedSkinIndex: 0,
+        bot: false,
+        profileIconId: 1,
+      },
+    ],
+  });
+}
+
 function makeTrackedPlayer() {
   return PlayerConfigEntrySchema.parse({
     alias: "Tracked",
@@ -183,5 +210,17 @@ describe.skipIf(!RUN_INTEGRATION_TEST)("sendPrematchNotification", () => {
     expect(Array.isArray(sendCalls[0]?.message["embeds"])).toBe(true);
     expect(sendCalls[0]?.message["files"]).toBeUndefined();
     expect(captureExceptionMock).toHaveBeenCalledTimes(1);
+  });
+
+  test("skips loading-screen render for Arena (CHERRY) games and sends embed-only", async () => {
+    // Arena games have no playerSubteamId in spectator-v5, so the image path is
+    // intentionally skipped. The embed-only fallback must still post.
+    await sendPrematchNotification(makeArenaGameInfo(), [makeTrackedPlayer()]);
+
+    expect(callOrder).not.toContain("buildLoadingScreenData");
+    expect(sendCalls).toHaveLength(1);
+    expect(Array.isArray(sendCalls[0]?.message["embeds"])).toBe(true);
+    expect(sendCalls[0]?.message["files"]).toBeUndefined();
+    expect(captureExceptionMock).not.toHaveBeenCalled();
   });
 });

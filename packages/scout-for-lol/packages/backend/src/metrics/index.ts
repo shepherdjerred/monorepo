@@ -291,6 +291,19 @@ export const prematchSpectatorPayloadSavesTotal = new Counter({
 });
 
 /**
+ * Counts pre-match notifications that intentionally skipped the loading-screen
+ * render before attempting `buildLoadingScreenData`. The most common reason is
+ * `arena_no_subteam` — Spectator V5 doesn't expose Arena (CHERRY) subteam
+ * assignments pre-game, so we fall back to the embed-only notification path.
+ */
+export const prematchSkippedTotal = new Counter({
+  name: "prematch_skipped_total",
+  help: "Pre-match notifications that skipped the loading-screen render before build, by reason",
+  labelNames: ["reason"] as const,
+  registers: [registry],
+});
+
+/**
  * Duration of raw prematch spectator payload uploads to S3 in seconds.
  * Only records attempted uploads (saved or error), not skip cases.
  */
