@@ -8,6 +8,7 @@ import {
   Secret,
   Service,
   ServiceAccount,
+  Volume,
 } from "cdk8s-plus-31";
 import {
   withCommonProps,
@@ -318,7 +319,14 @@ export function createTemporalWorkerDeployment(
     }),
   );
 
-  void container;
+  // Bun resolves its scratch directory to /tmp at startup and bails with
+  // `bun is unable to write files to tempdir: AccessDenied` if the path
+  // isn't writable for UID 1000. Several activities also stage real work
+  // under /tmp (deps-summary clones, docs-groom worktrees, the kubectl /
+  // gh / github-mcp-server installers in image.ts). A node-disk-backed
+  // emptyDir keeps that out of the 2 GiB pod memory budget.
+  const tmpVolume = Volume.fromEmptyDir(chart, "temporal-worker-tmp", "tmp");
+  container.mount("/tmp", tmpVolume);
 
   // Service + ServiceMonitor for the Temporal SDK's built-in Prometheus
   // bridge on :9464.
