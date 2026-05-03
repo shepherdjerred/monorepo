@@ -382,6 +382,9 @@ export async function createPrometheusApp(chart: Chart) {
         externalUrl: "https://prometheus.tailnet-1a49.ts.net",
         retention: "365d", // Keep data for 1 year
         retentionSize: "240GB", // Safety limit - delete old data if storage exceeds this
+        // Required so Tempo's metrics-generator can push service-graph,
+        // span-metrics, and local-blocks samples to Prometheus via remote_write.
+        enableRemoteWriteReceiver: true,
         storageSpec: {
           volumeClaimTemplate: {
             metadata: {

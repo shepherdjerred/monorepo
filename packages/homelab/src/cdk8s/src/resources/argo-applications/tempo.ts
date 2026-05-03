@@ -37,6 +37,34 @@ export function createTempoApp(chart: Chart) {
           global: {
             max_bytes_per_trace: 50_000_000, // 50MB
           },
+          // Per-tenant list of metrics-generator processors to run. Without this
+          // the generator pod runs but processes nothing — required for the
+          // generator to populate its hash ring with actual work to do.
+          metrics_generator: {
+            processors: ["service-graphs", "span-metrics", "local-blocks"],
+          },
+        },
+      },
+      // Metrics-generator derives Prometheus metrics from spans (service graph,
+      // span metrics) and serves TraceQL `rate()` / `quantile_over_time()`
+      // queries used by Grafana's Service Graph and Traces panel. Without this
+      // block, those queries fail with `error finding generators: empty ring`.
+      metricsGenerator: {
+        enabled: true,
+        remoteWriteUrl:
+          "http://prometheus-operated.prometheus:9090/api/v1/write",
+        processor: {
+          service_graphs: {},
+          span_metrics: {},
+          local_blocks: { filter_server_spans: false },
+        },
+        // Reuse the same PVC mounted at /var/tempo so the generator WAL
+        // survives pod restarts.
+        storage: {
+          path: "/var/tempo/metrics-generator",
+        },
+        traces_storage: {
+          path: "/var/tempo/metrics-generator-traces",
         },
       },
     },
