@@ -150,6 +150,15 @@ function extractExternalCharts(yamlContent: string): ExternalChart[] {
   return charts;
 }
 
+// Stderr patterns that indicate a transient upstream/network failure
+// (registry behind a flaky proxy, GitHub releases 5xx, DNS hiccup, etc.).
+// Real chart bugs — bad values, missing chart version, template errors —
+// must NOT match here, or we'd waste 10s hiding real failures.
+const TRANSIENT_HELM_ERROR_PATTERN =
+  /\b(?:502|503|504)\b|Bad Gateway|Proxy Error|Service Unavailable|Gateway Timeout|ECONNRESET|ECONNREFUSED|EAI_AGAIN|ETIMEDOUT|i\/o timeout|TLS handshake|tls: handshake|connection reset|connection refused|temporary failure in name resolution/i;
+
+const HELM_RETRY_DELAYS_MS = [1000, 3000, 6000];
+
 async function helmTemplate(chart: ExternalChart): Promise<{
   exitCode: number;
   stdout: string;
@@ -193,15 +202,44 @@ async function helmTemplate(chart: ExternalChart): Promise<{
     // Skip CRD validation and Kubernetes version checks
     args.push("--skip-crds");
 
-    const result = Bun.spawnSync(args, {
-      timeout: 60_000, // 60s per chart
-    });
-
-    return {
-      exitCode: result.exitCode,
-      stdout: result.stdout.toString(),
-      stderr: result.stderr.toString(),
+    const totalAttempts = HELM_RETRY_DELAYS_MS.length + 1;
+    let lastResult: { exitCode: number; stdout: string; stderr: string } = {
+      exitCode: 1,
+      stdout: "",
+      stderr: "",
     };
+
+    for (let attempt = 1; attempt <= totalAttempts; attempt++) {
+      const spawn = Bun.spawnSync(args, {
+        timeout: 60_000, // 60s per chart
+      });
+
+      const stdout = spawn.stdout.toString();
+      const stderr = spawn.stderr.toString();
+      // Bun reports exitCode === null when it had to kill the process (timeout/signal).
+      // Treat that as both a failure AND a transient signal to retry.
+      const timedOut = spawn.exitCode === null;
+      const exitCode = timedOut ? 124 : spawn.exitCode;
+
+      lastResult = { exitCode, stdout, stderr };
+
+      if (exitCode === 0) {
+        return lastResult;
+      }
+
+      const isTransient = timedOut || TRANSIENT_HELM_ERROR_PATTERN.test(stderr);
+      if (!isTransient || attempt === totalAttempts) {
+        return lastResult;
+      }
+
+      const delayMs = HELM_RETRY_DELAYS_MS[attempt - 1] ?? 0;
+      console.warn(
+        `helm template ${chart.appName} attempt ${String(attempt)}/${String(totalAttempts)} hit transient error, retrying in ${String(delayMs)}ms: ${stderr.trim().split("\n").slice(-1).join("") || (timedOut ? "timeout" : "unknown")}`,
+      );
+      await Bun.sleep(delayMs);
+    }
+
+    return lastResult;
   } finally {
     // Clean up temp dir
     const proc = Bun.spawnSync(["rm", "-rf", tempDir]);
