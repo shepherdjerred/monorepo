@@ -9,6 +9,7 @@ import {
   verifyState,
 } from "./util.ts";
 
+const FRONT_DOOR_LOCK = "lock.front_door" as const;
 const ROOMBA = "vacuum.roomba" as const;
 
 export async function leavingHome(): Promise<void> {
@@ -16,6 +17,8 @@ export async function leavingHome(): Promise<void> {
     "Leaving Home",
     "Goodbye! The Roomba will start cleaning soon.",
   );
+
+  await callService("lock", "lock", { entity_id: FRONT_DOOR_LOCK });
 
   const lights = await getEntitiesInDomain("light");
   for (const light of lights) {
