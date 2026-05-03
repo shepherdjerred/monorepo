@@ -66,6 +66,30 @@ function withEditorClis(container: Container): Container {
 }
 
 /**
+ * Hand ownership of Bun's install cache to UID 1000.
+ *
+ * The oven/bun base image sets `BUN_INSTALL=/usr/local`, which makes Bun
+ * resolve its install cache to `/usr/local/install/cache`. The build runs
+ * as root, so the cache is root-owned in the final image. Bun's runtime
+ * needs write access to that cache during `bun run` startup once the
+ * dependency graph crosses some threshold — the failure manifests as the
+ * misleading error `bun is unable to write files to tempdir: AccessDenied`
+ * (traced via /proc/<pid>/fd to a denied open of /usr/local/install/cache).
+ *
+ * Call this AFTER the last `bun install` step in the build so newly written
+ * cache entries are also reassigned. Inert no-op for any image that doesn't
+ * set or inherit BUN_INSTALL=/usr/local.
+ */
+function withWritableBunInstallCache(container: Container): Container {
+  return container.withExec([
+    "chown",
+    "-R",
+    "1000:1000",
+    "/usr/local/install/cache",
+  ]);
+}
+
+/**
  * Install kubectl into a container that already has curl + ca-certificates
  * (e.g. one that has been through `withGitHubCli`).
  *
@@ -373,9 +397,11 @@ export function buildTemporalWorkerImageHelper(
     );
   }
 
-  return container
-    .withWorkdir("/workspace/packages/temporal")
-    .withExec(["bun", "install", "--frozen-lockfile"])
+  return withWritableBunInstallCache(
+    container
+      .withWorkdir("/workspace/packages/temporal")
+      .withExec(["bun", "install", "--frozen-lockfile"]),
+  )
     .withLabel(
       "org.opencontainers.image.source",
       "https://github.com/shepherdjerred/monorepo",
