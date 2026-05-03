@@ -698,7 +698,7 @@ export function versionCommitBackHelper(
         `bun run .buildkite/scripts/update-versions.ts packages/homelab/src/cdk8s/src/versions.ts "${version}" ${digestArgs}`,
         `git checkout -b "chore/version-bump-${version}"`,
         `git add packages/homelab/src/cdk8s/src/versions.ts`,
-        `git commit -m "chore: bump image versions to ${version}"`,
+        `git commit -m "chore: bump image versions to ${version}" -m "Auto-Generated: ci-bot"`,
         `git push origin "chore/version-bump-${version}"`,
         `gh pr create --title "chore: bump image versions to ${version}" --body "Auto-generated version bump"`,
         `gh pr merge --auto --merge`,
