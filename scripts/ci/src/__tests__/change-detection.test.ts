@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import {
+  detectChanges,
   _checkInfraChanges,
   _extractPackageName,
   _transitiveClosure,
@@ -7,10 +8,27 @@ import {
   _isVersionCommitBack,
   _isReleasePleaseMerge,
   _classifyRenovateFiles,
+  _getBaseRevision,
+  _getChangedFiles,
+  _getLastGreenCommit,
   _NON_JS_PACKAGES,
   _JS_TS_PACKAGES,
 } from "../change-detection.ts";
 import { ALL_PACKAGES } from "../catalog.ts";
+
+type ExecResult = { stdout: string; exitCode: number };
+type ExecFn = (cmd: string[]) => Promise<ExecResult>;
+
+function restoreEnv(originalEnv: NodeJS.ProcessEnv, keys: string[]): void {
+  for (const key of keys) {
+    const value = originalEnv[key];
+    if (value === undefined) {
+      delete process.env[key];
+    } else {
+      process.env[key] = value;
+    }
+  }
+}
 
 describe("checkInfraChanges", () => {
   it("returns true for bun.lock changes", () => {
@@ -400,6 +418,154 @@ describe("classifyRenovateFiles", () => {
         "some/unrecognized/file.ts",
       ]),
     ).toBeNull();
+  });
+});
+
+describe("fail-fast base detection", () => {
+  const originalEnv = { ...process.env };
+  const envKeys = [
+    "BUILDKITE_API_TOKEN",
+    "BUILDKITE_AGENT_ACCESS_TOKEN",
+    "BUILDKITE_ORGANIZATION_SLUG",
+    "BUILDKITE_PIPELINE_SLUG",
+    "BUILDKITE_BUILD_NUMBER",
+    "BUILDKITE_BRANCH",
+    "BUILDKITE_PULL_REQUEST",
+    "BUILDKITE_MESSAGE",
+    "FULL_BUILD",
+  ];
+
+  beforeEach(() => {
+    for (const key of envKeys) {
+      delete process.env[key];
+    }
+    process.env["BUILDKITE_ORGANIZATION_SLUG"] = "sjerred";
+    process.env["BUILDKITE_PIPELINE_SLUG"] = "monorepo";
+    process.env["BUILDKITE_BUILD_NUMBER"] = "100";
+  });
+
+  afterEach(() => {
+    restoreEnv(originalEnv, envKeys);
+  });
+
+  it("requires BUILDKITE_API_TOKEN for main-branch Buildkite API detection", async () => {
+    await expect(_getLastGreenCommit()).rejects.toThrow(
+      "BUILDKITE_API_TOKEN is required",
+    );
+  });
+
+  it("does not use BUILDKITE_AGENT_ACCESS_TOKEN as a REST API fallback", async () => {
+    process.env["BUILDKITE_AGENT_ACCESS_TOKEN"] = "agent-token";
+    const fetchFn = async () => {
+      throw new Error("fetch should not be called");
+    };
+
+    await expect(_getLastGreenCommit(fetchFn)).rejects.toThrow(
+      "BUILDKITE_API_TOKEN is required",
+    );
+  });
+
+  it("rejects unauthorized Buildkite API responses with scope guidance", async () => {
+    process.env["BUILDKITE_API_TOKEN"] = "api-token";
+    const fetchFn = async () => new Response("", { status: 401 });
+
+    await expect(_getLastGreenCommit(fetchFn)).rejects.toThrow(
+      "read_builds scope",
+    );
+  });
+
+  it("rejects non-OK Buildkite API responses", async () => {
+    process.env["BUILDKITE_API_TOKEN"] = "api-token";
+    const fetchFn = async () => new Response("", { status: 500 });
+
+    await expect(_getLastGreenCommit(fetchFn)).rejects.toThrow("HTTP 500");
+  });
+
+  it("rejects Buildkite API request failures", async () => {
+    process.env["BUILDKITE_API_TOKEN"] = "api-token";
+    const fetchFn = async () => {
+      throw new Error("timeout");
+    };
+
+    await expect(_getLastGreenCommit(fetchFn)).rejects.toThrow(
+      "Buildkite API request failed: timeout",
+    );
+  });
+
+  it("rejects when no qualifying green main build exists", async () => {
+    process.env["BUILDKITE_API_TOKEN"] = "api-token";
+    const fetchFn = async () =>
+      new Response(
+        JSON.stringify([
+          {
+            number: 99,
+            commit: "abc123",
+            jobs: [{ name: ":eslint: Lint" }],
+          },
+        ]),
+        { status: 200 },
+      );
+
+    await expect(_getLastGreenCommit(fetchFn)).rejects.toThrow(
+      "No qualifying green main build found",
+    );
+  });
+
+  it("returns the first qualifying previous green build commit", async () => {
+    process.env["BUILDKITE_API_TOKEN"] = "api-token";
+    const fetchFn = async () =>
+      new Response(
+        JSON.stringify([
+          {
+            number: 100,
+            commit: "current",
+            jobs: [{ name: ":test_tube: Test" }],
+          },
+          {
+            number: 99,
+            commit: "abc123def456",
+            jobs: [{ name: ":test_tube: Test" }],
+          },
+        ]),
+        { status: 200 },
+      );
+
+    await expect(_getLastGreenCommit(fetchFn)).resolves.toBe("abc123def456");
+  });
+
+  it("rejects when merge-base cannot be computed", async () => {
+    process.env["BUILDKITE_BRANCH"] = "feature";
+    process.env["BUILDKITE_PULL_REQUEST"] = "42";
+    const execFn: ExecFn = async () => ({ stdout: "", exitCode: 1 });
+
+    await expect(_getBaseRevision(execFn)).rejects.toThrow(
+      "Unable to compute merge-base",
+    );
+  });
+
+  it("rejects when git diff fails after resolving a base", async () => {
+    process.env["BUILDKITE_BRANCH"] = "feature";
+    process.env["BUILDKITE_PULL_REQUEST"] = "false";
+    const execFn: ExecFn = async (cmd) => {
+      if (cmd[1] === "merge-base") {
+        return { stdout: "abc123", exitCode: 0 };
+      }
+      return { stdout: "", exitCode: 1 };
+    };
+
+    await expect(_getChangedFiles(execFn)).rejects.toThrow(
+      "Unable to diff base revision abc123 against HEAD",
+    );
+  });
+
+  it("returns a full build when explicitly requested without checking Buildkite API", async () => {
+    process.env["BUILDKITE_BRANCH"] = "main";
+    process.env["FULL_BUILD"] = "true";
+
+    const result = await detectChanges();
+
+    expect(result.buildAll).toBe(true);
+    expect(result.packages.size).toBe(ALL_PACKAGES.length);
   });
 });
 

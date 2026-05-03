@@ -171,15 +171,23 @@ function classifyRenovateFiles(changedFiles: string[]): RenovateClassification {
 // Buildkite API: find last green build
 // ---------------------------------------------------------------------------
 
-async function getLastGreenCommit(): Promise<string | null> {
-  const token =
-    process.env["BUILDKITE_API_TOKEN"] ??
-    process.env["BUILDKITE_AGENT_ACCESS_TOKEN"];
+type ExecResult = { stdout: string; exitCode: number };
+type ExecFn = (cmd: string[]) => Promise<ExecResult>;
+type FetchFn = (
+  input: Parameters<typeof fetch>[0],
+  init?: Parameters<typeof fetch>[1],
+) => ReturnType<typeof fetch>;
+
+function errorMessage(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
+
+async function getLastGreenCommit(fetchFn: FetchFn = fetch): Promise<string> {
+  const token = process.env["BUILDKITE_API_TOKEN"];
   if (!token) {
-    console.error(
-      "⚠️  No Buildkite API token — will fall back to full build on main",
+    throw new Error(
+      "BUILDKITE_API_TOKEN is required for main-branch change detection",
     );
-    return null;
   }
 
   const org = process.env["BUILDKITE_ORGANIZATION_SLUG"] ?? "";
@@ -187,10 +195,9 @@ async function getLastGreenCommit(): Promise<string | null> {
   const currentBuild = process.env["BUILDKITE_BUILD_NUMBER"] ?? "";
 
   if (!org || !pipeline) {
-    console.error(
-      "⚠️  Missing org/pipeline slug — will fall back to full build on main",
+    throw new Error(
+      "BUILDKITE_ORGANIZATION_SLUG and BUILDKITE_PIPELINE_SLUG are required for main-branch change detection",
     );
-    return null;
   }
 
   const url =
@@ -198,72 +205,68 @@ async function getLastGreenCommit(): Promise<string | null> {
     `/pipelines/${pipeline}/builds` +
     `?branch=main&state=passed&per_page=25`;
 
+  let resp: Response;
   try {
-    const resp = await fetch(url, {
+    resp = await fetchFn(url, {
       headers: { Authorization: `Bearer ${token}` },
       signal: AbortSignal.timeout(15_000),
     });
-
-    if (resp.status === 401) {
-      console.error(
-        "⚠️  Buildkite API 401: token lacks REST API permissions — will fall back to full build on main",
-      );
-      return null;
-    }
-
-    if (!resp.ok) {
-      console.error(
-        `⚠️  Buildkite API failed (HTTP ${resp.status}) — will fall back to full build on main`,
-      );
-      return null;
-    }
-
-    const builds = (await resp.json()) as Array<{
-      number?: number;
-      commit?: string;
-      jobs?: Array<{ name?: string }>;
-    }>;
-
-    for (const build of builds) {
-      if (String(build.number) === currentBuild) continue;
-
-      const jobs = build.jobs ?? [];
-      const qualifyingJobs = jobs.filter((j) =>
-        (j.name ?? "").includes(":test_tube:"),
-      );
-
-      if (qualifyingJobs.length >= MIN_GREEN_STEPS) {
-        const commit = build.commit ?? "";
-        console.error(
-          `Last green build: #${build.number} (${qualifyingJobs.length} test jobs, commit ${commit.slice(0, 10)})`,
-        );
-        return commit;
-      }
-
-      console.error(
-        `Build #${build.number} skipped: only ${qualifyingJobs.length} test jobs (need ${MIN_GREEN_STEPS})`,
-      );
-    }
   } catch (e) {
-    console.error(
-      `⚠️  Buildkite API request failed: ${e} — will fall back to full build on main`,
-    );
-    return null;
+    throw new Error(`Buildkite API request failed: ${errorMessage(e)}`);
   }
 
-  console.error(
-    "⚠️  No qualifying green build found in last 10 builds — will fall back to full build on main",
+  if (resp.status === 401 || resp.status === 403) {
+    throw new Error(
+      "Buildkite API token is not authorized; expected REST API token with read_builds scope",
+    );
+  }
+
+  if (!resp.ok) {
+    throw new Error(`Buildkite API failed with HTTP ${resp.status}`);
+  }
+
+  const builds = (await resp.json()) as Array<{
+    number?: number;
+    commit?: string;
+    jobs?: Array<{ name?: string }>;
+  }>;
+
+  for (const build of builds) {
+    if (String(build.number) === currentBuild) continue;
+
+    const jobs = build.jobs ?? [];
+    const qualifyingJobs = jobs.filter((j) =>
+      (j.name ?? "").includes(":test_tube:"),
+    );
+
+    if (qualifyingJobs.length >= MIN_GREEN_STEPS) {
+      const commit = build.commit ?? "";
+      if (!commit) {
+        throw new Error(
+          `Build #${build.number} qualified as green but did not include a commit SHA`,
+        );
+      }
+      console.error(
+        `Last green build: #${build.number} (${qualifyingJobs.length} test jobs, commit ${commit.slice(0, 10)})`,
+      );
+      return commit;
+    }
+
+    console.error(
+      `Build #${build.number} skipped: only ${qualifyingJobs.length} test jobs (need ${MIN_GREEN_STEPS})`,
+    );
+  }
+
+  throw new Error(
+    "No qualifying green main build found; cannot scope this build safely",
   );
-  return null;
 }
 
 // ---------------------------------------------------------------------------
 // Git helpers
 // ---------------------------------------------------------------------------
 
-async function exec(
-  cmd: string[],
-): Promise<{ stdout: string; exitCode: number }> {
+async function exec(cmd: string[]): Promise<ExecResult> {
   const proc = Bun.spawn(cmd, {
     stdout: "pipe",
     stderr: "pipe",
@@ -273,13 +276,16 @@ async function exec(
   return { stdout: stdout.trim(), exitCode };
 }
 
-async function getBaseRevision(): Promise<string | null> {
+async function getBaseRevision(execFn: ExecFn = exec): Promise<string> {
   const branch = process.env["BUILDKITE_BRANCH"] ?? "";
   const pullRequest = process.env["BUILDKITE_PULL_REQUEST"] ?? "false";
 
   if (pullRequest && pullRequest !== "false") {
-    const result = await exec(["git", "merge-base", "HEAD", "origin/main"]);
-    return result.exitCode === 0 ? result.stdout : null;
+    const result = await execFn(["git", "merge-base", "HEAD", "origin/main"]);
+    if (result.exitCode !== 0 || result.stdout === "") {
+      throw new Error("Unable to compute merge-base with origin/main");
+    }
+    return result.stdout;
   }
 
   if (branch === "main") {
@@ -287,16 +293,20 @@ async function getBaseRevision(): Promise<string | null> {
   }
 
   // Feature branch without PR
-  const result = await exec(["git", "merge-base", "HEAD", "origin/main"]);
-  return result.exitCode === 0 ? result.stdout : null;
+  const result = await execFn(["git", "merge-base", "HEAD", "origin/main"]);
+  if (result.exitCode !== 0 || result.stdout === "") {
+    throw new Error("Unable to compute merge-base with origin/main");
+  }
+  return result.stdout;
 }
 
-async function getChangedFiles(): Promise<string[] | null> {
-  const base = await getBaseRevision();
-  if (base === null) return null;
+async function getChangedFiles(execFn: ExecFn = exec): Promise<string[]> {
+  const base = await getBaseRevision(execFn);
 
-  const result = await exec(["git", "diff", "--name-only", base, "HEAD"]);
-  if (result.exitCode !== 0) return null;
+  const result = await execFn(["git", "diff", "--name-only", base, "HEAD"]);
+  if (result.exitCode !== 0) {
+    throw new Error(`Unable to diff base revision ${base} against HEAD`);
+  }
 
   return result.stdout
     .split("\n")
@@ -511,15 +521,12 @@ export async function detectChanges(): Promise<AffectedPackages> {
   const commitMsg = process.env["BUILDKITE_MESSAGE"] ?? "";
   const forceFull = forceFullEnv || commitMsg.includes("[full-build]");
 
-  const changedFiles = await getChangedFiles();
-
-  if (forceFull || changedFiles === null) {
-    const reason = forceFull
-      ? "Full build requested"
-      : "No base revision available";
-    console.error(`${reason}, building everything`);
+  if (forceFull) {
+    console.error("Full build requested, building everything");
     return fullBuildResult();
   }
+
+  const changedFiles = await getChangedFiles();
 
   // Renovate fast-track: runs BEFORE infra check so that bun.lock/package.json
   // in INFRA_FILES don't short-circuit the fast path.
@@ -629,6 +636,9 @@ export {
   isVersionCommitBack as _isVersionCommitBack,
   isReleasePleaseMerge as _isReleasePleaseMerge,
   classifyRenovateFiles as _classifyRenovateFiles,
+  getLastGreenCommit as _getLastGreenCommit,
+  getBaseRevision as _getBaseRevision,
+  getChangedFiles as _getChangedFiles,
   NON_JS_PACKAGES as _NON_JS_PACKAGES,
   JS_TS_PACKAGES as _JS_TS_PACKAGES,
 };
