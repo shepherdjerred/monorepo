@@ -6,6 +6,7 @@ import {
 } from "./util.ts";
 
 const LIVING_ROOM_SCENE = "scene.living_room_bright" as const;
+const FRONT_DOOR_LOCK = "lock.front_door" as const;
 const ROOMBA = "vacuum.roomba" as const;
 
 export async function welcomeHome(): Promise<void> {
@@ -13,6 +14,8 @@ export async function welcomeHome(): Promise<void> {
     "Welcome Home",
     "Welcome back! Hope you had a great time.",
   );
+
+  await callService("lock", "unlock", { entity_id: FRONT_DOOR_LOCK });
 
   await callService("scene", "turn_on", { entity_id: LIVING_ROOM_SCENE });
 
