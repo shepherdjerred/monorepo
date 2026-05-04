@@ -3,7 +3,7 @@ title: Model Selection
 description: Choose the right AI model for your Clauderon sessions
 ---
 
-22 models across three providers. Use `--model <flag>` when creating sessions.
+24 models across three providers. Use `--model <flag>` when creating sessions.
 
 ## Claude Models (Anthropic)
 
@@ -20,17 +20,19 @@ description: Choose the right AI model for your Clauderon sessions
 
 ## Codex/OpenAI Models
 
-| Model             | Flag            | Capability           | Speed    | Notes                |
-| ----------------- | --------------- | -------------------- | -------- | -------------------- |
-| **GPT-5.3-Codex** | `gpt-5-3-codex` | High (Code)          | Moderate | **Default** - coding |
-| **GPT-5.4**       | `gpt-5-4`       | Flagship             | Moderate |                      |
-| **GPT-5.4 Mini**  | `gpt-5-4-mini`  | High                 | Fast     |                      |
-| **GPT-5.4 Nano**  | `gpt-5-4-nano`  | Moderate             | Fastest  | Cost-effective       |
-| **GPT-5.4 Pro**   | `gpt-5-4-pro`   | Highest              | Slow     | Premium              |
-| **o3**            | `o3`            | High (Reasoning)     | Moderate |                      |
-| **o3-pro**        | `o3-pro`        | Highest (Reasoning)  | Slow     | Premium              |
-| **o4-mini**       | `o4-mini`       | High (Reasoning)     | Fast     |                      |
-| **o3-mini**       | `o3-mini`       | Moderate (Reasoning) | Fast     |                      |
+| Model             | Flag            | Capability           | Speed    | Notes                                     |
+| ----------------- | --------------- | -------------------- | -------- | ----------------------------------------- |
+| **GPT-5.5**       | `gpt-5-5`       | Flagship (latest)    | Moderate | Latest non-coding flagship (2026-04-23)   |
+| **GPT-5.5 Pro**   | `gpt-5-5-pro`   | Highest              | Slow     | Premium variant of latest flagship        |
+| **GPT-5.3-Codex** | `gpt-5-3-codex` | High (Code)          | Moderate | **Default** - coding                      |
+| **GPT-5.4**       | `gpt-5-4`       | Previous flagship    | Moderate |                                           |
+| **GPT-5.4 Mini**  | `gpt-5-4-mini`  | High                 | Fast     | Latest mini (no 5.5-mini exists)          |
+| **GPT-5.4 Nano**  | `gpt-5-4-nano`  | Moderate             | Fastest  | Latest nano, cost-effective (no 5.5-nano) |
+| **GPT-5.4 Pro**   | `gpt-5-4-pro`   | Highest              | Slow     | Previous premium                          |
+| **o3**            | `o3`            | High (Reasoning)     | Moderate |                                           |
+| **o3-pro**        | `o3-pro`        | Highest (Reasoning)  | Slow     | Premium                                   |
+| **o4-mini**       | `o4-mini`       | High (Reasoning)     | Fast     |                                           |
+| **o3-mini**       | `o3-mini`       | Moderate (Reasoning) | Fast     |                                           |
 
 ## Gemini Models (Google)
 
