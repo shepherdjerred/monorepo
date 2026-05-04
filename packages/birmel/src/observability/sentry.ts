@@ -37,6 +37,11 @@ export function initializeSentry(): void {
     sampleRate: config.sentry.sampleRate,
     // Bugsink does not support performance monitoring; keep traces off.
     tracesSampleRate: config.sentry.tracesSampleRate,
+    // Don't let Sentry register the global TracerProvider/Propagator/ContextManager.
+    // Otherwise it lands first (initializeSentry runs before initializeTracing),
+    // and VoltAgentObservability's later provider.register() collides — no spans
+    // reach Tempo. Sentry stays for errors via captureException.
+    skipOpenTelemetrySetup: true,
     // When debug is on, the SDK logs its own transport activity to stderr —
     // the only way to see "event sent" / "event dropped" details from
     // @sentry/bun, useful when triaging delivery issues.

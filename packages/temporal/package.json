@@ -15,7 +15,7 @@
     "build": "bun run scripts/ensure-ha-schema.ts && tsc",
     "typecheck": "bun run scripts/ensure-ha-schema.ts && bunx tsc --noEmit",
     "lint": "bunx eslint --cache .",
-    "test": "bun run scripts/ensure-ha-schema.ts && bun test src/activities src/event-bridge",
+    "test": "bun run scripts/ensure-ha-schema.ts && bun test src/activities src/event-bridge src/observability",
     "test:integration": "bun run scripts/ensure-ha-schema.ts && bun test src/integration.test.ts",
     "generate": "bun ../home-assistant/src/codegen/cli.ts --out src/generated/ha-schema.ts --name HaSchema"
   },

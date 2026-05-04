@@ -36,22 +36,18 @@ let initialized = false;
  * (every error is dropped on the floor) which is why we previously had
  * zero traces appearing in Tempo despite the SDK reporting "initialized".
  */
-// Messages we deliberately demote from `error` to `warn`. Both are recoverable
-// noise in our setup; promoting them to `error` triggers Sentry/PagerDuty
-// without giving us anything actionable. If a future regression breaks
-// telemetry for real, the OTLP exporter's other error paths still surface.
+// Messages we deliberately demote from `error` to `warn`.
 //
-// - "Attempted duplicate registration" was caused by `ai` pinning a different
-//   `@opentelemetry/api` version (deduped via `overrides` in package.json).
-//   Keep this filter as a tripwire so a future re-introduction is visible
-//   without paging.
 // - ECONNREFUSED is intermittent: Tempo is single-replica and the OTLP HTTP
 //   exporter retries on its own. Lossy traces are acceptable.
+//
+// "Attempted duplicate registration of API" is intentionally NOT demoted.
+// With skipOpenTelemetrySetup: true on Sentry, VoltAgentObservability owns
+// the global TracerProvider unopposed and that warning should never fire.
+// If it does, something else has started competing for the global and our
+// OTLP exporter is silently being bypassed — pageworthy.
 function shouldDemoteOtelError(message: string): boolean {
-  return (
-    message.includes("Attempted duplicate registration of API") ||
-    message.includes("ECONNREFUSED")
-  );
+  return message.includes("ECONNREFUSED");
 }
 
 const otelDiagLogger: DiagLogger = {
@@ -174,10 +170,19 @@ export function initializeTracing(): void {
   // single NodeTracerProvider globally and runs all spans (ours + voltagent's
   // own) through this processor list. VoltAgent owns provider.register(); we
   // own the OTLP exporter shipped to Tempo.
+  //
+  // spanFilters.enabled = false disables VoltAgent's SpanFilterProcessor.
+  // Without this, every user-supplied span processor is wrapped in a filter
+  // that only forwards spans whose instrumentation scope matches
+  // `instrumentationScopeName` (default "@voltagent/core"). Birmel emits via
+  // trace.getTracer("birmel"), so the filter would drop every birmel span on
+  // the floor — and our OTLP exporter (also wrapped) would never see them.
+  // We want all spans (birmel + voltagent + transitive deps) shipped to Tempo.
   voltAgentObservability = new VoltAgentObservability({
     serviceName: config.telemetry.serviceName,
     serviceVersion: "0.0.1",
     spanProcessors: [batchProcessor],
+    spanFilters: { enabled: false },
   });
 
   // Make this the global so every Agent (and workflow) reuses it instead of
