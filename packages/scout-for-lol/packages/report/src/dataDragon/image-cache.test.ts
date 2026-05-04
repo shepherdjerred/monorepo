@@ -7,11 +7,10 @@ import {
 } from "./image-cache.ts";
 
 describe("image-cache", () => {
-  // The cache stores base64 data URIs keyed by the EXACT string the caller
-  // passed in — it does not re-normalize. Callers (backend) must pass the
-  // output of `resolveChampionKey`, which already normalizes. These tests
-  // pin that contract for the camelCase champions the loading-screen
-  // feature has to deal with.
+  // Cache normalizes champion names on both `set` and `get`, so any
+  // casing variant the caller passes (Riot match-data quirks like
+  // "FiddleSticks", twisted-vs-DataDragon drift like "Reksai") resolves
+  // to the canonical entry. These tests pin that round-trip contract.
 
   test("preload + get with normalized camelCase key (RekSai)", async () => {
     await preloadChampionImages(["RekSai"]);
@@ -20,14 +19,29 @@ describe("image-cache", () => {
     expect(dataUri.length).toBeGreaterThan(200);
   });
 
-  test("preload + get with override input (Reksai) — getter uses same input", async () => {
-    // When upstream accidentally passes the non-normalized form, the
-    // cache resolves the file correctly (normalizeChampionName is called
-    // inside getChampionImageBase64) but the cache key is the raw input.
-    // Retrieval must use the same string.
+  test("preload + get round-trip across casings (Reksai ↔ RekSai)", async () => {
+    // The override map rewrites Reksai → RekSai; both casings hit the
+    // same cache entry whether the caller used the override input or the
+    // canonical form.
     await preloadChampionImages(["Reksai"]);
-    const dataUri = getChampionImage("Reksai");
-    expect(dataUri).toStartWith("data:image/png;base64,");
+    expect(getChampionImage("Reksai")).toStartWith("data:image/png;base64,");
+    expect(getChampionImage("RekSai")).toStartWith("data:image/png;base64,");
+  });
+
+  test("preload + get round-trip across Riot quirk casing (FiddleSticks ↔ Fiddlesticks)", async () => {
+    // Riot's match data API returns "FiddleSticks" (capital S) for
+    // Fiddlesticks. The cache must resolve both casings to the same
+    // canonical entry so report rendering doesn't throw.
+    await preloadChampionImages(["FiddleSticks"]);
+    expect(getChampionImage("FiddleSticks")).toStartWith(
+      "data:image/png;base64,",
+    );
+    expect(getChampionImage("Fiddlesticks")).toStartWith(
+      "data:image/png;base64,",
+    );
+    expect(getChampionImage("FIDDLESTICKS")).toStartWith(
+      "data:image/png;base64,",
+    );
   });
 
   test("preload + get champion loading image for RekSai", async () => {

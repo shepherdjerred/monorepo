@@ -6,6 +6,7 @@
  */
 
 import type { RawMatch, RawTimeline } from "@scout-for-lol/data";
+import { normalizeChampionName } from "#src/data-dragon/images.ts";
 
 /**
  * Participant info for the lookup table
@@ -38,7 +39,7 @@ export function buildParticipantLookup(
 ): ParticipantLookup[] {
   return rawMatch.info.participants.map((p, index) => ({
     participantId: index + 1,
-    championName: p.championName,
+    championName: normalizeChampionName(p.championName),
     team: p.teamId === 100 ? "Blue" : "Red",
     summonerName:
       p.riotIdGameName != null && p.riotIdGameName.length > 0

@@ -4,18 +4,8 @@ import { mapRegionToEnum } from "#src/league/model/region.ts";
 import type { PlayerConfigEntry, MatchId } from "@scout-for-lol/data/index.ts";
 import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import { z } from "zod";
-import {
-  riotApiErrorsTotal,
-  riotApiRequestsTotal,
-  updateRiotApiHealth,
-} from "#src/metrics/index.ts";
 import { createLogger } from "#src/logger.ts";
-import { withTimeout } from "#src/utils/timeout.ts";
-import {
-  extractHttpStatus,
-  isExpectedUpstreamError,
-} from "#src/league/api/upstream-errors.ts";
-import * as Sentry from "@sentry/bun";
+import { callRiotOrUndefined } from "#src/league/api/riot-call.ts";
 
 const logger = createLogger("api-match-history");
 
@@ -35,101 +25,18 @@ export async function getRecentMatchIds(
     `📜 Fetching recent match IDs for player: ${playerAlias} (${playerPuuid}) in region ${playerRegion}`,
   );
 
-  try {
-    const startTime = Date.now();
-    const region = mapRegionToEnum(playerRegion);
-    const regionGroup = regionToRegionGroup(region);
+  const region = mapRegionToEnum(playerRegion);
+  const regionGroup = regionToRegionGroup(region);
 
-    Sentry.addBreadcrumb({
-      category: "riot-api",
-      message: `Fetching match history for ${playerAlias}`,
-      data: { playerAlias, region: playerRegion, endpoint: "MatchV5.list" },
-      level: "info",
-    });
-
-    const response = await withTimeout(
-      api.MatchV5.list(playerPuuid, regionGroup, { count }),
-    );
-
-    const apiTime = Date.now() - startTime;
-    riotApiRequestsTotal.inc({ source: "match-history", status: "success" });
-    updateRiotApiHealth(true);
-
-    // The response should be an ApiResponseDTO with a response property containing an array of match IDs
-    const matchIdsResult = z.array(MatchIdSchema).safeParse(response.response);
-
-    if (!matchIdsResult.success) {
-      logger.error(
-        `❌ Failed to parse match IDs for ${playerAlias}:`,
-        matchIdsResult.error,
-      );
-      riotApiErrorsTotal.inc({
-        source: "match-id-parsing",
-        http_status: "validation",
-      });
-      return undefined;
-    }
-
-    const matchIds = matchIdsResult.data;
-    logger.info(
-      `✅ Successfully fetched ${matchIds.length.toString()} match IDs for ${playerAlias} (${apiTime.toString()}ms)`,
-    );
-
-    return matchIds;
-  } catch (error) {
-    riotApiRequestsTotal.inc({
+  return callRiotOrUndefined(
+    {
       source: "match-history",
-      status:
-        error instanceof Error && error.message.includes("timed out")
-          ? "timeout"
-          : "error",
-    });
-    updateRiotApiHealth(false);
-
-    const status = extractHttpStatus(error);
-    if (status === undefined) {
-      logger.error(
-        `❌ Error fetching match history for ${playerAlias}:`,
-        error,
-      );
-      riotApiErrorsTotal.inc({
-        source: "match-history-api",
-        http_status: "unknown",
-      });
-    } else {
-      if (status === 404) {
-        logger.info(`ℹ️  Player ${playerAlias} has no match history (404)`);
-        return undefined;
-      }
-      // 502/503/504 = Riot upstream outage — expected during maintenance
-      // windows. Count in metrics for observability but do NOT report to
-      // Sentry; these produce thousands of duplicate events per week.
-      if (isExpectedUpstreamError(status)) {
-        logger.warn(
-          `[getRecentMatchIds] Riot API returned ${status.toString()} for ${playerAlias} (expected upstream error)`,
-        );
-        riotApiErrorsTotal.inc({
-          source: "match-history-api",
-          http_status: status.toString(),
-        });
-        return undefined;
-      }
-      logger.error(`❌ HTTP Error ${status.toString()} for ${playerAlias}`);
-      riotApiErrorsTotal.inc({
-        source: "match-history-api",
-        http_status: status.toString(),
-      });
-      Sentry.captureException(error, {
-        tags: {
-          source: "match-history-api",
-          playerAlias,
-          region: playerRegion,
-          httpStatus: status.toString(),
-        },
-      });
-    }
-    return undefined;
-  }
+      schema: z.array(MatchIdSchema),
+      context: { playerAlias, region: playerRegion },
+      sentry: true,
+    },
+    () => api.MatchV5.list(playerPuuid, regionGroup, { count }),
+  );
 }
 
 export type FilterResult = {

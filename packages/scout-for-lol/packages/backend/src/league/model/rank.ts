@@ -15,14 +15,9 @@ import { filter, first, pipe } from "remeda";
 import { mapRegionToEnum } from "#src/league/model/region.ts";
 import { z } from "zod";
 import {
-  riotApiErrorsTotal,
-  riotApiRequestsTotal,
-  updateRiotApiHealth,
-} from "#src/metrics/index.ts";
-import { createLogger } from "#src/logger.ts";
-import { withTimeout } from "#src/utils/timeout.ts";
-
-const logger = createLogger("model-rank");
+  callRiotOrThrow,
+  callRiotOrUndefined,
+} from "#src/league/api/riot-call.ts";
 
 const solo = "RANKED_SOLO_5x5";
 const flex = "RANKED_FLEX_SR";
@@ -71,76 +66,41 @@ export async function getRankByPuuid(
   puuid: string,
   region: Region,
 ): Promise<Ranks | undefined> {
-  try {
-    const response = await withTimeout(
-      api.League.byPUUID(puuid, mapRegionToEnum(region)),
-    );
-    riotApiRequestsTotal.inc({
+  const entries = await callRiotOrUndefined(
+    {
       source: "rank-by-puuid",
-      status: "success",
-    });
-    updateRiotApiHealth(true);
-
-    const parseResult = z
-      .array(RawSummonerLeagueSchema)
-      .safeParse(response.response);
-    if (!parseResult.success) {
-      logger.warn(
-        `Failed to parse rank response for puuid ${puuid}:`,
-        parseResult.error,
-      );
-      return undefined;
-    }
-
-    return {
-      solo: getRank(parseResult.data, solo),
-      flex: getRank(parseResult.data, flex),
-    };
-  } catch (error) {
-    const status =
-      error instanceof Error && error.message.includes("timed out")
-        ? "timeout"
-        : "error";
-    riotApiRequestsTotal.inc({ source: "rank-by-puuid", status });
-    logger.warn(`Failed to fetch rank for puuid ${puuid}: ${String(error)}`);
-    return undefined;
-  }
+      schema: z.array(RawSummonerLeagueSchema),
+      schemaLabel: "summoner-league",
+      context: { puuid, region },
+    },
+    () => api.League.byPUUID(puuid, mapRegionToEnum(region)),
+  );
+  if (entries === undefined) return undefined;
+  return {
+    solo: getRank(entries, solo),
+    flex: getRank(entries, flex),
+  };
 }
 
 export async function getRanks(player: PlayerConfigEntry): Promise<Ranks> {
-  try {
-    const response = await withTimeout(
+  const entries = await callRiotOrThrow(
+    {
+      source: "rank",
+      schema: z.array(RawSummonerLeagueSchema),
+      schemaLabel: "summoner-league",
+      context: {
+        alias: player.alias,
+        region: player.league.leagueAccount.region,
+      },
+    },
+    () =>
       api.League.byPUUID(
         player.league.leagueAccount.puuid,
         mapRegionToEnum(player.league.leagueAccount.region),
       ),
-    );
-    riotApiRequestsTotal.inc({ source: "rank", status: "success" });
-    updateRiotApiHealth(true);
-
-    const parseResult = z
-      .array(RawSummonerLeagueSchema)
-      .safeParse(response.response);
-    if (!parseResult.success) {
-      throw parseResult.error;
-    }
-    const validatedResponse = parseResult.data;
-
-    return {
-      solo: getRank(validatedResponse, solo),
-      flex: getRank(validatedResponse, flex),
-    };
-  } catch (error) {
-    riotApiRequestsTotal.inc({
-      source: "rank",
-      status:
-        error instanceof Error && error.message.includes("timed out")
-          ? "timeout"
-          : "error",
-    });
-    updateRiotApiHealth(false);
-    logger.error(`Failed to fetch ranks for ${player.alias}:`, error);
-    riotApiErrorsTotal.inc({ source: "rank-fetch", http_status: "unknown" });
-    throw error;
-  }
+  );
+  return {
+    solo: getRank(entries, solo),
+    flex: getRank(entries, flex),
+  };
 }

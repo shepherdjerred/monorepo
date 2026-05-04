@@ -4,6 +4,7 @@ import {
   getItemImageBase64,
   getSpellImageBase64,
   getAugmentIconBase64,
+  normalizeChampionName,
   summoner,
   items,
   type SkinFallbackEvent,
@@ -58,14 +59,17 @@ if (typeof Bun !== "undefined") {
   );
 }
 
-// Get champion image from cache (must be pre-loaded via preloadChampionImages)
+// Get champion image from cache (must be pre-loaded via preloadChampionImages).
+// Normalizes the lookup key so any casing variant Riot ever sends
+// ("FiddleSticks", "FIDDLESTICKS", etc.) resolves to the canonical entry.
 export function getChampionImage(championName: string): string {
-  const cached = championImageCache.get(championName);
+  const key = normalizeChampionName(championName);
+  const cached = championImageCache.get(key);
   if (cached !== undefined && cached.length > 0) {
     return cached;
   }
   throw new Error(
-    `Champion image for ${championName} not found in cache. Call preloadChampionImages() before rendering.`,
+    `Champion image for ${key} not found in cache. Call preloadChampionImages() before rendering.`,
   );
 }
 
@@ -102,16 +106,19 @@ export function getAugmentIcon(augmentIconPath: string): string {
   );
 }
 
-// Pre-load champion images for a list of champion names
+// Pre-load champion images for a list of champion names. Each name is
+// normalized so cache hits work regardless of the casing the caller passed.
 export async function preloadChampionImages(
   championNames: string[],
 ): Promise<void> {
-  const uniqueNames = [...new Set(championNames)];
+  const uniqueKeys = [
+    ...new Set(championNames.map((name) => normalizeChampionName(name))),
+  ];
   await Promise.all(
-    uniqueNames.map(async (championName) => {
-      if (!championImageCache.has(championName)) {
-        const base64 = await getChampionImageBase64(championName);
-        championImageCache.set(championName, base64);
+    uniqueKeys.map(async (key) => {
+      if (!championImageCache.has(key)) {
+        const base64 = await getChampionImageBase64(key);
+        championImageCache.set(key, base64);
       }
     }),
   );
@@ -130,12 +137,14 @@ export async function preloadAugmentIcons(iconPaths: string[]): Promise<void> {
   );
 }
 
-// Get champion loading screen image from cache (must be pre-loaded)
+// Get champion loading screen image from cache (must be pre-loaded).
+// Normalizes the champion-name component of the cache key so casing
+// variants resolve to the canonical entry.
 export function getChampionLoadingImage(
   championName: string,
   skinNum: number,
 ): string {
-  const key = `${championName}_${skinNum.toString()}`;
+  const key = `${normalizeChampionName(championName)}_${skinNum.toString()}`;
   const cached = championLoadingImageCache.get(key);
   if (cached !== undefined && cached.length > 0) {
     return cached;
@@ -160,14 +169,19 @@ export async function preloadChampionLoadingImages(
   onSkinFallback?: (event: SkinFallbackEvent) => void,
 ): Promise<void> {
   const seen = new Set<string>();
-  const uniqueEntries = entries.filter((entry) => {
-    const key = `${entry.championName}_${entry.skinNum.toString()}`;
-    if (seen.has(key)) {
-      return false;
-    }
-    seen.add(key);
-    return true;
-  });
+  const uniqueEntries = entries
+    .map(({ championName, skinNum }) => ({
+      championName: normalizeChampionName(championName),
+      skinNum,
+    }))
+    .filter((entry) => {
+      const key = `${entry.championName}_${entry.skinNum.toString()}`;
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
 
   await Promise.all(
     uniqueEntries.map(async ({ championName, skinNum }) => {
