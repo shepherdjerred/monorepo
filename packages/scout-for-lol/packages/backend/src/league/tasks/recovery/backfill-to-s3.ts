@@ -11,12 +11,8 @@ import {
   backfillMatchesTotal,
   downtimeDetectedTotal,
 } from "#src/metrics/index.ts";
-import {
-  riotApiRequestsTotal,
-  updateRiotApiHealth,
-} from "#src/metrics/index.ts";
 import { z } from "zod";
-import { withTimeout } from "#src/utils/timeout.ts";
+import { callRiotOrUndefined } from "#src/league/api/riot-call.ts";
 import * as Sentry from "@sentry/bun";
 
 const logger = createLogger("backfill-to-s3");
@@ -53,52 +49,35 @@ export async function fetchMatchIdsForTimeRange(
 
   // Paginate through all matches in the time range
   while (hasMore) {
-    try {
-      const response = await withTimeout(
+    const matchIds = await callRiotOrUndefined(
+      {
+        source: "backfill-match-list",
+        schema: z.array(MatchIdSchema),
+        context: { puuid, region, offset },
+      },
+      () =>
         api.MatchV5.list(puuid, regionGroup, {
           startTime: startTimeEpochSeconds,
           endTime: endTimeEpochSeconds,
           count: MAX_MATCHES_PER_REQUEST,
           start: offset,
         }),
-      );
-      riotApiRequestsTotal.inc({
-        source: "backfill-match-list",
-        status: "success",
-      });
-      updateRiotApiHealth(true);
+    );
 
-      const matchIdsResult = z
-        .array(MatchIdSchema)
-        .safeParse(response.response);
-      if (!matchIdsResult.success) {
-        logger.error("Failed to parse match IDs during backfill");
-        hasMore = false;
-        continue;
-      }
-
-      const matchIds = matchIdsResult.data;
-      allMatchIds.push(...matchIds);
-
-      if (matchIds.length < MAX_MATCHES_PER_REQUEST) {
-        hasMore = false;
-        continue;
-      }
-
-      offset += MAX_MATCHES_PER_REQUEST;
-      await sleep(DELAY_BETWEEN_MATCH_FETCHES_MS);
-    } catch (error) {
-      riotApiRequestsTotal.inc({
-        source: "backfill-match-list",
-        status: "error",
-      });
-      updateRiotApiHealth(false);
-      logger.error(
-        `Error fetching match IDs for backfill (offset ${offset.toString()}):`,
-        error,
-      );
+    if (matchIds === undefined) {
       hasMore = false;
+      continue;
     }
+
+    allMatchIds.push(...matchIds);
+
+    if (matchIds.length < MAX_MATCHES_PER_REQUEST) {
+      hasMore = false;
+      continue;
+    }
+
+    offset += MAX_MATCHES_PER_REQUEST;
+    await sleep(DELAY_BETWEEN_MATCH_FETCHES_MS);
   }
 
   return allMatchIds;

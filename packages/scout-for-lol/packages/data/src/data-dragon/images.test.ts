@@ -90,6 +90,20 @@ describe("championNameOverrides", () => {
     );
   });
 
+  test("case-insensitive lookup against champion.json normalizes Riot quirks", () => {
+    // Riot match data API returns "FiddleSticks" (capital S) but the
+    // on-disk file is "Fiddlesticks.png". Same idea for any future Riot
+    // casing surprise — the case-insensitive lookup absorbs it without
+    // needing an explicit override entry.
+    expect(normalizeChampionName("FiddleSticks")).toBe("Fiddlesticks");
+    expect(normalizeChampionName("FIDDLESTICKS")).toBe("Fiddlesticks");
+    expect(normalizeChampionName("fiddlesticks")).toBe("Fiddlesticks");
+    // No-op for already-canonical names
+    expect(normalizeChampionName("Wukong")).toBe("Wukong");
+    // Names that aren't in champion.json at all are returned unchanged
+    expect(normalizeChampionName("UnknownChamp")).toBe("UnknownChamp");
+  });
+
   test.each(championOverrides)(
     "validateChampionImage finds on-disk asset for override input %s",
     async (input) => {

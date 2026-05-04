@@ -653,6 +653,20 @@ export const riotApiErrorsTotal = new Counter({
   registers: [registry],
 });
 
+/**
+ * Count of unknown keys observed in Riot API responses (additive schema
+ * drift). Each increment represents one previously-unknown field key that
+ * we stripped via the strict-with-fallback parse path. A non-zero rate
+ * means Riot has added fields we don't model yet — extend the schema to
+ * pick them up properly and the rate returns to zero.
+ */
+export const riotApiUnknownKeysTotal = new Counter({
+  name: "scout_riot_api_unknown_keys_total",
+  help: "Count of unknown keys observed in Riot API responses (schema drift)",
+  labelNames: ["schema"] as const,
+  registers: [registry],
+});
+
 // Track application start time for uptime calculation
 const applicationStartTime = Date.now();
 

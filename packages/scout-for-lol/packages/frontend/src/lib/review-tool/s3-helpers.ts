@@ -2,7 +2,11 @@
  * Helper functions for S3 match conversion
  */
 import type { RawParticipant, Rune, Champion } from "@scout-for-lol/data";
-import { getRuneInfo, parseLane } from "@scout-for-lol/data";
+import {
+  getRuneInfo,
+  normalizeChampionName,
+  parseLane,
+} from "@scout-for-lol/data";
 
 /**
  * Get match outcome from participant data
@@ -68,7 +72,7 @@ export function participantToChampion(p: RawParticipant): Champion {
 
   return {
     riotIdGameName,
-    championName: p.championName,
+    championName: normalizeChampionName(p.championName),
     kills: p.kills,
     deaths: p.deaths,
     assists: p.assists,
