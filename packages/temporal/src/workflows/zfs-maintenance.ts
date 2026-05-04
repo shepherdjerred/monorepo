@@ -2,7 +2,11 @@ import { proxyActivities } from "@temporalio/workflow";
 import type { ZfsMaintenanceActivities } from "#activities/zfs-maintenance.ts";
 
 const { runZfsMaintenance } = proxyActivities<ZfsMaintenanceActivities>({
-  startToCloseTimeout: "10 minutes",
+  // Four `kubectl exec` calls (autotrim×2, scrub-status×2 / scrub-init×2);
+  // each completes in seconds. Heartbeats fire between each — see
+  // zfs-maintenance.ts.
+  startToCloseTimeout: "5 minutes",
+  heartbeatTimeout: "90 seconds",
   retry: {
     maximumAttempts: 3,
     initialInterval: "30s",

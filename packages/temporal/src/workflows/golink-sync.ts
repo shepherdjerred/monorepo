@@ -103,7 +103,9 @@ export async function syncGolinks(): Promise<void> {
     }
   }
 
-  console.warn(
-    `Golink sync complete: ${String(created)} created/updated, ${String(deleted)} deleted, ${String(skippedOwnership)} skipped (different owner)`,
-  );
+  if (created > 0 || deleted > 0) {
+    console.warn(
+      `Golink sync complete: ${String(created)} created/updated, ${String(deleted)} deleted, ${String(skippedOwnership)} skipped (different owner)`,
+    );
+  }
 }

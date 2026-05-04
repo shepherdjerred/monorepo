@@ -1,3 +1,4 @@
+import { Context } from "@temporalio/activity";
 import * as k8s from "@kubernetes/client-node";
 
 const NAMESPACE = "bugsink";
@@ -26,6 +27,10 @@ export const bugsinkHousekeepingActivities = {
 
     const results: string[] = [];
     for (const command of commands) {
+      // Per-iteration heartbeat — pairs with the activity's
+      // heartbeatTimeout: "90 seconds" in workflows/bugsink.ts. SDK
+      // throttles transmission to 80% of timeout automatically.
+      Context.current().heartbeat({ command: command.join(" ") });
       const out = await kubectlExec(podName, command);
       const trimmed = out.trim();
       results.push(`${command.join(" ")}: ${trimmed === "" ? "ok" : trimmed}`);

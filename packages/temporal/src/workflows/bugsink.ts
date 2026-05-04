@@ -3,7 +3,12 @@ import type { BugsinkHousekeepingActivities } from "#activities/bugsink.ts";
 
 const { runBugsinkHousekeeping } =
   proxyActivities<BugsinkHousekeepingActivities>({
-    startToCloseTimeout: "30 minutes",
+    // Each `bugsink-manage` subcommand finishes in seconds; 5 of them in
+    // sequence comfortably fits in 5 min. Activity heartbeats every 30s
+    // (see bugsink.ts) so a worker death surfaces in <90s instead of
+    // burning the whole startToCloseTimeout.
+    startToCloseTimeout: "5 minutes",
+    heartbeatTimeout: "90 seconds",
     retry: {
       maximumAttempts: 3,
       initialInterval: "30s",

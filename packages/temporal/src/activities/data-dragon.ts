@@ -1,4 +1,4 @@
-import { metricMeter } from "@temporalio/activity";
+import { Context, metricMeter } from "@temporalio/activity";
 import { simpleGit } from "simple-git";
 import { z } from "zod/v4";
 
@@ -297,6 +297,16 @@ export const dataDragonActivities = {
     const repoDir = `${tempDir}/monorepo`;
     const ghToken = Bun.env["GH_TOKEN"] ?? "";
 
+    // Heartbeat every 10s while the long subprocesses (bun install, bun run
+    // update-data-dragon, gh pr create, ...) run. Pairs with the activity's
+    // heartbeatTimeout: "60 seconds" in workflows/data-dragon.ts.
+    const heartbeat = setInterval(() => {
+      Context.current().heartbeat({
+        phase: "updateDataDragon",
+        elapsedMs: Date.now() - start,
+      });
+    }, 10_000);
+
     try {
       if (ghToken === "") {
         throw new Error("GH_TOKEN is required to publish Data Dragon updates");
@@ -458,6 +468,7 @@ export const dataDragonActivities = {
       });
       throw error;
     } finally {
+      clearInterval(heartbeat);
       await Bun.$`rm -rf ${tempDir}`.quiet();
     }
   },

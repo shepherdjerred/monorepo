@@ -28,6 +28,7 @@ const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 5 * * *",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "5 minutes",
     memo: "Fetch Better Skill Capped manifest from Firestore and upload to S3 (daily at 05:00 PT)",
   },
   {
@@ -47,6 +48,7 @@ const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 6 * * *",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "5 minutes",
     memo: "Daily DNS record audit (SPF, DMARC, MX)",
   },
   {
@@ -76,7 +78,7 @@ const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 3 * * 0",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "15 minutes",
+    workflowExecutionTimeout: "30 minutes",
     memo: "Weekly ZFS pool scrub + autotrim (zfspv-pool-nvme, zfspv-pool-hdd)",
   },
   {
@@ -96,18 +98,18 @@ const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "30 6 * * *",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "2 hours",
+    workflowExecutionTimeout: "3 hours",
     memo: "Daily packages/docs grooming via claude -p; opens draft PRs for easy/medium tasks",
   },
   {
     id: "golink-sync",
     workflowType: "syncGolinks",
     args: [],
-    cronExpression: "*/5 * * * *",
+    cronExpression: "0 5 * * *",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "4 minutes",
-    memo: "Sync Tailscale ingresses to golink aliases",
+    memo: "Sync Tailscale ingresses to golink aliases (daily 5 AM PT)",
   },
   {
     id: "vacuum-9am",
@@ -116,6 +118,7 @@ const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 9 * * *",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "5 minutes",
     memo: "Run vacuum if no one is home (9 AM)",
   },
   {
@@ -125,6 +128,7 @@ const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 12 * * *",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "5 minutes",
     memo: "Run vacuum if no one is home (12 PM)",
   },
   {
@@ -134,6 +138,7 @@ const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 17 * * *",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "5 minutes",
     memo: "Run vacuum if no one is home (5 PM)",
   },
   {
@@ -143,6 +148,7 @@ const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 7 * * 1-5",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
     memo: "Good morning pre-wake (weekdays 7 AM)",
   },
   {
@@ -152,6 +158,7 @@ const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 8 * * 1-5",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
     memo: "Good morning wake-up (weekdays 8 AM)",
   },
   {
@@ -161,6 +168,7 @@ const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "15 8 * * 1-5",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
     memo: "Good morning get-up (weekdays 8:15 AM)",
   },
   {
@@ -170,6 +178,7 @@ const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 8 * * 0,6",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
     memo: "Good morning pre-wake (weekends 8 AM)",
   },
   {
@@ -179,6 +188,7 @@ const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 9 * * 0,6",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
     memo: "Good morning wake-up (weekends 9 AM)",
   },
   {
@@ -188,6 +198,7 @@ const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "15 9 * * 0,6",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
     memo: "Good morning get-up (weekends 9:15 AM)",
   },
 ];

@@ -2,10 +2,12 @@
  * Prompts for the docs-groom workflow. Kept as exported constants so they
  * are reviewable in one place and can be unit-tested if needed.
  *
- * Both prompts assume Claude is invoked via `claude -p --output-format json`
- * with `--allowed-tools "Read,Write,Edit,Glob,Grep,Bash(rg:*),Bash(bun:*)"`
- * and `--permission-mode acceptEdits`. The activities pass them as the sole
- * positional argument; no system prompt override.
+ * Both prompts assume Claude is invoked via
+ * `claude -p --output-format json --json-schema <SchemaFromZod>` with
+ * `--allowed-tools "Read,Write,Edit,Glob,Grep"` and
+ * `--permission-mode acceptEdits`. `--json-schema` enforces structured
+ * output upstream — the prompt only describes WHAT to produce, never HOW
+ * to format it.
  */
 
 export const GROOM_PROMPT = `You are running as part of a daily automated grooming pass over the
@@ -66,28 +68,14 @@ Difficulty rubric:
 
 # Output
 
-Output exactly one valid JSON object matching this schema, AND NOTHING
-else after the JSON:
+Return:
+- \`summary\`: one paragraph describing what you groomed inline (becomes the grooming PR body)
+- \`groomedFiles\`: paths you edited inline
+- \`tasks\`: larger improvements you did NOT do, each with \`title\`, \`slug\` (kebab-case), \`description\` (≥20 chars, with enough context for a follow-up Claude session to implement WITHOUT rerunning the audit), \`difficulty\`, \`files\`, \`category\`
 
-\`\`\`json
-{
-  "summary": "<one paragraph describing what you groomed inline — this becomes the grooming PR body>",
-  "groomedFiles": ["<path you edited>", "<path you edited>", ...],
-  "tasks": [
-    {
-      "title": "<5–80 chars, imperative, e.g. 'Rewrite renovate cleanup against current state'>",
-      "slug": "<kebab-case slug, will become the branch name segment>",
-      "description": "<20–2000 chars. Include enough context for a follow-up Claude session to implement WITHOUT rerunning the audit. Reference specific files and what's wrong.>",
-      "difficulty": "easy" | "medium" | "hard",
-      "files": ["<expected path>", ...],
-      "category": "stale" | "broken-link" | "status-rot" | "index-drift" | "unverified-implemented" | "rewrite" | "split" | "other"
-    }
-  ]
-}
-\`\`\`
+If you made no inline edits and identified no tasks, return empty \`groomedFiles\` and \`tasks\` with summary "No grooming or follow-up tasks needed."
 
-If you made no inline edits and identified no tasks, output:
-\`{"summary":"No grooming or follow-up tasks needed.","groomedFiles":[],"tasks":[]}\`
+The output schema is enforced by \`claude --json-schema\` — categories, difficulties, and field ranges are validated for you.
 `;
 
 export function buildImplementPrompt(input: {
@@ -132,15 +120,10 @@ Read it before editing.
 
 # Output
 
-After completing the task, output exactly one valid JSON object matching:
+After completing the task, return:
+- \`summary\`: one paragraph rationale describing what you changed and why (becomes the PR body)
+- \`filesChanged\`: paths you actually changed (must be non-empty)
 
-\`\`\`json
-{
-  "summary": "<one paragraph rationale describing what you changed and why — becomes the PR body>",
-  "filesChanged": ["<path>", "<path>", ...]
-}
-\`\`\`
-
-Then stop. Do not produce any text after the JSON.
+The output schema is enforced by \`claude --json-schema\`.
 `;
 }

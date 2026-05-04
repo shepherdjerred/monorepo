@@ -1,6 +1,8 @@
-import type {
+import { Context } from "@temporalio/activity";
+import { z } from "zod/v4";
+import {
   GroomResult,
-  GroomTask,
+  type GroomTask,
   ImplementResult,
 } from "#shared/docs-groom-types.ts";
 import {
@@ -24,30 +26,56 @@ import { captureWithContext, jsonLog } from "./docs-groom-impl.ts";
 const CLAUDE_ALLOWED_TOOLS = "Read,Write,Edit,Glob,Grep";
 const CLAUDE_PERMISSION_MODE = "acceptEdits";
 
+// Heartbeat the activity every 10s while claude -p is running so a hung
+// subprocess fails inside the heartbeatTimeout (3× this) instead of burning
+// the activity's startToCloseTimeout. Mirrors the pattern in
+// `pr-agent.ts:189-247`.
+const HEARTBEAT_INTERVAL_MS = 10_000;
+
+// Pre-compute JSON Schemas at module init. Passed via `claude --json-schema`
+// so the model is forced to produce schema-conformant output instead of
+// best-effort JSON-in-prose.
+const GROOM_RESULT_SCHEMA_JSON = JSON.stringify(z.toJSONSchema(GroomResult));
+const IMPLEMENT_RESULT_SCHEMA_JSON = JSON.stringify(
+  z.toJSONSchema(ImplementResult),
+);
+
 async function invokeClaude(input: {
   worktreePath: string;
   prompt: string;
   phase: "audit" | "implement";
+  jsonSchema: string;
 }): Promise<{ resultText: string }> {
-  const { worktreePath, prompt, phase } = input;
+  const { worktreePath, prompt, phase, jsonSchema } = input;
 
   const startMs = Date.now();
   jsonLog("info", "Invoking claude -p", phase, { worktreePath });
 
-  const result = await run(
-    [
-      "claude",
-      "-p",
-      prompt,
-      "--output-format",
-      "json",
-      "--allowed-tools",
-      CLAUDE_ALLOWED_TOOLS,
-      "--permission-mode",
-      CLAUDE_PERMISSION_MODE,
-    ],
-    { cwd: worktreePath },
-  );
+  const heartbeat = setInterval(() => {
+    Context.current().heartbeat({ phase, elapsedMs: Date.now() - startMs });
+  }, HEARTBEAT_INTERVAL_MS);
+
+  let result;
+  try {
+    result = await run(
+      [
+        "claude",
+        "-p",
+        prompt,
+        "--output-format",
+        "json",
+        "--json-schema",
+        jsonSchema,
+        "--allowed-tools",
+        CLAUDE_ALLOWED_TOOLS,
+        "--permission-mode",
+        CLAUDE_PERMISSION_MODE,
+      ],
+      { cwd: worktreePath },
+    );
+  } finally {
+    clearInterval(heartbeat);
+  }
 
   docsGroomClaudeDurationSeconds.observe(
     { phase },
@@ -63,6 +91,7 @@ async function invokeClaude(input: {
     });
     throw new Error(
       `Failed to parse claude --output-format json result: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
     );
   }
 
@@ -119,6 +148,7 @@ export async function doInvokeClaudeGroom(
     worktreePath,
     prompt: GROOM_PROMPT,
     phase: "audit",
+    jsonSchema: GROOM_RESULT_SCHEMA_JSON,
   });
   try {
     const groomResult = parseGroomResult(resultText);
@@ -139,6 +169,7 @@ export async function doInvokeClaudeGroom(
     });
     throw new Error(
       `Failed to parse GroomResult from claude output: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
     );
   }
 }
@@ -155,6 +186,7 @@ export async function doInvokeClaudeImplement(
     worktreePath,
     prompt,
     phase: "implement",
+    jsonSchema: IMPLEMENT_RESULT_SCHEMA_JSON,
   });
   try {
     const implResult = parseImplementResult(resultText);
@@ -170,6 +202,7 @@ export async function doInvokeClaudeImplement(
     });
     throw new Error(
       `Failed to parse ImplementResult from claude output: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
     );
   }
 }

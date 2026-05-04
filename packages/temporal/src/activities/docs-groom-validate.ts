@@ -1,3 +1,4 @@
+import { Context } from "@temporalio/activity";
 import { docsGroomValidateRejectionsTotal } from "#observability/metrics.ts";
 import {
   findOwningPackageDirs,
@@ -97,25 +98,36 @@ export async function doTypecheckIfCodeTouched(
     return { ok: true };
   }
 
-  for (const pkgDir of packageDirs) {
-    jsonLog("info", "Running bun run typecheck", "typecheck", {
-      packageDir: pkgDir,
-    });
-    const result = await run(["bun", "run", "typecheck"], {
-      cwd: pkgDir,
-      throwOnError: false,
-    });
-    if (result.exitCode !== 0) {
-      docsGroomValidateRejectionsTotal.inc({ reason: "typecheck-failed" });
-      return {
-        ok: false,
-        output:
-          `typecheck failed in ${pkgDir} (exit ${String(result.exitCode)}):\n${result.stderr}\n${result.stdout}`.slice(
-            0,
-            4000,
-          ),
-      };
+  // Heartbeat every 30s while typecheck subprocesses run so the activity's
+  // heartbeatTimeout (90s) catches a hung worker before startToCloseTimeout
+  // expires. Mirrors the pr-agent.ts pattern.
+  const heartbeat = setInterval(() => {
+    Context.current().heartbeat({ phase: "typecheck" });
+  }, 30_000);
+
+  try {
+    for (const pkgDir of packageDirs) {
+      jsonLog("info", "Running bun run typecheck", "typecheck", {
+        packageDir: pkgDir,
+      });
+      const result = await run(["bun", "run", "typecheck"], {
+        cwd: pkgDir,
+        throwOnError: false,
+      });
+      if (result.exitCode !== 0) {
+        docsGroomValidateRejectionsTotal.inc({ reason: "typecheck-failed" });
+        return {
+          ok: false,
+          output:
+            `typecheck failed in ${pkgDir} (exit ${String(result.exitCode)}):\n${result.stderr}\n${result.stdout}`.slice(
+              0,
+              4000,
+            ),
+        };
+      }
     }
+    return { ok: true };
+  } finally {
+    clearInterval(heartbeat);
   }
-  return { ok: true };
 }
