@@ -192,6 +192,80 @@ export function stripJsonFences(text: string): string {
   return trimmed.slice(firstNewline + 1, -3).trimEnd();
 }
 
+/**
+ * Extract the first balanced JSON object or array from a free-form string.
+ *
+ * `claude --json-schema` validates server-side after the fact; it does NOT
+ * prevent the model from prepending or appending narrative ("All looks
+ * good. Here's the audit: { ... }"). This helper is robust against that:
+ * it strips fences first, then if the remainder still doesn't start with
+ * `{`/`[`, it scans for the first opener and matches its closer via
+ * brace/bracket depth counting (string-aware so braces inside JSON
+ * strings don't fool it).
+ */
+export function extractJsonObject(rawText: string): string {
+  const fenced = stripJsonFences(rawText);
+  const startIdx = findFirstJsonOpener(fenced);
+  if (startIdx === -1) {
+    throw new Error(
+      `No JSON object or array found in text (head: ${JSON.stringify(fenced.slice(0, 200))})`,
+    );
+  }
+  const endIdx = findMatchingClose(fenced, startIdx);
+  if (endIdx === -1) {
+    throw new Error(
+      `Unterminated JSON starting at offset ${String(startIdx)} (head: ${JSON.stringify(fenced.slice(startIdx, startIdx + 200))})`,
+    );
+  }
+  return fenced.slice(startIdx, endIdx + 1);
+}
+
+function findFirstJsonOpener(s: string): number {
+  const brace = s.indexOf("{");
+  const bracket = s.indexOf("[");
+  if (brace === -1) {
+    return bracket;
+  }
+  if (bracket === -1) {
+    return brace;
+  }
+  return Math.min(brace, bracket);
+}
+
+function findMatchingClose(s: string, start: number): number {
+  const opener = s[start];
+  const closer = opener === "{" ? "}" : "]";
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  for (let i = start; i < s.length; i++) {
+    const ch = s[i];
+    if (inString) {
+      if (escape) {
+        escape = false;
+      } else if (ch === "\\") {
+        escape = true;
+      } else if (ch === '"') {
+        inString = false;
+      }
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+    if (ch === opener) {
+      depth++;
+    } else if (ch === closer) {
+      depth--;
+      if (depth === 0) {
+        return i;
+      }
+    }
+  }
+  return -1;
+}
+
 const JsonValueSchema = z.unknown();
 
 export function parseClaudeResultMessage(stdout: string): ClaudeResultMessage {
@@ -200,13 +274,13 @@ export function parseClaudeResultMessage(stdout: string): ClaudeResultMessage {
 }
 
 export function parseGroomResult(rawResultText: string): GroomResult {
-  const cleaned = stripJsonFences(rawResultText);
+  const cleaned = extractJsonObject(rawResultText);
   const parsed = JsonValueSchema.parse(JSON.parse(cleaned));
   return GroomResult.parse(parsed);
 }
 
 export function parseImplementResult(rawResultText: string): ImplementResult {
-  const cleaned = stripJsonFences(rawResultText);
+  const cleaned = extractJsonObject(rawResultText);
   const parsed = JsonValueSchema.parse(JSON.parse(cleaned));
   return ImplementResult.parse(parsed);
 }

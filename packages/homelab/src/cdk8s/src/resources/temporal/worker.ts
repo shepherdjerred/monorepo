@@ -83,6 +83,8 @@ export function createTemporalWorkerDeployment(
 
   // Namespace-scoped RBAC for the ZFS maintenance workflow, which execs into
   // the zfs-zpool-collector DaemonSet pod in the prometheus namespace.
+  // `kubectl exec daemonset/<name>` resolves the daemonset → pod via a
+  // GET on daemonsets.apps before opening the exec stream.
   new KubeRole(chart, "temporal-worker-zfs-exec", {
     metadata: { name: "temporal-worker-zfs-exec", namespace: "prometheus" },
     rules: [
@@ -95,6 +97,11 @@ export function createTemporalWorkerDeployment(
         apiGroups: [""],
         resources: ["pods"],
         verbs: ["get", "list"],
+      },
+      {
+        apiGroups: ["apps"],
+        resources: ["daemonsets"],
+        verbs: ["get"],
       },
     ],
   });
@@ -314,7 +321,21 @@ export function createTemporalWorkerDeployment(
           secret,
           key: "RECIPIENT_EMAIL",
         }),
-        SENDER_EMAIL: EnvValue.fromValue("updates@homelab.local"),
+        // Sender domain must have valid SPF/DKIM for the recipient's mail
+        // server to accept delivery. The previous literal `updates@homelab.local`
+        // was non-routable and got silently dropped by external recipients.
+        // Sourced from 1Password (item `temporal-temporal-worker-1p`, key
+        // `SENDER_EMAIL`) so the address can rotate without code changes.
+        // Marked optional so the pod still starts if the field is unset; the
+        // deps-summary activity itself fails fast with a clear error in that
+        // case — only the deps-summary workflow is affected, not the worker.
+        SENDER_EMAIL: EnvValue.fromSecretValue(
+          {
+            secret,
+            key: "SENDER_EMAIL",
+          },
+          { optional: true },
+        ),
       },
     }),
   );

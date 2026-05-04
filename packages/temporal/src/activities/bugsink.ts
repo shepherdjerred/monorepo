@@ -17,12 +17,16 @@ export const bugsinkHousekeepingActivities = {
   async runBugsinkHousekeeping(): Promise<string> {
     const podName = await findRunningBugsinkPod();
 
+    // No `cleanup_eventstorage` — this Bugsink instance does not configure
+    // external event storage (events live in the DB), so the command exits 1
+    // with "Storage name … not found because you have not configured any
+    // event storage at all". Re-add with the configured storage name if/when
+    // external event storage is enabled.
     const commands: string[][] = [
       ["bugsink-manage", "delete_old_events", "--days", "180"],
       ["bugsink-manage", "vacuum_tags"],
       ["bugsink-manage", "vacuum_files"],
       ["bugsink-manage", "vacuum_eventless_issuetags"],
-      ["bugsink-manage", "cleanup_eventstorage", "default"],
     ];
 
     const results: string[] = [];
