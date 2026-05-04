@@ -836,6 +836,15 @@ async function main(): Promise<void> {
 async function updateSnapshots(): Promise<void> {
   const rootDir = `${import.meta.dir}/../../..`;
 
+  // Refresh the workspace install so Bun's isolated `node_modules/.bun/`
+  // copy of @scout-for-lol/data picks up the freshly-downloaded assets.
+  // Without this, snapshot tests resolve `@scout-for-lol/data` through a
+  // content-hashed snapshot taken at install time and miss any rune/icon
+  // Riot has renamed since then (e.g. PhaseRush.png →
+  // StormraidersSurgeRuneIcon2.png in DDragon 16.9.1).
+  console.log("\n🔄 Refreshing workspace install for new assets...");
+  await $`cd ${rootDir} && bun install --force`.quiet();
+
   // Snapshots that depend on Data Dragon data
   const snapshotTests = [
     // Report package snapshots
