@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import {
+  extractJsonObject,
   isSecretPath,
   parseGitStatus,
   parseGroomResult,
@@ -164,6 +165,62 @@ describe("stripJsonFences", () => {
   });
 });
 
+describe("extractJsonObject", () => {
+  it("returns clean JSON unchanged", () => {
+    expect(extractJsonObject('{"a":1}')).toBe('{"a":1}');
+  });
+
+  it("strips fences", () => {
+    expect(extractJsonObject('```json\n{"a":1}\n```')).toBe('{"a":1}');
+  });
+
+  it("extracts JSON after leading prose", () => {
+    expect(
+      extractJsonObject('All looks good. Here is the audit:\n\n{"a":1}'),
+    ).toBe('{"a":1}');
+  });
+
+  it("extracts JSON before trailing prose", () => {
+    expect(extractJsonObject('{"a":1}\n\nThat\'s the result.')).toBe('{"a":1}');
+  });
+
+  it("extracts JSON wrapped in prose on both sides", () => {
+    expect(
+      extractJsonObject('All good.\n\n```json\n{"a":[1,2,3]}\n```\n\nDone.'),
+    ).toBe('{"a":[1,2,3]}');
+  });
+
+  it("handles braces inside string literals", () => {
+    const input = 'Prelude: {"text":"value with } and { braces","n":1}';
+    expect(extractJsonObject(input)).toBe(
+      '{"text":"value with } and { braces","n":1}',
+    );
+  });
+
+  it("handles escaped quotes inside string literals", () => {
+    const input = String.raw`Note: {"a":"he said \"hi\"","b":2}`;
+    expect(extractJsonObject(input)).toBe(
+      String.raw`{"a":"he said \"hi\"","b":2}`,
+    );
+  });
+
+  it("supports top-level arrays", () => {
+    expect(extractJsonObject("Result: [1,2,3]")).toBe("[1,2,3]");
+  });
+
+  it("throws when no JSON is present", () => {
+    expect(() => extractJsonObject("All looks good. No tasks today.")).toThrow(
+      /No JSON object/,
+    );
+  });
+
+  it("throws on unterminated JSON", () => {
+    expect(() => extractJsonObject('Output: {"a":1, "b":')).toThrow(
+      /Unterminated JSON/,
+    );
+  });
+});
+
 describe("parseGroomResult", () => {
   it("parses a minimal valid result", () => {
     const json = JSON.stringify({
@@ -209,6 +266,18 @@ describe("parseGroomResult", () => {
     });
     const out = parseGroomResult("```json\n" + json + "\n```");
     expect(out.summary).toBe("Wrapped in fences.");
+  });
+
+  it("tolerates leading narrative prose around the JSON", () => {
+    const json = JSON.stringify({
+      summary: "Found one task.",
+      groomedFiles: [],
+      tasks: [],
+    });
+    const out = parseGroomResult(
+      "All looks good. Here is the audit result:\n\n" + json,
+    );
+    expect(out.summary).toBe("Found one task.");
   });
 
   it("rejects bad slug shape", () => {

@@ -287,6 +287,7 @@ async function runClaude(input: PrAgentInput): Promise<PrAgentResult> {
     });
     throw new Error(
       `Failed to parse claude --output-format json result: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
     );
   }
 

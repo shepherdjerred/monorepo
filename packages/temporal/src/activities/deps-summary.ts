@@ -389,15 +389,16 @@ Format the response in HTML for email.`;
     const postalHost = Bun.env["POSTAL_HOST"];
     const postalApiKey = Bun.env["POSTAL_API_KEY"];
     const recipientEmail = Bun.env["RECIPIENT_EMAIL"];
-    const senderEmail = Bun.env["SENDER_EMAIL"] ?? "updates@homelab.local";
+    const senderEmail = Bun.env["SENDER_EMAIL"];
 
     if (
       postalHost === undefined ||
       postalApiKey === undefined ||
-      recipientEmail === undefined
+      recipientEmail === undefined ||
+      senderEmail === undefined
     ) {
       throw new Error(
-        "Missing email configuration: POSTAL_HOST, POSTAL_API_KEY, RECIPIENT_EMAIL",
+        "Missing email configuration: POSTAL_HOST, POSTAL_API_KEY, RECIPIENT_EMAIL, SENDER_EMAIL",
       );
     }
 
@@ -452,11 +453,44 @@ Format the response in HTML for email.`;
       }),
     });
 
+    const responseBody = await response.text();
     if (!response.ok) {
-      const body = await response.text();
-      throw new Error(`Postal API error (${String(response.status)}): ${body}`);
+      throw new Error(
+        `Postal API error (${String(response.status)}): ${responseBody}`,
+      );
     }
 
-    console.warn(`Email sent: ${subject}`);
+    // Postal returns 200 even on parameter/validation errors — the real
+    // outcome lives in `status` in the JSON body. Treat anything other
+    // than `success` as a failure so the workflow retries instead of
+    // silently "completing" with no mail delivered.
+    const envelope = PostalEnvelopeSchema.parse(JSON.parse(responseBody));
+    if (envelope.status !== "success") {
+      throw new Error(
+        `Postal rejected message (status=${envelope.status}): ${responseBody}`,
+      );
+    }
+
+    const successData = PostalSuccessDataSchema.parse(envelope.data);
+    const recipientId = successData.messages[recipientEmail]?.id ?? "unknown";
+    console.warn(
+      `Email accepted by Postal: subject="${subject}" message_id=${successData.message_id} recipient_id=${String(recipientId)} tag=dependency-summary`,
+    );
   },
 };
+
+const PostalEnvelopeSchema = z.object({
+  status: z.string(),
+  data: z.unknown(),
+});
+
+const PostalSuccessDataSchema = z.object({
+  message_id: z.string(),
+  messages: z.record(
+    z.string(),
+    z.object({
+      id: z.number(),
+      token: z.string(),
+    }),
+  ),
+});
