@@ -15,12 +15,19 @@ import {
   type Span,
   type Tracer,
 } from "@opentelemetry/api";
+import {
+  BatchSpanProcessor,
+  type ReadableSpan,
+  type SpanExporter,
+} from "@opentelemetry/sdk-trace-base";
+import { ExportResultCode, type ExportResult } from "@opentelemetry/core";
 
 const DEFAULT_OTLP_ENDPOINT = "http://tempo.tempo.svc.cluster.local:4318";
 const DEFAULT_SERVICE_NAME = "temporal-worker";
 
 let sdk: NodeSDK | undefined;
 let tracer: Tracer | undefined;
+let batchProcessor: BatchSpanProcessor | undefined;
 
 function jsonLog(
   level: "info" | "warning" | "error",
@@ -57,6 +64,48 @@ const diagLogger: DiagLogger = {
   },
 };
 
+class LoggingSpanExporter implements SpanExporter {
+  private readonly inner: SpanExporter;
+  private firstSuccessLogged = false;
+
+  constructor(inner: SpanExporter) {
+    this.inner = inner;
+  }
+
+  export(
+    spans: ReadableSpan[],
+    resultCallback: (result: ExportResult) => void,
+  ): void {
+    this.inner.export(spans, (result) => {
+      if (result.code === ExportResultCode.SUCCESS) {
+        if (!this.firstSuccessLogged) {
+          this.firstSuccessLogged = true;
+          jsonLog("info", "OTLP trace export succeeded (first batch)", {
+            spanCount: spans.length,
+          });
+        }
+      } else {
+        jsonLog("error", "OTLP trace export failed", {
+          spanCount: spans.length,
+          error:
+            result.error instanceof Error
+              ? result.error.message
+              : String(result.error ?? "unknown export error"),
+        });
+      }
+      resultCallback(result);
+    });
+  }
+
+  shutdown(): Promise<void> {
+    return this.inner.shutdown();
+  }
+
+  forceFlush(): Promise<void> {
+    return this.inner.forceFlush?.() ?? Promise.resolve();
+  }
+}
+
 export function initializeTracing(): void {
   const enabled = Bun.env["TELEMETRY_ENABLED"] === "true";
   if (!enabled) {
@@ -70,8 +119,19 @@ export function initializeTracing(): void {
   const serviceName = Bun.env["TELEMETRY_SERVICE_NAME"] ?? DEFAULT_SERVICE_NAME;
   const serviceVersion = Bun.env["VERSION"] ?? "dev";
 
-  const exporter = new OTLPTraceExporter({
-    url: `${otlpEndpoint}/v1/traces`,
+  const exporter = new LoggingSpanExporter(
+    new OTLPTraceExporter({
+      url: `${otlpEndpoint}/v1/traces`,
+    }),
+  );
+
+  // Explicit BatchSpanProcessor so we have a handle to forceFlush() before
+  // shutdown — without it any in-flight batch is lost when the pod stops.
+  batchProcessor = new BatchSpanProcessor(exporter, {
+    scheduledDelayMillis: 2000,
+    maxExportBatchSize: 512,
+    maxQueueSize: 4096,
+    exportTimeoutMillis: 30_000,
   });
 
   sdk = new NodeSDK({
@@ -79,7 +139,7 @@ export function initializeTracing(): void {
       [ATTR_SERVICE_NAME]: serviceName,
       [ATTR_SERVICE_VERSION]: serviceVersion,
     }),
-    traceExporter: exporter,
+    spanProcessors: [batchProcessor],
   });
 
   sdk.start();
@@ -97,6 +157,17 @@ export function getTracer(): Tracer | undefined {
 }
 
 export async function shutdownTracing(): Promise<void> {
+  if (batchProcessor !== undefined) {
+    try {
+      // Flush before shutdown — otherwise the in-flight batch (up to
+      // scheduledDelayMillis old) is lost when the pod stops.
+      await batchProcessor.forceFlush();
+    } catch (error) {
+      jsonLog("warning", "OTLP forceFlush failed during shutdown", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
   if (sdk !== undefined) {
     await sdk.shutdown();
   }

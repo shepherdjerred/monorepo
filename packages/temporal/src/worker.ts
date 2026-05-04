@@ -69,6 +69,12 @@ function initSentry(): void {
     dsn,
     environment: Bun.env["ENVIRONMENT"] ?? "production",
     release: Bun.env["VERSION"],
+    // Sentry would otherwise call setGlobalTracerProvider/Propagator/ContextManager
+    // before initializeTracing() runs, which makes our NodeSDK.start() collide
+    // with the duplicate-registration check and silently fall back to a no-op
+    // tracer — no spans reach Tempo. Sentry stays for errors via captureException;
+    // performance traces go to Tempo only.
+    skipOpenTelemetrySetup: true,
   });
   jsonLog("info", "Sentry initialized");
 }
