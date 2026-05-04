@@ -602,13 +602,17 @@ pub enum CodexModel {
     /// GPT-5.3-Codex (default, agentic coding model)
     #[default]
     Gpt5_3Codex,
-    /// GPT-5.4 (flagship, most capable)
+    /// GPT-5.5 (latest flagship, released 2026-04-23)
+    Gpt5_5,
+    /// GPT-5.5 Pro (premium variant of latest flagship)
+    Gpt5_5Pro,
+    /// GPT-5.4 (previous flagship)
     Gpt5_4,
-    /// GPT-5.4-mini (fast variant)
+    /// GPT-5.4-mini (fast variant — no 5.5-mini exists yet)
     Gpt5_4Mini,
-    /// GPT-5.4-nano (cost-effective variant)
+    /// GPT-5.4-nano (cost-effective variant — no 5.5-nano exists yet)
     Gpt5_4Nano,
-    /// GPT-5.4-pro (premium variant)
+    /// GPT-5.4-pro (previous premium variant)
     Gpt5_4Pro,
     /// o3 (reasoning model)
     O3,
@@ -646,6 +650,8 @@ impl CodexModel {
     #[must_use]
     pub const fn to_cli_flag(self) -> &'static str {
         match self {
+            Self::Gpt5_5 => "gpt-5-5",
+            Self::Gpt5_5Pro => "gpt-5-5-pro",
             Self::Gpt5_4 => "gpt-5-4",
             Self::Gpt5_4Mini => "gpt-5-4-mini",
             Self::Gpt5_4Nano => "gpt-5-4-nano",
@@ -1411,6 +1417,14 @@ mod tests {
     #[test]
     fn test_codex_model_to_cli_flag() {
         assert_eq!(CodexModel::Gpt5_3Codex.to_cli_flag(), "gpt-5-3-codex");
+        // GPT-5.5 family — only flagship + Pro exist (no mini/nano)
+        assert_eq!(CodexModel::Gpt5_5.to_cli_flag(), "gpt-5-5");
+        assert_eq!(CodexModel::Gpt5_5Pro.to_cli_flag(), "gpt-5-5-pro");
+        // GPT-5.4 family — full quartet
+        assert_eq!(CodexModel::Gpt5_4.to_cli_flag(), "gpt-5-4");
+        assert_eq!(CodexModel::Gpt5_4Mini.to_cli_flag(), "gpt-5-4-mini");
+        assert_eq!(CodexModel::Gpt5_4Nano.to_cli_flag(), "gpt-5-4-nano");
+        assert_eq!(CodexModel::Gpt5_4Pro.to_cli_flag(), "gpt-5-4-pro");
         // Legacy variants all map to gpt-5-3-codex
         assert_eq!(CodexModel::Gpt5_2Codex.to_cli_flag(), "gpt-5-3-codex");
         assert_eq!(CodexModel::Gpt5_2.to_cli_flag(), "gpt-5-3-codex");

@@ -709,13 +709,17 @@ export enum ClaudeModel {
 export enum CodexModel {
 	/** GPT-5.3-Codex (default, agentic coding model) */
 	Gpt5_3Codex = "Gpt5_3Codex",
-	/** GPT-5.4 (flagship, most capable) */
+	/** GPT-5.5 (latest flagship, released 2026-04-23) */
+	Gpt5_5 = "Gpt5_5",
+	/** GPT-5.5 Pro (premium variant of latest flagship) */
+	Gpt5_5Pro = "Gpt5_5Pro",
+	/** GPT-5.4 (previous flagship) */
 	Gpt5_4 = "Gpt5_4",
-	/** GPT-5.4-mini (fast variant) */
+	/** GPT-5.4-mini (fast variant — no 5.5-mini exists yet) */
 	Gpt5_4Mini = "Gpt5_4Mini",
-	/** GPT-5.4-nano (cost-effective variant) */
+	/** GPT-5.4-nano (cost-effective variant — no 5.5-nano exists yet) */
 	Gpt5_4Nano = "Gpt5_4Nano",
-	/** GPT-5.4-pro (premium variant) */
+	/** GPT-5.4-pro (previous premium variant) */
 	Gpt5_4Pro = "Gpt5_4Pro",
 	/** o3 (reasoning model) */
 	O3 = "O3",
