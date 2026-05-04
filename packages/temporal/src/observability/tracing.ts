@@ -90,7 +90,7 @@ class LoggingSpanExporter implements SpanExporter {
           error:
             result.error instanceof Error
               ? result.error.message
-              : String(result.error ?? "unknown export error"),
+              : "unknown export error",
         });
       }
       resultCallback(result);
