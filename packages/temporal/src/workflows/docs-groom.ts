@@ -31,19 +31,22 @@ const {
 
 const { invokeClaudeGroom: invokeClaudeGroomLong } =
   proxyActivities<DocsGroomActivities>({
-    startToCloseTimeout: "15 minutes",
+    startToCloseTimeout: "30 minutes",
+    heartbeatTimeout: "30 seconds",
     retry: { maximumAttempts: 1 },
   });
 
 const { invokeClaudeImplement: invokeClaudeImplementLong } =
   proxyActivities<DocsGroomActivities>({
-    startToCloseTimeout: "25 minutes",
+    startToCloseTimeout: "30 minutes",
+    heartbeatTimeout: "30 seconds",
     retry: { maximumAttempts: 1 },
   });
 
 const { typecheckIfCodeTouched: typecheckLong } =
   proxyActivities<DocsGroomActivities>({
     startToCloseTimeout: "10 minutes",
+    heartbeatTimeout: "90 seconds",
     retry: { maximumAttempts: 1 },
   });
 
@@ -140,8 +143,11 @@ export async function runDocsGroomAudit(): Promise<DocsGroomAuditResult> {
 
   let groomingPr: DocsGroomAuditResult["groomingPr"] = null;
   const implementationPrs: DocsGroomAuditResult["implementationPrs"] = [];
-  let hardTasks: GroomTask[] = [];
-  let filteredOutTasks: GroomTask[] = [];
+  // hardTasks / filteredOutTasks are reassigned before the return inside
+  // the try block. If the try throws, we never read them — declare without
+  // initializer so eslint(no-useless-assignment) doesn't flag a wasted `[]`.
+  let hardTasks: GroomTask[];
+  let filteredOutTasks: GroomTask[];
   let worktreePath: string | undefined;
   let success = false;
 
@@ -208,7 +214,8 @@ export async function runDocsGroomAudit(): Promise<DocsGroomAuditResult> {
           args: [{ task, parentRunId: info.runId }],
           workflowId: `docs-groom-task-${task.slug}-${date}-${info.runId.slice(0, 8)}`,
           taskQueue: info.taskQueue,
-          workflowExecutionTimeout: "30 minutes",
+          // 30 min claude run + setup/validate/typecheck/PR overhead
+          workflowExecutionTimeout: "45 minutes",
           parentClosePolicy: ParentClosePolicy.TERMINATE,
           cancellationType:
             ChildWorkflowCancellationType.WAIT_CANCELLATION_COMPLETED,
@@ -261,7 +268,11 @@ export async function runDocsGroomTask(input: {
   let worktreePath: string | undefined;
   let success = false;
   let pr: { url: string; number: number } | null = null;
-  let filesChanged: string[] = [];
+  // filesChanged is always assigned from implResult.filesChanged before any
+  // return path inside the try. If the activity throws first, we never read
+  // it — declare without initializer so eslint(no-useless-assignment) is
+  // happy.
+  let filesChanged: string[];
   let skippedReason: string | undefined;
 
   try {

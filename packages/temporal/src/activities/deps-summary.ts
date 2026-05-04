@@ -1,3 +1,4 @@
+import { Context } from "@temporalio/activity";
 import { simpleGit } from "simple-git";
 import OpenAI from "openai";
 import { z } from "zod/v4";
@@ -177,16 +178,23 @@ export const depsSummaryActivities = {
 
       const repoGit = simpleGit(tempDir);
 
-      const log = await repoGit.log({
-        "--since": sinceStr,
-        "--": [VERSIONS_FILE_PATH],
-      });
+      // simple-git's options-object form joins keys+values with `=`, so
+      // {"--": [path]} would serialise to `--=path`. The path-spec separator
+      // requires the array form.
+      const log = await repoGit.log([
+        `--since=${sinceStr}`,
+        "--",
+        VERSIONS_FILE_PATH,
+      ]);
 
       const changes = new Map<string, DependencyChange>();
       const renovateCommentRegex =
         /\/\/ renovate: datasource=(\S+)(?:\s+registryUrl=(\S+))?/;
 
       for (const commit of log.all) {
+        // Per-commit heartbeat — pairs with heartbeatTimeout: 60s in
+        // workflows/deps-summary.ts. SDK auto-throttles transmission.
+        Context.current().heartbeat({ phase: "diff", commit: commit.hash });
         let diff: string;
         try {
           diff = await repoGit.diff([
@@ -254,6 +262,11 @@ export const depsSummaryActivities = {
     // activity's start-to-close timeout when dozens of deps change at once.
     const CONCURRENCY = 8;
     for (let i = 0; i < eligible.length; i += CONCURRENCY) {
+      // Per-batch heartbeat — pairs with heartbeatTimeout: 60s.
+      Context.current().heartbeat({
+        phase: "fetchReleaseNotes",
+        batchStart: i,
+      });
       const batch = eligible.slice(i, i + CONCURRENCY);
       const results = await Promise.all(
         batch.map(async (change) => {
@@ -355,7 +368,7 @@ Format the response in HTML for email.`;
 
     try {
       const completion = await openai.chat.completions.create({
-        model: "gpt-5.4",
+        model: "gpt-5.5",
         messages: [{ role: "user", content: prompt }],
         max_completion_tokens: 8000,
       });

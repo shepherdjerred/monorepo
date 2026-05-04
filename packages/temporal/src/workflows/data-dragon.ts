@@ -5,16 +5,33 @@ import type {
   DataDragonUpdateResult,
 } from "#activities/data-dragon.ts";
 
-const { getDataDragonVersionState, recordDataDragonSkipped, updateDataDragon } =
+const { getDataDragonVersionState, recordDataDragonSkipped } =
   proxyActivities<DataDragonActivities>({
-    startToCloseTimeout: "2 hours",
+    // Quick HTTP fetch + Zod parse — finishes in seconds.
+    startToCloseTimeout: "1 minute",
     retry: {
-      maximumAttempts: 2,
-      initialInterval: "5 minutes",
+      maximumAttempts: 3,
+      initialInterval: "30 seconds",
       backoffCoefficient: 2,
-      maximumInterval: "15 minutes",
+      maximumInterval: "2 minutes",
     },
   });
+
+const { updateDataDragon } = proxyActivities<DataDragonActivities>({
+  // Long: clones the monorepo, runs `bun install --frozen-lockfile`,
+  // downloads ~3500 image assets in batches, refreshes the workspace
+  // install, runs snapshot tests, commits + pushes + opens a PR.
+  // Heartbeats fire every 10s (see data-dragon.ts) so worker death
+  // surfaces in <60s.
+  startToCloseTimeout: "90 minutes",
+  heartbeatTimeout: "60 seconds",
+  retry: {
+    maximumAttempts: 2,
+    initialInterval: "5 minutes",
+    backoffCoefficient: 2,
+    maximumInterval: "15 minutes",
+  },
+});
 
 export async function runScoutDataDragonUpdate(
   mode: DataDragonUpdateMode,
