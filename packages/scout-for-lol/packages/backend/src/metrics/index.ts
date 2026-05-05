@@ -533,6 +533,33 @@ export const participantMismatchTotal = new Counter({
 });
 
 // =======================
+// OpenAI Token Budget Metrics
+// =======================
+
+/**
+ * Total OpenAI tokens consumed, labelled by model and token kind.
+ * Sum across (prompt + completion) gives total spend for cost tracking.
+ */
+export const scoutOpenaiTokensUsedTotal = new Counter({
+  name: "scout_openai_tokens_used_total",
+  help: "Total OpenAI tokens consumed by the AI review pipeline",
+  labelNames: ["model", "kind"] as const, // kind: prompt | completion
+  registers: [registry],
+});
+
+/**
+ * Times the spend circuit breaker has refused a call because the hourly or
+ * daily token budget would be exceeded. Sustained non-zero rate means the
+ * budget is too tight, or there's an unintended retry loop somewhere.
+ */
+export const scoutOpenaiBudgetExceededTotal = new Counter({
+  name: "scout_openai_budget_exceeded_total",
+  help: "OpenAI calls refused by the token-budget circuit breaker",
+  labelNames: ["window"] as const, // window: hourly | daily
+  registers: [registry],
+});
+
+// =======================
 // Competition Leaderboard Chart Metrics
 // =======================
 

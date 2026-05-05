@@ -55,6 +55,14 @@ export default {
   s3BucketName: getOptionalEnvVar("S3_BUCKET_NAME"),
   openaiApiKey: getOptionalEnvVar("OPENAI_API_KEY"),
   geminiApiKey: getOptionalEnvVar("GEMINI_API_KEY"),
+  openaiHourlyTokenBudget: env
+    .get("OPENAI_HOURLY_TOKEN_BUDGET")
+    .default("1000000")
+    .asIntPositive(),
+  openaiDailyTokenBudget: env
+    .get("OPENAI_DAILY_TOKEN_BUDGET")
+    .default("10000000")
+    .asIntPositive(),
 };
 
 logger.info("✅ Configuration loaded successfully");

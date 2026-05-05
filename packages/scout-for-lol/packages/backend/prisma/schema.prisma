@@ -318,3 +318,12 @@ model GameEventLog {
   @@index([userId, timestamp])
   @@index([clientId, timestamp])
 }
+
+// Records every match for which the AI review pipeline has been entered.
+// Insert happens BEFORE the first OpenAI call so that even a mid-pipeline
+// crash leaves a row behind, preventing duplicate spend on the next poll.
+// Pure dedup table — one row per match, never reprocessed.
+model MatchAiAttempt {
+  matchId     String   @id // Riot match ID, e.g. EUW1_7843083474
+  attemptedAt DateTime @default(now())
+}

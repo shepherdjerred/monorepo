@@ -4,6 +4,7 @@ import type {
   MatchId,
 } from "@scout-for-lol/data/index.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
+import { updateLastProcessedMatch } from "#src/database/index.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
 
@@ -66,7 +67,14 @@ export async function processMatchForPlayer(
 
     if (!matchData) {
       logger.info(
-        `[${player.alias}] ⚠️  Could not fetch match data for ${matchId}, skipping`,
+        `[${player.alias}] ⚠️  Could not fetch match data for ${matchId}, advancing cursor and skipping`,
+      );
+      // Advance cursor so we don't retry the same broken match every poll.
+      // Riot's malformed response is deterministic; retrying burns API quota
+      // without ever succeeding.
+      await updateLastProcessedMatch(
+        player.league.leagueAccount.puuid,
+        matchId,
       );
       return;
     }
