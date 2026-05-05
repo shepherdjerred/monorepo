@@ -4,6 +4,8 @@
 
 **Not Started.** Tracking the eventual extraction of duplicated friend-group context (style cards + new lore files) into a single workspace package.
 
+Verified 2026-05-05: no `packages/glitter-context/` package exists. Both style-card directories and all critical file paths listed below remain accurate. Birmel has `ryan_style.json` which scout-for-lol does not; scout-for-lol has four personas birmel does not (`caitlyn`, `colin`, `nekoryan`, `richard`).
+
 ## Motivation
 
 Two AI surfaces consume the same "Glitter Boys" context, and content is duplicated across both packages today:
@@ -12,7 +14,7 @@ Two AI surfaces consume the same "Glitter Boys" context, and content is duplicat
 - Friend-group history: `packages/birmel/src/lore/glitter-boys-history.txt` and `packages/scout-for-lol/packages/data/src/review/prompts/context/glitter-boys-history.txt`
 - Relationship graph: `packages/birmel/src/lore/relationships.txt` and `packages/scout-for-lol/packages/data/src/review/prompts/context/relationships.txt`
 
-Verified `jerred_style.json` is byte-for-byte identical between the two style-card directories. Scout has three personas Birmel does not (`caitlyn`, `colin`, `richard`).
+Verified `jerred_style.json` is byte-for-byte identical between the two style-card directories. Scout has four personas Birmel does not (`caitlyn`, `colin`, `nekoryan`, `richard`); Birmel has one Scout does not (`ryan_style.json`).
 
 Drift risk grows as content evolves — a fix or addition in one package can silently miss the other.
 
@@ -38,7 +40,7 @@ packages/glitter-context/
 ## Migration
 
 1. Create `packages/glitter-context/` with content + loaders.
-2. Pick the canonical style-card directory and move there. Reconcile the three personas missing from Birmel (caitlyn/colin/richard) — confirm with the user whether they should appear in Birmel too or stay Scout-only.
+2. Pick the canonical style-card directory and move there. Reconcile diverged personas — Scout has `caitlyn`, `colin`, `nekoryan`, `richard` that Birmel lacks; Birmel has `ryan` that Scout lacks — confirm with the user whether each should appear in both packages or stay package-specific.
 3. Update Birmel's `src/persona/style-transform.ts` to import from the shared package instead of reading `src/persona/style-cards/`.
 4. Update Birmel's `src/voltagent/agents/system-prompt.ts` to import lore from the shared package.
 5. Update Scout's `packages/backend/src/league/review/prompts.ts` (style cards via `STYLECARDS_DIR`) and `packages/data/src/review/pipeline-stages.ts` (lore via the static text imports added 2026-04-25) to import from the shared package.
