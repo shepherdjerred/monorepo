@@ -364,5 +364,87 @@ and on(schedule) (max(velero_backup_success_total{schedule!="",schedule=~"${sche
         },
       ],
     },
+    getVeleroOrphanSnapshotRuleGroup(),
   ];
+}
+
+// Detection layer for the Velero orphan-snapshot pathology — populated
+// by the velero-orphan-audit Temporal workflow's daily run. See
+// packages/docs/decisions/2026-05-05_velero-orphan-snapshot-prevention.md
+// and packages/docs/guides/2026-05-05_velero-orphan-snapshot-remediation.md.
+function getVeleroOrphanSnapshotRuleGroup(): PrometheusRuleSpecGroups {
+  return {
+    name: "velero-orphan-snapshots",
+    rules: [
+      {
+        alert: "VeleroOrphanLocalSnapshots",
+        annotations: {
+          summary: "Velero orphan ZFS snapshots detected",
+          message: escapePrometheusTemplate(
+            "Velero orphan local ZFS snapshots present: {{ $value }} snapshot(s) cluster-wide have no matching live Velero Backup CR. Run the remediation runbook at packages/docs/guides/2026-05-05_velero-orphan-snapshot-remediation.md.",
+          ),
+        },
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          "velero_orphan_local_snapshots_total > 0",
+        ),
+        for: "24h",
+        labels: {
+          severity: "warning",
+        },
+      },
+      {
+        alert: "VeleroOrphanLocalBytesExcessive",
+        annotations: {
+          summary: "Velero orphan ZFS snapshots consuming significant disk",
+          message: escapePrometheusTemplate(
+            "Velero orphan local ZFS snapshots consume {{ $value | humanize1024 }}B cluster-wide. Run the remediation runbook to reclaim space.",
+          ),
+        },
+        // 1 GiB ceiling — anything above this is worth surfacing
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          "velero_orphan_local_bytes_total > 1024 * 1024 * 1024",
+        ),
+        for: "24h",
+        labels: {
+          severity: "warning",
+        },
+      },
+      {
+        alert: "ZFSDatasetSnapshotCountExcessive",
+        annotations: {
+          summary: "PVC dataset has excessive ZFS snapshot count",
+          message: escapePrometheusTemplate(
+            "Dataset {{ $labels.dataset }} has {{ $value }} ZFS snapshots; expected at most ~26 (sum of schedule retention slots). May indicate orphan accumulation; cross-check with velero_orphan_local_snapshots.",
+          ),
+        },
+        // Backstop: catches accumulation regardless of whether the audit workflow runs.
+        // Threshold is generous — 35 = 26 expected + 35% headroom for transient overlap.
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          "max by (dataset) (zfs_dataset_snapshot_count) > 35",
+        ),
+        for: "6h",
+        labels: {
+          severity: "warning",
+        },
+      },
+      {
+        alert: "VeleroOrphanAuditNotRunning",
+        annotations: {
+          summary:
+            "velero-orphan-audit workflow has not run successfully recently",
+          message: escapePrometheusTemplate(
+            "The velero-orphan-audit Temporal workflow has not incremented its success counter in 36h+. Detection metrics may be stale. Investigate the workflow in the Temporal UI.",
+          ),
+        },
+        // Workflow runs daily at 03:30 PT; alert if no successful run for 36h.
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          'absent(rate(velero_orphan_audit_runs_total{outcome="success"}[36h]) > 0)',
+        ),
+        for: "1h",
+        labels: {
+          severity: "warning",
+        },
+      },
+    ],
+  };
 }

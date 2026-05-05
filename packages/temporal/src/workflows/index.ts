@@ -17,6 +17,7 @@ import { runVacuumIfNotHome as _runVacuumIfNotHome } from "./ha/run-vacuum-if-no
 import { adjustClimate as _adjustClimate } from "./ha/climate-control.ts";
 import { runZfsMaintenanceWorkflow as _runZfsMaintenanceWorkflow } from "./zfs-maintenance.ts";
 import { runBugsinkHousekeepingWorkflow as _runBugsinkHousekeepingWorkflow } from "./bugsink.ts";
+import { runVeleroOrphanAuditWorkflow as _runVeleroOrphanAuditWorkflow } from "./velero-orphan-audit.ts";
 import { runScoutDataDragonUpdate as _runScoutDataDragonUpdate } from "./data-dragon.ts";
 import type { DataDragonUpdateResult } from "#activities/data-dragon.ts";
 import {
@@ -85,6 +86,10 @@ export async function runZfsMaintenanceWorkflow(): Promise<void> {
 
 export async function runBugsinkHousekeepingWorkflow(): Promise<void> {
   return _runBugsinkHousekeepingWorkflow();
+}
+
+export async function runVeleroOrphanAuditWorkflow(): Promise<void> {
+  return _runVeleroOrphanAuditWorkflow();
 }
 
 export async function runScoutDataDragonVersionCheck(): Promise<
