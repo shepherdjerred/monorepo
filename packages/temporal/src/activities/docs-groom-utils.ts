@@ -268,6 +268,45 @@ function findMatchingClose(s: string, start: number): number {
 
 const JsonValueSchema = z.unknown();
 
+const VALID_TASK_CATEGORIES = new Set([
+  "stale",
+  "broken-link",
+  "status-rot",
+  "index-drift",
+  "unverified-implemented",
+  "rewrite",
+  "split",
+  "other",
+]);
+
+const CategoryNormalizationSchema = z
+  .object({
+    tasks: z.array(z.record(z.string(), z.unknown())).optional(),
+  })
+  .loose();
+
+/**
+ * Coerce any task `category` value that isn't in the TaskCategory enum to
+ * `"other"`. `claude --json-schema` is best-effort; in practice the model
+ * occasionally invents categories like "architecture" or "guide" (those are
+ * doc-folder names, not task categories). Rather than drop the entire
+ * grooming run, accept the task with a degraded category.
+ */
+function coerceUnknownTaskCategories(value: unknown): unknown {
+  const parsed = CategoryNormalizationSchema.safeParse(value);
+  if (!parsed.success || parsed.data.tasks === undefined) {
+    return value;
+  }
+  const fixedTasks = parsed.data.tasks.map((task) => {
+    const cat = task["category"];
+    if (typeof cat === "string" && !VALID_TASK_CATEGORIES.has(cat)) {
+      return { ...task, category: "other" };
+    }
+    return task;
+  });
+  return { ...parsed.data, tasks: fixedTasks };
+}
+
 export function parseClaudeResultMessage(stdout: string): ClaudeResultMessage {
   const parsed = JsonValueSchema.parse(JSON.parse(stdout));
   return ClaudeResultMessage.parse(parsed);
@@ -276,7 +315,7 @@ export function parseClaudeResultMessage(stdout: string): ClaudeResultMessage {
 export function parseGroomResult(rawResultText: string): GroomResult {
   const cleaned = extractJsonObject(rawResultText);
   const parsed = JsonValueSchema.parse(JSON.parse(cleaned));
-  return GroomResult.parse(parsed);
+  return GroomResult.parse(coerceUnknownTaskCategories(parsed));
 }
 
 export function parseImplementResult(rawResultText: string): ImplementResult {

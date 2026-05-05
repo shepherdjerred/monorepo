@@ -280,6 +280,57 @@ describe("parseGroomResult", () => {
     expect(out.summary).toBe("Found one task.");
   });
 
+  it("coerces invented category values to 'other'", () => {
+    const json = JSON.stringify({
+      summary: "Identified two tasks with bad categories.",
+      groomedFiles: [],
+      tasks: [
+        {
+          title: "Document the auth pattern",
+          slug: "document-auth-pattern",
+          description:
+            "Write a short patterns doc covering the new auth middleware approach.",
+          difficulty: "medium",
+          files: ["packages/docs/patterns/auth.md"],
+          category: "architecture",
+        },
+        {
+          title: "Add a guide for the kubectl helper",
+          slug: "kubectl-helper-guide",
+          description:
+            "Author a guides/ doc walking through the most common kubectl-helper flows.",
+          difficulty: "easy",
+          files: ["packages/docs/guides/kubectl-helper.md"],
+          category: "guide",
+        },
+      ],
+    });
+    const out = parseGroomResult(json);
+    expect(out.tasks.length).toBe(2);
+    expect(out.tasks[0]?.category).toBe("other");
+    expect(out.tasks[1]?.category).toBe("other");
+  });
+
+  it("preserves valid categories untouched", () => {
+    const json = JSON.stringify({
+      summary: "One stale doc to archive.",
+      groomedFiles: [],
+      tasks: [
+        {
+          title: "Archive the old renovate cleanup doc",
+          slug: "archive-renovate-cleanup",
+          description:
+            "Move 2026-04-21_renovate-dashboard-cleanup.md into archive/superseded/.",
+          difficulty: "easy",
+          files: ["packages/docs/archive/superseded/foo.md"],
+          category: "stale",
+        },
+      ],
+    });
+    const out = parseGroomResult(json);
+    expect(out.tasks[0]?.category).toBe("stale");
+  });
+
   it("rejects bad slug shape", () => {
     const json = JSON.stringify({
       summary: "Task with bad slug.",

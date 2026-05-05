@@ -73,9 +73,22 @@ Return:
 - \`groomedFiles\`: paths you edited inline
 - \`tasks\`: larger improvements you did NOT do, each with \`title\`, \`slug\` (kebab-case), \`description\` (≥20 chars, with enough context for a follow-up Claude session to implement WITHOUT rerunning the audit), \`difficulty\`, \`files\`, \`category\`
 
-If you made no inline edits and identified no tasks, return empty \`groomedFiles\` and \`tasks\` with summary "No grooming or follow-up tasks needed."
+\`category\` MUST be exactly one of these strings (lowercase, kebab-case):
+- \`stale\` — the doc is outdated and should be moved to \`archive/\` or rewritten
+- \`broken-link\` — relative markdown links inside the doc 404
+- \`status-rot\` — a plan's \`## Status\` section is missing or contradicts current code
+- \`index-drift\` — \`packages/docs/index.md\` doesn't reflect the actual contents of \`packages/docs/\`
+- \`unverified-implemented\` — a plan claims "Implemented" but the referenced code/config doesn't exist
+- \`rewrite\` — the doc needs a substantive rewrite against current state
+- \`split\` — the doc has grown too large and should be broken into focused docs
+- \`other\` — none of the above; use sparingly
 
-The output schema is enforced by \`claude --json-schema\` — categories, difficulties, and field ranges are validated for you.
+Do NOT invent new category values (e.g. "architecture", "guide", "doc",
+"plan"). Those are *folder* names in \`packages/docs/\`, not task categories.
+The output schema is enforced by \`claude --json-schema\`; values outside
+the list above will be rejected.
+
+If you made no inline edits and identified no tasks, return empty \`groomedFiles\` and \`tasks\` with summary "No grooming or follow-up tasks needed."
 `;
 
 export function buildImplementPrompt(input: {
