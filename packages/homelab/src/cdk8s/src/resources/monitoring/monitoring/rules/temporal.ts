@@ -111,8 +111,11 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
             description:
               "Prometheus is not successfully scraping the Temporal worker metrics endpoint.",
           },
+          // Service name is `temporal-temporal-worker-metrics-service` —
+          // cdk8s prefixes the construct id with the chart name. Match as a
+          // substring so the regex is robust to either naming.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'absent(up{namespace="temporal",service=~"temporal-worker-metrics.*"}) or max(up{namespace="temporal",service=~"temporal-worker-metrics.*"}) == 0',
+            'absent(up{namespace="temporal",service=~".*temporal-worker-metrics.*"}) or max(up{namespace="temporal",service=~".*temporal-worker-metrics.*"}) == 0',
           ),
           for: "15m",
           labels: {
@@ -126,8 +129,10 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
             description:
               "Prometheus is not successfully scraping the Temporal server metrics endpoint.",
           },
+          // Service name is `temporal-temporal-server-metrics-service`. See
+          // TemporalWorkerMetricsDown above for the same regex caveat.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'absent(up{namespace="temporal",service=~"temporal-server-metrics.*"}) or max(up{namespace="temporal",service=~"temporal-server-metrics.*"}) == 0',
+            'absent(up{namespace="temporal",service=~".*temporal-server-metrics.*"}) or max(up{namespace="temporal",service=~".*temporal-server-metrics.*"}) == 0',
           ),
           for: "15m",
           labels: {
