@@ -204,6 +204,17 @@ export async function doInvokeClaudeImplement(
     });
     return implResult;
   } catch (error: unknown) {
+    jsonLog(
+      "error",
+      "ImplementResult parse failed — claude raw output:",
+      "implement",
+      {
+        taskSlug: task.slug,
+        parseError: error instanceof Error ? error.message : String(error),
+        resultTextLength: resultText.length,
+        resultText: resultText.slice(0, 8000),
+      },
+    );
     captureWithContext(error, "implement", {
       taskSlug: task.slug,
       resultTextHead: resultText.slice(0, 500),

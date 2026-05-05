@@ -152,6 +152,17 @@ After completing the task, return:
 - \`summary\`: one paragraph rationale describing what you changed and why (becomes the PR body)
 - \`filesChanged\`: paths you actually changed (must be non-empty)
 
-The output schema is enforced by \`claude --json-schema\`.
+# JSON syntax — CRITICAL
+
+The output is parsed as **strict JSON** — one shot, no retry. Any
+syntax error fails this task.
+
+- All strings MUST use double-quote delimiters (\`"..."\`).
+- Do NOT use backtick (\`\` \`...\` \`\`) or single-quote (\`'...'\`)
+  delimiters anywhere. No Markdown formatting like \`**summary**: ...\` —
+  emit the raw JSON object only, no prose, no \`---\` headers, no
+  fenced code blocks.
+- Inside string values, escape literal double quotes as \`\\"\` and
+  literal backslashes as \`\\\\\`.
 `;
 }
