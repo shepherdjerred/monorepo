@@ -142,26 +142,48 @@ export async function doCommitAndPush(
   message: string,
 ): Promise<boolean> {
   await run(["git", "add", "-A"], { cwd: worktreePath });
-  // After staging, the diff against HEAD may be empty even though
-  // `git status --porcelain` (used by validateChanges) reported changes —
-  // e.g. the model rewrote a file back to HEAD content, or only touched
-  // mtimes. Bail cleanly instead of letting `git commit` fail with the
-  // unhelpful "nothing to commit" exit-1.
-  const cached = await run(["git", "diff", "--cached", "--quiet"], {
+
+  // Stage the working tree only if there's something to commit. After a
+  // previous attempt's commit succeeded but push failed, the retry will
+  // see a clean staging area but the commit is still on HEAD — we need
+  // to fall through to the push, not bail.
+  const stagedDiff = await run(["git", "diff", "--cached", "--quiet"], {
     cwd: worktreePath,
     throwOnError: false,
   });
-  if (cached.exitCode === 0) {
+  if (stagedDiff.exitCode !== 0) {
+    await run(["git", "commit", "-m", message], { cwd: worktreePath });
+  }
+
+  // If HEAD has no commits beyond origin/main, this run produced
+  // nothing — no point pushing. Counts both fresh-no-op runs and the
+  // case where claude's "edits" rewrote files back to HEAD content.
+  const unpushed = await run(
+    ["git", "rev-list", "--count", "origin/main..HEAD"],
+    { cwd: worktreePath },
+  );
+  if (Number.parseInt(unpushed.stdout.trim(), 10) === 0) {
     jsonLog(
       "warning",
-      "validateChanges saw changes but nothing was staged — skipping commit/push (no PR opened)",
+      "No commits beyond origin/main — skipping push (no PR opened)",
       "push",
       { branch },
     );
     return false;
   }
-  await run(["git", "commit", "-m", message], { cwd: worktreePath });
-  await run(["git", "push", "-u", "origin", branch], { cwd: worktreePath });
+
+  // git push needs auth. The container has GH_TOKEN in env; `git push`
+  // would otherwise prompt for a username on stdin and fail with
+  // "could not read Username for 'https://github.com'". Wire a tiny
+  // askpass that echoes $GH_TOKEN and point GIT_ASKPASS at it.
+  const askpassPath = path.join(worktreePath, ".git-askpass");
+  await Bun.write(askpassPath, '#!/bin/sh\nexec echo "$GH_TOKEN"\n');
+  await run(["chmod", "+x", askpassPath]);
+
+  await run(["git", "push", "-u", "origin", branch], {
+    cwd: worktreePath,
+    env: { GIT_ASKPASS: askpassPath, GIT_TERMINAL_PROMPT: "0" },
+  });
   jsonLog("info", "Pushed branch", "push", { branch });
   return true;
 }
