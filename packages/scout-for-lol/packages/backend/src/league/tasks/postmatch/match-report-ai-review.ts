@@ -11,6 +11,8 @@ import { MIN_GAME_DURATION_SECONDS } from "@scout-for-lol/data/index.ts";
 import { getFlag } from "#src/configuration/flags.ts";
 import { generateMatchReview } from "#src/league/review/generator.ts";
 import { isExceptionalGame } from "./exceptional-game.ts";
+import { hasAiBeenAttempted, markAiAttempted } from "#src/database/index.ts";
+import { OpenAIBudgetExceeded } from "#src/league/review/openai-budget.ts";
 import { createLogger } from "#src/logger.ts";
 import * as Sentry from "@sentry/bun";
 
@@ -130,6 +132,18 @@ export async function generateAiReviewIfEnabled(
     return { text: undefined, image: undefined };
   }
 
+  // Persistent dedup: never run the AI pipeline twice for the same matchId.
+  // Catches every retry pattern (cursor drift, gap recovery, manual replay,
+  // future bugs we haven't seen yet). Mark BEFORE the first OpenAI call so
+  // a mid-pipeline crash still leaves the row behind.
+  if (await hasAiBeenAttempted(matchId)) {
+    logger.info(
+      `[generateMatchReport] Skipping AI review - already attempted for match ${matchId}`,
+    );
+    return { text: undefined, image: undefined };
+  }
+  await markAiAttempted(matchId);
+
   try {
     const review = await generateMatchReview(
       completedMatch,
@@ -139,6 +153,15 @@ export async function generateAiReviewIfEnabled(
     );
     return { text: review?.text, image: review?.image };
   } catch (error) {
+    if (error instanceof OpenAIBudgetExceeded) {
+      // Expected outcome of the circuit breaker, not a bug — log as info,
+      // skip Sentry to avoid alert noise. The breaker has already
+      // incremented its Prometheus counter.
+      logger.info(
+        `[generateMatchReport] Skipping AI review - ${error.message}`,
+      );
+      return { text: undefined, image: undefined };
+    }
     logger.error(`[generateMatchReport] Error generating AI review:`, error);
     Sentry.captureException(error, {
       tags: {

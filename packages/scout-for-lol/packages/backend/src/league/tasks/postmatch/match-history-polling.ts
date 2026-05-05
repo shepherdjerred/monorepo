@@ -50,6 +50,11 @@ let isPollingInProgress = false;
 let pollingStartTime: number | undefined;
 const POLLING_TIMEOUT_MS = 5 * 60 * 1000;
 
+// Discord notifications and AI reviews are suppressed for matches older than
+// this — covers the "bot recovered after a multi-hour outage and is replaying
+// stale matches" case so users don't get pinged about games from yesterday.
+const MAX_DISCORD_ALERT_AGE_MS = 3 * 60 * 60 * 1000;
+
 export function isMatchHistoryPollingInProgress(): boolean {
   return isPollingInProgress;
 }
@@ -120,6 +125,15 @@ async function processMatch(
     (id) => id,
   );
 
+  const matchAgeMs = Date.now() - matchData.info.gameCreation;
+  if (matchAgeMs > MAX_DISCORD_ALERT_AGE_MS) {
+    const ageHours = (matchAgeMs / (60 * 60 * 1000)).toFixed(1);
+    logger.info(
+      `[processMatch] ⏰ Skipping match ${matchId} — ${ageHours}h old (cutoff ${(MAX_DISCORD_ALERT_AGE_MS / (60 * 60 * 1000)).toString()}h)`,
+    );
+    return;
+  }
+
   const message = await generateMatchReport(matchData, trackedPlayers, {
     targetGuildIds,
   });
@@ -184,13 +198,30 @@ async function processMatchAndUpdatePlayers(
       logger.error(`[backfill] Error saving match ${matchId} to S3:`, error);
     }
   } else {
-    await processMatch(matchData, allTrackedPlayers);
+    // Wrap so a downstream failure (e.g. satori render crash, OpenAI error,
+    // Discord send failure) doesn't prevent the cursor advancing below.
+    // Without this, the same match retries every poll forever, re-running
+    // the whole AI pipeline and burning tokens.
+    try {
+      await processMatch(matchData, allTrackedPlayers);
+    } catch (error) {
+      logger.error(
+        `[processMatch] ❌ processMatch threw for ${matchId} — cursor will still advance`,
+        error,
+      );
+      Sentry.captureException(error, {
+        tags: { source: "process-match-throw", matchId },
+      });
+    }
   }
 
   // Mark as processed
   processedMatchIds.add(matchId);
 
-  // Update lastProcessedMatchId and lastMatchTime for all players in this match
+  // Update lastProcessedMatchId and lastMatchTime for all players in this match.
+  // Always run, even if processMatch threw — the cursor encodes "we tried,"
+  // not "we succeeded." Both Riot validation failures and report-render
+  // crashes are deterministic; retrying is bound to fail.
   const matchCreationTime = new Date(matchData.info.gameCreation);
   for (const trackedPlayer of allTrackedPlayers) {
     const playerPuuid = trackedPlayer.league.leagueAccount.puuid;
@@ -322,9 +353,17 @@ async function recoverMissedMatches(
 
   const mostRecent = allMissedMatchIds[0];
   if (!mostRecent) {
+    // No matches in the time window — player has been inactive but the
+    // cursor is stuck on a match outside the recent 5. Don't fire a Discord
+    // alert on the stale fallback match (could be hours/days old). Send it
+    // through silent backfill so the cursor advances and we stop detecting a
+    // gap every minute.
+    logger.info(
+      `[${player.alias}] 🛑 No matches in time window; sending fallback to silent backfill to advance cursor`,
+    );
     return {
-      discordMatchIds: fallbackMatchIds.slice(0, 1),
-      backfillMatchIds: [],
+      discordMatchIds: [],
+      backfillMatchIds: fallbackMatchIds.slice(0, 1),
     };
   }
 

@@ -79,11 +79,12 @@ export function getItemImage(itemId: number): string {
   if (cached !== undefined && cached.length > 0) {
     return cached;
   }
-  // Return empty for missing items (item ID 0 means empty slot)
-  if (itemId === 0) {
-    return "";
-  }
-  throw new Error(`Item image for ${itemId.toString()} not found in cache.`);
+  // Item ID 0 = empty slot (returns "" so satori renders nothing).
+  // Item ID not in cache = Riot shipped a new item between Data Dragon
+  // refreshes. Render the slot empty rather than crashing the whole
+  // report — a stale icon is recoverable next deploy, but a perpetual
+  // crash burns the entire AI pipeline on every poll for that match.
+  return "";
 }
 
 // Get spell image from cache
