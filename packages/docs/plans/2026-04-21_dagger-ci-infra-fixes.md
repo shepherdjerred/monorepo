@@ -2,7 +2,7 @@
 
 ## Status
 
-**Not started (2026-04-21).** Punch list for a dedicated CI-infra PR. These bugs exist on `main` at commit `4b77c05f` independent of any dep updates; they make `dagger call ci-all --source .` unrunnable end-to-end locally. Documented while cleaning up Renovate Dashboard #481 — see `2026-04-21_renovate-dashboard-cleanup.md`.
+**Not started (2026-04-21). Verified still open (2026-05-05).** Punch list for a dedicated CI-infra PR. Verified against `.dagger/src/ci.ts`, `.dagger/src/base.ts`, and `.dagger/src/deps.ts` on 2026-05-05: all six bugs remain unaddressed. No `.withWorkdir` chains were added for cargo or go execs, `bunBaseContainer` still lacks helm, and `deps.ts` still has three separate `clauderon/web/*` entries. These bugs exist on `main` at commit `4b77c05f` and persist; they make `dagger call ci-all --source .` unrunnable end-to-end locally. Documented while cleaning up Renovate Dashboard #481 — see `2026-04-21_renovate-dashboard-cleanup.md`.
 
 ## Context
 
