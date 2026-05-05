@@ -23,6 +23,7 @@ AI-maintained knowledge base for the monorepo.
 - [1Password Deduplication](decisions/2026-03-08_1password-deduplication.md) - Deduplicating 1Password secret references
 - [Renovate HA Manager Disabled](decisions/2026-04-05_renovate-homeassistant-manager-disabled.md) - Disabled homeassistant-manifest manager for non-HA manifests
 - [CI Build Scoping Fixes](decisions/2026-04-26_ci-build-scoping-fixes.md) - Three bugs causing every main build to rebuild all 25 packages; fixed baseline lookup and Renovate fast-track
+- [Velero Orphan-Snapshot Prevention](decisions/2026-05-05_velero-orphan-snapshot-prevention.md) - Why we chose detection + manual remediation over self-healing for Velero orphan ZFS snapshots and R2 objects
 
 ## Plans
 
@@ -56,9 +57,10 @@ AI-maintained knowledge base for the monorepo.
 - [NVMe Wear Attribution](guides/2026-04-21_nvme-wear-attribution.md) - Byte-level accounting of NVMe write sources
 - [Type-safe Home Assistant Client](guides/2026-04-21_type-safe-home-assistant-client.md) - `ha-codegen`, generated schema, and Temporal usage
 - [Birmel Remediation Follow-ups](guides/2026-04-25_birmel-remediation-followups.md) - Post-deploy checks and deferred cleanup from Birmel remediation
-- [Homelab Health Audit](guides/2026-04-25_homelab-health-audit.md) - Current cluster health audit snapshot
+- [Homelab Health Audit](guides/2026-05-05_homelab-health-audit.md) - Current cluster health audit snapshot
 - [Minecraft Server Ops](guides/2026-04-25_minecraft-server-ops.md) - Operational reference for deployed modded Minecraft servers
 - [Home Assistant Kumo Troubleshooting](guides/2026-05-04_home-assistant-kumo-troubleshooting.md) - Diagnosing `device_authentication_error`, the V3 cloud / Socket.IO password flow, the Murata-OUI DHCP-filter gap, and the cache-rewrite fix recipe
+- [Velero Orphan-Snapshot Remediation](guides/2026-05-05_velero-orphan-snapshot-remediation.md) - Procedure for manually pruning orphan ZFS snapshots and R2 objects when the audit workflow alerts
 
 ## Archive
 
@@ -68,7 +70,7 @@ Historical docs preserved for reference. These are no longer actively maintained
 - [`archive/changelogs/`](archive/changelogs/) - 1 historical changelog
 - [`archive/completed/`](archive/completed/) - 2 completed plans and audits
 - [`archive/dagger-migration/`](archive/dagger-migration/) - 18 Dagger migration plans and audits
-- [`archive/homelab-audits/`](archive/homelab-audits/) - 6 superseded homelab health audit snapshots
+- [`archive/homelab-audits/`](archive/homelab-audits/) - 9 superseded homelab health audit snapshots
 - [`archive/on-hold/`](archive/on-hold/) - 4 on-hold Sentinel architecture and implementation docs
 - [`archive/scout-followups/`](archive/scout-followups/) - 1 time-boxed Scout follow-up checklist
 - [`archive/stale/`](archive/stale/) - 7 stale operational snapshots and superseded plans
