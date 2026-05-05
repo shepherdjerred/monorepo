@@ -2,6 +2,7 @@ import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { createHomeAssistantDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/home/homeassistant.ts";
 import { createEufySecurityWsDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/home/eufy-security-ws.ts";
+import { createZwaveJsUiDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/home/zwave-js-ui.ts";
 import {
   KubeNetworkPolicy,
   IntOrString,
@@ -15,6 +16,7 @@ export async function createHomeChart(app: App) {
 
   await createHomeAssistantDeployment(chart);
   createEufySecurityWsDeployment(chart);
+  createZwaveJsUiDeployment(chart);
 
   // NetworkPolicy: Allow ingress to home namespace from Tailscale, Cloudflare tunnel, and LAN
   // Note: homeassistant uses hostNetwork — whether NetworkPolicies apply depends on the CNI plugin.

@@ -15,12 +15,17 @@ export class TailscaleIngress extends Construct {
     props: Partial<IngressProps> & {
       host: string;
       service: Service;
+      /** Required when the backing service exposes more than one port. */
+      port?: number;
     },
   ) {
     super(scope, id);
 
     const base: IngressProps = {
-      defaultBackend: IngressBackend.fromService(props.service),
+      defaultBackend: IngressBackend.fromService(
+        props.service,
+        props.port == null ? undefined : { port: props.port },
+      ),
       tls: [
         {
           hosts: [props.host],

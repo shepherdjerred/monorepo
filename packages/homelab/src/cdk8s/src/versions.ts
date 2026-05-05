@@ -67,6 +67,9 @@ const versions = {
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "bropat/eufy-security-ws":
     "2.1.0@sha256:886da4bc8ff070b63bb88cea3b535e512240e54f14313fa8c2890c843abd9605",
+  // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
+  "zwavejs/zwave-js-ui":
+    "11.16.2@sha256:c43f88e2e395bb4b37c9e87e64998b751b1e1908318177623cebe08867e1eb42",
   // renovate: datasource=github-releases versioning=semver
   "fuatakgun/eufy_security": "v8.2.4",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver

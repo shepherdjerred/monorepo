@@ -42,6 +42,7 @@ AI-maintained knowledge base for the monorepo.
 - [Tasks for Obsidian iOS Target Wiring](plans/2026-04-25_tasks-for-obsidian-ios-target-wiring.md) - Finish native iOS target wiring after the completed audit
 - [PR Review and Summary Bot](plans/2026-04-25_pr-review-and-summary-bot.md) - GH webhook → Temporal → claude -p + GitHub MCP for auto code-review and PR summaries
 - [Polyrepo → Monorepo Link Audit](plans/2026-04-25_polyrepo-link-audit.md) - Rewrite all stale polyrepo URLs to monorepo + add lychee CI link-check gate
+- [zwave-js-ui Bring-up](plans/2026-05-04_zwave-js-ui-bring-up.md) - Post-arrival checklist for wiring the Zooz ZST39 800-series stick into HA via zwave-js-ui
 
 ## Guides
 
