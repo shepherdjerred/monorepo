@@ -169,24 +169,26 @@ export async function runDocsGroomAudit(): Promise<DocsGroomAuditResult> {
           throw new Error(`grooming typecheck failed:\n${tcResult.output}`);
         }
       }
-      await commitAndPush(
+      const pushed = await commitAndPush(
         prepared.path,
         branch,
         `docs(docs): daily docs-groom pass ${date}`,
       );
-      groomingPr = await openDraftPr({
-        branch,
-        title: `docs(docs): daily docs-groom pass ${date}`,
-        body: buildPrBody({
+      if (pushed) {
+        groomingPr = await openDraftPr({
+          branch,
+          title: `docs(docs): daily docs-groom pass ${date}`,
+          body: buildPrBody({
+            kind: "grooming",
+            workflowId: info.workflowId,
+            runId: info.runId,
+            summary: groomResult.summary,
+            filesChanged: groomResult.groomedFiles,
+          }),
+          labels: [PR_LABEL],
           kind: "grooming",
-          workflowId: info.workflowId,
-          runId: info.runId,
-          summary: groomResult.summary,
-          filesChanged: groomResult.groomedFiles,
-        }),
-        labels: [PR_LABEL],
-        kind: "grooming",
-      });
+        });
+      }
     }
 
     // Fan out: only easy/medium tasks become child workflows.
@@ -304,27 +306,35 @@ export async function runDocsGroomTask(input: {
       }
     }
 
-    await commitAndPush(
+    const pushed = await commitAndPush(
       prepared.path,
       branch,
       `docs(docs): ${input.task.title}`,
     );
-    pr = await openDraftPr({
-      branch,
-      title: `docs(docs): ${input.task.title}`,
-      body: buildPrBody({
+    if (pushed) {
+      pr = await openDraftPr({
+        branch,
+        title: `docs(docs): ${input.task.title}`,
+        body: buildPrBody({
+          kind: "implementation",
+          workflowId: info.workflowId,
+          runId: info.runId,
+          task: input.task,
+          summary: implResult.summary,
+          filesChanged: implResult.filesChanged,
+        }),
+        labels: [PR_LABEL, PR_LABEL_TASK],
         kind: "implementation",
-        workflowId: info.workflowId,
-        runId: info.runId,
-        task: input.task,
-        summary: implResult.summary,
-        filesChanged: implResult.filesChanged,
-      }),
-      labels: [PR_LABEL, PR_LABEL_TASK],
-      kind: "implementation",
-    });
+      });
+    } else {
+      skippedReason = "validateChanges saw a diff but nothing was staged";
+    }
     success = true;
-    return { pr, filesChanged };
+    return {
+      pr,
+      filesChanged,
+      ...(skippedReason === undefined ? {} : { skippedReason }),
+    };
   } finally {
     if (worktreePath !== undefined) {
       try {

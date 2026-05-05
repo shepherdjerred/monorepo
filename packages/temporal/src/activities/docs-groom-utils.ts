@@ -49,8 +49,12 @@ export async function run(
   ]);
 
   if ((opts.throwOnError ?? true) && exitCode !== 0) {
+    // Include both streams — some tools (notably `git commit`) write
+    // diagnostic messages to stdout, not stderr, so a stderr-only error
+    // looks empty and hides the real cause.
+    const detail = [stderr.trim(), stdout.trim()].filter(Boolean).join("\n");
     throw new Error(
-      `Command failed with exit code ${String(exitCode)}: ${cmd.join(" ")}\n${stderr}`,
+      `Command failed with exit code ${String(exitCode)}: ${cmd.join(" ")}\n${detail}`,
     );
   }
 

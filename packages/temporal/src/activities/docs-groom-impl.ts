@@ -140,11 +140,30 @@ export async function doCommitAndPush(
   worktreePath: string,
   branch: string,
   message: string,
-): Promise<void> {
+): Promise<boolean> {
   await run(["git", "add", "-A"], { cwd: worktreePath });
+  // After staging, the diff against HEAD may be empty even though
+  // `git status --porcelain` (used by validateChanges) reported changes —
+  // e.g. the model rewrote a file back to HEAD content, or only touched
+  // mtimes. Bail cleanly instead of letting `git commit` fail with the
+  // unhelpful "nothing to commit" exit-1.
+  const cached = await run(["git", "diff", "--cached", "--quiet"], {
+    cwd: worktreePath,
+    throwOnError: false,
+  });
+  if (cached.exitCode === 0) {
+    jsonLog(
+      "warning",
+      "validateChanges saw changes but nothing was staged — skipping commit/push (no PR opened)",
+      "push",
+      { branch },
+    );
+    return false;
+  }
   await run(["git", "commit", "-m", message], { cwd: worktreePath });
   await run(["git", "push", "-u", "origin", branch], { cwd: worktreePath });
   jsonLog("info", "Pushed branch", "push", { branch });
+  return true;
 }
 
 export async function doCleanupWorktree(worktreePath: string): Promise<void> {
