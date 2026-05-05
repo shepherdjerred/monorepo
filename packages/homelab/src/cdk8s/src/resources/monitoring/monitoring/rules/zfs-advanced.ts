@@ -209,22 +209,9 @@ export function getZfsAdvancedRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "10m",
           labels: { severity: "critical", category: "storage" },
         },
-        {
-          alert: "ZfsPoolFragmentationHigh",
-          annotations: {
-            description: escapePrometheusTemplate(
-              "ZFS pool {{ $labels.zpool_name }} fragmentation is {{ $value }}%. High fragmentation can impact performance.",
-            ),
-            summary: escapePrometheusTemplate(
-              "ZFS pool {{ $labels.zpool_name }} fragmentation over 50%",
-            ),
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "zfs_zpool_fragmentation > 50",
-          ),
-          for: "1h",
-          labels: { severity: "warning", category: "storage" },
-        },
+        // Fragmentation alerts moved to zfs-maintenance.ts with raised
+        // thresholds (80% / 90% on SSD pools). See
+        // packages/docs/decisions/2026-05-05_zfs-fragmentation-acceptance.md.
       ],
     },
   ];
