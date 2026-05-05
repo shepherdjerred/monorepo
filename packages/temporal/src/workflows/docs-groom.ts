@@ -6,6 +6,7 @@ import {
   workflowInfo,
 } from "@temporalio/workflow";
 import type { DocsGroomActivities } from "#activities/docs-groom.ts";
+import { buildPrBody } from "#activities/docs-groom-pr.ts";
 import type { GroomTask } from "#shared/docs-groom-types.ts";
 
 const {
@@ -81,52 +82,6 @@ function todayIsoDate(): string {
   // server-recorded start time and is replay-safe.
   const startMs = workflowInfo().runStartTime.getTime();
   return new Date(startMs).toISOString().slice(0, 10);
-}
-
-function buildPrBody(input: {
-  kind: "grooming" | "implementation";
-  workflowId: string;
-  runId: string;
-  task?: GroomTask;
-  summary: string;
-  filesChanged: string[];
-}): string {
-  const lines: string[] = [];
-  lines.push(input.summary);
-  lines.push("");
-  lines.push("---");
-  lines.push("");
-  if (input.kind === "grooming") {
-    lines.push("**Automated daily grooming pass over `packages/docs/`.**");
-    lines.push("");
-    lines.push(
-      "This PR is the in-place portion of the daily grooming workflow. Larger improvement tasks the audit identified are opened as separate PRs labelled `docs-groom-task`.",
-    );
-  } else if (input.task !== undefined) {
-    lines.push(
-      `**Automated implementation PR for grooming task \`${input.task.slug}\`.**`,
-    );
-    lines.push("");
-    lines.push(`- **Difficulty**: ${input.task.difficulty}`);
-    lines.push(`- **Category**: ${input.task.category}`);
-    lines.push("");
-    lines.push("Original task description:");
-    lines.push("");
-    lines.push("> " + input.task.description.replaceAll("\n", "\n> "));
-  }
-  lines.push("");
-  lines.push("**Files changed:**");
-  for (const f of input.filesChanged.slice(0, 50)) {
-    lines.push(`- \`${f}\``);
-  }
-  if (input.filesChanged.length > 50) {
-    lines.push(`- _…and ${String(input.filesChanged.length - 50)} more_`);
-  }
-  lines.push("");
-  lines.push(
-    `Workflow run: \`${input.workflowId}\` / \`${input.runId}\` — see Temporal UI.`,
-  );
-  return lines.join("\n");
 }
 
 /**

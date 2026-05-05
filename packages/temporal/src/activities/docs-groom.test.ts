@@ -10,6 +10,7 @@ import {
   slugifyTaskTitle,
   stripJsonFences,
 } from "./docs-groom-utils.ts";
+import { buildPrBody } from "./docs-groom-pr.ts";
 
 describe("slugifyTaskTitle", () => {
   it("kebab-cases a normal title", () => {
@@ -431,5 +432,94 @@ describe("parseImplementResult", () => {
       filesChanged: [],
     });
     expect(() => parseImplementResult(json)).toThrow();
+  });
+});
+
+describe("buildPrBody", () => {
+  it("formats a grooming PR with proper Markdown headings", () => {
+    const body = buildPrBody({
+      kind: "grooming",
+      workflowId: "docs-groom-daily-workflow-2026-05-05T18:26:58Z",
+      runId: "019df964-ae13-75c7-ba43-1bafcdbb9680",
+      summary:
+        "Updated index.md to fix index drift.\n\nReplaced the superseded April 25 audit entry with the May 2 audit.",
+      filesChanged: [
+        "packages/docs/index.md",
+        "packages/docs/archive/superseded/foo.md",
+        "packages/docs/guides/bar.md",
+      ],
+    });
+    expect(body).toContain("## Summary\n\nUpdated index.md");
+    expect(body).toContain("## Files changed\n\n- `packages/docs/index.md`");
+    expect(body).toContain("\n---\n\nAutomated daily grooming pass over");
+    expect(body).toContain(
+      "Workflow run: `docs-groom-daily-workflow-2026-05-05T18:26:58Z` / `019df964-ae13-75c7-ba43-1bafcdbb9680`",
+    );
+    // Order check: Summary precedes Files changed precedes footer.
+    expect(body.indexOf("## Summary")).toBeLessThan(
+      body.indexOf("## Files changed"),
+    );
+    expect(body.indexOf("## Files changed")).toBeLessThan(
+      body.indexOf("\n---\n"),
+    );
+  });
+
+  it("formats an implementation PR with a Task section + blockquote", () => {
+    const body = buildPrBody({
+      kind: "implementation",
+      workflowId: "docs-groom-task-fix-status-rot-2026-05-05",
+      runId: "019df9bc-bdaf-7236-825d-89d0a2dca0b6",
+      task: {
+        slug: "fix-status-rot",
+        title: "Fix the status-rot in some plan",
+        description:
+          "Read the plan.\nVerify the code matches.\nUpdate the Status section.",
+        difficulty: "medium",
+        files: ["packages/docs/plans/foo.md"],
+        category: "status-rot",
+      },
+      summary: "Updated the Status section from Not Started to Implemented.",
+      filesChanged: ["packages/docs/plans/foo.md"],
+    });
+    expect(body).toContain("## Summary\n\nUpdated the Status section");
+    expect(body).toContain("## Task");
+    expect(body).toContain("- **Slug**: `fix-status-rot`");
+    expect(body).toContain("- **Difficulty**: medium");
+    expect(body).toContain("- **Category**: status-rot");
+    // Multi-line task description rendered as a blockquote on every line.
+    expect(body).toContain(
+      "> Read the plan.\n> Verify the code matches.\n> Update the Status section.",
+    );
+    expect(body).toContain(
+      "## Files changed\n\n- `packages/docs/plans/foo.md`",
+    );
+    expect(body).toContain(
+      "Automated implementation PR from the `runDocsGroomTask` workflow.",
+    );
+    // Order check: Summary → Task → Files changed → footer.
+    expect(body.indexOf("## Summary")).toBeLessThan(body.indexOf("## Task"));
+    expect(body.indexOf("## Task")).toBeLessThan(
+      body.indexOf("## Files changed"),
+    );
+    expect(body.indexOf("## Files changed")).toBeLessThan(
+      body.indexOf("\n---\n"),
+    );
+  });
+
+  it("truncates the file list at 50 with a '…and N more' tail", () => {
+    const filesChanged: string[] = [];
+    for (let i = 0; i < 60; i++) {
+      filesChanged.push(`packages/docs/file-${String(i).padStart(2, "0")}.md`);
+    }
+    const body = buildPrBody({
+      kind: "grooming",
+      workflowId: "wf-1",
+      runId: "run-1",
+      summary: "Touched a lot of files.",
+      filesChanged,
+    });
+    expect(body).toContain("- `packages/docs/file-49.md`");
+    expect(body).not.toContain("- `packages/docs/file-50.md`");
+    expect(body).toContain("- _…and 10 more_");
   });
 });
