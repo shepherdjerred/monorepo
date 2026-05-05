@@ -1,5 +1,6 @@
 import {
   Counter,
+  Gauge,
   Histogram,
   collectDefaultMetrics,
   Registry,
@@ -123,6 +124,68 @@ export const prAgentTokensTotal = new Counter({
   name: "pr_agent_tokens_total",
   help: "Tokens consumed by PR-agent claude subprocesses, by kind, model, and direction (input/output/cache_create/cache_read)",
   labelNames: ["kind", "model", "direction"] as const,
+  registers: [register],
+});
+
+// ---------------------------------------------------------------------------
+// velero-orphan-audit workflow metrics
+//
+// Detection-only metrics for orphan ZFS snapshots created by the Velero
+// re-deploy pathology. See:
+//   - packages/docs/decisions/2026-05-05_velero-orphan-snapshot-prevention.md
+//   - packages/docs/guides/2026-05-05_velero-orphan-snapshot-remediation.md
+// ---------------------------------------------------------------------------
+
+export const veleroOrphanAuditRunsTotal = new Counter({
+  name: "velero_orphan_audit_runs_total",
+  help: "Number of velero-orphan-audit workflow runs by outcome (success | failure)",
+  labelNames: ["outcome"] as const,
+  registers: [register],
+});
+
+export const veleroOrphanAuditDurationSeconds = new Histogram({
+  name: "velero_orphan_audit_duration_seconds",
+  help: "Wall-clock duration of velero-orphan-audit runs",
+  buckets: [10, 30, 60, 120, 300, 600],
+  registers: [register],
+});
+
+export const veleroOrphanLocalSnapshots = new Gauge({
+  name: "velero_orphan_local_snapshots",
+  help: "Local ZFS snapshots that have no matching live Velero Backup CR (per dataset)",
+  labelNames: ["pool", "dataset"] as const,
+  registers: [register],
+});
+
+export const veleroOrphanLocalBytes = new Gauge({
+  name: "velero_orphan_local_bytes",
+  help: "Bytes consumed by local orphan ZFS snapshots (per dataset)",
+  labelNames: ["pool", "dataset"] as const,
+  registers: [register],
+});
+
+export const veleroOrphanLocalSnapshotsTotal = new Gauge({
+  name: "velero_orphan_local_snapshots_total",
+  help: "Total local orphan ZFS snapshot count across all datasets",
+  registers: [register],
+});
+
+export const veleroOrphanLocalBytesTotal = new Gauge({
+  name: "velero_orphan_local_bytes_total",
+  help: "Total bytes consumed by local orphan ZFS snapshots across all datasets",
+  registers: [register],
+});
+
+export const veleroLiveBackupCount = new Gauge({
+  name: "velero_live_backup_count",
+  help: "Live Velero Backup CR count observed at audit time",
+  registers: [register],
+});
+
+export const zfsDatasetSnapshotCount = new Gauge({
+  name: "zfs_dataset_snapshot_count",
+  help: "Total ZFS snapshot count per PVC dataset (live + orphan)",
+  labelNames: ["pool", "dataset"] as const,
   registers: [register],
 });
 

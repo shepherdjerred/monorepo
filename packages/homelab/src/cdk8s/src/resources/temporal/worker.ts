@@ -156,6 +156,75 @@ export function createTemporalWorkerDeployment(
     ],
   });
 
+  // Namespace-scoped RBAC for the Velero orphan-snapshot audit workflow.
+  // Reads `velero.io/v1/Backup` CRs in the velero namespace and execs into
+  // the openebs-zfs-localpv-node pod to enumerate ZFS snapshots.
+  // See packages/docs/decisions/2026-05-05_velero-orphan-snapshot-prevention.md.
+  new KubeRole(chart, "temporal-worker-velero-backups-read", {
+    metadata: {
+      name: "temporal-worker-velero-backups-read",
+      namespace: "velero",
+    },
+    rules: [
+      {
+        apiGroups: ["velero.io"],
+        resources: ["backups"],
+        verbs: ["get", "list"],
+      },
+    ],
+  });
+
+  new KubeRoleBinding(chart, "temporal-worker-velero-backups-read-binding", {
+    metadata: {
+      name: "temporal-worker-velero-backups-read",
+      namespace: "velero",
+    },
+    roleRef: {
+      apiGroup: "rbac.authorization.k8s.io",
+      kind: "Role",
+      name: "temporal-worker-velero-backups-read",
+    },
+    subjects: [
+      {
+        kind: "ServiceAccount",
+        name: serviceAccount.name,
+        namespace: chart.namespace ?? "temporal",
+      },
+    ],
+  });
+
+  new KubeRole(chart, "temporal-worker-openebs-exec", {
+    metadata: { name: "temporal-worker-openebs-exec", namespace: "openebs" },
+    rules: [
+      {
+        apiGroups: [""],
+        resources: ["pods/exec"],
+        verbs: ["create"],
+      },
+      {
+        apiGroups: [""],
+        resources: ["pods"],
+        verbs: ["get", "list"],
+      },
+    ],
+  });
+
+  new KubeRoleBinding(chart, "temporal-worker-openebs-exec-binding", {
+    metadata: { name: "temporal-worker-openebs-exec", namespace: "openebs" },
+    roleRef: {
+      apiGroup: "rbac.authorization.k8s.io",
+      kind: "Role",
+      name: "temporal-worker-openebs-exec",
+    },
+    subjects: [
+      {
+        kind: "ServiceAccount",
+        name: serviceAccount.name,
+        namespace: chart.namespace ?? "temporal",
+      },
+    ],
+  });
+
   const deployment = new Deployment(chart, "temporal-worker", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
