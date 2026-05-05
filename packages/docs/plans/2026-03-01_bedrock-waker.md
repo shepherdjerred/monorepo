@@ -2,7 +2,9 @@
 
 ## Status
 
-Not Started. No `packages/bedrock-waker/` package or cdk8s bedrock-waker resources exist yet.
+**Stalled / Deferred** — Filed 2026-03-01; no progress as of 2026-05-05 (2+ months). No `packages/bedrock-waker/` package or cdk8s bedrock-waker resources exist yet.
+
+**Note:** The build section below references Bazel (`BUILD.bazel`, `bazel build`, `bun_service_image`), but Bazel has been removed from the monorepo. Before resuming, the package scaffolding and CI integration steps will need to be rewritten for the current Bun/Dagger build system.
 
 ## Context
 
