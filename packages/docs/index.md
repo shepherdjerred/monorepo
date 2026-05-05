@@ -43,6 +43,7 @@ AI-maintained knowledge base for the monorepo.
 - [PR Review and Summary Bot](plans/2026-04-25_pr-review-and-summary-bot.md) - GH webhook → Temporal → claude -p + GitHub MCP for auto code-review and PR summaries
 - [Polyrepo → Monorepo Link Audit](plans/2026-04-25_polyrepo-link-audit.md) - Rewrite all stale polyrepo URLs to monorepo + add lychee CI link-check gate
 - [zwave-js-ui Bring-up](plans/2026-05-04_zwave-js-ui-bring-up.md) - Post-arrival checklist for wiring the Zooz ZST39 800-series stick into HA via zwave-js-ui
+- [Mysa HACS Max-Temp Cap](plans/2026-05-05_mysa-max-temp-cap.md) - Local hotfix at 30 °C while upstream PR kgelinas/Mysa_HA#18 lands the 40 °C support
 
 ## Guides
 

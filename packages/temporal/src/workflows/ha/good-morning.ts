@@ -13,7 +13,9 @@ const EXTRA_MEDIA_PLAYERS = [MAIN_BATHROOM_MEDIA, ENTRYWAY_MEDIA] as const;
 const BEDROOM_DIMMED = "scene.bedroom_dimmed" as const;
 const BEDROOM_BRIGHT = "scene.bedroom_bright" as const;
 const MASTER_BATHROOM_HEAT = "climate.master_bathroom" as const;
-const MORNING_HEAT_TEMP_C = 35;
+// Capped at 30°C by the Mysa HACS integration (kgelinas/Mysa_HA#16, fix in PR
+// kgelinas/Mysa_HA#18). Bump back to 35 once the upstream fix ships.
+const MORNING_HEAT_TEMP_C = 30;
 const MORNING_HEAT_DURATION = "60 minutes" as const;
 
 const WAKE_MEDIA = {
