@@ -20,11 +20,12 @@ homekit:
         - input_select
         - vacuum
       exclude_entities:
-        - binary_sensor.jerred_iphone_focus
-        - binary_sensor.ipad_focus
         - binary_sensor.roomba_bin_full
       exclude_entity_globs:
+        - binary_sensor.*_focus
         - binary_sensor.*entertainment_configuration
+        - binary_sensor.granary_smart_camera_feeder_*
+        - binary_sensor.heat_pump_water_heater_*
         - switch.adaptive_lighting_*
         - sensor.the_victor_229_*
         - sensor.average_*
