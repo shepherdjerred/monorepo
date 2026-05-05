@@ -92,6 +92,18 @@ const SCHEDULES: ScheduleDefinition[] = [
     memo: "Daily Bugsink database housekeeping (delete old events, vacuum)",
   },
   {
+    id: "velero-orphan-audit",
+    workflowType: "runVeleroOrphanAuditWorkflow",
+    args: [],
+    // 03:30 PT — staggered after zfs-maintenance and before docs-groom so the
+    // audit captures a stable post-backup state.
+    cronExpression: "30 3 * * *",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "15 minutes",
+    memo: "Daily Velero orphan ZFS snapshot detection — emits Prometheus metrics for the orphan-snapshot pathology (see packages/docs/decisions/2026-05-05_velero-orphan-snapshot-prevention.md)",
+  },
+  {
     id: "docs-groom-daily",
     workflowType: "runDocsGroomAudit",
     args: [],

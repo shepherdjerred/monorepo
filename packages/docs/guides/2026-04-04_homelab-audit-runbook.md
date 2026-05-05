@@ -135,17 +135,10 @@ toolkit gf query 'ALERTS{alertstate="firing"}'             # All firing Promethe
 ### PagerDuty Incidents
 
 ```bash
-toolkit pd incidents                                       # Open incidents (triggered + acknowledged)
-toolkit pd incidents --status triggered                    # Triggered only (unacknowledged)
+toolkit pd incidents                                       # Open incidents
 ```
 
-For any open incident, get details and timeline:
-
-```bash
-toolkit pd incident <INCIDENT_ID>                          # Details, notes, timeline
-```
-
-Flag: any triggered (unacknowledged) incidents, incidents open for >24h, incidents without notes.
+Flag: incidents whose underlying alert has cleared (stale), or firing alerts without a matching incident (missing PD integration). Acknowledgement state and incident notes are out of scope.
 
 ### Scrape Targets
 

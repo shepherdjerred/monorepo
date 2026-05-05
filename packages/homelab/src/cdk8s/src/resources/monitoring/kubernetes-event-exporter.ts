@@ -147,13 +147,18 @@ receivers:
                 },
               ],
               resources: {
+                // Peak working set hit the 128 MiB limit during the
+                // 2026-05-05 home-zwave-js-ui FailedScheduling event storm
+                // (4 OOM kills in ~21 minutes; 23 restarts over 13 days).
+                // Doubling the limit gives ~2x headroom for typical event
+                // surges; keep request at the original steady-state.
                 requests: {
                   cpu: Quantity.fromString("50m"),
-                  memory: Quantity.fromString("64Mi"),
+                  memory: Quantity.fromString("128Mi"),
                 },
                 limits: {
                   cpu: Quantity.fromString("100m"),
-                  memory: Quantity.fromString("128Mi"),
+                  memory: Quantity.fromString("256Mi"),
                 },
               },
               securityContext: {

@@ -180,7 +180,11 @@ export async function doCommitAndPush(
   await Bun.write(askpassPath, '#!/bin/sh\nexec echo "$GH_TOKEN"\n');
   await run(["chmod", "+x", askpassPath]);
 
-  await run(["git", "push", "-u", "origin", branch], {
+  // --force-with-lease so a previous failed run that pushed a branch
+  // (e.g. failed at gh-pr-create after a successful push) doesn't block
+  // today's run. docs-groom is the canonical authority for these
+  // date-stamped branches; safe to overwrite the remote tip.
+  await run(["git", "push", "-u", "--force-with-lease", "origin", branch], {
     cwd: worktreePath,
     env: { GIT_ASKPASS: askpassPath, GIT_TERMINAL_PROMPT: "0" },
   });
