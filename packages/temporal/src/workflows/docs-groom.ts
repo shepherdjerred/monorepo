@@ -6,7 +6,7 @@ import {
   workflowInfo,
 } from "@temporalio/workflow";
 import type { DocsGroomActivities } from "#activities/docs-groom.ts";
-import { buildPrBody } from "#activities/docs-groom-pr.ts";
+import { buildPrBody } from "#shared/docs-groom-pr-body.ts";
 import type { GroomTask } from "#shared/docs-groom-types.ts";
 
 const {
