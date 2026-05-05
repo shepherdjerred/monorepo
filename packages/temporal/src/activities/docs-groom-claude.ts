@@ -164,6 +164,14 @@ export async function doInvokeClaudeGroom(
     }
     return groomResult;
   } catch (error: unknown) {
+    // Log full claude output to stdout (not just first 500 chars to Sentry)
+    // so failed runs are debuggable from Loki without round-tripping
+    // through Bugsink. Truncate at 8KB to keep individual log lines sane.
+    jsonLog("error", "GroomResult parse failed — claude raw output:", "audit", {
+      parseError: error instanceof Error ? error.message : String(error),
+      resultTextLength: resultText.length,
+      resultText: resultText.slice(0, 8000),
+    });
     captureWithContext(error, "audit", {
       resultTextHead: resultText.slice(0, 500),
     });
