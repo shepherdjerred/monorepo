@@ -89,6 +89,21 @@ The output schema is enforced by \`claude --json-schema\`; values outside
 the list above will be rejected.
 
 If you made no inline edits and identified no tasks, return empty \`groomedFiles\` and \`tasks\` with summary "No grooming or follow-up tasks needed."
+
+# JSON syntax — CRITICAL
+
+The output is parsed as **strict JSON** — one shot, no retry. Any
+syntax error fails the entire grooming run.
+
+- All strings MUST use double-quote delimiters (\`"..."\`).
+- Do NOT use backtick (\`\` \`...\` \`\`) or single-quote (\`'...'\`)
+  delimiters anywhere in the output. Those are JavaScript / Python
+  syntax, not JSON.
+- Inside string values, escape literal double quotes as \`\\"\` and
+  literal backslashes as \`\\\\\`. Backticks inside strings are fine.
+- Title MUST be ≤120 characters. Description MUST be ≤2000 characters.
+  Don't produce values longer than that — the parser will truncate
+  them but you should not rely on that.
 `;
 
 export function buildImplementPrompt(input: {
