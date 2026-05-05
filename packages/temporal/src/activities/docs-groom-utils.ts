@@ -283,6 +283,9 @@ const VALID_TASK_CATEGORIES = new Set([
   "other",
 ]);
 
+const TITLE_MAX_LEN = 120;
+const DESCRIPTION_MAX_LEN = 2000;
+
 const CategoryNormalizationSchema = z
   .object({
     tasks: z.array(z.record(z.string(), z.unknown())).optional(),
@@ -290,23 +293,49 @@ const CategoryNormalizationSchema = z
   .loose();
 
 /**
- * Coerce any task `category` value that isn't in the TaskCategory enum to
- * `"other"`. `claude --json-schema` is best-effort; in practice the model
- * occasionally invents categories like "architecture" or "guide" (those are
- * doc-folder names, not task categories). Rather than drop the entire
- * grooming run, accept the task with a degraded category.
+ * Normalize task fields that `claude --json-schema` doesn't reliably
+ * enforce in practice:
+ *
+ * - `category`: unknown values → `"other"` (the model invents folder
+ *   names like `"architecture"` / `"guide"`).
+ * - `title`: longer than the schema cap → truncate (with ellipsis).
+ * - `description`: longer than cap → truncate.
+ * - `slug`: not kebab-case → coerce via `slugifyTaskTitle`.
+ *
+ * Truncation is preferable to dropping the entire grooming run.
  */
-function coerceUnknownTaskCategories(value: unknown): unknown {
+function normalizeTaskFields(value: unknown): unknown {
   const parsed = CategoryNormalizationSchema.safeParse(value);
   if (!parsed.success || parsed.data.tasks === undefined) {
     return value;
   }
   const fixedTasks = parsed.data.tasks.map((task) => {
+    const next: Record<string, unknown> = { ...task };
+
     const cat = task["category"];
     if (typeof cat === "string" && !VALID_TASK_CATEGORIES.has(cat)) {
-      return { ...task, category: "other" };
+      next["category"] = "other";
     }
-    return task;
+
+    const title = task["title"];
+    if (typeof title === "string" && title.length > TITLE_MAX_LEN) {
+      next["title"] = title.slice(0, TITLE_MAX_LEN - 1) + "…";
+    }
+
+    const description = task["description"];
+    if (
+      typeof description === "string" &&
+      description.length > DESCRIPTION_MAX_LEN
+    ) {
+      next["description"] = description.slice(0, DESCRIPTION_MAX_LEN - 1) + "…";
+    }
+
+    const slug = task["slug"];
+    if (typeof slug === "string" && !/^[a-z0-9-]+$/.test(slug)) {
+      next["slug"] = slugifyTaskTitle(slug);
+    }
+
+    return next;
   });
   return { ...parsed.data, tasks: fixedTasks };
 }
@@ -319,7 +348,7 @@ export function parseClaudeResultMessage(stdout: string): ClaudeResultMessage {
 export function parseGroomResult(rawResultText: string): GroomResult {
   const cleaned = extractJsonObject(rawResultText);
   const parsed = JsonValueSchema.parse(JSON.parse(cleaned));
-  return GroomResult.parse(coerceUnknownTaskCategories(parsed));
+  return GroomResult.parse(normalizeTaskFields(parsed));
 }
 
 export function parseImplementResult(rawResultText: string): ImplementResult {

@@ -331,14 +331,57 @@ describe("parseGroomResult", () => {
     expect(out.tasks[0]?.category).toBe("stale");
   });
 
-  it("rejects bad slug shape", () => {
+  it("truncates over-length titles to schema cap", () => {
+    const longTitle = "x".repeat(200);
     const json = JSON.stringify({
-      summary: "Task with bad slug.",
+      summary: "Got an over-length title.",
+      groomedFiles: [],
+      tasks: [
+        {
+          title: longTitle,
+          slug: "long-title",
+          description:
+            "This task has a title beyond the 120-char schema cap; the parser must truncate it.",
+          difficulty: "easy",
+          files: [],
+          category: "other",
+        },
+      ],
+    });
+    const out = parseGroomResult(json);
+    expect(out.tasks[0]?.title.length).toBeLessThanOrEqual(120);
+    expect(out.tasks[0]?.title.endsWith("…")).toBe(true);
+  });
+
+  it("normalizes non-kebab-case slugs", () => {
+    const json = JSON.stringify({
+      summary: "Bad slug shape.",
+      groomedFiles: [],
+      tasks: [
+        {
+          title: "Some task",
+          slug: "Bad Slug With Spaces",
+          description:
+            "This task has a slug that violates the kebab-case regex; the parser normalizes it.",
+          difficulty: "easy",
+          files: [],
+          category: "other",
+        },
+      ],
+    });
+    const out = parseGroomResult(json);
+    expect(out.tasks[0]?.slug).toMatch(/^[a-z0-9-]+$/);
+    expect(out.tasks[0]?.slug).toBe("bad-slug-with-spaces");
+  });
+
+  it("rejects empty slug after normalization (e.g. all punctuation)", () => {
+    const json = JSON.stringify({
+      summary: "Task with unfixable slug.",
       groomedFiles: [],
       tasks: [
         {
           title: "Some title",
-          slug: "Bad Slug Has Spaces",
+          slug: "!!!",
           description:
             "This description is long enough to satisfy the minimum length requirement.",
           difficulty: "easy",
@@ -347,7 +390,10 @@ describe("parseGroomResult", () => {
         },
       ],
     });
-    expect(() => parseGroomResult(json)).toThrow();
+    // slugifyTaskTitle returns "task" for unparseable input, which is a
+    // valid kebab-case slug — so this should now PASS via coercion.
+    const out = parseGroomResult(json);
+    expect(out.tasks[0]?.slug).toBe("task");
   });
 
   it("rejects bad difficulty", () => {

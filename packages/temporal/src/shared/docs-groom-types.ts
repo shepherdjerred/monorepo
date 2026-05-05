@@ -16,7 +16,7 @@ export const TaskCategory = z.enum([
 export type TaskCategory = z.infer<typeof TaskCategory>;
 
 export const GroomTask = z.object({
-  title: z.string().min(5).max(80),
+  title: z.string().min(5).max(120),
   slug: z
     .string()
     .min(3)
