@@ -42,6 +42,20 @@ homekit:
       exclude_entities:
         - light.living_room_main
         - light.office
+  - name: Front Door
+    advertise_ip: 192.168.1.81
+    port: 21065
+    mode: accessory
+    filter:
+      include_entities:
+        - camera.front_door_fluent
+    entity_config:
+      camera.front_door_fluent:
+        support_audio: true
+        video_codec: copy
+        stream_count: 2
+        linked_motion_sensor: binary_sensor.front_door_person
+        linked_doorbell_sensor: binary_sensor.front_door_visitor
 
 http:
   use_x_forwarded_for: true
