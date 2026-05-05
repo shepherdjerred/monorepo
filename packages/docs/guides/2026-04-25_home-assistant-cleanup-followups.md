@@ -1,6 +1,6 @@
 # Home Assistant Cleanup — Next Steps
 
-Related: `guides/2026-04-25_homelab-health-audit.md`. Follows from log audit + cleanup session on 2026-04-25.
+Related: `archive/homelab-audits/2026-04-25_homelab-health-audit.md`. Follows from log audit + cleanup session on 2026-04-25.
 
 ## Already done
 

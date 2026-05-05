@@ -44,9 +44,12 @@ AI-maintained knowledge base for the monorepo.
 - [Polyrepo → Monorepo Link Audit](plans/2026-04-25_polyrepo-link-audit.md) - Rewrite all stale polyrepo URLs to monorepo + add lychee CI link-check gate
 - [zwave-js-ui Bring-up](plans/2026-05-04_zwave-js-ui-bring-up.md) - Post-arrival checklist for wiring the Zooz ZST39 800-series stick into HA via zwave-js-ui
 - [Mysa HACS Max-Temp Cap](plans/2026-05-05_mysa-max-temp-cap.md) - Local hotfix at 30 °C while upstream PR kgelinas/Mysa_HA#18 lands the 40 °C support
+- [Monarch Match Rate Fixes](plans/2026-04-25_monarch-match-rate-fixes.md) - Fix low match rates across Amazon, Apple, Bilt, USAA, and Costco enrichers
 
 ## Guides
 
+- [Home Assistant Cleanup Follow-ups](guides/2026-04-25_home-assistant-cleanup-followups.md) - Post-deploy checks and deferred cleanup from HA log audit on 2026-04-25
+- [Homelab Health Audit](guides/2026-05-02_homelab-health-audit.md) - Current cluster health audit snapshot (2026-05-02)
 - [Monarch Accuracy Test](guides/2026-02-22_monarch-accuracy-test.md) - Monarch transaction categorization accuracy testing
 - [Dotfiles Update](guides/2026-03-08_dotfiles-update.md) - Dotfiles update script and known issues
 - [Local Quality Check](guides/2026-04-03_local-quality-check.md) - Full monorepo verification commands
@@ -56,7 +59,6 @@ AI-maintained knowledge base for the monorepo.
 - [NVMe Wear Attribution](guides/2026-04-21_nvme-wear-attribution.md) - Byte-level accounting of NVMe write sources
 - [Type-safe Home Assistant Client](guides/2026-04-21_type-safe-home-assistant-client.md) - `ha-codegen`, generated schema, and Temporal usage
 - [Birmel Remediation Follow-ups](guides/2026-04-25_birmel-remediation-followups.md) - Post-deploy checks and deferred cleanup from Birmel remediation
-- [Homelab Health Audit](guides/2026-04-25_homelab-health-audit.md) - Current cluster health audit snapshot
 - [Minecraft Server Ops](guides/2026-04-25_minecraft-server-ops.md) - Operational reference for deployed modded Minecraft servers
 - [Home Assistant Kumo Troubleshooting](guides/2026-05-04_home-assistant-kumo-troubleshooting.md) - Diagnosing `device_authentication_error`, the V3 cloud / Socket.IO password flow, the Murata-OUI DHCP-filter gap, and the cache-rewrite fix recipe
 
@@ -68,8 +70,8 @@ Historical docs preserved for reference. These are no longer actively maintained
 - [`archive/changelogs/`](archive/changelogs/) - 1 historical changelog
 - [`archive/completed/`](archive/completed/) - 2 completed plans and audits
 - [`archive/dagger-migration/`](archive/dagger-migration/) - 18 Dagger migration plans and audits
-- [`archive/homelab-audits/`](archive/homelab-audits/) - 6 superseded homelab health audit snapshots
+- [`archive/homelab-audits/`](archive/homelab-audits/) - 8 superseded homelab health audit snapshots
 - [`archive/on-hold/`](archive/on-hold/) - 4 on-hold Sentinel architecture and implementation docs
 - [`archive/scout-followups/`](archive/scout-followups/) - 1 time-boxed Scout follow-up checklist
 - [`archive/stale/`](archive/stale/) - 7 stale operational snapshots and superseded plans
-- [`archive/superseded/`](archive/superseded/) - 5 older superseded plans
+- [`archive/superseded/`](archive/superseded/) - 7 older superseded plans

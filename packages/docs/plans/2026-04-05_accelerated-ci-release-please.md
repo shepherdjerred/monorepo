@@ -1,7 +1,10 @@
 # Accelerated CI for Release-Please and Version Commit-Back PRs
 
 **Date:** 2026-04-05
-**Status:** Not Started
+
+## Status
+
+Not Started
 
 ## Problem
 
