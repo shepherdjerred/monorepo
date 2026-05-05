@@ -10,7 +10,7 @@ import {
   slugifyTaskTitle,
   stripJsonFences,
 } from "./docs-groom-utils.ts";
-import { buildPrBody } from "./docs-groom-pr.ts";
+import { buildPrBody } from "#shared/docs-groom-pr-body.ts";
 
 describe("slugifyTaskTitle", () => {
   it("kebab-cases a normal title", () => {
