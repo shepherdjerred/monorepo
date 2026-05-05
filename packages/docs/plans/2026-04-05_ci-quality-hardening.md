@@ -2,7 +2,7 @@
 
 ## Status
 
-Active / Not Started. Knip, Trivy, and Semgrep are still soft-failing in CI.
+Active / Not Started. Verified 2026-05-05: all three tools are still `softFail: true` in `scripts/ci/src/steps/quality.ts` — Trivy (`trivyScanStep`, line ~134), Semgrep (`semgrepScanStep`, line ~158), and Knip (`knipCheckStep`, line ~99). None block the build on failure. No changes have been made since this plan was written. `.dagger/src/` has no invocations of these tools.
 
 ## Context
 
