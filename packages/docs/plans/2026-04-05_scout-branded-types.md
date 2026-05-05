@@ -2,7 +2,16 @@
 
 ## Status
 
-Not Started. Loading-screen-specific branded IDs exist, but this broader domain branding plan remains open.
+Partially Complete. Loading-screen-scoped variants of `SummonerSpellId` and `RuneId` were implemented in `packages/data/src/model/loading-screen.ts`, but the broader domain branding described in this plan is incomplete.
+
+### Checklist
+
+- [ ] `ItemId` — not yet defined in `model/champion.ts`
+- [x] `SummonerSpellId` — exists in `model/loading-screen.ts` (loading-screen scope only; plan proposed `SpellId` in `model/champion.ts`)
+- [x] `RuneId` — exists in `model/loading-screen.ts` (loading-screen scope only; plan proposed broader use from `model/champion.ts`)
+- [ ] `RuneTreeId` — not yet defined in `data-dragon/runes.ts`
+- [ ] `AugmentId` — not yet defined in `model/arena/augment.ts`; `mapAugmentIdsToUnion` still uses `number[]`
+- [ ] `QueueId` — not yet defined in `model/state.ts`
 
 ## Context
 
