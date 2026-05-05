@@ -172,11 +172,11 @@ export async function runDocsGroomAudit(): Promise<DocsGroomAuditResult> {
       await commitAndPush(
         prepared.path,
         branch,
-        `docs(groom): daily docs-groom pass ${date}`,
+        `docs(docs): daily docs-groom pass ${date}`,
       );
       groomingPr = await openDraftPr({
         branch,
-        title: `docs(groom): daily docs-groom pass ${date}`,
+        title: `docs(docs): daily docs-groom pass ${date}`,
         body: buildPrBody({
           kind: "grooming",
           workflowId: info.workflowId,
@@ -307,11 +307,11 @@ export async function runDocsGroomTask(input: {
     await commitAndPush(
       prepared.path,
       branch,
-      `docs(groom): ${input.task.title}`,
+      `docs(docs): ${input.task.title}`,
     );
     pr = await openDraftPr({
       branch,
-      title: `docs(groom): ${input.task.title}`,
+      title: `docs(docs): ${input.task.title}`,
       body: buildPrBody({
         kind: "implementation",
         workflowId: info.workflowId,
