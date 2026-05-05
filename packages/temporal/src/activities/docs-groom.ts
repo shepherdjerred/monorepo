@@ -95,8 +95,8 @@ export const docsGroomActivities = {
     worktreePath: string,
     branch: string,
     message: string,
-  ): Promise<void> {
-    await withSpan(
+  ): Promise<boolean> {
+    return await withSpan(
       "docs-groom.commitAndPush",
       { "docsGroom.worktreePath": worktreePath, "docsGroom.branch": branch },
       async () => doCommitAndPush(worktreePath, branch, message),
