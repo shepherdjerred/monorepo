@@ -39,6 +39,7 @@ AI-maintained knowledge base for the monorepo.
 - [Dagger CI Infrastructure Fixes](plans/2026-04-21_dagger-ci-infra-fixes.md) - Punch list for ciAllHelper and Dagger infra bugs
 - [Temporal Tailscale Exposure](plans/2026-04-21_temporal-tailscale-exposure.md) - Expose Temporal gRPC over Tailscale without port-forwarding
 - [Homelab Ops Hardening Backlog](plans/2026-04-25_homelab-ops-hardening-backlog.md) - Active follow-ups from the archived homelab ops audit
+- [Monarch Match Rate Fixes](plans/2026-04-25_monarch-match-rate-fixes.md) - Apple parser bug and Amazon multi-shipment matching gap diagnosis and fix plan
 - [Renovate Blocked Majors](plans/2026-04-25_renovate-blocked-majors.md) - Dedicated-session dependency upgrades and deploy promotions
 - [Shared Glitter-Context Package](plans/2026-04-25_shared-glitter-context-package.md) - De-duplicate style cards and lore across Birmel and Scout
 - [Tasks for Obsidian iOS Target Wiring](plans/2026-04-25_tasks-for-obsidian-ios-target-wiring.md) - Finish native iOS target wiring after the completed audit
@@ -59,6 +60,7 @@ AI-maintained knowledge base for the monorepo.
 - [NVMe Wear Attribution](guides/2026-04-21_nvme-wear-attribution.md) - Byte-level accounting of NVMe write sources
 - [Type-safe Home Assistant Client](guides/2026-04-21_type-safe-home-assistant-client.md) - `ha-codegen`, generated schema, and Temporal usage
 - [Birmel Remediation Follow-ups](guides/2026-04-25_birmel-remediation-followups.md) - Post-deploy checks and deferred cleanup from Birmel remediation
+- [Home Assistant Cleanup Follow-ups](guides/2026-04-25_home-assistant-cleanup-followups.md) - Open action items from the 2026-04-25 HA log audit (orphan entities, Sonos Wi-Fi, Litter-Robot, Sonoff, PetLibro)
 - [Homelab Health Audit](guides/2026-05-05_homelab-health-audit.md) - Current cluster health audit snapshot
 - [Minecraft Server Ops](guides/2026-04-25_minecraft-server-ops.md) - Operational reference for deployed modded Minecraft servers
 - [Home Assistant Kumo Troubleshooting](guides/2026-05-04_home-assistant-kumo-troubleshooting.md) - Diagnosing `device_authentication_error`, the V3 cloud / Socket.IO password flow, the Murata-OUI DHCP-filter gap, and the cache-rewrite fix recipe
@@ -76,4 +78,4 @@ Historical docs preserved for reference. These are no longer actively maintained
 - [`archive/on-hold/`](archive/on-hold/) - 4 on-hold Sentinel architecture and implementation docs
 - [`archive/scout-followups/`](archive/scout-followups/) - 1 time-boxed Scout follow-up checklist
 - [`archive/stale/`](archive/stale/) - 7 stale operational snapshots and superseded plans
-- [`archive/superseded/`](archive/superseded/) - 5 older superseded plans
+- [`archive/superseded/`](archive/superseded/) - 7 older superseded plans
