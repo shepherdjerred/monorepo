@@ -151,6 +151,46 @@ describe("buildPipeline", () => {
         expect(steps.find((s) => s.key === key)?.soft_fail).toBe(true);
       }
     });
+
+    it("only builds the image whose package actually changed", () => {
+      const affected = emptyAffected();
+      affected.packages.add("temporal");
+      affected.hasImagePackages.add("temporal");
+
+      const pipeline = buildPipeline(affected);
+      const steps = pipeline.steps.filter(isStep);
+      const groups = pipeline.steps.filter(isGroup);
+
+      // Build/push groups should exist for temporal-worker only
+      const buildGroup = groups.find((g) => g.key === "build-images");
+      expect(buildGroup).toBeDefined();
+      const buildSteps = buildGroup?.steps ?? [];
+      const buildKeys = buildSteps
+        .filter(isStep)
+        .map((s) => s.key)
+        .filter((k): k is string => typeof k === "string");
+      // Should include build for temporal-worker, NOT for birmel/scout/etc.
+      expect(buildKeys.some((k) => k.includes("temporal-worker"))).toBe(true);
+      expect(buildKeys.some((k) => k.includes("birmel"))).toBe(false);
+      expect(buildKeys.some((k) => k.includes("scout-for-lol"))).toBe(false);
+      expect(buildKeys.some((k) => k.includes("starlight-karma-bot"))).toBe(
+        false,
+      );
+      expect(buildKeys.some((k) => k.includes("discord-plays-pokemon"))).toBe(
+        false,
+      );
+      expect(buildKeys.some((k) => k.includes("tasknotes-server"))).toBe(false);
+
+      // Push steps live inside the push-images group, mirror should hold
+      const pushGroup = groups.find((g) => g.key === "push-images");
+      expect(pushGroup).toBeDefined();
+      const pushKeys = (pushGroup?.steps ?? [])
+        .filter(isStep)
+        .map((s) => s.key)
+        .filter((k): k is string => typeof k === "string");
+      expect(pushKeys.some((k) => k.includes("temporal-worker"))).toBe(true);
+      expect(pushKeys.some((k) => k.includes("birmel"))).toBe(false);
+    });
   });
 
   describe("full build", () => {
