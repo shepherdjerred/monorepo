@@ -176,7 +176,16 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
         imagesToBuild.push(...IMAGE_PUSH_TARGETS, ...INFRA_PUSH_TARGETS);
       } else {
         if (affected.hasImagePackages.size > 0) {
-          imagesToBuild.push(...IMAGE_PUSH_TARGETS);
+          // Filter to only the images whose package actually changed —
+          // a temporal-only PR shouldn't trigger birmel/scout/etc rebuilds.
+          // `img.package ?? img.name` matches the disambiguation used in
+          // steps/images.ts for `--pkg-dir ./packages/<pkg>`.
+          for (const img of IMAGE_PUSH_TARGETS) {
+            const pkg = img.package ?? img.name;
+            if (affected.hasImagePackages.has(pkg)) {
+              imagesToBuild.push(img);
+            }
+          }
         }
         if (affected.homelabChanged) {
           imagesToBuild.push(...INFRA_PUSH_TARGETS);
