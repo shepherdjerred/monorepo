@@ -33,9 +33,80 @@ src/
 bun run start        # Start worker (connects to Temporal server)
 bun run typecheck    # Type check (runs ensure-ha-schema first)
 bun run lint         # ESLint
-bun test             # Run tests
+bun test             # Run tests (incl. workflow-bundle smoke test)
 bun run generate     # Regenerate src/generated/ha-schema.ts from live HA (needs HA_URL + HA_TOKEN)
+
+# docs-groom prompt-iteration helpers (Fix 4 from i-didn-t-see-an-wondrous-quill plan)
+bun run groom:iterate-setup   # one-time: clone /tmp/groom-iterate
+bun run groom:iterate         # run claude → parse → print, no Temporal involved
 ```
+
+## Local dev loop (no CI, no Argo, no real GitHub)
+
+The full deploy chain (PR → CI → image → Argo → pod) takes ~30 min per round-trip. For docs-groom and similar claude-using workflows you almost never need it — three layered local paths cover most iteration:
+
+### A. Prompt-tuning only — no Temporal at all
+
+When you're iterating on `GROOM_PROMPT` or the `GroomResult` schema. Calls `claude -p` directly against a fresh worktree.
+
+```bash
+bun run groom:iterate-setup       # one-time, clones /tmp/groom-iterate
+# edit packages/temporal/src/shared/docs-groom-prompts.ts (or types.ts)
+bun run groom:iterate             # claude runs, parsed result prints, no Temporal
+cd /tmp/groom-iterate && git status -s    # what claude tried to edit inline
+cd /tmp/groom-iterate && git checkout . && git clean -fd    # reset for next run
+```
+
+### B. Workflow-bundle smoke test — sub-second
+
+`Worker.create()` webpack-bundles the workflow at startup. PR #685 shipped a transitive `@sentry/bun` import that webpack couldn't resolve (`UnhandledSchemeError: node:util`) and the worker pod crashed at boot 25 min into deploy. The new bundle test in `src/workflows/bundle.test.ts` runs the same webpack pass in ~1 s; it's part of `bun run test` now.
+
+```bash
+cd packages/temporal && bun run test       # bundle test runs alongside the rest
+```
+
+If you import an activity helper into a workflow file and this test starts failing — move the helper to `src/shared/` (a pure module with no Sentry/observability imports).
+
+### C. Full-stack local with `DOCS_GROOM_DRY_RUN=1`
+
+Real claude, real worker, real Temporal — but `git push` and `gh pr create` are stubbed so you can iterate end-to-end without mutating origin.
+
+```bash
+# 1. Local Temporal dev server (no in-cluster dependency)
+temporal server start-dev --port 7233 &
+
+# 2. Env from 1Password
+export TEMPORAL_ADDRESS=localhost:7233
+export DOCS_GROOM_DRY_RUN=1
+export GH_TOKEN=$(op read 'op://Homelab (Kubernetes)/temporal-worker-secrets/GH_TOKEN')
+export ANTHROPIC_API_KEY=$(op read 'op://Homelab (Kubernetes)/temporal-worker-secrets/ANTHROPIC_API_KEY')
+export CLAUDE_CODE_OAUTH_TOKEN=$(op read 'op://Homelab (Kubernetes)/temporal-worker-secrets/CLAUDE_CODE_OAUTH_TOKEN')
+
+# 3. Run the worker locally
+cd packages/temporal && bun run start
+
+# 4. From another shell — trigger
+temporal --address localhost:7233 schedule trigger --schedule-id docs-groom-daily
+
+# 5. Iterate. Restart worker after activity edits.
+```
+
+The dry-run mode keeps these LIVE (still hits the real thing):
+
+- `git clone` (read-only, public repo)
+- `claude -p` (real Anthropic API spend)
+- Local git ops, typecheck, validation
+
+…and skips these:
+
+- `git push --force-with-lease origin <branch>` (logs `[dry-run] would push <branch>`)
+- `gh pr create --draft` (logs `[dry-run] would create draft PR` with the rendered body, returns a fake URL)
+
+**Warnings:**
+
+- **Don't forget `DOCS_GROOM_DRY_RUN=1`** — without it, claude's edits get pushed to GitHub from your laptop.
+- **Real-claude tokens spend** — even in dry-run, `claude -p` hits the real Anthropic API. Add `--max-budget-usd` to the activity if iterating heavily.
+- **Don't leave the in-cluster worker scaled to 0 by accident** — if you want to reuse the in-cluster Temporal instead of `start-dev`, port-forward (`kubectl port-forward -n temporal svc/temporal-temporal-server-service 7233:7233`) and scale the in-cluster worker down (`kubectl scale deployment -n temporal temporal-temporal-worker --replicas=0`) so it doesn't compete for tasks. **Restore it after** (`--replicas=1`) or scheduled fires (golink-sync every 5 min, etc.) won't be processed.
 
 ## HA schema (type-safe workflows)
 

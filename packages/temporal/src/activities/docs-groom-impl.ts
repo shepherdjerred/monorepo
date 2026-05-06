@@ -172,6 +172,21 @@ export async function doCommitAndPush(
     return false;
   }
 
+  // Dry-run: skip the actual push so local dev / CI smoke runs don't
+  // mutate the real GitHub repo. Returning true keeps the workflow on
+  // the open-PR happy path so downstream openDraftPr (also gated by
+  // DOCS_GROOM_DRY_RUN) gets exercised.
+  if (Bun.env["DOCS_GROOM_DRY_RUN"] === "1") {
+    const head = await run(["git", "rev-parse", "HEAD"], { cwd: worktreePath });
+    jsonLog(
+      "info",
+      "[dry-run] would push branch (skipped, DOCS_GROOM_DRY_RUN=1)",
+      "push",
+      { branch, head: head.stdout.trim() },
+    );
+    return true;
+  }
+
   // git push needs auth. The container has GH_TOKEN in env; `git push`
   // would otherwise prompt for a username on stdin and fail with
   // "could not read Username for 'https://github.com'". Wire a tiny

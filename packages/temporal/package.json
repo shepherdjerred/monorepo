@@ -15,9 +15,11 @@
     "build": "bun run scripts/ensure-ha-schema.ts && tsc",
     "typecheck": "bun run scripts/ensure-ha-schema.ts && bunx tsc --noEmit",
     "lint": "bunx eslint --cache .",
-    "test": "bun run scripts/ensure-ha-schema.ts && bun test src/activities src/event-bridge src/observability",
+    "test": "bun run scripts/ensure-ha-schema.ts && bun test src/activities src/event-bridge src/observability src/workflows",
     "test:integration": "bun run scripts/ensure-ha-schema.ts && bun test src/integration.test.ts",
-    "generate": "bun ../home-assistant/src/codegen/cli.ts --out src/generated/ha-schema.ts --name HaSchema"
+    "generate": "bun ../home-assistant/src/codegen/cli.ts --out src/generated/ha-schema.ts --name HaSchema",
+    "groom:iterate-setup": "rm -rf /tmp/groom-iterate && git clone --depth 50 https://github.com/shepherdjerred/monorepo.git /tmp/groom-iterate && git -C /tmp/groom-iterate checkout -b iterate-$(date +%s)",
+    "groom:iterate": "bun run scripts/iterate-groom.ts /tmp/groom-iterate"
   },
   "dependencies": {
     "@shepherdjerred/home-assistant": "file:../home-assistant",
