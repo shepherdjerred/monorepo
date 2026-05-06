@@ -2,7 +2,7 @@
 
 ## Status
 
-Not Started. Root `scripts/` still exists; `packages/ci/` and `packages/scripts/` do not.
+Not Started. Root `scripts/` still exists; `packages/ci/` and `packages/scripts/` do not. Verified 2026-05-05.
 
 ## Context
 
