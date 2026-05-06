@@ -2,7 +2,24 @@
 
 ## Status
 
-Planned. Fork PR builds remain disabled; complete this before enabling external contributor CI.
+Not Started. Audited 2026-05-05 — no remediation items have been implemented. Fork PR builds remain disabled. All P0–P3 items are pending:
+
+| Item | Priority | Status |
+|------|----------|--------|
+| 1. Remove secrets from bootstrap step + `noSecrets` mode | P0 | Not started — `.buildkite/pipeline.yml` still mounts `buildkite-ci-secrets` on the generator pod; `k8s-plugin.ts` has no `noSecrets` option; `buildkite.ts` `plainStep`/`daggerStep` have no `noSecrets` param |
+| 2. CODEOWNERS for CI pipeline code | P0 | Not started — `.github/CODEOWNERS` does not exist |
+| 3. `--ignore-scripts` for pipeline generator install | P0 | Not started — `generate-pipeline.sh` has no `--ignore-scripts` flag |
+| 4. Trusted generator for fork PRs | P1 | Not started — `generate-pipeline.sh` has no fork detection or trusted-generator logic |
+| 5. `FORK_MODE` in pipeline generation | P1 | Not started — no `FORK_MODE` constant in `k8s-plugin.ts`; no `isForkPr` in `pipeline-builder.ts` |
+| 6. Re-enable fork builds in Buildkite settings | P1 | Blocked on items 1–5 |
+| 7. Split `buildkite-ci-secrets` into per-purpose secrets | P2 | Not started — monolithic secret still used in homelab ArgoCD config |
+| 8. Approval gate for tofu apply | P2 | Not started — no `block` step before tofu apply in `pipeline-builder.ts` |
+| 9. Buildkite OIDC for cloud credentials | P2 | Not started |
+| 10. Pipeline signing | P3 | Not started |
+| 11. Pod security hardening | P3 | Not started |
+| 12. CI image supply chain (pin by digest, cosign) | P3 | Not started — `k8s-plugin.ts` uses version tag, not digest |
+| 13. Dagger engine isolation | P3 | Not started |
+| 14. `--reject-secrets` flag on pipeline upload | P3 | Not started |
 
 ## Context
 
