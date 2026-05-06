@@ -2,7 +2,7 @@
 
 ## Status
 
-Planned. This is an implementation plan for structured CI reports and artifacts.
+Not Started. Checked 2026-05-05 — no implementation progress on any phase. All five phases (structured test results, coverage annotation, lint annotations, Java coverage wiring, typecheck annotations) remain unimplemented. The Dagger functions (`testReports`, `testWithReportsHelper`, `generateAndTestReports`) do not exist, `coverage-summary.ts` does not exist, no test-report artifact upload steps are present in the pipeline generator, and `mavenCoverage` is still never called from CI. The `test:ci` scripts in `scout-for-lol` sub-packages were pre-existing precedent documented when the plan was written, not new progress.
 
 Date: 2026-04-04
 
