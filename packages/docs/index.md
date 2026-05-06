@@ -59,6 +59,7 @@ AI-maintained knowledge base for the monorepo.
 - [NVMe Wear Attribution](guides/2026-04-21_nvme-wear-attribution.md) - Byte-level accounting of NVMe write sources
 - [Type-safe Home Assistant Client](guides/2026-04-21_type-safe-home-assistant-client.md) - `ha-codegen`, generated schema, and Temporal usage
 - [Birmel Remediation Follow-ups](guides/2026-04-25_birmel-remediation-followups.md) - Post-deploy checks and deferred cleanup from Birmel remediation
+- [Home Assistant Cleanup Follow-ups](guides/2026-04-25_home-assistant-cleanup-followups.md) - Open action items from the 2026-04-25 HA log audit: Hue/Sonos/Sonoff/Backup/iPad/PetLibro/pylitterbot
 - [Homelab Health Audit](guides/2026-05-05_homelab-health-audit.md) - Current cluster health audit snapshot
 - [Minecraft Server Ops](guides/2026-04-25_minecraft-server-ops.md) - Operational reference for deployed modded Minecraft servers
 - [Home Assistant Kumo Troubleshooting](guides/2026-05-04_home-assistant-kumo-troubleshooting.md) - Diagnosing `device_authentication_error`, the V3 cloud / Socket.IO password flow, the Murata-OUI DHCP-filter gap, and the cache-rewrite fix recipe

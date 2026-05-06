@@ -1,6 +1,6 @@
 # Home Assistant Cleanup — Next Steps
 
-Related: `guides/2026-04-25_homelab-health-audit.md`. Follows from log audit + cleanup session on 2026-04-25.
+Related: [`archive/homelab-audits/2026-04-25_homelab-health-audit.md`](../archive/homelab-audits/2026-04-25_homelab-health-audit.md). Follows from log audit + cleanup session on 2026-04-25. Last reviewed 2026-05-05.
 
 ## Already done
 
@@ -9,6 +9,7 @@ Related: `guides/2026-04-25_homelab-health-audit.md`. Follows from log audit + c
 - Confirmed Opower fully removed (0 active repair issues)
 - Rolled Prometheus → HA bearer token (token now in `prometheus-secrets:HOMEASSISTANT_TOKEN`, hot-reloaded via file mount)
 - Confirmed Roomba network fix (zero `roombapy` errors in 48h)
+- Kumo Living Room AC back online — DHCP reshuffled had swapped the (IP, password) pairings for both Mitsubishi dongles. Rewrote `/config/kumo_cache.json` with correct V3-fetched credentials and addresses, reloaded the integration, and set DHCP reservations for both Murata-OUI MACs (`50:26:ef:29:70:ee` → 192.168.1.173 Bedroom, `50:26:ef:28:f1:de` → 192.168.1.43 Living Room). See [2026-05-04 Kumo Troubleshooting](2026-05-04_home-assistant-kumo-troubleshooting.md) for the full investigation.
 
 ## Open — needs user action
 
@@ -81,27 +82,22 @@ All five backup state entities are `unavailable`:
 
 HA's built-in backup should never go unavailable. Likely a config/storage issue. Investigate via `Settings → System → Backups`.
 
-### 6. Kumo Living Room AC offline
-
-- `climate.living_room` and `sensor.living_room_current_temperature` unavailable
-- Kumo HVAC unit may be power-cycled or off the network. Quick ping to confirm.
-
-### 7. Old iPad #2 — 8 unavailable mobile_app entities
+### 6. Old iPad #2 — 8 unavailable mobile_app entities
 
 If that iPad is decommissioned, delete the device from `Settings → Devices & Services → Mobile App` to clear the 8 entities (`sensor.ipad_2_*`).
 
 ## Open — chronic / accept
 
-### 8. PetLibro custom integration — chronic upstream cloud flake
+### 7. PetLibro custom integration — chronic upstream cloud flake
 
-3 metadata sensors (`granary_smart_camera_feeder_*`) frequently unavailable. Top non-roomba error source over last 30 days (806 errors / 9 days, "Cannot connect to host api.us.petlibro.com"). Options:
+3 metadata sensors (`granary_smart_camera_feeder_*`) frequently unavailable. Top non-roomba error source over last 30 days (806 errors / 9 days, "Cannot connect to host api.us.petlibro.com"). Mitigation applied 2026-05-05: feeder binary sensors (`binary_sensor.*granary*feeder*`) are now excluded from the HomeKit bridge so they no longer appear as dead devices in Apple Home. The HA-side unavailability and log noise remain. Options for further remediation:
 
 - Lower polling frequency in the custom integration config
 - Filter `Cannot connect to host` to debug-level via Python logging
 - Replace with a less aggressive fork
 - Accept it (current state)
 
-### 9. pylitterbot upstream issue — boot-time SRP timeout
+### 8. pylitterbot upstream issue — boot-time SRP timeout
 
 When HA boots, `pylitterbot.session.login` runs synchronous Cognito SRP via `loop.run_in_executor(None, ...)` — shared executor with all other integrations. Under bootstrap concurrency, the call queues past HA's 145s stage-2 budget and gets cancelled. Reproduces on most HA restarts (33 cancelled-setup events in 30 days).
 
@@ -110,7 +106,7 @@ Worth filing on `natekspencer/pylitterbot`. Suggested fixes:
 - Use a dedicated thread executor for SRP login (not the shared default)
 - Fail fast and raise `ConfigEntryNotReady` so HA's normal `setup_retry` handles it instead of blocking the whole stage-2 budget
 
-### 10. HACS pending updates (12 components, 26 repair items)
+### 9. HACS pending updates (12 components, 26 repair items)
 
 Cosmetic — clear themselves on next HA pod restart after applying updates.
 
