@@ -84,6 +84,22 @@ export async function doFilterAlreadyOpen(
 export async function doOpenDraftPr(
   input: OpenDraftPrInput,
 ): Promise<{ url: string; number: number }> {
+  // Dry-run: print what we would have created and return a fixture URL
+  // so the workflow still ends with `pr` set on the result. Useful for
+  // local dev (DOCS_GROOM_DRY_RUN=1) — exercises the full happy path
+  // without mutating the real GitHub repo.
+  if (Bun.env["DOCS_GROOM_DRY_RUN"] === "1") {
+    jsonLog("info", "[dry-run] would create draft PR", "pr", {
+      branch: input.branch,
+      title: input.title,
+      labels: input.labels,
+      kind: input.kind,
+      bodyLength: input.body.length,
+      bodyHead: input.body.slice(0, 500),
+    });
+    return { url: "https://github.com/dry-run/pull/0", number: 0 };
+  }
+
   const args = [
     "gh",
     "pr",
