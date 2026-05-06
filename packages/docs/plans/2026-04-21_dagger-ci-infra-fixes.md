@@ -2,7 +2,9 @@
 
 ## Status
 
-**Not started (2026-04-21).** Punch list for a dedicated CI-infra PR. These bugs exist on `main` at commit `4b77c05f` independent of any dep updates; they make `dagger call ci-all --source .` unrunnable end-to-end locally. Documented while cleaning up Renovate Dashboard #481 — see `2026-04-21_renovate-dashboard-cleanup.md`.
+**Not started.** Punch list for a dedicated CI-infra PR. These bugs exist on `main` at commit `4b77c05f` independent of any dep updates; they make `dagger call ci-all --source .` unrunnable end-to-end locally. Documented while cleaning up Renovate Dashboard #481 — see `2026-04-21_renovate-dashboard-cleanup.md`.
+
+Verified still present (2026-05-05): `rustBaseContainer` and `goBaseContainer` both keep `withWorkdir("/workspace")` with no per-package override before cargo/go commands; `bunBaseContainer` still has no helm in its apt install list and homelab receives no `extraAptPackages` in the generic loop.
 
 ## Context
 
