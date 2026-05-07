@@ -25,13 +25,13 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 // Hostname of the Talos node where the Zooz ZST39 USB stick is plugged in.
 // Update after physically inserting the stick (verify via `kubectl get nodes`).
-const ZWAVE_NODE_HOSTNAME = "TODO-zwave-node";
+const ZWAVE_NODE_HOSTNAME = "torvalds";
 
 // Persistent USB device path on the host. Resolve via `ls -la /dev/serial/by-id/`
 // on the target node after plugging in the stick. The by-id path survives reboots
 // and USB re-enumeration; never use /dev/ttyUSB* or /dev/ttyACM* here.
 const ZWAVE_HOST_DEVICE_PATH =
-  "/dev/serial/by-id/TODO-usb-Zooz_800_Z-Wave_Stick_-if00";
+  "/dev/serial/by-id/usb-Zooz_800_Z-Wave_Stick_533D004242-if00";
 
 export function createZwaveJsUiDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "zwave-js-ui", {
