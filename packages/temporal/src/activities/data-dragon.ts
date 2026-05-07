@@ -336,6 +336,12 @@ export const dataDragonActivities = {
         ["bun", "run", "update-data-dragon", input.latestVersion],
         {
           cwd: `${repoDir}/${DATA_PACKAGE_ROOT}`,
+          // The updater's snapshot-regeneration step runs `bun test`, which
+          // loads scout's `configuration.ts` whose `env-var` validator only
+          // accepts ENVIRONMENT ∈ {dev, beta, prod}. The Temporal worker pod
+          // runs with ENVIRONMENT=production and the subprocess inherits it,
+          // failing validation. Pin to "dev" for the subprocess only.
+          env: { ENVIRONMENT: "dev" },
         },
       );
 
