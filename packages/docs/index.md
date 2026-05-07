@@ -44,6 +44,7 @@ AI-maintained knowledge base for the monorepo.
 - [Tasks for Obsidian iOS Target Wiring](plans/2026-04-25_tasks-for-obsidian-ios-target-wiring.md) - Finish native iOS target wiring after the completed audit
 - [PR Review and Summary Bot](plans/2026-04-25_pr-review-and-summary-bot.md) - GH webhook → Temporal → claude -p + GitHub MCP for auto code-review and PR summaries
 - [Polyrepo → Monorepo Link Audit](plans/2026-04-25_polyrepo-link-audit.md) - Rewrite all stale polyrepo URLs to monorepo + add lychee CI link-check gate
+- [Monarch Match Rate Fixes](plans/2026-04-25_monarch-match-rate-fixes.md) - Apple parser zero-match bug and Amazon 52% match-rate gap; phased diagnosis and fix plan
 - [Mysa HACS Max-Temp Cap](plans/2026-05-05_mysa-max-temp-cap.md) - Local hotfix at 30 °C while upstream PR kgelinas/Mysa_HA#18 lands the 40 °C support
 - [HomeKit Vacuum via Matter Hub](plans/2026-05-05_homekit-vacuum-via-matter-hub.md) - Deploy `t0bst4r/home-assistant-matter-hub` to expose HA `vacuum.*` entities to Apple Home (HomeKit Bridge can't carry vacuums)
 
@@ -61,6 +62,7 @@ AI-maintained knowledge base for the monorepo.
 - [Homelab Health Audit](guides/2026-05-05_homelab-health-audit.md) - Current cluster health audit snapshot
 - [Minecraft Server Ops](guides/2026-04-25_minecraft-server-ops.md) - Operational reference for deployed modded Minecraft servers
 - [Home Assistant Kumo Troubleshooting](guides/2026-05-04_home-assistant-kumo-troubleshooting.md) - Diagnosing `device_authentication_error`, the V3 cloud / Socket.IO password flow, the Murata-OUI DHCP-filter gap, and the cache-rewrite fix recipe
+- [Home Assistant Cleanup Follow-ups](guides/2026-04-25_home-assistant-cleanup-followups.md) - Post-audit action items: Hue orphan removal, Sonos Era 100 Wi-Fi, Litter-Robot reload, Sonoff outages, PetLibro flake
 - [Velero Orphan-Snapshot Remediation](guides/2026-05-05_velero-orphan-snapshot-remediation.md) - Procedure for manually pruning orphan ZFS snapshots and R2 objects when the audit workflow alerts
 
 ## Archive
@@ -75,4 +77,4 @@ Historical docs preserved for reference. These are no longer actively maintained
 - [`archive/on-hold/`](archive/on-hold/) - 4 on-hold Sentinel architecture and implementation docs
 - [`archive/scout-followups/`](archive/scout-followups/) - 1 time-boxed Scout follow-up checklist
 - [`archive/stale/`](archive/stale/) - 7 stale operational snapshots and superseded plans
-- [`archive/superseded/`](archive/superseded/) - 7 older superseded plans
+- [`archive/superseded/`](archive/superseded/) - 8 older superseded plans
