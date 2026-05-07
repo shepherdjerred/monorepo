@@ -44,7 +44,6 @@ AI-maintained knowledge base for the monorepo.
 - [Tasks for Obsidian iOS Target Wiring](plans/2026-04-25_tasks-for-obsidian-ios-target-wiring.md) - Finish native iOS target wiring after the completed audit
 - [PR Review and Summary Bot](plans/2026-04-25_pr-review-and-summary-bot.md) - GH webhook → Temporal → claude -p + GitHub MCP for auto code-review and PR summaries
 - [Polyrepo → Monorepo Link Audit](plans/2026-04-25_polyrepo-link-audit.md) - Rewrite all stale polyrepo URLs to monorepo + add lychee CI link-check gate
-- [zwave-js-ui Bring-up](plans/2026-05-04_zwave-js-ui-bring-up.md) - Post-arrival checklist for wiring the Zooz ZST39 800-series stick into HA via zwave-js-ui
 - [Mysa HACS Max-Temp Cap](plans/2026-05-05_mysa-max-temp-cap.md) - Local hotfix at 30 °C while upstream PR kgelinas/Mysa_HA#18 lands the 40 °C support
 - [HomeKit Vacuum via Matter Hub](plans/2026-05-05_homekit-vacuum-via-matter-hub.md) - Deploy `t0bst4r/home-assistant-matter-hub` to expose HA `vacuum.*` entities to Apple Home (HomeKit Bridge can't carry vacuums)
 
@@ -76,4 +75,4 @@ Historical docs preserved for reference. These are no longer actively maintained
 - [`archive/on-hold/`](archive/on-hold/) - 4 on-hold Sentinel architecture and implementation docs
 - [`archive/scout-followups/`](archive/scout-followups/) - 1 time-boxed Scout follow-up checklist
 - [`archive/stale/`](archive/stale/) - 7 stale operational snapshots and superseded plans
-- [`archive/superseded/`](archive/superseded/) - 5 older superseded plans
+- [`archive/superseded/`](archive/superseded/) - 7 older superseded plans
