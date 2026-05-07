@@ -159,6 +159,15 @@ The `runPrAgent` activity (`src/activities/pr-agent.ts`) launches `claude -p --m
 
 **Models** — review uses `claude-opus-4-7` (max-turns 30), summary uses `claude-haiku-4-5-20251001` (max-turns 10). Summary comments include the marker `<!-- pr-summary -->` so subsequent runs edit in place instead of duplicating.
 
+## HA presence (welcomeHome / leavingHome) — debounce model
+
+HA `state_changed` events for `person.jerred` / `person.shuxin` flap at the home/not_home boundary (GPS / wifi / cell-tower jitter). Two layers, both keyed off `PRESENCE_COOLDOWN_SECONDS = 90` in `src/shared/presence.ts`:
+
+1. **Trigger dedupe** (`src/event-bridge/triggers.ts`) — workflow ids are `welcome-home-{cooldownBucket()}-{entity}` / `leaving-home-{cooldownBucket()}-{entity}` with `REJECT_DUPLICATE` + `WorkflowIdConflictPolicy.FAIL`. Duplicate transitions inside one 90 s tumbling window are rejected at the server and surfaced as `component=ha-presence phase=debounced`.
+2. **Workflow recheck** (`src/workflows/ha/{leaving,welcome}-home.ts`) — both workflows sleep `PRESENCE_COOLDOWN_SECONDS` before any side-effect, then re-fetch presence (`everyoneAway()` / `anyoneHome()` from `./util.ts`). A single false transition exits without notifying / locking / vacuuming, logged as `phase=debounced`.
+
+LogQL: `{namespace="temporal"} | json | component="ha-presence"`.
+
 ## Daily docs-groom workflow
 
 `runDocsGroomAudit` runs daily at 06:30 PT (`30 6 * * *`, schedule id `docs-groom-daily`). It:

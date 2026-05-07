@@ -1,11 +1,16 @@
 import { z } from "zod";
 import type { Client } from "@temporalio/client";
-import { WorkflowIdReusePolicy } from "@temporalio/client";
+import {
+  WorkflowExecutionAlreadyStartedError,
+  WorkflowIdConflictPolicy,
+  WorkflowIdReusePolicy,
+} from "@temporalio/client";
 import type {
   EventEnvelope,
   HomeAssistantRestClient,
 } from "@shepherdjerred/home-assistant";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { cooldownBucket } from "#shared/presence.ts";
 
 const IOS_ACTION_ID_GOOD_NIGHT = "A91A15AA-479E-416C-8F51-BD983A999266";
 
@@ -31,17 +36,40 @@ async function startWorkflow(
   client: Client,
   workflowType: string,
   workflowId: string,
+  options: {
+    workflowIdReusePolicy?: WorkflowIdReusePolicy;
+    workflowIdConflictPolicy?: WorkflowIdConflictPolicy;
+  } = {},
 ): Promise<void> {
   try {
     await client.workflow.start(workflowType, {
       taskQueue: TASK_QUEUES.DEFAULT,
       workflowId,
-      workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE,
+      workflowIdReusePolicy:
+        options.workflowIdReusePolicy ?? WorkflowIdReusePolicy.ALLOW_DUPLICATE,
+      ...(options.workflowIdConflictPolicy !== undefined && {
+        workflowIdConflictPolicy: options.workflowIdConflictPolicy,
+      }),
       workflowExecutionTimeout: "10 minutes",
       args: [],
     });
     console.warn(`Started workflow ${workflowType} id=${workflowId}`);
   } catch (error: unknown) {
+    if (error instanceof WorkflowExecutionAlreadyStartedError) {
+      // Expected for HA-presence cooldown: a duplicate transition fired
+      // inside the same bucket. Suppressed at the server, surfaced as info.
+      console.warn(
+        JSON.stringify({
+          level: "info",
+          msg: `${workflowType} debounced: duplicate start in same cooldown bucket`,
+          component: "ha-presence",
+          phase: "debounced",
+          workflowType,
+          workflowId,
+        }),
+      );
+      return;
+    }
     const detail = error instanceof Error ? error.message : String(error);
     console.error(
       `Failed to start workflow ${workflowType} id=${workflowId}: ${detail}`,
@@ -104,7 +132,11 @@ export function handleStateChanged(
       await startWorkflow(
         client,
         "welcomeHome",
-        `welcome-home-${dayKey()}-${parsed.data.entity_id}`,
+        `welcome-home-${cooldownBucket()}-${parsed.data.entity_id}`,
+        {
+          workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
+          workflowIdConflictPolicy: WorkflowIdConflictPolicy.FAIL,
+        },
       );
       return;
     }
@@ -118,7 +150,11 @@ export function handleStateChanged(
       await startWorkflow(
         client,
         "leavingHome",
-        `leaving-home-${dayKey()}-${parsed.data.entity_id}`,
+        `leaving-home-${cooldownBucket()}-${parsed.data.entity_id}`,
+        {
+          workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
+          workflowIdConflictPolicy: WorkflowIdConflictPolicy.FAIL,
+        },
       );
     }
   };
