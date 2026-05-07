@@ -60,9 +60,12 @@ export function createZwaveJsUiDeployment(chart: Chart) {
   //   s2AuthenticatedKey          — Z-Wave S2 Authenticated network key
   //   s2UnauthenticatedKey        — Z-Wave S2 Unauthenticated network key
   //   s0LegacyKey                 — Z-Wave S0 legacy network key
+  //   s2AuthenticatedKeyLr        — Z-Wave Long Range S2 Authenticated key
+  //   s2AccessControlKeyLr        — Z-Wave Long Range S2 Access Control key
   // Generate via the zwave-js-ui Settings UI on first run, then mirror the
   // values back into 1Password so future redeploys preserve the radio's
-  // S2 pairings.
+  // S2 pairings. LR keys SHOULD be distinct from classic S2 keys to keep
+  // compromise blast radius contained per network class.
   const secretsItem = new OnePasswordItem(chart, "zwave-js-ui-secrets", {
     spec: {
       itemPath: vaultItemPath("ertelv7tiogcwecrt3dxmjd2wi"),
@@ -121,6 +124,14 @@ export function createZwaveJsUiDeployment(chart: Chart) {
         KEY_S0_LEGACY: EnvValue.fromSecretValue({
           secret,
           key: "s0LegacyKey",
+        }),
+        KEY_LR_S2_AUTHENTICATED: EnvValue.fromSecretValue({
+          secret,
+          key: "s2AuthenticatedKeyLr",
+        }),
+        KEY_LR_S2_ACCESS_CONTROL: EnvValue.fromSecretValue({
+          secret,
+          key: "s2AccessControlKeyLr",
         }),
       },
       volumeMounts: [
