@@ -35,78 +35,9 @@ bun run typecheck    # Type check (runs ensure-ha-schema first)
 bun run lint         # ESLint
 bun test             # Run tests (incl. workflow-bundle smoke test)
 bun run generate     # Regenerate src/generated/ha-schema.ts from live HA (needs HA_URL + HA_TOKEN)
-
-# docs-groom prompt-iteration helpers (Fix 4 from i-didn-t-see-an-wondrous-quill plan)
-bun run groom:iterate-setup   # one-time: clone /tmp/groom-iterate
-bun run groom:iterate         # run claude → parse → print, no Temporal involved
 ```
 
-## Local dev loop (no CI, no Argo, no real GitHub)
-
-The full deploy chain (PR → CI → image → Argo → pod) takes ~30 min per round-trip. For docs-groom and similar claude-using workflows you almost never need it — three layered local paths cover most iteration:
-
-### A. Prompt-tuning only — no Temporal at all
-
-When you're iterating on `GROOM_PROMPT` or the `GroomResult` schema. Calls `claude -p` directly against a fresh worktree.
-
-```bash
-bun run groom:iterate-setup       # one-time, clones /tmp/groom-iterate
-# edit packages/temporal/src/shared/docs-groom-prompts.ts (or types.ts)
-bun run groom:iterate             # claude runs, parsed result prints, no Temporal
-cd /tmp/groom-iterate && git status -s    # what claude tried to edit inline
-cd /tmp/groom-iterate && git checkout . && git clean -fd    # reset for next run
-```
-
-### B. Workflow-bundle smoke test — sub-second
-
-`Worker.create()` webpack-bundles the workflow at startup. PR #685 shipped a transitive `@sentry/bun` import that webpack couldn't resolve (`UnhandledSchemeError: node:util`) and the worker pod crashed at boot 25 min into deploy. The new bundle test in `src/workflows/bundle.test.ts` runs the same webpack pass in ~1 s; it's part of `bun run test` now.
-
-```bash
-cd packages/temporal && bun run test       # bundle test runs alongside the rest
-```
-
-If you import an activity helper into a workflow file and this test starts failing — move the helper to `src/shared/` (a pure module with no Sentry/observability imports).
-
-### C. Full-stack local with `DOCS_GROOM_DRY_RUN=1`
-
-Real claude, real worker, real Temporal — but `git push` and `gh pr create` are stubbed so you can iterate end-to-end without mutating origin.
-
-```bash
-# 1. Local Temporal dev server (no in-cluster dependency)
-temporal server start-dev --port 7233 &
-
-# 2. Env from 1Password
-export TEMPORAL_ADDRESS=localhost:7233
-export DOCS_GROOM_DRY_RUN=1
-export GH_TOKEN=$(op read 'op://Homelab (Kubernetes)/temporal-worker-secrets/GH_TOKEN')
-export ANTHROPIC_API_KEY=$(op read 'op://Homelab (Kubernetes)/temporal-worker-secrets/ANTHROPIC_API_KEY')
-export CLAUDE_CODE_OAUTH_TOKEN=$(op read 'op://Homelab (Kubernetes)/temporal-worker-secrets/CLAUDE_CODE_OAUTH_TOKEN')
-
-# 3. Run the worker locally
-cd packages/temporal && bun run start
-
-# 4. From another shell — trigger
-temporal --address localhost:7233 schedule trigger --schedule-id docs-groom-daily
-
-# 5. Iterate. Restart worker after activity edits.
-```
-
-The dry-run mode keeps these LIVE (still hits the real thing):
-
-- `git clone` (read-only, public repo)
-- `claude -p` (real Anthropic API spend)
-- Local git ops, typecheck, validation
-
-…and skips these:
-
-- `git push --force-with-lease origin <branch>` (logs `[dry-run] would push <branch>`)
-- `gh pr create --draft` (logs `[dry-run] would create draft PR` with the rendered body, returns a fake URL)
-
-**Warnings:**
-
-- **Don't forget `DOCS_GROOM_DRY_RUN=1`** — without it, claude's edits get pushed to GitHub from your laptop.
-- **Real-claude tokens spend** — even in dry-run, `claude -p` hits the real Anthropic API. Add `--max-budget-usd` to the activity if iterating heavily.
-- **Don't leave the in-cluster worker scaled to 0 by accident** — if you want to reuse the in-cluster Temporal instead of `start-dev`, port-forward (`kubectl port-forward -n temporal svc/temporal-temporal-server-service 7233:7233`) and scale the in-cluster worker down (`kubectl scale deployment -n temporal temporal-temporal-worker --replicas=0`) so it doesn't compete for tasks. **Restore it after** (`--replicas=1`) or scheduled fires (golink-sync every 5 min, etc.) won't be processed.
+The `bun test` run includes a workflow-bundle smoke test (`src/workflows/bundle.test.ts`) that runs the same webpack pass `Worker.create()` performs at startup. If you import an activity helper into a workflow file and this test starts failing, move the helper to `src/shared/` (a pure module with no Sentry/observability imports).
 
 ## HA schema (type-safe workflows)
 
@@ -132,15 +63,15 @@ Workflow:
 - `HA_TOKEN` — Home Assistant long-lived access token
 - `GOLINK_URL` — Golink service URL
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `S3_ENDPOINT` — S3/SeaweedFS credentials
-- `GH_TOKEN` — GitHub API token (used by docs-groom for cloning + opening PRs)
+- `GH_TOKEN` — GitHub API token (used by activities that clone repos or call the GitHub API)
 - `OPENAI_API_KEY` — OpenAI API key
-- `CLAUDE_CODE_OAUTH_TOKEN` — Claude Code subscription token. **Sole** auth for every `claude -p` activity (docs-groom + pr-agent). The cdk8s deployment intentionally does NOT inject `ANTHROPIC_API_KEY` — when both are present the CLI prefers the API key, which billed against direct-API credits instead of the subscription. The 1P field still exists for emergency fallback but is not referenced.
+- `CLAUDE_CODE_OAUTH_TOKEN` — Claude Code subscription token. **Sole** auth for every `claude -p` activity (currently pr-agent). The cdk8s deployment intentionally does NOT inject `ANTHROPIC_API_KEY` — when both are present the CLI prefers the API key, which billed against direct-API credits instead of the subscription. The 1P field still exists for emergency fallback but is not referenced.
 - `POSTAL_HOST`, `POSTAL_API_KEY` — Postal email service
 - `RECIPIENT_EMAIL`, `SENDER_EMAIL` — Email addresses for dependency summary
 - `TELEMETRY_ENABLED`, `OTLP_ENDPOINT`, `TELEMETRY_SERVICE_NAME` — OpenTelemetry tracing → Tempo (gated by `TELEMETRY_ENABLED`)
 - `SENTRY_DSN`, `ENVIRONMENT` — Sentry/Bugsink error tracking (init no-ops when DSN unset)
 - `APP_METRICS_PORT` — port for the application Prometheus registry (default `9465`); separate from the SDK metrics on `:9464`
-- `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, `GIT_COMMITTER_EMAIL` — bot identity for `git commit` in docs-groom
+- `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, `GIT_COMMITTER_EMAIL` — bot identity for any activity that runs `git commit`
 - `GITHUB_WEBHOOK_SECRET` — HMAC secret used to verify `X-Hub-Signature-256` on incoming PR webhooks. **Required** when the webhook server is enabled; the server only starts when this is set.
 - `GITHUB_PERSONAL_ACCESS_TOKEN` — token passed to the `github-mcp-server` MCP backend used by the pr-agent activity. May be the same as `GH_TOKEN` if the existing token has the necessary `pull_requests: read+write` and `contents: read` scopes; keep separate if you want a narrower-scoped token for the bot.
 - `GITHUB_WEBHOOK_PORT` — port for the GitHub webhook receiver (default `9466`).
@@ -166,33 +97,3 @@ HA `state_changed` events for `person.jerred` / `person.shuxin` flap at the home
 2. **Workflow recheck** (`src/workflows/ha/{leaving,welcome}-home.ts`) — both workflows sleep `PRESENCE_COOLDOWN_SECONDS` before any side-effect, then re-fetch presence (`everyoneAway()` / `anyoneHome()` from `./util.ts`). A single false transition exits without notifying / locking / vacuuming, logged as `phase=debounced`.
 
 LogQL: `{namespace="temporal"} | json | component="ha-presence"`.
-
-## Daily docs-groom workflow
-
-`runDocsGroomAudit` runs daily at 06:30 PT (`30 6 * * *`, schedule id `docs-groom-daily`). It:
-
-1. Clones a fresh shallow worktree of `shepherdjerred/monorepo` into `/tmp/groom-<wfRunId>`
-2. Runs `claude -p GROOM_PROMPT --output-format json` over `packages/docs/`. Claude does small in-place edits (move stale → archive, add `## Status`, fix links, update `index.md`) AND returns a JSON list of larger improvement tasks
-3. Commits any inline grooming as a single draft PR labelled `docs-groom`
-4. For up to 5 easy/medium tasks (after `filterAlreadyOpen` drops slugs that already have an open or recently-closed PR), spawns one `runDocsGroomTask` child workflow per task
-5. Each child does the same prepare → claude -p → validate → typecheck → push → draft PR loop, but with `IMPLEMENT_PROMPT` and one specific task. Child PRs are labelled `docs-groom` + `docs-groom-task`
-6. Hard tasks are returned in the parent workflow result for visibility in the Temporal UI — no PR
-
-**Safety:** `validateChanges` rejects empty diffs, paths matching `.env*`/`*.key`/`*.pem`/`id_rsa*`, gitignored paths, and any branch other than the expected feature branch. `typecheckIfCodeTouched` runs `bun run typecheck` for any owning workspace package whose files were changed (failure → no PR). All PRs are draft; nothing auto-merges.
-
-**Observability** — see `src/observability/`:
-
-- All activities emit `console.warn(JSON.stringify({ level, msg, component, module: "docs-groom", phase, workflowId, runId, traceId, ... }))` for Loki
-- 8 `docs_groom_*` Prometheus metrics on `:9465`: runs, tasks-identified, prs-opened, claude duration/cost/tokens, validation rejections, filtered-already-open
-- OTel spans `docs-groom.*` per activity → Tempo
-- Sentry context attached per activity (workflow, phase, runId, taskSlug)
-- Grafana panels: "Docs Grooming" row in `temporal-dashboard.ts`
-- Alerts: `docs-groom` rule group in `monitoring/rules/temporal.ts` — schedule-not-running, activities-failing, no-prs-opened, cost-budget-exceeded, secret-rejection (critical)
-
-LogQL examples:
-
-```logql
-{namespace="temporal"} | json | workflow=~"runDocsGroom.*"               # all docs-groom activity
-{namespace="temporal"} | json | workflow=~"runDocsGroom.*" | level="error"  # failures only
-{namespace="temporal"} | json | phase="validate" | reason!=""            # rejected diffs
-```

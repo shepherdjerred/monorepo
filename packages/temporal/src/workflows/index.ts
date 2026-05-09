@@ -20,17 +20,10 @@ import { runBugsinkHousekeepingWorkflow as _runBugsinkHousekeepingWorkflow } fro
 import { runVeleroOrphanAuditWorkflow as _runVeleroOrphanAuditWorkflow } from "./velero-orphan-audit.ts";
 import { runScoutDataDragonUpdate as _runScoutDataDragonUpdate } from "./data-dragon.ts";
 import type { DataDragonUpdateResult } from "#activities/data-dragon.ts";
-import {
-  runDocsGroomAudit as _runDocsGroomAudit,
-  runDocsGroomTask as _runDocsGroomTask,
-  type DocsGroomAuditResult,
-  type DocsGroomTaskResult,
-} from "./docs-groom.ts";
 import { prReview as _prReview } from "./pr-review.ts";
 import { prSummary as _prSummary } from "./pr-summary.ts";
 import type { PrAgentInput } from "#shared/schemas.ts";
 import type { PrAgentResult } from "#activities/pr-agent.ts";
-import type { GroomTask } from "#shared/docs-groom-types.ts";
 
 export async function fetchSkillCappedManifest(): Promise<void> {
   return _fetchSkillCappedManifest();
@@ -102,17 +95,6 @@ export async function runScoutDataDragonWeeklyRefresh(): Promise<
   DataDragonUpdateResult | undefined
 > {
   return _runScoutDataDragonUpdate("weekly-refresh");
-}
-
-export async function runDocsGroomAudit(): Promise<DocsGroomAuditResult> {
-  return _runDocsGroomAudit();
-}
-
-export async function runDocsGroomTask(input: {
-  task: GroomTask;
-  parentRunId: string;
-}): Promise<DocsGroomTaskResult> {
-  return _runDocsGroomTask(input);
 }
 
 export async function prReview(input: PrAgentInput): Promise<PrAgentResult> {
