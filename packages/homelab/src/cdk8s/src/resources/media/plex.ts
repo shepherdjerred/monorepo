@@ -67,7 +67,14 @@ export function createPlexDeployment(
     withCommonProps({
       image: `plexinc/pms-docker:${versions["plexinc/pms-docker"]}`,
       envVariables: {
-        ADVERTISE_IP: EnvValue.fromValue("https://plex.tailnet-1a49.ts.net"),
+        // Comma-separated list of URLs Plex advertises to clients as Direct
+        // Connection options (written to `customConnections` in Preferences.xml).
+        // - LAN URL: torvalds eno1 IP, served via the pod's hostPort:32400.
+        //   Lets LAN clients (e.g. Apple TV) bypass Plex Relay's 2 Mbps cap.
+        // - Tailscale URL: for tailnet-attached remote clients.
+        ADVERTISE_IP: EnvValue.fromValue(
+          "http://192.168.1.81:32400,https://plex.tailnet-1a49.ts.net",
+        ),
       },
       // https://support.plex.tv/articles/201543147-what-network-ports-do-i-need-to-allow-through-my-firewall/
       ports: [
