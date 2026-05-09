@@ -248,8 +248,8 @@ export function createTemporalWorkerDeployment(
       image: `ghcr.io/shepherdjerred/temporal-worker:${versions["shepherdjerred/temporal-worker"]}`,
       // :9464 = Temporal SDK's built-in Prometheus bridge (workflow_completed,
       //        activity_task_fail, etc. — see installRuntime in worker.ts)
-      // :9465 = application Prometheus registry (docs_groom_*, pr_*, default
-      //        Bun process metrics — see observability/metrics.ts)
+      // :9465 = application Prometheus registry (pr_*, default Bun process
+      //        metrics — see observability/metrics.ts)
       // :9466 = GitHub webhook receiver (Hono server in event-bridge/
       //        github-webhook.ts) — exposed via Cloudflare Tunnel for PR
       //        review/summary events.
@@ -264,7 +264,7 @@ export function createTemporalWorkerDeployment(
         readOnlyRootFilesystem: false,
       },
       // Bumped from 200m/500m and 256Mi/1Gi to give headroom for in-process
-      // claude -p invocations from the docs-groom workflow.
+      // claude -p invocations.
       resources: {
         cpu: {
           request: Cpu.millis(500),
@@ -291,9 +291,9 @@ export function createTemporalWorkerDeployment(
         // CLI prefers the API key — which billed against (and exhausted)
         // direct-API credits despite the user's Claude Code subscription.
         // Removing the API key from the env forces the CLI onto the OAuth
-        // token (subscription) for both docs-groom and pr-agent activities.
-        // The field still exists in the 1Password secret; just not referenced.
-        // Git identity for any workflow that runs `git commit` (docs-groom).
+        // token (subscription) for the pr-agent activity. The field still
+        // exists in the 1Password secret; just not referenced.
+        // Git identity for any activity that runs `git commit`.
         GIT_AUTHOR_NAME: EnvValue.fromValue("temporal-worker[bot]"),
         GIT_AUTHOR_EMAIL: EnvValue.fromValue("temporal-worker@homelab.local"),
         GIT_COMMITTER_NAME: EnvValue.fromValue("temporal-worker[bot]"),
@@ -413,10 +413,10 @@ export function createTemporalWorkerDeployment(
 
   // Bun resolves its scratch directory to /tmp at startup and bails with
   // `bun is unable to write files to tempdir: AccessDenied` if the path
-  // isn't writable for UID 1000. Several activities also stage real work
-  // under /tmp (deps-summary clones, docs-groom worktrees, the kubectl /
-  // gh / github-mcp-server installers in image.ts). A node-disk-backed
-  // emptyDir keeps that out of the 2 GiB pod memory budget.
+  // isn't writable for UID 1000. Activities also stage real work under
+  // /tmp (deps-summary clones, the kubectl / gh / github-mcp-server
+  // installers in image.ts). A node-disk-backed emptyDir keeps that out
+  // of the 2 GiB pod memory budget.
   const tmpVolume = Volume.fromEmptyDir(chart, "temporal-worker-tmp", "tmp");
   container.mount("/tmp", tmpVolume);
 

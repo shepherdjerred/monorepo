@@ -8,7 +8,7 @@ import {
   prAgentTokensTotal,
 } from "#observability/metrics.ts";
 import { getTraceContext } from "#observability/tracing.ts";
-import { parseClaudeResultMessage } from "./docs-groom-utils.ts";
+import { parseClaudeResultMessage } from "#shared/claude-result.ts";
 import { buildReviewPrompt, buildSummaryPrompt } from "./pr-prompts.ts";
 
 const COMPONENT = "pr-agent";

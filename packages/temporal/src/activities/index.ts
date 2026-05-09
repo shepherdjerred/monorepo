@@ -6,7 +6,6 @@ import { haActivities } from "./ha.ts";
 import { zfsMaintenanceActivities } from "./zfs-maintenance.ts";
 import { bugsinkHousekeepingActivities } from "./bugsink.ts";
 import { dataDragonActivities } from "./data-dragon.ts";
-import { docsGroomActivities } from "./docs-groom.ts";
 import { prAgentActivities } from "./pr-agent.ts";
 import { veleroOrphanAuditActivities } from "./velero-orphan-audit.ts";
 
@@ -19,7 +18,6 @@ export const activities = {
   ...zfsMaintenanceActivities,
   ...bugsinkHousekeepingActivities,
   ...dataDragonActivities,
-  ...docsGroomActivities,
   ...prAgentActivities,
   ...veleroOrphanAuditActivities,
 };
