@@ -14,6 +14,8 @@ import { PRESENCE_COOLDOWN_SECONDS } from "#shared/presence.ts";
 
 const FRONT_DOOR_LOCK = "lock.front_door" as const;
 const ROOMBA = "vacuum.roomba" as const;
+const Q7_MAX = "vacuum.q7_max" as const;
+const VACUUMS = [ROOMBA, Q7_MAX] as const;
 
 export async function leavingHome(): Promise<void> {
   // HA presence routinely emits a brief not_home blip while the user is
@@ -34,7 +36,7 @@ export async function leavingHome(): Promise<void> {
 
   await sendNotification(
     "Leaving Home",
-    "Goodbye! The Roomba will start cleaning soon.",
+    "Goodbye! The vacuums will start cleaning soon.",
   );
 
   await callService("lock", "lock", { entity_id: FRONT_DOOR_LOCK });
@@ -55,11 +57,17 @@ export async function leavingHome(): Promise<void> {
     });
   }
 
-  const roomba = await getEntityState(ROOMBA);
-  if (shouldStartVacuum(roomba.state)) {
-    await callService("vacuum", "start", { entity_id: ROOMBA });
+  const started: (typeof VACUUMS)[number][] = [];
+  for (const vacuum of VACUUMS) {
+    const state = await getEntityState(vacuum);
+    if (shouldStartVacuum(state.state)) {
+      await callService("vacuum", "start", { entity_id: vacuum });
+      started.push(vacuum);
+    }
+  }
+  for (const vacuum of started) {
     await verifyState(
-      ROOMBA,
+      vacuum,
       (state) => state === "cleaning" || state === "returning",
       { delaySeconds: 5 * 60, retries: 3, retryDelaySeconds: 60 },
     );
