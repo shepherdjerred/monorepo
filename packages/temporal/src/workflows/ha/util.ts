@@ -12,6 +12,7 @@ import type { HaSchema } from "#generated/ha-schema.ts";
 
 const activities = proxyActivities<HaActivities>({
   startToCloseTimeout: "30 seconds",
+  retry: { maximumAttempts: 3 },
 });
 
 // Activity-facing API is stringly-typed (Temporal can't proxy generics). The

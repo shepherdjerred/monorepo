@@ -150,7 +150,8 @@ const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 7 * * 1-5",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "30 minutes",
+    // goodMorningEarly does a 60-minute sleep (MORNING_HEAT_DURATION); needs > 60m + slack
+    workflowExecutionTimeout: "75 minutes",
     memo: "Good morning pre-wake (weekdays 7 AM)",
   },
   {
@@ -180,7 +181,8 @@ const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 8 * * 0,6",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "30 minutes",
+    // goodMorningEarly does a 60-minute sleep (MORNING_HEAT_DURATION); needs > 60m + slack
+    workflowExecutionTimeout: "75 minutes",
     memo: "Good morning pre-wake (weekends 8 AM)",
   },
   {
