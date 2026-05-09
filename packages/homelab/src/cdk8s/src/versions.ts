@@ -201,7 +201,7 @@ const versions = {
   // Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3
   // not managed by renovate
   "shepherdjerred/caddy-s3proxy":
-    "2.0.0-1797@sha256:a1888d8edef6b88e37f96dfb91512999dcfbaf1f6e1943fc13acfd406772ed4e",
+    "2.0.0-1840@sha256:6be61b775ad9fcce19405463a3b7655e26be042e55258ddbe80662ff5f33ad03",
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
@@ -209,7 +209,7 @@ const versions = {
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
-    "2.0.0-1797@sha256:cd164f4379035d1a8e09992a5345a365eddc2f2bfd319421acddaac1ffbee455",
+    "2.0.0-1840@sha256:c00f5602784c962b205a6d8bcb8fd01c64e8c00af7119c14b279c5b109acf69c",
   // Custom status-page-api image - Status page API
   // not managed by renovate
   "shepherdjerred/status-page-api":
@@ -226,7 +226,7 @@ const versions = {
   // Custom temporal-worker image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/temporal-worker":
-    "2.0.0-1797@sha256:cb3cd6ff117eeb524aec1595a2fbab664ef83c126a542d94cc46ee2cdcfd4e6b",
+    "2.0.0-1840@sha256:34a697e59824809314bb58f8b749549a6f0ead002199fae805a9cd718901787b",
 };
 
 /**
