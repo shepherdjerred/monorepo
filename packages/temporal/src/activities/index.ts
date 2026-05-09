@@ -8,6 +8,7 @@ import { bugsinkHousekeepingActivities } from "./bugsink.ts";
 import { dataDragonActivities } from "./data-dragon.ts";
 import { prAgentActivities } from "./pr-agent.ts";
 import { veleroOrphanAuditActivities } from "./velero-orphan-audit.ts";
+import { outcomeActivities } from "./outcome.ts";
 
 export const activities = {
   ...fetcherActivities,
@@ -20,4 +21,5 @@ export const activities = {
   ...dataDragonActivities,
   ...prAgentActivities,
   ...veleroOrphanAuditActivities,
+  ...outcomeActivities,
 };

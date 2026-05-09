@@ -565,6 +565,15 @@ pre-commit:
               - "scripts/ci/src/**/*.ts"
             run: bash scripts/check-dagger-hygiene.sh
 
+          # --- Tunnel ↔ DNS coverage ---
+          # Every cdk8s TunnelBinding must have a matching cloudflare_dns_record
+          # in tofu. Without this, the public hostname silently fails to resolve.
+          - name: tunnel-dns-coverage
+            glob:
+              - "packages/homelab/src/cdk8s/src/**/*.ts"
+              - "packages/homelab/src/tofu/cloudflare/*.tf"
+            run: bun scripts/check-tunnel-dns-coverage.ts
+
           # --- Quality ratchet ---
           - name: quality-ratchet
             glob: "**/*.{ts,tsx,rs}"

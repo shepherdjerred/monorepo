@@ -1,6 +1,6 @@
 resource "cloudflare_zone" "sjer_red" {
   account = { id = var.cloudflare_account_id }
-  name       = "sjer.red"
+  name    = "sjer.red"
 }
 
 # ── CNAMEs (Cloudflare Tunnel services) ─────────────────────────────────────
@@ -151,6 +151,18 @@ resource "cloudflare_dns_record" "sjer_red_cname_pokebot" {
   proxied = true
 }
 
+# Receives GitHub `pull_request` webhooks for the temporal worker's pr-agent
+# (prReview / prSummary workflows). TunnelBinding lives in cdk8s; this DNS
+# record completes the public path. See packages/temporal/CLAUDE.md.
+resource "cloudflare_dns_record" "sjer_red_cname_pr_bot" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "pr-bot"
+  type    = "CNAME"
+  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
+  proxied = true
+}
+
 resource "cloudflare_dns_record" "sjer_red_cname_resume" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
@@ -245,6 +257,15 @@ resource "cloudflare_dns_record" "sjer_red_cname_status" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
   name    = "status"
+  type    = "CNAME"
+  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
+  proxied = true
+}
+
+resource "cloudflare_dns_record" "sjer_red_cname_temporal" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "temporal"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
@@ -396,7 +417,7 @@ resource "cloudflare_dns_record" "sjer_red_dkim_fm3" {
 
 resource "cloudflare_dns_record" "sjer_red_mx1" {
   zone_id  = cloudflare_zone.sjer_red.id
-  ttl     = 1
+  ttl      = 1
   name     = "sjer.red"
   type     = "MX"
   content  = "in1-smtp.messagingengine.com"
@@ -405,7 +426,7 @@ resource "cloudflare_dns_record" "sjer_red_mx1" {
 
 resource "cloudflare_dns_record" "sjer_red_mx2" {
   zone_id  = cloudflare_zone.sjer_red.id
-  ttl     = 1
+  ttl      = 1
   name     = "sjer.red"
   type     = "MX"
   content  = "in2-smtp.messagingengine.com"
@@ -414,7 +435,7 @@ resource "cloudflare_dns_record" "sjer_red_mx2" {
 
 resource "cloudflare_dns_record" "sjer_red_mx_rp1" {
   zone_id  = cloudflare_zone.sjer_red.id
-  ttl     = 1
+  ttl      = 1
   name     = "rp"
   type     = "MX"
   content  = "in1-smtp.messagingengine.com"
@@ -423,7 +444,7 @@ resource "cloudflare_dns_record" "sjer_red_mx_rp1" {
 
 resource "cloudflare_dns_record" "sjer_red_mx_rp2" {
   zone_id  = cloudflare_zone.sjer_red.id
-  ttl     = 1
+  ttl      = 1
   name     = "rp"
   type     = "MX"
   content  = "in2-smtp.messagingengine.com"

@@ -1,4 +1,9 @@
-import { proxyActivities, sleep } from "@temporalio/workflow";
+import {
+  proxyActivities,
+  sleep,
+  upsertMemo,
+  workflowInfo,
+} from "@temporalio/workflow";
 import type {
   Domain,
   EntityId,
@@ -8,12 +13,47 @@ import type {
   ServiceDataFor,
 } from "@shepherdjerred/home-assistant";
 import type { HaActivities } from "#activities/ha.ts";
+import type {
+  OutcomeActivities,
+  WorkflowOutcome,
+} from "#activities/outcome.ts";
 import type { HaSchema } from "#generated/ha-schema.ts";
 
 const activities = proxyActivities<HaActivities>({
   startToCloseTimeout: "30 seconds",
   retry: { maximumAttempts: 3 },
 });
+
+const outcomeActivities = proxyActivities<OutcomeActivities>({
+  startToCloseTimeout: "10 seconds",
+  retry: { maximumAttempts: 2 },
+});
+
+/**
+ * Records a check-and-skip workflow's terminal outcome:
+ *  - `executed` — the body ran (side effects applied)
+ *  - `skipped`  — a guard returned early; no side effects
+ *
+ * Two channels:
+ *  1. Workflow memo (`outcome`, `outcomeReason`) — visible in Temporal UI /
+ *     `temporal workflow describe`. No namespace admin setup required.
+ *  2. Prom counter `temporal_workflow_outcome_total{workflow,outcome,reason}` —
+ *     queryable in Grafana to differentiate runs that did real work.
+ *
+ * Call once at each terminal branch of the workflow before returning. Cheap
+ * (~one activity invocation, no I/O beyond in-process counters).
+ */
+export async function setOutcome(
+  outcome: WorkflowOutcome,
+  reason: string,
+): Promise<void> {
+  upsertMemo({ outcome, outcomeReason: reason });
+  await outcomeActivities.recordWorkflowOutcome({
+    workflow: workflowInfo().workflowType,
+    outcome,
+    reason,
+  });
+}
 
 // Activity-facing API is stringly-typed (Temporal can't proxy generics). The
 // wrappers below narrow each call against the generated HaSchema so workflows

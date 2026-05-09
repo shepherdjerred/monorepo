@@ -146,6 +146,19 @@ export function daggerHygieneStep(): BuildkiteStep {
   });
 }
 
+/**
+ * Plain step: verifies every cdk8s `TunnelBinding` has a matching
+ * `cloudflare_dns_record` in Tofu. Without DNS, the tunnel hostname silently
+ * fails to resolve — see prReview/prSummary outage on 2026-05-02.
+ */
+export function tunnelDnsCoverageStep(): BuildkiteStep {
+  return plainStep({
+    label: ":cloud: Tunnel DNS Coverage",
+    key: "tunnel-dns-coverage",
+    command: "bun scripts/check-tunnel-dns-coverage.ts",
+  });
+}
+
 export function semgrepScanStep(): BuildkiteStep {
   return plainStep({
     label: ":mag: Semgrep Scan",

@@ -158,7 +158,6 @@ describe("buildPipeline", () => {
       affected.hasImagePackages.add("temporal");
 
       const pipeline = buildPipeline(affected);
-      const steps = pipeline.steps.filter(isStep);
       const groups = pipeline.steps.filter(isGroup);
 
       // Build/push groups should exist for temporal-worker only
@@ -700,6 +699,7 @@ describe("buildPipeline", () => {
         "suppression-check",
         "trivy-scan",
         "semgrep-scan",
+        "tunnel-dns-coverage",
       ]);
       const nonDagger: string[] = [];
 

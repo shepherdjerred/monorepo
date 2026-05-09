@@ -1,5 +1,6 @@
 import "dotenv/config";
 import env from "env-var";
+import { z } from "zod";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("config");
@@ -38,14 +39,32 @@ function getOptionalEnvVar(
   }
 }
 
+const EnvironmentSchema = z.enum(["dev", "beta", "prod"]);
+
+// Resolves the runtime environment. Under NODE_ENV=test we tolerate junk
+// values (e.g. an upstream pod's ENVIRONMENT="production" leaking into a
+// spawned bun-test invocation) and fall back to "dev". Production paths
+// still throw on bad config so we don't silently mis-route.
+export function resolveEnvironment(): z.infer<typeof EnvironmentSchema> {
+  const raw = env.get("ENVIRONMENT").default("dev").asString();
+  const parsed = EnvironmentSchema.safeParse(raw);
+  if (parsed.success) return parsed.data;
+  if (Bun.env.NODE_ENV === "test") {
+    logger.warn(
+      `⚠️  ENVIRONMENT="${raw}" not in [dev, beta, prod]; coercing to "dev" for tests`,
+    );
+    return "dev";
+  }
+  throw new Error(
+    `Invalid ENVIRONMENT="${raw}", expected one of: dev, beta, prod`,
+  );
+}
+
 export default {
   version: getRequiredEnvVar("VERSION"),
   gitSha: getRequiredEnvVar("GIT_SHA"),
   sentryDsn: getOptionalEnvVar("SENTRY_DSN"),
-  environment: env
-    .get("ENVIRONMENT")
-    .default("dev")
-    .asEnum(["dev", "beta", "prod"]),
+  environment: resolveEnvironment(),
   discordToken: getRequiredEnvVar("DISCORD_TOKEN"),
   applicationId: getRequiredEnvVar("APPLICATION_ID"),
   discordClientSecret: getOptionalEnvVar("DISCORD_CLIENT_SECRET"),

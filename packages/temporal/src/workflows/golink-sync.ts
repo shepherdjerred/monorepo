@@ -108,4 +108,16 @@ export async function syncGolinks(): Promise<void> {
       `Golink sync complete: ${String(created)} created/updated, ${String(deleted)} deleted, ${String(skippedOwnership)} skipped (different owner)`,
     );
   }
+
+  const staleForeign = existingLinks.filter(
+    (link) =>
+      !isSyncOwned(link) &&
+      link.long.includes(tailnetDomain) &&
+      !expectedLinks.has(link.short),
+  );
+  if (staleForeign.length > 0) {
+    console.warn(
+      `Golink sync: ${String(staleForeign.length)} stale tailnet links owned by another identity (skipped): ${staleForeign.map((l) => l.short).join(", ")}`,
+    );
+  }
 }
