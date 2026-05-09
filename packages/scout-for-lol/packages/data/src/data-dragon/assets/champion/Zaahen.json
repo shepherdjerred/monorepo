@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Zaahen": {
       "id": "Zaahen",
@@ -682,7 +682,7 @@
         "name": "Cultivation of War",
         "description": "Zaahen's attacks and abilities against enemy champions  grant him stacks of Determination, gaining bonus Attack Damage per stack. When filled with Determination, Zaahen gains increased Attack Damage and can revive.",
         "image": {
-          "full": "ZaahenP.Zaahen.png",
+          "full": "ZaahenP.png",
           "sprite": "passive5.png",
           "group": "passive",
           "x": 192,

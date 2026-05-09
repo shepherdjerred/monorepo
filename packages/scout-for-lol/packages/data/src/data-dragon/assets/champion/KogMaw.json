@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "KogMaw": {
       "id": "KogMaw",
@@ -651,8 +651,8 @@
         {
           "id": "KogMawBioArcaneBarrage",
           "name": "Bio-Arcane Barrage",
-          "description": "Kog'Maw's attacks gain range and deal a percent of the target's maximum health as magic damage.",
-          "tooltip": "Kog'Maw gains {{ range }} Attack Range and his Attacks deal an additional <magicDamage>{{ totalhealthdamage }} max Health magic damage</magicDamage> for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "description": "Kog'Maw's attacks gain range and deal a percent of the target's maximum health as magic damage %i:OnHit% <OnHit>On-Hit</OnHit>.",
+          "tooltip": "Kog'Maw gains {{ range }} Attack Range and his Attacks deal an additional <magicDamage>{{ totalhealthdamage }} max Health magic damage</magicDamage> %i:OnHit% <OnHit>On-Hit</OnHit> for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Range",

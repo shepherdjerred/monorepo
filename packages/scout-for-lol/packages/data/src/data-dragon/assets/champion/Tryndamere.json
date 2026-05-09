@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Tryndamere": {
       "id": "Tryndamere",
@@ -809,7 +809,7 @@
           "id": "UndyingRage",
           "name": "Undying Rage",
           "description": "Tryndamere's lust for battle becomes so strong that he is unable to die, no matter how wounded he becomes.",
-          "tooltip": "Tryndamere becomes completely immune to death for {{ e3 }} seconds, refusing to be reduced below {{ e2 }} Health, and instantly gains <keywordMajor>{{ e1 }} Fury</keywordMajor>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Tryndamere becomes completely immune to death for {{ tryndrduration }} seconds, refusing to be reduced below {{ tryndrminhealth }} Health, and instantly gains <keywordMajor>{{ tryndrfurygain }} Fury</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Cooldown",
@@ -818,8 +818,8 @@
             ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ e2 }} -> {{ e2NL }}",
-              "{{ e1 }} -> {{ e1NL }}"
+              "{{ tryndrminhealth }} -> {{ tryndrminhealthNL }}",
+              "{{ tryndrfurygain }} -> {{ tryndrfurygainNL }}"
             ]
           },
           "maxrank": 3,

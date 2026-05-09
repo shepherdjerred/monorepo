@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Kennen": {
       "id": "Kennen",
@@ -304,7 +304,7 @@
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}",
-              "{{ e1 }} -> {{ e1NL }}"
+              "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 5,
@@ -328,11 +328,11 @@
           "effect": [
             null,
             [
-              75,
-              125,
-              175,
-              225,
-              275
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
               0,
@@ -400,7 +400,7 @@
           ],
           "effectBurn": [
             null,
-            "75/125/175/225/275",
+            "0",
             "0",
             "0",
             "0",
@@ -437,7 +437,7 @@
           "id": "KennenBringTheLight",
           "name": "Electrical Surge",
           "description": "Kennen passively deals extra damage and adds a Mark of the Storm to his target every few attacks, and he can activate this ability to damage and add another Mark of the Storm to targets who are already marked.",
-          "tooltip": "<spellPassive>Passive:</spellPassive> Every 5th Attack deals an additional <magicDamage>{{ totaldamagepassive }} magic damage</magicDamage>.<br /><br /><spellActive>Active:</spellActive> Kennen sends out a blast of electricity, dealing <magicDamage>{{ totaldamageactive }} magic damage</magicDamage> to nearby enemies affected by <spellName>Mark of the Storm</spellName>.<br />{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Every 5th Attack deals an additional <magicDamage>{{ totaldamagepassive }} magic damage</magicDamage> %i:OnHit% <OnHit>On-Hit</OnHit>.<br /><br /><spellActive>Active:</spellActive> Kennen sends out a blast of electricity, dealing <magicDamage>{{ totaldamageactive }} magic damage</magicDamage> to nearby enemies affected by <spellName>Mark of the Storm</spellName>.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Cooldown",
@@ -582,7 +582,7 @@
           "id": "KennenLightningRush",
           "name": "Lightning Rush",
           "description": "Kennen morphs into a lightning form, enabling him to pass through units and apply a Mark of the Storm. Kennen gains Move Speed when entering this form, and attack speed when leaving it.",
-          "tooltip": "Kennen turns into a ball of lightning, gaining <speed>{{ movementspeed*100 }}% Move Speed</speed>, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to enemies he passes through, and becoming Ghosted for {{ durationasball }} seconds. If Kennen damages at least one enemy, he gains {{ energyrefund }} Energy. <br /><br />After this ability ends, Kennen gains <attackSpeed>{{ attackspeed*100 }}% Attack Speed</attackSpeed> for {{ durationafterball }} seconds. Kennen can <recast>Recast</recast> to end this Ability early.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Kennen turns into a ball of lightning, gaining <speed>{{ movementspeed*100 }}% Move Speed</speed>, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to enemies he passes through, and becoming Ghosted for {{ durationasball }} seconds. If Kennen damages at least one enemy, he gains {{ energyrefund }} Energy. <br /><br />After this ability ends, Kennen gains <attackSpeed>{{ totalas*100 }}% Attack Speed</attackSpeed> for {{ durationafterball }} seconds. Critical Strikes extend this duration by {{ critdurationbonus }} second(s). Kennen can <recast>Recast</recast> to end this Ability early.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Cooldown",
@@ -592,7 +592,7 @@
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ attackspeed*100.000000 }}% -> {{ attackspeednl*100.000000 }}%"
+              "{{ totalas*100.000000 }}% -> {{ totalasnl*100.000000 }}%"
             ]
           },
           "maxrank": 5,

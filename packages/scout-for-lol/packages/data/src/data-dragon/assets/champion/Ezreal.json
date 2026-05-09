@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Ezreal": {
       "id": "Ezreal",
@@ -718,12 +718,10 @@
           "tooltip": "Ezreal fires a magical orb that sticks to the first champion, structure, or epic jungle monster hit for {{ detonationtimeout }} seconds. If Ezreal hits that target with an Attack or Ability, it detonates, dealing <magicDamage>{{ damage }} magic damage</magicDamage>. Detonating with an Ability refunds the Mana cost of that Ability plus <scaleMana>{{ manareturn }} Mana</scaleMana>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Damage",
-              "Total AP Ratio"
+              "Damage"
             ],
             "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ apratio*100.000000 }}% -> {{ aprationl*100.000000 }}%"
+              "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 5,
@@ -997,14 +995,16 @@
           "id": "EzrealR",
           "name": "Trueshot Barrage",
           "description": "Ezreal winds up before firing a powerful barrage of energy that deals massive damage to each unit it passes through (damage is reduced for minions and non-epic monsters).",
-          "tooltip": "Ezreal fires a massive energy arc that deals <magicDamage>{{ damage }} magic damage</magicDamage>. The arc deals {{ damagereductionwaveclear.0*100 }}% damage to minions and non-epic jungle monsters.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Ezreal fires a massive energy arc that deals <magicDamage>{{ damage }} magic damage</magicDamage>. Damage to minions and non-epic jungle monsters is reduced to <magicDamage>{{ damageminionmonster }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
+              "Non Champion Damage",
               "Cooldown"
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ basedamageminionmonster }} -> {{ basedamageminionmonsterNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },

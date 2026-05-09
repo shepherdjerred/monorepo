@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Vayne": {
       "id": "Vayne",
@@ -467,6 +467,54 @@
           "name": "Risen Legend Vayne (Mythclimber)",
           "chromas": false,
           "parentSkin": 64
+        },
+        {
+          "id": "67067",
+          "num": 67,
+          "name": "Demoncursed Vayne",
+          "chromas": true
+        },
+        {
+          "id": "67068",
+          "num": 68,
+          "name": "Demoncursed Vayne (Ruby)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "67069",
+          "num": 69,
+          "name": "Demoncursed Vayne (Catseye)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "67070",
+          "num": 70,
+          "name": "Demoncursed Vayne (Emerald)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "67071",
+          "num": 71,
+          "name": "Demoncursed Vayne (Sapphire)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "67072",
+          "num": 72,
+          "name": "Demoncursed Vayne (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "67073",
+          "num": 73,
+          "name": "Demoncursed Vayne (Pearl)",
+          "chromas": false,
+          "parentSkin": 67
         }
       ],
       "lore": "Shauna Vayne is a deadly, remorseless Demacian monster hunter, who has dedicated her life to finding and destroying the demon that murdered her family. Armed with a wrist-mounted crossbow and a heart full of vengeance, she is only truly happy when slaying practitioners or creations of the dark arts, striking from the shadows with a flurry of silver bolts.",

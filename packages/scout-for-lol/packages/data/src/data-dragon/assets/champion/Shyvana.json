@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Shyvana": {
       "id": "Shyvana",
@@ -236,7 +236,7 @@
         "attackdamage": 62,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 2,
-        "attackspeed": 0.625
+        "attackspeed": 0.638
       },
       "spells": [
         {
@@ -384,7 +384,7 @@
           "id": "ShyvanaW",
           "name": "Inferno Aegis",
           "description": "Shyvana gains a shield, movement speed, and after a short delay, the area around her detonates.  While in Dragon Form, the explosion will heal her if it strikes an enemy champion.",
-          "tooltip": "Shyvana wraps herself in flames for {{ duration }} seconds, gaining <shield>{{ calc_shield }} Shield</shield>, increased by <shield>{{ calc_shield_per_nearby_champion }}</shield> per nearby enemy champion and <speed>{{ movespeed }} Move Speed</speed>, increased to <speed>{{ movespeedtowardsenemies }}</speed> when moving towards enemy champions.<br /><br />When the effect ends, the <shield>Shield</shield> is broken, or upon <recast>Recast</recast> the area around her detonates, dealing <magicDamage>{{ damage }} magic damage</magicDamage>.<br /><br /><keywordMajor>Dragon Form:</keywordMajor> If the detonation hits an enemy champion Shyvana <healing>restores from {{ calc_heal_min }} to {{ calc_heal_max }} Health</healing> based on her missing Health.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Shyvana wraps herself in flames for {{ duration }} seconds, gaining <shield>{{ calc_shield }} Shield</shield>, increased by <shield>{{ calc_shield_per_nearby_champion }}</shield> per nearby enemy champion and <speed>{{ movespeed }} Move Speed</speed>, increased to <speed>{{ movespeedtowardsenemies }}</speed> when moving towards enemy champions.<br /><br />When the effect ends, the <shield>Shield</shield> is broken, or upon <recast>Recast</recast> the area around her detonates, dealing <magicDamage>{{ damage }} magic damage</magicDamage>.<br /><br /><keywordMajor>Dragon Form:</keywordMajor> If the detonation hits an enemy champion Shyvana <healing> {{ calc_base_heal }} + {{ calc_missing_health_heal }} Missing Health</healing>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Cooldown",
@@ -399,13 +399,13 @@
           },
           "maxrank": 5,
           "cooldown": [
-            14,
-            13.5,
             13,
-            12.5,
-            12
+            12,
+            11,
+            10,
+            9
           ],
-          "cooldownBurn": "14/13.5/13/12.5/12",
+          "cooldownBurn": "13/12/11/10/9",
           "cost": [
             0,
             0,
@@ -527,28 +527,28 @@
           "id": "ShyvanaE",
           "name": "Molten Burst",
           "description": "Shyvana launches a fireball that explodes upon striking a large target and slows them. In Dragon Form, it passes through and explodes upon striking large enemies, leaving behind a trail of fire.",
-          "tooltip": "Shyvana launches a fireball at the target location dealing <magicDamage>{{ damage }} magic damage</magicDamage> and <status>Slowing by {{ calc_slow }} for {{ slowduration }} seconds</status>. It explodes upon striking an enemy or reaching its terminus.<br /><br /><keywordMajor>Dragon Form:</keywordMajor> Shyvana's fireball is larger and pierces through enemies. Upon striking a champion, large monster, or reaching its terminus it triggers a pulse of fire that deals <magicDamage>{{ calc_dragon_damage }} magic damage</magicDamage> and <status>Slows by {{ calc_slow_dragon }} for {{ slowduration }} seconds</status>. The fireball leaves behind a trail for {{ groundlingerduration }} seconds that deals <magicDamage>{{ damagepersecond }} magic damage per second</magicDamage>. {{ spellmodifierdescriptionappend }}",
+          "tooltip": "Shyvana launches a fireball at the target location dealing <magicDamage>{{ damage }} + {{ calc_max_health_damage }} Max health magic damage</magicDamage> and <status>Slowing by {{ calc_slow }} for {{ slowduration }} seconds</status>. It explodes upon striking an enemy or reaching its terminus.<br /><br /><keywordMajor>Dragon Form:</keywordMajor> Shyvana's fireball is larger and pierces through enemies. Upon striking a champion, large monster, or reaching its terminus it triggers a pulse of fire that deals <magicDamage>{{ calc_dragon_damage }}  + {{ calc_max_health_dragon_damage }} Max Health magic damage</magicDamage> and <status>Slows by {{ calc_slow_dragon }} for {{ slowduration }} seconds</status>. The fireball leaves behind a trail for {{ groundlingerduration }} seconds that deals <magicDamage>{{ damagepersecond }} magic damage per second</magicDamage>. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Cooldown",
               "Damage",
-              "Slow"
+              "Total AP Ratio"
             ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ slowamount*100.000000 }}% -> {{ slowamountnl*100.000000 }}%"
+              "{{ damageapratio*100.000000 }}% -> {{ damageaprationl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
           "cooldown": [
             12,
-            11.5,
             11,
-            10.5,
-            10
+            10,
+            9,
+            8
           ],
-          "cooldownBurn": "12/11.5/11/10.5/10",
+          "cooldownBurn": "12/11/10/9/8",
           "cost": [
             0,
             0,

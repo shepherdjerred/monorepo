@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Zeri": {
       "id": "Zeri",
@@ -365,7 +365,7 @@
         "armorperlevel": 4.2,
         "spellblock": 30,
         "spellblockperlevel": 1.3,
-        "attackrange": 500,
+        "attackrange": 550,
         "hpregen": 3.25,
         "hpregenperlevel": 0.7,
         "mpregen": 6,
@@ -667,8 +667,8 @@
         {
           "id": "ZeriE",
           "name": "Spark Surge",
-          "description": "Zeri dashes a short distance and energizes her next 3 shots of Burst Fire, causing them to pierce through enemies. She will vault and grind over any terrain she touches.",
-          "tooltip": "Zeri dashes a short distance and vaults over any terrain she touches, greatly extending the dash range. For the next {{ buffduration }} seconds, her shots of <spellName>Burst Fire</spellName> pierce dealing {{ pendamagepercent*100 }}% damage to enemies after the first and an additional <magicDamage>{{ bonusdamagetotal }} magic damage</magicDamage> On-Hit to the first target struck. <br /><br />Hitting an enemy champion with an Attack or Ability reduces this Ability's cooldown by {{ cdreductionperhit }} seconds. Critical strikes reduce the cooldown by {{ critcdreductionperhit }} seconds instead.{{ spellmodifierdescriptionappend }}",
+          "description": "Zeri dashes a short distance and energizes Burst Fire to pierce through enemies. She will vault and grind over any terrain she touches.",
+          "tooltip": "Zeri dashes a short distance and vaults over any terrain she touches, greatly extending the dash range. For the next {{ buffduration }} seconds, her shots of <spellName>Burst Fire</spellName> pierce dealing {{ pendamagepercent*100 }}% damage to enemies after the first and an additional <magicDamage>{{ bonusdamagetotal }} magic damage</magicDamage> On-Hit to the first target struck. <br /><br />Hitting an enemy with an Attack reduces this Ability's cooldown by {{ cdreductionperhit }} seconds. Critical strikes reduce the cooldown by {{ critcdreductionperhit }} seconds instead.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Percentage Damage",
@@ -685,13 +685,13 @@
           },
           "maxrank": 5,
           "cooldown": [
-            22,
+            24,
+            22.5,
             21,
-            20,
-            19,
+            19.5,
             18
           ],
-          "cooldownBurn": "22/21/20/19/18",
+          "cooldownBurn": "24/22.5/21/19.5/18",
           "cost": [
             90,
             85,
@@ -817,10 +817,12 @@
           "leveltip": {
             "label": [
               "Damage",
+              "Move Speed",
               "Cooldown"
             ],
             "effect": [
               "{{ activedamage }} -> {{ activedamageNL }}",
+              "{{ mspercent*100.000000 }}% -> {{ mspercentnl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Maokai": {
       "id": "Maokai",
@@ -454,7 +454,7 @@
           "id": "MaokaiW",
           "name": "Twisted Advance",
           "description": "Maokai contorts into a mass of moving roots, becoming untargetable and dashing to the target. Upon arrival, he roots the target.",
-          "tooltip": "Maokai transforms into a moving mass of roots, becoming Untargetable and dashing to an enemy. Upon arrival, he <status>Roots</status> the enemy for {{ e2 }} second(s) and deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>. {{ spellmodifierdescriptionappend }}",
+          "tooltip": "Maokai transforms into a moving mass of roots, becoming Untargetable and dashing to an enemy. Upon arrival, he <status>Roots</status> the enemy for {{ rootduration }} second(s) and deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -463,7 +463,7 @@
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ e2 }} -> {{ e2NL }}",
+              "{{ rootduration }} -> {{ rootdurationNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
