@@ -18,7 +18,12 @@ import {
 import { getPlayer } from "#src/league/model/player.ts";
 import type { MessageCreateOptions } from "discord.js";
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
-import { matchToSvg, arenaMatchToSvg, svgToPng } from "@scout-for-lol/report";
+import {
+  matchToSvg,
+  arenaMatchToSvg,
+  svgToPng,
+  setItemMissHandler,
+} from "@scout-for-lol/report";
 import { saveMatchToS3, saveImageToS3, saveSvgToS3 } from "#src/storage/s3.ts";
 import { toMatch, toArenaMatch } from "#src/league/model/match.ts";
 import { match } from "ts-pattern";
@@ -33,9 +38,21 @@ import {
 import {
   reportsGeneratedTotal,
   reportsFailedTotal,
+  scoutItemCacheMissTotal,
 } from "#src/metrics/index.ts";
 
 const logger = createLogger("postmatch-match-report-generator");
+
+// Wire the report package's item-cache miss callback so we can log + meter
+// the event. Fires whenever satori renders the "?" placeholder because
+// the requested item id isn't in the bundled Data Dragon snapshot — i.e.
+// Riot shipped a new item between updates. Single-install at module init.
+setItemMissHandler(({ itemId }) => {
+  logger.warn(
+    `[image-cache] ⚠️  Item ${itemId.toString()} not in cache — rendered placeholder. Refresh Data Dragon if sustained.`,
+  );
+  scoutItemCacheMissTotal.inc({ item_id: itemId.toString() });
+});
 
 /** Format a natural language message about who finished the game */
 function formatGameCompletionMessage(
