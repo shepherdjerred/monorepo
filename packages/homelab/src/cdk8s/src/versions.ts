@@ -19,9 +19,12 @@ const versions = {
   "tailscale-operator": "1.96.5",
   // renovate: datasource=github-releases versioning=semver
   "adyanth/cloudflare-operator": "v0.13.1",
-  // renovate: datasource=docker registryUrl=https://quay.io versioning=loose
+  // renovate: datasource=docker registryUrl=https://quay.io versioning=docker
+  // Tracked via the rolling `latest` tag because upstream redlib only publishes
+  // sha-<short-commit> tags, which Renovate cannot version-compare. The global
+  // pinDigests rule (renovate.json) keeps the @sha256 fresh as `latest` moves.
   "redlib/redlib":
-    "sha-ba98178@sha256:dffb6c5a22f889d47d8e28e33411db0fb6c5694599f72cf740c912c12f5fc1c6",
+    "latest@sha256:e6647a94d553bf3f7c95c53fc6d9da5785e6c278d9002e99ea32abdb5e3c513a",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "itzg/minecraft-server":
     "2026.4.2-java21@sha256:55d2d31aed9848756c0051dea0b001a36ea0fa2afdce892f1aab0655a6dff87b",
