@@ -17,7 +17,14 @@ export function addApiAndCompetitionRows(
   prometheusDatasource: PrometheusDatasource,
 ): void {
   // Row 5: API Activity
-  builder.withRow(new dashboard.RowBuilder("API Activity"));
+  builder.withRow(
+    new dashboard.RowBuilder("API Activity").gridPos({
+      x: 0,
+      y: 72,
+      w: 24,
+      h: 1,
+    }),
+  );
 
   // Riot API Request Rate
   builder.withPanel(
@@ -35,7 +42,7 @@ export function addApiAndCompetitionRows(
       .unit("reqps")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 0, y: 41, w: 12, h: 8 }),
+      .gridPos({ x: 0, y: 73, w: 12, h: 8 }),
   );
 
   // Database Query Rate
@@ -54,7 +61,7 @@ export function addApiAndCompetitionRows(
       .unit("reqps")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 12, y: 41, w: 12, h: 8 }),
+      .gridPos({ x: 12, y: 73, w: 12, h: 8 }),
   );
 
   // Reports Generated
@@ -73,7 +80,7 @@ export function addApiAndCompetitionRows(
       .unit("short")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 0, y: 49, w: 8, h: 8 }),
+      .gridPos({ x: 0, y: 81, w: 8, h: 8 }),
   );
 
   // Reports Failed
@@ -101,7 +108,7 @@ export function addApiAndCompetitionRows(
             { value: 1, color: "red" },
           ]),
       )
-      .gridPos({ x: 8, y: 49, w: 8, h: 8 }),
+      .gridPos({ x: 8, y: 81, w: 8, h: 8 }),
   );
 
   // Riot API Errors
@@ -129,10 +136,12 @@ export function addApiAndCompetitionRows(
             { value: 0.1, color: "red" },
           ]),
       )
-      .gridPos({ x: 16, y: 49, w: 8, h: 8 }),
+      .gridPos({ x: 16, y: 81, w: 8, h: 8 }),
   );
 
-  // Participant Mismatches (known Riot API bug)
+  // Participant Mismatches (known Riot API bug). `or on() vector(0)` so the
+  // panel shows a flat 0 line when no mismatches have occurred (counter
+  // never incremented), instead of "No data".
   builder.withPanel(
     new timeseries.PanelBuilder()
       .title("Participant Mismatches")
@@ -143,7 +152,7 @@ export function addApiAndCompetitionRows(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `sum by (environment) (rate(participant_mismatch_total{${buildFilter()}}[5m])) * 60`,
+            `sum by (environment) (rate(participant_mismatch_total{${buildFilter()}}[5m])) * 60 or on() vector(0)`,
           )
           .legendFormat("{{environment}}"),
       )
@@ -159,11 +168,18 @@ export function addApiAndCompetitionRows(
             { value: 1, color: "red" },
           ]),
       )
-      .gridPos({ x: 0, y: 57, w: 8, h: 8 }),
+      .gridPos({ x: 0, y: 89, w: 24, h: 8 }),
   );
 
   // Row 6: Competition leaderboard chart
-  builder.withRow(new dashboard.RowBuilder("Competition leaderboard chart"));
+  builder.withRow(
+    new dashboard.RowBuilder("Competition leaderboard chart").gridPos({
+      x: 0,
+      y: 97,
+      w: 24,
+      h: 1,
+    }),
+  );
 
   // Render duration p50 / p95 by criteria type
   builder.withPanel(
@@ -190,7 +206,7 @@ export function addApiAndCompetitionRows(
       .unit("s")
       .lineWidth(2)
       .fillOpacity(5)
-      .gridPos({ x: 0, y: 65, w: 12, h: 8 }),
+      .gridPos({ x: 0, y: 98, w: 12, h: 8 }),
   );
 
   // Render outcome rate (success / error / skipped)
@@ -220,7 +236,7 @@ export function addApiAndCompetitionRows(
             { value: 0.1, color: "red" },
           ]),
       )
-      .gridPos({ x: 12, y: 65, w: 12, h: 8 }),
+      .gridPos({ x: 12, y: 98, w: 12, h: 8 }),
   );
 
   // PNG size distribution — catches blank-render regressions and pathological growth
@@ -248,7 +264,7 @@ export function addApiAndCompetitionRows(
       .unit("bytes")
       .lineWidth(2)
       .fillOpacity(5)
-      .gridPos({ x: 0, y: 73, w: 12, h: 8 }),
+      .gridPos({ x: 0, y: 106, w: 12, h: 8 }),
   );
 
   // S3 snapshot fetch latency
@@ -269,6 +285,6 @@ export function addApiAndCompetitionRows(
       .unit("s")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 12, y: 73, w: 12, h: 8 }),
+      .gridPos({ x: 12, y: 106, w: 12, h: 8 }),
   );
 }

@@ -79,7 +79,9 @@ export function createScoutDashboard() {
   };
 
   // Row 1: Overview Stats
-  builder.withRow(new dashboard.RowBuilder("Overview"));
+  builder.withRow(
+    new dashboard.RowBuilder("Overview").gridPos({ x: 0, y: 0, w: 24, h: 1 }),
+  );
 
   // Guild Count
   builder.withPanel(
@@ -169,7 +171,14 @@ export function createScoutDashboard() {
   );
 
   // Row 2: Discord Metrics
-  builder.withRow(new dashboard.RowBuilder("Discord Metrics"));
+  builder.withRow(
+    new dashboard.RowBuilder("Discord Metrics").gridPos({
+      x: 0,
+      y: 5,
+      w: 24,
+      h: 1,
+    }),
+  );
 
   // WebSocket Latency
   builder.withPanel(
@@ -184,7 +193,7 @@ export function createScoutDashboard() {
       .unit("ms")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 0, y: 5, w: 12, h: 8 }),
+      .gridPos({ x: 0, y: 6, w: 12, h: 8 }),
   );
 
   // Command Rate
@@ -203,11 +212,18 @@ export function createScoutDashboard() {
       .unit("reqps")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 12, y: 5, w: 12, h: 8 }),
+      .gridPos({ x: 12, y: 6, w: 12, h: 8 }),
   );
 
   // Row 3: Application Performance
-  builder.withRow(new dashboard.RowBuilder("Application Performance"));
+  builder.withRow(
+    new dashboard.RowBuilder("Application Performance").gridPos({
+      x: 0,
+      y: 14,
+      w: 24,
+      h: 1,
+    }),
+  );
 
   // Uptime
   builder.withPanel(
@@ -215,7 +231,7 @@ export function createScoutDashboard() {
       title: "Uptime",
       query: `max by (environment) (application_uptime_seconds{${buildFilter()}})`,
       legend: "{{environment}}",
-      gridPos: { x: 0, y: 13, w: 6, h: 4 },
+      gridPos: { x: 0, y: 15, w: 6, h: 4 },
       unit: "s",
     }),
   );
@@ -226,7 +242,7 @@ export function createScoutDashboard() {
       title: "Active Competitions",
       query: `sum by (environment) (competitions_active_total{${buildFilter()}})`,
       legend: "{{environment}}",
-      gridPos: { x: 6, y: 13, w: 6, h: 4 },
+      gridPos: { x: 6, y: 15, w: 6, h: 4 },
     }),
   );
 
@@ -236,7 +252,7 @@ export function createScoutDashboard() {
       title: "Active Subscriptions",
       query: `sum by (environment) (subscriptions_total{${buildFilter()}})`,
       legend: "{{environment}}",
-      gridPos: { x: 12, y: 13, w: 6, h: 4 },
+      gridPos: { x: 12, y: 15, w: 6, h: 4 },
     }),
   );
 
@@ -246,7 +262,7 @@ export function createScoutDashboard() {
       title: "Avg Accounts/Player",
       query: `avg by (environment) (avg_accounts_per_player{${buildFilter()}})`,
       legend: "{{environment}}",
-      gridPos: { x: 18, y: 13, w: 6, h: 4 },
+      gridPos: { x: 18, y: 15, w: 6, h: 4 },
       unit: "short",
       graphMode: common.BigValueGraphMode.None,
     }).decimals(2),
@@ -268,7 +284,7 @@ export function createScoutDashboard() {
       .unit("s")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 0, y: 17, w: 12, h: 8 }),
+      .gridPos({ x: 0, y: 19, w: 12, h: 8 }),
   );
 
   // Cron Job Execution Rate
@@ -287,7 +303,7 @@ export function createScoutDashboard() {
       .unit("reqps")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 12, y: 17, w: 12, h: 8 }),
+      .gridPos({ x: 12, y: 19, w: 12, h: 8 }),
   );
 
   // Row 4: Pre-match — extracted into addPreMatchRow to keep this function

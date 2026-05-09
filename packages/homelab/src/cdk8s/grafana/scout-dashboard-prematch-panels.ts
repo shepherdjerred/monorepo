@@ -23,7 +23,14 @@ export function addPreMatchRow(
   builder: dashboard.DashboardBuilder,
   prometheusDatasource: PrometheusDatasource,
 ): void {
-  builder.withRow(new dashboard.RowBuilder("Pre-match"));
+  builder.withRow(
+    new dashboard.RowBuilder("Pre-match").gridPos({
+      x: 0,
+      y: 27,
+      w: 24,
+      h: 1,
+    }),
+  );
 
   // Prematch Active Games
   builder.withPanel(
@@ -40,7 +47,7 @@ export function addPreMatchRow(
       .unit("short")
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
-      .gridPos({ x: 0, y: 25, w: 4, h: 4 }),
+      .gridPos({ x: 0, y: 28, w: 4, h: 4 }),
   );
 
   // Prematch Detections
@@ -59,7 +66,7 @@ export function addPreMatchRow(
       .unit("short")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 4, y: 25, w: 10, h: 8 }),
+      .gridPos({ x: 4, y: 28, w: 10, h: 8 }),
   );
 
   // Loading Screen Outcomes
@@ -78,7 +85,7 @@ export function addPreMatchRow(
       .unit("short")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 14, y: 25, w: 10, h: 8 }),
+      .gridPos({ x: 14, y: 28, w: 10, h: 8 }),
   );
 
   // Spectator Payload Save Outcomes
@@ -97,7 +104,7 @@ export function addPreMatchRow(
       .unit("short")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 0, y: 33, w: 12, h: 8 }),
+      .gridPos({ x: 0, y: 36, w: 12, h: 8 }),
   );
 
   // Spectator Payload Save p95
@@ -116,7 +123,7 @@ export function addPreMatchRow(
       .unit("s")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 12, y: 33, w: 12, h: 8 }),
+      .gridPos({ x: 12, y: 36, w: 12, h: 8 }),
   );
 
   // Subsequent Match Detection Rate (Fix 1 evidence — should rise above 0
@@ -139,7 +146,7 @@ export function addPreMatchRow(
       .unit("short")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 0, y: 41, w: 12, h: 8 }),
+      .gridPos({ x: 0, y: 44, w: 12, h: 8 }),
   );
 
   // Loading Screen Generation p95
@@ -158,11 +165,13 @@ export function addPreMatchRow(
       .unit("s")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 12, y: 41, w: 12, h: 8 }),
+      .gridPos({ x: 12, y: 44, w: 12, h: 8 }),
   );
 
   // Skin Fallback Rate (informational — non-zero but stable is expected
-  // briefly after Riot ships a new skin until the next update-data-dragon)
+  // briefly after Riot ships a new skin until the next update-data-dragon).
+  // `or on() vector(0)` so the panel renders a flat 0 line instead of "No data"
+  // when no fallbacks have happened in the lookback window.
   builder.withPanel(
     new timeseries.PanelBuilder()
       .title("Loading Screen Skin Fallback Rate")
@@ -173,14 +182,14 @@ export function addPreMatchRow(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `sum by (environment) (rate(prematch_loading_screen_skin_fallback_total{${PREMATCH_FILTER}}[5m])) * 60`,
+            `sum by (environment) (rate(prematch_loading_screen_skin_fallback_total{${PREMATCH_FILTER}}[5m])) * 60 or on() vector(0)`,
           )
           .legendFormat("{{environment}}"),
       )
       .unit("short")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 0, y: 49, w: 12, h: 8 }),
+      .gridPos({ x: 0, y: 52, w: 12, h: 8 }),
   );
 
   // Top Fallback Skins (24h) — table showing which champion+skin combos
@@ -201,7 +210,7 @@ export function addPreMatchRow(
           .format(prometheus.PromQueryFormat.Table)
           .instant(),
       )
-      .gridPos({ x: 12, y: 49, w: 12, h: 8 }),
+      .gridPos({ x: 12, y: 52, w: 12, h: 8 }),
   );
 
   // Polling Skips by Reason (catches regressions where the cron lock or
@@ -232,7 +241,7 @@ export function addPreMatchRow(
             { value: 2, color: "red" },
           ]),
       )
-      .gridPos({ x: 0, y: 57, w: 12, h: 8 }),
+      .gridPos({ x: 0, y: 60, w: 12, h: 8 }),
   );
 
   // Spectator API Call Rate (sanity-check Fix 1's effect on call volume —
@@ -255,7 +264,7 @@ export function addPreMatchRow(
       .unit("reqps")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 12, y: 57, w: 12, h: 8 }),
+      .gridPos({ x: 12, y: 60, w: 12, h: 8 }),
   );
 
   // Spectator Circuit Breaker State (0=closed, 1=open, 2=half-open)
@@ -285,6 +294,6 @@ export function addPreMatchRow(
             { value: 2, color: "yellow" },
           ]),
       )
-      .gridPos({ x: 0, y: 65, w: 6, h: 4 }),
+      .gridPos({ x: 0, y: 68, w: 24, h: 4 }),
   );
 }
