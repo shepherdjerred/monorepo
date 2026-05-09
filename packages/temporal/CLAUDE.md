@@ -134,7 +134,7 @@ Workflow:
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `S3_ENDPOINT` — S3/SeaweedFS credentials
 - `GH_TOKEN` — GitHub API token (used by docs-groom for cloning + opening PRs)
 - `OPENAI_API_KEY` — OpenAI API key
-- `ANTHROPIC_API_KEY` — Anthropic API key (used by docs-groom for `claude -p`)
+- `CLAUDE_CODE_OAUTH_TOKEN` — Claude Code subscription token. **Sole** auth for every `claude -p` activity (docs-groom + pr-agent). The cdk8s deployment intentionally does NOT inject `ANTHROPIC_API_KEY` — when both are present the CLI prefers the API key, which billed against direct-API credits instead of the subscription. The 1P field still exists for emergency fallback but is not referenced.
 - `POSTAL_HOST`, `POSTAL_API_KEY` — Postal email service
 - `RECIPIENT_EMAIL`, `SENDER_EMAIL` — Email addresses for dependency summary
 - `TELEMETRY_ENABLED`, `OTLP_ENDPOINT`, `TELEMETRY_SERVICE_NAME` — OpenTelemetry tracing → Tempo (gated by `TELEMETRY_ENABLED`)
@@ -143,7 +143,6 @@ Workflow:
 - `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, `GIT_COMMITTER_EMAIL` — bot identity for `git commit` in docs-groom
 - `GITHUB_WEBHOOK_SECRET` — HMAC secret used to verify `X-Hub-Signature-256` on incoming PR webhooks. **Required** when the webhook server is enabled; the server only starts when this is set.
 - `GITHUB_PERSONAL_ACCESS_TOKEN` — token passed to the `github-mcp-server` MCP backend used by the pr-agent activity. May be the same as `GH_TOKEN` if the existing token has the necessary `pull_requests: read+write` and `contents: read` scopes; keep separate if you want a narrower-scoped token for the bot.
-- `CLAUDE_CODE_OAUTH_TOKEN` — auth used by the `claude` CLI inside the pr-agent activity (subprocess inherits this from the parent process).
 - `GITHUB_WEBHOOK_PORT` — port for the GitHub webhook receiver (default `9466`).
 
 ## PR review / summary bot
