@@ -286,11 +286,13 @@ export function createTemporalWorkerDeployment(
           "http://tempo.tempo.svc.cluster.local:4318",
         ),
         TELEMETRY_SERVICE_NAME: EnvValue.fromValue("temporal-worker"),
-        // Anthropic Claude (used by the docs-groom workflow).
-        ANTHROPIC_API_KEY: EnvValue.fromSecretValue({
-          secret,
-          key: "ANTHROPIC_API_KEY",
-        }),
+        // Anthropic Claude auth: ONLY CLAUDE_CODE_OAUTH_TOKEN (set further
+        // below). When ANTHROPIC_API_KEY is also in the env, the `claude -p`
+        // CLI prefers the API key — which billed against (and exhausted)
+        // direct-API credits despite the user's Claude Code subscription.
+        // Removing the API key from the env forces the CLI onto the OAuth
+        // token (subscription) for both docs-groom and pr-agent activities.
+        // The field still exists in the 1Password secret; just not referenced.
         // Git identity for any workflow that runs `git commit` (docs-groom).
         GIT_AUTHOR_NAME: EnvValue.fromValue("temporal-worker[bot]"),
         GIT_AUTHOR_EMAIL: EnvValue.fromValue("temporal-worker@homelab.local"),
