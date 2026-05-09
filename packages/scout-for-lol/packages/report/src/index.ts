@@ -15,6 +15,10 @@ export {
   type LoadingScreenOptions,
 } from "./html/loading-screen/index.tsx";
 export {
+  setItemMissHandler,
+  type ItemMissEvent,
+} from "./dataDragon/image-cache.ts";
+export {
   getChampionInfo,
   extractRunes,
   participantToChampion,

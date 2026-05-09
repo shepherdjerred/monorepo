@@ -2,8 +2,10 @@ import { describe, expect, test } from "bun:test";
 import {
   getChampionImage,
   getChampionLoadingImage,
+  getItemImage,
   preloadChampionImages,
   preloadChampionLoadingImages,
+  setItemMissHandler,
 } from "./image-cache.ts";
 
 describe("image-cache", () => {
@@ -79,5 +81,37 @@ describe("image-cache", () => {
     expect(() =>
       getChampionLoadingImage("AZZZThisIsDefinitelyNotCached", 99),
     ).toThrow(/not found in cache/);
+  });
+
+  test("getItemImage returns SVG placeholder data URI for unknown item id", () => {
+    // Items not in the bundled Data Dragon snapshot (Riot ships new IDs
+    // every patch) must render as a "?" placeholder rather than throwing
+    // — satori crashes on empty `<img src="">` and the postmatch report
+    // pipeline silently advances cursors, losing matches.
+    const dataUri = getItemImage(9_999_999);
+    expect(dataUri).toStartWith("data:image/svg+xml;base64,");
+    expect(dataUri.length).toBeGreaterThan(50);
+  });
+
+  test("getItemImage returns the real PNG for a known cached item id", () => {
+    // Item ID 1001 (Boots) has shipped in every Data Dragon snapshot since
+    // forever; if this assertion ever fails, the items.json is broken.
+    const dataUri = getItemImage(1001);
+    expect(dataUri).toStartWith("data:image/png;base64,");
+  });
+
+  test("setItemMissHandler fires for unknown item ids only", () => {
+    const events: number[] = [];
+    setItemMissHandler((event) => events.push(event.itemId));
+    try {
+      getItemImage(9_999_998);
+      getItemImage(1001);
+      getItemImage(9_999_997);
+    } finally {
+      setItemMissHandler(() => {
+        // Reset to a no-op so other tests don't leak this handler.
+      });
+    }
+    expect(events).toEqual([9_999_998, 9_999_997]);
   });
 });

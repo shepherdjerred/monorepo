@@ -492,6 +492,24 @@ export const reportsFailedTotal = new Counter({
 });
 
 /**
+ * Item icon cache misses during report rendering — incremented when
+ * `@scout-for-lol/report`'s `getItemImage()` falls back to the "?"
+ * placeholder because the requested item id isn't in the bundled Data
+ * Dragon snapshot. The wiring lives in `match-report-generator.ts` via
+ * `setItemMissHandler`.
+ *
+ * A non-zero rate is informational, not an error. Sustained or rapidly
+ * climbing rate means it's time to refresh assets — mirrors the
+ * `prematch_loading_screen_skin_fallback_total` pattern.
+ */
+export const scoutItemCacheMissTotal = new Counter({
+  name: "scout_item_cache_miss_total",
+  help: "Item icon cache misses (rendered as '?' placeholder) during report generation",
+  labelNames: ["item_id"] as const,
+  registers: [registry],
+});
+
+/**
  * Total number of database queries
  */
 export const databaseQueriesTotal = new Counter({
