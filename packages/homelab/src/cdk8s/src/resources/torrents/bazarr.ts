@@ -79,7 +79,9 @@ export function createBazarrDeployment(
         },
         memory: {
           request: Size.mebibytes(512),
-          limit: Size.gibibytes(2),
+          // Bumped 2 → 3 GiB after the 2026-05-07 OOMKilled at the 2 GiB limit
+          // (subtitle queue under load). 2 GiB was tight for steady-state.
+          limit: Size.gibibytes(3),
         },
       },
     }),
