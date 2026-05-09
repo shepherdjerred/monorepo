@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Leblanc": {
       "id": "Leblanc",
@@ -1016,7 +1016,7 @@
         "name": "Mirror Image",
         "description": "When LeBlanc drops below 40% Health, she becomes invisible for 1 second and creates a Mirror Image that deals no damage and lasts for up to 8 seconds.",
         "image": {
-          "full": "LeblancP.Leblanc_Rework.png",
+          "full": "LeblancP.png",
           "sprite": "passive2.png",
           "group": "passive",
           "x": 432,

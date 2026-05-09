@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Briar": {
       "id": "Briar",
@@ -235,7 +235,7 @@
       },
       "stats": {
         "hp": 625,
-        "hpperlevel": 100,
+        "hpperlevel": 95,
         "mp": 0,
         "mpperlevel": 0,
         "movespeed": 340,

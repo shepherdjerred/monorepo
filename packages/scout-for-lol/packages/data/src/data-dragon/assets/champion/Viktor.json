@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Viktor": {
       "id": "Viktor",
@@ -844,7 +844,7 @@
         "name": "Glorious Evolution",
         "description": "Viktor gains Hex Fragments whenever he kills an enemy. With every 100 Hex Fragments he obtains, Viktor permanently augments an active ability. After upgrading all of his basic abilities, he can gather 100 Hex Fragments to augment his ultimate ability.",
         "image": {
-          "full": "Viktor_Passive.ViktorVGU.png",
+          "full": "Viktor_Passive.png",
           "sprite": "passive5.png",
           "group": "passive",
           "x": 96,

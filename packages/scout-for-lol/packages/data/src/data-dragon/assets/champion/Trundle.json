@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Trundle": {
       "id": "Trundle",
@@ -414,7 +414,7 @@
           "id": "trundledesecrate",
           "name": "Frozen Domain",
           "description": "Trundle turns target location into his domain, gaining Attack Speed, Move Speed, and increased healing from all sources while on it.",
-          "tooltip": "Trundle freezes an area for {{ e4 }} seconds. While inside he gains <speed>{{ e1 }}% Move Speed</speed>, <attackSpeed>{{ e2 }}% Attack Speed</attackSpeed>, and {{ e3 }}% increased healing.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Trundle freezes an area for {{ duration }} seconds. While inside he gains <speed>{{ msbonus*100 }}% Move Speed</speed>, <attackSpeed>{{ asbonus*100 }}% Attack Speed</attackSpeed>, and {{ healingbonus*100 }}% increased healing.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Move Speed",
@@ -422,8 +422,8 @@
               "Cooldown"
             ],
             "effect": [
-              "{{ effect1amount*100.000000 }}% -> {{ effect1amountnl*100.000000 }}%",
-              "{{ effect2amount*100.000000 }}% -> {{ effect2amountnl*100.000000 }}%",
+              "{{ msbonus*100.000000 }}% -> {{ msbonusnl*100.000000 }}%",
+              "{{ asbonus*100.000000 }}% -> {{ asbonusnl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -448,25 +448,25 @@
           "effect": [
             null,
             [
-              20,
-              28,
-              36,
-              44,
-              52
+              0.2,
+              0.28,
+              0.36,
+              0.44,
+              0.52
             ],
             [
-              30,
-              45,
-              60,
-              75,
-              90
+              0.3,
+              0.45,
+              0.6,
+              0.75,
+              0.9
             ],
             [
-              25,
-              25,
-              25,
-              25,
-              25
+              0.25,
+              0.25,
+              0.25,
+              0.25,
+              0.25
             ],
             [
               8,
@@ -520,9 +520,9 @@
           ],
           "effectBurn": [
             null,
-            "20/28/36/44/52",
-            "30/45/60/75/90",
-            "25",
+            "0.2/0.28/0.36/0.44/0.52",
+            "0.3/0.45/0.6/0.75/0.9",
+            "0.25",
             "8",
             "775",
             "0",
@@ -557,7 +557,7 @@
           "id": "TrundleCircle",
           "name": "Pillar of Ice",
           "description": "Trundle creates an ice pillar at target location, becoming impassable terrain and slowing all nearby enemy units.",
-          "tooltip": "Trundle creates an icy pillar for {{ e1 }} seconds, briefly <status>Knocking Back</status> enemies directly over it and <status>Slowing</status> nearby enemies by {{ e2 }}%.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Trundle creates an icy pillar for {{ pillarduration }} seconds, briefly <status>Knocking Back</status> enemies directly over it and <status>Slowing</status> nearby enemies by {{ slowamount }}%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Cooldown",
@@ -565,7 +565,7 @@
             ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ e2 }}% -> {{ e2NL }}%"
+              "{{ slowamount }}% -> {{ slowamountNL }}%"
             ]
           },
           "maxrank": 5,

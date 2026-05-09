@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Poppy": {
       "id": "Poppy",
@@ -421,11 +421,11 @@
               "Monster Cap"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
-              "{{ e3 }}% -> {{ e3NL }}%",
+              "{{ basedamagevalue }} -> {{ basedamagevalueNL }}",
+              "{{ slow_ }}% -> {{ slow_NL }}%",
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}",
-              "{{ e6 }} -> {{ e6NL }}"
+              "{{ maxhealthdamagetononheroes }} -> {{ maxhealthdamagetononheroesNL }}"
             ]
           },
           "maxrank": 5,
@@ -566,7 +566,7 @@
             ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ e5 }} -> {{ e5NL }}"
+              "{{ damagevalue }} -> {{ damagevalueNL }}"
             ]
           },
           "maxrank": 5,
@@ -708,9 +708,9 @@
               "Cooldown"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
-              "{{ e2 }} -> {{ e2NL }}",
-              "{{ e3 }} -> {{ e3NL }}",
+              "{{ basedamagevalue }} -> {{ basedamagevalueNL }}",
+              "{{ walldamage }} -> {{ walldamageNL }}",
+              "{{ stunduration }} -> {{ stundurationNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },

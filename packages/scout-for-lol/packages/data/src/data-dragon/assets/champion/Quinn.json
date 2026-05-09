@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Quinn": {
       "id": "Quinn",
@@ -232,7 +232,7 @@
           "id": "QuinnQ",
           "name": "Blinding Assault",
           "description": "Quinn calls Valor to mark an enemy and hinder its vision before damaging all enemies in the immediate area.",
-          "tooltip": "Quinn orders Valor to dive, making the first enemy hit <keywordMajor>Vulnerable</keywordMajor>, reducing their vision radius for {{ e3 }} seconds and dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to all surrounding enemies.<br /><br />If the first enemy struck is not a champion, it is <status>Disarmed</status> for {{ e3 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Quinn orders Valor to dive, making the first enemy hit <keywordMajor>Vulnerable</keywordMajor>, reducing their vision radius for {{ visionreductionduration }} seconds and dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to all surrounding enemies.<br /><br />If the first enemy struck is not a champion, it is <status>Disarmed</status> for {{ visionreductionduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -377,7 +377,7 @@
           "id": "QuinnW",
           "name": "Heightened Senses",
           "description": "Passively grants Quinn Attack Speed and Move Speed after she attacks a <font color='#FFF673'>Vulnerable</font> target. Activate to have Valor reveal a large area nearby.",
-          "tooltip": "<spellPassive>Passive:</spellPassive> Attacking a <keywordMajor>Vulnerable</keywordMajor> target grants Quinn <attackSpeed>{{ attackspeedbonus*100 }}% Attack Speed</attackSpeed> and <speed>{{ e3 }}% Move Speed</speed> for {{ e1 }} seconds.<br /><br /><spellActive>Active:</spellActive> Valor reveals a large area nearby for {{ e5 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Attacking a <keywordMajor>Vulnerable</keywordMajor> target grants Quinn <attackSpeed>{{ attackspeedbonus*100 }}% Attack Speed</attackSpeed> and <speed>{{ movespeedamount*100 }}% Move Speed</speed> for {{ buffduration }} seconds.<br /><br /><spellActive>Active:</spellActive> Valor reveals a large area nearby for {{ visionduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Attack Speed",
@@ -386,7 +386,7 @@
             ],
             "effect": [
               "{{ attackspeedbonus*100.000000 }}% -> {{ attackspeedbonusnl*100.000000 }}%",
-              "{{ effect3amount*100.000000 }}% -> {{ effect3amountnl*100.000000 }}%",
+              "{{ movespeedamount*100.000000 }}% -> {{ movespeedamountnl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -425,11 +425,11 @@
               0
             ],
             [
-              20,
-              25,
-              30,
-              35,
-              40
+              0.2,
+              0.25,
+              0.3,
+              0.35,
+              0.4
             ],
             [
               2100,
@@ -485,7 +485,7 @@
             null,
             "2",
             "0",
-            "20/25/30/35/40",
+            "0.2/0.25/0.3/0.35/0.4",
             "2100",
             "2",
             "0",
@@ -520,14 +520,14 @@
           "id": "QuinnE",
           "name": "Vault",
           "description": "Quinn dashes to an enemy, dealing physical damage and slowing the target's Move Speed. Upon reaching the target, she leaps off the target, briefly interrupting it, and lands near her maximum Attack Range away from the target.",
-          "tooltip": "Quinn dashes to an enemy, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and marking them <keywordMajor>Vulnerable</keywordMajor>. Quinn then leaps backwards from the target, slightly <status>Knocking</status> them <status>Back</status> and <status>Slowing</status> them by {{ e1 }}%, decaying over {{ e3 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Quinn dashes to an enemy, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and marking them <keywordMajor>Vulnerable</keywordMajor>. Quinn then leaps backwards from the target, slightly <status>Knocking</status> them <status>Back</status> and <status>Slowing</status> them by {{ slowamount*100 }}%, decaying over {{ slowdecaytime }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
               "Cooldown"
             ],
             "effect": [
-              "{{ e2 }} -> {{ e2NL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -552,11 +552,11 @@
           "effect": [
             null,
             [
-              50,
-              50,
-              50,
-              50,
-              50
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
             ],
             [
               40,
@@ -624,7 +624,7 @@
           ],
           "effectBurn": [
             null,
-            "50",
+            "0.5",
             "40/65/90/115/140",
             "1.5",
             "0",

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Aurora": {
       "id": "Aurora",
@@ -741,7 +741,7 @@
         "name": "Spirit Abjuration",
         "description": "Aurora's spells and attacks exorcise spirits from the enemies she damages. Exorcised spirits follow Aurora around and heal her.",
         "image": {
-          "full": "AuroraPassive.Aurora.png",
+          "full": "AuroraPassive.png",
           "sprite": "passive0.png",
           "group": "passive",
           "x": 96,

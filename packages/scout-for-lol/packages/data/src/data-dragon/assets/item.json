@@ -219,6 +219,15 @@
         "FlatPhysicalDamageMod": 7
       }
     },
+    "1086": {
+      "name": "Doran's Bow",
+      "description": "<mainText><stats><attention>6</attention> Attack Damage<br><attention>15%</attention> Attack Speed<br><attention>1.5%</attention> Omnivamp</stats><br><br></mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatPhysicalDamageMod": 6,
+        "PercentAttackSpeedMod": 0.15
+      }
+    },
     "1090": {
       "name": "Quest: Top",
       "description": "",
@@ -251,19 +260,19 @@
     },
     "1101": {
       "name": "Scorchclaw Pup",
-      "description": "<mainText><stats></stats><br><br><passive>Jungle Companions</passive><br>Summon a <font color='#DD2E2E'>Scorchclaw</font> that assists you against monsters.<br><br><passive>Scorchclaw's Slash</passive><br>The companion grows as you hunt monsters, empowering your <spellName>Smite</spellName>. When fully grown, it periodically imbues your next Attack or Ability to burn enemies and <status>Slow</status> them. Killing large monsters readies this immediately.</mainText>",
+      "description": "<mainText><stats></stats><br><br><passive>Jungle Companions</passive><br>Summon a <font color='#DD2E2E'>Scorchclaw</font> that assists you against monsters.<br><br>The companion grows as you hunt monsters, empowering your <spellName>Smite</spellName>. When fully grown, it completes your Jungle Quest and periodically imbues your next Attack or Ability to burn enemies and <status>Slow</status> them. Killing large monsters readies this immediately.</mainText>",
       "plaintext": "",
       "stats": {}
     },
     "1102": {
       "name": "Gustwalker Hatchling",
-      "description": "<mainText><stats></stats><br><br><passive>Jungle Companions</passive><br>Summon a <font color='#38A8E8'>Gustwalker</font> that assists you against monsters.<br><br><passive>Gustwalker's Gait</passive><br>The companion grows as you hunt monsters, empowering your <spellName>Smite</spellName>. When fully grown, it grants <speed>Move Speed</speed> upon entering brush, increased when killing large monsters.</mainText>",
+      "description": "<mainText><stats></stats><br><br><passive>Jungle Companions</passive><br>Summon a <font color='#38A8E8'>Gustwalker</font> that assists you against monsters.<br><br>The companion grows as you hunt monsters, empowering your <spellName>Smite</spellName>. When fully grown, it completes your Jungle Quest and grants <speed>Move Speed</speed> upon entering brush, increased when killing large monsters.</mainText>",
       "plaintext": "",
       "stats": {}
     },
     "1103": {
       "name": "Mosstomper Seedling",
-      "description": "<mainText><stats></stats><br><br><passive>Jungle Companions</passive><br>Summon a <font color='#1CA935'>Jungle Pet</font> that assists you against monsters.<br><br><passive>Mosstomper's Courage</passive><br>The companion grows as you hunt monsters, empowering your <spellName>Smite</spellName>. When fully grown, it completes your Jungle Quest. </mainText>",
+      "description": "<mainText><stats></stats><br><br><passive>Jungle Companions</passive><br>Summon a <font color='#1CA935'>Mosstomper</font> that assists you against monsters.<br><br>The companion grows as you hunt monsters, empowering your <spellName>Smite</spellName>. When fully grown, it completes your Jungle Quest and grants a Shield while out of combat and after killing large monsters.</mainText>",
       "plaintext": "",
       "stats": {}
     },
@@ -275,19 +284,19 @@
     },
     "1105": {
       "name": "Mosstomper Seedling",
-      "description": "<mainText><stats></stats><br><br><passive>Jungle Companions</passive><br>Summon a <font color='#1CA935'>Jungle Pet</font> that assists you against monsters.<br><br><passive>Mosstomper's Courage</passive><br>The companion grows as you hunt monsters, empowering your <spellName>Smite</spellName>. When fully grown, it completes your Jungle Quest. </mainText>",
+      "description": "<mainText><stats></stats><br><br><passive>Jungle Companions</passive><br>Summon a <font color='#1CA935'>Mosstomper</font> that assists you against monsters.<br><br>The companion grows as you hunt monsters, empowering your <spellName>Smite</spellName>. When fully grown, it completes your Jungle Quest and grants a Shield while out of combat and after killing large monsters.</mainText>",
       "plaintext": "",
       "stats": {}
     },
     "1106": {
       "name": "Gustwalker Hatchling",
-      "description": "<mainText><stats></stats><br><br><passive>Jungle Companions</passive><br>Summon a <font color='#38A8E8'>Gustwalker</font> that assists you against monsters.<br><br><passive>Gustwalker's Gait</passive><br>The companion grows as you hunt monsters, empowering your <spellName>Smite</spellName>. When fully grown, it grants <speed>Move Speed</speed> upon entering brush, increased when killing large monsters.</mainText>",
+      "description": "<mainText><stats></stats><br><br><passive>Jungle Companions</passive><br>Summon a <font color='#38A8E8'>Gustwalker</font> that assists you against monsters.<br><br>The companion grows as you hunt monsters, empowering your <spellName>Smite</spellName>. When fully grown, it completes your Jungle Quest and grants <speed>Move Speed</speed> upon entering brush, increased when killing large monsters.</mainText>",
       "plaintext": "",
       "stats": {}
     },
     "1107": {
       "name": "Scorchclaw Pup",
-      "description": "<mainText><stats></stats><br><br><passive>Jungle Companions</passive><br>Summon a <font color='#DD2E2E'>Scorchclaw</font> that assists you against monsters.<br><br><passive>Scorchclaw's Slash</passive><br>The companion grows as you hunt monsters, empowering your <spellName>Smite</spellName>. When fully grown, it periodically imbues your next Attack or Ability to burn enemies and <status>Slow</status> them. Killing large monsters readies this immediately.</mainText>",
+      "description": "<mainText><stats></stats><br><br><passive>Jungle Companions</passive><br>Summon a <font color='#DD2E2E'>Scorchclaw</font> that assists you against monsters.<br><br>The companion grows as you hunt monsters, empowering your <spellName>Smite</spellName>. When fully grown, it completes your Jungle Quest and periodically imbues your next Attack or Ability to burn enemies and <status>Slow</status> them. Killing large monsters readies this immediately.</mainText>",
       "plaintext": "",
       "stats": {}
     },
@@ -302,21 +311,31 @@
         "PercentAttackSpeedMod": 0.25
       }
     },
+    "1120": {
+      "name": "Doran's Helm",
+      "description": "<mainText><stats><attention>110</attention> Health<br><attention>10</attention> Armor<br><attention>10</attention> Magic Resist</stats><br><br><passive>Helping Hand</passive><br>Attacks deal <physicalDamage>5 bonus physical damage</physicalDamage> to minions.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 10,
+        "FlatHPPoolMod": 110,
+        "FlatArmorMod": 10
+      }
+    },
     "1200": {
       "name": "Top Lane Quest",
-      "description": "<mainText><stats></stats><br><br>Takedown champions, minions, towers, plates, and epic monsters to complete your quest. Earn points much faster in top lane!<br><br><font color = '#00FF00'>Rewards</font><br>• Teleport as a 3rd Summoner Spell<br>• Flat bonus experience, more experience from all sources, and an increased level cap</mainText>",
+      "description": "<mainText><stats></stats><br><br>Takedown champions, minions, towers, plates, and epic monsters to complete your quest. Earn points much faster in top lane!<br><br><font color = '#00FF00'>Rewards</font><br>• Teleport as a 3rd Summoner Spell<br>• Flat bonus experience, more experience from all sources, and increased level cap</mainText>",
       "plaintext": "",
       "stats": {}
     },
     "1201": {
       "name": "Mid Lane Quest",
-      "description": "<mainText><stats></stats><br><br>Takedown champions, minions, towers, plates, and epic monsters to complete your quest. Earn points much faster in mid lane!<br><br><font color = '#00FF00'>Rewards</font><br>• Upgrade boots to tier 3<br>• Enhanced Recall</mainText>",
+      "description": "<mainText><stats></stats><br><br>Takedown champions, minions, towers, plates, and epic monsters to complete your quest. Earn points much faster in mid lane!<br><br><font color = '#00FF00'>Rewards</font><br>• Upgrade boots to tier 3<br>• Increased Bonus AD and AP</mainText>",
       "plaintext": "",
       "stats": {}
     },
     "1202": {
       "name": "Bot Lane Quest",
-      "description": "<mainText><stats></stats><br><br><titleLeft>Bot Lane Quest</titleLeft><br><mainText>Takedown champions, minions, towers, plates, and epic monsters to complete your quest. Earn points much faster in bot lane!<br><br><font color = '#00FF00'>Rewards</font><br>• An immediate lump sum of gold<br>• Increased gold from minion kills, champion kills, and assists<br>• Boots move to a 7th slot, freeing up your inventory for 6 items</mainText></mainText>",
+      "description": "<mainText><stats></stats><br><br>Takedown champions, minions, towers, plates, and epic monsters to complete your quest. Earn points much faster in bot lane!<br><br><font color = '#00FF00'>Rewards</font><br>• Gold imediately and Increased gold from Minion kills and champion takedowns<br>• A bonus item slot for your boots</mainText>",
       "plaintext": "",
       "stats": {}
     },
@@ -333,50 +352,62 @@
       "stats": {}
     },
     "1205": {
-      "name": "",
+      "name": "Jungle Quest Reward",
       "description": "",
       "plaintext": "",
       "stats": {}
     },
     "1206": {
-      "name": "Mid Lane Quest",
-      "description": "<mainText><stats></stats><br><br><font color = '#00FF00'>Rewards</font><br>• Upgrade boots to tier 3<br>• Enhanced Recall</mainText>",
+      "name": "Mid Lane Quest Reward",
+      "description": "<mainText><stats></stats><br><br><font color = '#00FF00'>Rewards</font><br>• Upgrade boots to tier 3<br>• +6% bonus Attack Damage and Ability Power</mainText>",
       "plaintext": "",
       "stats": {}
     },
     "1207": {
-      "name": "Bot Lane Quest",
-      "description": "<mainText><stats></stats><br><br><font color = '#00FF00'>Rewards</font><br>• Lump Sum of Gold<br>• Increased gold from minion kills, champion kills, and assists<br>• Boots move to a 7th slot, freeing up your inventory for 6 items</mainText>",
+      "name": "Bot Lane Quest Reward",
+      "description": "<mainText><stats></stats><br><br><font color = '#00FF00'>Rewards</font><br>• +300immediately and Boots move to a 7th slot, freeing up your inventory for 6 items<br>• +2from Minion kills<br>• +40from Champion takedowns</mainText>",
       "plaintext": "",
       "stats": {}
     },
     "1208": {
-      "name": "Support Quest",
-      "description": "<mainText><stats></stats><br><br><font color = '#00FF00'>Rewards</font><br>• Upgraded support item<br>• Discounted control wards</mainText>",
+      "name": "Support Quest Reward",
+      "description": "<mainText><stats></stats><br><br><font color = '#00FF00'>Rewards</font><br>• A new slot for control wards<br>• Discounted control wards<br>• Bounty of Worlds item</mainText>",
       "plaintext": "",
       "stats": {}
     },
     "1209": {
-      "name": "Jungle Quest",
-      "description": "<mainText><stats></stats><br><br><font color = '#00FF00'>Rewards</font><br>• Upgraded jungle pet and Smite<br>• Increased gold and XP from large monsters<br>• Bonus movement speed in the jungle</mainText>",
+      "name": "Jungle Quest Reward",
+      "description": "<mainText><stats></stats><br><br><font color = '#00FF00'>Rewards</font><br>• Upgraded Smite and evolve jungle pet to <font color = '#0B6623'>Mosstomper</font><br>• Increased gold and XP from large monsters<br>• Bonus movement speed in the jungle</mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "1210": {
+      "name": "Jungle Quest Reward",
+      "description": "",
+      "plaintext": "",
+      "stats": {}
+    },
+    "1211": {
+      "name": "Jungle Quest Reward",
+      "description": "",
       "plaintext": "",
       "stats": {}
     },
     "1220": {
-      "name": "Unleashed Teleport",
-      "description": "<mainText><stats></stats><br><br>After channeling for 0 seconds, become <keyword>Untargetable</keyword> and travel to target allied structure, minion, or ward.</mainText>",
+      "name": "Unleashed Teleport (Top Lane Quest Reward)",
+      "description": "<mainText><stats></stats><br><br><font color = '#00FF00'>Rewards</font><br>• Extra Action - Teleport: After channeling for 0 seconds, become <keyword>Untargetable</keyword> and travel to target allied structure, minion, or ward.<br>• Flat bonus experience, more experience from all sources, and an increased level cap</mainText>",
       "plaintext": "",
       "stats": {}
     },
     "1221": {
-      "name": "Top Lane Quest",
+      "name": "Top Lane Quest Reward",
       "description": "<mainText><stats></stats><br><br><font color = '#00FF00'>Rewards</font><br>• Enhance your Teleport with a large max-health shield on use<br>• Flat bonus experience, more experience from all sources, and an increased level cap</mainText>",
       "plaintext": "",
       "stats": {}
     },
     "1222": {
       "name": "Top Lane Quest",
-      "description": "<mainText><stats></stats><br><br>Takedown champions, minions, towers, plates, and epic monsters to complete your quest. Earn points much faster in top lane!<br><br><font color = '#00FF00'>Rewards</font><br>• Enhance your Teleport with a large max-health shield on use<br>• Flat bonus experience, more experience from all sources, and an increased level cap</mainText>",
+      "description": "<mainText><stats></stats><br><br>Takedown champions, minions, towers, plates, and epic monsters to complete your quest. Earn points much faster in top lane!<br><br><font color = '#00FF00'>Rewards</font><br>• Enhance your Teleport with a large max-health shield on use<br>• Flat bonus experience, more experience from all sources, and increased level cap</mainText>",
       "plaintext": "",
       "stats": {}
     },
@@ -713,6 +744,12 @@
       "plaintext": "",
       "stats": {}
     },
+    "2147": {
+      "name": "Augment Level",
+      "description": "<mainText><stats></stats><br><br><active>Active - Consume:</active> Gain 1 augment level.<br><br><flavorText>Good for you.</flavorText></mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
     "2150": {
       "name": "Elixir of Skill",
       "description": "<mainText><stats></stats><br><br><active>Consume</active><br>Grants 1 Skill Point.<br><br><rules>This item does not increase your level or allow allocating skill points past the normal maximum in a skill</rules></mainText>",
@@ -827,12 +864,12 @@
     },
     "2510": {
       "name": "Dusk and Dawn",
-      "description": "<mainText><stats><attention>350</attention> Health<br><attention>70</attention> Ability Power<br><attention>20</attention> Ability Haste<br><attention>25%</attention> Attack Speed</stats><br><br><passive>Spellblade</passive> (0s)<br>After using an Ability, your next Attack deals <magicDamage> bonus magic damage</magicDamage> <OnHit>On-Hit</OnHit> and applies <OnHit>On-Hit</OnHit> effects an additional time.</mainText>",
+      "description": "<mainText><stats><attention>300</attention> Health<br><attention>60</attention> Ability Power<br><attention>20</attention> Ability Haste<br><attention>20%</attention> Attack Speed</stats><br><br><passive>Spellblade</passive> (0s)<br>After using an Ability, your next Attack deals <magicDamage> bonus magic damage</magicDamage> and <healing>heals you for </healing> <OnHit>On-Hit</OnHit> and then applies <OnHit>On-Hit</OnHit> effects an additional time.</mainText>",
       "plaintext": "",
       "stats": {
-        "FlatHPPoolMod": 350,
-        "FlatMagicDamageMod": 70,
-        "PercentAttackSpeedMod": 0.25
+        "FlatHPPoolMod": 300,
+        "FlatMagicDamageMod": 60,
+        "PercentAttackSpeedMod": 0.2
       }
     },
     "2512": {
@@ -955,7 +992,7 @@
     },
     "3005": {
       "name": "Ghostcrawlers",
-      "description": "<mainText><stats><attention>45</attention> Move Speed</stats><br><br><active>Wall Walk</active> (0s)<br>Gain the ability to walk through walls for 6 seconds. While inside walls, gain 125 move speed. Casting a spell or attacking will end this effect.</mainText>",
+      "description": "<mainText><stats><attention>45</attention> Move Speed</stats><br><br><active>Wall Walk</active> (0s)<br>Gain the ability to walk through walls for 6 seconds. While inside walls, gain <speed>125 move speed</speed>. Casting a spell or attacking will end this effect.</mainText>",
       "plaintext": "Increases Attack Damage based on maximum Health",
       "stats": {
         "FlatMovementSpeedMod": 45
@@ -968,6 +1005,14 @@
       "stats": {
         "FlatMovementSpeedMod": 45,
         "PercentAttackSpeedMod": 0.25
+      }
+    },
+    "3008": {
+      "name": "Gluttonous Greaves",
+      "description": "<mainText><stats><attention>45</attention> Move Speed<br><attention>4%</attention> Omnivamp</stats><br><br><passive>Slay</passive><br>Gain 1% Omnivamp on Champion takedown, stacking up to 6 times.</mainText>",
+      "plaintext": "Increases Attack Damage based on maximum Mana",
+      "stats": {
+        "FlatMovementSpeedMod": 45
       }
     },
     "3009": {
@@ -1347,10 +1392,11 @@
     },
     "3087": {
       "name": "Statikk Shiv",
-      "description": "<mainText><stats><attention>45</attention> Attack Damage<br><attention>30%</attention> Attack Speed<br><attention>4%</attention> Move Speed</stats><br><br><passive>Electrospark</passive><br>Attacks trigger chain lightning <OnHit>On-Hit</OnHit>, dealing <magicDamage>magic damage</magicDamage> with a cooldown.<br><br><passive>Electroshock</passive> <br>Takedowns within 3 seconds of damaging the target reset Electrospark's cooldown.</mainText>",
+      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>45</attention> Ability Power<br><attention>30%</attention> Attack Speed<br><attention>4%</attention> Move Speed</stats><br><br><passive>Electrospark</passive><br>Your <keyword>Energized Attacks</keyword> fire chain lightning, applying <OnHit>On-Hit</OnHit> effects and dealing <magicDamage>magic damage</magicDamage> to nearby targets.<br><br><passive>Electroshock</passive> <br>Basic Attacks grant extra <keyword>Energized</keyword> stacks.</mainText>",
       "plaintext": "Movement builds charges that release chain lightning on basic attack",
       "stats": {
-        "FlatPhysicalDamageMod": 45,
+        "FlatMagicDamageMod": 45,
+        "FlatPhysicalDamageMod": 40,
         "PercentAttackSpeedMod": 0.3,
         "PercentMovementSpeedMod": 0.04
       }
@@ -1758,6 +1804,14 @@
         "FlatMagicDamageMod": 75
       }
     },
+    "3168": {
+      "name": "Immortal Path",
+      "description": "<mainText><stats><attention>45</attention> Move Speed<br><attention>4%</attention> Omnivamp</stats><br><br><passive>Slay</passive><br>Gain 1% Omnivamp on Champion takedown, stacking up to 6 times.<br><br><passive>Now and Forever</passive><br>While above half Health, deal 5% increased damage. <br><br>While below half Health, gain 15% increased healing, shielding, and regeneration.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMovementSpeedMod": 45
+      }
+    },
     "3170": {
       "name": "Swiftmarch",
       "description": "<mainText><stats><attention>65</attention> Move Speed</stats><br><br><passive>Fleetfooted</passive><br>Reduce the effectiveness of <keyword>Slows</keyword> by 40%.<br><br><passive>Noxian Fervor</passive><br>Gain 5% of your <speed>Move Speed</speed> as Adaptive Force.</mainText>",
@@ -1956,7 +2010,7 @@
     },
     "3430": {
       "name": "Rite Of Ruin",
-      "description": "<mainText><stats><attention>50</attention> Ability Power<br><attention>15</attention> Ability Haste<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Wrath and Ruin</passive><br>On spell cast, gain 2.5% critical chance for 6 seconds, stacking up to 20%.<br><br><passive>Salvage the Wreckage</passive><br>Your spells have a chance equal to your crit chance to grant you or your targeted ally a <healing>shield</healing> for  for 3s.<br></mainText>",
+      "description": "<mainText><stats><attention>50</attention> Ability Power<br><attention>15</attention> Ability Haste<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Wrath and Ruin</passive><br>On spell cast, gain <attention>2.5% Critical Strike Chance</attention> for 6 seconds, stacking up to 20%.<br><br><passive>Salvage the Wreckage</passive><br>Your spells have a chance equal to your <attention>Critical Strike Chance</attention> to grant you or your targeted ally a <shield>shield for </shield> for 3s.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 50,
@@ -2288,7 +2342,7 @@
     },
     "4011": {
       "name": "Sword of Blossoming Dawn",
-      "description": "<mainText><stats><attention>45</attention> Ability Power<br><attention>200</attention> Health<br><attention>12%</attention> Heal and Shield Power<br><attention>15</attention> Ability Haste</stats><br><br><passive>Effervescence</passive><br>Gain +1.2% Attack Speed for every <healing>1% Heal and Shield Power</healing> you have. <br><br><passive>Peppermint</passive><br><OnHit>On-Hit</OnHit>, <healing>heal the lowest health</healing> ally champion near you for , prioritizing lower health allies.</mainText>",
+      "description": "<mainText><stats><attention>45</attention> Ability Power<br><attention>200</attention> Health<br><attention>12%</attention> Heal and Shield Power<br><attention>15</attention> Ability Haste</stats><br><br><passive>Effervescence</passive><br>Gain +<attackSpeed>1.2% Attack Speed</attackSpeed> for every <healing>1% Heal and Shield Power</healing> you have. <br><br><passive>Peppermint</passive><br><OnHit>On-Hit</OnHit>, <healing>heal the lowest health</healing> ally champion near you for , prioritizing lower health allies.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 200,
@@ -2573,7 +2627,7 @@
     },
     "6616": {
       "name": "Staff of Flowing Water",
-      "description": "<mainText><stats><attention>35</attention> Ability Power<br><attention>10%</attention> Heal and Shield Power<br><attention>125%</attention> Base Mana Regen<br><attention>15</attention> Ability Haste</stats><br><br><passive>Rapids</passive><br>Healing or Shielding an ally grants you both <magicDamage>45 Ability Power</magicDamage> for 6 seconds.</mainText>",
+      "description": "<mainText><stats><attention>35</attention> Ability Power<br><attention>10%</attention> Heal and Shield Power<br><attention>125%</attention> Base Mana Regen<br><attention>10</attention> Ability Haste</stats><br><br><passive>Rapids</passive><br>Healing or Shielding an ally grants you both <magicDamage>40 Ability Power</magicDamage> and <attention>15 Ability Haste</attention> for 6 seconds.</mainText>",
       "plaintext": "Your heals and shields reduce crowd control and grant Move Speed",
       "stats": {
         "FlatMagicDamageMod": 35
@@ -2842,10 +2896,10 @@
     },
     "6697": {
       "name": "Hubris",
-      "description": "<mainText><stats><attention>60</attention> Attack Damage<br><attention>18</attention> Lethality<br><attention>10</attention> Ability Haste</stats><br><br><passive>Eminence</passive><br>When a champion that you damaged within 3 seconds dies, gain <physicalDamage>15 Attack Damage plus 2 per champion killed</physicalDamage> for 90 seconds.</mainText>",
+      "description": "<mainText><stats><attention>55</attention> Attack Damage<br><attention>18</attention> Lethality<br><attention>10</attention> Ability Haste</stats><br><br><passive>Eminence</passive><br>When a champion that you damaged within 3 seconds dies, gain <physicalDamage>12 Attack Damage plus 3 per champion killed</physicalDamage> for 90 seconds.</mainText>",
       "plaintext": "",
       "stats": {
-        "FlatPhysicalDamageMod": 60
+        "FlatPhysicalDamageMod": 55
       }
     },
     "6698": {
@@ -2858,7 +2912,7 @@
     },
     "6699": {
       "name": "Voltaic Cyclosword",
-      "description": "<mainText><stats><attention>55</attention> Attack Damage<br><attention>18</attention> Lethality<br><attention>10</attention> Ability Haste</stats><br><br><passive>Galvanize</passive><br>Dashes and Stealth stack <keyword>Energized</keyword> 75% faster.<br><br><passive>Firmament</passive><br>Your <keyword>Energized Attack</keyword> deals <physicalDamage>bonus physical damage</physicalDamage> and <keyword>Slows</keyword> for 0.75 seconds.</mainText>",
+      "description": "<mainText><stats><attention>55</attention> Attack Damage<br><attention>10</attention> Lethality<br><attention>10</attention> Ability Haste</stats><br><br><passive>Galvanize</passive><br>Damaging an Enemy Champions with an ability triggers <keyword>Energized</keyword> if it is ready.<br><br><passive>Firmament</passive><br>Your <keyword>Energized Attack</keyword> deals <physicalDamage>% target's Current Health as bonus physical damage</physicalDamage> and grants you <scaleLethality>bonus Lethality</scaleLethality> for 4 seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatPhysicalDamageMod": 55
@@ -3276,7 +3330,7 @@
     },
     "123430": {
       "name": "Rite of Ruin",
-      "description": "<mainText><stats><attention>55</attention> Ability Power<br><attention>10</attention> Ability Haste<br><attention>25%</attention> Critical Strike Chance<br><attention>4%</attention> Move Speed</stats><br><br><passive>Wrath and Ruin</passive><br>On spell cast, gain 2.5% critical chance for 6 seconds, stacking up to 20%.<br><br><passive>Salvage the Wreckage</passive><br>Your spells have a chance equal to your crit chance to grant you or your targeted ally a <healing>shield</healing> for  for 3s.<br></mainText>",
+      "description": "<mainText><stats><attention>55</attention> Ability Power<br><attention>10</attention> Ability Haste<br><attention>25%</attention> Critical Strike Chance<br><attention>4%</attention> Move Speed</stats><br><br><passive>Wrath and Ruin</passive><br>On spell cast, gain <attention>2.5% Critical Strike Chance</attention> for 6 seconds, stacking up to 20%.<br><br><passive>Salvage the Wreckage</passive><br>Your spells have a chance equal to your <attention>Critical Strike Chance</attention> to grant you or your targeted ally a <shield>shield for </shield> for 3s.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 55,
@@ -3286,7 +3340,7 @@
     },
     "124011": {
       "name": "Sword of Blossoming Dawn",
-      "description": "<mainText><stats><attention>45</attention> Ability Power<br><attention>200</attention> Health<br><attention>12%</attention> Heal and Shield Power<br><attention>15</attention> Ability Haste</stats><br><br><passive>Effervescence</passive><br>Gain +1.2% Attack Speed for every <healing>1% Heal and Shield Power</healing> you have. <br><br><passive>Peppermint</passive><br><OnHit>On-Hit</OnHit>, <healing>heal the lowest health</healing> ally champion near you for , prioritizing lower health allies.</mainText>",
+      "description": "<mainText><stats><attention>45</attention> Ability Power<br><attention>200</attention> Health<br><attention>12%</attention> Heal and Shield Power<br><attention>15</attention> Ability Haste</stats><br><br><passive>Effervescence</passive><br>Gain +<attackSpeed>1.2% Attack Speed</attackSpeed> for every <healing>1% Heal and Shield Power</healing> you have. <br><br><passive>Peppermint</passive><br><OnHit>On-Hit</OnHit>, <healing>heal the lowest health</healing> ally champion near you for , prioritizing lower health allies.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 200,
@@ -3295,10 +3349,10 @@
     },
     "126697": {
       "name": "Hubris",
-      "description": "<mainText><stats><attention>60</attention> Attack Damage<br><attention>18</attention> Lethality<br><attention>15</attention> Ability Haste</stats><br><br><passive>Eminence</passive><br>Gain temporary AD based on champion kills on kill.</mainText>",
+      "description": "<mainText><stats><attention>55</attention> Attack Damage<br><attention>18</attention> Lethality<br><attention>10</attention> Ability Haste</stats><br><br><passive>Eminence</passive><br>Gain temporary AD based on champion kills on kill.</mainText>",
       "plaintext": "",
       "stats": {
-        "FlatPhysicalDamageMod": 60
+        "FlatPhysicalDamageMod": 55
       }
     },
     "220000": {
@@ -3370,6 +3424,12 @@
     "220011": {
       "name": "Bravery Voucher",
       "description": "<mainText><stats></stats><br><br>Redeem during a Shopping Phase to gain a Stat Anvil and 1 bonus rerolls!</mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
+    "220012": {
+      "name": "Shardblade",
+      "description": "<mainText><stats></stats><br><br>Increase the effectiveness of stat shards.</mainText>",
       "plaintext": "",
       "stats": {}
     },
@@ -3497,12 +3557,12 @@
     },
     "222510": {
       "name": "Dusk and Dawn",
-      "description": "<mainText><stats><attention>300</attention> Health<br><attention>70</attention> Ability Power<br><attention>20</attention> Ability Haste<br><attention>25%</attention> Attack Speed</stats><br><br><passive>Spellblade</passive> (0s)<br>After using an Ability, your next Attack deals <magicDamage> bonus magic damage</magicDamage> <OnHit>On-Hit</OnHit> and applies <OnHit>On-Hit</OnHit> effects an additional time.</mainText>",
+      "description": "<mainText><stats><attention>300</attention> Health<br><attention>60</attention> Ability Power<br><attention>20</attention> Ability Haste<br><attention>20%</attention> Attack Speed</stats><br><br><passive>Spellblade</passive> (0s)<br>After using an Ability, your next Attack deals <magicDamage> bonus magic damage</magicDamage> and <healing>heals you for </healing> <OnHit>On-Hit</OnHit> and then applies <OnHit>On-Hit</OnHit> effects an additional time.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 300,
-        "FlatMagicDamageMod": 70,
-        "PercentAttackSpeedMod": 0.25
+        "FlatMagicDamageMod": 60,
+        "PercentAttackSpeedMod": 0.2
       }
     },
     "222512": {
@@ -3617,7 +3677,7 @@
     },
     "223005": {
       "name": "Ghostcrawlers",
-      "description": "<mainText><stats><attention>70</attention> Move Speed</stats><br><br><active>Wall Walk</active> (0s)<br>Gain the ability to walk through walls for 6 seconds. While inside walls, gain 300 move speed. Casting a spell or attacking will end this effect.</mainText>",
+      "description": "<mainText><stats><attention>70</attention> Move Speed</stats><br><br><active>Wall Walk</active> (0s)<br>Gain the ability to walk through walls for 6 seconds. While inside walls, gain <speed>300 move speed</speed>. Casting a spell or attacking will end this effect.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMovementSpeedMod": 70
@@ -3632,9 +3692,17 @@
         "PercentAttackSpeedMod": 0.35
       }
     },
+    "223008": {
+      "name": "Gluttonous Greaves",
+      "description": "<mainText><stats><attention>45</attention> Move Speed<br><attention>4%</attention> Omnivamp</stats><br><br><passive>Slay</passive><br>Gain 1% Omnivamp on Champion takedown, stacking up to 6 times.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatMovementSpeedMod": 45
+      }
+    },
     "223009": {
       "name": "Boots of Swiftness",
-      "description": "<mainText><stats><attention>70</attention> Move Speed</stats><br><br>The strength of movement slowing effects is reduced by <buffedStat>40%</buffedStat>.</mainText>",
+      "description": "<mainText><stats><attention>70</attention> Move Speed</stats><br><br>The strength of movement <status>slowing</status> effects is reduced by 40%.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMovementSpeedMod": 70
@@ -3712,7 +3780,7 @@
     },
     "223040": {
       "name": "Seraph's Embrace",
-      "description": "<mainText><stats><attention>60</attention> Ability Power<br><attention>1200</attention> Mana<br><attention>25</attention> Ability Haste</stats><br><br><passive>Awe</passive><br>Gain Ability Power equal to <scaleMana>4% bonus Mana.</scaleMana> (0).<br><br><passive>Lifeline</passive><br>Upon taking damage that would reduce your Health below 30%, gain a 350 + 20% maximum Mana Shield for 3s (0s).</mainText>",
+      "description": "<mainText><stats><attention>60</attention> Ability Power<br><attention>1200</attention> Mana<br><attention>25</attention> Ability Haste</stats><br><br><passive>Awe</passive><br>Gain Ability Power equal to <scaleMana>4% bonus Mana.</scaleMana> (0).<br><br><passive>Lifeline</passive><br>Upon taking damage that would reduce your Health below 30%, gain a <shield>350 + 0% current Mana Shield</shield> for 3s (0s).</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMPPoolMod": 1200,
@@ -3740,7 +3808,7 @@
     },
     "223047": {
       "name": "Plated Steelcaps",
-      "description": "<mainText><stats><attention>25</attention> Armor<br><attention>30</attention> Move Speed</stats><br><br>Reduces incoming damage from Attacks by <buffedStat>14%</buffedStat>.</mainText>",
+      "description": "<mainText><stats><attention>25</attention> Armor<br><attention>30</attention> Move Speed</stats><br><br>Reduces incoming damage from Attacks by 14%.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMovementSpeedMod": 30,
@@ -3759,7 +3827,7 @@
     },
     "223053": {
       "name": "Sterak's Gage",
-      "description": "<mainText><stats><attention>300</attention> Health<br><attention>20%</attention> Tenacity</stats><br><br><passive>The Claws that Catch</passive><br>Gain <scaleAD> bonus Attack Damage</scaleAD>.<br><br><passive>Lifeline</passive> (0s)<br>Upon taking damage that would reduce your Health below 30%, gain a <shield> Shield</shield> decaying over 4.5 seconds.</mainText>",
+      "description": "<mainText><stats><attention>300</attention> Health<br><attention>20%</attention> Tenacity</stats><br><br><passive>The Claws that Catch</passive><br>Gain <scaleAD> bonus Attack Damage</scaleAD>.<br><br><passive>Lifeline</passive> (0s)<br>Upon taking damage that would reduce your <scaleHealth>Health below 30%</scaleHealth>, gain a <shield> Shield</shield> decaying over 4.5 seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 300
@@ -3773,7 +3841,7 @@
     },
     "223065": {
       "name": "Spirit Visage",
-      "description": "<mainText><stats><attention>300</attention> Health<br><attention>40</attention> Magic Resist<br><attention>10</attention> Ability Haste</stats><br><br><passive>Boundless Vitality</passive><br>Increases all Healing and Shielding effectiveness on you by 30%.</mainText>",
+      "description": "<mainText><stats><attention>300</attention> Health<br><attention>40</attention> Magic Resist<br><attention>10</attention> Ability Haste</stats><br><br><passive>Boundless Vitality</passive><br>Increases all <healing>Healing</healing> and <shield> Shielding</shield> effectiveness on you by 30%.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatSpellBlockMod": 40,
@@ -3818,7 +3886,7 @@
     },
     "223072": {
       "name": "Bloodthirster",
-      "description": "<mainText><stats><attention>70</attention> Attack Damage<br><attention>18%</attention> Life Steal</stats><br><br><passive>Ichorshield</passive><br>Convert excess healing from your Lifesteal to a Shield.</mainText>",
+      "description": "<mainText><stats><attention>70</attention> Attack Damage<br><attention>18%</attention> Life Steal</stats><br><br><passive>Ichorshield</passive><br>Convert excess healing from your <lifeSteal>Life Steal</lifeSteal> to a <shield>Shield</shield>.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatPhysicalDamageMod": 70,
@@ -3837,7 +3905,7 @@
     },
     "223074": {
       "name": "Ravenous Hydra",
-      "description": "<mainText><stats><attention>70</attention> Attack Damage<br><attention>15</attention> Ability Haste<br><attention>15%</attention> Life Steal</stats><br><br><passive>Cleave:</passive> Attacks and Abilities deal physical damage to other nearby enemies. Activate to hit nearby enemies.<br><active>Ravenous Crescent</active><br>Deal <physicalDamage>physical damage</physicalDamage> to enemies around you. <br>Your Life Steal applies to this damage.</mainText>",
+      "description": "<mainText><stats><attention>70</attention> Attack Damage<br><attention>15</attention> Ability Haste<br><attention>15%</attention> Life Steal</stats><br><br><passive>Cleave:</passive> Attacks and Abilities deal physical damage to other nearby enemies. Activate to hit nearby enemies.<br><active>Ravenous Crescent</active><br>Deal <physicalDamage>physical damage</physicalDamage> to enemies around you. <br>Your <lifeSteal>Life Steal</lifeSteal> applies to this damage.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatPhysicalDamageMod": 70,
@@ -3855,7 +3923,7 @@
     },
     "223078": {
       "name": "Trinity Force",
-      "description": "<mainText><stats><attention>35</attention> Attack Damage<br><attention>25%</attention> Attack Speed<br><attention>333</attention> Health<br><attention>20</attention> Ability Haste</stats><br><br><passive>Spellblade</passive><br>After using an Ability, your next Attack is enhanced with  additional physical damage.<br><br><passive>Quicken</passive><br>Basic attacks grant Move Speed.<br><br></mainText>",
+      "description": "<mainText><stats><attention>35</attention> Attack Damage<br><attention>25%</attention> Attack Speed<br><attention>333</attention> Health<br><attention>20</attention> Ability Haste</stats><br><br><passive>Spellblade</passive><br>After using an Ability, your next Attack is enhanced with additional physical damage.<br><br><passive>Quicken</passive><br>Basic attacks grant Move Speed.<br><br></mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 333,
@@ -3873,7 +3941,7 @@
     },
     "223085": {
       "name": "Runaan's Hurricane",
-      "description": "<mainText><stats><attention>45%</attention> Attack Speed<br><attention>25%</attention> Critical Strike Chance<br><attention>4%</attention> Move Speed</stats><br><br><passive>Wind's Fury</passive><br>When Attacking, bolts are fired at up to 2 enemies near the target. Bolts apply On-Hit effects and can Critically Strike.<br><br><rules>Item is for Ranged champions only.</rules></mainText>",
+      "description": "<mainText><stats><attention>45%</attention> Attack Speed<br><attention>25%</attention> Critical Strike Chance<br><attention>4%</attention> Move Speed</stats><br><br><passive>Wind's Fury</passive><br>When Attacking, bolts are fired at up to 2 enemies near the target. Bolts apply <OnHit>On-Hit</OnHit> effects and can <attention>Critically Strike</attention>.<br><br><rules>Item is for Ranged champions only.</rules></mainText>",
       "plaintext": "",
       "stats": {
         "FlatCritChanceMod": 0.25,
@@ -3883,11 +3951,12 @@
     },
     "223087": {
       "name": "Statikk Shiv",
-      "description": "<mainText><stats><attention>45</attention> Attack Damage<br><attention>40%</attention> Attack Speed<br><attention>4%</attention> Move Speed</stats><br><br><passive>Electrospark</passive><br>Attacks trigger chain lightning <OnHit>On-Hit</OnHit>, dealing <magicDamage>magic damage</magicDamage> with a cooldown.<br><br><passive>Electroshock</passive> <br>Takedowns within 3 seconds of damaging the target reset Electrospark's cooldown.</mainText>",
+      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>45</attention> Ability Power<br><attention>30%</attention> Attack Speed<br><attention>4%</attention> Move Speed</stats><br><br><passive>Electrospark</passive><br>Your <keyword>Energized Attacks</keyword> fire chain lightning, applying <OnHit>On-Hit</OnHit> effects and dealing <magicDamage>magic damage</magicDamage> to up to <attention></attention> targets.<br><br><passive>Electroshock</passive> <br>Basic Attacks grant extra <keyword>Energized</keyword> stacks.</mainText>",
       "plaintext": "",
       "stats": {
-        "FlatPhysicalDamageMod": 45,
-        "PercentAttackSpeedMod": 0.4,
+        "FlatMagicDamageMod": 45,
+        "FlatPhysicalDamageMod": 40,
+        "PercentAttackSpeedMod": 0.3,
         "PercentMovementSpeedMod": 0.04
       }
     },
@@ -3939,7 +4008,7 @@
     },
     "223102": {
       "name": "Banshee's Veil",
-      "description": "<mainText><stats><attention>80</attention> Ability Power<br><attention>40</attention> Magic Resist</stats><br><br><passive>Annul</passive><br>Grants a Spell Shield that blocks the next enemy Ability.<br><br><rules>Item cooldown is restarted if you take damage from champions before it is completed.</rules></mainText>",
+      "description": "<mainText><stats><attention>80</attention> Ability Power<br><attention>40</attention> Magic Resist</stats><br><br><passive>Annul</passive><br>Grants a <shield>Spell Shield</shield> that blocks the next enemy Ability.<br><br><rules>Item cooldown is restarted if you take damage from champions before it is completed.</rules></mainText>",
       "plaintext": "",
       "stats": {
         "FlatSpellBlockMod": 40,
@@ -3965,7 +4034,7 @@
     },
     "223109": {
       "name": "Knight's Vow",
-      "description": "<mainText><stats><attention>400</attention> Health<br><attention>50</attention> Armor<br><attention>15</attention> Ability Haste</stats><br><br><passive>Sacrifice</passive><br>While near your <attention>Worthy</attention> ally, take 12% of the damage they receive and <healing>heal</healing> for 10% of the damage they deal to Champions.<br><br><active>ACTIVE</active> (0s)<br><active>Pledge</active><br>Designate an ally who is <attention>Worthy</attention>.</mainText>",
+      "description": "<mainText><stats><attention>400</attention> Health<br><attention>50</attention> Armor<br><attention>15</attention> Ability Haste</stats><br><br><passive>Sacrifice</passive><br>While near your <attention>Worthy</attention> ally, take 12% of the damage they receive and <healing>heal for 10% of the damage they deal</healing> to Champions.<br><br><active>ACTIVE</active> (0s)<br><active>Pledge</active><br>Designate an ally who is <attention>Worthy</attention>.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 400,
@@ -4099,7 +4168,7 @@
     },
     "223146": {
       "name": "Hextech Gunblade",
-      "description": "<mainText><stats><attention>90</attention> Ability Power<br><attention>45</attention> Attack Damage<br><attention>15%</attention> Omnivamp</stats><br><br><br><br><active>ACTIVE</active> (0s)<br><active>Lightning Bolt</active><br>Shocks the target enemy champion, dealing <magicDamage> magic damage</magicDamage> and slowing them by 25% for 1.5 seconds.</mainText>",
+      "description": "<mainText><stats><attention>90</attention> Ability Power<br><attention>45</attention> Attack Damage<br><attention>15%</attention> Omnivamp</stats><br><br><br><br><active>ACTIVE</active> (0s)<br><active>Lightning Bolt</active><br>Shocks the target enemy champion, dealing <magicDamage> magic damage</magicDamage> and <status>Slowing</status> them by 25% for 1.5 seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 90,
@@ -4162,7 +4231,7 @@
     },
     "223165": {
       "name": "Morellonomicon",
-      "description": "<mainText><stats><attention>90</attention> Ability Power<br><attention>250</attention> Health<br><attention>15</attention> Ability Haste</stats><br><br><passive>Affliction</passive><br>Dealing magic damage applies <status>40% Grievous Wounds</status> to enemy champions for 3 seconds.<br><br><buffedStat>If an enemy heals for more than 60% of their maximum health while continously affected by <status>Grievous Wounds</status>, it is increased to <status>80% Grievous Wounds</status>.</buffedStat><br><br><rules><status>Grievous Wounds</status> reduces the effectiveness of Healing and Regeneration effects.</rules></mainText>",
+      "description": "<mainText><stats><attention>90</attention> Ability Power<br><attention>250</attention> Health<br><attention>15</attention> Ability Haste</stats><br><br><passive>Affliction</passive><br>Dealing <magicDamage>magic damage</magicDamage> applies <status>40% Grievous Wounds</status> to enemy champions for 3 seconds.<br><br><buffedStat>If an enemy heals for more than 60% of their maximum health while continously affected by <status>Grievous Wounds</status>, it is increased to <status>80% Grievous Wounds</status>.</buffedStat><br><br><rules><status>Grievous Wounds</status> reduces the effectiveness of Healing and Regeneration effects.</rules></mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 250,
@@ -4171,7 +4240,7 @@
     },
     "223172": {
       "name": "Zephyr",
-      "description": "<mainText><stats><attention>50%</attention> Attack Speed<br><attention>10%</attention> Move Speed<br><attention>30</attention> Ability Haste<br><attention>20%</attention> Tenacity</stats><br><br><passive>Like the Wind</passive><br>Gain 5% Move Speed <OnHit>On-Hit</OnHit> for 6 seconds, stacking up to 25% Move Speed.<br><br><rules>Tenacity reduces the duration of <status>Stun</status>, <status>Slow</status>, <status>Taunt</status>, <status>Fear</status>, <status>Silence</status>, <status>Blind</status>, <status>Polymorph</status> and <status>Immobilizing</status> effects. It has no effect on <status>Airborne</status> or <status>Suppression</status>.</rules></mainText>",
+      "description": "<mainText><stats><attention>50%</attention> Attack Speed<br><attention>10%</attention> Move Speed<br><attention>30</attention> Ability Haste<br><attention>20%</attention> Tenacity</stats><br><br><passive>Like the Wind</passive><br>Gain 5% Move Speed <OnHit>On-Hit</OnHit> for 6 seconds, stacking up to 25% Move Speed.</mainText>",
       "plaintext": "",
       "stats": {
         "PercentAttackSpeedMod": 0.5,
@@ -4209,7 +4278,7 @@
     },
     "223185": {
       "name": "Guardian's Dirk",
-      "description": "<mainText><stats><attention>25</attention> Attack Damage<br><attention>11</attention> Lethality<br><attention>10</attention> Ability Haste</stats><br><br><passive>Agricultural Reaper</passive> <br>Increases effects of Power Flower by 20%. Gain 100 Move speed for 3s after attacking a plant.</mainText>",
+      "description": "<mainText><stats><attention>25</attention> Attack Damage<br><attention>11</attention> Lethality<br><attention>10</attention> Ability Haste</stats><br><br><passive>Agricultural Reaper</passive> <br>Increases effects of <attention>Power Flower by 20%</attention>. Gain <speed>100 Move Speed</speed> for 3s after attacking a plant.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatPhysicalDamageMod": 25
@@ -4253,7 +4322,7 @@
     },
     "223504": {
       "name": "Ardent Censer",
-      "description": "<mainText><stats><attention>40</attention> Ability Power<br><attention>12%</attention> Heal and Shield Power<br><attention>150%</attention> Base Mana Regen<br><attention>6%</attention> Move Speed</stats><br><br><passive>Sanctify</passive><br>Healing or Shielding another ally enhances you both for 6 seconds, granting your Attacks <attackSpeed>40%</attackSpeed> Attack Speed and <magicDamage>25 magic damage</magicDamage> <OnHit>On-Hit</OnHit>.</mainText>",
+      "description": "<mainText><stats><attention>40</attention> Ability Power<br><attention>12%</attention> Heal and Shield Power<br><attention>150%</attention> Base Mana Regen<br><attention>6%</attention> Move Speed</stats><br><br><passive>Sanctify</passive><br>Healing or Shielding another ally enhances you both for 6 seconds, granting your Attacks <attackSpeed>40% Attack Speed</attackSpeed> and <magicDamage>25 magic damage</magicDamage> <OnHit>On-Hit</OnHit>.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 40,
@@ -4315,7 +4384,7 @@
     },
     "224401": {
       "name": "Force of Nature",
-      "description": "<mainText><stats><attention>400</attention> Health<br><attention>50</attention> Magic Resist<br><attention>4%</attention> Move Speed</stats><br><br><passive>Absorb</passive><br>Taking <magicDamage>magic damage</magicDamage> from enemy Champions grants a stack of <attention>Steadfast</attention> (max 10) for 7 seconds. Enemy <status>Immobilizing</status> effects grant an additional 2 stacks.<br><br><passive>Dissipate</passive><br>While at 10 stacks of <attention>Steadfast</attention>, gain <scaleMR>50 Magic Resist</scaleMR> and 14% increased Move Speed.<br><br><rules>One spell can add a new stack of <attention>Steadfast</attention> every 1 second.</rules></mainText>",
+      "description": "<mainText><stats><attention>400</attention> Health<br><attention>50</attention> Magic Resist<br><attention>4%</attention> Move Speed</stats><br><br><passive>Absorb</passive><br>Taking <magicDamage>magic damage</magicDamage> from enemy Champions grants a stack of <attention>Steadfast</attention> (max 10) for 7 seconds. Enemy <status>Immobilizing</status> effects grant an additional 2 stacks.<br><br><passive>Dissipate</passive><br>While at 10 stacks of <attention>Steadfast</attention>, gain <scaleMR>50 Magic Resist</scaleMR> and <speed>14% increased Move Speed</speed>.<br><br><rules>One spell can add a new stack of <attention>Steadfast</attention> every 1 second.</rules></mainText>",
       "plaintext": "",
       "stats": {
         "FlatSpellBlockMod": 50,
@@ -4432,7 +4501,7 @@
     },
     "226609": {
       "name": "Chempunk Chainsword",
-      "description": "<mainText><stats><attention>45</attention> Attack Damage<br><attention>450</attention> Health<br><attention>15</attention> Ability Haste</stats><br><br><passive>Hackshorn</passive><br>Dealing physical damage applies 40% <status>Grievous Wounds</status> to enemy champions for 3 seconds.<br><br><buffedStat>If an enemy heals for more than 60% of their maximum health while continously affected by <status>Grievous Wounds</status>, it is increased to <status>80% Grievous Wounds</status>.</buffedStat><br><br><rules><status>Grievous Wounds</status> reduces the effectiveness of Healing and Regeneration effects.</rules></mainText>",
+      "description": "<mainText><stats><attention>45</attention> Attack Damage<br><attention>450</attention> Health<br><attention>15</attention> Ability Haste</stats><br><br><passive>Hackshorn</passive><br>Dealing physical damage applies <status>40% Grievous Wounds</status> to enemy champions for 3 seconds.<br><br><buffedStat>If an enemy heals for more than 60% of their maximum health while continously affected by <status>Grievous Wounds</status>, it is increased to <status>80% Grievous Wounds</status>.</buffedStat><br><br><rules><status>Grievous Wounds</status> reduces the effectiveness of Healing and Regeneration effects.</rules></mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 450,
@@ -4450,7 +4519,7 @@
     },
     "226616": {
       "name": "Staff of Flowing Water",
-      "description": "<mainText><stats><attention>65</attention> Ability Power<br><attention>14%</attention> Heal and Shield Power<br><attention>150%</attention> Base Mana Regen<br><attention>15</attention> Ability Haste</stats><br><br><passive>Rapids</passive><br>Healing or Shielding an ally grants you both <magicDamage> Ability Power</magicDamage> for 4 seconds.</mainText>",
+      "description": "<mainText><stats><attention>65</attention> Ability Power<br><attention>14%</attention> Heal and Shield Power<br><attention>150%</attention> Base Mana Regen<br><attention>15</attention> Ability Haste</stats><br><br><passive>Rapids</passive><br>Healing or Shielding an ally grants you both <magicDamage>40 Ability Power</magicDamage> and <attention>15 Ability Haste</attention> for 6 seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 65
@@ -4458,7 +4527,7 @@
     },
     "226617": {
       "name": "Moonstone Renewer",
-      "description": "<mainText><stats><attention>35</attention> Ability Power<br><attention>200</attention> Health<br><attention>30</attention> Ability Haste<br><attention>125%</attention> Base Mana Regen</stats><br><br><passive>Starlit Grace</passive><br><healing>Healing or shielding</healing> yourself or an ally chains to the other champion, healing <healing>20%</healing> or shielding <shield>25%</shield> of the original amount.</mainText>",
+      "description": "<mainText><stats><attention>35</attention> Ability Power<br><attention>200</attention> Health<br><attention>30</attention> Ability Haste<br><attention>125%</attention> Base Mana Regen</stats><br><br><passive>Starlit Grace</passive><br><healing>Healing</healing> or <shield>shielding</shield> yourself or an ally chains to the other champion, <healing>healing 20%</healing> or <shield>shielding 25%</shield> of the original amount.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 200,
@@ -4476,7 +4545,7 @@
     },
     "226621": {
       "name": "Dawncore",
-      "description": "<mainText><stats><attention>45</attention> Ability Power<br><attention>16%</attention> Heal and Shield Power<br><attention>200%</attention> Base Mana Regen</stats><br><br><passive>First Light</passive><br>Gain <healing>3% Heal and Shield Power</healing> and <scaleAP>10 Ability Power</scaleAP> per 100% Base Mana Regen.</mainText>",
+      "description": "<mainText><stats><attention>45</attention> Ability Power<br><attention>16%</attention> Heal and Shield Power<br><attention>200%</attention> Base Mana Regen</stats><br><br><passive>First Light</passive><br>Gain <healing>3% Heal and Shield Power</healing> and <scaleAP>10 Ability Power</scaleAP> per <scaleMana>100% Base Mana Regen</scaleMana>.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 45
@@ -4546,6 +4615,14 @@
         "FlatMPPoolMod": 300,
         "FlatHPPoolMod": 350,
         "FlatMagicDamageMod": 60
+      }
+    },
+    "226660": {
+      "name": "Bami's Cinder",
+      "description": "<mainText><stats><attention>150</attention> Health<br><attention>5</attention> Ability Haste</stats><br><br><passive>Immolate</passive><br>After taking or dealing damage, deal <magicDamage>magic damage</magicDamage> to nearby enemies for 3 seconds.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 150
       }
     },
     "226662": {
@@ -4628,7 +4705,7 @@
     },
     "226676": {
       "name": "The Collector",
-      "description": "<mainText><stats><attention>45</attention> Attack Damage<br><attention>12</attention> Lethality<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Death</passive><br>Your damage executes champions that are below 5% Health.<br><br><passive>Taxes</passive><br>Champion kills grant <gold>125 bonus gold</gold>.</mainText>",
+      "description": "<mainText><stats><attention>45</attention> Attack Damage<br><attention>12</attention> Lethality<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Death</passive><br>Your damage executes champions that are <scaleHealth>below 5% Health</scaleHealth>.<br><br><passive>Taxes</passive><br>Champion kills grant <gold>125 bonus gold</gold>.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatCritChanceMod": 0.25,
@@ -4661,7 +4738,7 @@
     },
     "226694": {
       "name": "Serylda's Grudge",
-      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>40%</attention> Armor Penetration<br><attention>10</attention> Ability Haste</stats><br><br><passive>Bitter Cold</passive><br>Damaging Abilities <status>Slow</status> enemies below 50% Health by 30% for 1 second.</mainText>",
+      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>40%</attention> Armor Penetration<br><attention>10</attention> Ability Haste</stats><br><br><passive>Bitter Cold</passive><br>Damaging Abilities <status>Slow</status> enemies <scaleHealth>below 50% Health</scaleHealth> by 30% for 1 second.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatPhysicalDamageMod": 40
@@ -4701,7 +4778,7 @@
     },
     "226699": {
       "name": "Voltaic Cyclosword",
-      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>18</attention> Lethality<br><attention>20</attention> Ability Haste</stats><br><br><passive>Galvanize</passive><br>Dashes and Stealth stack <keyword>Energized</keyword> 75% faster.<br><br><passive>Firmament</passive><br>Your <keyword>Energized Attack</keyword> deals <physicalDamage>bonus physical damage</physicalDamage> and <keyword>Slows</keyword> for 0.75 seconds.</mainText>",
+      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>18</attention> Lethality<br><attention>20</attention> Ability Haste</stats><br><br><passive>Galvanize</passive><br>Damaging an Enemy Champions with an ability triggers <keyword>Energized</keyword> if it is ready.<br><br><passive>Firmament</passive><br>Your <keyword>Energized Attack</keyword> deals <physicalDamage>%</physicalDamage> target's Current Health as <physicalDamage>bonus physical damage</physicalDamage> and grants you <scaleLethality> Lethality</scaleLethality> for 4 seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatPhysicalDamageMod": 50
@@ -4725,7 +4802,7 @@
     },
     "228002": {
       "name": "Wooglet's Witchcap",
-      "description": "<mainText><stats><ornnBonus>300</ornnBonus> Ability Power<br><ornnBonus>50</ornnBonus> Armor<br><ornnBonus>20</ornnBonus> Ability Haste</stats><br><br><passive>Magical Opus</passive><br>Increases your total <scaleAP>Ability Power by 50%</scaleAP>.<br><br><b>Requires Augment: <prismatic>Quest: Wooglet's Witchcap</prismatic></b><br><br><active>Time Stop</active><br>Enter <keyword>Stasis</keyword> for 2.5 seconds.</mainText>",
+      "description": "<mainText><stats><ornnBonus>300</ornnBonus> Ability Power<br><ornnBonus>50</ornnBonus> Armor<br><ornnBonus>20</ornnBonus> Ability Haste</stats><br><br><passive>Magical Opus:</passive><br>Increases your total <scaleAP>Ability Power by 50% (0)</scaleAP>.<br><br><active>Time Stop</active><br>Enter <keyword>Stasis</keyword> for 2.5 seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 300,
@@ -4793,7 +4870,7 @@
     },
     "228020": {
       "name": "Abyssal Mask",
-      "description": "<mainText><stats><attention>350</attention> Health<br><attention>50</attention> Magic Resist<br><attention>15</attention> Ability Haste</stats><br><br><passive>Unmake</passive><br>Nearby enemy champions take 12% more <magicDamage>magic damage</magicDamage>.</mainText>",
+      "description": "<mainText><stats><attention>350</attention> Health<br><attention>50</attention> Magic Resist<br><attention>15</attention> Ability Haste</stats><br><br><passive>Unmake</passive><br>Nearby enemy champions take <magicDamage>12% more magic damage</magicDamage>.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatSpellBlockMod": 50,
@@ -4982,7 +5059,7 @@
     },
     "326616": {
       "name": "Staff of Flowing Water",
-      "description": "<mainText><stats><attention>45</attention> Ability Power<br><attention>10%</attention> Heal and Shield Power<br><attention>150%</attention> Base Mana Regen<br><attention>15</attention> Ability Haste</stats><br><br><passive>Rapids</passive><br>Healing or Shielding an ally grants you both <magicDamage>45 Ability Power</magicDamage> for 6 seconds.</mainText>",
+      "description": "<mainText><stats><attention>45</attention> Ability Power<br><attention>10%</attention> Heal and Shield Power<br><attention>150%</attention> Base Mana Regen<br><attention>10</attention> Ability Haste</stats><br><br><passive>Rapids</passive><br>Healing or Shielding an ally grants you both <magicDamage>40 Ability Power</magicDamage> and <attention>15 Ability Haste</attention> for 6 seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 45
@@ -5055,7 +5132,7 @@
     },
     "443056": {
       "name": "Demon King's Crown",
-      "description": "<mainText><stats></stats><br><br><passive>Supremacy</passive><br>Increases your Health, Armor, Magic Resist, Attack Damage, Ability Power, Attack Speed, and Ability Haste by 26%, increased by 0% per round win and -3% each round lost after acquiring this item.</mainText>",
+      "description": "<mainText><stats></stats><br><br><passive>Supremacy</passive><br>Increases your <scaleHealth>Health</scaleHealth>, <scaleArmor>Armor</scaleArmor>, <scaleMR>Magic Resist</scaleMR>, <physicalDamage>Attack Damage</physicalDamage>, <scaleAP>Ability Power</scaleAP>, <attackSpeed>Attack Speed</attackSpeed>, increased by 0% per round win and -3% each round lost after acquiring this item.</mainText>",
       "plaintext": "",
       "stats": {}
     },
@@ -5087,7 +5164,7 @@
     },
     "443061": {
       "name": "Force Of Entropy",
-      "description": "<mainText><stats><attention>900</attention> Health<br><attention>30</attention> Ability Haste<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Atrophy</passive><br>Immobilizing Crowd Control effects you apply roll your <keyword>Critical Chance</keyword> to increase their duration by 0.25 +33% seconds.</mainText>",
+      "description": "<mainText><stats><attention>900</attention> Health<br><attention>30</attention> Ability Haste<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Atrophy</passive><br>When you <status>Immobilizing</status> a target roll your <attention>Critical Chance</attention> to increase their duration by 0.25 +33% seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 900,
@@ -5096,7 +5173,7 @@
     },
     "443062": {
       "name": "Sanguine Gift",
-      "description": "<mainText><stats><attention>80</attention> Ability Power<br><attention>20</attention> Ability Haste<br><attention>15%</attention> Heal and Shield Power</stats><br><br><passive>Patronage</passive><br>Store 15% of the total damage you've dealt to enemies. Whenever this exceeds 333, consume it to heal yourself and your nearest ally for that amount.</mainText>",
+      "description": "<mainText><stats><attention>80</attention> Ability Power<br><attention>20</attention> Ability Haste<br><attention>15%</attention> Heal and Shield Power</stats><br><br><passive>Patronage</passive><br>Store 15% of the total damage you've dealt to enemies. Whenever this exceeds 333, consume it to <healing>heal</healing> yourself and your nearest ally for that amount.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 80
@@ -5104,7 +5181,7 @@
     },
     "443063": {
       "name": "Eleisa's Miracle",
-      "description": "<mainText><stats><attention>50</attention> Armor<br><attention>50</attention> Magic Resist<br><attention>25</attention> Ability Haste</stats><br><br><passive>Enduring Vitality</passive><br>Gain +2.5% Heal and Shield Power per 100 Missing Health, up to 60%.</mainText>",
+      "description": "<mainText><stats><attention>50</attention> Armor<br><attention>50</attention> Magic Resist<br><attention>25</attention> Ability Haste</stats><br><br><passive>Enduring Vitality</passive><br>Gain <healing>+2.5% Heal and Shield Power</healing> per <scaleHealth>100 Missing Health</scaleHealth>, up to 60%.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatSpellBlockMod": 50,
@@ -5129,7 +5206,7 @@
     },
     "443079": {
       "name": "Turbo Chemtank",
-      "description": "<mainText><stats><attention>600</attention> Health<br><attention>80</attention> Adaptive Force</stats><br><br><br><br><active>ACTIVE</active> (0s)<br><active>Supercharged</active><br>Remove all crowd control debuffs (excluding <status>Airborne</status>) and become Unstoppable for 3 seconds.</mainText>",
+      "description": "<mainText><stats><attention>600</attention> Health<br><attention>80</attention> Adaptive Force</stats><br><br>Ignore the next time you are <status>Immobilized</status>, instead dropping a chemical cannister nearby (s Cooldown). Picking up the cannister reduces the Cooldown by 15 seconds and restores <scaleHealth>4% max Health</scaleHealth>. Enemies stepping on the cannister destroy it.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 600
@@ -5137,17 +5214,18 @@
     },
     "443080": {
       "name": "Twin Mask",
-      "description": "<mainText><stats></stats><br><br><passive>Unanimity</passive><br>Gain a percent of your teammate's Health, Armor, Magic Resist, Attack Damage, Ability Power, Attack Speed, and Ability Haste, increased significantly if they also have <keywordMajor>Twin Mask</keywordMajor> and are alive.</mainText>",
+      "description": "<mainText><stats></stats><br><br><passive>Unanimity</passive><br>Gain a percent of your teammate's <scaleHealth>Health</scaleHealth>, <scaleArmor>Armor</scaleArmor>, <scaleMR>Magic Resist</scaleMR>, <physicalDamage>Attack Damage</physicalDamage>, <scaleAP>Ability Power</scaleAP>, <attackSpeed>Attack Speed</attackSpeed>, and Ability Haste, increased significantly if they also have <keywordMajor>Twin Mask</keywordMajor> and are alive.</mainText>",
       "plaintext": "",
       "stats": {}
     },
     "443081": {
       "name": "Hexbolt Companion",
-      "description": "<mainText><stats><attention>75%</attention> Attack Speed<br><attention>500</attention> Health</stats><br><br><passive>Covering Fire</passive><br>While near an allied champion, <OnHit>On-Hit</OnHit> gain a stack of Edict, At 1 stacks, the next time you would apply an <OnHit>On-Hit</OnHit>, your teammate also fires a bolt at the target, dealing <physicalDamage> physical damage</physicalDamage> and applying their <OnHit>On-Hit</OnHit> effects.<br><br><keywordMajor>Covering Fire</keywordMajor> cannot trigger other <keywordMajor>Covering Fire</keywordMajor>.</mainText>",
+      "description": "<mainText><stats><attention>75%</attention> Attack Speed<br><attention>500</attention> Health<br><attention>4%</attention> Move Speed</stats><br><br><passive>Covering Fire</passive><br>Every 10 seconds, <keywordMajor>Autocast</keywordMajor> fires a bolt towards a nearby target, dealing <physicalDamage> physical damage</physicalDamage> and applying <OnHit>On-Hit</OnHit> effects.<br><br><passive>Energized</passive><br>Moving and Attacking generates an <keyword>Energized Attack</keyword>.<br><br><passive>Unload</passive><br>Your <keyword>Energized Attacks</keyword> trigger your <keywordMajor>Autocast</keywordMajor> effects.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 500,
-        "PercentAttackSpeedMod": 0.75
+        "PercentAttackSpeedMod": 0.75,
+        "PercentMovementSpeedMod": 0.04
       }
     },
     "443083": {
@@ -5189,7 +5267,7 @@
     },
     "444637": {
       "name": "Demonic Embrace",
-      "description": "<mainText><stats><attention>80</attention> Ability Power<br><attention>700</attention> Health</stats><br><br><passive>Sinister Pact</passive><br>Gain +1.5% <scaleAP>Ability Power</scaleAP> and 1.5% Move Speed per 100 Missing Health, up to 45%.</mainText>",
+      "description": "<mainText><stats><attention>80</attention> Ability Power<br><attention>700</attention> Health</stats><br><br><passive>Sinister Pact</passive><br>Gain <scaleAP>+1.5% Ability Power</scaleAP> and <speed>1.5% Move Speed</speed> per <scaleHealth>100 Missing Health</scaleHealth>, up to 45%.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 700,
@@ -5208,7 +5286,7 @@
     },
     "446632": {
       "name": "Divine Sunderer",
-      "description": "<mainText><stats><attention>55</attention> Attack Damage<br><attention>350</attention> Health<br><attention>20</attention> Ability Haste</stats><br><br><passive>Spellblade</passive><br>After using an Ability, your next Attack is enhanced with additional damage. If the target is a champion, also heal.<br><br></mainText>",
+      "description": "<mainText><stats><attention>55</attention> Attack Damage<br><attention>350</attention> Health<br><attention>20</attention> Ability Haste</stats><br><br><passive>Spellblade</passive><br>After using an Ability, your next Attack is enhanced with additional damage. If the target is a champion, also <healing>heal</healing>.<br><br></mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 350,
@@ -5227,7 +5305,7 @@
     },
     "446667": {
       "name": "Radiant Virtue",
-      "description": "<mainText><stats><attention>400</attention> Health<br><attention>35</attention> Armor<br><attention>35</attention> Magic Resist<br><attention>12%</attention> Heal and Shield Power</stats><br><br><passive>Guiding Light</passive><br>Upon casting your Ultimate you <status>Transcend</status>, increasing your <scaleHealth>Max Health</scaleHealth> by <scaleHealth></scaleHealth> for 9s. While <status>Transcended</status>, you and allies within 1200 range of you heal for <scaleHealth> ()</scaleHealth> over the duration (0s).</mainText>",
+      "description": "<mainText><stats><attention>400</attention> Health<br><attention>35</attention> Armor<br><attention>35</attention> Magic Resist<br><attention>12%</attention> Heal and Shield Power</stats><br><br><passive>Judgement</passive><br>Gain 30 Ultimate Haste.<br><br><passive>Guiding Light</passive><br>Upon casting your Ultimate you <status>Transcend</status>, increasing your <scaleHealth>Max Health by </scaleHealth> for 9 seconds. While <status>Transcended</status>, you and allies within 5000 range of you <healing>heal for  ()</healing> over the duration (0s).</mainText>",
       "plaintext": "",
       "stats": {
         "FlatSpellBlockMod": 35,
@@ -5248,7 +5326,7 @@
     },
     "446691": {
       "name": "Duskblade of Draktharr",
-      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>20</attention> Lethality<br><attention>20</attention> Ability Haste</stats><br><br><passive>Nightstalker</passive><br>Your Abilities deal up to an additional percent damage based on the target's missing health. When a champion that you have damaged within the last 3 seconds dies, you become <keywordStealth>Untargetable</keywordStealth> from non-structures for 1.5 seconds (0s).</mainText>",
+      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>20</attention> Lethality<br><attention>20</attention> Ability Haste</stats><br><br><passive>Nightstalker</passive><br>Your Abilities deal up to an additional percent damage based on the target's <scaleHealth>missing health</scaleHealth>. When a champion that you have damaged within the last 3 seconds dies, you become <keywordStealth>Untargetable</keywordStealth> from non-structures for 1.5 seconds (0s).</mainText>",
       "plaintext": "",
       "stats": {
         "FlatPhysicalDamageMod": 50
@@ -5264,7 +5342,7 @@
     },
     "447100": {
       "name": "Mirage Blade",
-      "description": "<mainText><stats><attention>65</attention> Adaptive Force<br><attention>60%</attention> Attack Speed<br><attention>6%</attention> Move Speed</stats><br><br><passive>Blur</passive><br>On-Hit reduce the remaining cooldowns of your <status>Dash</status> and <status>Blink</status> Abilities by 12% (reduced to 4% for Ultimates).</mainText>",
+      "description": "<mainText><stats><attention>65</attention> Adaptive Force<br><attention>60%</attention> Attack Speed<br><attention>6%</attention> Move Speed</stats><br><br><passive>Blur</passive><br><OnHit>On-Hit</OnHit> reduce the remaining cooldowns of your Dash and Blink Abilities by 20% (reduced to 5% for Ultimates).</mainText>",
       "plaintext": "",
       "stats": {
         "PercentAttackSpeedMod": 0.6,
@@ -5273,7 +5351,7 @@
     },
     "447101": {
       "name": "Gambler's Blade",
-      "description": "<mainText><stats><attention>70%</attention> Attack Speed<br><attention>40</attention> Ability Haste<br><attention>8%</attention> Move Speed</stats><br><br><passive>Money In The Bank</passive><br>Your Attacks and Abilities have a 12% chance to bank between 30 and 245 Gold when they hit an enemy. On Round Win, cash out. On Round Lose, lose 25% of your bank.</mainText>",
+      "description": "<mainText><stats><attention>70%</attention> Attack Speed<br><attention>40</attention> Ability Haste<br><attention>8%</attention> Move Speed</stats><br><br><passive>Money In The Bank</passive><br>Your Attacks and Abilities have a 12% chance to bank between <gold>30 and 245 Gold</gold> when they hit an enemy. On Round Win, cash out. On Round Lose, lose 25% of your bank.</mainText>",
       "plaintext": "",
       "stats": {
         "PercentAttackSpeedMod": 0.7,
@@ -5292,7 +5370,7 @@
     },
     "447103": {
       "name": "Hemomancer's Helm",
-      "description": "<mainText><stats><attention>70</attention> Attack Damage<br><attention>30</attention> Ability Haste<br><attention>15%</attention> Omnivamp</stats><br><br><passive>Scarlet Allegiance</passive><br>Threshold 30% Lifesteal/Omnivamp: Gain <healing>500 Max Health</healing>. Drain 10% of all damage nearby enemies take.</mainText>",
+      "description": "<mainText><stats><attention>70</attention> Attack Damage<br><attention>30</attention> Ability Haste<br><attention>15%</attention> Omnivamp</stats><br><br><passive>Scarlet Allegiance</passive><br>Threshold <lifeSteal>30% Lifesteal/Omnivamp</lifeSteal>: Gain <scaleHealth>500 Max Health</scaleHealth>. Drain 10% of all damage nearby enemies take.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatPhysicalDamageMod": 70
@@ -5317,7 +5395,7 @@
     },
     "447106": {
       "name": "Dragonheart",
-      "description": "<mainText><stats></stats><br><br><passive>Inner Flame</passive><br>Increases your <scaleHealth>Health</scaleHealth>, <scaleArmor>Armor</scaleArmor>, <scaleMR>Magic Resist</scaleMR>, <physicalDamage>Attack Damage</physicalDamage>, <magicDamage>Ability Power</magicDamage>, <attackSpeed>Attack Speed</attackSpeed>, and Ability Haste by 4% per Dragon Soul you possess.<br><br>Every 2 rounds, gain a Dragon Soul.<br><br>If you already have every elemental soul and would gain another, an ancient power awakens within...<br><br><rules>When purchased, if it is past round 5, immediately gain 1 soul, plus 1 for every 2 rounds beyond round 5.</rules></mainText>",
+      "description": "<mainText><stats></stats><br><br><passive>Inner Flame</passive><br>Increases your <scaleHealth>Health</scaleHealth>, <scaleArmor>Armor</scaleArmor>, <scaleMR>Magic Resist</scaleMR>, <physicalDamage>Attack Damage</physicalDamage>, <scaleAP>Ability Power</scaleAP>, <attackSpeed>Attack Speed</attackSpeed>, and Ability Haste by 4% per Dragon Soul you possess.<br><br>Every 2 rounds, gain a Dragon Soul.<br><br>If you already have every elemental soul and would gain another, an ancient power awakens within...<br><br><rules>When purchased, if it is past round 5, immediately gain 1 soul, plus 1 for every 2 rounds beyond round 5.</rules></mainText>",
       "plaintext": "",
       "stats": {}
     },
@@ -5351,7 +5429,7 @@
     },
     "447110": {
       "name": "Moonflair Spellblade",
-      "description": "<mainText><stats><attention>85</attention> Ability Power<br><attention>400</attention> Health<br><attention>30%</attention> Tenacity</stats><br><br><passive>Relentless</passive><br>When you use an Ability, reset your auto attack timer and gain <attackSpeed>90% Attack Speed</attackSpeed> for your next 2 Attacks.<br><br>When you Attack, reduce your Ability Cooldowns by 0.5 seconds.</mainText>",
+      "description": "<mainText><stats><attention>85</attention> Ability Power<br><attention>400</attention> Health<br><attention>30%</attention> Tenacity</stats><br><br><passive>Relentless</passive><br>When you use an Ability, reset your auto attack timer and gain <attackSpeed>90% Attack Speed</attackSpeed> for your next 2 Attacks.<br><br>When you Attack, reduce your non-Dash and Blink Abilities Ability Cooldowns by 0.5 seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 400,
@@ -5360,7 +5438,7 @@
     },
     "447111": {
       "name": "Overlord's Bloodmail",
-      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>400</attention> Health</stats><br><br><passive>Tyranny</passive><br>Gain <physicalDamage> AD</physicalDamage> equal to 3% <scaleHealth>Bonus HP</scaleHealth>.<br><br><passive>Retribution</passive><br>Gain up to <physicalDamage>17.5% increased AD</physicalDamage> based on your percent missing Health.</mainText>",
+      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>400</attention> Health</stats><br><br><passive>Tyranny</passive><br>Gain <physicalDamage> AD</physicalDamage> equal to <scaleHealth>3% Bonus HP</scaleHealth>.<br><br><passive>Retribution</passive><br>Gain up to <physicalDamage>17.5% increased AD</physicalDamage> based on your percent missing Health.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 400,
@@ -5369,7 +5447,7 @@
     },
     "447112": {
       "name": "Flesheater",
-      "description": "<mainText><stats><attention>70</attention> Adaptive Force<br><attention>500</attention> Health<br><attention>20</attention> Ability Haste</stats><br><br><passive>Hack the Meat</passive><br>Dealing damage shreds 3 <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> for 5 seconds, stacking up to 10 times. Applying stacks has a 1 second cooldown per Ability.<br><br><passive>Cannibalize</passive><br>On Champion Takedown, Heal yourself and your ally for <healing>18% of the Target's Max Health</healing>.</mainText>",
+      "description": "<mainText><stats><attention>70</attention> Adaptive Force<br><attention>500</attention> Health<br><attention>20</attention> Ability Haste</stats><br><br><passive>Hack the Meat</passive><br>Dealing damage shreds 3 <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> for 5 seconds, stacking up to 10 times. Applying stacks has a 1 second cooldown per Ability.<br><br><passive>Cannibalize</passive><br>On Champion Takedown, steal 10% of their stats and size for the rest of the round.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 500
@@ -5386,7 +5464,7 @@
     },
     "447114": {
       "name": "Reverberation",
-      "description": "<mainText><stats><attention>35</attention> Armor<br><attention>35</attention> Magic Resist<br><attention>40%</attention> Attack Speed</stats><br><br><passive>Reverberate</passive><br>At combat start gain <healing>50 max Health</healing> per <attackSpeed>10% bonus Attack Speed</attackSpeed>.<br><br><passive>Resonate</passive><br>Attacks deal <magicDamage> magic damage <OnHit>On-Hit</OnHit></magicDamage>.<br><br><passive>Rumble</passive><br><status>Immobilizing</status> or <status>Grounding</status> an enemy champion grants 25 stacks for 10 seconds. While at 100 stacks, <status>Immobilizing</status> an enemy champion applies <OnHit>On-Hit</OnHit> effects 3 times.</mainText>",
+      "description": "<mainText><stats><attention>35</attention> Armor<br><attention>35</attention> Magic Resist<br><attention>40%</attention> Attack Speed</stats><br><br><passive>Reverberate</passive><br>At combat start gain <healing>50 max Health</healing> per <attackSpeed>10% bonus Attack Speed</attackSpeed>.<br><br><passive>Resonate</passive><br>Attacks deal <magicDamage> magic damage <OnHit>On-Hit</OnHit></magicDamage>.<br><br><passive>Rumble</passive><br><status>Immobilizing</status> or <status>Grounding</status> an enemy champion applies <OnHit>On-Hit</OnHit> effects 3 times.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatSpellBlockMod": 35,
@@ -5396,7 +5474,7 @@
     },
     "447115": {
       "name": "Regicide",
-      "description": "<mainText><stats><attention>60</attention> Attack Damage<br><attention>15</attention> Lethality<br><attention>8%</attention> Move Speed</stats><br><br><passive>End the Line</passive><br>At the start of each round, declare the lowest health enemy the <keywordMajor>Regent</keywordMajor>. Getting a takedown on the <keywordMajor>Regent</keywordMajor> grants you a permanent <physicalDamage>10 Attack Damage</physicalDamage> and refreshes your Ultimate's Cooldown.</mainText>",
+      "description": "<mainText><stats><attention>60</attention> Attack Damage<br><attention>15</attention> Lethality<br><attention>8%</attention> Move Speed</stats><br><br><passive>End the Line</passive><br>At the start of each round, declare the lowest health enemy the <keywordMajor>Regent</keywordMajor>. Getting a takedown on the <keywordMajor>Regent</keywordMajor> grants you a permanent <physicalDamage>15 Attack Damage</physicalDamage> and refreshes your Ultimate's Cooldown.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatPhysicalDamageMod": 60,
@@ -5421,18 +5499,17 @@
     },
     "447119": {
       "name": "Lightning Rod",
-      "description": "<mainText><stats><attention>500</attention> Health<br><attention>30</attention> Armor<br><attention>30</attention> Magic Resist<br><attention>8%</attention> Move Speed</stats><br><br><passive>Call Lightning</passive><br>Every 16 seconds, <keywordMajor>Autocast</keywordMajor> summon a stormcloud above you, which after a brief delay fires a lightning bolt, dealing <magicDamage> plus 10% max Health magic damage</magicDamage> and <status>Slowing</status> by 30% for 2 seconds.<br><br>If you are struck by the lightning, gain a <shield> Shield</shield> for 2 seconds.<br><br><passive>Fully Automated</passive><br>Your <keywordMajor>Autocast</keywordMajor> Cooldowns are reduced by 1 seconds and benefit from your Ability Haste.<br><br><rules>Call Lighting has a minimum cooldown of 5 seconds.</rules></mainText>",
+      "description": "<mainText><stats><attention>500</attention> Health<br><attention>30</attention> Armor<br><attention>30</attention> Magic Resist<br><attention>20</attention> Ability Haste</stats><br><br><passive>Call Lightning</passive><br>Every 16 seconds, <keywordMajor>Autocast</keywordMajor> summon a stormcloud above you, which after a brief delay fires a lightning bolt, dealing <magicDamage> plus 10% max Health magic damage</magicDamage> and <status>Slowing</status> by 30% for 2 seconds.<br><br>If you are struck by the lightning, gain a <shield> Shield</shield> for 2 seconds.<br><br><passive>Fully Automated</passive><br>Your <keywordMajor>Autocast</keywordMajor> spells benefit from your Ability Haste.<br><br><rules>Call Lighting has a minimum cooldown of 5 seconds.</rules></mainText>",
       "plaintext": "",
       "stats": {
         "FlatSpellBlockMod": 30,
         "FlatHPPoolMod": 500,
-        "FlatArmorMod": 30,
-        "PercentMovementSpeedMod": 0.08
+        "FlatArmorMod": 30
       }
     },
     "447120": {
       "name": "Diamond-Tipped Spear",
-      "description": "<mainText><stats><attention>75</attention> Adaptive Force<br><attention>30%</attention> Attack Speed</stats><br><br><passive>Reach Weapon</passive><br>Increase your attack range by 75.<br><br><passive>Sweet Spot</passive><br>Deal up to 30% increased damage with Attacks and 50% with Abilities based on how far your target is from you. Damage caps at 800 units. </mainText>",
+      "description": "<mainText><stats><attention>75</attention> Adaptive Force<br><attention>30%</attention> Attack Speed</stats><br><br><passive>Reach Weapon</passive><br>Increase your attack range by 75.<br><br><passive>Sweet Spot</passive><br>Deal up to 30% increased damage with Attacks and 50% with Abilities based on how far your target is from you. Damage caps at 700 units. </mainText>",
       "plaintext": "",
       "stats": {
         "PercentAttackSpeedMod": 0.3
@@ -5449,7 +5526,7 @@
     },
     "447122": {
       "name": "Black Hole Gauntlet",
-      "description": "<mainText><stats><attention>900</attention> Health<br><attention>25</attention> Ability Haste</stats><br><br><passive>Accretion</passive><br><OnHit>On-Hit</OnHit>, gain 1 stack of <keywordMajor>Accretion</keywordMajor>, and 5 stacks for <status>immobilizing</status> an enemy champion. These stacks last for the rest of the round, up to 50. Each stack increases your size by 2%.<br><br><active>ACTIVE</active> (0s)<br><active>Dark Star</active><br>Summon a Black Hole that scales with your size. <slow>Slowing</slow> nearby enemies by 30% while those in the center are pulled closer and take <magic> magic damage each second</magic>, granting you 1 stack of <keywordMajor>Accretion</keywordMajor>. The Black Hole lasts for  seconds.<br><br><rules>Increases in size every 10 stacks. </rules></mainText>",
+      "description": "<mainText><stats><attention>900</attention> Health<br><attention>25</attention> Ability Haste</stats><br><br><passive>Accretion</passive><br><OnHit>On-Hit</OnHit>, gain 1 stack of <keywordMajor>Accretion</keywordMajor>, and 5 stacks for <status>immobilizing</status> an enemy champion. These stacks last for the rest of the round, up to 50. Each stack increases your size by 2%.<br><br><active>ACTIVE</active> (0s)<br><active>Dark Star</active><br>Summon a Black Hole that scales with your size. <status>Slowing</status> nearby enemies by 30% while those in the center are pulled closer and take <magicDamage> magic damage each second</magicDamage>, granting you 1 stack of <keywordMajor>Accretion</keywordMajor>. The Black Hole lasts for  seconds.<br><br><rules>Increases in size every 10 stacks. </rules></mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 900
@@ -5457,7 +5534,7 @@
     },
     "447123": {
       "name": "Puppeteer",
-      "description": "<mainText><stats><attention>30%</attention> Attack Speed<br><attention>15%</attention> Heal and Shield Power<br><attention>40</attention> Ability Haste<br><attention>150%</attention> Base Mana Regen</stats><br><br><passive>Pull Their Strings</passive> <br>Attacking a champion adds a stack for 15 seconds. At 4 stacks, <status>Berserk</status> them for 2 seconds. You grant <status>Berserk</status> enemies an additional <attackSpeed> Attack Speed</attackSpeed> and <speed>40% Move Speed</speed>. (25 second Cooldown).<br><br><healing>Healing</healing>, <shield>Shielding</shield>, or buffing yourself or an ally with an Ability reduces the Cooldown by 5 seconds.<br><br><rules>If only one enemy is alive, instead <status>Fear</status> them for the same duration.</rules></mainText>",
+      "description": "<mainText><stats><attention>30%</attention> Attack Speed<br><attention>15%</attention> Heal and Shield Power<br><attention>40</attention> Ability Haste<br><attention>150%</attention> Base Mana Regen</stats><br><br><passive>Pull Their Strings</passive> (0s)<br>Attacking a champion adds a stack for 15 seconds. At 4 stacks, <status>Berserk</status> them for 2 seconds. You grant <status>Berserk</status> enemies an additional <attackSpeed> Attack Speed</attackSpeed> and <speed>40% Move Speed</speed>.<br><br><healing>Healing</healing>, <shield>Shielding</shield>, or buffing yourself or an ally with an Ability reduces the Cooldown by 5 seconds.<br><br><rules>If only one enemy is alive, instead <status>Fear</status> them for the same duration.</rules></mainText>",
       "plaintext": "",
       "stats": {
         "PercentAttackSpeedMod": 0.3
@@ -5554,7 +5631,7 @@
     },
     "663146": {
       "name": "Hextech Gunblade",
-      "description": "<mainText><stats><attention>90</attention> Ability Power<br><attention>45</attention> Attack Damage<br><attention>15%</attention> Omnivamp</stats><br><br><br><br><active>ACTIVE</active> (0s)<br><active>Lightning Bolt</active><br>Shocks the target enemy champion, dealing <magicDamage> magic damage</magicDamage> and slowing them by 40% for 2 seconds.</mainText>",
+      "description": "<mainText><stats><attention>90</attention> Ability Power<br><attention>45</attention> Attack Damage<br><attention>15%</attention> Omnivamp</stats><br><br><br><br><active>ACTIVE</active> (0s)<br><active>Lightning Bolt</active><br>Shocks the target enemy champion, dealing <magicDamage> magic damage</magicDamage> and <status>Slowing</status> them by 40% for 2 seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 90,
@@ -5563,7 +5640,7 @@
     },
     "663172": {
       "name": "Zephyr",
-      "description": "<mainText><stats><attention>40%</attention> Attack Speed<br><attention>8%</attention> Move Speed<br><attention>25</attention> Ability Haste<br><attention>20%</attention> Tenacity</stats><br><br><passive>Like the Wind</passive><br>Gain 5% Move Speed <OnHit>On-Hit</OnHit> for 6 seconds, stacking up to 25% Move Speed.<br><br><rules>Tenacity reduces the duration of <status>Stun</status>, <status>Slow</status>, <status>Taunt</status>, <status>Fear</status>, <status>Silence</status>, <status>Blind</status>, <status>Polymorph</status> and <status>Immobilizing</status> effects. It has no effect on <status>Airborne</status> or <status>Suppression</status>.</rules></mainText>",
+      "description": "<mainText><stats><attention>40%</attention> Attack Speed<br><attention>8%</attention> Move Speed<br><attention>25</attention> Ability Haste<br><attention>20%</attention> Tenacity</stats><br><br><passive>Like the Wind</passive><br>Gain 5% Move Speed <OnHit>On-Hit</OnHit> for 6 seconds, stacking up to 25% Move Speed.</mainText>",
       "plaintext": "",
       "stats": {
         "PercentAttackSpeedMod": 0.4,
@@ -5582,7 +5659,7 @@
     },
     "664011": {
       "name": "Sword of Blossoming Dawn",
-      "description": "<mainText><stats><attention>35</attention> Ability Power<br><attention>150</attention> Health<br><attention>10%</attention> Heal and Shield Power<br><attention>10</attention> Ability Haste</stats><br><br><passive>Effervescence</passive><br>Gain +1% Attack Speed for every <healing>1% Heal and Shield Power</healing> you have. <br><br><passive>Peppermint</passive><br><OnHit>On-Hit</OnHit>, <healing>heal the lowest health</healing> ally champion near you for , prioritizing lower health allies.</mainText>",
+      "description": "<mainText><stats><attention>35</attention> Ability Power<br><attention>150</attention> Health<br><attention>10%</attention> Heal and Shield Power<br><attention>10</attention> Ability Haste</stats><br><br><passive>Effervescence</passive><br>Gain +<attackSpeed>1% Attack Speed</attackSpeed> for every <healing>1% Heal and Shield Power</healing> you have. <br><br><passive>Peppermint</passive><br><OnHit>On-Hit</OnHit>, <healing>heal the lowest health</healing> ally champion near you for , prioritizing lower health allies.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 150,
@@ -5635,7 +5712,7 @@
     },
     "667112": {
       "name": "Flesheater",
-      "description": "<mainText><stats><attention>55</attention> Adaptive Force<br><attention>500</attention> Health</stats><br><br><passive>Hack the Meat</passive><br>Dealing damage shreds 3 <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> for 5 seconds, stacking up to 10 times. Applying stacks has a 1 second cooldown per Ability.<br><br><passive>Cannibalize</passive><br>On Champion Takedown, Heal yourself and your ally for <healing>18% of the Target's Max Health</healing>.</mainText>",
+      "description": "<mainText><stats><attention>55</attention> Adaptive Force<br><attention>500</attention> Health</stats><br><br><passive>Hack the Meat</passive><br>Dealing damage shreds 3 <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> for 5 seconds, stacking up to 10 times. Applying stacks has a 1 second cooldown per Ability.<br><br><passive>Cannibalize</passive><br>On Champion Takedown, steal 10% of their stats and size for the rest of the round.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 500

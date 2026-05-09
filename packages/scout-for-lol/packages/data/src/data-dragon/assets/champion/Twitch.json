@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Twitch": {
       "id": "Twitch",
@@ -1004,7 +1004,7 @@
       ],
       "passive": {
         "name": "Deadly Venom",
-        "description": "Twitch's basic attacks infect the target, dealing true damage each second.",
+        "description": "Twitch's basic attacks infect the target %i:OnHit% <OnHit>On-Hit</OnHit>, dealing true damage each second.",
         "image": {
           "full": "Twitch_Passive.png",
           "sprite": "passive4.png",

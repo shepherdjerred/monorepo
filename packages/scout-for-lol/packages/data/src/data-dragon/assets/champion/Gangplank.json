@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Gangplank": {
       "id": "Gangplank",
@@ -358,8 +358,8 @@
             ],
             "effect": [
               "{{ spelldamage }} -> {{ spelldamageNL }}",
-              "{{ e2 }} -> {{ e2NL }}",
-              "{{ e5 }} -> {{ e5NL }}",
+              "{{ goldproc }} -> {{ goldprocNL }}",
+              "{{ ssproc }} -> {{ ssprocNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
@@ -493,7 +493,7 @@
           "id": "GangplankW",
           "name": "Remove Scurvy",
           "description": "Eats citrus to cure crowd control effects and restore Health.",
-          "tooltip": "Gangplank consumes a large amount of citrus fruit, removing all <status>Disabling</status> effects and restoring <healing>{{ basehealth }} plus {{ e2 }}% missing Health</healing>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Gangplank consumes a large amount of citrus fruit, removing all <status>Disabling</status> effects and restoring <healing>{{ basehealth }} plus {{ percentheal }}% missing Health</healing>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Healing",
@@ -501,7 +501,7 @@
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
+              "{{ baseheal }} -> {{ basehealNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
@@ -636,7 +636,7 @@
           "id": "GangplankE",
           "name": "Powder Keg",
           "description": "Gangplank uncovers a powder keg at target location. If he attacks it, it explodes, spreading the attack's damage to enemies in the area, slowing them.",
-          "tooltip": "Gangplank places a powder keg that can be attacked by Gangplank and enemy champions for {{ e5 }} seconds. When an enemy destroys it, the keg is defused. When Gangplank destroys it, it explodes, <status>Slowing</status> by {{ finalslowamount }}% for {{ e2 }} seconds and dealing the <physicalDamage>Attack's damage</physicalDamage>, ignoring {{ e0 }}% Armor. Champions take an additional <physicalDamage>{{ e3 }} physical damage</physicalDamage>.<br /><br />Keg health decays every {{ barreldecaytime }} seconds. Keg explosions detonate other kegs with overlapping blast zones, but don't deal damage to the same target more than once. Keg explosions triggered by <spellName>Parrrley</spellName> will grant the bonus gold for targets killed.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Gangplank places a powder keg that can be attacked by Gangplank and enemy champions for {{ barrelduration }} seconds. When an enemy destroys it, the keg is defused. When Gangplank destroys it, it explodes, <status>Slowing</status> by {{ finalslowamount }}% for {{ debuffduration }} seconds and dealing the <physicalDamage>Attack's damage</physicalDamage>, ignoring {{ barrelarmorpenetration }}% Armor. Champions take an additional <physicalDamage>{{ bonusdamagetochampions }} physical damage</physicalDamage>.<br /><br />Keg health decays every {{ barreldecaytime }} seconds. Keg explosions detonate other kegs with overlapping blast zones, but don't deal damage to the same target more than once. Keg explosions triggered by <spellName>Parrrley</spellName> will grant the bonus gold for targets killed.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Bonus Damage Against Champions",
@@ -645,8 +645,8 @@
               "Recharge Time"
             ],
             "effect": [
-              "{{ e3 }} -> {{ e3NL }}",
-              "{{ e1 }} -> {{ e1NL }}",
+              "{{ bonusdamagetochampions }} -> {{ bonusdamagetochampionsNL }}",
+              "{{ maxbarrels }} -> {{ maxbarrelsNL }}",
               "{{ barrelslow }}% -> {{ barrelslowNL }}%",
               "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"
             ]

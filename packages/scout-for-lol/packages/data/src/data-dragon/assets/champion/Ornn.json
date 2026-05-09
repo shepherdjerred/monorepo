@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Ornn": {
       "id": "Ornn",
@@ -327,7 +327,7 @@
           "id": "OrnnQ",
           "name": "Volcanic Rupture",
           "description": "Ornn slams the ground, sending out a fissure dealing damage and slowing enemies hit. After a small delay, a magma pillar forms at the end location.",
-          "tooltip": "Ornn slams the ground, creating a fissure dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>Slowing</status> by {{ e5 }}% for {{ e6 }} seconds. A pillar of rock forms at the fissure's end for {{ e3 }} seconds. {{ spellmodifierdescriptionappend }}",
+          "tooltip": "Ornn slams the ground, creating a fissure dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>Slowing</status> by {{ slowamount }}% for {{ slowduration }} seconds. A pillar of rock forms at the fissure's end for {{ pillarduration }} seconds. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",

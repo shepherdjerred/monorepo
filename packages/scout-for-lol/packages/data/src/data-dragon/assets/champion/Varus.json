@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Varus": {
       "id": "Varus",
@@ -550,7 +550,7 @@
           "id": "VarusQ",
           "name": "Piercing Arrow",
           "description": "Varus readies and then fires a powerful shot that gains extra range and damage the longer he spends preparing to fire.",
-          "tooltip": "<attention>Begin Charging:</attention> Varus draws back his next shot, <status>Slowing</status> himself by {{ e7 }}%. After {{ e5 }} seconds, if not fired, Varus will cancel the Ability and refund {{ e4 }}% of its Mana cost.<br /><br /><attention>Release:</attention> Varus releases the arrow, dealing <physicalDamage>{{ totaldamagemintooltip }} physical damage</physicalDamage>, reduced by {{ e3 }}% per enemy hit (minimum {{ e9 }}%). Damage and <keywordMajor>Blight</keywordMajor> detonation effects are increased by up to {{ maxchargeamp*100 }}% based on charge time (maximum <physicalDamage>{{ totaldamagemax }}</physicalDamage>) .{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<attention>Begin Charging:</attention> Varus draws back his next shot, <status>Slowing</status> himself by {{ movespeedmod*-100 }}%. After {{ maxchannelduration }} seconds, if not fired, Varus will cancel the Ability and refund {{ manarefund*100 }}% of its Mana cost.<br /><br /><attention>Release:</attention> Varus releases the arrow, dealing <physicalDamage>{{ totaldamagemintooltip }} physical damage</physicalDamage>, reduced by {{ falloffpercent*100 }}% per enemy hit (minimum {{ mindamagepercent*100 }}%). Damage and <keywordMajor>Blight</keywordMajor> detonation effects are increased by up to {{ maxchargeamp*100 }}% based on charge time (maximum <physicalDamage>{{ totaldamagemax }}</physicalDamage>) .{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Maximum Damage",
@@ -598,18 +598,18 @@
               0
             ],
             [
-              15,
-              15,
-              15,
-              15,
-              15
+              0.15,
+              0.15,
+              0.15,
+              0.15,
+              0.15
             ],
             [
-              50,
-              50,
-              50,
-              50,
-              50
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
             ],
             [
               4,
@@ -626,11 +626,11 @@
               3
             ],
             [
-              20,
-              20,
-              20,
-              20,
-              20
+              -0.2,
+              -0.2,
+              -0.2,
+              -0.2,
+              -0.2
             ],
             [
               0,
@@ -640,11 +640,11 @@
               0
             ],
             [
-              33,
-              33,
-              33,
-              33,
-              33
+              0.33,
+              0.33,
+              0.33,
+              0.33,
+              0.33
             ],
             [
               0,
@@ -658,13 +658,13 @@
             null,
             "0",
             "0",
-            "15",
-            "50",
+            "0.15",
+            "0.5",
             "4",
             "3",
-            "20",
+            "-0.2",
             "0",
-            "33",
+            "0.33",
             "0"
           ],
           "vars": [],
@@ -693,7 +693,7 @@
           "id": "VarusW",
           "name": "Blighted Quiver",
           "description": "Passive: Varus' basic attacks deal bonus magic damage and apply Blight. Varus' other abilities detonate Blight, dealing magic damage based on the target's maximum Health. Active: Varus empowers his next Piercing Arrow.",
-          "tooltip": "<spellPassive>Passive: </spellPassive>Varus' Attacks deal an additional <magicDamage>{{ onhitdamage }} magic damage</magicDamage> and apply a <keywordMajor>Blight</keywordMajor> stack for {{ e3 }} seconds (max {{ e4 }} stacks).<br /><br />Varus' other Abilities detonate <keywordMajor>Blight</keywordMajor> stacks dealing <magicDamage>{{ percenthpperstack }} max Health magic damage</magicDamage> per stack (max <magicDamage>{{ maxpercenthpperstack }} max Health damage</magicDamage>). Detonating <keywordMajor>Blight</keywordMajor> on champions and epic monsters also reduces his basic Abilities' Cooldowns by {{ cdrperblightstack*100 }}% of their Maximum per stack.<br /><br /><spellActive>Active:</spellActive> Varus' next <spellName>Piercing Arrow</spellName> deals an additional <magicDamage>{{ qempowerpercenthp }} missing Health magic damage</magicDamage>, increased up to <magicDamage>{{ maxqempowerpercenthp }} missing Health damage</magicDamage> based on charge time.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive: </spellPassive>Varus' Attacks deal an additional <magicDamage>{{ onhitdamage }} magic damage</magicDamage> and apply a <keywordMajor>Blight</keywordMajor> stack for {{ debuffduration }} seconds (max {{ maxstacks }} stacks).<br /><br />Varus' other Abilities detonate <keywordMajor>Blight</keywordMajor> stacks dealing <magicDamage>{{ percenthpperstack }} max Health magic damage</magicDamage> per stack (max <magicDamage>{{ maxpercenthpperstack }} max Health damage</magicDamage>). Detonating <keywordMajor>Blight</keywordMajor> on champions and epic monsters also reduces his basic Abilities' Cooldowns by {{ cdrperblightstack*100 }}% of their Maximum per stack.<br /><br /><spellActive>Active:</spellActive> Varus' next <spellName>Piercing Arrow</spellName> deals an additional <magicDamage>{{ qempowerpercenthp }} missing Health magic damage</magicDamage>, increased up to <magicDamage>{{ maxqempowerpercenthp }} missing Health damage</magicDamage> based on charge time.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage on Attack",
@@ -836,7 +836,7 @@
           "id": "VarusE",
           "name": "Hail of Arrows",
           "description": "Varus fires a hail of arrows that deal physical damage and desecrate the ground. Desecrated ground slows enemies' Move Speed and reduces their self healing and regeneration.",
-          "tooltip": "Varus fires a hail of arrows that deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and desecrates the ground for {{ e3 }} seconds, <status>Slowing</status> enemies by {{ slowpercent*-100 }}% and applying {{ grievousamount*100 }}% Grievous Wounds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Varus fires a hail of arrows that deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and desecrates the ground for {{ groundduration }} seconds, <status>Slowing</status> enemies by {{ slowpercent*-100 }}% and applying {{ grievousamount*100 }}% Grievous Wounds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -979,14 +979,14 @@
           "id": "VarusR",
           "name": "Chain of Corruption",
           "description": "Varus flings out a damaging tendril of corruption that immobilizes the first enemy champion hit and then spreads towards nearby uninfected champions, immobilizing them too on contact.",
-          "tooltip": "Varus flings out a tendril of corruption, <status>Rooting</status> the first champion hit for {{ e2 }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. <status>Rooted</status> enemies gain {{ e4 }} <keywordMajor>Blight</keywordMajor> stacks over the duration.<br /><br />The corruption spreads from its target to uninfected enemy champions. If it reaches them, they take the same damage and <status>Root</status>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Varus flings out a tendril of corruption, <status>Rooting</status> the first champion hit for {{ rootduration }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. <status>Rooted</status> enemies gain {{ passivestacks }} <keywordMajor>Blight</keywordMajor> stacks over the duration.<br /><br />The corruption spreads from its target to uninfected enemy champions. If it reaches them, they take the same damage and <status>Root</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
               "Cooldown"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },

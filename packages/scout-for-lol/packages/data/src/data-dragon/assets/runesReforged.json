@@ -28,8 +28,8 @@
             "key": "HailOfBlades",
             "icon": "perk-images/Styles/Domination/HailOfBlades/HailOfBlades.png",
             "name": "Hail of Blades",
-            "shortDesc": "Gain a large amount of Attack Speed for the first 3 attacks made against enemy champions.",
-            "longDesc": "Gain 160% (80% for ranged champions) Attack Speed when you attack an enemy champion for up to 3 attacks.<br><br>No more than 3s can elapse between attacks or this effect will end.<br><br>Cooldown: 10s.<br><br><rules>Attack resets increase the attack limit by 1.<br>Allows you to temporarily exceed the Attack Speed limit.</rules>"
+            "shortDesc": "Gain a large amount of Attack Speed and <trueDamage>bonus true damage</trueDamage> for the first 3 attacks made against enemy champions.",
+            "longDesc": "Gain 120% (60% for ranged champions) Attack Speed and <trueDamage>bonus true damage</trueDamage> when you attack an enemy champion for up to 3 attacks.<br><br>No more than 3s can elapse between attacks or this effect will end.<br><br>Cooldown: 10s.<br>On-Hit Damage: 4 - 20 (+0.08 bonus AD, +0.06 AP) damage.<br><br><rules>Attack resets increase the attack limit by 1.<br>Allows you to temporarily exceed the Attack Speed limit.</rules>"
           }
         ]
       },
@@ -509,15 +509,23 @@
             "icon": "perk-images/Styles/Sorcery/ArcaneComet/ArcaneComet.png",
             "name": "Arcane Comet",
             "shortDesc": "Damaging a champion with an ability hurls a damaging comet at their location.",
-            "longDesc": "Damaging a champion with an ability hurls a comet at their location, or, if Arcane Comet is on cooldown, reduces its remaining cooldown.<br><br><lol-uikit-tooltipped-keyword key='LinkTooltip_Description_AdaptiveDmg'><font color='#48C4B7'>Adaptive Damage</font></lol-uikit-tooltipped-keyword>: 30 - 130 based on level (<scaleAP>+0.05 AP</scaleAP> and <scaleAD>+0.1 bonus AD</scaleAD>)<br>Cooldown: 20 - 8s<br><rules><br>Cooldown Reduction:<br>Single Target: 20%.<br>Area of Effect: 10%.<br>Damage over Time: 5%.<br></rules>"
+            "longDesc": "Damaging a champion with an ability hurls a comet at their location, dealing increased damage based on distance.<br><br><lol-uikit-tooltipped-keyword key='LinkTooltip_Description_AdaptiveDmg'><font color='#48C4B7'>Adaptive Damage</font></lol-uikit-tooltipped-keyword>: 15 - 100 based on level (<scaleAP>+0.05 AP</scaleAP> and <scaleAD>+0.1 bonus AD</scaleAD>)<br>Cooldown: 20 - 8s<br><rules><br>Damage amplification scales up to 100% at 750 range.<br></rules>"
           },
           {
             "id": 8230,
             "key": "PhaseRush",
-            "icon": "perk-images/Styles/Sorcery/PhaseRush/PhaseRush.png",
-            "name": "Phase Rush",
-            "shortDesc": "Hitting an enemy champion with 3 <b>separate</b> attacks or abilities grants a burst of <lol-uikit-tooltipped-keyword key='LinkTooltip_Description_MS'>MS</lol-uikit-tooltipped-keyword> and Slow Resist. ",
-            "longDesc": "Hitting an enemy champion with 3 attacks or <b>separate</b> abilities within 4s grants <speed>25 - 50% Move Speed</speed> based on level and <status>50% Slow Resistance</status> for 3s. Move Speed is 50% effective for ranged champions.<br>Cooldown: 30s - 10s"
+            "icon": "perk-images/Styles/Sorcery/PhaseRush/StormraidersSurgeRuneIcon2.png",
+            "name": "Stormraider's Surge",
+            "shortDesc": "Dealing 25% of a champion's maximum health grants a burst of <lol-uikit-tooltipped-keyword key='LinkTooltip_Description_MS'>MS</lol-uikit-tooltipped-keyword> and Slow Resist. ",
+            "longDesc": "Dealing 25% of a champion's maximum health within 3s grants <speed>40% Move Speed</speed> and <status>50% Slow Resistance</status> for 3s. Move Speed is 75% effective for ranged champions.<br>Cooldown: 20s - 10s"
+          },
+          {
+            "id": 8992,
+            "key": "DeathfireTouch",
+            "icon": "perk-images/Styles/Sorcery/DeathfireTouch/DEATHFIRE_TOUCH_KEYSTONE.png",
+            "name": "Deathfire Touch",
+            "shortDesc": "Damaging a champion with an ability burns them over time.",
+            "longDesc": "Damaging a champion with an ability burns them for 1 - 10 based on level (+<scaleAP>0.03 AP</scaleAP>) (+<scaleAD>0.08 bonus AD</scaleAD>)  adaptive damage per second. After burning for 3 seconds, the damage of the burn increases by 100% while they remain on fire.<br><rules><br>Duration:<br>Single Target: 4s.<br>Area of Effect: 2s<br>Damage over Time: 1s<br></rules>"
           }
         ]
       },

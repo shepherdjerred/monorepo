@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "JarvanIV": {
       "id": "JarvanIV",
@@ -437,7 +437,7 @@
           "id": "JarvanIVDragonStrike",
           "name": "Dragon Strike",
           "description": "Jarvan IV extends his lance, dealing physical damage and lowering the Armor of enemies in its path. Additionally, this will pull Jarvan to his Demacian Standard, knocking up enemies in his path.",
-          "tooltip": "Jarvan extends his lance, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and removing <scaleArmor>{{ e2 }}% Armor</scaleArmor> for {{ e3 }} seconds.<br /><br />If the lance connects with <spellName>Demacian Standard</spellName>, Jarvan will pull himself to it, <status>Knocking Up</status> those in his path for 0.75 seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Jarvan extends his lance, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and removing <scaleArmor>{{ basearshred*100 }}% Armor</scaleArmor> for {{ e3 }} seconds.<br /><br />If the lance connects with <spellName>Demacian Standard</spellName>, Jarvan will pull himself to it, <status>Knocking Up</status> those in his path for 0.75 seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -447,7 +447,7 @@
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ e2 }}% -> {{ e2NL }}%",
+              "{{ basearshred*100.000000 }}% -> {{ basearshrednl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
@@ -480,11 +480,11 @@
               240
             ],
             [
-              10,
-              14,
-              18,
-              22,
-              26
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
               3,
@@ -546,7 +546,7 @@
           "effectBurn": [
             null,
             "80/120/160/200/240",
-            "10/14/18/22/26",
+            "0",
             "3",
             "0",
             "0",
@@ -582,7 +582,7 @@
           "id": "JarvanIVGoldenAegis",
           "name": "Golden Aegis",
           "description": "Jarvan IV calls upon the ancient kings of Demacia to shield him from harm and slow surrounding enemies.",
-          "tooltip": "Jarvan summons an aegis, <status>Slowing</status> nearby enemies by {{ e2 }}% for {{ e5 }} seconds and granting him a <shield>{{ baseshield }} Shield</shield>, increased by <shield>{{ bonusshield }}</shield> for each enemy champion hit.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Jarvan summons an aegis, <status>Slowing</status> nearby enemies by {{ baseslowamount*100 }}% for {{ e5 }} seconds and granting him a <shield>{{ totalshield }} Shield</shield>, increased by <shield>{{ bonusshield }}</shield> for each enemy champion hit.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Shield Amount",
@@ -590,7 +590,7 @@
             ],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
-              "{{ e2 }}% -> {{ e2NL }}%"
+              "{{ baseslowamount*100.000000 }}% -> {{ baseslowamountnl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
@@ -621,11 +621,11 @@
               140
             ],
             [
-              15,
-              20,
-              25,
-              30,
-              35
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
               10,
@@ -687,7 +687,7 @@
           "effectBurn": [
             null,
             "60/80/100/120/140",
-            "15/20/25/30/35",
+            "0",
             "10/20/30/40/50",
             "4",
             "2",
@@ -723,7 +723,7 @@
           "id": "JarvanIVDemacianStandard",
           "name": "Demacian Standard",
           "description": "Jarvan IV carries the pride of Demacia, passively granting him bonus Attack Speed. Activating Demacian Standard allows Jarvan IV to place a Demacian flag that deals magic damage on impact and grants Attack Speed to nearby allied champions.",
-          "tooltip": "<spellPassive>Passive:</spellPassive> Jarvan gains <attackSpeed>{{ permanentattackspeed*100 }}% Attack Speed</attackSpeed>.<br /><br /><spellActive>Active:</spellActive> Jarvan throws a standard into the ground, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and granting allies near the standard <attackSpeed>{{ e3 }}% Attack Speed</attackSpeed> for {{ e4 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Jarvan gains <attackSpeed>{{ permanentattackspeed*100 }}% Attack Speed</attackSpeed>.<br /><br /><spellActive>Active:</spellActive> Jarvan throws a standard into the ground, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and granting allies near the standard <attackSpeed>{{ baseauraas*100 }}% Attack Speed</attackSpeed> for {{ e4 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -734,7 +734,7 @@
             "effect": [
               "{{ e2 }} -> {{ e2NL }}",
               "{{ permanentattackspeed*100.000000 }}% -> {{ permanentattackspeednl*100.000000 }}%",
-              "{{ effect3amount*100.000000 }}% -> {{ effect3amountnl*100.000000 }}%",
+              "{{ baseauraas*100.000000 }}% -> {{ baseauraasnl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -773,11 +773,11 @@
               240
             ],
             [
-              20,
-              22.5,
-              25,
-              27.5,
-              30
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
               8,
@@ -833,7 +833,7 @@
             null,
             "10/13/16/19/22",
             "80/120/160/200/240",
-            "20/22.5/25/27.5/30",
+            "0",
             "8",
             "0",
             "0",
