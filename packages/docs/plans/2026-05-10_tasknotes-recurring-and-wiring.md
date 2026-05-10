@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress — Phase 1 complete, Phases 2–6 pending.
+Complete — all 6 phases shipped as stacked PRs (#729 → #732 → #733 → #734 → #735 → #736), pending review and merge.
 
 ## Context
 
@@ -354,17 +354,50 @@ Per repo CLAUDE.md, mirror this plan to `packages/docs/plans/2026-05-10_tasknote
   - `packages/tasks-for-obsidian/src/domain/recurrence.test.ts` _(new)_ — 13 cases covering local-date formatting, recurrence detection, instance toggle, and optimistic projection.
   - All hooks green: `bun test` (server 158 pass, client 185 pass), `bun run typecheck` (both clean), `bunx eslint . --max-warnings=0` (both clean), pre-commit + commit-msg validation (`fix(root)` cross-cutting scope).
 
+- **Phase 2 — Offline sync wiring.** Branch `feature/2026-05-10-tasknotes-offline-sync`, PR [#732](https://github.com/shepherdjerred/monorepo/pull/732). Commit `fe0ab46cc`.
+  - `MutationQueue` + `SyncEngine` + AsyncStorage cache wired into `TaskContext`. Each mutation method (createTask, updateTask, deleteTask, toggleStatus) now applies optimistic state, enqueues, fires the API call. On success the entry is replay-drained. On failure the optimistic state stays and the mutation stays queued.
+  - `refreshTasks` delegates to `syncEngine.fullSync()`: replays queue → fetches server → re-applies remaining (failed) mutations on top → writes through to cache.
+  - Added `complete_instance` mutation type (no payload) so the recurring-task path is offline-resilient.
+  - Refactored `MutationQueue.replay` to accept a narrow `MutationClient` (Pick of 5 methods); `SyncEngine` accepts a `SyncClient` (`MutationClient + listTasks`). Tests build minimal fakes — no type assertions, satisfies the monorepo's `custom-rules/no-type-assertions` rule.
+  - `MutationQueue` takes injectable `MutationStorage`; `SyncEngine` takes `TaskCacheStorage`. Defaults wrap `TypedStorage`. Tests pass in-memory fakes (Bun test env can't load AsyncStorage).
+  - Mutation Zod schemas now reuse `CreateTaskRequestSchema` / `UpdateTaskRequestSchema` directly from `tasknotes-types` instead of duplicating field lists (which had a `description` vs `details` mismatch + missing `recurrenceAnchor` / `extraFields`).
+  - Tests: `MutationQueue.test.ts` (9 cases), `SyncEngine.test.ts` (9 cases). Total client tests: 203 pass.
+
+- **Phase 3 — PomodoroProvider mount.** Branch `feature/2026-05-10-tasknotes-pomodoro-mount`, PR [#733](https://github.com/shepherdjerred/monorepo/pull/733). Commit `49060dfc3`.
+  - `App.tsx` — slot `PomodoroProvider` between `ApiClientProvider` and `TaskProvider` so `usePomodoroContext` resolves on the Pomodoro screen.
+
+- **Phase 4 — Time-tracking overlay + Live Activities bridge.** Branch `feature/2026-05-10-tasknotes-time-tracking-ui`, PR [#734](https://github.com/shepherdjerred/monorepo/pull/734). Commit `314e897de`.
+  - `src/components/timer/ActiveTimeTrackingOverlay.tsx` _(new)_ — reads `activeEntry` from `TimeTrackingContext`, looks up task title via `TaskContext`, ticks 1Hz, renders `TimeTrackingBar` absolutely above the tab bar (safe-area-aware).
+  - Same component bridges to iOS Live Activity layer: `startTimeTracking` on transition `null → set`, `updateTimeTracking` each tick, `stopTimeTracking` on `set → null`. No-ops on Android / pre-iOS-16.2.
+  - `TimeTrackingBar` API change: `duration: number` (minutes via `formatDuration`) → `elapsedSeconds: number` (formats `MM:SS` or `H:MM:SS`). Knip showed zero existing consumers, so free API change.
+  - `src/lib/elapsed.ts` _(new)_ — extracted `formatElapsed` + `elapsedSecondsSince` for direct unit testing. 8 cases in `elapsed.test.ts`. Total client tests: 211 pass.
+
+- **Phase 5 — Markdown rendering for `details`.** Branch `feature/2026-05-10-tasknotes-markdown-details`, PR [#735](https://github.com/shepherdjerred/monorepo/pull/735). Commit `3be382788`.
+  - `TaskDetailScreen.tsx` — display mode renders `<MarkdownView content={task.details} />` between meta and actions when `details` is non-empty; edit mode adds a multiline `TextInput` after the due-date picker, seeded from `task.details`, passed through `updateTask`.
+
+- **Phase 6 — Hygiene sweep.** Branch `feature/2026-05-10-tasknotes-hygiene`, PR [#736](https://github.com/shepherdjerred/monorepo/pull/736). Commit `649afb7e4`.
+  - Deleted 6 dead files: `BrowseItem.tsx`, `use-labels.ts`, `use-projects.ts`, `use-time-tracking.ts`, `icon-map.ts`, `styles/priority.ts`.
+  - Dropped unused runtime deps: `@react-native-community/datetimepicker`, `ts-pattern` (client), `yaml` (server). Added `@typescript-eslint/utils` to devDeps in both packages.
+  - Removed duplicate `TaskResponseSchema` / `CreateTaskResponseSchema` aliases in `domain/schemas.ts`; `TaskNotesClient` now uses `TaskSchema` directly.
+  - Dropped `export` on server `readTaskFile` (used internally only).
+  - Held back: `@babel/preset-env`, `@babel/runtime`, `@react-native/typescript-config`, top-level `typescript-eslint` — knip flags as unused but they're React Native build-chain conventions. Defer to a future PR with manual iOS build verification.
+
 ### Remaining
 
-- **Phase 2** — Wire offline sync (`MutationQueue` + `SyncEngine` + `storage` cache); add `complete_instance` mutation type; refactor `TaskContext` mutation methods to enqueue + replay; refactor `SyncContext.syncNow` to drain queue then refetch.
-- **Phase 3** — Mount `PomodoroProvider` in `App.tsx:56` (between `ApiClientProvider` and `TaskProvider`); add provider mount test.
-- **Phase 4** — Build `ActiveTimeTrackingOverlay`; mount in `ThemedApp`; bridge JS↔Swift Live Activity calls in `TimeTrackingContext`; add tests.
-- **Phase 5** — Drop `MarkdownView` into `TaskDetailScreen` for `details` field (display + edit modes); add tests.
-- **Phase 6** — Hygiene: drop unused deps (`@react-native-community/datetimepicker`, `ts-pattern`, server `yaml`, etc.); declare `@typescript-eslint/utils`; remove unused exports + duplicate `TaskSchema|TaskResponseSchema|CreateTaskResponseSchema`; remove server `readTaskFile`.
+- All 6 phases shipped as PRs. Awaiting review + merge in order: 729 → 732 → 733 → 734 → 735 → 736. Once merged, clean up clone + branches per the plan's "Working Environment" section.
+
+### Follow-ups (out of scope, captured for later)
+
+- **No retry/backoff on `MutationQueue.replay`.** Failed mutations replay forever until success or manual clear. Add attempt counter + age-based expiry.
+- **Temp-ID rewriting is one-way.** Local Map gets the real id but any deep-link or navigation state captured the temp id stays broken until refresh.
+- **TZ divergence near midnight** between server-local and device-local dates can briefly desync the `completeInstances` optimistic display vs server state. Concrete fix: send explicit date in POST body.
+- **No callers of `TimeTrackingContext.startTracking()` yet.** Wiring start/stop controls into TaskRow / TaskDetail is its own follow-up.
+- **`TAB_BAR_OFFSET` is hardcoded `56pt`** in the overlay. Resolve dynamically via a navigation hook in a follow-up.
+- **Held-back devDeps cleanup** (Phase 6 caveat): verify React Native iOS build still works after dropping `@babel/preset-env` etc.
 
 ### Caveats
 
 - Working in dissociated clone at `~/git/monorepo-tasknotes-fixes`. After all PRs merge: `rm -rf` the clone and `git branch -d` each `feature/2026-05-10-tasknotes-*` branch.
-- Setup script (`bun run scripts/setup.ts`) regenerates `packages/homelab/src/cdk8s/generated/helm/*.types.ts`, `packages/scout-for-lol/packages/backend/src/testing/template.db`, `packages/clauderon/web/bun.lock`, `scripts/ci/bun.lock` — these are codegen artifacts and were intentionally **not** staged. Only Phase 1 source files are in `2421683c7`.
-- Server `completeRecurring` uses **server-local** date for the `completeInstances` entry. Client `nextOptimistic` uses **device-local** date for the optimistic projection. If server and device timezones diverge near midnight, the optimistic display may briefly disagree with what the server stores. Out of scope for this fix; flagged in the plan's "Out of Scope" section. Concrete next step if it bites: have the client send the date string in the POST body and have the server honor it (currently the endpoint takes no payload).
-- Phase 1 PR description should call out that the server fix is required for the client fix to be effective end-to-end.
+- Setup script (`bun run scripts/setup.ts`) regenerates `packages/homelab/src/cdk8s/generated/helm/*.types.ts`, `packages/scout-for-lol/packages/backend/src/testing/template.db`, `packages/clauderon/web/bun.lock`, `scripts/ci/bun.lock` — these are codegen artifacts and were intentionally **not** staged in any of the 6 phase commits.
+- Phase 1 PR description calls out that server + client must ship together; either alone is insufficient.
+- Phases stack: each phase's branch was cut from the previous phase's branch, not from `origin/main`. Reviewers must merge in order. After merge, GitHub auto-rebases the next PR's target.
