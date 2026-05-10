@@ -44,8 +44,8 @@ export class PagerDutyClient {
 
   private async fetchIncidents(): Promise<z.infer<typeof IncidentSchema>[]> {
     const url = new URL("https://api.pagerduty.com/incidents");
-    url.searchParams.set("statuses[]", "triggered");
-    url.searchParams.set("statuses[]", "acknowledged");
+    url.searchParams.append("statuses[]", "triggered");
+    url.searchParams.append("statuses[]", "acknowledged");
     const response = await this.fetchJson(url);
     return IncidentsResponseSchema.parse(response).incidents;
   }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { buildClaudeArgs, redactToken } from "./pr-agent.ts";
+import { buildClaudeArgs } from "./pr-agent.ts";
 import {
   buildReviewPrompt,
   buildSummaryPrompt,
@@ -18,32 +18,6 @@ const baseInput: PrAgentInput = {
   prTitle: "Add foo support",
   prAuthor: "alice",
 };
-
-describe("redactToken", () => {
-  it("replaces token occurrences with ***", () => {
-    expect(
-      redactToken("Authorization: Bearer abc12345xyz", "abc12345xyz"),
-    ).toBe("Authorization: Bearer ***");
-  });
-
-  it("replaces all occurrences", () => {
-    expect(redactToken("abc12345xyz and abc12345xyz", "abc12345xyz")).toBe(
-      "*** and ***",
-    );
-  });
-
-  it("returns input unchanged for short or missing tokens", () => {
-    expect(redactToken("hello")).toBe("hello");
-    expect(redactToken("hello", "")).toBe("hello");
-    expect(redactToken("hello short", "short")).toBe("hello short");
-  });
-
-  it("does not replace overlapping but non-equal substrings", () => {
-    expect(redactToken("abcdefgh and abcdefgi", "abcdefgh")).toBe(
-      "*** and abcdefgi",
-    );
-  });
-});
 
 describe("buildClaudeArgs", () => {
   it("includes the prompt, MCP config, allowed tools, and permission mode", () => {

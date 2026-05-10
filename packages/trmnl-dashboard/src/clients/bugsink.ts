@@ -2,6 +2,7 @@ import { z } from "zod";
 
 const PagedResponseSchema = <T extends z.ZodType>(item: T) =>
   z.object({
+    next: z.string().nullable().optional(),
     results: z.array(item),
   });
 
@@ -42,11 +43,19 @@ export class BugsinkClient {
   }
 
   private async countUnresolved(projectId: number): Promise<number> {
-    const url = new URL(`${this.baseUrl}/issues/`);
-    url.searchParams.set("project", String(projectId));
-    const response = await this.fetchJson(url);
-    const issues = PagedResponseSchema(IssueSchema).parse(response).results;
-    return issues.filter((issue) => !issue.is_resolved).length;
+    const initialUrl = new URL(`${this.baseUrl}/issues/`);
+    initialUrl.searchParams.set("project", String(projectId));
+    initialUrl.searchParams.set("status", "unresolved");
+
+    let nextUrl: string | null = initialUrl.toString();
+    let total = 0;
+    while (nextUrl !== null) {
+      const response = await this.fetchJson(new URL(nextUrl));
+      const page = PagedResponseSchema(IssueSchema).parse(response);
+      total += page.results.filter((issue) => !issue.is_resolved).length;
+      nextUrl = page.next ?? null;
+    }
+    return total;
   }
 
   private async fetchJson(pathOrUrl: string | URL): Promise<unknown> {

@@ -19,6 +19,7 @@ import {
   renderAuditMarkdownToHtml,
 } from "#shared/markdown-to-html.ts";
 import { resolvePostalAddresses, sendPostalEmail } from "#shared/postal.ts";
+import { redactSecrets } from "#shared/redact.ts";
 
 const COMPONENT = "homelab-audit";
 
@@ -29,8 +30,16 @@ const DEFAULT_MAX_TURNS = 80;
 
 // Audit hits a wide tool surface (kubectl, talosctl, toolkit, tofu, gh) so we
 // allow Bash + Read + Grep + Glob + the GitHub MCP namespace if it's wired up
-// later. `--dangerously-skip-permissions` plus this allow-list prevents
-// interactive prompts while bounding the tools the agent can call.
+// later. The actual security bound is layered:
+//   1. The Bun.spawn env (no API key, only OAuth token + audit creds).
+//   2. The cluster RBAC bound to the temporal-worker SA — strict read-only via
+//      `temporal-worker-audit-reader` (see homelab/.../audit-rbac.ts).
+//   3. The prompt itself, which forbids state-mutating commands.
+// `--allowed-tools` narrows the model's tool selection at the CLI layer.
+// `--dangerously-skip-permissions` only suppresses the *interactive*
+// per-tool-call prompt (necessary for headless `claude -p`); it does not
+// remove the allow-list. `--permission-mode acceptEdits` is redundant in
+// this combination but is kept for parity with `pr-agent.ts`.
 const ALLOWED_TOOLS = "Bash,Read,Grep,Glob,WebFetch,mcp__github__*";
 
 export type HomelabAuditAgentInput = {
@@ -122,11 +131,23 @@ function safeHeartbeat(payload: Record<string, unknown>): void {
   }
 }
 
-function redactToken(text: string, token: string | undefined): string {
-  if (token === undefined || token.length < 8) {
-    return text;
-  }
-  return text.replaceAll(token, "***");
+// Every secret the audit subprocess can plausibly leak through stderr — any
+// 401 response, curl -v handshake, argocd verbose, or upstream library that
+// echoes a header. Listed in priority order; redactSecrets is O(N tokens × M
+// chars) so a fixed handful is fine.
+function auditSecretTokens(): readonly (string | undefined)[] {
+  return [
+    Bun.env["CLAUDE_CODE_OAUTH_TOKEN"],
+    Bun.env["ANTHROPIC_API_KEY"],
+    Bun.env["PAGERDUTY_TOKEN"],
+    Bun.env["BUGSINK_TOKEN"],
+    Bun.env["GRAFANA_API_KEY"],
+    Bun.env["ARGOCD_AUTH_TOKEN"],
+    Bun.env["CLOUDFLARE_API_TOKEN"],
+    Bun.env["GH_TOKEN"],
+    Bun.env["GITHUB_PERSONAL_ACCESS_TOKEN"],
+    Bun.env["POSTAL_API_KEY"],
+  ];
 }
 
 function todayIsoDate(): string {
@@ -196,6 +217,7 @@ async function runAuditAgent(
     safeHeartbeat({ phase: "agent", elapsedMs: Date.now() - startMs });
   }, HEARTBEAT_INTERVAL_MS);
 
+  const secretTokens = auditSecretTokens();
   const stderrPump = (async () => {
     const reader = proc.stderr.getReader();
     const decoder = new TextDecoder();
@@ -214,13 +236,13 @@ async function runAuditAgent(
             continue;
           }
           jsonLog("info", "claude stderr", {
-            line: redactToken(line, claudeToken),
+            line: redactSecrets(line, secretTokens),
           });
         }
       }
       if (buf.length > 0) {
         jsonLog("info", "claude stderr", {
-          line: redactToken(buf, claudeToken),
+          line: redactSecrets(buf, secretTokens),
         });
       }
     } catch (error: unknown) {

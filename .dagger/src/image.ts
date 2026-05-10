@@ -266,6 +266,38 @@ function withHomelabAuditClis(container: Container): Container {
 }
 
 /**
+ * Compile the in-tree `packages/toolkit` CLI into a single static binary at
+ * `/usr/local/bin/toolkit`.
+ *
+ * The audit runbook (`packages/docs/guides/2026-04-04_homelab-audit-runbook.md`)
+ * invokes `toolkit pd incidents`, `toolkit bugsink issues`, and
+ * `toolkit gf query|logs|alerts` — the homelab-audit-daily workflow needs
+ * these in the worker image.
+ *
+ * Built in a side stage from the `toolkitDir` directory (mounted via the
+ * WORKSPACE_DEPS map for `temporal` — see `.dagger/src/deps.ts`). The result
+ * is a single self-contained binary; no `bun` runtime dependency at run-time.
+ *
+ * `eslintConfigDir` must also be present at /workspace/packages/eslint-config
+ * because toolkit's package.json depends on `file:../eslint-config`. Temporal
+ * already pulls it in as one of its own deps, so this is satisfied.
+ */
+function withToolkit(container: Container): Container {
+  return container
+    .withWorkdir("/workspace/packages/toolkit")
+    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withExec([
+      "bun",
+      "build",
+      "./src/index.ts",
+      "--compile",
+      "--outfile=/usr/local/bin/toolkit",
+    ])
+    .withExec(["chmod", "+x", "/usr/local/bin/toolkit"])
+    .withExec(["toolkit", "--version"]);
+}
+
+/**
  * Build a Bun service OCI image. Constructs a minimal workspace with
  * only the target package and its workspace deps — no file modification.
  *
@@ -515,11 +547,22 @@ export function buildTemporalWorkerImageHelper(
     );
   }
 
-  return withWritableBunInstallCache(
+  container = withWritableBunInstallCache(
     container
       .withWorkdir("/workspace/packages/temporal")
       .withExec(["bun", "install", "--frozen-lockfile"]),
-  )
+  );
+
+  // Compile the in-tree toolkit CLI into a static binary if its source is
+  // mounted. The temporal-worker WORKSPACE_DEPS list opts into this by
+  // including `toolkit`; other consumers of buildTemporalWorkerImageHelper
+  // (none today) won't pay the build cost.
+  if (depNames.includes("toolkit")) {
+    container = withToolkit(container);
+  }
+
+  return container
+    .withWorkdir("/workspace/packages/temporal")
     .withLabel(
       "org.opencontainers.image.source",
       "https://github.com/shepherdjerred/monorepo",
