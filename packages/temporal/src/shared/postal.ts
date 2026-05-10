@@ -73,6 +73,13 @@ export async function sendPostalEmail(
     "Content-Type": "application/json",
     "X-Server-API-Key": config.apiKey,
   };
+  // The Fetch spec lists `Host` as a forbidden request header (the runtime is
+  // supposed to compute it from the URL). Bun's `fetch` deviates from the spec
+  // here and DOES preserve a caller-supplied `Host`, which we depend on:
+  // POSTAL_HOST_HEADER is how we route through the Cloudflare Tunnel front to
+  // the in-cluster Postal service when its public hostname differs from the
+  // upstream. Verified with a local Bun.serve echo test against this exact
+  // pattern. If we ever migrate this off Bun, rewrite the URL hostname instead.
   if (config.hostHeader !== undefined) {
     headers["Host"] = config.hostHeader;
   }
