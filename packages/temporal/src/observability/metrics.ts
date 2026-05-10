@@ -65,6 +65,40 @@ export const prAgentTokensTotal = new Counter({
 });
 
 // ---------------------------------------------------------------------------
+// PR summary (SDK-native, Haiku) — Phase 7 of the SOTA PR review bot plan
+// ---------------------------------------------------------------------------
+
+export const prSummaryDurationSeconds = new Histogram({
+  name: "pr_summary_duration_seconds",
+  help: "Wall-clock duration of SDK-native PR summary activity runs",
+  labelNames: ["model", "action"] as const,
+  buckets: [5, 10, 20, 30, 45, 60, 90, 120, 180],
+  registers: [register],
+});
+
+export const prSummaryCostUsd = new Histogram({
+  name: "pr_summary_cost_usd",
+  help: "Estimated USD cost per PR summary, derived from token usage + Haiku pricing",
+  labelNames: ["model"] as const,
+  buckets: [0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.2, 0.5],
+  registers: [register],
+});
+
+export const prSummaryTokensTotal = new Counter({
+  name: "pr_summary_tokens_total",
+  help: "Tokens consumed by the SDK-native PR summary activity, by model and direction (input/output/cache_create/cache_read)",
+  labelNames: ["model", "direction"] as const,
+  registers: [register],
+});
+
+export const prSummaryCommentsTotal = new Counter({
+  name: "pr_summary_comments_total",
+  help: "PR summary comments posted by the bot, by action (created | updated)",
+  labelNames: ["action"] as const,
+  registers: [register],
+});
+
+// ---------------------------------------------------------------------------
 // homelab-audit workflow metrics
 // ---------------------------------------------------------------------------
 
