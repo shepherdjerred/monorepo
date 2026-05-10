@@ -69,6 +69,33 @@ sonos:
 recorder:
   commit_interval: 10
   purge_keep_days: 180
+  # Exclude entities whose state is either pure noise or trivially recreated
+  # from another source. Keeps the 180-day window cheap by not recording data
+  # we'd never analyze. Targets the homeassistant-pvc PVC churn (~22 GB/day).
+  exclude:
+    domains:
+      # Weather is rebuilt by the integration on demand; storing 180 days of
+      # "Temperature: 72°F at 3:14:23" is high-volume and low-value.
+      - weather
+    entity_globs:
+      # Diagnostic / link-quality metrics — not analytical.
+      - sensor.*_signal_strength
+      - sensor.*_link_quality
+      - sensor.*_linkquality
+      - sensor.*_rssi
+      # "When did this last update" meta sensors — monotonic timestamps.
+      - sensor.*_last_changed
+      - sensor.*_last_updated
+      - sensor.*_last_seen
+      - sensor.*_last_reset
+      - sensor.*_last_communication
+      - sensor.*_uptime
+      # Sun/astronomy is a deterministic function of time + location.
+      - sensor.sun_*
+    entities:
+      - sun.sun
+      - sensor.date
+      - sensor.time
 
 # Text to speech
 tts:
