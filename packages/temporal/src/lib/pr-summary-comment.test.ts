@@ -4,7 +4,10 @@ import {
   type OctokitForUpsert,
 } from "./pr-summary-comment.ts";
 
-const MARKER = "<!-- pr-summary -->";
+// Tests pass the marker explicitly rather than importing SUMMARY_MARKER so
+// they stay decoupled from the SDK summary's specific marker string — the
+// helper is generic and would work for any hidden HTML-comment marker.
+const MARKER = "<!-- pr-summary-sdk -->";
 
 type FakeComment = {
   id: number;

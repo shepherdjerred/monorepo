@@ -2,12 +2,19 @@ import type Anthropic from "@anthropic-ai/sdk";
 import type { PrSummaryInput } from "#shared/schemas.ts";
 
 /**
- * Hidden marker embedded in the PR summary comment body. The comment helper
- * uses this to find and edit the existing summary in place on subsequent
- * pushes instead of leaving a fresh one each time. Kept identical to the
- * legacy `claude -p`-based summary so shadow-mode comparisons line up.
+ * Hidden marker embedded in the SDK-native PR summary comment body. The
+ * comment helper uses this to find and edit the existing summary in place
+ * on subsequent pushes instead of leaving a fresh one each time.
+ *
+ * Deliberately distinct from the legacy `claude -p` summary's
+ * `<!-- pr-summary -->` marker: during shadow mode both summaries run on
+ * every non-draft PR so reviewers and the eval grader can compare quality
+ * side-by-side. If the marker collided, one path's upsert would race the
+ * other and we'd lose one of the two summaries. Phase 13 retires the
+ * legacy path; at that point this marker can stay or revert to
+ * `<!-- pr-summary -->`.
  */
-export const SUMMARY_MARKER = "<!-- pr-summary -->";
+export const SUMMARY_MARKER = "<!-- pr-summary-sdk -->";
 
 const SYSTEM_PREAMBLE = `\
 You are a senior staff engineer writing a concise pull request summary for a

@@ -9,10 +9,11 @@ import type { PrAgentInput, PrSummaryInput } from "#shared/schemas.ts";
 /**
  * Legacy `claude -p`-based summary workflow. Kept on `TASK_QUEUES.DEFAULT`
  * so it runs side-by-side with `prSummaryPipeline` during the shadow-mode
- * period. Both workflows target the same `<!-- pr-summary -->` marker
- * comment, so during shadow mode the second to finish wins; once we cut
- * over, Phase 13 deletes this function together with the legacy `prReview`
- * and the Dagger code-review step.
+ * period. The two paths use different markers — `<!-- pr-summary -->` for
+ * this legacy workflow, `<!-- pr-summary-sdk -->` for the SDK path — so
+ * both comments live on every non-draft PR for direct quality comparison
+ * by reviewers and the eval grader. Phase 13 deletes this function
+ * together with the legacy `prReview` and the Dagger code-review step.
  */
 const { runPrAgent } = proxyActivities<PrAgentActivities>({
   startToCloseTimeout: "5 minutes",

@@ -18,11 +18,15 @@ const basePr: PrSummaryInput = {
 };
 
 describe("SUMMARY_MARKER", () => {
-  it("matches the legacy pr-prompts marker so shadow-mode comparisons line up", () => {
-    // The webhook starts the new SDK summary workflow alongside the legacy
-    // `claude -p` one during shadow mode; both must use the same marker so
-    // they target the same GitHub comment instead of writing duplicates.
-    expect(SUMMARY_MARKER).toBe("<!-- pr-summary -->");
+  it("is distinct from the legacy marker so both summaries can coexist during shadow mode", () => {
+    // The webhook starts the new SDK summary pipeline alongside the legacy
+    // `claude -p` summary during shadow mode. Each path edits in place via
+    // its own marker so reviewers (and the eval grader) get to compare
+    // both summaries side-by-side on every non-draft PR. If the markers
+    // collided, the two upserts would race and we'd lose one of the
+    // summaries.
+    expect(SUMMARY_MARKER).toBe("<!-- pr-summary-sdk -->");
+    expect(SUMMARY_MARKER).not.toBe("<!-- pr-summary -->");
   });
 });
 
