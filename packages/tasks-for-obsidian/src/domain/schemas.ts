@@ -85,10 +85,6 @@ export const TaskListSchema = z.object({
   note: z.string().optional(),
 });
 
-// Single task responses: after envelope unwrapping, data IS the task
-export const TaskResponseSchema = TaskSchema;
-export const CreateTaskResponseSchema = TaskSchema;
-
 export const TaskStatsSchema = BaseTaskStatsSchema.transform(
   (raw): TaskStats => raw,
 );

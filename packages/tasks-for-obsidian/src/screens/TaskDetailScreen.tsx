@@ -21,6 +21,7 @@ import { typography } from "../styles/typography";
 import { formatRelativeDate } from "../lib/dates";
 import { PriorityPicker } from "../components/input/PriorityPicker";
 import { DatePicker } from "../components/input/DatePicker";
+import { MarkdownView } from "../components/common/MarkdownView";
 import { isCompletedStatus } from "../domain/status";
 import {
   feedbackTaskComplete,
@@ -43,20 +44,27 @@ export function TaskDetailScreen({ route, navigation }: Props) {
     task?.priority ?? "normal",
   );
   const [due, setDue] = useState(task?.due);
+  const [details, setDetails] = useState(task?.details ?? "");
 
   useEffect(() => {
     if (task) {
       setTitle(task.title);
       setPriority(task.priority);
       setDue(task.due);
+      setDetails(task.details ?? "");
     }
   }, [task]);
 
   const handleSave = useCallback(() => {
     feedbackTaskCreate();
-    void updateTask(taskId, { title, priority, due: due ?? null });
+    void updateTask(taskId, {
+      title,
+      priority,
+      due: due ?? null,
+      details,
+    });
     setEditing(false);
-  }, [taskId, title, priority, due, updateTask]);
+  }, [taskId, title, priority, due, details, updateTask]);
 
   const handleDelete = useCallback(() => {
     Alert.alert("Delete Task", "Are you sure?", [
@@ -127,6 +135,33 @@ export function TaskDetailScreen({ route, navigation }: Props) {
             Due Date
           </Text>
           <DatePicker value={due} onChange={setDue} />
+
+          <Text
+            style={[
+              typography.label,
+              { color: colors.textSecondary },
+              styles.sectionLabel,
+            ]}
+          >
+            Details
+          </Text>
+          <TextInput
+            style={[
+              styles.input,
+              styles.detailsInput,
+              {
+                color: colors.text,
+                borderColor: colors.border,
+                backgroundColor: colors.surface,
+              },
+            ]}
+            value={details}
+            onChangeText={setDetails}
+            placeholder="Add details (markdown supported)"
+            placeholderTextColor={colors.textTertiary}
+            multiline
+            textAlignVertical="top"
+          />
 
           <View style={styles.actions}>
             <Pressable
@@ -207,6 +242,15 @@ export function TaskDetailScreen({ route, navigation }: Props) {
           <MetaRow label="Tags" value={task.tags.join(", ")} colors={colors} />
         ) : null}
       </View>
+
+      {task.details && task.details.length > 0 ? (
+        <View style={styles.detailsSection}>
+          <Text style={[typography.label, { color: colors.textSecondary }]}>
+            Details
+          </Text>
+          <MarkdownView content={task.details} />
+        </View>
+      ) : null}
 
       <View style={styles.actions}>
         <Pressable
@@ -302,6 +346,13 @@ const styles = StyleSheet.create({
   },
   meta: {
     marginTop: 20,
+  },
+  detailsSection: {
+    marginTop: 20,
+    gap: 8,
+  },
+  detailsInput: {
+    minHeight: 120,
   },
   sectionLabel: {
     marginTop: 16,

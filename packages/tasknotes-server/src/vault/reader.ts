@@ -47,7 +47,7 @@ export async function scanVault(
   return tasks;
 }
 
-export async function readTaskFile(
+async function readTaskFile(
   filePath: string,
   vaultPath: string,
 ): Promise<Task | undefined> {
