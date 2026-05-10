@@ -27,7 +27,10 @@ import type { PrSummaryInput } from "#shared/schemas.ts";
 
 type CliOptions = {
   repo: string;
-  count: number;
+  /** Either replay a single specific PR (--pr) or the last N merged (--count). */
+  selector:
+    | { kind: "single"; prNumber: number }
+    | { kind: "recent"; count: number };
   dryRun: boolean;
 };
 
@@ -64,6 +67,7 @@ function parseCliArgs(argv: string[]): CliOptions {
     args: argv,
     options: {
       repo: { type: "string", default: "shepherdjerred/monorepo" },
+      pr: { type: "string" },
       count: { type: "string", default: "10" },
       "dry-run": { type: "boolean", default: true },
     },
@@ -74,13 +78,55 @@ function parseCliArgs(argv: string[]): CliOptions {
   if (!repo.includes("/")) {
     throw new Error(`--repo must be in owner/name form, got: ${repo}`);
   }
+
+  // --pr <#> takes precedence over --count <N>. Single-PR mode is the
+  // shape the team-lead's guidance asks for; batch mode is kept for the
+  // original "last 10 merged" Phase 7 gate.
+  if (values.pr !== undefined) {
+    const prNumber = Number.parseInt(values.pr, 10);
+    if (Number.isNaN(prNumber) || prNumber <= 0) {
+      throw new Error(`--pr must be a positive integer, got: ${values.pr}`);
+    }
+    return {
+      repo,
+      selector: { kind: "single", prNumber },
+      dryRun: values["dry-run"],
+    };
+  }
+
   const count = Number.parseInt(values.count, 10);
   if (Number.isNaN(count) || count <= 0 || count > 100) {
     throw new Error(
       `--count must be a positive integer ≤ 100, got: ${values.count}`,
     );
   }
-  return { repo, count, dryRun: values["dry-run"] };
+  return {
+    repo,
+    selector: { kind: "recent", count },
+    dryRun: values["dry-run"],
+  };
+}
+
+async function fetchSinglePr(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+  prNumber: number,
+): Promise<MergedPr> {
+  const response = await octokit.rest.pulls.get({
+    owner,
+    repo,
+    pull_number: prNumber,
+  });
+  const pr = response.data;
+  return {
+    number: pr.number,
+    title: pr.title,
+    baseRef: pr.base.ref,
+    headRef: pr.head.ref,
+    headSha: pr.head.sha,
+    author: pr.user.login,
+  };
 }
 
 async function listRecentMergedPrs(
@@ -206,9 +252,13 @@ async function main(): Promise<void> {
   const anthropic = new Anthropic({ apiKey: anthropicKey });
   const octokit = new Octokit({ auth: githubToken });
 
-  const prs = await listRecentMergedPrs(octokit, owner, repo, opts.count);
+  const prs =
+    opts.selector.kind === "single"
+      ? [await fetchSinglePr(octokit, owner, repo, opts.selector.prNumber)]
+      : await listRecentMergedPrs(octokit, owner, repo, opts.selector.count);
   logJson("info", {
-    msg: "Selected merged PRs for replay",
+    msg: "Selected PRs for replay",
+    mode: opts.selector.kind,
     count: prs.length,
     dryRun: opts.dryRun,
   });

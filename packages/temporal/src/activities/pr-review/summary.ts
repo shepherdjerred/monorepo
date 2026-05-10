@@ -452,7 +452,7 @@ export function adaptOctokit(octokit: Octokit): OctokitForSummary {
 export type PrSummaryActivities = typeof prSummaryActivities;
 
 export const prSummaryActivities = {
-  async runPrSummaryWorkflow(pr: PrSummaryInput): Promise<RunSummaryResult> {
+  async runPrSummaryPipeline(pr: PrSummaryInput): Promise<RunSummaryResult> {
     const anthropicKey = envOrThrow("ANTHROPIC_API_KEY");
     const githubToken = envOrThrow("GITHUB_PERSONAL_ACCESS_TOKEN");
 

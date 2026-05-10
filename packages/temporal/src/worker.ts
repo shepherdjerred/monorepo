@@ -116,6 +116,20 @@ async function main(): Promise<void> {
 
   jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.PR_REVIEW });
 
+  // Third worker on the pr-summary task queue. Isolated from PR_REVIEW so a
+  // stuck specialist activity (e.g. specialist runner waiting on Anthropic
+  // 5xx) can't block the cheap, fast Haiku summary — operators still see
+  // "what changed in this PR?" even when the deep review is degraded.
+  const prSummaryWorker = await Worker.create({
+    connection,
+    namespace: "default",
+    taskQueue: TASK_QUEUES.PR_SUMMARY,
+    workflowsPath,
+    activities,
+  });
+
+  jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.PR_SUMMARY });
+
   const clientConnection = await Connection.connect({ address });
   const client = new Client({ connection: clientConnection });
   await registerSchedules(client);
@@ -157,6 +171,14 @@ async function main(): Promise<void> {
         state: prReviewState,
       });
     }
+    const prSummaryState = prSummaryWorker.getState();
+    if (prSummaryState === "RUNNING") {
+      prSummaryWorker.shutdown();
+    } else {
+      jsonLog("info", "pr-summary worker not RUNNING, skipping shutdown()", {
+        state: prSummaryState,
+      });
+    }
     await stopMetricsServer();
     await shutdownTracing();
   };
@@ -168,7 +190,11 @@ async function main(): Promise<void> {
     void shutdown("SIGINT");
   });
 
-  await Promise.all([worker.run(), prReviewWorker.run()]);
+  await Promise.all([
+    worker.run(),
+    prReviewWorker.run(),
+    prSummaryWorker.run(),
+  ]);
 }
 
 void (async () => {
