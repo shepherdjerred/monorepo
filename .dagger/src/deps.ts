@@ -24,6 +24,7 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   "starlight-karma-bot": ["eslint-config"],
   "tasknotes-types": ["eslint-config"],
   "home-assistant": ["eslint-config"],
+  "trmnl-dashboard": ["eslint-config", "home-assistant"],
   temporal: ["eslint-config", "home-assistant"],
 
   // Multi-dep packages

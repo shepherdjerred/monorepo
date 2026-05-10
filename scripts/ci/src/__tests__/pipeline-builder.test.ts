@@ -158,7 +158,6 @@ describe("buildPipeline", () => {
       affected.hasImagePackages.add("temporal");
 
       const pipeline = buildPipeline(affected);
-      const steps = pipeline.steps.filter(isStep);
       const groups = pipeline.steps.filter(isGroup);
 
       // Build/push groups should exist for temporal-worker only
@@ -401,6 +400,20 @@ describe("buildPipeline", () => {
       const pipeline = buildPipeline(fullBuild());
       const steps = pipeline.steps.filter(isStep);
       expect(steps.some((s) => s.key === "version-commit-back")).toBe(true);
+    });
+
+    it("serializes version commit-back", () => {
+      const pipeline = buildPipeline(fullBuild());
+      const steps = pipeline.steps.filter(isStep);
+      const versionCommitBack = steps.find(
+        (s) => s.key === "version-commit-back",
+      );
+
+      expect(versionCommitBack).toBeDefined();
+      expect(versionCommitBack?.concurrency).toBe(1);
+      expect(versionCommitBack?.concurrency_group).toBe(
+        "monorepo/version-commit-back",
+      );
     });
 
     it("omits version commit-back on auto-generated commits", () => {

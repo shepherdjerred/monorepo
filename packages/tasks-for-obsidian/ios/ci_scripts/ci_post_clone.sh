@@ -28,7 +28,9 @@ fi
 
 if ! command -v bun >/dev/null 2>&1; then
   echo "[ci_post_clone] Installing Bun..."
-  curl -fsSL https://bun.sh/install | bash
+  # renovate: datasource=github-releases depName=oven-sh/bun
+  BUN_INSTALL_TAG="bun-v1.3.13"
+  curl -fsSL https://bun.sh/install | bash -s "$BUN_INSTALL_TAG"
   export BUN_INSTALL="$HOME/.bun"
   export PATH="$BUN_INSTALL/bin:$PATH"
 fi

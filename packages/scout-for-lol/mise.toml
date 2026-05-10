@@ -1,5 +1,6 @@
 [tools]
-bun = "latest"
+# renovate: datasource=github-releases depName=oven-sh/bun
+bun = "1.3.13"
 
 [tasks.dev]
 description = "Create all files needed for development"

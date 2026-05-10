@@ -46,6 +46,12 @@ AI-maintained knowledge base for the monorepo.
 - [Polyrepo → Monorepo Link Audit](plans/2026-04-25_polyrepo-link-audit.md) - Rewrite all stale polyrepo URLs to monorepo + add lychee CI link-check gate
 - [Mysa HACS Max-Temp Cap](plans/2026-05-05_mysa-max-temp-cap.md) - Local hotfix at 30 °C while upstream PR kgelinas/Mysa_HA#18 lands the 40 °C support
 - [HomeKit Vacuum via Matter Hub](plans/2026-05-05_homekit-vacuum-via-matter-hub.md) - Deploy `t0bst4r/home-assistant-matter-hub` to expose HA `vacuum.*` entities to Apple Home (HomeKit Bridge can't carry vacuums)
+- [CLAUDE.md Documentation Discipline](plans/2026-05-09_claude-md-doc-discipline.md) - Require every session to mirror its plan into `packages/docs/plans/` and end with a Session Log
+- [Bypass Mode Defaults](plans/2026-05-09_bypass-mode-defaults.md) - Enable bypass-by-default for Claude Code + Codex; tier-A deny-list hardening
+- [pi Codex Quota Fix](plans/2026-05-09_pi-codex-quota-fix.md) - `pi` v0.74.0 quota error: `defaultProvider` was `openai` (needs API key) instead of `openai-codex` (OAuth) — one-line settings fix
+- [Dissociated-Clone Workflow Skill](plans/2026-05-09_dissociated-clone-workflow-skill.md) - New `dissociated-clone-workflow` skill + monorepo CLAUDE.md guidance: prefer `git clone --shared --dissociate` over worktrees for parallel work to avoid shared stash/reflog
+- [Renovate Coverage Audit & Fixes](plans/2026-05-09_renovate-coverage-audit.md) - Close gaps where deps are unmanaged or appear tracked but aren't (`.dagger/src/constants.ts` dead annotations, `mise.toml` `latest` pins, CI image VERSION drift, Talos installer manager, etc.)
+- [Daily Homelab Audit Email](plans/2026-05-09_daily-homelab-audit-email.md) - Daily Temporal workflow that runs the homelab-audit-runbook via `claude -p` and emails the result via Postal at 06:30 PT
 
 ## Guides
 

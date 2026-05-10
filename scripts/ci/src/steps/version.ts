@@ -28,6 +28,8 @@ export function versionCommitBackStep(
     timeoutMinutes: 10,
     condition: MAIN_ONLY,
     dependsOn,
+    concurrency: 1,
+    concurrencyGroup: "monorepo/version-commit-back",
     priority: 1,
   });
 }
