@@ -52,6 +52,7 @@ AI-maintained knowledge base for the monorepo.
 - [Dissociated-Clone Workflow Skill](plans/2026-05-09_dissociated-clone-workflow-skill.md) - New `dissociated-clone-workflow` skill + monorepo CLAUDE.md guidance: prefer `git clone --shared --dissociate` over worktrees for parallel work to avoid shared stash/reflog
 - [Renovate Coverage Audit & Fixes](plans/2026-05-09_renovate-coverage-audit.md) - Close gaps where deps are unmanaged or appear tracked but aren't (`.dagger/src/constants.ts` dead annotations, `mise.toml` `latest` pins, CI image VERSION drift, Talos installer manager, etc.)
 - [Daily Homelab Audit Email](plans/2026-05-09_daily-homelab-audit-email.md) - Daily Temporal workflow that runs the homelab-audit-runbook via `claude -p` and emails the result via Postal at 06:30 PT
+- [Pi Overview Answer](plans/2026-05-10_pi-overview.md) - Session plan for summarizing how the installed Pi coding-agent harness works
 
 ## Guides
 

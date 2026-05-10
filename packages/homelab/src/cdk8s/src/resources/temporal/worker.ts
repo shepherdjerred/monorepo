@@ -458,6 +458,12 @@ export function createTemporalWorkerDeployment(
           { secret, key: "CLOUDFLARE_API_TOKEN" },
           { optional: true },
         ),
+        // talosctl reads its config from $TALOSCONFIG; the file is projected
+        // from 1P field TALOSCONFIG_YAML via the volume mount above. The
+        // volume is `optional: true` so the pod still starts when the 1P
+        // field is unset — talosctl commands then fail fast with a clear
+        // error inside the audit run.
+        TALOSCONFIG: EnvValue.fromValue("/etc/talos/config"),
       },
     }),
   );
@@ -470,6 +476,28 @@ export function createTemporalWorkerDeployment(
   // of the 2 GiB pod memory budget.
   const tmpVolume = Volume.fromEmptyDir(chart, "temporal-worker-tmp", "tmp");
   container.mount("/tmp", tmpVolume);
+
+  // Project the talosconfig YAML from 1Password into a file at
+  // /etc/talos/config. The homelab-audit-daily workflow's §1 commands
+  // (`talosctl health`, `talosctl get members`, `talosctl dmesg`) need it —
+  // kubectl-derived signal covers Ready/kernel but misses ZFS / OOM event
+  // detail. The 1P field is `TALOSCONFIG_YAML` (one string holding the full
+  // YAML). Marked optional so the pod still starts when the field is unset;
+  // when it is, /etc/talos/config will be absent and talosctl commands fail
+  // fast with a clear error inside the audit run, while every other workflow
+  // keeps running.
+  const talosConfigVolume = Volume.fromSecret(
+    chart,
+    "temporal-worker-talosconfig",
+    secret,
+    {
+      name: "talosconfig",
+      items: { TALOSCONFIG_YAML: { path: "config" } },
+      defaultMode: 0o400,
+      optional: true,
+    },
+  );
+  container.mount("/etc/talos", talosConfigVolume, { readOnly: true });
 
   // Service + ServiceMonitor for the Temporal SDK's built-in Prometheus
   // bridge on :9464.

@@ -109,16 +109,16 @@ const TOOL_INVENTORY = `
 Available tools (already authenticated in this environment — do not attempt to log in):
 
 - \`kubectl\` — context \`admin@torvalds\`. Read-only RBAC; do not attempt write verbs.
-- \`talosctl\` — context \`torvalds\` (TALOSCONFIG already set).
-- \`argocd\` — \`ARGOCD_SERVER\` + \`ARGOCD_AUTH_TOKEN\` are set; use \`argocd --grpc-web\` if the transport demands it.
+- \`talosctl\` — context \`torvalds\` (\`TALOSCONFIG=/etc/talos/config\` projected from the worker pod's secret). If talosctl errors with "Forbidden" or "no such file", note it in the audit and fall back to kubectl-derived signal for §1.
+- \`argocd\` — \`ARGOCD_SERVER\` + \`ARGOCD_AUTH_TOKEN\` are set; pass \`--grpc-web\` if the transport demands it.
 - \`velero\` — uses in-cluster auth.
-- \`tofu\` — for state inspection only. Run \`tofu -chdir=packages/homelab/src/cdk8s/src/tofu/cloudflare plan -detailed-exitcode\` to detect drift; never \`tofu apply\`.
+- \`tofu\` — for state inspection only. Run \`tofu -chdir=packages/homelab/src/cdk8s/src/tofu/cloudflare plan -detailed-exitcode\` to detect drift; exit code 2 from this command means "drift detected" (NOT a failure) — report the drift in the audit body and continue. Never run \`tofu apply\`.
 - \`gh\` — for the open-PR survey (§12).
-- \`curl\` against the homelab APIs (no separate CLI is shipped for these in v1):
-  - PagerDuty: \`PAGERDUTY_TOKEN\`. Open incidents → \`curl -fsS -H "Authorization: Token token=$PAGERDUTY_TOKEN" -H "Accept: application/vnd.pagerduty+json;version=2" 'https://api.pagerduty.com/incidents?statuses[]=triggered&statuses[]=acknowledged&limit=100'\`.
-  - Bugsink: \`BUGSINK_URL\`, \`BUGSINK_TOKEN\`. Open issues → \`curl -fsS -H "Authorization: Bearer $BUGSINK_TOKEN" "$BUGSINK_URL/api/0/projects/" \` and per-project \`/issues/?status=unresolved\`.
-  - Grafana / PromQL: \`GRAFANA_URL\`, \`GRAFANA_API_KEY\`. \`curl -fsS -H "Authorization: Bearer $GRAFANA_API_KEY" "$GRAFANA_URL/api/datasources/proxy/<id>/api/v1/query?query=<expr>"\` — datasource ids are stable: 1=Prometheus, 2=Loki.
-  - Loki / LogQL: same Grafana endpoint with \`/loki/api/v1/query_range?query=<logql>&since=24h\`.
+- \`toolkit\` — local binary at /usr/local/bin/toolkit. Subcommands the runbook calls for:
+  - \`toolkit pd incidents [--json]\` — open PagerDuty incidents (§6).
+  - \`toolkit bugsink issues [--json]\` — open Bugsink issues (§9). \`toolkit bugsink issue <ID>\` for details.
+  - \`toolkit gf alerts\` / \`toolkit gf query '<promql>'\` / \`toolkit gf logs '<logql>' --since 24h --limit 50\` (§6, §10).
+  All required env vars (\`PAGERDUTY_TOKEN\`, \`BUGSINK_URL\`, \`BUGSINK_TOKEN\`, \`GRAFANA_URL\`, \`GRAFANA_API_KEY\`) are already injected.
 `.trim();
 
 export function buildAuditPrompt(input: BuildAuditPromptInput): string {

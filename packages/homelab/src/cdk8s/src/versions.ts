@@ -234,6 +234,10 @@ const versions = {
     "2.0.0-1874@sha256:f02422fff6591bc55c2395b4c3ba3788196e058996afced7da514d0bb6be1820",
   // Custom TRMNL dashboard image - updated by CI pipeline
   // not managed by renovate
+  // TODO: replace `latest` with the first `2.0.0-NNNN@sha256:...` once the
+  // initial trmnl-dashboard image lands in ghcr; the version-commit-back
+  // step in `.dagger/src/release.ts` will rewrite this entry on every main
+  // build thereafter (same pattern as `shepherdjerred/temporal-worker`).
   "shepherdjerred/trmnl-dashboard": "latest",
 };
 

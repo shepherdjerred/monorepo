@@ -9,6 +9,7 @@ import {
 } from "#observability/metrics.ts";
 import { getTraceContext } from "#observability/tracing.ts";
 import { parseClaudeResultMessage } from "#shared/claude-result.ts";
+import { redactSecrets } from "#shared/redact.ts";
 import { buildReviewPrompt, buildSummaryPrompt } from "./pr-prompts.ts";
 
 const COMPONENT = "pr-agent";
@@ -74,13 +75,6 @@ function captureWithContext(
     });
     Sentry.captureException(error);
   });
-}
-
-export function redactToken(text: string, token?: string): string {
-  if (token === undefined || token.length < 8) {
-    return text;
-  }
-  return text.replaceAll(token, "***");
 }
 
 export function buildClaudeArgs(input: {
@@ -211,10 +205,7 @@ async function runClaude(input: PrAgentInput): Promise<PrAgentResult> {
           if (line.length === 0) {
             continue;
           }
-          const redacted = redactToken(
-            redactToken(line, githubToken),
-            claudeToken,
-          );
+          const redacted = redactSecrets(line, [githubToken, claudeToken]);
           jsonLog("info", "claude stderr", {
             line: redacted,
             kind: input.kind,
@@ -222,10 +213,7 @@ async function runClaude(input: PrAgentInput): Promise<PrAgentResult> {
         }
       }
       if (buf.length > 0) {
-        const redacted = redactToken(
-          redactToken(buf, githubToken),
-          claudeToken,
-        );
+        const redacted = redactSecrets(buf, [githubToken, claudeToken]);
         jsonLog("info", "claude stderr", { line: redacted, kind: input.kind });
       }
     } catch (error: unknown) {

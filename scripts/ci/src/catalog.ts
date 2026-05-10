@@ -309,6 +309,7 @@ export const ALL_PACKAGES: string[] = [
   "terraform-provider-asuswrt",
   "tips",
   "toolkit",
+  "trmnl-dashboard",
   "webring",
 ];
 
