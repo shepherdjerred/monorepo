@@ -47,10 +47,6 @@ export function createPlexDeployment(
     },
     metadata: {
       annotations: {
-        "ignore-check.kube-linter.io/privileged-container":
-          "Required for Intel GPU transcoding access",
-        "ignore-check.kube-linter.io/privilege-escalation-container":
-          "Required when privileged is true",
         "ignore-check.kube-linter.io/run-as-non-root":
           "Plex requires root for media library permissions",
         "ignore-check.kube-linter.io/no-read-only-root-fs":
@@ -144,8 +140,8 @@ export function createPlexDeployment(
       ],
       // TODO: verify that these are definitely required
       securityContext: {
-        allowPrivilegeEscalation: true,
-        privileged: true,
+        allowPrivilegeEscalation: false,
+        privileged: false,
         // needed
         ensureNonRoot: false,
         readOnlyRootFilesystem: false,
