@@ -25,6 +25,7 @@ import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/ser
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { createTemporalWorkerAuditRbac } from "./audit-rbac.ts";
 
 export type CreateTemporalWorkerDeploymentProps = {
   serverServiceName: string;
@@ -225,6 +226,10 @@ export function createTemporalWorkerDeployment(
     ],
   });
 
+  // Cluster-wide read-only RBAC for the homelab-audit-daily workflow. See
+  // ./audit-rbac.ts for the full rule set.
+  createTemporalWorkerAuditRbac(chart, serviceAccount);
+
   const deployment = new Deployment(chart, "temporal-worker", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
@@ -263,16 +268,19 @@ export function createTemporalWorkerDeployment(
         group: GID,
         readOnlyRootFilesystem: false,
       },
-      // Bumped from 200m/500m and 256Mi/1Gi to give headroom for in-process
-      // claude -p invocations.
+      // Sized for in-process claude -p invocations. The pr-agent activity
+      // (review + summary) runs for a few minutes; the homelab-audit-daily
+      // workflow runs ~25 min and shells out to kubectl / talosctl / curl
+      // alongside claude. 1500m/4Gi gives headroom without throttling
+      // either lifecycle.
       resources: {
         cpu: {
           request: Cpu.millis(500),
-          limit: Cpu.millis(1000),
+          limit: Cpu.millis(1500),
         },
         memory: {
           request: Size.mebibytes(512),
-          limit: Size.gibibytes(2),
+          limit: Size.gibibytes(4),
         },
       },
       envVariables: {
@@ -407,6 +415,55 @@ export function createTemporalWorkerDeployment(
           },
           { optional: true },
         ),
+        // ---------------------------------------------------------------
+        // homelab-audit-daily workflow credentials. All marked optional so
+        // the pod still starts if a 1P field is unset — the audit activity
+        // fails fast in the agent loop with a clear "API X returned 401"
+        // when a token is missing, while every other workflow keeps running.
+        // Add these fields to 1P item `temporal-temporal-worker-1p`:
+        //   PAGERDUTY_TOKEN, BUGSINK_URL, BUGSINK_TOKEN,
+        //   GRAFANA_URL, GRAFANA_API_KEY,
+        //   ARGOCD_SERVER, ARGOCD_AUTH_TOKEN,
+        //   CLOUDFLARE_API_TOKEN  (for `tofu plan` against the cloudflare module)
+        // ---------------------------------------------------------------
+        PAGERDUTY_TOKEN: EnvValue.fromSecretValue(
+          { secret, key: "PAGERDUTY_TOKEN" },
+          { optional: true },
+        ),
+        BUGSINK_URL: EnvValue.fromSecretValue(
+          { secret, key: "BUGSINK_URL" },
+          { optional: true },
+        ),
+        BUGSINK_TOKEN: EnvValue.fromSecretValue(
+          { secret, key: "BUGSINK_TOKEN" },
+          { optional: true },
+        ),
+        GRAFANA_URL: EnvValue.fromSecretValue(
+          { secret, key: "GRAFANA_URL" },
+          { optional: true },
+        ),
+        GRAFANA_API_KEY: EnvValue.fromSecretValue(
+          { secret, key: "GRAFANA_API_KEY" },
+          { optional: true },
+        ),
+        ARGOCD_SERVER: EnvValue.fromSecretValue(
+          { secret, key: "ARGOCD_SERVER" },
+          { optional: true },
+        ),
+        ARGOCD_AUTH_TOKEN: EnvValue.fromSecretValue(
+          { secret, key: "ARGOCD_AUTH_TOKEN" },
+          { optional: true },
+        ),
+        CLOUDFLARE_API_TOKEN: EnvValue.fromSecretValue(
+          { secret, key: "CLOUDFLARE_API_TOKEN" },
+          { optional: true },
+        ),
+        // talosctl reads its config from $TALOSCONFIG; the file is projected
+        // from 1P field TALOSCONFIG_YAML via the volume mount above. The
+        // volume is `optional: true` so the pod still starts when the 1P
+        // field is unset — talosctl commands then fail fast with a clear
+        // error inside the audit run.
+        TALOSCONFIG: EnvValue.fromValue("/etc/talos/config"),
       },
     }),
   );
@@ -419,6 +476,28 @@ export function createTemporalWorkerDeployment(
   // of the 2 GiB pod memory budget.
   const tmpVolume = Volume.fromEmptyDir(chart, "temporal-worker-tmp", "tmp");
   container.mount("/tmp", tmpVolume);
+
+  // Project the talosconfig YAML from 1Password into a file at
+  // /etc/talos/config. The homelab-audit-daily workflow's §1 commands
+  // (`talosctl health`, `talosctl get members`, `talosctl dmesg`) need it —
+  // kubectl-derived signal covers Ready/kernel but misses ZFS / OOM event
+  // detail. The 1P field is `TALOSCONFIG_YAML` (one string holding the full
+  // YAML). Marked optional so the pod still starts when the field is unset;
+  // when it is, /etc/talos/config will be absent and talosctl commands fail
+  // fast with a clear error inside the audit run, while every other workflow
+  // keeps running.
+  const talosConfigVolume = Volume.fromSecret(
+    chart,
+    "temporal-worker-talosconfig",
+    secret,
+    {
+      name: "talosconfig",
+      items: { TALOSCONFIG_YAML: { path: "config" } },
+      defaultMode: 0o400,
+      optional: true,
+    },
+  );
+  container.mount("/etc/talos", talosConfigVolume, { readOnly: true });
 
   // Service + ServiceMonitor for the Temporal SDK's built-in Prometheus
   // bridge on :9464.

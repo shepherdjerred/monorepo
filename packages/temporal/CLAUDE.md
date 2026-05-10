@@ -67,7 +67,14 @@ Workflow:
 - `OPENAI_API_KEY` — OpenAI API key
 - `CLAUDE_CODE_OAUTH_TOKEN` — Claude Code subscription token. **Sole** auth for every `claude -p` activity (currently pr-agent). The cdk8s deployment intentionally does NOT inject `ANTHROPIC_API_KEY` — when both are present the CLI prefers the API key, which billed against direct-API credits instead of the subscription. The 1P field still exists for emergency fallback but is not referenced.
 - `POSTAL_HOST`, `POSTAL_API_KEY` — Postal email service
-- `RECIPIENT_EMAIL`, `SENDER_EMAIL` — Email addresses for dependency summary
+- `RECIPIENT_EMAIL`, `SENDER_EMAIL` — Email addresses for dependency summary and homelab audit
+- `RUNBOOK_PATH` — local override for the homelab-audit runbook (defaults to fetching `https://raw.githubusercontent.com/.../packages/docs/guides/2026-04-04_homelab-audit-runbook.md`)
+- `PAGERDUTY_TOKEN` — PagerDuty REST API token (homelab audit)
+- `BUGSINK_URL`, `BUGSINK_TOKEN` — Bugsink REST API base + token (homelab audit)
+- `GRAFANA_URL`, `GRAFANA_API_KEY` — Grafana base + API key (PromQL/Loki via the `/api/datasources/proxy/<id>/...` endpoints)
+- `ARGOCD_SERVER`, `ARGOCD_AUTH_TOKEN` — ArgoCD server + token for `argocd app list` (homelab audit §13)
+- `CLOUDFLARE_API_TOKEN` — read-only Cloudflare token used by `tofu plan -detailed-exitcode` (homelab audit §4)
+- `TALOSCONFIG` — path to talosconfig (set to `/etc/talos/config` in cluster). Sourced via the projected volume that mounts 1P field `TALOSCONFIG_YAML` as a file. Marked optional in cdk8s — if the 1P field is unset, the file is absent and talosctl commands inside the audit fail fast with a clear error.
 - `TELEMETRY_ENABLED`, `OTLP_ENDPOINT`, `TELEMETRY_SERVICE_NAME` — OpenTelemetry tracing → Tempo (gated by `TELEMETRY_ENABLED`)
 - `SENTRY_DSN`, `ENVIRONMENT` — Sentry/Bugsink error tracking (init no-ops when DSN unset)
 - `APP_METRICS_PORT` — port for the application Prometheus registry (default `9465`); separate from the SDK metrics on `:9464`
@@ -75,6 +82,34 @@ Workflow:
 - `GITHUB_WEBHOOK_SECRET` — HMAC secret used to verify `X-Hub-Signature-256` on incoming PR webhooks. **Required** when the webhook server is enabled; the server only starts when this is set.
 - `GITHUB_PERSONAL_ACCESS_TOKEN` — token passed to the `github-mcp-server` MCP backend used by the pr-agent activity. May be the same as `GH_TOKEN` if the existing token has the necessary `pull_requests: read+write` and `contents: read` scopes; keep separate if you want a narrower-scoped token for the bot.
 - `GITHUB_WEBHOOK_PORT` — port for the GitHub webhook receiver (default `9466`).
+
+## Homelab audit (daily)
+
+`runHomelabAuditWorkflow` is registered as `homelab-audit-daily` (cron `30 6 * * *` PT). It invokes `claude -p` with the runbook at `packages/docs/guides/2026-04-04_homelab-audit-runbook.md` as the prompt, then renders the agent's markdown to HTML and sends it via Postal with tag `homelab-audit`. See `packages/docs/plans/2026-05-09_daily-homelab-audit-email.md` for the design + verification ladder.
+
+The activity (`src/activities/homelab-audit.ts`) mirrors the `pr-agent` lifecycle (Bun.spawn `claude -p`, 10 s heartbeats, stderr line pump with token redaction, parsed `--output-format json` result, Sentry capture on failure, Prom metrics).
+
+**Local dev loop (no Temporal, no cluster)** — see `scripts/run-homelab-audit-local.ts`:
+
+```bash
+# Mac already has every CLI the prompt invokes (kubectl, talosctl, tofu via op
+# run, gh). DRY_RUN=1 writes /tmp/homelab-audit-<ts>.{md,html} instead of
+# POSTing to Postal.
+op run --env-file=.env.audit -- DRY_RUN=1 bun run scripts/run-homelab-audit-local.ts
+
+# Section-filter for cheap iteration (no full 25-min run while tuning the prompt):
+op run --env-file=.env.audit -- DRY_RUN=1 bun run scripts/run-homelab-audit-local.ts --sections=1,9,13
+
+# Cheap-model iteration:
+op run --env-file=.env.audit -- DRY_RUN=1 bun run scripts/run-homelab-audit-local.ts --haiku
+
+# Real Postal send (use a +audit-test alias for filterability):
+op run --env-file=.env.audit -- bun run scripts/run-homelab-audit-local.ts
+```
+
+Set `RUNBOOK_PATH=packages/docs/guides/2026-04-04_homelab-audit-runbook.md` in `.env.audit` to use the in-tree runbook (no GitHub round-trip).
+
+**Cluster RBAC** — the worker SA gets a cluster-wide read-only `temporal-worker-audit-reader` ClusterRole (see `packages/homelab/src/cdk8s/src/resources/temporal/audit-rbac.ts`). No `pods/exec`, no write verbs.
 
 ## PR review / summary bot
 

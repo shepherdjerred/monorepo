@@ -4,8 +4,13 @@ import { z } from "zod/v4";
 import * as Sentry from "@sentry/bun";
 import type { Client } from "@temporalio/client";
 import { WorkflowIdReusePolicy } from "@temporalio/common";
+import { WorkflowExecutionAlreadyStartedError } from "@temporalio/client";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
-import { PrAgentInputSchema, type PrAgentInput } from "#shared/schemas.ts";
+import {
+  PrAgentInputSchema,
+  type PrAgentInput,
+  type PrReviewPipelineInput,
+} from "#shared/schemas.ts";
 import {
   prWebhookReceivedTotal,
   prWebhookSignatureFailuresTotal,
@@ -78,10 +83,53 @@ function workflowIdFor(kind: PrAgentInput["kind"], pr: PrAgentInput): string {
   return `pr-${kind}-${pr.owner}-${pr.repo}-${String(pr.prNumber)}-${pr.commitSha}`;
 }
 
+function pipelineWorkflowIdFor(pr: PrReviewPipelineInput): string {
+  return `pr-review-pipeline-${pr.owner}-${pr.repo}-${String(pr.prNumber)}-${pr.commitSha}`;
+}
+
+async function startPrReviewPipeline(
+  client: Client,
+  pipelineInput: PrReviewPipelineInput,
+): Promise<void> {
+  // REJECT_DUPLICATE so a redelivered webhook for the same commit sha
+  // no-ops at the Temporal server rather than re-running the pipeline.
+  // The "already-started" error is the expected idempotent path; surface
+  // it as an info log rather than a workflow-start failure.
+  try {
+    await client.workflow.start("prReviewPipeline", {
+      taskQueue: TASK_QUEUES.PR_REVIEW,
+      workflowId: pipelineWorkflowIdFor(pipelineInput),
+      workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
+      args: [pipelineInput],
+    });
+  } catch (error: unknown) {
+    if (error instanceof WorkflowExecutionAlreadyStartedError) {
+      jsonLog("info", "pr-review pipeline already started for this commit", {
+        prNumber: pipelineInput.prNumber,
+        commitSha: pipelineInput.commitSha,
+        workflowId: pipelineWorkflowIdFor(pipelineInput),
+      });
+      return;
+    }
+    throw error;
+  }
+}
+
 async function startPrWorkflows(
   client: Client,
   input: PrAgentInput,
 ): Promise<void> {
+  const pipelineInput: PrReviewPipelineInput = {
+    owner: input.owner,
+    repo: input.repo,
+    prNumber: input.prNumber,
+    commitSha: input.commitSha,
+    baseRef: input.baseRef,
+    headRef: input.headRef,
+    prTitle: input.prTitle,
+    prAuthor: input.prAuthor,
+  };
+
   await Promise.all([
     client.workflow.start("prReview", {
       taskQueue: TASK_QUEUES.DEFAULT,
@@ -95,6 +143,9 @@ async function startPrWorkflows(
       workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE,
       args: [{ ...input, kind: "summary" }],
     }),
+    // SOTA pipeline (shadow mode during the multi-phase rollout — see
+    // packages/docs/plans/2026-05-10_sota-pr-review-bot.md).
+    startPrReviewPipeline(client, pipelineInput),
   ]);
 }
 

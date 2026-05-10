@@ -1,0 +1,114 @@
+<div class="layout layout--col gap--medium">
+  <div class="grid grid--cols-3 gap--small">
+    <div class="item">
+      <div class="meta"></div>
+      <div class="content">
+        <span class="title">Home</span>
+        <span class="value value--small">{{ summary }}</span>
+      </div>
+    </div>
+    <div class="item">
+      <div class="meta"></div>
+      <div class="content">
+        <span class="title">Unavailable</span>
+        <span class="value">{{ counts.unavailable }}</span>
+      </div>
+    </div>
+    <div class="item">
+      <div class="meta"></div>
+      <div class="content">
+        <span class="title">Low Battery</span>
+        <span class="value">{{ counts.low_battery }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid--cols-3 gap--medium">
+    <div>
+      <span class="label label--underline">Presence</span>
+      <table class="table table--condensed">
+        <tbody>
+          {% for entity in presence limit: 6 %}
+            <tr>
+              <td>{{ entity.label }}</td>
+              <td class="text--right">{{ entity.state }}</td>
+            </tr>
+          {% else %}
+            <tr><td>No configured entities</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <span class="label label--underline">Security</span>
+      <table class="table table--condensed">
+        <tbody>
+          {% for entity in security limit: 6 %}
+            <tr>
+              <td>{{ entity.label }}</td>
+              <td class="text--right">{{ entity.state }}</td>
+            </tr>
+          {% else %}
+            <tr><td>No configured entities</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <span class="label label--underline">Climate</span>
+      <table class="table table--condensed">
+        <tbody>
+          {% for entity in climate limit: 6 %}
+            <tr>
+              <td>{{ entity.label }}</td>
+              <td class="text--right">{{ entity.state }}</td>
+            </tr>
+          {% else %}
+            <tr><td>No configured entities</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid grid--cols-2 gap--medium">
+    <div>
+      <span class="label label--underline">Unavailable</span>
+      <table class="table table--condensed">
+        <tbody>
+          {% for entity in unavailable limit: 8 %}
+            <tr>
+              <td>{{ entity.label }}</td>
+              <td class="text--right">{{ entity.state }}</td>
+            </tr>
+          {% else %}
+            <tr><td>None</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <span class="label label--underline">Batteries</span>
+      <table class="table table--condensed">
+        <tbody>
+          {% for entity in low_batteries limit: 8 %}
+            <tr>
+              <td>{{ entity.label }}</td>
+              <td class="text--right">{{ entity.detail }}</td>
+            </tr>
+          {% else %}
+            <tr><td>None low</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="title_bar">
+  <span class="title">Home Assistant</span>
+  <span class="instance">{{ status | upcase }} · {{ generated_at | date: "%-I:%M %p" }}</span>
+</div>

@@ -90,15 +90,31 @@ async function main(): Promise<void> {
 
   const connection = await NativeConnection.connect({ address });
 
+  const workflowsPath = new URL("workflows/index.ts", import.meta.url).pathname;
+
   const worker = await Worker.create({
     connection,
     namespace: "default",
     taskQueue: TASK_QUEUES.DEFAULT,
-    workflowsPath: new URL("workflows/index.ts", import.meta.url).pathname,
+    workflowsPath,
     activities,
   });
 
   jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.DEFAULT });
+
+  // Second worker on the pr-review task queue. Same workflow bundle and
+  // activity surface, but isolated from the DEFAULT queue so the
+  // long-running multi-specialist LLM activities can't head-of-line block
+  // HA / cron workflows. See packages/docs/plans/2026-05-10_sota-pr-review-bot.md.
+  const prReviewWorker = await Worker.create({
+    connection,
+    namespace: "default",
+    taskQueue: TASK_QUEUES.PR_REVIEW,
+    workflowsPath,
+    activities,
+  });
+
+  jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.PR_REVIEW });
 
   const clientConnection = await Connection.connect({ address });
   const client = new Client({ connection: clientConnection });
@@ -133,6 +149,14 @@ async function main(): Promise<void> {
         state: workerState,
       });
     }
+    const prReviewState = prReviewWorker.getState();
+    if (prReviewState === "RUNNING") {
+      prReviewWorker.shutdown();
+    } else {
+      jsonLog("info", "pr-review worker not RUNNING, skipping shutdown()", {
+        state: prReviewState,
+      });
+    }
     await stopMetricsServer();
     await shutdownTracing();
   };
@@ -144,7 +168,7 @@ async function main(): Promise<void> {
     void shutdown("SIGINT");
   });
 
-  await worker.run();
+  await Promise.all([worker.run(), prReviewWorker.run()]);
 }
 
 void (async () => {

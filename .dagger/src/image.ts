@@ -6,6 +6,7 @@
 import { dag, Container, Directory, Secret } from "@dagger.io/dagger";
 
 import {
+  ARGOCD_CLI_VERSION,
   BUN_IMAGE,
   BUN_CACHE,
   CADDY_BUILDER_IMAGE,
@@ -14,6 +15,10 @@ import {
   GH_CLI_VERSION,
   GITHUB_MCP_SERVER_VERSION,
   KUBECTL_VERSION,
+  OBSIDIAN_HEADLESS_BASE_IMAGE,
+  TALOSCTL_VERSION,
+  TOFU_VERSION,
+  VELERO_CLI_VERSION,
 } from "./constants";
 import versions from "./versions";
 
@@ -150,6 +155,146 @@ function withGithubMcpServer(container: Container): Container {
       ].join(" && "),
     ])
     .withExec(["github-mcp-server", "--version"]);
+}
+
+/**
+ * Install talosctl. Required by the homelab daily audit workflow, which runs
+ * `talosctl health`, `talosctl get members`, `talosctl version`, etc. as part
+ * of §1 of the audit runbook.
+ *
+ * Talos publishes per-arch binaries (no tarball, no checksums file at a stable
+ * URL) — we verify by re-running `talosctl version --client` and trusting the
+ * GitHub release served over HTTPS. If a stricter chain is needed later,
+ * sigstore signatures are published alongside the binaries.
+ */
+function withTalosctl(container: Container): Container {
+  const url = `https://github.com/siderolabs/talos/releases/download/${TALOSCTL_VERSION}/talosctl-linux-amd64`;
+  return container
+    .withExec([
+      "sh",
+      "-c",
+      [
+        `curl -fsSL ${url} -o /usr/local/bin/talosctl`,
+        `chmod +x /usr/local/bin/talosctl`,
+      ].join(" && "),
+    ])
+    .withExec(["talosctl", "version", "--client"]);
+}
+
+/**
+ * Install OpenTofu. Required by the homelab daily audit workflow, which runs
+ * `tofu plan -detailed-exitcode` against the cloudflare module to detect drift
+ * (read-only inspection — never `tofu apply`).
+ *
+ * SHA-verified using the upstream-published checksums file the same way as
+ * kubectl and github-mcp-server.
+ */
+function withTofu(container: Container): Container {
+  const baseUrl = `https://github.com/opentofu/opentofu/releases/download/v${TOFU_VERSION}`;
+  const tarballName = `tofu_${TOFU_VERSION}_linux_amd64.tar.gz`;
+  const checksumsName = `tofu_${TOFU_VERSION}_SHA256SUMS`;
+  return container
+    .withExec([
+      "sh",
+      "-c",
+      [
+        `curl -fsSL ${baseUrl}/${tarballName} -o /tmp/tofu.tar.gz`,
+        `curl -fsSL ${baseUrl}/${checksumsName} -o /tmp/tofu.checksums.txt`,
+        `expected=$(grep " ${tarballName}$" /tmp/tofu.checksums.txt | awk '{print $1}')`,
+        `[ -n "$expected" ] || (echo "no checksum entry for ${tarballName}" && exit 1)`,
+        `actual=$(sha256sum /tmp/tofu.tar.gz | awk '{print $1}')`,
+        `[ "$expected" = "$actual" ] || (echo "tofu checksum mismatch (expected $expected, got $actual)" && exit 1)`,
+        `tar -xzf /tmp/tofu.tar.gz -C /usr/local/bin tofu`,
+        `chmod +x /usr/local/bin/tofu`,
+        `rm /tmp/tofu.tar.gz /tmp/tofu.checksums.txt`,
+      ].join(" && "),
+    ])
+    .withExec(["tofu", "version"]);
+}
+
+/**
+ * Install the ArgoCD CLI for the homelab daily audit workflow's §13
+ * Application Health Matrix step (`argocd app list`).
+ *
+ * No upstream checksums file at a stable path — verify the binary via
+ * `argocd version --client` after install. The release page does carry
+ * detached signatures; switching to those would harden this further.
+ */
+function withArgoCdCli(container: Container): Container {
+  const url = `https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_CLI_VERSION}/argocd-linux-amd64`;
+  return container
+    .withExec([
+      "sh",
+      "-c",
+      [
+        `curl -fsSL ${url} -o /usr/local/bin/argocd`,
+        `chmod +x /usr/local/bin/argocd`,
+      ].join(" && "),
+    ])
+    .withExec(["argocd", "version", "--client"]);
+}
+
+/**
+ * Install the Velero CLI for the homelab daily audit workflow's §5 Storage &
+ * Backups step (`velero backup get`, `velero schedule get`).
+ */
+function withVeleroCli(container: Container): Container {
+  const tarballName = `velero-${VELERO_CLI_VERSION}-linux-amd64.tar.gz`;
+  const url = `https://github.com/vmware-tanzu/velero/releases/download/${VELERO_CLI_VERSION}/${tarballName}`;
+  return container
+    .withExec([
+      "sh",
+      "-c",
+      [
+        `curl -fsSL ${url} -o /tmp/velero.tar.gz`,
+        `tar -xzf /tmp/velero.tar.gz -C /tmp`,
+        `mv /tmp/velero-${VELERO_CLI_VERSION}-linux-amd64/velero /usr/local/bin/velero`,
+        `chmod +x /usr/local/bin/velero`,
+        `rm -rf /tmp/velero.tar.gz /tmp/velero-${VELERO_CLI_VERSION}-linux-amd64`,
+      ].join(" && "),
+    ])
+    .withExec(["velero", "version", "--client-only"]);
+}
+
+/**
+ * Bundle the four homelab-audit CLIs (talosctl, tofu, argocd, velero) into a
+ * container. Used only by the temporal-worker image — pr-agent and the other
+ * Bun services don't need them.
+ */
+function withHomelabAuditClis(container: Container): Container {
+  return withVeleroCli(withArgoCdCli(withTofu(withTalosctl(container))));
+}
+
+/**
+ * Compile the in-tree `packages/toolkit` CLI into a single static binary at
+ * `/usr/local/bin/toolkit`.
+ *
+ * The audit runbook (`packages/docs/guides/2026-04-04_homelab-audit-runbook.md`)
+ * invokes `toolkit pd incidents`, `toolkit bugsink issues`, and
+ * `toolkit gf query|logs|alerts` — the homelab-audit-daily workflow needs
+ * these in the worker image.
+ *
+ * Built in a side stage from the `toolkitDir` directory (mounted via the
+ * WORKSPACE_DEPS map for `temporal` — see `.dagger/src/deps.ts`). The result
+ * is a single self-contained binary; no `bun` runtime dependency at run-time.
+ *
+ * `eslintConfigDir` must also be present at /workspace/packages/eslint-config
+ * because toolkit's package.json depends on `file:../eslint-config`. Temporal
+ * already pulls it in as one of its own deps, so this is satisfied.
+ */
+function withToolkit(container: Container): Container {
+  return container
+    .withWorkdir("/workspace/packages/toolkit")
+    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withExec([
+      "bun",
+      "build",
+      "./src/index.ts",
+      "--compile",
+      "--outfile=/usr/local/bin/toolkit",
+    ])
+    .withExec(["chmod", "+x", "/usr/local/bin/toolkit"])
+    .withExec(["toolkit", "--version"]);
 }
 
 /**
@@ -309,7 +454,7 @@ export function buildObsidianHeadlessImageHelper(
 ): Container {
   return dag
     .container()
-    .from("node:22-slim")
+    .from(OBSIDIAN_HEADLESS_BASE_IMAGE)
     .withExec([
       "sh",
       "-c",
@@ -381,7 +526,12 @@ export function buildTemporalWorkerImageHelper(
   // The pr-agent activity (PR review + summary) launches `claude -p` with
   // the GitHub MCP server as the only allowed tool source — see
   // `withGithubMcpServer`.
-  container = withGithubMcpServer(withKubectl(withEditorClis(container)));
+  // The homelab-audit-daily workflow runs `claude -p` against the audit
+  // runbook, which invokes talosctl / tofu / argocd / velero — see
+  // `withHomelabAuditClis`.
+  container = withHomelabAuditClis(
+    withGithubMcpServer(withKubectl(withEditorClis(container))),
+  );
 
   container = container
     .withWorkdir("/workspace")
@@ -397,11 +547,26 @@ export function buildTemporalWorkerImageHelper(
     );
   }
 
-  return withWritableBunInstallCache(
-    container
-      .withWorkdir("/workspace/packages/temporal")
-      .withExec(["bun", "install", "--frozen-lockfile"]),
-  )
+  container = container
+    .withWorkdir("/workspace/packages/temporal")
+    .withExec(["bun", "install", "--frozen-lockfile"]);
+
+  // Compile the in-tree toolkit CLI into a static binary if its source is
+  // mounted. The temporal-worker WORKSPACE_DEPS list opts into this by
+  // including `toolkit`; other consumers of buildTemporalWorkerImageHelper
+  // (none today) won't pay the build cost.
+  if (depNames.includes("toolkit")) {
+    container = withToolkit(container);
+  }
+
+  // Reassign ownership of the bun install cache AFTER every bun-install step
+  // (including toolkit's). New entries written by the toolkit install must
+  // also be readable by UID 1000 at runtime — see the docstring on
+  // `withWritableBunInstallCache`.
+  container = withWritableBunInstallCache(container);
+
+  return container
+    .withWorkdir("/workspace/packages/temporal")
     .withLabel(
       "org.opencontainers.image.source",
       "https://github.com/shepherdjerred/monorepo",

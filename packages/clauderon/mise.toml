@@ -1,5 +1,5 @@
 [tools]
-rust = "latest"
+rust = "1.95.0"
 
 # =============================================================================
 # Setup Tasks (one-time setup for faster builds)

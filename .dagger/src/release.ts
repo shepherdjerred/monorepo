@@ -630,7 +630,9 @@ export function clauderonUploadHelper(
 // Version commit-back
 // ---------------------------------------------------------------------------
 
-/** Update versions.ts with new image digests and create an auto-merge PR. */
+const VERSION_BUMP_BRANCH = "chore/version-bump-pending";
+
+/** Update versions.ts with new image digests and create or refresh an auto-merge PR. */
 export function versionCommitBackHelper(
   digests: string,
   version: string,
@@ -661,7 +663,7 @@ export function versionCommitBackHelper(
   if (dryrun) {
     return container.withExec([
       "echo",
-      `DRYRUN: would commit version bump ${version} with digests: ${digests}, then close any existing open PRs on chore/version-bump-* branches`,
+      `DRYRUN: would update ${VERSION_BUMP_BRANCH} with version bump ${version} and digests: ${digests}`,
     ]);
   }
 
@@ -695,15 +697,13 @@ export function versionCommitBackHelper(
         `cd /repo`,
         `git config user.email "ci@sjer.red"`,
         `git config user.name "CI Bot"`,
+        `if git ls-remote --exit-code --heads origin "${VERSION_BUMP_BRANCH}" >/dev/null 2>&1; then git fetch origin main:refs/remotes/origin/main "${VERSION_BUMP_BRANCH}:${VERSION_BUMP_BRANCH}" && git checkout "${VERSION_BUMP_BRANCH}" && git rebase origin/main; else git fetch origin main:refs/remotes/origin/main && git checkout -b "${VERSION_BUMP_BRANCH}" origin/main; fi`,
         `bun run .buildkite/scripts/update-versions.ts packages/homelab/src/cdk8s/src/versions.ts "${version}" ${digestArgs}`,
-        `git checkout -b "chore/version-bump-${version}"`,
         `git add packages/homelab/src/cdk8s/src/versions.ts`,
-        `git commit -m "chore: bump image versions to ${version}" -m "Auto-Generated: ci-bot"`,
-        `git push origin "chore/version-bump-${version}"`,
-        `gh pr create --title "chore: bump image versions to ${version}" --body "Auto-generated version bump"`,
-        `gh pr merge --auto --merge`,
-        `NEW_PR=$(gh pr view --json number -q .number)`,
-        `gh pr list --state open --search "head:chore/version-bump-" --json number,headRefName -q ".[] | select(.headRefName | startswith(\\"chore/version-bump-\\")) | select(.number != $NEW_PR) | .number" | while read -r num; do if ! gh pr close "$num" --delete-branch --comment "Superseded by #$NEW_PR"; then echo "warning: failed to close PR #$num"; fi; done`,
+        `if git diff --cached --quiet; then HAS_VERSION_CHANGES=0; echo "No version changes to commit"; else HAS_VERSION_CHANGES=1; git commit -m "chore: bump image versions to ${version}" -m "Auto-Generated: ci-bot"; fi`,
+        `if [ "$HAS_VERSION_CHANGES" = "0" ] && git diff --quiet origin/main...HEAD; then echo "No version changes and pending branch has no diff"; exit 0; fi`,
+        `git push --force-with-lease -u origin "${VERSION_BUMP_BRANCH}"`,
+        `PR_NUMBER=$(gh pr list --head "${VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty'); if [ -z "$PR_NUMBER" ]; then gh pr create --base main --head "${VERSION_BUMP_BRANCH}" --title "chore: bump pending image versions" --body "Auto-generated version bump"; PR_NUMBER=$(gh pr view "${VERSION_BUMP_BRANCH}" --json number -q .number); fi; gh pr merge "$PR_NUMBER" --auto --merge`,
       ].join(" && "),
     ]);
 }

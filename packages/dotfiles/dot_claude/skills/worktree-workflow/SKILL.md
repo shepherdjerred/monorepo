@@ -7,6 +7,9 @@ description: |
 
 # Git Worktree Workflow Agent
 
+> **⚠️ Prefer the `dissociated-clone-workflow` skill for new work.**
+> Worktrees share `refs/stash`, the reflog, and other per-repo state across checkouts, which causes collisions during merges and parallel agent runs. The dissociated-clone approach (`git clone --shared --dissociate`) gives full isolation (own stash, own reflog, safe to gc) at the cost of extra disk and per-clone setup. Use this worktree skill only when disk cost rules out clones, or for very short-lived single-file checkouts.
+
 ## What's New in Git Worktree & AI Agents (2025)
 
 - **AI Agent Integration**: 4-5 parallel Claude Code agents working independently on different features

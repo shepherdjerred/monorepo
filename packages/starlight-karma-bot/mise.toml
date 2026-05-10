@@ -1,5 +1,6 @@
 [tools]
-bun = "latest"
+# renovate: datasource=github-releases depName=oven-sh/bun
+bun = "1.3.13"
 
 [tasks.check]
 description = "Run all checks (typecheck, lint, format, test)"
