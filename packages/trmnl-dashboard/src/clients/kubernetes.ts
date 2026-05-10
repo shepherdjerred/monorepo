@@ -117,7 +117,7 @@ export class KubernetesClient {
             condition.type === "Ready" && condition.status === "True",
         ),
       ).length,
-      unhealthyPods: parsedPods.filter(isPodUnhealthy).length,
+      unhealthyPods: parsedPods.filter((pod) => isPodUnhealthy(pod)).length,
     };
   }
 
