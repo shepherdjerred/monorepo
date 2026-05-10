@@ -6,6 +6,7 @@ import { getArgoCDRuleGroups } from "./rules/argocd.ts";
 import { getResourceMonitoringRuleGroups } from "./rules/resource-monitoring.ts";
 import { getZfsMonitoringRuleGroups } from "./rules/zfs.ts";
 import { getSmartctlRuleGroups } from "./rules/smartctl.ts";
+import { getNvmeRuleGroups } from "./rules/nvme.ts";
 import { getHaWorkflowRuleGroups } from "./rules/ha-workflows.ts";
 import { getGitckupRuleGroups } from "./rules/gitckup.ts";
 import { getQBitTorrentRuleGroups } from "./rules/qbittorrent.ts";
@@ -89,6 +90,21 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
     spec: {
       groups: getSmartctlRuleGroups(),
+    },
+  });
+
+  // NVMe-specific wear, spare, media-error, and sustained-write-rate alerts.
+  // Complements smartctl-rules: those use smartmon_* metrics (SATA-style) which
+  // don't expose SSD wear reliably on Samsung 990 PRO; nvme_* metrics from the
+  // node-exporter nvme collector do.
+  new PrometheusRule(chart, "prometheus-nvme-rules", {
+    metadata: {
+      name: "prometheus-nvme-rules",
+      namespace: "prometheus",
+      labels: { release: "prometheus" },
+    },
+    spec: {
+      groups: getNvmeRuleGroups(),
     },
   });
 
