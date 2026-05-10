@@ -24,9 +24,26 @@ export const PrAgentInputSchema = z.object({
   prAuthor: z.string(),
 });
 
+/**
+ * Input to the structured pr-review pipeline (multi-specialist + verification).
+ * Mirrors PrAgentInput but without the `kind` discriminator — the pipeline is
+ * always "review".
+ */
+export const PrReviewPipelineInputSchema = z.object({
+  owner: z.string().min(1),
+  repo: z.string().min(1),
+  prNumber: z.number().int().positive(),
+  commitSha: z.string().min(1),
+  baseRef: z.string().min(1),
+  headRef: z.string().min(1),
+  prTitle: z.string(),
+  prAuthor: z.string(),
+});
+
 export type FetcherInput = z.infer<typeof FetcherInputSchema>;
 export type DepsSummaryInput = z.infer<typeof DepsSummaryInputSchema>;
 export type DnsAuditInput = z.infer<typeof DnsAuditInputSchema>;
 export type GolinkSyncInput = z.infer<typeof GolinkSyncInputSchema>;
 export type VacuumInput = z.infer<typeof VacuumInputSchema>;
 export type PrAgentInput = z.infer<typeof PrAgentInputSchema>;
+export type PrReviewPipelineInput = z.infer<typeof PrReviewPipelineInputSchema>;

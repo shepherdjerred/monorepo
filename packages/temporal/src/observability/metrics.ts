@@ -159,6 +159,25 @@ export const zfsDatasetSnapshotCount = new Gauge({
   registers: [register],
 });
 
+// ---------------------------------------------------------------------------
+// pr-review pipeline metrics (Phase 1+ of the SOTA PR review bot — see
+// packages/docs/plans/2026-05-10_sota-pr-review-bot.md).
+// ---------------------------------------------------------------------------
+
+export const prReviewPipelinePostedTotal = new Counter({
+  name: "pr_review_pipeline_posted_total",
+  help: "pr-review pipeline review comments posted (outcome: created | updated)",
+  labelNames: ["owner", "repo", "outcome"] as const,
+  registers: [register],
+});
+
+export const prReviewPipelineFindingsHistogram = new Histogram({
+  name: "pr_review_pipeline_findings_per_pr",
+  help: "Findings posted per PR by the pr-review pipeline",
+  buckets: [0, 1, 2, 3, 5, 10, 20, 50],
+  registers: [register],
+});
+
 let server: ReturnType<typeof Bun.serve> | undefined;
 
 function jsonLog(
