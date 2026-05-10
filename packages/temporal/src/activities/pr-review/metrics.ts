@@ -1,7 +1,7 @@
 import { withSpan } from "#observability/tracing.ts";
 import {
   prReviewCountTotal,
-  prReviewCommentsPerPr,
+  prReviewFindingsPerPr,
 } from "#observability/metrics.ts";
 
 const COMPONENT = "pr-review-pipeline";
@@ -44,7 +44,7 @@ async function emitMetricsImpl(input: EmitMetricsInput): Promise<void> {
         repo: input.repo,
         outcome: input.created ? "created" : "updated",
       });
-      prReviewCommentsPerPr.observe(input.postedFindings);
+      prReviewFindingsPerPr.observe(input.postedFindings);
       jsonLog("info", "emitMetrics recorded posted-findings histogram", {
         postedFindings: input.postedFindings,
         created: input.created,
