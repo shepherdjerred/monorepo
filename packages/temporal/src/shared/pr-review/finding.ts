@@ -62,10 +62,16 @@ export const FindingVotesSchema = z.object({
  * required so the schema doubles as a contract for prompt outputs.
  */
 export const FindingSchema = z.object({
-  /** Stable id for dedupe / KV lookups. Hash of (path, lineStart, kind, claim). */
+  /** Stable id for dedupe / KV lookups. Hash of (file, lineStart, kind, claim). */
   id: z.string().min(1),
-  /** File path relative to repo root. */
-  path: z.string().min(1),
+  /**
+   * File path relative to repo root. Named `file` (not `path`) to match the
+   * naming used in specialists' draft `src/shared/pr-review/schemas.ts`
+   * (SpecialistFinding → AnnotatedFinding → ConsensusFinding → VerifiedFinding
+   * stage layering); keeping the field name stable across both files lets the
+   * stage schemas extend FindingSchema directly without translation.
+   */
+  file: z.string().min(1),
   /** Starting line number (1-indexed). */
   lineStart: z.number().int().positive(),
   /** Ending line number, inclusive. May equal lineStart for single-line findings. */

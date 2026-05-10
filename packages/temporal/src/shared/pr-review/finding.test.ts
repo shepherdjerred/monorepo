@@ -10,7 +10,7 @@ import {
 
 const VALID_FINDING: Finding = {
   id: "f1",
-  path: "packages/temporal/src/worker.ts",
+  file: "packages/temporal/src/worker.ts",
   lineStart: 42,
   lineEnd: 44,
   kind: "correctness",
@@ -71,8 +71,8 @@ describe("foundation: FindingSchema", () => {
     ).toThrow();
   });
 
-  it("rejects findings with empty path / claim / evidence", () => {
-    expect(() => FindingSchema.parse({ ...VALID_FINDING, path: "" })).toThrow();
+  it("rejects findings with empty file / claim / evidence", () => {
+    expect(() => FindingSchema.parse({ ...VALID_FINDING, file: "" })).toThrow();
     expect(() =>
       FindingSchema.parse({ ...VALID_FINDING, claim: "" }),
     ).toThrow();

@@ -194,19 +194,21 @@ export const zfsDatasetSnapshotCount = new Gauge({
 });
 
 // ---------------------------------------------------------------------------
-// pr-review pipeline metrics (Phase 1+ of the SOTA PR review bot — see
-// packages/docs/plans/2026-05-10_sota-pr-review-bot.md).
+// pr-review metrics (Phase 1+ of the SOTA PR review bot — see
+// packages/docs/plans/2026-05-10_sota-pr-review-bot.md). Eval's Grafana
+// dashboard (Phase 8) targets the `pr_review_*` namespace; do not bake the
+// word "pipeline" into the names.
 // ---------------------------------------------------------------------------
 
-export const prReviewPipelinePostedTotal = new Counter({
-  name: "pr_review_pipeline_posted_total",
+export const prReviewCountTotal = new Counter({
+  name: "pr_review_count_total",
   help: "pr-review pipeline review comments posted (outcome: created | updated)",
   labelNames: ["owner", "repo", "outcome"] as const,
   registers: [register],
 });
 
-export const prReviewPipelineFindingsHistogram = new Histogram({
-  name: "pr_review_pipeline_findings_per_pr",
+export const prReviewCommentsPerPr = new Histogram({
+  name: "pr_review_comments_per_pr",
   help: "Findings posted per PR by the pr-review pipeline",
   buckets: [0, 1, 2, 3, 5, 10, 20, 50],
   registers: [register],

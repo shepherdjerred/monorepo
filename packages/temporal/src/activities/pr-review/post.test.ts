@@ -1,5 +1,6 @@
 import { describe, expect, it, mock } from "bun:test";
 import {
+  isPostEnabled,
   markerFor,
   renderCommentBody,
   runPostReview,
@@ -117,12 +118,85 @@ describe("foundation: pr-review postReview", () => {
   });
 
   describe("renderCommentBody", () => {
-    it("emits the phase-1 stub body with the marker on the first line", () => {
+    it("emits the marker on the first line and the empty-findings sentence when no findings are present", () => {
       const marker = markerFor(WORKFLOW_ID);
       const body = renderCommentBody(INPUT, marker);
       const [firstLine, ...rest] = body.split("\n");
       expect(firstLine).toBe(marker);
-      expect(rest.join("\n")).toContain("hello from prReview — phase 1 stub");
+      const tail = rest.join("\n");
+      expect(tail).toContain("pr-review-bot");
+      expect(tail).toContain("no substantive correctness issues found");
+    });
+
+    it("groups findings by severity (Critical → Warning → Nit) and renders each finding's metadata", () => {
+      const marker = markerFor(WORKFLOW_ID);
+      const body = renderCommentBody(
+        {
+          pipeline: PIPELINE,
+          findings: [
+            {
+              id: "fA",
+              file: "packages/temporal/src/worker.ts",
+              lineStart: 10,
+              lineEnd: 10,
+              kind: "correctness",
+              severity: "nit",
+              verifier: "none",
+              claim: "trivial style nit",
+              evidence: "irrelevant evidence text",
+              confidence: 0.5,
+            },
+            {
+              id: "fB",
+              file: "packages/temporal/src/event-bridge/github-webhook.ts",
+              lineStart: 42,
+              lineEnd: 44,
+              kind: "correctness",
+              severity: "critical",
+              verifier: "test",
+              claim: "race condition between webhook signature check and start",
+              evidence:
+                "lines 42-44 spawn workflow.start before signature is verified",
+              confidence: 0.95,
+            },
+            {
+              id: "fC",
+              file: "packages/temporal/src/activities/pr-agent.ts",
+              lineStart: 100,
+              lineEnd: 100,
+              kind: "correctness",
+              severity: "warning",
+              verifier: "typecheck",
+              claim: "missing await on async call",
+              evidence: "spawn returns a Promise; result is discarded",
+              confidence: 0.8,
+            },
+          ],
+        },
+        marker,
+      );
+
+      // Critical must appear before Warning, which must appear before Nit.
+      const criticalIdx = body.indexOf("## Critical");
+      const warningIdx = body.indexOf("## Warning");
+      const nitIdx = body.indexOf("## Nit");
+      expect(criticalIdx).toBeGreaterThan(0);
+      expect(warningIdx).toBeGreaterThan(criticalIdx);
+      expect(nitIdx).toBeGreaterThan(warningIdx);
+
+      // Each section's count header reflects the bucket size.
+      expect(body).toContain("## Critical (1)");
+      expect(body).toContain("## Warning (1)");
+      expect(body).toContain("## Nit (1)");
+
+      // Per-finding metadata is rendered.
+      expect(body).toContain(
+        "packages/temporal/src/event-bridge/github-webhook.ts",
+      );
+      expect(body).toContain("L42-L44");
+      expect(body).toContain("_verifier_: `test`");
+      expect(body).toContain("_confidence_: 0.95");
+      expect(body).toContain("race condition");
     });
   });
 
@@ -147,7 +221,7 @@ describe("foundation: pr-review postReview", () => {
         throw new Error("expected create call");
       }
       expect(created.issue_number).toBe(PIPELINE.prNumber);
-      expect(created.body).toContain("hello from prReview — phase 1 stub");
+      expect(created.body).toContain("pr-review-bot");
       expect(created.body.startsWith(markerFor(WORKFLOW_ID))).toBe(true);
     });
 
@@ -221,6 +295,32 @@ describe("foundation: pr-review postReview", () => {
       );
       expect(result.created).toBe(true);
       expect(createCalls.length).toBe(1);
+    });
+  });
+
+  describe("isPostEnabled (dry-run gate)", () => {
+    it("returns false when the env var is absent (safe default — pipeline ships dry)", () => {
+      const env: Record<string, string> = {};
+      const value = env["PR_REVIEW_POST_ENABLED"];
+      expect(isPostEnabled(value)).toBe(false);
+    });
+
+    it("returns false when the env var is the empty string", () => {
+      expect(isPostEnabled("")).toBe(false);
+    });
+
+    it("returns false for any value that isn't case-insensitive 'true'", () => {
+      expect(isPostEnabled("1")).toBe(false);
+      expect(isPostEnabled("yes")).toBe(false);
+      expect(isPostEnabled("on")).toBe(false);
+      expect(isPostEnabled("false")).toBe(false);
+      expect(isPostEnabled("True!")).toBe(false);
+    });
+
+    it("returns true only for the literal string 'true' (case-insensitive)", () => {
+      expect(isPostEnabled("true")).toBe(true);
+      expect(isPostEnabled("TRUE")).toBe(true);
+      expect(isPostEnabled("True")).toBe(true);
     });
   });
 });

@@ -1,7 +1,7 @@
 import { withSpan } from "#observability/tracing.ts";
 import {
-  prReviewPipelinePostedTotal,
-  prReviewPipelineFindingsHistogram,
+  prReviewCountTotal,
+  prReviewCommentsPerPr,
 } from "#observability/metrics.ts";
 
 const COMPONENT = "pr-review-pipeline";
@@ -39,12 +39,12 @@ async function emitMetricsImpl(input: EmitMetricsInput): Promise<void> {
       "findings.posted": input.postedFindings,
     },
     () => {
-      prReviewPipelinePostedTotal.inc({
+      prReviewCountTotal.inc({
         owner: input.owner,
         repo: input.repo,
         outcome: input.created ? "created" : "updated",
       });
-      prReviewPipelineFindingsHistogram.observe(input.postedFindings);
+      prReviewCommentsPerPr.observe(input.postedFindings);
       jsonLog("info", "emitMetrics recorded posted-findings histogram", {
         postedFindings: input.postedFindings,
         created: input.created,

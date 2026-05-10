@@ -386,6 +386,14 @@ export function createTemporalWorkerDeployment(
           secret,
           key: "ANTHROPIC_API_KEY",
         }),
+        // Kill switch for the new pr-review pipeline's live posting. Defaults
+        // "false" so the pipeline runs end-to-end (bootstrap, specialists,
+        // render) and logs the would-be comment but does NOT mutate the PR.
+        // Flip to "true" only after shadow-mode dogfooding (Phase 12 of the
+        // SOTA plan) gives a precision/FPR baseline we trust. The post
+        // activity reads this directly from the env at runtime — see
+        // packages/temporal/src/activities/pr-review/post.ts `isPostEnabled`.
+        PR_REVIEW_POST_ENABLED: EnvValue.fromValue("false"),
         GITHUB_WEBHOOK_PORT: EnvValue.fromValue("9466"),
         // Bugsink (Sentry-compatible) error tracking. Read by initSentry()
         // in worker.ts; when unset, Sentry init is a no-op.

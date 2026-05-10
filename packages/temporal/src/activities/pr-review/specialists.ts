@@ -2,6 +2,7 @@ import { withSpan } from "#observability/tracing.ts";
 import type { PrReviewPipelineInput } from "#shared/schemas.ts";
 import type { Finding } from "#shared/pr-review/finding.ts";
 import type { BootstrapResult } from "./bootstrap.ts";
+import { correctnessReviewer } from "./specialists/correctness.ts";
 
 const COMPONENT = "pr-review-pipeline";
 
@@ -35,15 +36,26 @@ async function runSpecialistsImpl(
       "pr.number": input.pipeline.prNumber,
       "pr.commitSha": input.pipeline.commitSha,
     },
-    () => {
-      // Phase 1: stub. Real implementation fans out to 5 specialists
-      // (correctness/security/performance/convention/deps) with 3 randomized
-      // passes each, then returns the aggregated findings. Tracked in Phase 3
-      // of packages/docs/plans/2026-05-10_sota-pr-review-bot.md.
-      jsonLog("info", "runSpecialists stub invoked", {
+    async () => {
+      // Phase 2: single-specialist parity baseline. Calls only the
+      // correctness reviewer (the port of pr-prompts.ts's review prompt).
+      // Phase 3 (owned by specialists teammate) replaces this body with
+      // parallel fan-out across all five specialists, randomized diff
+      // slicing, and the consensus vote stub gets a real implementation.
+      jsonLog("info", "runSpecialists invoking correctnessReviewer", {
         prNumber: input.pipeline.prNumber,
       });
-      return Promise.resolve<Finding[]>([]);
+      const result = await correctnessReviewer({
+        pipeline: input.pipeline,
+        context: input.context,
+      });
+      jsonLog("info", "runSpecialists completed", {
+        prNumber: input.pipeline.prNumber,
+        findingsCount: result.findings.length,
+        costUsd: result.costUsd,
+        durationMs: result.durationMs,
+      });
+      return result.findings;
     },
   );
 }
