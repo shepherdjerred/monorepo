@@ -65,7 +65,8 @@ Workflow:
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `S3_ENDPOINT` — S3/SeaweedFS credentials
 - `GH_TOKEN` — GitHub API token (used by activities that clone repos or call the GitHub API)
 - `OPENAI_API_KEY` — OpenAI API key
-- `CLAUDE_CODE_OAUTH_TOKEN` — Claude Code subscription token. **Sole** auth for every `claude -p` activity (currently pr-agent). The cdk8s deployment intentionally does NOT inject `ANTHROPIC_API_KEY` — when both are present the CLI prefers the API key, which billed against direct-API credits instead of the subscription. The 1P field still exists for emergency fallback but is not referenced.
+- `CLAUDE_CODE_OAUTH_TOKEN` — Claude Code subscription token. Auth for every `claude -p` activity (currently pr-agent + homelab-audit).
+- `ANTHROPIC_API_KEY` — direct Anthropic API key. Used by the SDK-native `runPrSummaryPipeline` activity (Phase 7 of the SOTA PR review bot plan). The Anthropic TypeScript SDK only accepts the direct API key, so this is required for the SDK summary path. Shadow-mode caveat: with both `CLAUDE_CODE_OAUTH_TOKEN` and `ANTHROPIC_API_KEY` set, the legacy `claude -p` CLI prefers the API key and bills direct credits instead of the subscription — accepted for the ~2-week shadow window; Phase 13 retires the CLI path and the conflict goes away.
 - `POSTAL_HOST`, `POSTAL_API_KEY` — Postal email service
 - `RECIPIENT_EMAIL`, `SENDER_EMAIL` — Email addresses for dependency summary and homelab audit
 - `RUNBOOK_PATH` — local override for the homelab-audit runbook (defaults to fetching `https://raw.githubusercontent.com/.../packages/docs/guides/2026-04-04_homelab-audit-runbook.md`)
@@ -113,16 +114,30 @@ Set `RUNBOOK_PATH=packages/docs/guides/2026-04-04_homelab-audit-runbook.md` in `
 
 ## PR review / summary bot
 
-`prReview` and `prSummary` workflows are triggered by GitHub `pull_request` webhook deliveries. The Hono server in `src/event-bridge/github-webhook.ts` runs alongside the HA WebSocket listener, verifies the signature, skips draft + bot-authored PRs, and starts both workflows in parallel with workflow IDs `pr-{kind}-{owner}-{repo}-{prNumber}-{commitSha}` (`WorkflowIdReusePolicy.ALLOW_DUPLICATE`).
+Per webhook delivery, the Hono server in `src/event-bridge/github-webhook.ts` starts four workflows in parallel:
+
+| Workflow                   | Queue        | Activity                                           | Comment marker            |
+| -------------------------- | ------------ | -------------------------------------------------- | ------------------------- |
+| `prReview` (legacy)        | `DEFAULT`    | `runPrAgent` (claude -p)                           | _none — posts a review_   |
+| `prSummary` (legacy)       | `DEFAULT`    | `runPrAgent` (claude -p)                           | `<!-- pr-summary -->`     |
+| `prReviewPipeline` (SOTA)  | `PR_REVIEW`  | multi-specialist consensus + verify                | per Phase 1 design        |
+| `prSummaryPipeline` (SOTA) | `PR_SUMMARY` | `runPrSummaryPipeline` (Anthropic SDK + Haiku 4.5) | `<!-- pr-summary-sdk -->` |
+
+The two summary paths use **distinct** markers so both comments live on every non-draft PR during shadow mode — reviewers and the eval grader compare quality side-by-side. Phase 13 retires the legacy `claude -p` workflows; at that point the SDK summary takes over the canonical `<!-- pr-summary -->` marker if useful.
 
 The `runPrAgent` activity (`src/activities/pr-agent.ts`) launches `claude -p --mcp-config <tempfile> --allowed-tools mcp__github__* --model <m> --max-turns <n>`. The MCP config points at `/usr/local/bin/github-mcp-server` (installed in the worker image via `withGithubMcpServer` in `.dagger/src/image.ts`). Tokens are passed via env, never written into the MCP config file. stderr is streamed line-by-line through `jsonLog` with token redaction. Heartbeats fire every 10s during the subprocess lifetime.
+
+The `runPrSummaryPipeline` activity (`src/activities/pr-review/summary.ts`) talks to the Anthropic SDK directly. Streams Haiku 4.5 via `messages.stream(...).finalMessage()`. Prompt caching pinned to the last system block (CLAUDE.md hierarchy). Cost target ≤$0.10/summary. See `scripts/replay-pr-summary.ts --pr <#>` for the verification harness.
 
 **Component log values** (use these in `component:` and LogQL filters):
 
 - `pr-webhook` — webhook server
-- `pr-agent` — `claude -p` subprocess wrapper
+- `pr-agent` — `claude -p` subprocess wrapper (legacy)
+- `pr-summary` — SDK-native Haiku summary activity
 
-**Models** — review uses `claude-opus-4-7` (max-turns 30), summary uses `claude-haiku-4-5-20251001` (max-turns 10). Summary comments include the marker `<!-- pr-summary -->` so subsequent runs edit in place instead of duplicating.
+**Shadow-mode auth caveat** — the worker pod has both `CLAUDE_CODE_OAUTH_TOKEN` (subscription, used by `claude -p`) and `ANTHROPIC_API_KEY` (used by the SDK summary). When both are set, the legacy CLI prefers the API key and bills direct-API credits instead of the subscription. We accept this for the ~2-week shadow window (Phase 12 of the SOTA plan); Phase 13 retires the CLI path and the conflict goes away.
+
+**Models** — legacy review uses `claude-opus-4-7` (max-turns 30), legacy summary uses `claude-haiku-4-5-20251001` (max-turns 10), SDK summary uses `claude-haiku-4-5` via the official SDK with streaming.
 
 ## HA presence (welcomeHome / leavingHome) — debounce model
 

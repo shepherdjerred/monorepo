@@ -5,6 +5,7 @@ import {
   Deployment,
   DeploymentStrategy,
   EnvValue,
+  type ISecret,
   Secret,
   Service,
   ServiceAccount,
@@ -30,6 +31,24 @@ import { createTemporalWorkerAuditRbac } from "./audit-rbac.ts";
 export type CreateTemporalWorkerDeploymentProps = {
   serverServiceName: string;
 };
+
+/**
+ * Build a map of `KEY: EnvValue.fromSecretValue(..., { optional: true })`
+ * entries for the homelab-audit-daily workflow credentials. Marked optional
+ * so the pod still starts if a 1P field is unset — the audit activity then
+ * fails fast in its agent loop with a clear "API X returned 401" while every
+ * other workflow keeps running.
+ */
+function optionalSecretEnv(
+  secret: ISecret,
+  keys: readonly string[],
+): Record<string, EnvValue> {
+  const env: Record<string, EnvValue> = {};
+  for (const key of keys) {
+    env[key] = EnvValue.fromSecretValue({ secret, key }, { optional: true });
+  }
+  return env;
+}
 
 export function createTemporalWorkerDeployment(
   chart: Chart,
@@ -294,13 +313,6 @@ export function createTemporalWorkerDeployment(
           "http://tempo.tempo.svc.cluster.local:4318",
         ),
         TELEMETRY_SERVICE_NAME: EnvValue.fromValue("temporal-worker"),
-        // Anthropic Claude auth: ONLY CLAUDE_CODE_OAUTH_TOKEN (set further
-        // below). When ANTHROPIC_API_KEY is also in the env, the `claude -p`
-        // CLI prefers the API key — which billed against (and exhausted)
-        // direct-API credits despite the user's Claude Code subscription.
-        // Removing the API key from the env forces the CLI onto the OAuth
-        // token (subscription) for the pr-agent activity. The field still
-        // exists in the 1Password secret; just not referenced.
         // Git identity for any activity that runs `git commit`.
         GIT_AUTHOR_NAME: EnvValue.fromValue("temporal-worker[bot]"),
         GIT_AUTHOR_EMAIL: EnvValue.fromValue("temporal-worker@homelab.local"),
@@ -364,9 +376,15 @@ export function createTemporalWorkerDeployment(
           secret,
           key: "GITHUB_PERSONAL_ACCESS_TOKEN",
         }),
+        // Anthropic: OAuth → legacy `claude -p`, API key → SDK pr-summary.
+        // Shadow-mode billing caveat in packages/temporal/CLAUDE.md.
         CLAUDE_CODE_OAUTH_TOKEN: EnvValue.fromSecretValue({
           secret,
           key: "CLAUDE_CODE_OAUTH_TOKEN",
+        }),
+        ANTHROPIC_API_KEY: EnvValue.fromSecretValue({
+          secret,
+          key: "ANTHROPIC_API_KEY",
         }),
         GITHUB_WEBHOOK_PORT: EnvValue.fromValue("9466"),
         // Bugsink (Sentry-compatible) error tracking. Read by initSentry()
@@ -426,38 +444,16 @@ export function createTemporalWorkerDeployment(
         //   ARGOCD_SERVER, ARGOCD_AUTH_TOKEN,
         //   CLOUDFLARE_API_TOKEN  (for `tofu plan` against the cloudflare module)
         // ---------------------------------------------------------------
-        PAGERDUTY_TOKEN: EnvValue.fromSecretValue(
-          { secret, key: "PAGERDUTY_TOKEN" },
-          { optional: true },
-        ),
-        BUGSINK_URL: EnvValue.fromSecretValue(
-          { secret, key: "BUGSINK_URL" },
-          { optional: true },
-        ),
-        BUGSINK_TOKEN: EnvValue.fromSecretValue(
-          { secret, key: "BUGSINK_TOKEN" },
-          { optional: true },
-        ),
-        GRAFANA_URL: EnvValue.fromSecretValue(
-          { secret, key: "GRAFANA_URL" },
-          { optional: true },
-        ),
-        GRAFANA_API_KEY: EnvValue.fromSecretValue(
-          { secret, key: "GRAFANA_API_KEY" },
-          { optional: true },
-        ),
-        ARGOCD_SERVER: EnvValue.fromSecretValue(
-          { secret, key: "ARGOCD_SERVER" },
-          { optional: true },
-        ),
-        ARGOCD_AUTH_TOKEN: EnvValue.fromSecretValue(
-          { secret, key: "ARGOCD_AUTH_TOKEN" },
-          { optional: true },
-        ),
-        CLOUDFLARE_API_TOKEN: EnvValue.fromSecretValue(
-          { secret, key: "CLOUDFLARE_API_TOKEN" },
-          { optional: true },
-        ),
+        ...optionalSecretEnv(secret, [
+          "PAGERDUTY_TOKEN",
+          "BUGSINK_URL",
+          "BUGSINK_TOKEN",
+          "GRAFANA_URL",
+          "GRAFANA_API_KEY",
+          "ARGOCD_SERVER",
+          "ARGOCD_AUTH_TOKEN",
+          "CLOUDFLARE_API_TOKEN",
+        ]),
         // talosctl reads its config from $TALOSCONFIG; the file is projected
         // from 1P field TALOSCONFIG_YAML via the volume mount above. The
         // volume is `optional: true` so the pod still starts when the 1P
