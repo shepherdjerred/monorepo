@@ -1,0 +1,11 @@
+{
+  "app.thinking.cycle": ["alt+t"],
+  "tui.editor.cursorUp": ["up", "alt+k"],
+  "tui.editor.cursorDown": ["down", "alt+j"],
+  "tui.editor.cursorLeft": ["left", "ctrl+b", "alt+h"],
+  "tui.editor.cursorRight": ["right", "ctrl+f", "alt+l"],
+  "tui.editor.cursorWordLeft": ["alt+left", "ctrl+left", "alt+b"],
+  "tui.editor.cursorWordRight": ["alt+right", "ctrl+right", "alt+w"],
+  "tui.editor.cursorLineStart": ["home", "ctrl+a", "alt+0"],
+  "tui.editor.cursorLineEnd": ["end", "ctrl+e", "alt+$"]
+}
