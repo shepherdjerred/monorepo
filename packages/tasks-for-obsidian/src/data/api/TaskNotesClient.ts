@@ -25,7 +25,6 @@ import type { AppError } from "../../domain/errors";
 import { type Result, OK_VOID, err, ok } from "../../domain/result";
 import {
   CalendarEventsSchema,
-  CreateTaskResponseSchema,
   DeleteResponseSchema,
   FilterOptionsSchema,
   HealthStatusSchema,
@@ -33,7 +32,6 @@ import {
   PomodoroStatusSchema,
   QueryResponseSchema,
   TaskListSchema,
-  TaskResponseSchema,
   TaskSchema,
   TaskStatsSchema,
   TimeSummarySchema,
@@ -69,20 +67,20 @@ export class TaskNotesClient {
   }
 
   async getTask(id: TaskId): Promise<Result<Task, AppError>> {
-    return this.request("GET", PATHS.TASK(id), TaskResponseSchema);
+    return this.request("GET", PATHS.TASK(id), TaskSchema);
   }
 
   async createTask(
     request: CreateTaskRequest,
   ): Promise<Result<Task, AppError>> {
-    return this.request("POST", PATHS.TASKS, CreateTaskResponseSchema, request);
+    return this.request("POST", PATHS.TASKS, TaskSchema, request);
   }
 
   async updateTask(
     id: TaskId,
     request: UpdateTaskRequest,
   ): Promise<Result<Task, AppError>> {
-    return this.request("PUT", PATHS.TASK(id), TaskResponseSchema, request);
+    return this.request("PUT", PATHS.TASK(id), TaskSchema, request);
   }
 
   async deleteTask(id: TaskId): Promise<Result<void, AppError>> {
@@ -99,12 +97,9 @@ export class TaskNotesClient {
     id: TaskId,
     newStatus: TaskStatus,
   ): Promise<Result<Task, AppError>> {
-    return this.request(
-      "POST",
-      PATHS.TASK_TOGGLE_STATUS(id),
-      TaskResponseSchema,
-      { status: newStatus },
-    );
+    return this.request("POST", PATHS.TASK_TOGGLE_STATUS(id), TaskSchema, {
+      status: newStatus,
+    });
   }
 
   async archiveTask(id: TaskId): Promise<Result<void, AppError>> {
@@ -118,11 +113,7 @@ export class TaskNotesClient {
   }
 
   async completeRecurringInstance(id: TaskId): Promise<Result<Task, AppError>> {
-    return this.request(
-      "POST",
-      PATHS.TASK_COMPLETE_INSTANCE(id),
-      TaskResponseSchema,
-    );
+    return this.request("POST", PATHS.TASK_COMPLETE_INSTANCE(id), TaskSchema);
   }
 
   async queryTasks(
