@@ -1,0 +1,9 @@
+{
+  "lastChangelogVersion": "0.74.0",
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.5",
+  "theme": "light",
+  "defaultThinkingLevel": "high",
+  "skills": ["~/.claude/skills"],
+  "enableSkillCommands": true
+}

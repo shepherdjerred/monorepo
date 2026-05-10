@@ -17,9 +17,11 @@ const ChunkRowSchema = z.object({
 
 export type ChunkRow = z.infer<typeof ChunkRowSchema>;
 
-const VectorSearchResultSchema = ChunkRowSchema.extend({
+const VectorSearchResultSchema = ChunkRowSchema.omit({ vector: true }).extend({
   _distance: z.number(),
 });
+
+type VectorSearchResult = z.infer<typeof VectorSearchResultSchema>;
 
 export type MetadataRow = {
   path: string;
@@ -238,17 +240,12 @@ export class RecallDb {
   async vectorSearch(
     queryVector: number[],
     limit: number,
-  ): Promise<(ChunkRow & { _distance: number })[]> {
+  ): Promise<VectorSearchResult[]> {
     const table = await this.getLanceTable();
     const raw = await table.vectorSearch(queryVector).limit(limit).toArray();
-    // LanceDB returns untyped records — validate with Zod
-    return raw.map((row: Record<string, unknown>) => {
-      const vec = Array.isArray(row["vector"]) ? row["vector"] : [];
-      return VectorSearchResultSchema.parse({
-        ...row,
-        vector: vec,
-      });
-    });
+    return raw.map((row: Record<string, unknown>) =>
+      VectorSearchResultSchema.parse(row),
+    );
   }
 
   // Aggregate queries
