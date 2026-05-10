@@ -8,19 +8,22 @@
     "#activities/*": "./src/activities/*",
     "#workflows/*": "./src/workflows/*",
     "#generated/*": "./src/generated/*",
-    "#observability/*": "./src/observability/*"
+    "#observability/*": "./src/observability/*",
+    "#lib/*": "./src/lib/*"
   },
   "scripts": {
     "start": "bun run src/worker.ts",
     "build": "bun run scripts/ensure-ha-schema.ts && tsc",
     "typecheck": "bun run scripts/ensure-ha-schema.ts && bunx tsc --noEmit",
     "lint": "bunx eslint --cache .",
-    "test": "bun run scripts/ensure-ha-schema.ts && bun test src/activities src/event-bridge src/observability src/shared src/workflows",
+    "test": "bun run scripts/ensure-ha-schema.ts && bun test src/activities src/event-bridge src/observability src/shared src/workflows src/lib",
     "test:integration": "bun run scripts/ensure-ha-schema.ts && bun test src/integration.test.ts",
     "generate": "bun ../home-assistant/src/codegen/cli.ts --out src/generated/ha-schema.ts --name HaSchema"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.95.1",
     "@kubernetes/client-node": "^1.4.0",
+    "@octokit/rest": "^22.0.1",
     "@octokit/webhooks-methods": "^5.1.1",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/exporter-trace-otlp-http": "^0.215.0",
