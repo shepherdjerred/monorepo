@@ -1,6 +1,6 @@
 import { withSpan } from "#observability/tracing.ts";
 import {
-  prReviewCountTotal,
+  prReviewPostedTotal,
   prReviewFindingsPerPr,
 } from "#observability/metrics.ts";
 
@@ -39,7 +39,7 @@ async function emitMetricsImpl(input: EmitMetricsInput): Promise<void> {
       "findings.posted": input.postedFindings,
     },
     () => {
-      prReviewCountTotal.inc({
+      prReviewPostedTotal.inc({
         owner: input.owner,
         repo: input.repo,
         outcome: input.created ? "created" : "updated",

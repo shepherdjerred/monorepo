@@ -198,11 +198,19 @@ export const zfsDatasetSnapshotCount = new Gauge({
 // packages/docs/plans/2026-05-10_sota-pr-review-bot.md). Eval's Grafana
 // dashboard (Phase 8) targets the `pr_review_*` namespace; do not bake the
 // word "pipeline" into the names.
+//
+// `pr_review_posted_total` is the post-activity outcome counter (one tick
+// per *posted* comment, label distinguishes fresh-create vs edit-in-place).
+// Eval owns the workflow-lifecycle counter `pr_review_count_total{repo,
+// status=posted|skipped|failed}` in their Task 8 PR — that one ticks once
+// per run regardless of post outcome (including kill-switch suppressions
+// and pre-post failures). Different semantics, different labels, different
+// name.
 // ---------------------------------------------------------------------------
 
-export const prReviewCountTotal = new Counter({
-  name: "pr_review_count_total",
-  help: "pr-review pipeline review comments posted (outcome: created | updated)",
+export const prReviewPostedTotal = new Counter({
+  name: "pr_review_posted_total",
+  help: "pr-review post-activity comments posted to GitHub, by edit-vs-create outcome",
   labelNames: ["owner", "repo", "outcome"] as const,
   registers: [register],
 });
