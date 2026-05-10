@@ -12,6 +12,7 @@ import type { Result } from "../domain/result";
 import { err } from "../domain/result";
 import { ConnectionError } from "../domain/errors";
 import { getNextStatus } from "../domain/status";
+import { isRecurring, nextOptimistic } from "../domain/recurrence";
 import type {
   CreateTaskRequest,
   Task,
@@ -126,23 +127,22 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       setTasks((prev) => {
         existing = prev.get(id);
         if (!existing) return prev;
-        const optimistic: Task = {
-          ...existing,
-          status: getNextStatus(existing.status),
-        };
+        const optimistic = nextOptimistic(existing);
         const next = new Map(prev);
         next.set(id, optimistic);
         return next;
       });
-      const newStatus = getNextStatus(existing?.status ?? "open");
-      const result = await client.toggleTaskStatus(id, newStatus);
+      if (!existing) return err(new ConnectionError("Task not found"));
+      const result = isRecurring(existing)
+        ? await client.completeRecurringInstance(id)
+        : await client.toggleTaskStatus(id, getNextStatus(existing.status));
       if (result.ok) {
         setTasks((prev) => {
           const next = new Map(prev);
           next.set(result.value.id, result.value);
           return next;
         });
-      } else if (existing) {
+      } else {
         const rollback = existing;
         setTasks((prev) => {
           const next = new Map(prev);

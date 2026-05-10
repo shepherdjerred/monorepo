@@ -439,11 +439,35 @@ describe("TaskStore.getFilterOptions", () => {
 });
 
 describe("TaskStore.completeRecurring", () => {
-  test("marks task as done", async () => {
+  test("adds today to completeInstances and keeps status open for recurring task", async () => {
     const created = await store.create({
       title: "Weekly",
       recurrence: "every week",
     });
+    const completed = await store.completeRecurring(created.id);
+    expect(completed).toBeDefined();
+    expect(completed?.status).toBe("open");
+    const today = new Date();
+    const ymd = `${String(today.getFullYear())}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    expect(completed?.completeInstances).toContain(ymd);
+  });
+
+  test("toggles today off when called twice on a recurring task", async () => {
+    const created = await store.create({
+      title: "Weekly toggle",
+      recurrence: "every week",
+    });
+    await store.completeRecurring(created.id);
+    const second = await store.completeRecurring(created.id);
+    expect(second).toBeDefined();
+    expect(second?.status).toBe("open");
+    const today = new Date();
+    const ymd = `${String(today.getFullYear())}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    expect(second?.completeInstances).not.toContain(ymd);
+  });
+
+  test("falls back to status=done for non-recurring task", async () => {
+    const created = await store.create({ title: "One-off" });
     const completed = await store.completeRecurring(created.id);
     expect(completed).toBeDefined();
     expect(completed?.status).toBe("done");
