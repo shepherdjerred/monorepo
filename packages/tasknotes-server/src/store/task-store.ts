@@ -187,11 +187,33 @@ export class TaskStore {
     const existing = this.tasks.get(id);
     if (existing === undefined) return undefined;
 
-    const completed: Task = { ...existing, status: "done" };
+    if (existing.recurrence === undefined || existing.recurrence === "") {
+      const completed: Task = {
+        ...existing,
+        status: "done",
+        dateModified: new Date().toISOString(),
+      };
+      const filePath = path.resolve(this.vaultPath, existing.path);
+      await writeTaskFile(filePath, completed);
+      this.tasks.set(id, completed);
+      return completed;
+    }
+
+    const today = toISODate(new Date());
+    const hasToday = existing.completeInstances.includes(today);
+    const completeInstances = hasToday
+      ? existing.completeInstances.filter((d) => d !== today)
+      : [...existing.completeInstances, today];
+
+    const next: Task = {
+      ...existing,
+      completeInstances,
+      dateModified: new Date().toISOString(),
+    };
     const filePath = path.resolve(this.vaultPath, existing.path);
-    await writeTaskFile(filePath, completed);
-    this.tasks.set(id, completed);
-    return completed;
+    await writeTaskFile(filePath, next);
+    this.tasks.set(id, next);
+    return next;
   }
 
   query(filter: TaskQueryFilter): { tasks: Task[]; total: number } {

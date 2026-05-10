@@ -60,6 +60,7 @@ AI-maintained knowledge base for the monorepo.
 - [PR Review Bot Cluster-Key](plans/2026-05-10_pr-review-bot-cluster-key.md) - Pure-utility cluster-key bucketing for Phase 3 consensus + Phase 10 eval grader (Task 3 prep)
 - [PR Review Bot Phase 8 — Measurement](plans/2026-05-10_pr-review-bot-phase-8-measurement.md) - Prometheus metrics, Grafana dashboard, and PagerDuty alerts for the SOTA PR review bot
 - [Fix trmnl-dashboard helm chart](plans/2026-05-10_fix-trmnl-dashboard-helm-chart.md) - Add the missing `Chart.yaml` skeleton so Dagger's `helmPackageHelper` can package the chart (Buildkite #1915)
+- [TaskNotes Recurring Fix + Wiring](plans/2026-05-10_tasknotes-recurring-and-wiring.md) - Fix recurring-task drop bug; wire half-built subsystems (offline sync, Pomodoro, Live Activities, time-tracking UI, markdown rendering)
 
 ## Guides
 

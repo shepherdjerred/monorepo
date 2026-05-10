@@ -136,11 +136,49 @@ describe("tasks CRUD", () => {
     expect(list.tasks.length).toBe(0);
   });
 
-  test("POST /api/tasks/:id/complete-instance completes task", async () => {
+  test("POST /api/tasks/:id/complete-instance adds today to completeInstances on recurring task", async () => {
+    // Capture today before any requests so a midnight rollover during the
+    // test can't make the assertion flake.
+    const today = new Date();
+    const ymd = `${String(today.getFullYear())}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
     const created = await createTask({
       title: "Recurring",
       recurrence: "every week",
     });
+    const res = await makeRequest(
+      "POST",
+      `/api/tasks/${String(created.id)}/complete-instance`,
+    );
+    expect(res.status).toBe(200);
+    const task = await jsonBody(res);
+    expect(task.status).toBe("open");
+    expect(task.completeInstances).toContain(ymd);
+    expect(task.recurrence).toBe("every week");
+  });
+
+  test("POST /api/tasks/:id/complete-instance toggles today off when called twice", async () => {
+    const today = new Date();
+    const ymd = `${String(today.getFullYear())}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const created = await createTask({
+      title: "Recurring toggle",
+      recurrence: "every week",
+    });
+    await makeRequest(
+      "POST",
+      `/api/tasks/${String(created.id)}/complete-instance`,
+    );
+    const res = await makeRequest(
+      "POST",
+      `/api/tasks/${String(created.id)}/complete-instance`,
+    );
+    expect(res.status).toBe(200);
+    const task = await jsonBody(res);
+    expect(task.status).toBe("open");
+    expect(task.completeInstances).not.toContain(ymd);
+  });
+
+  test("POST /api/tasks/:id/complete-instance falls back to status=done for non-recurring task", async () => {
+    const created = await createTask({ title: "One-off" });
     const res = await makeRequest(
       "POST",
       `/api/tasks/${String(created.id)}/complete-instance`,

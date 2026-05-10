@@ -5,6 +5,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as Sentry from "@sentry/react-native";
 
 import { ApiClientProvider } from "./src/state/ApiClientContext";
+import { PomodoroProvider } from "./src/state/PomodoroContext";
 import { SettingsProvider } from "./src/state/SettingsContext";
 import { SyncProvider } from "./src/state/SyncContext";
 import { TaskProvider } from "./src/state/TaskContext";
@@ -14,6 +15,7 @@ import { useSyncContext } from "./src/state/SyncContext";
 import { useAppState } from "./src/hooks/use-app-state";
 import { ErrorBoundary } from "./src/components/common/ErrorBoundary";
 import { ConnectionBanner } from "./src/components/common/ConnectionBanner";
+import { ActiveTimeTrackingOverlay } from "./src/components/timer/ActiveTimeTrackingOverlay";
 import { AppNavigator } from "./src/navigation/AppNavigator";
 import { initFeedback } from "./src/lib/feedback";
 
@@ -39,6 +41,7 @@ function ThemedApp() {
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
       <ConnectionBanner />
       <AppNavigator />
+      <ActiveTimeTrackingOverlay />
     </>
   );
 }
@@ -54,13 +57,15 @@ function App() {
         <ErrorBoundary>
           <SettingsProvider>
             <ApiClientProvider>
-              <TaskProvider>
-                <SyncProvider>
-                  <TimeTrackingProvider>
-                    <ThemedApp />
-                  </TimeTrackingProvider>
-                </SyncProvider>
-              </TaskProvider>
+              <PomodoroProvider>
+                <TaskProvider>
+                  <SyncProvider>
+                    <TimeTrackingProvider>
+                      <ThemedApp />
+                    </TimeTrackingProvider>
+                  </SyncProvider>
+                </TaskProvider>
+              </PomodoroProvider>
             </ApiClientProvider>
           </SettingsProvider>
         </ErrorBoundary>

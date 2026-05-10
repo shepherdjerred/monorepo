@@ -1,34 +1,67 @@
-import type { TaskNotesClient } from "../api/TaskNotesClient";
 import { TypedStorage } from "../cache/storage";
-import type { MutationQueue, Mutation } from "./MutationQueue";
+import type { MutationClient, MutationQueue, Mutation } from "./MutationQueue";
 import type { AppError } from "../../domain/errors";
-import { type Result, OK_VOID } from "../../domain/result";
+import { type Result, OK_VOID, err } from "../../domain/result";
+import { ConnectionError } from "../../domain/errors";
 import type { Task, TaskId } from "../../domain/types";
 import { getNextStatus } from "../../domain/status";
+import { toggleCompleteInstance } from "../../domain/recurrence";
+
+export type SyncClient = MutationClient & {
+  listTasks: () => Promise<Result<Task[], AppError>>;
+};
+
+export type TaskCacheStorage = {
+  getTasks: () => Promise<Task[]>;
+  setTasks: (tasks: Task[]) => Promise<void>;
+  getLastSyncTime: () => Promise<number | null>;
+  setLastSyncTime: (time: number) => Promise<void>;
+};
+
+const defaultCacheStorage: TaskCacheStorage = {
+  getTasks: () => TypedStorage.getTasks(),
+  setTasks: (tasks) => TypedStorage.setTasks(tasks),
+  getLastSyncTime: () => TypedStorage.getLastSyncTime(),
+  setLastSyncTime: (time) => TypedStorage.setLastSyncTime(time),
+};
 
 export class SyncEngine {
+  private readonly cache: TaskCacheStorage;
+
   constructor(
-    private readonly client: TaskNotesClient,
+    private readonly client: SyncClient | null,
     private readonly mutationQueue: MutationQueue,
     private readonly onTasksUpdated: (tasks: Task[]) => void,
-  ) {}
+    cache: TaskCacheStorage = defaultCacheStorage,
+  ) {
+    this.cache = cache;
+  }
 
   async fullSync(): Promise<Result<void, AppError>> {
-    // 1. Replay pending mutations
+    if (this.client === null) {
+      return err(new ConnectionError("API URL not configured"));
+    }
+
     if (!this.mutationQueue.isEmpty) {
       await this.mutationQueue.replay(this.client);
     }
 
-    // 2. Fetch all tasks from server
     const result = await this.client.listTasks();
     if (!result.ok) return result;
 
-    // 3. Update cache
-    await TypedStorage.setTasks(result.value);
-    await TypedStorage.setLastSyncTime(Date.now());
+    let tasks = new Map<TaskId, Task>();
+    for (const task of result.value) {
+      tasks.set(task.id, task);
+    }
+    for (const remaining of this.mutationQueue.pending) {
+      tasks = this.applyOptimistic(remaining, tasks);
+    }
+    const merged = [...tasks.values()];
 
-    // 4. Notify via callback
-    this.onTasksUpdated(result.value);
+    await this.cache.setTasks(merged);
+    await this.cache.setLastSyncTime(Date.now());
+
+    this.onTasksUpdated(merged);
 
     return OK_VOID;
   }
@@ -72,16 +105,23 @@ export class SyncEngine {
         }
         break;
       }
+      case "complete_instance": {
+        const existing = next.get(mutation.taskId);
+        if (existing) {
+          next.set(mutation.taskId, toggleCompleteInstance(existing));
+        }
+        break;
+      }
     }
 
     return next;
   }
 
   async syncFromCache(): Promise<Task[]> {
-    return TypedStorage.getTasks();
+    return this.cache.getTasks();
   }
 
   async getLastSyncTime(): Promise<number | null> {
-    return TypedStorage.getLastSyncTime();
+    return this.cache.getLastSyncTime();
   }
 }

@@ -1,17 +1,17 @@
 import React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useSettings } from "../../hooks/use-settings";
-import { formatDuration } from "../../lib/utils";
+import { formatElapsed } from "../../lib/elapsed";
 
 type TimeTrackingBarProps = {
   taskTitle: string;
-  duration: number;
+  elapsedSeconds: number;
   onStop: () => void;
 };
 
 export function TimeTrackingBar({
   taskTitle,
-  duration,
+  elapsedSeconds,
   onStop,
 }: TimeTrackingBarProps) {
   const { colors } = useSettings();
@@ -22,7 +22,7 @@ export function TimeTrackingBar({
         <Text style={styles.title} numberOfLines={1}>
           {taskTitle}
         </Text>
-        <Text style={styles.duration}>{formatDuration(duration)}</Text>
+        <Text style={styles.duration}>{formatElapsed(elapsedSeconds)}</Text>
       </View>
       <Pressable style={styles.stopButton} onPress={onStop}>
         <Text style={styles.stopText}>Stop</Text>

@@ -6,7 +6,12 @@ const config: TSESLint.FlatConfig.ConfigArray = [
     tsconfigRootDir: import.meta.dirname,
     reactNative: true,
     projectService: {
-      allowDefaultProject: ["src/domain/*.test.ts", "src/lib/*.test.ts"],
+      allowDefaultProject: [
+        "src/domain/*.test.ts",
+        "src/lib/*.test.ts",
+        "src/data/sync/*.test.ts",
+      ],
+      maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 50,
     },
     ignores: [
       "**/generated/**/*",
