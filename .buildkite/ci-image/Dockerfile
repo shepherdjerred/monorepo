@@ -24,13 +24,13 @@ RUN curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-l
     | tar xJ -C /usr/local --strip-components=1
 
 # renovate: datasource=github-releases depName=dagger/dagger
-ARG DAGGER_VERSION=0.20.6
+ARG DAGGER_VERSION=0.20.8
 RUN curl -fsSL "https://dl.dagger.io/dagger/releases/${DAGGER_VERSION}/dagger_v${DAGGER_VERSION}_linux_amd64.tar.gz" \
     | tar xz -C /usr/local/bin dagger && \
     chmod +x /usr/local/bin/dagger
 
 # renovate: datasource=github-releases depName=astral-sh/uv
-ARG UV_VERSION=0.11.7
+ARG UV_VERSION=0.11.12
 RUN curl -LsSf "https://astral.sh/uv/${UV_VERSION}/install.sh" | sh && \
     mv /root/.local/bin/uv /usr/local/bin/uv && \
     mv /root/.local/bin/uvx /usr/local/bin/uvx || true

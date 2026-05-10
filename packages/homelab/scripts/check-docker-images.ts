@@ -155,37 +155,24 @@ function parseImageRef(
   const registryInfo = getRegistryInfo(entry.registryUrl);
   if (!registryInfo) return undefined;
 
-  // Determine the actual Docker repository name:
-  // 1. If packageName is set, use it (e.g., "shepherdjerred/scout-for-lol")
-  // 2. If registryUrl has a sub-path (e.g., "ghcr.io/recyclarr"), combine sub-path + key
-  // 3. Otherwise, use the key directly
-  let repository: string;
-
-  if (entry.packageName) {
-    repository = entry.packageName;
-  } else {
-    // Check if registryUrl has a sub-path beyond the base registry
-    const normalized = entry.registryUrl
-      .replace(/^https?:\/\//, "")
-      .replace(/\/$/, "");
-
-    // Find the base registry key
-    let baseRegistry = "";
-    for (const registryKey of Object.keys(REGISTRY_AUTH)) {
-      if (normalized.startsWith(registryKey)) {
-        baseRegistry = registryKey;
-        break;
-      }
-    }
-
-    if (baseRegistry && normalized.length > baseRegistry.length) {
-      // There's a sub-path: e.g., "ghcr.io/recyclarr" -> sub-path is "recyclarr"
-      const subPath = normalized.substring(baseRegistry.length + 1); // +1 for the /
-      repository = `${subPath}/${entry.key}`;
-    } else {
-      repository = entry.key;
+  // Determine the actual Docker repository name. Registry URLs may carry a
+  // namespace prefix, e.g. ghcr.io/buildkite/helm + agent-stack-k8s.
+  const normalized = entry.registryUrl
+    .replace(/^https?:\/\//, "")
+    .replace(/\/$/, "");
+  let baseRegistry = "";
+  for (const registryKey of Object.keys(REGISTRY_AUTH)) {
+    if (normalized.startsWith(registryKey)) {
+      baseRegistry = registryKey;
+      break;
     }
   }
+  const subPath =
+    baseRegistry && normalized.length > baseRegistry.length
+      ? normalized.substring(baseRegistry.length + 1)
+      : "";
+  const repositoryBase = entry.packageName ?? entry.key;
+  const repository = subPath ? `${subPath}/${repositoryBase}` : repositoryBase;
 
   return {
     registry: entry.registryUrl.replace(/^https?:\/\//, "").replace(/\/$/, ""),

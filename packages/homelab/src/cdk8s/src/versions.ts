@@ -85,7 +85,7 @@ const versions = {
   // renovate: datasource=helm registryUrl=https://chartmuseum.github.io/charts versioning=semver
   chartmuseum: "3.10.4",
   // renovate: datasource=helm registryUrl=https://itzg.github.io/minecraft-server-charts versioning=semver
-  minecraft: "5.1.2",
+  minecraft: "5.1.3",
   // renovate: datasource=helm registryUrl=https://itzg.github.io/minecraft-server-charts versioning=semver
   "mc-router": "1.5.0",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=docker
@@ -104,13 +104,13 @@ const versions = {
     "2.0.0-1886@sha256:680fd7fae60e4d30b1cab7baaaf1a5908e8be4f0b8bde80917e47c80dea3a664",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
   "shepherdjerred/scout-for-lol/prod":
-    "2.0.0-1599@sha256:bd823dafcd84a36bb427f43a2986d5fdf44ccd91ac4039b517debd100a75ad87",
+    "2.0.0-1904@sha256:3f0baa5c79a06d30cd172bc76925195fcd03eaf808419c3205c21a2eea7b0190",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
     "2.0.0-1750@sha256:979a9a8653ad228088fd566d74227e1a4c6b0fab0b03881257439058c9158b33",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/starlight-karma-bot
   "shepherdjerred/starlight-karma-bot/prod":
-    "2.0.0-1076@sha256:09a68ad7b5e311727005fb70b1754bf454f4e929e2423e49c8cc7893d6a7fe31",
+    "2.0.0-1904@sha256:f722a858ec67670e76f708cbb4932a2649c9f98e3132124a681ff1cad1b7df56",
   // not managed by renovate
   "shepherdjerred/birmel":
     "2.0.0-1750@sha256:c1c6b3176da03e7f608186fe20824bc8c35c528e2756df2c2329d2e2cf3d098a",
@@ -119,7 +119,7 @@ const versions = {
     "2.0.0-1750@sha256:094adf3a1387160f836422b2c762c25f02a48deee33b9be13bcf2903c3cfdcb6",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "freshrss/freshrss":
-    "1.28.1@sha256:9100f649f5c946f589f54cdb9be7a65996528f48f691ef90eb262a0e06e5a522",
+    "1.29.0@sha256:cca8988d05cd449e1c6c69405971b1e6fc2c2116ceeb45c9fa3fc33837997a75",
   // renovate: datasource=docker registryUrl=https://ghcr.io/buildkite/helm versioning=semver packageName=agent-stack-k8s
   "agent-stack-k8s":
     "0.43.1@sha256:aee3771c2f19ad138b041d3fa5785a738214dcc64195b6417459fe721defec16",
@@ -152,7 +152,7 @@ const versions = {
   recyclarr:
     "8.6.0@sha256:3c38ceeb54438dd8327e4e65c9b48ba601a6d20fff833342d93c9b0bc4b1930b",
   // renovate: datasource=github-releases versioning=semver
-  "siderolabs/talos": "1.12.6",
+  "siderolabs/talos": "1.13.0",
   // renovate: datasource=helm registryUrl=https://opensource.zalando.com/postgres-operator/charts/postgres-operator versioning=semver
   "postgres-operator": "1.15.1",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
