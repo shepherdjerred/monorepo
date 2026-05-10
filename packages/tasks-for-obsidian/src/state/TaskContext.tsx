@@ -202,24 +202,22 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       if (client === null) {
         return err(new ConnectionError("API URL not configured"));
       }
-      let optimistic: Task | undefined;
-      setTasks((prev) => {
-        const existing = prev.get(id);
-        if (existing === undefined) return prev;
-        const updates: Partial<Task> = {};
-        for (const [key, value] of Object.entries(req)) {
-          if (value !== undefined) {
-            Object.assign(updates, { [key]: value });
-          }
+      const existing = tasks.get(id);
+      if (existing === undefined) {
+        return err(new ConnectionError("Task not found"));
+      }
+      const updates: Partial<Task> = {};
+      for (const [key, value] of Object.entries(req)) {
+        if (value !== undefined) {
+          Object.assign(updates, { [key]: value });
         }
-        optimistic = { ...existing, ...updates };
+      }
+      const optimistic: Task = { ...existing, ...updates };
+      setTasks((prev) => {
         const next = new Map(prev);
         next.set(id, optimistic);
         return next;
       });
-      if (optimistic === undefined) {
-        return err(new ConnectionError("Task not found"));
-      }
       await mutationQueue.enqueue({ type: "update", taskId: id, payload: req });
       updatePendingCount();
       const result = await client.updateTask(id, req);
@@ -235,7 +233,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       }
       return ok(optimistic);
     },
-    [client, mutationQueue, updatePendingCount],
+    [client, mutationQueue, tasks, updatePendingCount],
   );
 
   const deleteTask = useCallback(
@@ -266,19 +264,16 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       if (client === null) {
         return err(new ConnectionError("API URL not configured"));
       }
-      let existing: Task | undefined;
-      let optimistic: Task | undefined;
+      const existing = tasks.get(id);
+      if (existing === undefined) {
+        return err(new ConnectionError("Task not found"));
+      }
+      const optimistic = nextOptimistic(existing);
       setTasks((prev) => {
-        existing = prev.get(id);
-        if (existing === undefined) return prev;
-        optimistic = nextOptimistic(existing);
         const next = new Map(prev);
         next.set(id, optimistic);
         return next;
       });
-      if (existing === undefined || optimistic === undefined) {
-        return err(new ConnectionError("Task not found"));
-      }
       if (isRecurring(existing)) {
         await mutationQueue.enqueue({ type: "complete_instance", taskId: id });
       } else {
@@ -305,7 +300,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       }
       return ok(optimistic);
     },
-    [client, mutationQueue, updatePendingCount],
+    [client, mutationQueue, tasks, updatePendingCount],
   );
 
   // Replay queue on every client change (e.g., URL configured).
