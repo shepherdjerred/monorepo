@@ -9,6 +9,7 @@ import { exportTasknotesDashboardJson } from "@shepherdjerred/homelab/cdk8s/graf
 import { exportBuildkiteDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/buildkite-dashboard.ts";
 import { exportZfsDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/zfs-dashboard.ts";
 import { exportTemporalDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/temporal-dashboard.ts";
+import { exportPrReviewBotDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/pr-review-bot-dashboard.ts";
 
 /**
  * Dashboard configuration for creating Grafana dashboard ConfigMaps
@@ -114,10 +115,18 @@ const TEMPORAL_DASHBOARD: DashboardConfig = {
   exportFn: exportTemporalDashboardJson,
 };
 
+const PR_REVIEW_BOT_DASHBOARD: DashboardConfig = {
+  id: "pr-review-bot-dashboard-configmap",
+  name: "pr-review-bot-dashboard",
+  jsonFilename: "pr-review-bot.json",
+  exportFn: exportPrReviewBotDashboardJson,
+};
+
 const ALL_DASHBOARDS: DashboardConfig[] = [
   BUILDKITE_DASHBOARD,
   GITCKUP_DASHBOARD,
   HA_WORKFLOW_DASHBOARD,
+  PR_REVIEW_BOT_DASHBOARD,
   SCOUT_DASHBOARD,
   SMARTCTL_DASHBOARD,
   TASKNOTES_DASHBOARD,
