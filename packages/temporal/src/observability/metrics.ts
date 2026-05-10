@@ -207,8 +207,8 @@ export const prReviewCountTotal = new Counter({
   registers: [register],
 });
 
-export const prReviewCommentsPerPr = new Histogram({
-  name: "pr_review_comments_per_pr",
+export const prReviewFindingsPerPr = new Histogram({
+  name: "pr_review_findings_per_pr",
   help: "Findings posted per PR by the pr-review pipeline",
   buckets: [0, 1, 2, 3, 5, 10, 20, 50],
   registers: [register],
