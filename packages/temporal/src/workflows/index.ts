@@ -22,10 +22,12 @@ import { runScoutDataDragonUpdate as _runScoutDataDragonUpdate } from "./data-dr
 import type { DataDragonUpdateResult } from "#activities/data-dragon.ts";
 import { prReview as _prReview } from "./pr-review.ts";
 import { prSummary as _prSummary } from "./pr-summary.ts";
+import { prReviewPipeline as _prReviewPipeline } from "./pr-review/index.ts";
 import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab-audit.ts";
 import type { RunHomelabAuditWorkflowInput } from "./homelab-audit.ts";
-import type { PrAgentInput } from "#shared/schemas.ts";
+import type { PrAgentInput, PrReviewPipelineInput } from "#shared/schemas.ts";
 import type { PrAgentResult } from "#activities/pr-agent.ts";
+import type { PrReviewPipelineResult } from "./pr-review/index.ts";
 
 export async function fetchSkillCappedManifest(): Promise<void> {
   return _fetchSkillCappedManifest();
@@ -105,6 +107,12 @@ export async function prReview(input: PrAgentInput): Promise<PrAgentResult> {
 
 export async function prSummary(input: PrAgentInput): Promise<PrAgentResult> {
   return _prSummary(input);
+}
+
+export async function prReviewPipeline(
+  input: PrReviewPipelineInput,
+): Promise<PrReviewPipelineResult> {
+  return _prReviewPipeline(input);
 }
 
 export async function runHomelabAuditWorkflow(

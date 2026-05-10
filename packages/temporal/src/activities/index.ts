@@ -8,6 +8,7 @@ import { zfsMaintenanceActivities } from "./zfs-maintenance.ts";
 import { bugsinkHousekeepingActivities } from "./bugsink.ts";
 import { dataDragonActivities } from "./data-dragon.ts";
 import { prAgentActivities } from "./pr-agent.ts";
+import { prReviewActivities } from "./pr-review/index.ts";
 import { veleroOrphanAuditActivities } from "./velero-orphan-audit.ts";
 
 export const activities = {
@@ -21,5 +22,6 @@ export const activities = {
   ...bugsinkHousekeepingActivities,
   ...dataDragonActivities,
   ...prAgentActivities,
+  ...prReviewActivities,
   ...veleroOrphanAuditActivities,
 };
