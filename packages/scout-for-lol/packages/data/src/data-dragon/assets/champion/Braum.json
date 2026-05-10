@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Braum": {
       "id": "Braum",
@@ -779,8 +779,8 @@
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ e2 }} -> {{ e2NL }}",
-              "{{ e3 }}% -> {{ e3NL }}%",
+              "{{ shieldholdduration }} -> {{ shieldholddurationNL }}",
+              "{{ shieldfacingdramount }}% -> {{ shieldfacingdramountNL }}%",
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]

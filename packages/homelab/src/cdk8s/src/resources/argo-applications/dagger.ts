@@ -313,7 +313,12 @@ echo "Done."`,
                   accessModes: ["ReadWriteOnce"],
                   resources: {
                     requests: {
-                      storage: "1Ti",
+                      // 2 TiB cache. Engine PVC was hitting 72% on 1 TiB,
+                      // triggering BuildKit GC churn (re-uploading evicted blobs).
+                      // See dagger/dagger#7711, #10504. Storage class allows online
+                      // expansion; existing PVC needs `kubectl patch` since STS
+                      // volumeClaimTemplates are immutable in Kubernetes.
+                      storage: "2Ti",
                     },
                   },
                 },

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Lux": {
       "id": "Lux",
@@ -612,7 +612,7 @@
           "id": "LuxLightBinding",
           "name": "Light Binding",
           "description": "Lux releases a sphere of light that binds and deals damage to up to two enemy units.",
-          "tooltip": "Lux fires a ball of light, <status>Rooting</status> the first two enemies for {{ e3 }} seconds and dealing <magicDamage>{{ totaldamagett }} magic damage</magicDamage> to each.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Lux fires a ball of light, <status>Rooting</status> the first two enemies for {{ rootduration }} seconds and dealing <magicDamage>{{ totaldamagett }} magic damage</magicDamage> to each.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage"
@@ -751,7 +751,7 @@
           "id": "LuxPrismaticWave",
           "name": "Prismatic Barrier",
           "description": "Lux throws her wand and bends the light around any friendly target it touches, protecting them from enemy damage.",
-          "tooltip": "Lux throws her wand, granting <shield>{{ totalshieldtt }} Shield</shield> for {{ e3 }} seconds to allies it passes through. Then it returns, granting the same <shield>Shield</shield> on its return.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Lux throws her wand, granting <shield>{{ totalshieldtt }} Shield</shield> for {{ shieldduration }} seconds to allies it passes through. Then it returns, granting the same <shield>Shield</shield> on its return.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Shield Amount",
@@ -894,7 +894,7 @@
           "id": "LuxLightStrikeKugel",
           "name": "Lucent Singularity",
           "description": "Fires an anomaly of twisted light to an area, which slows nearby enemies. Lux can detonate it to damage enemies in the area of effect.",
-          "tooltip": "Lux creates a light zone that <status>Slows</status> by {{ e1 }}% and reveals the area. After {{ e3 }} seconds or on <recast>Recasting</recast> this Ability, it detonates, dealing <magicDamage>{{ totaldamagett }} magic damage</magicDamage> and <status>Slowing</status> for an additional {{ slowlingerduration }} second.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Lux creates a light zone that <status>Slows</status> by {{ slowpercent }}% and reveals the area. After {{ slowzoneduration }} seconds or on <recast>Recasting</recast> this Ability, it detonates, dealing <magicDamage>{{ totaldamagett }} magic damage</magicDamage> and <status>Slowing</status> for an additional {{ slowlingerduration }} second.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -903,7 +903,7 @@
               "Cooldown"
             ],
             "effect": [
-              "{{ e2 }} -> {{ e2NL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ slowpercent }}% -> {{ slowpercentNL }}%",
               "{{ cost }} -> {{ costNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"

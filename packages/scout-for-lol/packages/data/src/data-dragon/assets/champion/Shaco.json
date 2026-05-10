@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Shaco": {
       "id": "Shaco",
@@ -498,6 +498,19 @@
           "name": "Cat-in-the-Box Shaco (Obsidian)",
           "chromas": false,
           "parentSkin": 64
+        },
+        {
+          "id": "35071",
+          "num": 71,
+          "name": "Prestige Pandemonium Shaco",
+          "chromas": true
+        },
+        {
+          "id": "35072",
+          "num": 72,
+          "name": "Prestige Pandemonium Shaco (Vivid)",
+          "chromas": false,
+          "parentSkin": 71
         }
       ],
       "lore": "Crafted long ago as a plaything for a lonely prince, the enchanted marionette Shaco now delights in murder and mayhem. Corrupted by dark magic and the loss of his beloved charge, the once-kind puppet finds pleasure only in the misery of the poor souls he torments. He uses toys and simple tricks to deadly effect, finding the results of his bloody “games” hilarious—and for those who hear a dark chuckle in the dead of night, the Demon Jester may have marked them as his next plaything.",

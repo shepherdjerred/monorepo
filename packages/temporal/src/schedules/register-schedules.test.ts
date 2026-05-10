@@ -11,7 +11,9 @@ import { SCHEDULES } from "./register-schedules.ts";
 // goodMorningEarly's 30m timeout was less than its 60m bathroom-heat sleep
 // (incident: 2026-05-08).
 //
-// Workflows not in this map are unconstrained (no known long sleep).
+// Every scheduled workflow must be listed either here or in
+// WORKFLOWS_WITHOUT_LONG_SLEEPS below. New schedules should make that
+// classification explicit so this test cannot silently skip them.
 // ---------------------------------------------------------------------------
 const ONE_MINUTE = 60 * 1000;
 const ONE_HOUR = 60 * ONE_MINUTE;
@@ -23,9 +25,23 @@ const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
   goodMorningWakeUp: ONE_MINUTE,
   // get-up: ~5 sec sleep between volume ramps; <1m total
   goodMorningGetUp: ONE_MINUTE,
-  // run-vacuum: verifyState delaySeconds=180, retries=3 × retryDelaySeconds=60 = ~6m
-  runVacuumIfNotHome: 6 * ONE_MINUTE,
+  // run-vacuum: verifyState delaySeconds=180 + 3 inter-attempt retry sleeps.
+  // Activity time and retries are covered by SLACK_MS below.
+  runVacuumIfNotHome: 7 * ONE_MINUTE,
 };
+
+const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
+  "fetchSkillCappedManifest",
+  "generateDependencySummary",
+  "runDnsAudit",
+  "runHomelabAuditWorkflow",
+  "runScoutDataDragonVersionCheck",
+  "runScoutDataDragonWeeklyRefresh",
+  "runZfsMaintenanceWorkflow",
+  "runBugsinkHousekeepingWorkflow",
+  "runVeleroOrphanAuditWorkflow",
+  "syncGolinks",
+]);
 
 const SLACK_MS = 5 * ONE_MINUTE;
 
@@ -56,7 +72,10 @@ describe("schedule timeout vs workflow sleep", () => {
     "$id timeout exceeds known sleeps + slack",
     (schedule) => {
       const maxSleep = WORKFLOW_MAX_SLEEP_MS[schedule.workflowType];
-      if (maxSleep === undefined) return; // unconstrained
+      if (maxSleep === undefined) {
+        expect(WORKFLOWS_WITHOUT_LONG_SLEEPS).toContain(schedule.workflowType);
+        return;
+      }
       if (schedule.workflowExecutionTimeout === undefined) {
         throw new Error(
           `${schedule.id}: workflowExecutionTimeout is unset but workflow ${schedule.workflowType} sleeps up to ${String(maxSleep)}ms`,

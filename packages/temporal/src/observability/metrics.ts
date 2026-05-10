@@ -65,6 +65,73 @@ export const prAgentTokensTotal = new Counter({
 });
 
 // ---------------------------------------------------------------------------
+// PR summary (SDK-native, Haiku) — Phase 7 of the SOTA PR review bot plan
+// ---------------------------------------------------------------------------
+
+export const prSummaryDurationSeconds = new Histogram({
+  name: "pr_summary_duration_seconds",
+  help: "Wall-clock duration of SDK-native PR summary activity runs",
+  labelNames: ["model", "action"] as const,
+  buckets: [5, 10, 20, 30, 45, 60, 90, 120, 180],
+  registers: [register],
+});
+
+export const prSummaryCostUsd = new Histogram({
+  name: "pr_summary_cost_usd",
+  help: "Estimated USD cost per PR summary, derived from token usage + Haiku pricing",
+  labelNames: ["model"] as const,
+  buckets: [0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.2, 0.5],
+  registers: [register],
+});
+
+export const prSummaryTokensTotal = new Counter({
+  name: "pr_summary_tokens_total",
+  help: "Tokens consumed by the SDK-native PR summary activity, by model and direction (input/output/cache_create/cache_read)",
+  labelNames: ["model", "direction"] as const,
+  registers: [register],
+});
+
+export const prSummaryCommentsTotal = new Counter({
+  name: "pr_summary_comments_total",
+  help: "PR summary comments posted by the bot, by action (created | updated)",
+  labelNames: ["action"] as const,
+  registers: [register],
+});
+
+// ---------------------------------------------------------------------------
+// homelab-audit workflow metrics
+// ---------------------------------------------------------------------------
+
+export const homelabAuditSubprocessDurationSeconds = new Histogram({
+  name: "homelab_audit_subprocess_duration_seconds",
+  help: "Wall-clock duration of `claude -p` subprocess invocations for the homelab daily audit",
+  labelNames: ["model", "exit_code"] as const,
+  buckets: [60, 300, 600, 900, 1500, 1800, 2100, 2700],
+  registers: [register],
+});
+
+export const homelabAuditSubprocessExitTotal = new Counter({
+  name: "homelab_audit_subprocess_exit_total",
+  help: "Homelab-audit claude subprocess exits, by exit code",
+  labelNames: ["exit_code"] as const,
+  registers: [register],
+});
+
+export const homelabAuditTokensTotal = new Counter({
+  name: "homelab_audit_tokens_total",
+  help: "Tokens consumed by the homelab-audit claude subprocess, by model and direction",
+  labelNames: ["model", "direction"] as const,
+  registers: [register],
+});
+
+export const homelabAuditEmailSentTotal = new Counter({
+  name: "homelab_audit_email_sent_total",
+  help: "Homelab-audit emails sent via Postal, by outcome (success | failure)",
+  labelNames: ["outcome"] as const,
+  registers: [register],
+});
+
+// ---------------------------------------------------------------------------
 // velero-orphan-audit workflow metrics
 //
 // Detection-only metrics for orphan ZFS snapshots created by the Velero
@@ -123,6 +190,25 @@ export const zfsDatasetSnapshotCount = new Gauge({
   name: "zfs_dataset_snapshot_count",
   help: "Total ZFS snapshot count per PVC dataset (live + orphan)",
   labelNames: ["pool", "dataset"] as const,
+  registers: [register],
+});
+
+// ---------------------------------------------------------------------------
+// pr-review pipeline metrics (Phase 1+ of the SOTA PR review bot — see
+// packages/docs/plans/2026-05-10_sota-pr-review-bot.md).
+// ---------------------------------------------------------------------------
+
+export const prReviewPipelinePostedTotal = new Counter({
+  name: "pr_review_pipeline_posted_total",
+  help: "pr-review pipeline review comments posted (outcome: created | updated)",
+  labelNames: ["owner", "repo", "outcome"] as const,
+  registers: [register],
+});
+
+export const prReviewPipelineFindingsHistogram = new Histogram({
+  name: "pr_review_pipeline_findings_per_pr",
+  help: "Findings posted per PR by the pr-review pipeline",
+  buckets: [0, 1, 2, 3, 5, 10, 20, 50],
   registers: [register],
 });
 

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Alistar": {
       "id": "Alistar",
@@ -671,7 +671,7 @@
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}",
-              "{{ e1 }} -> {{ e1NL }}"
+              "{{ trampledamage }} -> {{ trampledamageNL }}"
             ]
           },
           "maxrank": 5,

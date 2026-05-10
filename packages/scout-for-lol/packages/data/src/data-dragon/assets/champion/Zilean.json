@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Zilean": {
       "id": "Zilean",
@@ -290,7 +290,7 @@
           "id": "ZileanQ",
           "name": "Time Bomb",
           "description": "Tosses a bomb to target area that sticks to units that come near it (prioritizes Champions). It detonates after 3 seconds, dealing area of effect damage. If a Time Bomb is detonated early by another Time Bomb, it also stuns enemies.",
-          "tooltip": "Zilean tosses a time-delayed bomb that sticks to the first unit which comes within a small area around it. After {{ e2 }} seconds it detonates, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br />Placing a second bomb on a unit that already has one detonates the first bomb immediately and <status>Stuns</status> enemies in the blast for {{ e4 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Zilean tosses a time-delayed bomb that sticks to the first unit which comes within a small area around it. After {{ fuseduration }} seconds it detonates, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br />Placing a second bomb on a unit that already has one detonates the first bomb immediately and <status>Stuns</status> enemies in the blast for {{ stunduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Cooldown",
@@ -435,7 +435,7 @@
           "id": "ZileanW",
           "name": "Rewind",
           "description": "Zilean can prepare himself for future confrontations, reducing the cooldowns of his other basic abilities.",
-          "tooltip": "Zilean turns time, reducing his other basic Ability Cooldowns by {{ e2 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Zilean turns time, reducing his other basic Ability Cooldowns by {{ cooldownreduction }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Cooldown"
@@ -472,11 +472,11 @@
               60
             ],
             [
-              10,
-              10,
-              10,
-              10,
-              10
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
               35,
@@ -538,7 +538,7 @@
           "effectBurn": [
             null,
             "20/30/40/50/60",
-            "10",
+            "0",
             "35",
             "0",
             "0",
@@ -568,21 +568,21 @@
             "w": 48,
             "h": 48
           },
-          "resource": "{{ e3 }} Mana"
+          "resource": "{{ manacost }} Mana"
         },
         {
           "id": "TimeWarp",
           "name": "Time Warp",
           "description": "Zilean bends time around any unit, decreasing an enemy's Move Speed or increasing an ally's Move Speed for a short time.",
-          "tooltip": "Zilean <status>Slows</status> an enemy champion by {{ e2 }}% or grants an allied champion <speed>{{ e2 }}% Move Speed</speed> for {{ e1 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Zilean <status>Slows</status> an enemy champion by {{ speedamount }}% or grants an allied champion <speed>{{ speedamount }}% Move Speed</speed> for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Slow",
               "Move Speed"
             ],
             "effect": [
-              "{{ e2 }}% -> {{ e2NL }}%",
-              "{{ e2 }}% -> {{ e2NL }}%"
+              "{{ speedamount }}% -> {{ speedamountNL }}%",
+              "{{ speedamount }}% -> {{ speedamountNL }}%"
             ]
           },
           "maxrank": 5,

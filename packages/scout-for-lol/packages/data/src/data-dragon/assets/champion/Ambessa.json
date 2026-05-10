@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Ambessa": {
       "id": "Ambessa",
@@ -664,7 +664,7 @@
         "name": "Drakehound's Step",
         "description": "Entering an attack or movement command while casting an ability will cause Ambessa to dash a short distance once the ability is cast, granting her next attack bonus range, damage, and attack speed, and refunding energy.",
         "image": {
-          "full": "Icon_Ambessa_Passive.Domina.png",
+          "full": "Icon_Ambessa_Passive.png",
           "sprite": "passive0.png",
           "group": "passive",
           "x": 240,

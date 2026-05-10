@@ -90,15 +90,45 @@ async function main(): Promise<void> {
 
   const connection = await NativeConnection.connect({ address });
 
+  const workflowsPath = new URL("workflows/index.ts", import.meta.url).pathname;
+
   const worker = await Worker.create({
     connection,
     namespace: "default",
     taskQueue: TASK_QUEUES.DEFAULT,
-    workflowsPath: new URL("workflows/index.ts", import.meta.url).pathname,
+    workflowsPath,
     activities,
   });
 
   jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.DEFAULT });
+
+  // Second worker on the pr-review task queue. Same workflow bundle and
+  // activity surface, but isolated from the DEFAULT queue so the
+  // long-running multi-specialist LLM activities can't head-of-line block
+  // HA / cron workflows. See packages/docs/plans/2026-05-10_sota-pr-review-bot.md.
+  const prReviewWorker = await Worker.create({
+    connection,
+    namespace: "default",
+    taskQueue: TASK_QUEUES.PR_REVIEW,
+    workflowsPath,
+    activities,
+  });
+
+  jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.PR_REVIEW });
+
+  // Third worker on the pr-summary task queue. Isolated from PR_REVIEW so a
+  // stuck specialist activity (e.g. specialist runner waiting on Anthropic
+  // 5xx) can't block the cheap, fast Haiku summary — operators still see
+  // "what changed in this PR?" even when the deep review is degraded.
+  const prSummaryWorker = await Worker.create({
+    connection,
+    namespace: "default",
+    taskQueue: TASK_QUEUES.PR_SUMMARY,
+    workflowsPath,
+    activities,
+  });
+
+  jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.PR_SUMMARY });
 
   const clientConnection = await Connection.connect({ address });
   const client = new Client({ connection: clientConnection });
@@ -133,6 +163,22 @@ async function main(): Promise<void> {
         state: workerState,
       });
     }
+    const prReviewState = prReviewWorker.getState();
+    if (prReviewState === "RUNNING") {
+      prReviewWorker.shutdown();
+    } else {
+      jsonLog("info", "pr-review worker not RUNNING, skipping shutdown()", {
+        state: prReviewState,
+      });
+    }
+    const prSummaryState = prSummaryWorker.getState();
+    if (prSummaryState === "RUNNING") {
+      prSummaryWorker.shutdown();
+    } else {
+      jsonLog("info", "pr-summary worker not RUNNING, skipping shutdown()", {
+        state: prSummaryState,
+      });
+    }
     await stopMetricsServer();
     await shutdownTracing();
   };
@@ -144,7 +190,11 @@ async function main(): Promise<void> {
     void shutdown("SIGINT");
   });
 
-  await worker.run();
+  await Promise.all([
+    worker.run(),
+    prReviewWorker.run(),
+    prSummaryWorker.run(),
+  ]);
 }
 
 void (async () => {

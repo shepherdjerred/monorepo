@@ -43,13 +43,68 @@ const FQDN_REGEX = /\bfqdn\s*:\s*["'`]([^"'`]+)["'`]/;
 
 const ZONE_REGEX =
   /resource\s+"cloudflare_zone"\s+"([^"]+)"\s*\{[\s\S]*?name\s*=\s*"([^"]+)"/g;
-const DNS_RECORD_REGEX =
-  /resource\s+"cloudflare_dns_record"\s+"([^"]+)"\s*\{([^}]*)\}/g;
+const DNS_RECORD_START_REGEX =
+  /resource\s+"cloudflare_dns_record"\s+"([^"]+)"\s*\{/g;
 const DNS_NAME_FIELD = /^\s*name\s*=\s*"([^"]+)"/m;
 const DNS_ZONE_ID_FIELD = /zone_id\s*=\s*cloudflare_zone\.([A-Za-z0-9_]+)\.id/;
 
 function lineOf(text: string, offset: number): number {
   return text.slice(0, offset).split("\n").length;
+}
+
+function extractDnsRecordBlocks(
+  text: string,
+): { resourceName: string; body: string; offset: number }[] {
+  const blocks: { resourceName: string; body: string; offset: number }[] = [];
+
+  for (const match of text.matchAll(DNS_RECORD_START_REGEX)) {
+    const resourceName = match[1];
+    if (resourceName === undefined || match.index === undefined) continue;
+
+    let depth = 1;
+    let quote: '"' | "'" | undefined;
+    let escaped = false;
+    const bodyStart = match.index + match[0].length;
+
+    for (let index = bodyStart; index < text.length; index += 1) {
+      const char = text[index];
+
+      if (quote !== undefined) {
+        if (escaped) {
+          escaped = false;
+        } else if (char === "\\") {
+          escaped = true;
+        } else if (char === quote) {
+          quote = undefined;
+        }
+        continue;
+      }
+
+      if (char === '"' || char === "'") {
+        quote = char;
+      } else if (char === "{") {
+        depth += 1;
+      } else if (char === "}") {
+        depth -= 1;
+        if (depth === 0) {
+          blocks.push({
+            resourceName,
+            body: text.slice(bodyStart, index),
+            offset: match.index,
+          });
+          break;
+        }
+      }
+    }
+
+    if (depth !== 0) {
+      throw new Error(
+        `Unclosed cloudflare_dns_record resource ${resourceName} starting at line ${String(lineOf(text, match.index))}`,
+      );
+    }
+  }
+
+  return blocks;
 }
 
 async function collectTunnelBindings(): Promise<TunnelBinding[]> {
@@ -122,17 +177,14 @@ async function collectDnsNames(): Promise<DnsName[]> {
   })) {
     const abs = path.join(TOFU_CLOUDFLARE, rel);
     const text = await Bun.file(abs).text();
-    for (const match of text.matchAll(DNS_RECORD_REGEX)) {
-      const resourceName = match[1];
-      const body = match[2];
-      if (resourceName === undefined || body === undefined) continue;
-      const nameMatch = DNS_NAME_FIELD.exec(body);
-      const zoneMatch = DNS_ZONE_ID_FIELD.exec(body);
+    for (const block of extractDnsRecordBlocks(text)) {
+      const nameMatch = DNS_NAME_FIELD.exec(block.body);
+      const zoneMatch = DNS_ZONE_ID_FIELD.exec(block.body);
       if (nameMatch === null) continue;
       names.push({
         file: abs,
-        line: lineOf(text, match.index ?? 0),
-        resourceName,
+        line: lineOf(text, block.offset),
+        resourceName: block.resourceName,
         name: nameMatch[1] ?? "",
         zoneRef: zoneMatch?.[1],
       });

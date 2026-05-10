@@ -215,7 +215,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'sum by (workflow) (increase(temporal_workflow_outcome_total{outcome="executed"}[5d])) == 0\n  and on (workflow) sum by (workflow) (increase(temporal_workflow_outcome_total{outcome="skipped"}[5d])) > 5',
+            'sum by (workflow) (increase(temporal_workflow_outcome_total{outcome="skipped"}[5d])) > 5\nunless on (workflow)\n  sum by (workflow) (increase(temporal_workflow_outcome_total{outcome="executed"}[5d])) > 0',
           ),
           for: "1h",
           labels: {

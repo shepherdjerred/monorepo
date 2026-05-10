@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Malzahar": {
       "id": "Malzahar",
@@ -468,8 +468,8 @@
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
-              "{{ e2 }} -> {{ e2NL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ silenceduration }} -> {{ silencedurationNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },

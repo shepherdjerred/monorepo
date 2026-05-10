@@ -2,6 +2,7 @@ import { Context } from "@temporalio/activity";
 import { simpleGit } from "simple-git";
 import OpenAI from "openai";
 import { z } from "zod/v4";
+import { sendPostalEmail, resolvePostalAddresses } from "#shared/postal.ts";
 
 const VERSIONS_FILE_PATH = "src/cdk8s/src/versions.ts";
 const REPO_URL = "https://github.com/shepherdjerred/homelab.git";
@@ -386,21 +387,7 @@ Format the response in HTML for email.`;
     summary: string,
     failedFetches: FailedFetch[],
   ): Promise<void> {
-    const postalHost = Bun.env["POSTAL_HOST"];
-    const postalApiKey = Bun.env["POSTAL_API_KEY"];
-    const recipientEmail = Bun.env["RECIPIENT_EMAIL"];
-    const senderEmail = Bun.env["SENDER_EMAIL"];
-
-    if (
-      postalHost === undefined ||
-      postalApiKey === undefined ||
-      recipientEmail === undefined ||
-      senderEmail === undefined
-    ) {
-      throw new Error(
-        "Missing email configuration: POSTAL_HOST, POSTAL_API_KEY, RECIPIENT_EMAIL, SENDER_EMAIL",
-      );
-    }
+    const { recipient, sender } = resolvePostalAddresses();
 
     const subject =
       changes.length === 0
@@ -432,65 +419,16 @@ Format the response in HTML for email.`;
       html += `<p>No dependencies were updated this week.</p>`;
     }
 
-    const postalHostHeader = Bun.env["POSTAL_HOST_HEADER"];
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      "X-Server-API-Key": postalApiKey,
-    };
-    if (postalHostHeader !== undefined) {
-      headers["Host"] = postalHostHeader;
-    }
-
-    const response = await fetch(`${postalHost}/api/v1/send/message`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        to: [recipientEmail],
-        from: senderEmail,
-        subject,
-        html_body: html,
-        tag: "dependency-summary",
-      }),
+    const result = await sendPostalEmail({
+      to: recipient,
+      from: sender,
+      subject,
+      htmlBody: html,
+      tag: "dependency-summary",
     });
 
-    const responseBody = await response.text();
-    if (!response.ok) {
-      throw new Error(
-        `Postal API error (${String(response.status)}): ${responseBody}`,
-      );
-    }
-
-    // Postal returns 200 even on parameter/validation errors — the real
-    // outcome lives in `status` in the JSON body. Treat anything other
-    // than `success` as a failure so the workflow retries instead of
-    // silently "completing" with no mail delivered.
-    const envelope = PostalEnvelopeSchema.parse(JSON.parse(responseBody));
-    if (envelope.status !== "success") {
-      throw new Error(
-        `Postal rejected message (status=${envelope.status}): ${responseBody}`,
-      );
-    }
-
-    const successData = PostalSuccessDataSchema.parse(envelope.data);
-    const recipientId = successData.messages[recipientEmail]?.id ?? "unknown";
     console.warn(
-      `Email accepted by Postal: subject="${subject}" message_id=${successData.message_id} recipient_id=${String(recipientId)} tag=dependency-summary`,
+      `Email accepted by Postal: subject="${result.subject}" message_id=${result.messageId} recipient_id=${String(result.recipientId)} tag=${result.tag}`,
     );
   },
 };
-
-const PostalEnvelopeSchema = z.object({
-  status: z.string(),
-  data: z.unknown(),
-});
-
-const PostalSuccessDataSchema = z.object({
-  message_id: z.string(),
-  messages: z.record(
-    z.string(),
-    z.object({
-      id: z.number(),
-      token: z.string(),
-    }),
-  ),
-});

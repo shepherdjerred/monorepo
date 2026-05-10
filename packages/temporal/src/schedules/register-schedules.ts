@@ -52,6 +52,20 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Daily DNS record audit (SPF, DMARC, MX)",
   },
   {
+    id: "homelab-audit-daily",
+    workflowType: "runHomelabAuditWorkflow",
+    args: [{}],
+    // 06:30 PT — staggered after dns-audit-daily (06:00). Lands in inbox
+    // before goodMorningEarly (07:00 weekdays / 08:00 weekends) fires.
+    cronExpression: "30 6 * * *",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    // The agent run targets ~25 min wall (start-to-close 45 min in the
+    // workflow); 60 min covers a single retry on transient failure.
+    workflowExecutionTimeout: "60 minutes",
+    memo: "Daily homelab health audit email (claude -p following the homelab-audit-runbook → Postal)",
+  },
+  {
     id: "scout-data-dragon-version-check",
     workflowType: "runScoutDataDragonVersionCheck",
     args: [],
@@ -120,7 +134,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 9 * * *",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    // verifyState worst case = 3m delay + 3×1m retries = ~6m + slack
+    // verifyState worst case = 3m delay + 3×1m inter-attempt sleeps + slack
     workflowExecutionTimeout: "15 minutes",
     memo: "Run vacuum if no one is home (9 AM)",
   },
@@ -131,7 +145,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 12 * * *",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    // verifyState worst case = 3m delay + 3×1m retries = ~6m + slack
+    // verifyState worst case = 3m delay + 3×1m inter-attempt sleeps + slack
     workflowExecutionTimeout: "15 minutes",
     memo: "Run vacuum if no one is home (12 PM)",
   },
@@ -142,7 +156,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 17 * * *",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    // verifyState worst case = 3m delay + 3×1m retries = ~6m + slack
+    // verifyState worst case = 3m delay + 3×1m inter-attempt sleeps + slack
     workflowExecutionTimeout: "15 minutes",
     memo: "Run vacuum if no one is home (5 PM)",
   },

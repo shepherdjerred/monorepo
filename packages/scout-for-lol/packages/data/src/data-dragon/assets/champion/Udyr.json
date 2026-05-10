@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Udyr": {
       "id": "Udyr",
@@ -149,12 +149,14 @@
             "label": [
               "Attack Speed",
               "% Max Health Damage",
-              "On-Hit Damage"
+              "On-Hit Damage",
+              "On-Hit Damage Bonus HP Ratio"
             ],
             "effect": [
               "{{ attackspeedbase*100.000000 }}% -> {{ attackspeedbasenl*100.000000 }}%",
               "{{ maxhponhitbase*100.000000 }}% -> {{ maxhponhitbasenl*100.000000 }}%",
-              "{{ basedamage }} -> {{ basedamageNL }}"
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ onhitbonushpratio*100.000000 }}% -> {{ onhitbonushprationl*100.000000 }}%"
             ]
           },
           "maxrank": 6,
@@ -456,14 +458,14 @@
           "id": "UdyrE",
           "name": "Blazing Stampede",
           "description": "Udyr gains movement speed and his first attack against each target will Stun them. Recast: Gain even more movement speed and immunity to immobilizing effects for a couple seconds. ",
-          "tooltip": "<spellActive>Stampede Stance:</spellActive> Udyr gains <speed>{{ movespeed*100 }}% Move Speed</speed>, decaying over {{ movespeedduration }} seconds. Additionally, Udyr's Attacks dash him to the target and <status>Stun</status> for {{ stunduration }} seconds ({{ icd }} second Cooldown per target).<br /><br /><keywordMajor>Awaken:</keywordMajor> Grants immunity to <status>Immobilizing</status> and <status>Disabling</status> effects and an additional <speed>{{ movespeedbonus }} Move Speed</speed> for {{ unstoppableduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellActive>Stampede Stance:</spellActive> Udyr gains <speed>{{ movespeed }} Move Speed</speed>, decaying over {{ movespeedduration }} seconds. Additionally, Udyr's Attacks dash him to the target and <status>Stun</status> for {{ stunduration }} seconds ({{ icd }} second Cooldown per target).<br /><br /><keywordMajor>Awaken:</keywordMajor> Grants immunity to <status>Immobilizing</status> and <status>Disabling</status> effects and an additional <speed>{{ movespeedbonus }} Move Speed</speed> for {{ unstoppableduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Move Speed",
               "Per Unit Cooldown"
             ],
             "effect": [
-              "{{ movespeed*100.000000 }}% -> {{ movespeednl*100.000000 }}%",
+              "{{ basemovespeed*100.000000 }}% -> {{ basemovespeednl*100.000000 }}%",
               "{{ icd }} -> {{ icdNL }}"
             ]
           },

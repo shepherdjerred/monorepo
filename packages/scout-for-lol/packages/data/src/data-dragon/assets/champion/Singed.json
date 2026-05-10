@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Singed": {
       "id": "Singed",
@@ -551,9 +551,9 @@
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
-              "{{ e3 }}% -> {{ e3NL }}%",
-              "{{ e2 }} -> {{ e2NL }}",
+              "{{ basedamagevalue }} -> {{ basedamagevalueNL }}",
+              "{{ maxhpdamage }}% -> {{ maxhpdamageNL }}%",
+              "{{ rootduration }} -> {{ rootdurationNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]

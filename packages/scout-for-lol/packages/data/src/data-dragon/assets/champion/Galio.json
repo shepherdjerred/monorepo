@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Galio": {
       "id": "Galio",
@@ -530,7 +530,7 @@
           "id": "GalioW",
           "name": "Shield of Durand",
           "description": "Galio charges a defensive stance, moving slowly. Upon releasing the charge, Galio will taunt and damage nearby enemies.",
-          "tooltip": "<spellPassive>Passive:</spellPassive> Galio gains a <shield>{{ totalpassiveshield }} Magic Shield</shield> after not taking damage for {{ passiveshieldooctimer }} seconds.<br /><br /><charge>Begin Charging:</charge> Galio reduces incoming magic damage by {{ magicdamagereduction }} and incoming physical damage by {{ physicaldamagereduction }} and <status>Slows</status> himself by {{ e3 }}%.<br /><br /><release>Release:</release> Galio <status>Taunts</status> enemy champions for between {{ e4 }} to {{ e7 }} seconds, deals between <magicDamage>{{ mintotaldamage }}</magicDamage> and <magicDamage>{{ maxtotaldamage }} magic damage</magicDamage>, and refreshes the damage reduction for {{ e8 }} seconds. Taunt duration, damage, and range increase with charge time.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Galio gains a <shield>{{ totalpassiveshield }} Magic Shield</shield> after not taking damage for {{ passiveshieldooctimer }} seconds.<br /><br /><charge>Begin Charging:</charge> Galio reduces incoming magic damage by {{ magicdamagereduction }} and incoming physical damage by {{ physicaldamagereduction }} and <status>Slows</status> himself by {{ selfslowpercent }}%.<br /><br /><release>Release:</release> Galio <status>Taunts</status> enemy champions for between {{ ccdurationmin }} to {{ ccdurationmax }} seconds, deals between <magicDamage>{{ mintotaldamage }}</magicDamage> and <magicDamage>{{ maxtotaldamage }} magic damage</magicDamage>, and refreshes the damage reduction for {{ drlingerduration }} seconds. Taunt duration, damage, and range increase with charge time.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Shield Health Ratio",
@@ -541,8 +541,8 @@
             ],
             "effect": [
               "{{ passiveshieldhealthratio*100.000000 }}% -> {{ passiveshieldhealthrationl*100.000000 }}%",
-              "{{ e1 }}% -> {{ e1NL }}%",
-              "{{ effect1amount*0.500000 }}% -> {{ effect1amountnl*0.500000 }}%",
+              "{{ damagereductionbase*100.000000 }}% -> {{ damagereductionbasenl*100.000000 }}%",
+              "{{ damagereductionbase*50.000000 }}% -> {{ damagereductionbasenl*50.000000 }}%",
               "{{ maximumwbasedamage }} -> {{ maximumwbasedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
@@ -568,32 +568,11 @@
           "effect": [
             null,
             [
-              25,
-              30,
-              35,
-              40,
-              45
-            ],
-            [
-              2,
-              2,
-              2,
-              2,
-              2
-            ],
-            [
-              15,
-              15,
-              15,
-              15,
-              15
-            ],
-            [
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
               0,
@@ -603,53 +582,74 @@
               0
             ],
             [
-              1,
-              1,
-              1,
-              1,
-              1
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              1.5,
-              1.5,
-              1.5,
-              1.5,
-              1.5
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              2,
-              2,
-              2,
-              2,
-              2
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              1.25,
-              1.25,
-              1.25,
-              1.25,
-              1.25
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              4,
-              4,
-              4,
-              4,
-              4
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
             ]
           ],
           "effectBurn": [
             null,
-            "25/30/35/40/45",
-            "2",
-            "15",
-            "0.5",
             "0",
-            "1",
-            "1.5",
-            "2",
-            "1.25",
-            "4"
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
           ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",

@@ -42,10 +42,10 @@ describe("resolveEnvironment", () => {
     expect(resolveEnvironment()).toBe("dev");
   });
 
-  test("coerces invalid value to 'dev' under NODE_ENV=test", () => {
+  test("throws on invalid value under NODE_ENV=test", () => {
     Bun.env["ENVIRONMENT"] = "production"; // not in the enum
     Bun.env.NODE_ENV = "test";
-    expect(resolveEnvironment()).toBe("dev");
+    expect(() => resolveEnvironment()).toThrow(/Invalid ENVIRONMENT/);
   });
 
   test("throws on invalid value when not in test mode", () => {

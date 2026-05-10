@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Zoe": {
       "id": "Zoe",
@@ -659,28 +659,30 @@
           "id": "ZoeE",
           "name": "Sleepy Trouble Bubble",
           "description": "Causes the target to become drowsy, then fall asleep. While asleep, the target's Magic Resist is reduced. The first source of damage that breaks the sleep is doubled, up to a cap.",
-          "tooltip": "Zoe dropkicks a bubble that deals <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage>, lingering as a trap if it hits nothing. The bubble's range is extended when flying over terrain.<br /><br />After a delay, the victim falls <status>Asleep</status> and have their <scaleMR>Magic Resist</scaleMR> reduced by {{ percentpen*100 }}% for 2 seconds. Attacks and Ability hits wake them up but deal double damage, up to <trueDamage>{{ breakdamagetooltip }} true damage</trueDamage>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Zoe dropkicks a bubble that deals <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage>, lingering as a trap if it hits nothing. The bubble's range is extended when flying over terrain.<br /><br />If either the bubble or trap hits an enemy champion she refreshes {{ cooldownrefresh*100 }}% of her cooldown.<br /><br />After a delay, the victim falls <status>Asleep</status> and have their <scaleMR>Magic Resist</scaleMR> reduced by {{ percentpen*100 }}% for 2 seconds. Attacks and Ability hits wake them up but deal double damage, up to <trueDamage>{{ breakdamagetooltip }} true damage</trueDamage>.<br /><br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
               "Bonus Damage Cap",
-              "Cooldown"
+              "Cooldown",
+              "Cooldown Refresh"
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}"
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cooldownrefresh*100.000000 }}% -> {{ cooldownrefreshnl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
           "cooldown": [
+            18,
+            17,
             16,
             15,
-            14,
-            13,
-            12
+            14
           ],
-          "cooldownBurn": "16/15/14/13/12",
+          "cooldownBurn": "18/17/16/15/14",
           "cost": [
             80,
             80,

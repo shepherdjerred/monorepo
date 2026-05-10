@@ -24,7 +24,12 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   "starlight-karma-bot": ["eslint-config"],
   "tasknotes-types": ["eslint-config"],
   "home-assistant": ["eslint-config"],
-  temporal: ["eslint-config", "home-assistant"],
+  "trmnl-dashboard": ["eslint-config", "home-assistant"],
+  // `toolkit` here is not a file: dep in temporal's package.json — it's
+  // mounted so the worker-image build can compile the toolkit CLI into a
+  // single static binary at /usr/local/bin/toolkit. Required by the
+  // homelab-audit-daily workflow (runbook §5/§6/§9 use `toolkit gf|pd|bugsink`).
+  temporal: ["eslint-config", "home-assistant", "toolkit"],
 
   // Multi-dep packages
   "tasknotes-server": ["eslint-config", "tasknotes-types"],

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Mordekaiser": {
       "id": "Mordekaiser",
@@ -738,7 +738,7 @@
           "id": "MordekaiserE",
           "name": "Death's Grasp",
           "description": "Mordekaiser pulls all enemies in an area.",
-          "tooltip": "<spellPassive>Passive:</spellPassive> Mordekaiser gains {{ magicpen*100 }}% Magic Penetration.<br /><br /><spellActive>Active:</spellActive> Mordekaiser pulls enemies in his direction, dealing <magicDamage>{{ totaldamage }} magic damage.</magicDamage>{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellActive>Active:</spellActive> Pulls enemies in his direction, dealing <magicDamage>{{ totaldamage }} magic damage.</magicDamage>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Percent Magic Penetration",

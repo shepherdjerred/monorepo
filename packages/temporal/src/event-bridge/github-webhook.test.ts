@@ -89,6 +89,9 @@ describe("buildWebhookApp", () => {
     const app = buildWebhookApp(SECRET, start);
     const res = await postWebhook(app, makeBaseEvent());
     expect(res.status).toBe(200);
+    // The handler delegates to `start` once per delivery; fan-out across
+    // prReview / prSummary / prReviewPipeline happens inside the
+    // implementation supplied to buildWebhookApp.
     expect(start).toHaveBeenCalledTimes(1);
     expect(calls.length).toBe(1);
     const firstCall = calls[0];
@@ -103,6 +106,31 @@ describe("buildWebhookApp", () => {
     expect(input.baseRef).toBe("main");
     expect(input.commitSha).toBe("ab".repeat(20));
     expect(input.prAuthor).toBe("alice");
+  });
+
+  it("foundation: passes through fields the pr-review pipeline derives its id from", async () => {
+    const calls: StartCall[] = [];
+    const start = mock(async (input: PrAgentInput) => {
+      calls.push([input]);
+    });
+    const app = buildWebhookApp(SECRET, start);
+    const res = await postWebhook(
+      app,
+      makeBaseEvent({ number: 9001, headSha: "cd".repeat(20) }),
+    );
+    expect(res.status).toBe(200);
+    const firstCall = calls[0];
+    if (firstCall === undefined) {
+      throw new Error("expected one call");
+    }
+    const input = firstCall[0];
+    expect(input.prNumber).toBe(9001);
+    expect(input.commitSha).toBe("cd".repeat(20));
+    // The pipeline workflow id constructor lives in the production
+    // start-workflows function; verify the inputs it relies on are
+    // present and non-empty so callers can deterministically build it.
+    expect(input.owner.length).toBeGreaterThan(0);
+    expect(input.repo.length).toBeGreaterThan(0);
   });
 
   it("skips draft PRs unless action is ready_for_review", async () => {

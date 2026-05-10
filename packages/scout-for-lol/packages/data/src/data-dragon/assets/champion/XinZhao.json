@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "XinZhao": {
       "id": "XinZhao",
@@ -560,7 +560,7 @@
           "id": "XinZhaoW",
           "name": "Wind Becomes Lightning",
           "description": "Xin Zhao slashes in front of himself with his spear, then thrusts it forward, slowing affected enemies and marking them as Challenged.",
-          "tooltip": "Xin Zhao slashes, dealing <physicalDamage>{{ slashdamage }} physical damage</physicalDamage>, then thrusts, dealing <physicalDamage>{{ thrustdamage }}</physicalDamage>. Enemies hit by the thrust are <status>Slowed</status> by {{ e6 }}% for {{ e7 }} seconds. <br /><br />Champions and Large Monsters hit by the thrust are marked as <keywordMajor>Challenged</keywordMajor> for {{ markduration }} seconds and revealed unless <keywordStealth>Stealthed</keywordStealth>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Xin Zhao slashes, dealing <physicalDamage>{{ slashdamage }} physical damage</physicalDamage>, then thrusts, dealing <physicalDamage>{{ thrustdamage }}</physicalDamage>. Enemies hit by the thrust are <status>Slowed</status> by {{ e6 }}% for {{ totalslowduration }} seconds. <br /><br />Champions and Large Monsters hit by the thrust are marked as <keywordMajor>Challenged</keywordMajor> for {{ markduration }} seconds and revealed unless <keywordStealth>Stealthed</keywordStealth>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Slash Damage",
@@ -638,11 +638,11 @@
               50
             ],
             [
-              1.5,
-              1.5,
-              1.5,
-              1.5,
-              1.5
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
               140,
@@ -674,7 +674,7 @@
             "0.5",
             "0.5",
             "50",
-            "1.5",
+            "0",
             "140",
             "200",
             "0"
@@ -705,15 +705,15 @@
           "id": "XinZhaoE",
           "name": "Audacious Charge",
           "description": "Xin Zhao charges to an enemy, gaining increased Attack Speed and dealing damage to all enemies in the area, slowing them briefly. This Ability gains increased range against Challenged targets.",
-          "tooltip": "Xin Zhao charges an enemy, dealing <magicDamage>{{ chargedamage }} magic damage</magicDamage> to nearby enemies and <status>Slowing</status> them by {{ baseslowamount }}% for {{ e6 }} seconds.<br /><br />Xin Zhao also grants himself <attackSpeed>{{ e3 }}% Attack Speed</attackSpeed> for {{ e4 }} seconds.<br /><br />This Ability's range is increased on enemies that are <keywordMajor>Challenged</keywordMajor>. <br />{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Xin Zhao charges an enemy, dealing <magicDamage>{{ chargedamage }} magic damage</magicDamage> to nearby enemies and <status>Slowing</status> them by {{ slowamount }}% for {{ slowduration }} seconds.<br /><br />Xin Zhao grants himself <attackSpeed>{{ f1 }}% (%i:scaleAS%%i:scaleAP%) Attack Speed</attackSpeed> for {{ asduration }} seconds.<br /><br />This Ability's range is increased on enemies that are <keywordMajor>Challenged</keywordMajor>.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
               "Attack Speed"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
-              "{{ effect3amount*100.000000 }}% -> {{ effect3amountnl*100.000000 }}%"
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ asmod*100.000000 }}% -> {{ asmodnl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
@@ -737,32 +737,32 @@
           "effect": [
             null,
             [
-              50,
-              75,
-              100,
-              125,
-              150
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              -0.3,
-              -0.3,
-              -0.3,
-              -0.3,
-              -0.3
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              40,
-              50,
-              60,
-              70,
-              80
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              5,
-              5,
-              5,
-              5,
-              5
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
               250,
@@ -772,11 +772,11 @@
               250
             ],
             [
-              0.5,
-              0.5,
-              0.5,
-              0.5,
-              0.5
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
               0,
@@ -809,12 +809,12 @@
           ],
           "effectBurn": [
             null,
-            "50/75/100/125/150",
-            "-0.3",
-            "40/50/60/70/80",
-            "5",
+            "0",
+            "0",
+            "0",
+            "0",
             "250",
-            "0.5",
+            "0",
             "0",
             "0",
             "0",
@@ -962,7 +962,7 @@
         "name": "Determination",
         "description": "Every third attack deals bonus damage and heals Xin Zhao.",
         "image": {
-          "full": "XinZhaoReworkP.XinZhaoRework.png",
+          "full": "XinZhaoReworkP.png",
           "sprite": "passive5.png",
           "group": "passive",
           "x": 384,

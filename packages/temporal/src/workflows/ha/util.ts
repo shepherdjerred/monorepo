@@ -48,11 +48,17 @@ export async function setOutcome(
   reason: string,
 ): Promise<void> {
   upsertMemo({ outcome, outcomeReason: reason });
-  await outcomeActivities.recordWorkflowOutcome({
-    workflow: workflowInfo().workflowType,
-    outcome,
-    reason,
-  });
+  try {
+    await outcomeActivities.recordWorkflowOutcome({
+      workflow: workflowInfo().workflowType,
+      outcome,
+      reason,
+    });
+  } catch (error) {
+    console.warn(
+      `setOutcome: failed to record ${outcome}/${reason}: ${String(error)}`,
+    );
+  }
 }
 
 // Activity-facing API is stringly-typed (Temporal can't proxy generics). The

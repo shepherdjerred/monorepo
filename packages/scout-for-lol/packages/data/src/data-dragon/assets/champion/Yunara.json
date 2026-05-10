@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.8.1",
+  "version": "16.9.1",
   "data": {
     "Yunara": {
       "id": "Yunara",
@@ -671,7 +671,7 @@
         "name": "Vow of the First Lands",
         "description": "Yunara's Critical Strikes deal bonus magic damage.",
         "image": {
-          "full": "Yunara_Passive.Yunara.png",
+          "full": "Yunara_Passive.png",
           "sprite": "passive5.png",
           "group": "passive",
           "x": 96,
