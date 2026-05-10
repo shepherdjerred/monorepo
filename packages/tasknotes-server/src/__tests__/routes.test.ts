@@ -137,6 +137,10 @@ describe("tasks CRUD", () => {
   });
 
   test("POST /api/tasks/:id/complete-instance adds today to completeInstances on recurring task", async () => {
+    // Capture today before any requests so a midnight rollover during the
+    // test can't make the assertion flake.
+    const today = new Date();
+    const ymd = `${String(today.getFullYear())}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
     const created = await createTask({
       title: "Recurring",
       recurrence: "every week",
@@ -147,14 +151,14 @@ describe("tasks CRUD", () => {
     );
     expect(res.status).toBe(200);
     const task = await jsonBody(res);
-    const today = new Date();
-    const ymd = `${String(today.getFullYear())}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
     expect(task.status).toBe("open");
     expect(task.completeInstances).toContain(ymd);
     expect(task.recurrence).toBe("every week");
   });
 
   test("POST /api/tasks/:id/complete-instance toggles today off when called twice", async () => {
+    const today = new Date();
+    const ymd = `${String(today.getFullYear())}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
     const created = await createTask({
       title: "Recurring toggle",
       recurrence: "every week",
@@ -169,8 +173,6 @@ describe("tasks CRUD", () => {
     );
     expect(res.status).toBe(200);
     const task = await jsonBody(res);
-    const today = new Date();
-    const ymd = `${String(today.getFullYear())}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
     expect(task.status).toBe("open");
     expect(task.completeInstances).not.toContain(ymd);
   });
