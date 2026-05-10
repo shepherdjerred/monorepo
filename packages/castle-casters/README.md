@@ -4,6 +4,8 @@ The game of Quoridor with a medieval fantasy theme. Created for my Harding Unive
 
 Cross-platform, tested on macOS and Windows.
 
+An archived browser rewrite prototype lives at `archive/castle-casters-web-rewrite`.
+
 ## Technologies Used
 
 - Java 21

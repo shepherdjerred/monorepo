@@ -1,0 +1,45 @@
+{
+  "name": "castle-casters-web",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "imports": {
+    "#src/*": "./src/*"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "bun test tests/render.test.ts",
+    "test:e2e": "playwright test",
+    "lint": "bunx eslint . --max-warnings=0",
+    "lint:fix": "eslint --fix .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@castle-casters/core": "file:../castle-casters-core",
+    "@sentry/browser": "^10.49.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.57.0",
+    "@shepherdjerred/eslint-config": "file:../eslint-config",
+    "@types/bun": "^1.3.13",
+    "@types/node": "^25.6.0",
+    "@webgpu/types": "^0.1.68",
+    "eslint": "^9.39.4",
+    "fast-check": "^4.4.0",
+    "jiti": "^2.6.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.0",
+    "vite": "^8.0.9"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shepherdjerred/monorepo.git",
+    "directory": "packages/castle-casters-web"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  }
+}

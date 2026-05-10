@@ -1,0 +1,40 @@
+{
+  "name": "castle-casters-server",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "imports": {
+    "#src/*": "./src/*"
+  },
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun --watch run src/index.ts",
+    "build": "bun build src/index.ts --outdir=dist --target=bun",
+    "test": "bun test",
+    "lint": "bunx eslint . --max-warnings=0",
+    "lint:fix": "eslint --fix .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@castle-casters/core": "file:../castle-casters-core",
+    "@sentry/bun": "^10.49.0",
+    "hono": "^4.12.14",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "file:../eslint-config",
+    "@types/bun": "^1.3.13",
+    "eslint": "^9.39.4",
+    "jiti": "^2.6.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shepherdjerred/monorepo.git",
+    "directory": "packages/castle-casters-server"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  }
+}
