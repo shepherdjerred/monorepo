@@ -54,6 +54,7 @@ AI-maintained knowledge base for the monorepo.
 - [Daily Homelab Audit Email](plans/2026-05-09_daily-homelab-audit-email.md) - Daily Temporal workflow that runs the homelab-audit-runbook via `claude -p` and emails the result via Postal at 06:30 PT
 - [Pi Overview Answer](plans/2026-05-10_pi-overview.md) - Session plan for summarizing how the installed Pi coding-agent harness works
 - [Pi Feature Roadmap](plans/2026-05-10_pi-feature-roadmap.md) - Map requested Pi features to extensions, settings, and built-in skills support
+- [TaskNotes Recurring Fix + Wiring](plans/2026-05-10_tasknotes-recurring-and-wiring.md) - Fix recurring-task drop bug; wire half-built subsystems (offline sync, Pomodoro, Live Activities, time-tracking UI, markdown rendering)
 
 ## Guides
 
