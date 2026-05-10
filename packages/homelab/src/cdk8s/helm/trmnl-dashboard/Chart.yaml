@@ -1,0 +1,6 @@
+apiVersion: v2
+name: trmnl-dashboard
+description: TRMNL e-ink dashboard server
+type: application
+version: "$version"
+appVersion: "$appVersion"

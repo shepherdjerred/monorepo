@@ -54,6 +54,10 @@ AI-maintained knowledge base for the monorepo.
 - [Daily Homelab Audit Email](plans/2026-05-09_daily-homelab-audit-email.md) - Daily Temporal workflow that runs the homelab-audit-runbook via `claude -p` and emails the result via Postal at 06:30 PT
 - [Pi Overview Answer](plans/2026-05-10_pi-overview.md) - Session plan for summarizing how the installed Pi coding-agent harness works
 - [Pi Feature Roadmap](plans/2026-05-10_pi-feature-roadmap.md) - Map requested Pi features to extensions, settings, and built-in skills support
+- [Fix toolkit recall search Zod crash](plans/2026-05-10_fix-toolkit-recall-zod-vector.md) - Drop `vector` from search schema; LanceDB 0.27.2 returns Apache Arrow Vector wrapper, not `number[]`
+- [NVMe Firmware Update Runbook](plans/2026-05-10_firmware-update-runbook.md) - Single-window 4B2QJXD7 → 8B2QJXD7 update for both Samsung 990 PRO drives on single-node Talos; pre-flight + execution + rollback
+- [SOTA PR Review Bot](plans/2026-05-10_sota-pr-review-bot.md) - Full-spec multi-agent + verification + retrieval + continuous-eval PR review bot; supersedes 2026-04-25 plan
+- [Fix trmnl-dashboard helm chart](plans/2026-05-10_fix-trmnl-dashboard-helm-chart.md) - Add the missing `Chart.yaml` skeleton so Dagger's `helmPackageHelper` can package the chart (Buildkite #1915)
 - [TaskNotes Recurring Fix + Wiring](plans/2026-05-10_tasknotes-recurring-and-wiring.md) - Fix recurring-task drop bug; wire half-built subsystems (offline sync, Pomodoro, Live Activities, time-tracking UI, markdown rendering)
 
 ## Guides
