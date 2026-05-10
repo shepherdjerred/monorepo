@@ -3,6 +3,7 @@ import {
   anyoneHome,
   callService,
   sendNotification,
+  setOutcome,
   volumeUpBy,
 } from "./util.ts";
 
@@ -26,6 +27,7 @@ const WAKE_MEDIA = {
 export async function goodMorningEarly(): Promise<void> {
   if (!(await anyoneHome())) {
     console.warn("good_morning_early: no one home, skipping");
+    await setOutcome("skipped", "no-one-home");
     return;
   }
 
@@ -40,11 +42,13 @@ export async function goodMorningEarly(): Promise<void> {
   await callService("climate", "turn_off", {
     entity_id: MASTER_BATHROOM_HEAT,
   });
+  await setOutcome("executed", "heat-cycle-complete");
 }
 
 export async function goodMorningWakeUp(): Promise<void> {
   if (!(await anyoneHome())) {
     console.warn("good_morning_wake_up: no one home, skipping");
+    await setOutcome("skipped", "no-one-home");
     return;
   }
 
@@ -67,11 +71,13 @@ export async function goodMorningWakeUp(): Promise<void> {
     entity_id: BEDROOM_DIMMED,
     transition: 3,
   });
+  await setOutcome("executed", "wake-routine-complete");
 }
 
 export async function goodMorningGetUp(): Promise<void> {
   if (!(await anyoneHome())) {
     console.warn("good_morning_get_up: no one home, skipping");
+    await setOutcome("skipped", "no-one-home");
     return;
   }
 
@@ -101,4 +107,5 @@ export async function goodMorningGetUp(): Promise<void> {
       await sleep("5 seconds");
     }
   }
+  await setOutcome("executed", "getup-routine-complete");
 }

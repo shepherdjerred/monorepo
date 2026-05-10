@@ -14,7 +14,6 @@ import { goodNight as _goodNight } from "./ha/good-night.ts";
 import { welcomeHome as _welcomeHome } from "./ha/welcome-home.ts";
 import { leavingHome as _leavingHome } from "./ha/leaving-home.ts";
 import { runVacuumIfNotHome as _runVacuumIfNotHome } from "./ha/run-vacuum-if-not-home.ts";
-import { adjustClimate as _adjustClimate } from "./ha/climate-control.ts";
 import { runZfsMaintenanceWorkflow as _runZfsMaintenanceWorkflow } from "./zfs-maintenance.ts";
 import { runBugsinkHousekeepingWorkflow as _runBugsinkHousekeepingWorkflow } from "./bugsink.ts";
 import { runVeleroOrphanAuditWorkflow as _runVeleroOrphanAuditWorkflow } from "./velero-orphan-audit.ts";
@@ -79,10 +78,6 @@ export async function leavingHome(): Promise<void> {
 
 export async function runVacuumIfNotHome(): Promise<void> {
   return _runVacuumIfNotHome();
-}
-
-export async function adjustClimate(): Promise<void> {
-  return _adjustClimate();
 }
 
 export async function runZfsMaintenanceWorkflow(): Promise<void> {

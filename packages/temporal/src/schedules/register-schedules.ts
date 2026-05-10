@@ -20,7 +20,7 @@ type ScheduleDefinition = {
   workflowExecutionTimeout?: Duration;
 };
 
-const SCHEDULES: ScheduleDefinition[] = [
+export const SCHEDULES: ScheduleDefinition[] = [
   {
     id: "fetcher-skill-capped",
     workflowType: "fetchSkillCappedManifest",
@@ -134,7 +134,8 @@ const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 9 * * *",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "5 minutes",
+    // verifyState worst case = 3m delay + 3×1m inter-attempt sleeps + slack
+    workflowExecutionTimeout: "15 minutes",
     memo: "Run vacuum if no one is home (9 AM)",
   },
   {
@@ -144,7 +145,8 @@ const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 12 * * *",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "5 minutes",
+    // verifyState worst case = 3m delay + 3×1m inter-attempt sleeps + slack
+    workflowExecutionTimeout: "15 minutes",
     memo: "Run vacuum if no one is home (12 PM)",
   },
   {
@@ -154,7 +156,8 @@ const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 17 * * *",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "5 minutes",
+    // verifyState worst case = 3m delay + 3×1m inter-attempt sleeps + slack
+    workflowExecutionTimeout: "15 minutes",
     memo: "Run vacuum if no one is home (5 PM)",
   },
   {

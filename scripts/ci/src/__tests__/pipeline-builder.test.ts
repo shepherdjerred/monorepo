@@ -713,6 +713,7 @@ describe("buildPipeline", () => {
         "suppression-check",
         "trivy-scan",
         "semgrep-scan",
+        "tunnel-dns-coverage",
       ]);
       const nonDagger: string[] = [];
 

@@ -23,6 +23,7 @@ import {
   trivyScanStep,
   semgrepScanStep,
   daggerHygieneStep,
+  tunnelDnsCoverageStep,
   caddyfileValidateStep,
   lockfileCheckStep,
   envVarNamesStep,
@@ -117,6 +118,9 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
   steps.push(markdownlintStep());
   steps.push(knipCheckStep());
   steps.push(daggerHygieneStep());
+  if (affected.buildAll || affected.homelabChanged) {
+    steps.push(tunnelDnsCoverageStep());
+  }
   steps.push(trivyScanStep());
   steps.push(semgrepScanStep());
 
