@@ -50,9 +50,10 @@ const SLACK_MS = 5 * ONE_MINUTE;
 // inputs are interpreted as milliseconds (matches @temporalio/common).
 function durationToMs(d: Duration): number {
   if (typeof d === "number") return d;
-  const match = /^(\d+)\s*(second|minute|hour|day)s?$/.exec(d.trim());
+  const duration: string = d;
+  const match = /^(\d+)\s*(second|minute|hour|day)s?$/.exec(duration.trim());
   if (match === null) {
-    throw new Error(`Unrecognized Temporal duration string: "${d}"`);
+    throw new Error(`Unrecognized Temporal duration string: "${duration}"`);
   }
   const n = Number(match[1]);
   const unit = match[2];
