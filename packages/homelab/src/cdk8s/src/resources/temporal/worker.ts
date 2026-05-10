@@ -25,6 +25,7 @@ import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/ser
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { createTemporalWorkerAuditRbac } from "./audit-rbac.ts";
 
 export type CreateTemporalWorkerDeploymentProps = {
   serverServiceName: string;
@@ -225,6 +226,10 @@ export function createTemporalWorkerDeployment(
     ],
   });
 
+  // Cluster-wide read-only RBAC for the homelab-audit-daily workflow. See
+  // ./audit-rbac.ts for the full rule set.
+  createTemporalWorkerAuditRbac(chart, serviceAccount);
+
   const deployment = new Deployment(chart, "temporal-worker", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
@@ -263,16 +268,19 @@ export function createTemporalWorkerDeployment(
         group: GID,
         readOnlyRootFilesystem: false,
       },
-      // Bumped from 200m/500m and 256Mi/1Gi to give headroom for in-process
-      // claude -p invocations.
+      // Sized for in-process claude -p invocations. The pr-agent activity
+      // (review + summary) runs for a few minutes; the homelab-audit-daily
+      // workflow runs ~25 min and shells out to kubectl / talosctl / curl
+      // alongside claude. 1500m/4Gi gives headroom without throttling
+      // either lifecycle.
       resources: {
         cpu: {
           request: Cpu.millis(500),
-          limit: Cpu.millis(1000),
+          limit: Cpu.millis(1500),
         },
         memory: {
           request: Size.mebibytes(512),
-          limit: Size.gibibytes(2),
+          limit: Size.gibibytes(4),
         },
       },
       envVariables: {
@@ -405,6 +413,49 @@ export function createTemporalWorkerDeployment(
             secret,
             key: "SENDER_EMAIL",
           },
+          { optional: true },
+        ),
+        // ---------------------------------------------------------------
+        // homelab-audit-daily workflow credentials. All marked optional so
+        // the pod still starts if a 1P field is unset — the audit activity
+        // fails fast in the agent loop with a clear "API X returned 401"
+        // when a token is missing, while every other workflow keeps running.
+        // Add these fields to 1P item `temporal-temporal-worker-1p`:
+        //   PAGERDUTY_TOKEN, BUGSINK_URL, BUGSINK_TOKEN,
+        //   GRAFANA_URL, GRAFANA_API_KEY,
+        //   ARGOCD_SERVER, ARGOCD_AUTH_TOKEN,
+        //   CLOUDFLARE_API_TOKEN  (for `tofu plan` against the cloudflare module)
+        // ---------------------------------------------------------------
+        PAGERDUTY_TOKEN: EnvValue.fromSecretValue(
+          { secret, key: "PAGERDUTY_TOKEN" },
+          { optional: true },
+        ),
+        BUGSINK_URL: EnvValue.fromSecretValue(
+          { secret, key: "BUGSINK_URL" },
+          { optional: true },
+        ),
+        BUGSINK_TOKEN: EnvValue.fromSecretValue(
+          { secret, key: "BUGSINK_TOKEN" },
+          { optional: true },
+        ),
+        GRAFANA_URL: EnvValue.fromSecretValue(
+          { secret, key: "GRAFANA_URL" },
+          { optional: true },
+        ),
+        GRAFANA_API_KEY: EnvValue.fromSecretValue(
+          { secret, key: "GRAFANA_API_KEY" },
+          { optional: true },
+        ),
+        ARGOCD_SERVER: EnvValue.fromSecretValue(
+          { secret, key: "ARGOCD_SERVER" },
+          { optional: true },
+        ),
+        ARGOCD_AUTH_TOKEN: EnvValue.fromSecretValue(
+          { secret, key: "ARGOCD_AUTH_TOKEN" },
+          { optional: true },
+        ),
+        CLOUDFLARE_API_TOKEN: EnvValue.fromSecretValue(
+          { secret, key: "CLOUDFLARE_API_TOKEN" },
           { optional: true },
         ),
       },
