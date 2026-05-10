@@ -1,17 +1,45 @@
 import { z } from "zod";
+import {
+  CreateTaskRequestSchema,
+  UpdateTaskRequestSchema,
+} from "tasknotes-types";
 
-import type { TaskNotesClient } from "../api/TaskNotesClient";
 import { TypedStorage } from "../cache/storage";
 import type { AppError } from "../../domain/errors";
 import type { Result } from "../../domain/result";
 import type {
   CreateTaskRequest,
+  Task,
   TaskId,
   UpdateTaskRequest,
 } from "../../domain/types";
 import { TaskIdSchema } from "../../domain/types";
 import type { TaskStatus } from "../../domain/status";
 import { TaskStatusSchema } from "../../domain/schemas";
+
+export type MutationClient = {
+  createTask: (req: CreateTaskRequest) => Promise<Result<Task, AppError>>;
+  updateTask: (
+    id: TaskId,
+    req: UpdateTaskRequest,
+  ) => Promise<Result<Task, AppError>>;
+  deleteTask: (id: TaskId) => Promise<Result<void, AppError>>;
+  toggleTaskStatus: (
+    id: TaskId,
+    status: TaskStatus,
+  ) => Promise<Result<Task, AppError>>;
+  completeRecurringInstance: (id: TaskId) => Promise<Result<Task, AppError>>;
+};
+
+export type MutationStorage = {
+  read: () => Promise<string | null>;
+  write: (data: string) => Promise<void>;
+};
+
+const defaultStorage: MutationStorage = {
+  read: () => TypedStorage.getMutationQueue(),
+  write: (data) => TypedStorage.setMutationQueue(data),
+};
 
 type BaseMutation = { id: string; timestamp: number };
 type CreateMutation = BaseMutation & {
@@ -29,64 +57,46 @@ type ToggleStatusMutation = BaseMutation & {
   taskId: TaskId;
   payload: { status: TaskStatus };
 };
+type CompleteInstanceMutation = BaseMutation & {
+  type: "complete_instance";
+  taskId: TaskId;
+};
 
 export type Mutation =
   | CreateMutation
   | UpdateMutation
   | DeleteMutation
-  | ToggleStatusMutation;
+  | ToggleStatusMutation
+  | CompleteInstanceMutation;
 
 type CreateMutationInput = Omit<CreateMutation, "id" | "timestamp">;
 type UpdateMutationInput = Omit<UpdateMutation, "id" | "timestamp">;
 type DeleteMutationInput = Omit<DeleteMutation, "id" | "timestamp">;
 type ToggleStatusMutationInput = Omit<ToggleStatusMutation, "id" | "timestamp">;
+type CompleteInstanceMutationInput = Omit<
+  CompleteInstanceMutation,
+  "id" | "timestamp"
+>;
 export type MutationInput =
   | CreateMutationInput
   | UpdateMutationInput
   | DeleteMutationInput
-  | ToggleStatusMutationInput;
+  | ToggleStatusMutationInput
+  | CompleteInstanceMutationInput;
 
 const MutationSchema = z.discriminatedUnion("type", [
   z.object({
     id: z.string(),
     timestamp: z.number(),
     type: z.literal("create"),
-    payload: z.object({
-      title: z.string(),
-      description: z.string().optional(),
-      status: TaskStatusSchema.optional(),
-      priority: z
-        .enum(["highest", "high", "medium", "normal", "low", "none"])
-        .optional(),
-      due: z.string().optional(),
-      scheduled: z.string().optional(),
-      contexts: z.array(z.string()).optional(),
-      projects: z.array(z.string()).optional(),
-      tags: z.array(z.string()).optional(),
-      recurrence: z.string().optional(),
-      timeEstimate: z.number().optional(),
-    }),
+    payload: CreateTaskRequestSchema,
   }),
   z.object({
     id: z.string(),
     timestamp: z.number(),
     type: z.literal("update"),
     taskId: TaskIdSchema,
-    payload: z.object({
-      title: z.string().optional(),
-      description: z.string().optional(),
-      status: TaskStatusSchema.optional(),
-      priority: z
-        .enum(["highest", "high", "medium", "normal", "low", "none"])
-        .optional(),
-      due: z.string().nullable().optional(),
-      scheduled: z.string().nullable().optional(),
-      contexts: z.array(z.string()).optional(),
-      projects: z.array(z.string()).optional(),
-      tags: z.array(z.string()).optional(),
-      recurrence: z.string().nullable().optional(),
-      timeEstimate: z.number().nullable().optional(),
-    }),
+    payload: UpdateTaskRequestSchema,
   }),
   z.object({
     id: z.string(),
@@ -103,78 +113,87 @@ const MutationSchema = z.discriminatedUnion("type", [
       status: TaskStatusSchema,
     }),
   }),
+  z.object({
+    id: z.string(),
+    timestamp: z.number(),
+    type: z.literal("complete_instance"),
+    taskId: TaskIdSchema,
+  }),
 ]);
 
 let counter = 0;
 function generateId(): string {
   counter += 1;
-  return `${Date.now()}-${counter}`;
+  return `${String(Date.now())}-${String(counter)}`;
 }
 
 export class MutationQueue {
   private queue: Mutation[] = [];
+  private readonly storage: MutationStorage;
 
-  async enqueue(mutation: MutationInput): Promise<void> {
-    const base = { id: generateId(), timestamp: Date.now() };
-    switch (mutation.type) {
-      case "create":
-        this.queue.push({
-          ...base,
-          type: mutation.type,
-          payload: mutation.payload,
-        });
-        break;
-      case "update":
-        this.queue.push({
-          ...base,
-          type: mutation.type,
-          taskId: mutation.taskId,
-          payload: mutation.payload,
-        });
-        break;
-      case "delete":
-        this.queue.push({
-          ...base,
-          type: mutation.type,
-          taskId: mutation.taskId,
-        });
-        break;
-      case "toggle_status":
-        this.queue.push({
-          ...base,
-          type: mutation.type,
-          taskId: mutation.taskId,
-          payload: mutation.payload,
-        });
-        break;
-    }
-    await this.persist();
+  constructor(storage: MutationStorage = defaultStorage) {
+    this.storage = storage;
   }
 
-  async replay(client: TaskNotesClient): Promise<Result<void, AppError>[]> {
+  async enqueue(mutation: MutationInput): Promise<Mutation> {
+    const base = { id: generateId(), timestamp: Date.now() };
+    let entry: Mutation;
+    switch (mutation.type) {
+      case "create":
+        entry = { ...base, type: mutation.type, payload: mutation.payload };
+        break;
+      case "update":
+        entry = {
+          ...base,
+          type: mutation.type,
+          taskId: mutation.taskId,
+          payload: mutation.payload,
+        };
+        break;
+      case "delete":
+        entry = { ...base, type: mutation.type, taskId: mutation.taskId };
+        break;
+      case "toggle_status":
+        entry = {
+          ...base,
+          type: mutation.type,
+          taskId: mutation.taskId,
+          payload: mutation.payload,
+        };
+        break;
+      case "complete_instance":
+        entry = { ...base, type: mutation.type, taskId: mutation.taskId };
+        break;
+    }
+    this.queue.push(entry);
+    await this.persist();
+    return entry;
+  }
+
+  async replay(client: MutationClient): Promise<Result<void, AppError>[]> {
     const results: Result<void, AppError>[] = [];
-    const processed: Mutation[] = [];
+    const processed = new Set<string>();
 
     for (const mutation of this.queue) {
       const result = await this.executeMutation(client, mutation);
       if (result.ok) {
-        processed.push(mutation);
+        processed.add(mutation.id);
       }
       results.push(result);
     }
 
-    this.queue = this.queue.filter((m) => !processed.includes(m));
+    this.queue = this.queue.filter((m) => !processed.has(m.id));
     await this.persist();
 
     return results;
   }
 
   async persist(): Promise<void> {
-    await TypedStorage.setMutationQueue(JSON.stringify(this.queue));
+    await this.storage.write(JSON.stringify(this.queue));
   }
 
   async restore(): Promise<void> {
-    const raw = await TypedStorage.getMutationQueue();
+    const raw = await this.storage.read();
     if (!raw) {
       this.queue = [];
       return;
@@ -207,7 +226,7 @@ export class MutationQueue {
   }
 
   private async executeMutation(
-    client: TaskNotesClient,
+    client: MutationClient,
     mutation: Mutation,
   ): Promise<Result<void, AppError>> {
     switch (mutation.type) {
@@ -230,6 +249,10 @@ export class MutationQueue {
           mutation.taskId,
           mutation.payload.status,
         );
+        return result.ok ? { ok: true, value: undefined } : result;
+      }
+      case "complete_instance": {
+        const result = await client.completeRecurringInstance(mutation.taskId);
         return result.ok ? { ok: true, value: undefined } : result;
       }
     }
