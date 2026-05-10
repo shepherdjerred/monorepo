@@ -27,7 +27,7 @@ export class PrometheusClient {
     const url = new URL("/api/v1/query", this.baseUrl);
     url.searchParams.set("query", query);
 
-    const response = await fetch(url, { signal: AbortSignal.timeout(8_000) });
+    const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
     if (!response.ok) {
       throw new Error(`Prometheus query failed: ${response.status.toString()}`);
     }

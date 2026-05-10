@@ -68,7 +68,7 @@ export class BugsinkClient {
         Authorization: `Bearer ${this.token}`,
         Accept: "application/json",
       },
-      signal: AbortSignal.timeout(8_000),
+      signal: AbortSignal.timeout(8000),
     });
     if (!response.ok) {
       throw new Error(`Bugsink request failed: ${response.status.toString()}`);
