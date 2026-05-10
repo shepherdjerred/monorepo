@@ -5,6 +5,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as Sentry from "@sentry/react-native";
 
 import { ApiClientProvider } from "./src/state/ApiClientContext";
+import { PomodoroProvider } from "./src/state/PomodoroContext";
 import { SettingsProvider } from "./src/state/SettingsContext";
 import { SyncProvider } from "./src/state/SyncContext";
 import { TaskProvider } from "./src/state/TaskContext";
@@ -54,13 +55,15 @@ function App() {
         <ErrorBoundary>
           <SettingsProvider>
             <ApiClientProvider>
-              <TaskProvider>
-                <SyncProvider>
-                  <TimeTrackingProvider>
-                    <ThemedApp />
-                  </TimeTrackingProvider>
-                </SyncProvider>
-              </TaskProvider>
+              <PomodoroProvider>
+                <TaskProvider>
+                  <SyncProvider>
+                    <TimeTrackingProvider>
+                      <ThemedApp />
+                    </TimeTrackingProvider>
+                  </SyncProvider>
+                </TaskProvider>
+              </PomodoroProvider>
             </ApiClientProvider>
           </SettingsProvider>
         </ErrorBoundary>
