@@ -7,6 +7,8 @@ import { handleGrafanaCommand } from "./handlers/grafana.ts";
 import { handleFetchCommand } from "./handlers/fetch.ts";
 import { handleRecallCommand } from "./handlers/recall.ts";
 
+const TOOLKIT_VERSION = "0.1.0";
+
 function printUsage(): void {
   console.log(`
 toolkit - CLI utilities for development workflows
@@ -67,6 +69,7 @@ Commands:
   gf ...                     Alias for grafana
 
 Options:
+  --version                  Print toolkit version
   --json                     Output as JSON
   --verbose, -v              Verbose output (timing, debug info)
 
@@ -100,6 +103,11 @@ async function main(): Promise<void> {
     command === "-h"
   ) {
     printUsage();
+    process.exit(0);
+  }
+
+  if (command === "--version" || command === "version") {
+    console.log(`toolkit ${TOOLKIT_VERSION}`);
     process.exit(0);
   }
 
