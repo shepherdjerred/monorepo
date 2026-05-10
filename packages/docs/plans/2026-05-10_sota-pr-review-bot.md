@@ -2,7 +2,7 @@
 
 ## Status
 
-Not Started — supersedes [`2026-04-25_pr-review-and-summary-bot.md`](./2026-04-25_pr-review-and-summary-bot.md), which should move to `archive/superseded/` once this plan is approved.
+In Progress — Phase 1 (foundation) implementation landed in PR #728; subsequent phases tracked via the team task list. Supersedes [`2026-04-25_pr-review-and-summary-bot.md`](./2026-04-25_pr-review-and-summary-bot.md), which should move to `archive/superseded/` once this plan is approved.
 
 ## Context
 
@@ -309,3 +309,33 @@ Repo-level gates always: `bun run typecheck && bun run test && bunx eslint . --f
 - RARe (less-is-more retrieval): https://arxiv.org/abs/2511.05302
 - ROI / FPR cost model: https://www.codeant.ai/blogs/ai-code-review-roi
 - Anthropic extended thinking: https://platform.claude.com/docs/en/build-with-claude/extended-thinking
+
+## Session Log — 2026-05-10 (foundation teammate, Phase 1)
+
+### Done
+
+- Added Zod `Finding` schema + `FindingArraySchema` at `packages/temporal/src/shared/pr-review/finding.ts` with 8 unit tests covering field validation, enum coverage, and the optional `votes` clustering metadata. Co-located under `shared/pr-review/` alongside the consensus-clustering helper specialists will land at `shared/pr-review/cluster-key.ts` (eval also imports this hash for grading).
+- Added `TASK_QUEUES.PR_REVIEW = "pr-review"` constant in `packages/temporal/src/shared/task-queues.ts`.
+- Added `PrReviewPipelineInputSchema` in `packages/temporal/src/shared/schemas.ts`.
+- Created 8 activity skeleton files under `packages/temporal/src/activities/pr-review/` (`bootstrap.ts`, `specialists.ts`, `consensus.ts`, `verify.ts`, `dedupe.ts`, `post.ts`, `metrics.ts`, `track.ts`) plus an `index.ts` aggregator. Every activity is wrapped in `withSpan` for OTel and structured-logs through `jsonLog`.
+- The `postReview` activity is **not** a stub — it actually posts a literal phase-1 comment (`"hello from prReview — phase 1 stub"`) via `@octokit/rest`, with marker-based edit-in-place so redelivered webhooks update rather than duplicate. Marker is workflow-id-scoped so cross-PR collisions are impossible. Factored into a pure `runPostReview` runner so tests can drive it with a fake Octokit (5 unit tests covering create-new, update-existing, ignore-other-workflow-marker, error propagation, null-body resilience).
+- Parent workflow `prReviewPipeline` lives at `packages/temporal/src/workflows/pr-review/index.ts` and orchestrates the activity graph end-to-end with proper per-activity timeouts and retry policies.
+- Added `octokit@^5.0.4` to `packages/temporal/package.json`.
+- Wired the new workflow + activities into the temporal package's index files.
+- Worker now creates a **second** `Worker` on the `pr-review` task queue (same workflow bundle + activity surface as the DEFAULT worker) and `Promise.all`s both `run()` calls. Shutdown is symmetric across both.
+- Webhook handler now starts three workflows on each PR delivery: existing `prReview` (DEFAULT) + `prSummary` (DEFAULT) + new `prReviewPipeline` (`pr-review` queue) — see `packages/temporal/src/event-bridge/github-webhook.ts`. The pipeline uses `REJECT_DUPLICATE` so redelivered webhooks for the same commit sha no-op at the Temporal server; the `WorkflowExecutionAlreadyStartedError` is caught and surfaced as an info log instead of an HTTP 500.
+- Added Prometheus metrics `pr_review_pipeline_posted_total{owner,repo,outcome}` and `pr_review_pipeline_findings_per_pr` (Histogram).
+- Webhook test extended to verify the fields the pipeline workflow id derives from are passed through unchanged.
+- PR #728 opened against main; all local gates clean (typecheck, test 75/75, eslint, prettier, markdownlint, cdk8s synth, dagger hygiene, lefthook tier-1/tier-2).
+
+### Remaining
+
+- Phase 2 (Task #2): port `codeReviewHelper`'s prompt into a real `correctnessReviewer` activity using `@anthropic-ai/sdk` with prompt caching on the CLAUDE.md hierarchy; build `packages/temporal/scripts/replay-pr-review.ts --pr <#> --baseline` CLI. Pending team-lead sequencing guidance on whether to stack on #728 or wait for merge + rebase.
+- Phase 13 (Task #13): retire `scripts/ci/src/steps/code-review.ts` + `codeReviewHelper` after Phase 12 shadow-mode cutover. Blocked for weeks.
+
+### Caveats
+
+- The existing temporal-worker Helm chart already wires every secret + port the foundation needs (`GITHUB_WEBHOOK_SECRET`, `GH_TOKEN`, `GITHUB_PERSONAL_ACCESS_TOKEN`, `CLAUDE_CODE_OAUTH_TOKEN`, Sentry DSN; Cloudflare Tunnel on `:9466`). No chart changes needed for Phase 1; the new worker on the `pr-review` queue is just another goroutine inside the same pod.
+- `PostReviewOctokit["rest"]["issues"]["listComments"]` is typed as `unknown` because the real Octokit method has a deeply-conditional auto-generated signature that's awkward to mock without `as` assertions (which the custom ESLint rule forbids). The activity only uses `listComments` as a route pointer for `paginate.iterator`; the fake iterator ignores its identity, so widening to `unknown` keeps both the contract honest and the tests passing without leaning on forbidden casts.
+- The two pre-existing `prReview` and `prSummary` workflows (claude-subprocess) keep running alongside the new pipeline during the multi-phase shadow rollout (Phase 12). They are deleted in Phase 13.
+- Setup-script regen produced unrelated helm-types churn and a scout test DB diff; intentionally excluded from the Phase 1 commit.
