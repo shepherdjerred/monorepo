@@ -547,11 +547,9 @@ export function buildTemporalWorkerImageHelper(
     );
   }
 
-  container = withWritableBunInstallCache(
-    container
-      .withWorkdir("/workspace/packages/temporal")
-      .withExec(["bun", "install", "--frozen-lockfile"]),
-  );
+  container = container
+    .withWorkdir("/workspace/packages/temporal")
+    .withExec(["bun", "install", "--frozen-lockfile"]);
 
   // Compile the in-tree toolkit CLI into a static binary if its source is
   // mounted. The temporal-worker WORKSPACE_DEPS list opts into this by
@@ -560,6 +558,12 @@ export function buildTemporalWorkerImageHelper(
   if (depNames.includes("toolkit")) {
     container = withToolkit(container);
   }
+
+  // Reassign ownership of the bun install cache AFTER every bun-install step
+  // (including toolkit's). New entries written by the toolkit install must
+  // also be readable by UID 1000 at runtime — see the docstring on
+  // `withWritableBunInstallCache`.
+  container = withWritableBunInstallCache(container);
 
   return container
     .withWorkdir("/workspace/packages/temporal")
