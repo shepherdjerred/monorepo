@@ -10,6 +10,7 @@ import {
   PrAgentInputSchema,
   type PrAgentInput,
   type PrReviewPipelineInput,
+  type PrSummaryInput,
 } from "#shared/schemas.ts";
 import {
   prWebhookReceivedTotal,
@@ -87,6 +88,10 @@ function pipelineWorkflowIdFor(pr: PrReviewPipelineInput): string {
   return `pr-review-pipeline-${pr.owner}-${pr.repo}-${String(pr.prNumber)}-${pr.commitSha}`;
 }
 
+function summaryPipelineWorkflowIdFor(pr: PrSummaryInput): string {
+  return `pr-summary-pipeline-${pr.owner}-${pr.repo}-${String(pr.prNumber)}-${pr.commitSha}`;
+}
+
 async function startPrReviewPipeline(
   client: Client,
   pipelineInput: PrReviewPipelineInput,
@@ -115,11 +120,48 @@ async function startPrReviewPipeline(
   }
 }
 
+async function startPrSummaryPipeline(
+  client: Client,
+  summaryInput: PrSummaryInput,
+): Promise<void> {
+  // Same idempotency model as the review pipeline — redelivered webhooks
+  // for the same commit sha no-op at the server.
+  try {
+    await client.workflow.start("prSummaryPipeline", {
+      taskQueue: TASK_QUEUES.PR_SUMMARY,
+      workflowId: summaryPipelineWorkflowIdFor(summaryInput),
+      workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
+      args: [summaryInput],
+    });
+  } catch (error: unknown) {
+    if (error instanceof WorkflowExecutionAlreadyStartedError) {
+      jsonLog("info", "pr-summary pipeline already started for this commit", {
+        prNumber: summaryInput.prNumber,
+        commitSha: summaryInput.commitSha,
+        workflowId: summaryPipelineWorkflowIdFor(summaryInput),
+      });
+      return;
+    }
+    throw error;
+  }
+}
+
 async function startPrWorkflows(
   client: Client,
   input: PrAgentInput,
 ): Promise<void> {
   const pipelineInput: PrReviewPipelineInput = {
+    owner: input.owner,
+    repo: input.repo,
+    prNumber: input.prNumber,
+    commitSha: input.commitSha,
+    baseRef: input.baseRef,
+    headRef: input.headRef,
+    prTitle: input.prTitle,
+    prAuthor: input.prAuthor,
+  };
+
+  const summaryInput: PrSummaryInput = {
     owner: input.owner,
     repo: input.repo,
     prNumber: input.prNumber,
@@ -143,9 +185,13 @@ async function startPrWorkflows(
       workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE,
       args: [{ ...input, kind: "summary" }],
     }),
-    // SOTA pipeline (shadow mode during the multi-phase rollout — see
-    // packages/docs/plans/2026-05-10_sota-pr-review-bot.md).
+    // SOTA review pipeline (multi-specialist consensus + verification) and
+    // SOTA summary pipeline (Haiku 4.5 + prompt caching). Both run in
+    // shadow mode alongside the legacy claude -p workflows during the
+    // multi-phase rollout — see
+    // packages/docs/plans/2026-05-10_sota-pr-review-bot.md.
     startPrReviewPipeline(client, pipelineInput),
+    startPrSummaryPipeline(client, summaryInput),
   ]);
 }
 
