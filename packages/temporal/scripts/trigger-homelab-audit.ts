@@ -44,7 +44,9 @@ function parseArgs(argv: readonly string[]): Args {
 
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
-  const client = await createTemporalClient();
+  const address = Bun.env["TEMPORAL_ADDRESS"] ?? DEFAULT_TEMPORAL_ADDRESS;
+  const connection = await Connection.connect({ address });
+  const client = new Client({ connection });
   const workflowId = `homelab-audit-trigger-${args.date}-${crypto.randomUUID().slice(0, 8)}`;
 
   console.warn(
@@ -53,9 +55,7 @@ async function main(): Promise<void> {
       msg: "Starting homelab audit workflow",
       workflowId,
       date: args.date,
-      address:
-        Bun.env["TEMPORAL_ADDRESS"] ??
-        "temporal-server.temporal.svc.cluster.local:7233",
+      address,
     }),
   );
 

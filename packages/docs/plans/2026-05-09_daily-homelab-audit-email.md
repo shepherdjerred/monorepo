@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress — implementation started 2026-05-09. Layers 1–5 (local iteration) target completion before any worker-image rebuild or cluster deploy.
+Complete (code + RBAC + Dagger image) — 2026-05-10. Layer 6 (cluster smoke) requires the operator to populate the new 1Password fields and merge/build the worker image; the schedule is registered and will fire automatically on next 06:30 PT after that.
 
 ## Context
 
@@ -121,8 +121,6 @@ op run --env-file=.env.audit -- bun run src/scripts/trigger-homelab-audit.ts
 - Auto-archive each day's markdown to `packages/docs/guides/audits/YYYY-MM-DD.md` via a follow-on activity.
 - Slack/Discord short-form digest in addition to email.
 - Auto-fixers for the common items the audit surfaces every run (Released PVs, OOMKill memory bumps).
-- **Toolkit binary in worker image.** v1 substituted `curl` against the PD/Bugsink/Grafana REST APIs. Building and shipping the `toolkit` static binary into the worker image would let the prompt re-use the runbook's `toolkit gf query` / `toolkit pd incidents` commands verbatim.
-- **`talosctl` auth in cluster.** v1 ships the binary but does not inject `TALOSCONFIG`. Today the agent falls back to `kubectl` for §1 signal (node Ready, kernel via `kubectl get nodes -o wide`). Wiring talosconfig from 1Password would unlock `talosctl health`, `talosctl dmesg`, `talosctl get members`.
 
 ## Session Log — 2026-05-09
 
@@ -145,20 +143,48 @@ op run --env-file=.env.audit -- bun run src/scripts/trigger-homelab-audit.ts
 - `packages/temporal/CLAUDE.md` — documents the new env vars + the homelab-audit local-dev recipe.
 - Verification: `cd packages/temporal && bun run typecheck` clean, `bun run test` 55/55 pass, `bun run lint` clean, `./src/workflows/bundle.test.ts` webpacks the new workflow imports cleanly. `cd packages/homelab && bun run typecheck` clean, eslint clean.
 
-### Remaining
+## Session Log — 2026-05-10
 
-- **Layer 6 cluster smoke** is not yet exercised. Required steps before the schedule fires:
-  1. Add the new fields to 1Password item `temporal-temporal-worker-1p`: `PAGERDUTY_TOKEN`, `BUGSINK_URL`, `BUGSINK_TOKEN`, `GRAFANA_URL`, `GRAFANA_API_KEY`, `ARGOCD_SERVER`, `ARGOCD_AUTH_TOKEN`, `CLOUDFLARE_API_TOKEN`. (Do **not** rename existing fields — see auto-memory `feedback_dont_modify_1p_items`.)
-  2. Run Layer 2 locally with `DRY_RUN=1` against the fields above (use `op run --env-file=.env.audit -- ...`); confirm the agent produces a markdown audit comparable in depth to `packages/docs/guides/2026-05-08_homelab-health-audit.md`.
-  3. Compose `.env.audit` with `RUNBOOK_PATH=packages/docs/guides/2026-04-04_homelab-audit-runbook.md` for offline iteration.
-  4. After local satisfaction, let the worker-image build land via Renovate or a manual rebuild; trigger the schedule once via Temporal UI ("Run Now").
-  5. Watch `homelab_audit_tokens_total` and `homelab_audit_subprocess_duration_seconds`. If a single run is > 200 k input, > 50 k output, or > 35 min wall, tune the prompt **before** the next 06:30 PT fire.
-- A workflow-level `TestWorkflowEnvironment` test (`workflows/homelab-audit.test.ts`) was scoped in but not written — the workflow body is 6 lines and the bundle smoke test already validates it webpacks. If retry/timeout policy changes meaningfully, add the test.
+### Done — closed every deferral from the 2026-05-09 log
+
+- **Toolkit binary now compiled into the worker image.** Added `withToolkit(container)` to `.dagger/src/image.ts` (runs `bun install --frozen-lockfile` + `bun build --compile --outfile=/usr/local/bin/toolkit` in `/workspace/packages/toolkit`, then `toolkit --version` smoke check). Wired into `buildTemporalWorkerImageHelper` conditionally on `depNames.includes("toolkit")`. Added `"toolkit"` to `WORKSPACE_DEPS["temporal"]` in `.dagger/src/deps.ts` so the CI mounts the toolkit source. Restored the runbook-style `toolkit pd|bugsink|gf` references in the audit prompt (replacing the curl recipes) — `packages/temporal/src/activities/homelab-audit-prompts.ts`.
+- **TALOSCONFIG injection wired.** Added a projected `Volume.fromSecret` mount in `packages/homelab/src/cdk8s/src/resources/temporal/worker.ts` that surfaces 1P field `TALOSCONFIG_YAML` as `/etc/talos/config` (read-only, mode 0400, `optional: true` so a missing field doesn't break pod startup). Set `TALOSCONFIG=/etc/talos/config` in env. Updated the prompt and `packages/temporal/CLAUDE.md` accordingly.
+- **TestWorkflowEnvironment-driven workflow test.** New `packages/temporal/src/workflows/homelab-audit.test.ts` drives `runHomelabAuditWorkflow` against `TestWorkflowEnvironment.createTimeSkipping()` with the agent and email activities mocked. Asserts agent → email order, retry policy on transient failure, and that the workflow input flows through to the email activity. Added `@temporalio/testing@1.16.1` (exact-pinned) — also pinned the existing `@temporalio/{activity,client,common,worker,workflow}` from `^1.16.1` to exact `1.16.1` to avoid the protobuf-namespace duplicate registration that hits when the testing package's nested `@temporalio/proto` resolves to a different patch than the rest.
+- **Layer 5 trigger script added.** New `packages/temporal/scripts/trigger-homelab-audit.ts` connects to whatever `$TEMPORAL_ADDRESS` resolves to, starts a `runHomelabAuditWorkflow` execution with a unique ID, and (by default) waits for the result. Used in the verification ladder Layer 5 once the prompt is dialed in.
+- **Verification:** `cd packages/temporal && bun run typecheck` clean, `bun run test` 58/58 pass (including 2 new TestWorkflowEnvironment tests), `bun run lint` clean. `cd packages/homelab && bun run typecheck` clean, eslint clean. `cd packages/homelab/src/cdk8s && bunx eslint --cache src/resources/temporal/` clean.
+
+### Remaining (operator only — no further code changes)
+
+- **Populate 1Password item `temporal-temporal-worker-1p`** with the new fields. Per `feedback_dont_modify_1p_items`, do not rename existing fields:
+  - `PAGERDUTY_TOKEN`, `BUGSINK_URL`, `BUGSINK_TOKEN`
+  - `GRAFANA_URL`, `GRAFANA_API_KEY`
+  - `ARGOCD_SERVER`, `ARGOCD_AUTH_TOKEN`
+  - `CLOUDFLARE_API_TOKEN` (read-only token, scope: Account:Read + Zone:Read)
+  - `TALOSCONFIG_YAML` (the full talosconfig file contents as a single string — `talosctl config view --raw` on a configured workstation produces the value)
+- **Layer 2 dry-run locally** before merging:
+
+  ```bash
+  cd packages/temporal
+  op run --env-file=.env.audit -- DRY_RUN=1 bun run scripts/run-homelab-audit-local.ts --sections=1,9,13
+  ```
+
+  Confirm the rendered HTML at `/tmp/homelab-audit-<ts>.html` is comparable in depth to `packages/docs/guides/2026-05-08_homelab-health-audit.md`. Iterate the prompt while it's cheap.
+
+- **Layer 5 trigger against local Temporal dev server** (optional, recommended once before merge):
+
+  ```bash
+  temporal server start-dev --ui-port 8233 &
+  op run --env-file=.env.audit -- TEMPORAL_ADDRESS=localhost:7233 bun run start &
+  op run --env-file=.env.audit -- TEMPORAL_ADDRESS=localhost:7233 bun run scripts/trigger-homelab-audit.ts
+  ```
+
+- **Layer 6** — after merge, the worker image rebuilds via the existing Buildkite pipeline. Once deployed, manually trigger via Temporal UI ("Run Now" on `homelab-audit-daily`) once. Confirm the email arrives, then leave the schedule running.
+- **Cost gate** — record `homelab_audit_tokens_total` and `homelab_audit_subprocess_duration_seconds` after the first successful run. If a single run is > 200 k input, > 50 k output, or > 35 min wall, tune the prompt before the next 06:30 PT fire.
 
 ### Caveats
 
-- **Toolkit binary deferred.** v1 has the agent use `curl` directly against PD/Bugsink/Grafana REST APIs; the prompt embeds the exact endpoints and auth headers. The runbook still references `toolkit gf` / `toolkit pd` patterns — the agent will need to translate. If runbook fidelity is a problem, the v2 followup is to compile the toolkit binary in the Dagger worker-image build (requires plumbing toolkit + eslint-config Directory params through `buildTemporalWorkerImage`).
-- **Talos auth not wired in cluster.** The image ships `talosctl` but the deployment doesn't yet inject `TALOSCONFIG`. Talos-specific runbook signal (§1's `talosctl health`, `talosctl dmesg`, `talosctl get members`) won't work until the talosconfig YAML is added to 1P + mounted as a file. v1 falls back to kubectl-derived signal for §1.
-- **`tofu plan -detailed-exitcode` returns 2 on drift.** That's intentional — the agent should report drift in the audit body, not throw. The prompt notes this; tune wording on the next iteration if the agent treats exit 2 as failure.
-- **Postal "tag" filtering.** Mail will arrive with tag `homelab-audit` (production) and `homelab-audit-test` (local DRY_RUN=0 send). Inbox rules can split them.
-- The audit runbook is fetched over HTTPS from `main` at activity startup. **A bad commit to the runbook will break the next morning's audit.** Rollback path: revert the runbook commit; the next run picks up the old content. No image rebuild needed.
+- **`tofu plan -detailed-exitcode` returns 2 on drift.** The prompt notes this is "drift detected" rather than failure; if the agent treats exit 2 as failure, tighten the wording on the next iteration.
+- **Postal "tag" filtering.** Mail will arrive with tag `homelab-audit` (production) and `homelab-audit-test` (local `DRY_RUN=0` send via `scripts/run-homelab-audit-local.ts`). Inbox rules can split them.
+- **Runbook fetched over HTTPS from `main` at activity startup.** A bad commit to the runbook breaks the next morning's audit. Rollback: revert the runbook commit; the next run picks it up — no image rebuild needed.
+- **`@temporalio/testing` pinned to exact 1.16.1.** It pulls a transitive copy of `@temporalio/worker`; with `^1.16.1` Bun resolves the transitive copy to a different patch and the `NativeConnection` types diverge. Pinning all five `@temporalio/*` packages to exact `1.16.1` keeps the test environment compatible. Renovate may still propose minor bumps — accept them as a coordinated set.
+- **Toolkit binary build cost.** The toolkit binary is compiled in-place during the worker-image build (`bun build --compile` inside `withToolkit`). Adds ~30 s to image build time and ~50 MB to image size due to bundled `@lancedb/lancedb` native module. Acceptable for a daily image rebuild; revisit if it grows.
