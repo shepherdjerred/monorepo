@@ -69,6 +69,22 @@ describe("retry config", () => {
   });
 });
 
+describe("version commit-back", () => {
+  it("uses a stable pending branch", () => {
+    const releaseSource = readFileSync(`${daggerSrc}/release.ts`, "utf-8");
+    expect(releaseSource).toContain(
+      'const VERSION_BUMP_BRANCH = "chore/version-bump-pending"',
+    );
+    expect(releaseSource).toContain(`git rebase origin/main`);
+  });
+
+  it("does not close sibling version bump PRs", () => {
+    const releaseSource = readFileSync(`${daggerSrc}/release.ts`, "utf-8");
+    expect(releaseSource).not.toContain("gh pr close");
+    expect(releaseSource).not.toContain("Superseded by");
+  });
+});
+
 describe("image tags", () => {
   function getImageConstants(): string[] {
     const result = execSync(

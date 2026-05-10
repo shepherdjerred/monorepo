@@ -48,6 +48,7 @@ export const IMAGE_PUSH_TARGETS: ImageTarget[] = [
     buildFn: "build-temporal-worker-image",
     pushFn: "push-temporal-worker-image",
   },
+  { name: "trmnl-dashboard", versionKey: "shepherdjerred/trmnl-dashboard" },
 ];
 
 export const INFRA_PUSH_TARGETS: ImageTarget[] = [
@@ -245,6 +246,7 @@ export const HELM_CHARTS: string[] = [
   "tasknotes",
   "status-page",
   "temporal",
+  "trmnl-dashboard",
 ];
 
 // ---------------------------------------------------------------------------

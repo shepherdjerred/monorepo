@@ -21,7 +21,7 @@ export const PLAYWRIGHT_IMAGE = "mcr.microsoft.com/playwright:v1.59.1-noble";
 export const SWIFTLINT_IMAGE = "ghcr.io/realm/swiftlint:0.58.2";
 // renovate: datasource=docker depName=alpine
 export const ALPINE_IMAGE = "alpine:3.21";
-// renovate: datasource=docker depName=hashicorp/terraform
+// renovate: datasource=docker depName=opentofu/opentofu
 export const TOFU_IMAGE = "ghcr.io/opentofu/opentofu:1.11.5";
 // renovate: datasource=docker depName=maven
 export const MAVEN_IMAGE = "maven:3.9.15-eclipse-temurin-25";
@@ -34,6 +34,10 @@ export const CADDY_BUILDER_IMAGE =
   "caddy:2-builder-alpine@sha256:17a3a99c747d2124b9e9a6f434905b2869d67d9fc278b00f3deba5f4a69254bc";
 // renovate: datasource=docker depName=python
 export const PYTHON_IMAGE = "python:3.13-slim";
+
+// Base image for obsidian-headless container (uses Node, not Bun, due to native better-sqlite3 addon).
+// renovate: datasource=docker depName=node
+export const OBSIDIAN_HEADLESS_BASE_IMAGE = "node:22-slim";
 // renovate: datasource=docker depName=alpine/helm
 export const HELM_IMAGE =
   "alpine/helm:4.1.3@sha256:a572075a78666ad6fb1f40cb477a9e2eabbc46f3739beeb81904a6121f6ef027";
@@ -59,6 +63,18 @@ export const KUBECTL_VERSION = "v1.35.0";
 
 // renovate: datasource=github-releases depName=github/github-mcp-server
 export const GITHUB_MCP_SERVER_VERSION = "1.0.3";
+
+// renovate: datasource=github-releases depName=siderolabs/talos
+export const TALOSCTL_VERSION = "v1.13.0";
+
+// renovate: datasource=github-releases depName=opentofu/opentofu
+export const TOFU_VERSION = "1.11.5";
+
+// renovate: datasource=github-releases depName=argoproj/argo-cd
+export const ARGOCD_CLI_VERSION = "v3.2.4";
+
+// renovate: datasource=github-releases depName=vmware-tanzu/velero
+export const VELERO_CLI_VERSION = "v1.18.0";
 
 // ---------------------------------------------------------------------------
 // Cache volume names (stable — never include version numbers)

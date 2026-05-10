@@ -1,0 +1,31 @@
+{
+  "name": "@shepherdjerred/trmnl-dashboard",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "imports": {
+    "#src/*": "./src/*"
+  },
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun --watch run src/index.ts",
+    "build": "true",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "lint": "bunx eslint . --max-warnings=0"
+  },
+  "dependencies": {
+    "@shepherdjerred/home-assistant": "file:../home-assistant",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "file:../eslint-config",
+    "@types/bun": "^1.3.13",
+    "eslint": "^9.39.4",
+    "jiti": "^2.6.1",
+    "typescript": "^6.0.3"
+  }
+}

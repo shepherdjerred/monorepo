@@ -29,11 +29,9 @@ export async function createMcpGatewayDeployment(chart: Chart) {
   const UID = 65_534;
   const GID = 65_534;
 
-  // Load the mcp-proxy configuration and piazza script from files
+  // Load the mcp-proxy configuration from file.
   const configPath = path.join(CURRENT_DIRNAME, "config.json");
   const configContent = await Bun.file(configPath).text();
-  const piazzaScriptPath = path.join(CURRENT_DIRNAME, "piazza-mcp.py");
-  const piazzaScriptContent = await Bun.file(piazzaScriptPath).text();
 
   // Create ConfigMap for mcp-proxy configuration
   const mcpProxyConfig = new ConfigMap(chart, "mcp-proxy-config", {
@@ -42,7 +40,6 @@ export async function createMcpGatewayDeployment(chart: Chart) {
     },
     data: {
       "config.json": configContent,
-      "piazza-mcp.py": piazzaScriptContent,
     },
   });
 
@@ -53,15 +50,6 @@ export async function createMcpGatewayDeployment(chart: Chart) {
     },
     metadata: {
       name: "canvas",
-    },
-  });
-
-  const piazzaItem = new OnePasswordItem(chart, "piazza-1p", {
-    spec: {
-      itemPath: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/piazza",
-    },
-    metadata: {
-      name: "piazza",
     },
   });
 
@@ -145,23 +133,6 @@ export async function createMcpGatewayDeployment(chart: Chart) {
             canvasItem.name,
           ),
           key: "CANVAS_BASE_URL",
-        }),
-        // Piazza configuration (cookie-based auth to bypass SSO/2FA)
-        PIAZZA_COOKIES: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(
-            chart,
-            "piazza-cookies-secret",
-            piazzaItem.name,
-          ),
-          key: "PIAZZA_COOKIES",
-        }),
-        PIAZZA_COURSES: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(
-            chart,
-            "piazza-courses-secret",
-            piazzaItem.name,
-          ),
-          key: "PIAZZA_COURSES",
         }),
         // GitHub configuration - @modelcontextprotocol/server-github expects GITHUB_TOKEN
         GITHUB_TOKEN: EnvValue.fromSecretValue({

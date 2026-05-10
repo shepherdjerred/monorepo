@@ -4,8 +4,8 @@
 [tools]
 # renovate: datasource=github-releases depName=oven-sh/bun
 bun = "1.3.13"
-rust = "latest"
-java = "latest"
+rust = "1.95.0"
+java = "25.0.2"
 
 [tasks.dev]
 description = "Set up the development environment for all packages"

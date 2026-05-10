@@ -9,17 +9,6 @@
       "command": "npx",
       "args": ["-y", "@r-huijts/canvas-mcp@1.0.8"]
     },
-    "piazza": {
-      "command": "uv",
-      "args": [
-        "run",
-        "--with",
-        "fastmcp>=3.0.0b1",
-        "--with",
-        "piazza-api",
-        "/config/piazza-mcp.py"
-      ]
-    },
     "home-assistant": {
       "command": "uvx",
       "args": [
@@ -44,10 +33,6 @@
     "fastmail": {
       "command": "npx",
       "args": ["-y", "@jahfer/jmap-mcp-server"]
-    },
-    "weather": {
-      "command": "npx",
-      "args": ["-y", "@dangahagan/weather-mcp"]
     },
     "gmail": {
       "command": "npx",

@@ -1,6 +1,7 @@
 [tools]
-bun = "latest"
-java = "25"
+# renovate: datasource=github-releases depName=oven-sh/bun
+bun = "1.3.13"
+java = "25.0.2"
 
 [tasks.dev]
 description = "Set up development environment"

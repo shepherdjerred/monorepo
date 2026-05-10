@@ -1,0 +1,127 @@
+<div class="layout layout--col gap--medium">
+  <div class="grid grid--cols-4 gap--small">
+    <div class="item">
+      <div class="meta"></div>
+      <div class="content">
+        <span class="title">K8s</span>
+        <span class="value value--small">
+          {{ kubernetes.ready_nodes }}/{{ kubernetes.total_nodes }} nodes
+        </span>
+      </div>
+    </div>
+    <div class="item">
+      <div class="meta"></div>
+      <div class="content">
+        <span class="title">PagerDuty</span>
+        <span class="value">{{ pagerduty.triggered }}</span>
+      </div>
+    </div>
+    <div class="item">
+      <div class="meta"></div>
+      <div class="content">
+        <span class="title">Bugsink</span>
+        <span class="value">{{ bugsink.unresolved }}</span>
+      </div>
+    </div>
+    <div class="item">
+      <div class="meta"></div>
+      <div class="content">
+        <span class="title">Alerts</span>
+        <span class="value">{{ alerts.critical }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid--cols-2 gap--medium">
+    <div>
+      <span class="label label--underline">Hardware</span>
+      <table class="table table--condensed">
+        <tbody>
+          <tr>
+            <td>CPU</td>
+            <td class="text--right">
+              {% if hardware.cpu_used_percent %}
+                {{ hardware.cpu_used_percent }}%
+              {% else %}
+                n/a
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td>Memory</td>
+            <td class="text--right">
+              {% if hardware.memory_used_percent %}
+                {{ hardware.memory_used_percent }}%
+              {% else %}
+                n/a
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td>Unhealthy Pods</td>
+            <td class="text--right">{{ kubernetes.unhealthy_pods }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <span class="label label--underline">Storage</span>
+      <table class="table table--condensed">
+        <tbody>
+          {% for volume in storage.volumes limit: 5 %}
+            <tr>
+              <td>{{ volume.name }}</td>
+              <td class="text--right">{{ volume.used_percent }}%</td>
+            </tr>
+          {% else %}
+            <tr><td>No metrics</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid grid--cols-2 gap--medium">
+    <div>
+      <span class="label label--underline">Bugsink Projects</span>
+      <table class="table table--condensed">
+        <tbody>
+          {% for project in bugsink.projects limit: 6 %}
+            <tr>
+              <td>{{ project.name }}</td>
+              <td class="text--right">{{ project.unresolved }}</td>
+            </tr>
+          {% else %}
+            <tr><td>No unresolved issues</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <span class="label label--underline">PagerDuty</span>
+      <table class="table table--condensed">
+        <tbody>
+          <tr>
+            <td>Triggered</td>
+            <td class="text--right">{{ pagerduty.triggered }}</td>
+          </tr>
+          <tr>
+            <td>Acknowledged</td>
+            <td class="text--right">{{ pagerduty.acknowledged }}</td>
+          </tr>
+          <tr>
+            <td>On Call</td>
+            <td class="text--right">{{ pagerduty.on_call | join: ", " }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="title_bar">
+  <span class="title">Homelab</span>
+  <span class="instance">{{ status | upcase }} · {{ generated_at | date: "%-I:%M %p" }}</span>
+</div>

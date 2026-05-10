@@ -30,6 +30,42 @@ scripts/ci/                  # TypeScript CI pipeline generator
 archive/                     # Legacy projects (do not modify)
 ```
 
+## Documentation Discipline — Per Session
+
+**Every session must produce or update a plan file in-repo, and end with a written summary appended to that plan file.** This applies even to one-shot edits — the plan file may be brief, but it must exist.
+
+### Plan files (in-repo)
+
+- **Location:** `packages/docs/plans/<YYYY-MM-DD>_<kebab-case-slug>.md`
+- **Mirror harness plans.** When plan mode is used, copy the approved plan from `~/.claude/plans/<slug>.md` into `packages/docs/plans/` using the dated naming convention before beginning implementation.
+- **Create a plan even without plan mode.** For non-plan-mode sessions, write a brief plan file capturing intent, scope, files to touch, and verification steps before edits begin.
+- **Include a `## Status` line** near the top: `In Progress`, `Complete`, `Partially Complete`, or `Abandoned`.
+- **Raw Markdown only** — never render to PDF or Typst.
+- **Update `packages/docs/index.md`** when adding a new plan file.
+- See `packages/docs/CLAUDE.md` for the broader docs taxonomy (architecture / patterns / decisions / guides / plans).
+
+### End-of-session summary
+
+Before ending any session, append a section to the plan file:
+
+```markdown
+## Session Log — <YYYY-MM-DD>
+
+### Done
+
+- <bullets of work actually completed: file paths, PR/commit refs>
+
+### Remaining
+
+- <work the user asked for that wasn't finished, with concrete next steps>
+
+### Caveats
+
+- <known issues, deferred decisions, surprises, warnings the next agent needs>
+```
+
+If a session spans multiple plan files, append a Session Log to each. **Also restate the same Done / Remaining / Caveats inline as the final chat message** so the user sees it without opening the file.
+
 ## Dagger & CI Code — Banned Patterns
 
 These patterns are banned in `.dagger/src/` and `scripts/ci/src/`. Automated checks (`scripts/check-dagger-hygiene.ts`) enforce this in pre-commit and CI. Do not write them.
@@ -91,6 +127,35 @@ Always verify changes:
 1. `bun run typecheck` - Type errors
 2. `bun run test` - Test failures
 3. `bunx eslint . --fix` - Lint issues (in relevant package)
+
+## Parallel Work — Prefer Dissociated Clones
+
+When starting parallel feature work, hot-fixing while another change is in progress, or running multiple Claude agents in this repo concurrently, **prefer dissociated clones over `git worktree`**. Worktrees share `refs/stash` and the reflog across checkouts, which causes collisions during merges and multi-agent work. Dissociated clones give each checkout its own stash, reflog, and gc — at the cost of a per-clone setup run.
+
+```bash
+# Create an isolated working clone (own stash, own reflog, no network needed)
+git clone --shared --dissociate \
+  /Users/jerred/git/monorepo \
+  ~/git/monorepo-<feature-slug>
+
+cd ~/git/monorepo-<feature-slug>
+
+# Re-point origin from the local source path to the real remote.
+# Without this, `git push` would push to the local source, not GitHub.
+git remote set-url origin <remote-url>
+git fetch origin --prune
+
+# Branch from the real origin/main
+git switch -c feature/<slug> origin/main
+
+# REQUIRED before any build/test in the new clone — runs codegen, shared builds, deps.
+# Without this, builds fail with cryptic missing-module / missing-generated-file errors.
+bun run scripts/setup.ts
+```
+
+After PR merge: `rm -rf ~/git/monorepo-<feature-slug>` and `git branch -d feature/<slug>` in the main checkout. See the `dissociated-clone-workflow` skill for the full workflow, including helper scripts.
+
+**Cost trade-off**: each clone is ~600 MB for `.git` plus ~20 GB after `bun run scripts/setup.ts`. Worth it for isolated parallel work or multi-agent runs; not worth it for trivial single-file edits — those stay in the main checkout.
 
 ## Package Notes
 

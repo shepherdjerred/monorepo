@@ -65,6 +65,7 @@ import { createTasknotesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/
 import { createStatusPageApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/status-page.ts";
 import { createDaggerApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/dagger.ts";
 import { createTemporalApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/temporal.ts";
+import { createTrmnlDashboardApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/trmnl-dashboard.ts";
 
 export async function createAppsChart(app: App) {
   const chart = new Chart(app, "apps", {
@@ -156,6 +157,7 @@ export async function createAppsChart(app: App) {
   createStatusPageApp(chart);
   createDaggerApp(chart);
   createTemporalApp(chart);
+  createTrmnlDashboardApp(chart);
 
   // ArgoCD AppProject
   createProject(chart);
