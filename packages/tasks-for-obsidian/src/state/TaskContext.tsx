@@ -123,16 +123,14 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   const toggleStatus = useCallback(
     async (id: TaskId): Promise<Result<Task, AppError>> => {
       if (!client) return err(new ConnectionError("API URL not configured"));
-      let existing: Task | undefined;
+      const existing = tasks.get(id);
+      if (!existing) return err(new ConnectionError("Task not found"));
+      const optimistic = nextOptimistic(existing);
       setTasks((prev) => {
-        existing = prev.get(id);
-        if (!existing) return prev;
-        const optimistic = nextOptimistic(existing);
         const next = new Map(prev);
         next.set(id, optimistic);
         return next;
       });
-      if (!existing) return err(new ConnectionError("Task not found"));
       const result = isRecurring(existing)
         ? await client.completeRecurringInstance(id)
         : await client.toggleTaskStatus(id, getNextStatus(existing.status));
@@ -143,16 +141,15 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
           return next;
         });
       } else {
-        const rollback = existing;
         setTasks((prev) => {
           const next = new Map(prev);
-          next.set(id, rollback);
+          next.set(id, existing);
           return next;
         });
       }
       return result;
     },
-    [client],
+    [client, tasks],
   );
 
   const value = useMemo<TaskContextValue>(
