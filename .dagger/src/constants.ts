@@ -40,7 +40,7 @@ export const PYTHON_IMAGE = "python:3.13-slim";
 export const OBSIDIAN_HEADLESS_BASE_IMAGE = "node:22-slim";
 // renovate: datasource=docker depName=alpine/helm
 export const HELM_IMAGE =
-  "alpine/helm:4.1.3@sha256:a572075a78666ad6fb1f40cb477a9e2eabbc46f3739beeb81904a6121f6ef027";
+  "alpine/helm:4.1.4@sha256:4b0bdd2cf18ff6bca12aba0b2c5671384dab5035c19c57f0c58b854a0baf65be";
 
 // Pinned Bun version for containers that install Bun manually (e.g. Playwright)
 // renovate: datasource=npm depName=bun
