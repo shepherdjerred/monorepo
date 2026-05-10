@@ -2,11 +2,6 @@ import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/gen
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { escapePrometheusTemplate } from "./shared.ts";
 
-// Sustained 7-day write rate threshold for the regression alert. At 30 MB/s a 4 TB
-// 990 PRO (2,400 TBW spec) burns through its TBW budget in ~2.5 years; well below
-// expected service life. Catches the next CI scaling change before it eats the drives.
-const WRITE_RATE_REGRESSION_BPS = 30 * 1024 * 1024;
-
 export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
     {
@@ -56,8 +51,9 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
           },
         },
 
-        // Available spare capacity. Drops below 0.20 means firmware is running out of
-        // reserved blocks for replacement; failure is approaching even before percentage_used hits 1.0.
+        // Available spare capacity. Drops below firmware-defined threshold means
+        // reserved blocks for replacement are exhausting; failure is approaching
+        // even before percentage_used hits 1.0.
         {
           alert: "NvmeAvailableSpareLow",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -99,28 +95,62 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
           },
         },
 
-        // Sustained write-rate regression. The 7-day window smooths past CI bursts
-        // without masking a workload change. nvme1n1 hosts the ZFS pool so it carries
-        // most of the load; nvme0n1 hosts /var (containerd) and writes less.
+        // Thermal alerts using the working nvme_temperature_celsius metric.
+        // The existing SmartNvmeTemperatureHigh/Critical in smartctl.ts use
+        // smartmon_temperature_celsius_value, which the smartmon-collector
+        // emits with an empty `device` label on this cluster — meaning the
+        // device=~".*/nvme[0-9].*" filter never matches and those alerts
+        // never fire for NVMe drives. (Coincidentally, the SATA fallback
+        // SmartDeviceTemperature* alerts catch them because the empty-device
+        // negation matches; that's fragile and misleadingly named.)
+        // These NVMe-specific alerts use the node-exporter nvme collector,
+        // which emits proper `device=nvme[0-9]+n[0-9]+` labels.
         {
-          alert: "NvmeWriteRateRegression",
+          alert: "NvmeTemperatureHigh",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `avg_over_time(rate(node_disk_written_bytes_total{device=~"nvme.*"}[5m])[7d:5m]) > ${String(WRITE_RATE_REGRESSION_BPS)}`,
+            "nvme_temperature_celsius > 65",
           ),
-          for: "1h",
+          for: "5m",
           labels: {
             severity: "warning",
             category: "hardware",
           },
           annotations: {
             summary: escapePrometheusTemplate(
-              "Sustained NVMe write rate above 30 MB/s on {{ $labels.device }}",
+              "Elevated NVMe temperature on {{ $labels.device }}",
             ),
             description: escapePrometheusTemplate(
-              "NVMe {{ $labels.device }} 7-day-avg write rate is {{ $value | humanize }}B/s. At sustained 30 MB/s a 4 TB Samsung 990 PRO (2,400 TBW) reaches spec TBW in ~2.5 years. Investigate the top dataset writers via `node_zfs_zpool_dataset_nwritten`.",
+              "NVMe {{ $labels.device }} is {{ $value }}°C. Samsung 990 PRO rated operating max is 70°C; thermal throttling kicks in at the limit.",
             ),
           },
         },
+        {
+          alert: "NvmeTemperatureCritical",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "nvme_temperature_celsius > 70",
+          ),
+          for: "1m",
+          labels: {
+            severity: "critical",
+            category: "hardware",
+          },
+          annotations: {
+            summary: escapePrometheusTemplate(
+              "NVMe at thermal throttle limit on {{ $labels.device }}",
+            ),
+            description: escapePrometheusTemplate(
+              "NVMe {{ $labels.device }} is {{ $value }}°C — at or above Samsung 990 PRO rated operating limit. Dynamic Thermal Guard is throttling write bandwidth, extending CI burst windows in a self-reinforcing loop.",
+            ),
+          },
+        },
+
+        // Note on write-rate regression: deliberately not added here. The
+        // existing prometheus-resource-monitoring-rules already cover this:
+        //  - HighDiskWriteActivity (SSD, > 50 MB/s for 30m)
+        //  - SustainedDiskWriteActivity (SSD, > 1 TB/24h for 1h)
+        //  - NodeDiskIOSaturation (queue depth > 10 for 30m)
+        // Those use node_disk_info{rotational="0"} which already excludes HDDs.
+        // Adding another threshold here would just create alert noise.
       ],
     },
   ];
