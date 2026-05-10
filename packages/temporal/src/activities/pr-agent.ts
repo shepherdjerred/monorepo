@@ -124,6 +124,32 @@ function modelFor(kind: Kind): string {
   return kind === "review" ? REVIEW_MODEL : SUMMARY_MODEL;
 }
 
+/**
+ * Build the env passed to the `claude -p` subprocess. Strips
+ * `ANTHROPIC_API_KEY` from the inherited env so the CLI prefers the OAuth
+ * token (Claude Code subscription) over the API key (direct-API credits).
+ * The new pr-review pipeline (Phase 2+) requires `ANTHROPIC_API_KEY` to be
+ * set on the worker pod for its Anthropic SDK calls, but those calls go
+ * through the SDK in-process, never through this subprocess.
+ */
+function buildSubprocessEnv(
+  githubToken: string,
+  claudeToken: string,
+): Record<string, string> {
+  const env: Record<string, string> = {};
+  for (const [key, value] of Object.entries(Bun.env)) {
+    if (key === "ANTHROPIC_API_KEY") {
+      continue;
+    }
+    if (typeof value === "string") {
+      env[key] = value;
+    }
+  }
+  env["GITHUB_PERSONAL_ACCESS_TOKEN"] = githubToken;
+  env["CLAUDE_CODE_OAUTH_TOKEN"] = claudeToken;
+  return env;
+}
+
 function maxTurnsFor(kind: Kind): number {
   return kind === "review" ? REVIEW_MAX_TURNS : SUMMARY_MAX_TURNS;
 }
@@ -173,11 +199,7 @@ async function runClaude(input: PrAgentInput): Promise<PrAgentResult> {
     stdin: "ignore",
     stdout: "pipe",
     stderr: "pipe",
-    env: {
-      ...Bun.env,
-      GITHUB_PERSONAL_ACCESS_TOKEN: githubToken,
-      CLAUDE_CODE_OAUTH_TOKEN: claudeToken,
-    },
+    env: buildSubprocessEnv(githubToken, claudeToken),
   });
 
   const heartbeat = setInterval(() => {

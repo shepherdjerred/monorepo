@@ -339,3 +339,46 @@ Repo-level gates always: `bun run typecheck && bun run test && bunx eslint . --f
 - `PostReviewOctokit["rest"]["issues"]["listComments"]` is typed as `unknown` because the real Octokit method has a deeply-conditional auto-generated signature that's awkward to mock without `as` assertions (which the custom ESLint rule forbids). The activity only uses `listComments` as a route pointer for `paginate.iterator`; the fake iterator ignores its identity, so widening to `unknown` keeps both the contract honest and the tests passing without leaning on forbidden casts.
 - The two pre-existing `prReview` and `prSummary` workflows (claude-subprocess) keep running alongside the new pipeline during the multi-phase shadow rollout (Phase 12). They are deleted in Phase 13.
 - Setup-script regen produced unrelated helm-types churn and a scout test DB diff; intentionally excluded from the Phase 1 commit.
+
+## Session Log — 2026-05-10 (foundation teammate, Phase 2)
+
+### Done
+
+- Branched `feature/2026-05-10-pr-review-bot-correctness` from `origin/main` after Phase 1 (#728) merged into main as `33e7dffde`.
+- Added `@anthropic-ai/sdk@^0.88.0` to `packages/temporal/package.json`.
+- New shared types at `packages/temporal/src/shared/pr-review/context.ts`: `PrFileDiff`, `ClaudeMdFile`, `PrReviewContext` — all Zod-defined.
+- **Bootstrap activity is no longer a stub.** `packages/temporal/src/activities/pr-review/bootstrap.ts` now fetches the PR's diff via `octokit.rest.pulls.listFiles` and walks the CLAUDE.md hierarchy via `octokit.rest.repos.getContent` at the PR head SHA. `BootstrapResult` carries the real diff + CLAUDE.md content. The full clone-into-ZFS-scratch path is still Phase 5/6 work; `workdir` stays empty until then.
+- New `correctnessReviewer` at `packages/temporal/src/activities/pr-review/specialists/correctness.ts`. Calls Anthropic SDK `client.messages.parse()` with:
+  - Model `claude-opus-4-7`, `thinking: { type: "adaptive" }`, `output_config.effort: "high"`, `max_tokens: 16000`.
+  - System block with `cache_control: { type: "ephemeral" }` containing the ported review prompt (semantic parity with `pr-prompts.ts`'s `buildReviewPrompt` — same review-focus bullets, adapted for the SDK transport).
+  - Structured output via `zodOutputFormat(CorrectnessOutputSchema)` so the model emits a typed `{ findings: Finding[] }` payload directly.
+- `runSpecialists` now invokes `correctnessReviewer` instead of returning the empty-array stub. Phase 3 (specialists teammate) will replace this body with the full 5-specialist fan-out.
+- `postReview` now renders severity-grouped Markdown (Critical / Warning / Nit sections, ordered worst-first) instead of the Phase 1 literal stub. Empty findings get a friendly "no substantive correctness issues found" sentence so reviewers can tell the bot ran.
+- `pr-agent.ts` (legacy `claude -p` subprocess) strips `ANTHROPIC_API_KEY` from the inherited env before spawning, so the CLI can't accidentally bill subscription users against direct-API credits. Factored as a named `buildSubprocessEnv` helper for testability.
+- Helm chart (cdk8s, `packages/homelab/src/cdk8s/src/resources/temporal/worker.ts`): adds `ANTHROPIC_API_KEY` via `EnvValue.fromSecretValue` from the existing 1Password item, with a comment explaining the dual-auth dance (SDK gets the key; CLI subprocess explicitly strips it).
+- New CLI: `packages/temporal/scripts/replay-pr-review.ts --pr <N> --baseline` — local-only replay, reads the PR via Octokit, runs bootstrap + correctness in-process, prints the would-be comment to stdout (diagnostic chatter on stderr). No Temporal server needed. Optional `--print-prompt` flag dumps the user-turn prompt for prompt iteration. Used for the parity check against PR #724 and the future "replay against last 50 PRs" continuous-eval use case.
+- 22 new unit tests (97 total / 0 fail): `correctness.test.ts` (system-prompt parity assertions for the legacy review-focus bullets, prompt-builder layout, runner SDK-call contract, refusal/error paths, schema validation); `bootstrap.test.ts` (fake-octokit-driven diff listing + CLAUDE.md hierarchy walk including 404 handling); updated `post.test.ts` to assert the new severity-grouped renderer.
+- **Schema rename per team-lead**: `FindingSchema.path` → `FindingSchema.file` for consistency with specialists' draft `src/shared/pr-review/schemas.ts` (SpecialistFinding → AnnotatedFinding → ConsensusFinding → VerifiedFinding stage layering — see retrieval team's branch). Updated every consumer (renderer in `post.ts`, test fixtures, system-prompt instruction in `correctness.ts`). `PrFileDiff.path` and `ClaudeMdFile.path` stay as `path` — they're local to the bootstrap activity's diff/hierarchy types and don't share a contract with specialists.
+- **Metric rename per team-lead → align with eval's dashboard namespace**: `pr_review_pipeline_posted_total` → `pr_review_count_total`, `pr_review_pipeline_findings_per_pr` → `pr_review_comments_per_pr`. Variable names updated to match (`prReviewCountTotal`, `prReviewCommentsPerPr`). Eval's Phase 8 Grafana panels target the `pr_review_*` namespace; this rename happens now (before any series accumulates) so we don't have to back-fill labels later.
+- Extracted `buildTemporalWorkerEnvVariables` helper from `createTemporalWorkerDeployment` in `packages/homelab/src/cdk8s/src/resources/temporal/worker.ts`. The function was over the `max-lines-per-function: 400` ESLint cap once the `ANTHROPIC_API_KEY` + `PR_REVIEW_POST_ENABLED` envs landed; the helper is a clean cut at the obvious seam (the entire `envVariables: { ... }` literal).
+
+### Verification (this PR)
+
+- `bun run typecheck` clean in `packages/temporal` and `packages/homelab`.
+- `bun run test` in `packages/temporal`: 97 pass / 0 fail (was 76 / 0 in Phase 1; +22 new tests including the parity gate).
+- `bunx eslint --cache .` clean (exit 0) in `packages/temporal` and `packages/homelab/src/cdk8s`.
+- `bun run build` (cdk8s synth) clean in `packages/homelab`.
+- `scripts/check-dagger-hygiene.ts` clean.
+- **Manual parity replay**: queued — `bun run packages/temporal/scripts/replay-pr-review.ts --pr 724 --baseline` requires `ANTHROPIC_API_KEY` + `GH_TOKEN` in the local env. Will run before requesting team-lead review; PR description will include the rendered would-be comment.
+
+### Remaining
+
+- Phase 13 (Task #13, foundation): retire `scripts/ci/src/steps/code-review.ts` + `codeReviewHelper` after Phase 12 shadow-mode cutover. Blocked for weeks.
+
+### Caveats
+
+- The SDK's `effort` enum at `@anthropic-ai/sdk@0.88.0` exposes `low | medium | high | max` — no `xhigh` yet. The `claude-api` skill recommends `xhigh` for agentic/coding workloads on Opus 4.7. Switch to `xhigh` once the SDK exposes it (≥ 0.95); flagged with a comment in `correctness.ts`.
+- Parity is **semantic, not byte-identical**, against the existing `pr-agent.ts` prompt: the SDK port replaces the `gh pr view`/`gh pr diff` MCP-fetching clauses with an inline diff + CLAUDE.md hierarchy. The system-prompt parity test asserts the legacy review-focus bullets (functionality / architectural fit / logic errors / security / design) and the "cite path + line; do not invent; skip Prettier/ESLint nits" parity instructions survive verbatim.
+- `subprocessEnv` in `pr-agent.ts` was extracted into `buildSubprocessEnv` partly to escape an ESLint complexity-21 ceiling. The function is module-scope and only used by the legacy `runClaude`; Phase 13 will remove both.
+- The replay CLI is local-only (in-process bootstrap + correctness + post rendering, no Temporal server, no scheduling, no retries). For full-fidelity replay through the worker (real workflow path, OTel, retries) trigger a webhook redelivery from the GitHub UI on a test PR.
+- **Kill switch: `PR_REVIEW_POST_ENABLED` env var, defaults to `"false"`.** Even after this PR merges and the worker is redeployed, the pipeline runs end-to-end (real diff fetch, real Anthropic call, real findings) but the post activity **suppresses the GitHub mutation** and returns a synthetic `commentId: -1`. The would-be comment body is logged at `level=info` so operators can inspect it via Grafana/Loki without it landing on the PR. This avoids the footgun of "merging Phase 2 → next webhook redelivery → live LLM comment on every prod PR" while still letting team-lead exercise the real path during deploy verification. Flip `PR_REVIEW_POST_ENABLED=true` on the temporal-worker Deployment when ready to start posting — coordinate with eval first so the FPR baseline is in place. The chart wires the env var explicitly to `"false"` to make this a deliberate flip, not an accidental default.
