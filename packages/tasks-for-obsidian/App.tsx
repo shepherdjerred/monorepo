@@ -15,6 +15,7 @@ import { useSyncContext } from "./src/state/SyncContext";
 import { useAppState } from "./src/hooks/use-app-state";
 import { ErrorBoundary } from "./src/components/common/ErrorBoundary";
 import { ConnectionBanner } from "./src/components/common/ConnectionBanner";
+import { ActiveTimeTrackingOverlay } from "./src/components/timer/ActiveTimeTrackingOverlay";
 import { AppNavigator } from "./src/navigation/AppNavigator";
 import { initFeedback } from "./src/lib/feedback";
 
@@ -40,6 +41,7 @@ function ThemedApp() {
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
       <ConnectionBanner />
       <AppNavigator />
+      <ActiveTimeTrackingOverlay />
     </>
   );
 }
