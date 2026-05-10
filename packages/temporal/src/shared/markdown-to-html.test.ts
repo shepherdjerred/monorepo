@@ -45,6 +45,25 @@ describe("renderAuditMarkdownToHtml", () => {
     expect(html).toContain("kubectl get nodes");
   });
 
+  it("strips raw <script> and event-handler attributes from agent output", () => {
+    const malicious = [
+      "## Section",
+      "",
+      "<script>alert('xss')</script>",
+      "",
+      'Click <a href="javascript:alert(1)" onclick="alert(2)">here</a>.',
+      "",
+      '<img src=x onerror="alert(3)">',
+    ].join("\n");
+    const html = renderAuditMarkdownToHtml(malicious);
+    expect(html).not.toContain("<script");
+    expect(html).not.toContain("onerror");
+    expect(html).not.toContain("onclick");
+    expect(html).not.toContain("javascript:");
+    // Anchor element kept, but the dangerous href is dropped.
+    expect(html).toContain(">here</a>");
+  });
+
   it("autolinks bare URLs (gfm)", () => {
     const md = "See https://example.com/x for details.";
     const html = renderAuditMarkdownToHtml(md);

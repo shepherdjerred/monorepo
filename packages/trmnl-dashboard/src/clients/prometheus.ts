@@ -1,7 +1,10 @@
 import { z } from "zod";
 
+// Prometheus returns 200 even on query errors (status="error" + errorType
+// in the body). Pin status to the literal "success" so an upstream error
+// fails fast at parse time instead of looking like "no samples".
 const PrometheusVectorResponse = z.object({
-  status: z.string(),
+  status: z.literal("success"),
   data: z.object({
     result: z.array(
       z.object({
@@ -24,7 +27,7 @@ export class PrometheusClient {
     const url = new URL("/api/v1/query", this.baseUrl);
     url.searchParams.set("query", query);
 
-    const response = await fetch(url);
+    const response = await fetch(url, { signal: AbortSignal.timeout(8_000) });
     if (!response.ok) {
       throw new Error(`Prometheus query failed: ${response.status.toString()}`);
     }

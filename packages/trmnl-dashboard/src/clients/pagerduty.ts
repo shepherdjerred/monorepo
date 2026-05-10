@@ -63,6 +63,7 @@ export class PagerDutyClient {
         Authorization: `Token token=${this.token}`,
         Accept: "application/json",
       },
+      signal: AbortSignal.timeout(8_000),
     });
     if (!response.ok) {
       throw new Error(

@@ -1,4 +1,5 @@
 import { Marked } from "marked";
+import sanitizeHtml from "sanitize-html";
 
 const STYLE = `
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #222; line-height: 1.45; max-width: 900px; margin: 0 auto; padding: 16px; }
@@ -21,10 +22,55 @@ const STYLE = `
   a:hover { text-decoration: underline; }
 `.trim();
 
+// Markdown comes from `claude -p` over kubectl/log/PD output, so the source
+// can carry attacker-influenced strings (pod names, log lines, third-party
+// API responses). marked.parse() passes raw HTML through verbatim, which
+// would round-trip a `<script>` or `<img onerror>` straight into the email
+// body. Sanitize the rendered HTML against an allowlist that covers every
+// element our markdown can legitimately produce — GFM tables, fenced code,
+// headings, lists, blockquotes, links — and nothing else.
+const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
+  allowedTags: [
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "p",
+    "br",
+    "hr",
+    "strong",
+    "em",
+    "code",
+    "pre",
+    "blockquote",
+    "ul",
+    "ol",
+    "li",
+    "table",
+    "thead",
+    "tbody",
+    "tr",
+    "th",
+    "td",
+    "a",
+    "del",
+    "ins",
+  ],
+  allowedAttributes: {
+    a: ["href", "title"],
+    th: ["align"],
+    td: ["align"],
+  },
+  allowedSchemes: ["http", "https", "mailto"],
+};
+
 /**
  * Convert audit markdown to email-safe HTML with an inlined <style> block.
  *
- * Uses GitHub-Flavored Markdown via `marked` (tables, fenced code, autolinks).
+ * Uses GitHub-Flavored Markdown via `marked` (tables, fenced code, autolinks),
+ * then sanitizes against a strict allowlist before embedding in the email.
  * No external CSS — every email client should render this without help.
  *
  * The renderer is deliberately permissive about emoji, status prefixes, and
@@ -37,7 +83,10 @@ export function renderAuditMarkdownToHtml(markdown: string): string {
     breaks: false,
     pedantic: false,
   });
-  const body = marked.parse(markdown, { async: false });
+  const body = sanitizeHtml(
+    marked.parse(markdown, { async: false }),
+    SANITIZE_OPTIONS,
+  );
   return [
     "<!doctype html>",
     '<html lang="en">',

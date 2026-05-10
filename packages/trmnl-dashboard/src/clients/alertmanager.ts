@@ -16,7 +16,7 @@ export class AlertmanagerClient {
     url.searchParams.set("silenced", "false");
     url.searchParams.set("inhibited", "false");
 
-    const response = await fetch(url);
+    const response = await fetch(url, { signal: AbortSignal.timeout(8_000) });
     if (!response.ok) {
       throw new Error(
         `Alertmanager request failed: ${response.status.toString()}`,

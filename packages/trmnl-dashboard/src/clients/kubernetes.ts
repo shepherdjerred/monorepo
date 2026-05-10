@@ -128,6 +128,7 @@ export class KubernetesClient {
         Authorization: `Bearer ${token.trim()}`,
         Accept: "application/json",
       },
+      signal: AbortSignal.timeout(8_000),
     };
 
     const caFile = Bun.file(this.caPath);

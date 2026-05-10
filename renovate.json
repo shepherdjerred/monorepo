@@ -114,6 +114,11 @@
       "matchUpdateTypes": ["major"]
     },
     {
+      "description": "Keep TOFU_IMAGE (docker datasource) and TOFU_VERSION (github-releases) in `.dagger/src/constants.ts` bumping together — they pin the same upstream and drift between them means the worker image and any container running TOFU_IMAGE are on different OpenTofu versions, which corrupts state files written by the other binary.",
+      "groupName": "OpenTofu",
+      "matchPackageNames": ["opentofu/opentofu"]
+    },
+    {
       "description": "Ignore architecture-specific Plex tags (armhf, arm64)",
       "matchPackageNames": ["plexinc/pms-docker"],
       "allowedVersions": "!/-(armhf|arm64)$/"
