@@ -161,4 +161,12 @@ describe("foundation: bootstrap.runBootstrap", () => {
     });
     expect(result.retrievedSymbols).toEqual([]);
   });
+
+  it("returns blockDiffs as the empty array until the bootstrap newSource fetch lands", async () => {
+    const octokit = makeOctokit({ files: [], contents: new Map() });
+    const result = await runBootstrap(octokit, PIPELINE, () => {
+      // intentionally silent
+    });
+    expect(result.blockDiffs).toEqual([]);
+  });
 });

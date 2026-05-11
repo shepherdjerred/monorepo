@@ -1,5 +1,6 @@
 import { z } from "zod/v4";
 import { SymbolEntrySchema } from "#lib/symbol-index.ts";
+import { FileBlockDiffSchema } from "#lib/block-diff.ts";
 
 /**
  * One file's slice of a PR diff. `patch` is the unified-diff hunk text as
@@ -55,18 +56,24 @@ export type RetrievedSymbolForPrompt = z.infer<
 
 /**
  * The full review context: the PR metadata the model needs, every file the PR
- * touches, the CLAUDE.md hierarchy in effect at the PR head, and the
- * Phase 5 retrieval results (related symbols).
+ * touches, the CLAUDE.md hierarchy in effect at the PR head, the Phase 5
+ * retrieval results (related symbols), and the Phase 6 AST-structured block
+ * diffs (one per changed file, with `lineFallback` for unsupported langs).
  *
  * `workdir` is populated when the bootstrap activity has staged a real clone
  * (Phase 5+ work); Phase 2 leaves it empty. `retrievedSymbols` is `[]` until
  * the bootstrap rewrite wires retrieval against the cloned workdir.
+ * `blockDiffs` is `[]` until bootstrap reads `newSource` per file; the
+ * Phase 6 module supports a pure-patch fallback (it falls back to
+ * `lineFallback` when the source is unavailable), but bootstrap is the
+ * natural place to invoke it.
  */
 export const PrReviewContextSchema = z.object({
   workdir: z.string(),
   changedFiles: z.array(PrFileDiffSchema),
   claudeMdHierarchy: z.array(ClaudeMdFileSchema),
   retrievedSymbols: z.array(RetrievedSymbolForPromptSchema),
+  blockDiffs: z.array(FileBlockDiffSchema),
 });
 
 export type PrFileDiff = z.infer<typeof PrFileDiffSchema>;

@@ -26,6 +26,7 @@ import {
 import type { PrFileDiff, PrReviewContext } from "#shared/pr-review/context.ts";
 import type { PrReviewPipelineInput } from "#shared/schemas.ts";
 import { permuteFiles } from "#lib/diff-slicing.ts";
+import { formatBlockDiff } from "#lib/block-diff.ts";
 
 const COMPONENT = "pr-review-pipeline";
 
@@ -190,6 +191,21 @@ export function buildSpecialistUserText(request: SpecialistRequest): string {
       } else {
         lines.push("_(snippet unavailable — workdir not cloned)_");
       }
+      lines.push("");
+    }
+  }
+
+  if (context.blockDiffs.length > 0) {
+    lines.push("## AST block summary (structure-aware diff)");
+    lines.push("");
+    lines.push(
+      "Logical-block view of the changes: which functions / classes / methods were added, modified, or removed. The raw line diff is still in the Changed files section below — this is the structural index, not a replacement.",
+    );
+    lines.push("");
+    for (const fd of context.blockDiffs) {
+      lines.push(`### \`${fd.file}\``);
+      lines.push("");
+      lines.push(formatBlockDiff(fd));
       lines.push("");
     }
   }

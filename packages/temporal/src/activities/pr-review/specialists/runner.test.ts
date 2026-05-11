@@ -48,6 +48,7 @@ const CONTEXT: PrReviewContext = {
   ],
   claudeMdHierarchy: [],
   retrievedSymbols: [],
+  blockDiffs: [],
 };
 
 const CFG: SpecialistConfig = {
@@ -287,6 +288,76 @@ describe("buildSpecialistUserText", () => {
       passId: 0,
     });
     expect(text).toContain("snippet unavailable");
+  });
+
+  it("omits the AST block summary when no blockDiffs are present", () => {
+    const text = buildSpecialistUserText({
+      config: CFG,
+      pipeline: PIPELINE,
+      context: CONTEXT,
+      passId: 0,
+    });
+    expect(text).not.toContain("AST block summary");
+  });
+
+  it("renders blockDiffs between Related symbols and Changed files, with the formatted block lines", () => {
+    const ctx: PrReviewContext = {
+      ...CONTEXT,
+      blockDiffs: [
+        {
+          file: "a.ts",
+          language: "typescript",
+          blocks: [
+            {
+              kind: "function",
+              name: "doThing",
+              range: { startLine: 10, endLine: 30 },
+              edit: "modified",
+              addedLines: 5,
+              removedLines: 2,
+              modifiedSubBlocks: [],
+            },
+          ],
+          orphanHunks: [],
+          lineFallback: null,
+        },
+      ],
+    };
+    const text = buildSpecialistUserText({
+      config: CFG,
+      pipeline: PIPELINE,
+      context: ctx,
+      passId: 0,
+    });
+    expect(text).toContain("AST block summary");
+    expect(text).toContain("`doThing` (function) — modified");
+    const astIdx = text.indexOf("AST block summary");
+    const filesIdx = text.indexOf("## Changed files");
+    expect(astIdx).toBeGreaterThan(-1);
+    expect(filesIdx).toBeGreaterThan(astIdx);
+  });
+
+  it("renders lineFallback diffs for unsupported languages", () => {
+    const ctx: PrReviewContext = {
+      ...CONTEXT,
+      blockDiffs: [
+        {
+          file: "x.py",
+          language: null,
+          blocks: [],
+          orphanHunks: [],
+          lineFallback: "@@ -1 +1 @@\n-a\n+b",
+        },
+      ],
+    };
+    const text = buildSpecialistUserText({
+      config: CFG,
+      pipeline: PIPELINE,
+      context: ctx,
+      passId: 0,
+    });
+    expect(text).toContain("`x.py`");
+    expect(text).toContain("+b");
   });
 });
 

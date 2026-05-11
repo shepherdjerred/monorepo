@@ -9,6 +9,7 @@ import type {
   PrFileDiff,
   RetrievedSymbolForPrompt,
 } from "#shared/pr-review/context.ts";
+import type { FileBlockDiff } from "#lib/block-diff.ts";
 
 /**
  * Narrowing schema for the `getContent` response when the path resolves to a
@@ -46,6 +47,13 @@ export type BootstrapResult = {
    * once the workdir lands.
    */
   retrievedSymbols: RetrievedSymbolForPrompt[];
+  /**
+   * Phase 6 AST-structured block diffs, one per changed file. Empty until
+   * bootstrap fetches `newSource` for each file and invokes
+   * `computeFileBlockDiff`; the runner already renders this section in the
+   * specialist prompt so it lights up the moment bootstrap populates it.
+   */
+  blockDiffs: FileBlockDiff[];
 };
 
 const CLAUDE_MD_FILENAME = "CLAUDE.md";
@@ -276,6 +284,7 @@ export async function runBootstrap(
     changedFiles,
     claudeMdHierarchy,
     retrievedSymbols: [],
+    blockDiffs: [],
   };
 }
 
