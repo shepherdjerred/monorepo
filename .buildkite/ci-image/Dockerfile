@@ -17,10 +17,11 @@ LABEL org.opencontainers.image.title="ci-base"
 LABEL org.opencontainers.image.description="CI base image: Dagger CLI, Bun, Node.js, uv, semgrep, gh, helm, opentofu, awscli, ripgrep, shellcheck, gitleaks, trivy, plus build-essentials"
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 
-# System essentials + build dependencies (covers install_base() in setup-tools.sh)
+# System essentials + build dependencies (covers install_base() in setup-tools.sh).
+# gnupg is required by the opentofu installer below for signature verification.
 RUN apt-get update -qq && \
     apt-get install -y -qq \
-    bash curl jq git ca-certificates unzip xz-utils \
+    bash curl jq git ca-certificates unzip xz-utils gnupg \
     gcc g++ python3 libssl-dev pkg-config && \
     rm -rf /var/lib/apt/lists/*
 
