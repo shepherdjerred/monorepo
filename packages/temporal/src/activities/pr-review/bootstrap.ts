@@ -24,6 +24,10 @@ import {
   type WorkdirDeps,
   type WorkdirEnv,
 } from "#lib/pr-review-workdir.ts";
+import {
+  requiredWorkflowId,
+  workflowExecutionContext,
+} from "#activities/temporal-context.ts";
 
 /**
  * Narrowing schema for the `getContent` response when the path resolves to a
@@ -103,8 +107,7 @@ function captureWithContext(
     scope.setTag("activity", info.activityType);
     scope.setTag("component", COMPONENT);
     scope.setContext("prReviewBootstrap", {
-      workflowId: info.workflowExecution.workflowId,
-      runId: info.workflowExecution.runId,
+      ...workflowExecutionContext(info),
       attempt: info.attempt,
       owner: input.owner,
       repo: input.repo,
@@ -504,7 +507,7 @@ async function bootstrapContextImpl(
 
       try {
         const base = await runBootstrap(octokit, input, sendHeartbeat);
-        const workflowId = Context.current().info.workflowExecution.workflowId;
+        const workflowId = requiredWorkflowId(Context.current().info);
         const enriched = await enrichBootstrapWithWorkdir({
           base,
           pipeline: input,

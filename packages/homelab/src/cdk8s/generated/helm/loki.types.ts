@@ -1148,7 +1148,9 @@ export type LokiHelmValuesLokiOperationalconfig = object;
 
 export type LokiHelmValuesEnterprise = {
   /**
-   * Enable enterprise features, license must be provided
+   * Enterprise features are disabled by default.
+   * Set to `true` to deploy Grafana Enterprise Logs (GEL) with a valid license via
+   * `enterprise.license.contents` or `enterprise.useExternalLicense`/`enterprise.externalLicenseName`.
    *
    * @default false
    */
@@ -1156,7 +1158,7 @@ export type LokiHelmValuesEnterprise = {
   /**
    * Default version of GEL to deploy
    *
-   * @default "3.6.5"
+   * @default "3.6.6"
    */
   version?: string;
   cluster_name?: unknown;
@@ -1215,6 +1217,10 @@ a..."
   canarySecret?: unknown;
   /**
    * Note: Uses enterprise.adminToken.secret value to mount the admin token used to call the admin api.
+   * The provisioner is disabled by default because it requires an out-of-band admin token secret
+   * (created via GEL `tokengen`) referenced by `enterprise.adminToken.secret`. After creating that
+   * secret, set both `enterprise.adminToken.secret` and `enterprise.provisioner.enabled: true`.
+   * See production/helm/loki/docs/examples/enterprise/README.md for the full procedure.
    *
    * @default {...} (17 keys)
    */
@@ -1251,7 +1257,7 @@ export type LokiHelmValuesEnterpriseImage = {
   /**
    * Docker image tag
    *
-   * @default "3.6.7"
+   * @default "3.6.6"
    */
   tag?: string;
   digest?: unknown;
@@ -1271,7 +1277,7 @@ export type LokiHelmValuesEnterpriseProvisioner = {
   /**
    * Whether the job should be part of the deployment
    *
-   * @default true
+   * @default false
    */
   enabled?: boolean;
   provisionedSecretPrefix?: unknown;
@@ -9601,6 +9607,18 @@ export type LokiHelmValuesMinio = {
    */
   enabled?: boolean;
   /**
+   * Override the upstream MinIO, Inc. images with the Pigsty (pgsty) community
+   * fork to mitigate the unresolved CVE in the abandoned MinIO images.
+   * See https://github.com/pgsty/minio for details.
+   *
+   * @default {"repository":"docker.io/pgsty/minio","tag":"RELEASE.2026-03-14T12-00-00Z","pullPolicy":"IfNotPresent"}
+   */
+  image?: LokiHelmValuesMinioImage;
+  /**
+   * @default {"repository":"docker.io/pgsty/mc","tag":"RELEASE.2026-03-13T08-57-32Z","pullPolicy":"IfNotPresent"}
+   */
+  mcImage?: LokiHelmValuesMinioMcImage;
+  /**
    * @default 1
    */
   replicas?: number;
@@ -9633,6 +9651,36 @@ export type LokiHelmValuesMinio = {
    */
   resources?: LokiHelmValuesMinioResources;
   address?: unknown;
+};
+
+export type LokiHelmValuesMinioImage = {
+  /**
+   * @default "docker.io/pgsty/minio"
+   */
+  repository?: string;
+  /**
+   * @default "RELEASE.2026-03-14T12-00-00Z"
+   */
+  tag?: string;
+  /**
+   * @default "IfNotPresent"
+   */
+  pullPolicy?: string;
+};
+
+export type LokiHelmValuesMinioMcImage = {
+  /**
+   * @default "docker.io/pgsty/mc"
+   */
+  repository?: string;
+  /**
+   * @default "RELEASE.2026-03-13T08-57-32Z"
+   */
+  tag?: string;
+  /**
+   * @default "IfNotPresent"
+   */
+  pullPolicy?: string;
 };
 
 export type LokiHelmValuesMinioUsersElement = {
@@ -10904,7 +10952,7 @@ export type LokiHelmValues = {
   /**
    * Configuration for the minio subchart
    *
-   * @default {...} (10 keys)
+   * @default {...} (12 keys)
    */
   minio?: LokiHelmValuesMinio;
   extraObjects?: unknown;
@@ -12061,6 +12109,12 @@ export type LokiHelmParameters = {
   "rollout_operator.securityContext.capabilities.drop"?: string;
   "rollout_operator.securityContext.allowPrivilegeEscalation"?: string;
   "minio.enabled"?: string;
+  "minio.image.repository"?: string;
+  "minio.image.tag"?: string;
+  "minio.image.pullPolicy"?: string;
+  "minio.mcImage.repository"?: string;
+  "minio.mcImage.tag"?: string;
+  "minio.mcImage.pullPolicy"?: string;
   "minio.replicas"?: string;
   "minio.drivesPerNode"?: string;
   "minio.rootUser"?: string;

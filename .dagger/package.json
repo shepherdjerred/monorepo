@@ -1,10 +1,10 @@
 {
   "type": "module",
-  "packageManager": "npm@11.12.1",
+  "packageManager": "npm@11.14.1",
   "dagger": {
     "runtime": "node"
   },
   "dependencies": {
-    "typescript": "6.0.2"
+    "typescript": "6.0.3"
   }
 }

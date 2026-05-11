@@ -104,13 +104,13 @@ const versions = {
     "2.0.0-2286@sha256:04c9761721e2d9e98e0366dae56a227e9402662427f7774f8f43389fda84d7fa",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
   "shepherdjerred/scout-for-lol/prod":
-    "2.0.0-2195@sha256:7b1048e6299abdee7b6bec941609042bc8832b63cf7115d4d1eace148bb8817f",
+    "2.0.0-2286@sha256:04c9761721e2d9e98e0366dae56a227e9402662427f7774f8f43389fda84d7fa",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
     "2.0.0-2286@sha256:d6d69dfbfbe0a4a3ae8750c8ffc77f4eff8efd19e85f06d274c701400a91b70b",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/starlight-karma-bot
   "shepherdjerred/starlight-karma-bot/prod":
-    "2.0.0-2195@sha256:8b60bc59f875526b36b03ce9a74044ffe9d8ab628eb4245b5b57e0d20e071fca",
+    "2.0.0-2286@sha256:d6d69dfbfbe0a4a3ae8750c8ffc77f4eff8efd19e85f06d274c701400a91b70b",
   // not managed by renovate
   "shepherdjerred/birmel":
     "2.0.0-2286@sha256:f94b403e681804a6e296a01f6cf201ca100b9658540a4cba0b5110e810f794a9",

@@ -3,8 +3,11 @@
  *
  * Adds RN-specific rules, globals, and disables DOM/Bun rules that don't apply.
  */
+import { fixupPluginRules } from "@eslint/compat";
 import reactNative from "eslint-plugin-react-native";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const reactNativePlugin = fixupPluginRules(reactNative);
 
 /**
  * Configuration for React Native projects
@@ -18,7 +21,7 @@ export function reactNativeConfig(): TSESLint.FlatConfig.ConfigArray {
     {
       files: ["**/*.tsx", "**/*.ts"],
       plugins: {
-        "react-native": reactNative,
+        "react-native": reactNativePlugin,
       },
       rules: {
         "react-native/no-unused-styles": "warn",

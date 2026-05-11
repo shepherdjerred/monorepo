@@ -50,7 +50,7 @@ export const ConfigSchema = z.strictObject({
     enabled: z.boolean(),
     emulator_url: z.union([
       z.literal("built_in"),
-      z.string().url("Must be a valid URL"),
+      z.url("Must be a valid URL"),
     ]),
     browser: z.strictObject({
       preferences: z.record(z.string(), z.union([z.boolean(), z.number()])),

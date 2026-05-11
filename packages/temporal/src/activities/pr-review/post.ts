@@ -5,6 +5,10 @@ import { withSpan } from "#observability/tracing.ts";
 import type { Finding } from "#shared/pr-review/finding.ts";
 import type { PrReviewPipelineInput } from "#shared/schemas.ts";
 import { clusterKey } from "#shared/pr-review/cluster-key.ts";
+import {
+  requiredWorkflowId,
+  workflowExecutionContext,
+} from "#activities/temporal-context.ts";
 
 const COMPONENT = "pr-review-pipeline";
 
@@ -264,8 +268,7 @@ function captureWithContext(
     scope.setTag("activity", info.activityType);
     scope.setTag("component", COMPONENT);
     scope.setContext("prReviewPostReview", {
-      workflowId: info.workflowExecution.workflowId,
-      runId: info.workflowExecution.runId,
+      ...workflowExecutionContext(info),
       attempt: info.attempt,
       owner: input.pipeline.owner,
       repo: input.pipeline.repo,
@@ -373,7 +376,7 @@ async function postReviewImpl(
       "findings.count": input.findings.length,
     },
     async () => {
-      const workflowId = Context.current().info.workflowExecution.workflowId;
+      const workflowId = requiredWorkflowId(Context.current().info);
 
       if (!isPostEnabledFromEnv()) {
         // Dry-run: render the body for the log so operators can see what

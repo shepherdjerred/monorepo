@@ -27,6 +27,7 @@ import type { PrFileDiff, PrReviewContext } from "#shared/pr-review/context.ts";
 import type { PrReviewPipelineInput } from "#shared/schemas.ts";
 import { permuteFiles } from "#lib/diff-slicing.ts";
 import { formatBlockDiff } from "#lib/block-diff.ts";
+import { workflowExecutionContext } from "#activities/temporal-context.ts";
 
 const COMPONENT = "pr-review-pipeline";
 
@@ -273,8 +274,7 @@ function captureWithContext(error: unknown, request: SpecialistRequest): void {
     scope.setTag("component", COMPONENT);
     scope.setTag("specialist", request.config.id);
     scope.setContext("specialistPass", {
-      workflowId: info.workflowExecution.workflowId,
-      runId: info.workflowExecution.runId,
+      ...workflowExecutionContext(info),
       attempt: info.attempt,
       owner: request.pipeline.owner,
       repo: request.pipeline.repo,

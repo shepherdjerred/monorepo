@@ -13,5 +13,11 @@
       "zod": ["./node_modules/.bun/zod@3.25.76/node_modules/zod"]
     }
   },
-  "exclude": ["eslint.config.ts", "astro.config.ts"]
+  "exclude": [
+    "dist",
+    "playwright-report",
+    "test-results",
+    "eslint.config.ts",
+    "astro.config.ts"
+  ]
 }

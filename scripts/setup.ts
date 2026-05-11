@@ -310,7 +310,7 @@ const DAG_TASKS: DagTask[] = [
   {
     id: "birmel-prisma",
     label: "birmel prisma",
-    cmd: ["bunx", "--trust", "prisma@6", "generate"],
+    cmd: ["bunx", "--trust", "prisma", "generate"],
     cwd: "packages/birmel",
     deps: [],
     warnOnly: false,

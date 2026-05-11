@@ -8,6 +8,7 @@ import { withSpan } from "#observability/tracing.ts";
 import { FindingSchema, type Finding } from "#shared/pr-review/finding.ts";
 import type { PrReviewContext } from "#shared/pr-review/context.ts";
 import type { PrReviewPipelineInput } from "#shared/schemas.ts";
+import { workflowExecutionContext } from "#activities/temporal-context.ts";
 
 const COMPONENT = "pr-review-pipeline";
 
@@ -131,8 +132,7 @@ function captureWithContext(
     scope.setTag("activity", info.activityType);
     scope.setTag("component", COMPONENT);
     scope.setContext("correctnessReviewer", {
-      workflowId: info.workflowExecution.workflowId,
-      runId: info.workflowExecution.runId,
+      ...workflowExecutionContext(info),
       attempt: info.attempt,
       owner: input.pipeline.owner,
       repo: input.pipeline.repo,

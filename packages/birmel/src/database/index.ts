@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 
 // Singleton pattern for Prisma client using a well-known key
 const PRISMA_KEY = "__birmel_prisma__";
@@ -26,19 +27,21 @@ function setGlobalPrisma(client: PrismaClient): void {
 }
 
 const databasePath = Bun.env["DATABASE_PATH"];
-let datasourceUrl: string | undefined;
+let databaseUrl = Bun.env["DATABASE_URL"];
 if (databasePath != null && databasePath.length > 0) {
-  datasourceUrl = databasePath.startsWith("file:")
+  databaseUrl = databasePath.startsWith("file:")
     ? databasePath
     : `file:${databasePath}`;
 }
 
+const adapter = new PrismaLibSql({
+  url: databaseUrl ?? "file:./data/birmel.db",
+});
+
 export const prisma =
   getGlobalPrisma() ??
   new PrismaClient({
-    ...(datasourceUrl != null && datasourceUrl.length > 0
-      ? { datasourceUrl }
-      : {}),
+    adapter,
     log:
       Bun.env["LOG_LEVEL"] === "debug"
         ? ["query", "info", "warn", "error"]

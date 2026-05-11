@@ -40,6 +40,7 @@ import * as Sentry from "@sentry/bun";
 import { withSpan } from "#observability/tracing.ts";
 import { prReviewVerifyFindingsTotal } from "#observability/metrics.ts";
 import type { Finding, VerificationResult } from "#shared/pr-review/finding.ts";
+import { workflowExecutionContext } from "#activities/temporal-context.ts";
 import {
   makeBunSpawnVerifierRunner,
   makeVerificationResult,
@@ -100,8 +101,7 @@ function captureWithContext(
       const info = Context.current().info;
       scope.setTag("workflow", info.workflowType);
       scope.setTag("activity", info.activityType);
-      ctxFields["workflowId"] = info.workflowExecution.workflowId;
-      ctxFields["runId"] = info.workflowExecution.runId;
+      Object.assign(ctxFields, workflowExecutionContext(info));
       ctxFields["attempt"] = info.attempt;
     } catch {
       /* not inside a Temporal activity — proceed without workflow tags */

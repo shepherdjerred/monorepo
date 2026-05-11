@@ -17,19 +17,19 @@
     "docker:build": "docker build -f docker/Dockerfile.sandbox -t claude-web-sandbox:latest docker/"
   },
   "dependencies": {
-    "@prisma/client": "^6.0.0",
+    "@prisma/client": "^7.8.0",
     "dockerode": "^4.0.4",
-    "hono": "^4.7.10",
+    "hono": "^4.12.18",
     "jose": "^6.0.10",
     "ws": "^8.18.0",
-    "zod": "^3.24.4"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/bun": "^1.2.5",
     "@types/dockerode": "^3.3.35",
     "@types/ws": "^8.18.0",
     "concurrently": "^9.1.2",
-    "prisma": "^6.0.0",
-    "typescript": "^5.8.3"
+    "prisma": "^7.8.0",
+    "typescript": "^6.0.3"
   }
 }

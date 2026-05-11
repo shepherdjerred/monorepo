@@ -8,6 +8,7 @@ import {
 } from "#observability/metrics.ts";
 import { getTraceContext } from "#observability/tracing.ts";
 import { parseClaudeResultMessage } from "#shared/claude-result.ts";
+import { workflowExecutionContext } from "#activities/temporal-context.ts";
 import {
   buildAuditPrompt,
   loadRunbook,
@@ -96,8 +97,7 @@ function activityInfoOrUndefined(): Record<string, unknown> | undefined {
     const info = Context.current().info;
     return {
       workflow: info.workflowType,
-      workflowId: info.workflowExecution.workflowId,
-      runId: info.workflowExecution.runId,
+      ...workflowExecutionContext(info),
       activity: info.activityType,
       attempt: info.attempt,
     };

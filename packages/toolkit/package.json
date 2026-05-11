@@ -25,13 +25,13 @@
   "devDependencies": {
     "@shepherdjerred/eslint-config": "file:../eslint-config",
     "@types/bun": "latest",
-    "eslint": "^9.39.4",
-    "jiti": "^2.6.1",
-    "typescript": "latest"
+    "eslint": "^10.3.0",
+    "jiti": "^2.7.0",
+    "typescript": "^6.0.3"
   },
   "dependencies": {
     "@lancedb/lancedb": "^0.27.2",
     "gray-matter": "^4.0.3",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   }
 }

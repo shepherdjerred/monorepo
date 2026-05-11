@@ -2,7 +2,7 @@
 
 export type PrometheusblackboxexporterHelmValuesGlobal = {
   /**
-   * Global image registry to use if it needs to be overriden for some specific use cases (e.g local registries, custom images, ...)
+   * Global image registry to use if it needs to be overridden for some specific use cases (e.g local registries, custom images, ...)
    *
    * @default ""
    */
@@ -739,7 +739,7 @@ export type PrometheusblackboxexporterHelmValuesConfigReloaderImage = {
    */
   repository?: string;
   /**
-   * @default "v0.90.1"
+   * @default "v0.91.0"
    */
   tag?: string;
   /**
@@ -1122,7 +1122,7 @@ export type PrometheusblackboxexporterHelmValues = {
   dnsConfig?: unknown;
   extraManifests?: unknown[];
   /**
-   * global common labels, applied to all ressources
+   * global common labels, applied to all resources
    *
    * @default {}
    */

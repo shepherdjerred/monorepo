@@ -29,6 +29,12 @@ export type KyvernoHelmValuesGlobal = {
    * @default {"data":null,"volume":{}}
    */
   caCertificates?: KyvernoHelmValuesGlobalCaCertificates;
+  /**
+   * Global priority class name for pod priority. Non-global values will override the global value.
+   *
+   * @default ""
+   */
+  priorityClassName?: string;
   extraEnvVars?: unknown[];
   /**
    * Global node labels for pod assignment. Non-global values will override the global value.
@@ -391,7 +397,7 @@ export type KyvernoHelmValuesCrdsMigration = {
    */
   podResources?: KyvernoHelmValuesCrdsMigrationPodResources;
   /**
-   * @default {"automountServiceAccountToken":true}
+   * @default {"automountServiceAccountToken":true,"projectedServiceAccountToken":{"expirationSeconds":3600,"audience":""}}
    */
   serviceAccount?: KyvernoHelmValuesCrdsMigrationServiceAccount;
 };
@@ -522,11 +528,58 @@ export type KyvernoHelmValuesCrdsMigrationPodResourcesRequests = {
 
 export type KyvernoHelmValuesCrdsMigrationServiceAccount = {
   /**
-   * Toggle automounting of the ServiceAccount
+   * Toggle automounting of the ServiceAccount.
+   * When set to false, a projected service account token is used instead
+   * which provides time-limited and audience-bound tokens for improved security.
    *
    * @default true
    */
   automountServiceAccountToken?: boolean;
+  /**
+   * Projected service account token configuration (only used when automountServiceAccountToken is false)
+   *
+   * @default {"expirationSeconds":3600,"audience":""}
+   */
+  projectedServiceAccountToken?: KyvernoHelmValuesCrdsMigrationServiceAccountProjectedServiceAccountToken;
+};
+
+export type KyvernoHelmValuesCrdsMigrationServiceAccountProjectedServiceAccountToken =
+  {
+    /**
+     * Token expiration time in seconds.
+     * The kubelet will request a new token before the token expires.
+     *
+     * @default 3600
+     */
+    expirationSeconds?: number;
+    /**
+     * Audience for the projected service account token.
+     * If not set, the token will have no audience restriction.
+     *
+     * @default ""
+     */
+    audience?: string;
+  };
+
+export type KyvernoHelmValuesApiCallToken = {
+  /**
+   * Audience for the projected token used in outbound requests.
+   * Set this to the audience your receiving service validates in the OIDC token's
+   * `aud` claim. The default is `kyverno-svc.kyverno.io`, which is a Kyverno-specific
+   * audience and prevents the token from being accepted by the Kubernetes API server.
+   *
+   * @default "kyverno-svc.kyverno.io"
+   */
+  audience?: string;
+  /**
+   * Token lifetime in seconds for the projected outbound API call token.
+   * The default is `3600` (1 hour). The kubelet requests a replacement before the
+   * token expires, so lowering this reduces token lifetime while increasing rotation
+   * frequency.
+   *
+   * @default 3600
+   */
+  expirationSeconds?: number;
 };
 
 export type KyvernoHelmValuesConfig = {
@@ -576,6 +629,16 @@ export type KyvernoHelmValuesConfig = {
    * @default false
    */
   generateSuccessEvents?: boolean;
+  /**
+   * Comma-separated list of event actions for which success events should be generated.
+   * When set, only success events matching the specified actions are emitted.
+   * Requires `generateSuccessEvents` to be `true`.
+   * Valid values: "Resource Mutated", "Resource Passed", "Resource Generated", "Resource Cleaned Up".
+   * Example: "Resource Mutated" or "Resource Mutated,Resource Generated".
+   *
+   * @default ""
+   */
+  successEventActions?: string;
   maxContextSize?: unknown;
   resourceFilters?: string[];
   /**
@@ -822,11 +885,19 @@ export type KyvernoHelmValuesTest = {
    */
   securityContext?: KyvernoHelmValuesTestSecurityContext;
   /**
-   * Toggle automounting of the ServiceAccount
+   * Toggle automounting of the ServiceAccount.
+   * When set to false, a projected service account token is used instead
+   * which provides time-limited and audience-bound tokens for improved security.
    *
    * @default true
    */
   automountServiceAccountToken?: boolean;
+  /**
+   * Projected service account token configuration (only used when automountServiceAccountToken is false)
+   *
+   * @default {"expirationSeconds":3600,"audience":""}
+   */
+  projectedServiceAccountToken?: KyvernoHelmValuesTestProjectedServiceAccountToken;
   /**
    * Node labels for pod assignment
    * Additional Pod annotations
@@ -854,13 +925,7 @@ export type KyvernoHelmValuesTestImage = {
    * @default "kyverno/readiness-checker"
    */
   repository?: string;
-  /**
-   * Image tag
-   * Defaults to `latest` if omitted
-   *
-   * @default "v0.1.0"
-   */
-  tag?: string;
+  tag?: unknown;
   pullPolicy?: unknown;
 };
 
@@ -947,6 +1012,23 @@ export type KyvernoHelmValuesTestSecurityContextSeccompProfile = {
   type?: string;
 };
 
+export type KyvernoHelmValuesTestProjectedServiceAccountToken = {
+  /**
+   * Token expiration time in seconds.
+   * The kubelet will request a new token before the token expires.
+   *
+   * @default 3600
+   */
+  expirationSeconds?: number;
+  /**
+   * Audience for the projected service account token.
+   * If not set, the token will have no audience restriction.
+   *
+   * @default ""
+   */
+  audience?: string;
+};
+
 export type KyvernoHelmValuesTestNodeSelector = object;
 
 export type KyvernoHelmValuesTestPodAnnotations = object;
@@ -960,10 +1042,6 @@ export type KyvernoHelmValuesWebhooksCleanup = {
    * @default true
    */
   enabled?: boolean;
-  /**
-   * @default {"enabled":false}
-   */
-  autoDeleteWebhooks?: KyvernoHelmValuesWebhooksCleanupAutoDeleteWebhooks;
   /**
    * @default {...} (4 keys)
    */
@@ -1023,40 +1101,25 @@ export type KyvernoHelmValuesWebhooksCleanup = {
    */
   resources?: KyvernoHelmValuesWebhooksCleanupResources;
   /**
-   * @default {"automountServiceAccountToken":true}
+   * @default {"automountServiceAccountToken":true,"projectedServiceAccountToken":{"expirationSeconds":3600,"audience":""}}
    */
   serviceAccount?: KyvernoHelmValuesWebhooksCleanupServiceAccount;
-};
-
-export type KyvernoHelmValuesWebhooksCleanupAutoDeleteWebhooks = {
-  /**
-   * Allow webhooks controller to delete webhooks using finalizers
-   *
-   * @default false
-   */
-  enabled?: boolean;
 };
 
 export type KyvernoHelmValuesWebhooksCleanupImage = {
   /**
    * (string) Image registry
    *
-   * @default "registry.k8s.io"
+   * @default "ghcr.io"
    */
   registry?: string;
   /**
    * Image repository
    *
-   * @default "kubectl"
+   * @default "kyverno/readiness-checker"
    */
   repository?: string;
-  /**
-   * Image tag
-   * Defaults to `latest` if omitted
-   *
-   * @default "v1.34.3"
-   */
-  tag?: string;
+  tag?: unknown;
   pullPolicy?: unknown;
 };
 
@@ -1165,12 +1228,38 @@ export type KyvernoHelmValuesWebhooksCleanupResourcesRequests = {
 
 export type KyvernoHelmValuesWebhooksCleanupServiceAccount = {
   /**
-   * Toggle automounting of the ServiceAccount
+   * Toggle automounting of the ServiceAccount.
+   * When set to false, a projected service account token is used instead
+   * which provides time-limited and audience-bound tokens for improved security.
    *
    * @default true
    */
   automountServiceAccountToken?: boolean;
+  /**
+   * Projected service account token configuration (only used when automountServiceAccountToken is false)
+   *
+   * @default {"expirationSeconds":3600,"audience":""}
+   */
+  projectedServiceAccountToken?: KyvernoHelmValuesWebhooksCleanupServiceAccountProjectedServiceAccountToken;
 };
+
+export type KyvernoHelmValuesWebhooksCleanupServiceAccountProjectedServiceAccountToken =
+  {
+    /**
+     * Token expiration time in seconds.
+     * The kubelet will request a new token before the token expires.
+     *
+     * @default 3600
+     */
+    expirationSeconds?: number;
+    /**
+     * Audience for the projected service account token.
+     * If not set, the token will have no audience restriction.
+     *
+     * @default ""
+     */
+    audience?: string;
+  };
 
 export type KyvernoHelmValuesGrafana = {
   /**
@@ -1319,7 +1408,7 @@ export type KyvernoHelmValuesFeatures = {
    */
   dumpPatches?: KyvernoHelmValuesFeaturesDumpPatches;
   /**
-   * @default {"maxApiCallResponseLength":2000000}
+   * @default {"maxApiCallResponseLength":2000000,"apiCallTimeout":"30s"}
    */
   globalContext?: KyvernoHelmValuesFeaturesGlobalContext;
   /**
@@ -1545,6 +1634,12 @@ export type KyvernoHelmValuesFeaturesGlobalContext = {
    * @default 2000000
    */
   maxApiCallResponseLength?: number;
+  /**
+   * Timeout for HTTP API calls made by policies. A value of 0s means no timeout.
+   *
+   * @default "30s"
+   */
+  apiCallTimeout?: string;
 };
 
 export type KyvernoHelmValuesFeaturesLogging = {
@@ -1624,7 +1719,7 @@ export type KyvernoHelmValuesFeaturesTuf = {
 
 export type KyvernoHelmValuesAdmissionController = {
   /**
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   autoscaling?: KyvernoHelmValuesAdmissionControllerAutoscaling;
   /**
@@ -1692,6 +1787,12 @@ export type KyvernoHelmValuesAdmissionController = {
    * @default {}
    */
   podAnnotations?: KyvernoHelmValuesAdmissionControllerPodAnnotations;
+  /**
+   * Deployment labels.
+   *
+   * @default {}
+   */
+  labels?: KyvernoHelmValuesAdmissionControllerLabels;
   /**
    * Deployment annotations.
    *
@@ -1848,6 +1949,8 @@ export type KyvernoHelmValuesAdmissionController = {
   container?: KyvernoHelmValuesAdmissionControllerContainer;
   extraInitContainers?: unknown[];
   extraContainers?: unknown[];
+  extraVolumes?: unknown[];
+  extraVolumeMounts?: unknown[];
   /**
    * @default {...} (5 keys)
    */
@@ -1869,7 +1972,7 @@ export type KyvernoHelmValuesAdmissionController = {
    */
   tracing?: KyvernoHelmValuesAdmissionControllerTracing;
   /**
-   * @default {...} (5 keys)
+   * @default {...} (7 keys)
    */
   metering?: KyvernoHelmValuesAdmissionControllerMetering;
   /**
@@ -1903,6 +2006,7 @@ export type KyvernoHelmValuesAdmissionControllerAutoscaling = {
    * @default 80
    */
   targetCPUUtilizationPercentage?: number;
+  targetMemoryUtilizationPercentage?: unknown;
   /**
    * Configurable scaling behavior
    *
@@ -1950,7 +2054,7 @@ export type KyvernoHelmValuesAdmissionControllerRbac = {
    */
   viewRoleName?: string;
   /**
-   * @default {"name":null,"annotations":{},"automountServiceAccountToken":true}
+   * @default {...} (4 keys)
    */
   serviceAccount?: KyvernoHelmValuesAdmissionControllerRbacServiceAccount;
   /**
@@ -1976,11 +2080,19 @@ export type KyvernoHelmValuesAdmissionControllerRbacServiceAccount = {
    */
   annotations?: KyvernoHelmValuesAdmissionControllerRbacServiceAccountAnnotations;
   /**
-   * Toggle automounting of the ServiceAccount
+   * Toggle automounting of the ServiceAccount.
+   * When set to false, a projected service account token is used instead
+   * which provides time-limited and audience-bound tokens for improved security.
    *
    * @default true
    */
   automountServiceAccountToken?: boolean;
+  /**
+   * Projected service account token configuration (only used when automountServiceAccountToken is false)
+   *
+   * @default {"expirationSeconds":3600,"audience":""}
+   */
+  projectedServiceAccountToken?: KyvernoHelmValuesAdmissionControllerRbacServiceAccountProjectedServiceAccountToken;
 };
 
 export type KyvernoHelmValuesAdmissionControllerRbacServiceAccountAnnotations =
@@ -1990,6 +2102,24 @@ export type KyvernoHelmValuesAdmissionControllerRbacServiceAccountAnnotations =
      * This is common for config maps, custom settings, and extensible configurations.
      */
     [key: string]: unknown;
+  };
+
+export type KyvernoHelmValuesAdmissionControllerRbacServiceAccountProjectedServiceAccountToken =
+  {
+    /**
+     * Token expiration time in seconds.
+     * The kubelet will request a new token before the token expires.
+     *
+     * @default 3600
+     */
+    expirationSeconds?: number;
+    /**
+     * Audience for the projected service account token.
+     * If not set, the token will have no audience restriction.
+     *
+     * @default ""
+     */
+    audience?: string;
   };
 
 export type KyvernoHelmValuesAdmissionControllerRbacCoreClusterRole = {
@@ -2102,6 +2232,14 @@ export type KyvernoHelmValuesAdmissionControllerCertManagerTls = {
 export type KyvernoHelmValuesAdmissionControllerPodLabels = object;
 
 export type KyvernoHelmValuesAdmissionControllerPodAnnotations = object;
+
+export type KyvernoHelmValuesAdmissionControllerLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
 
 export type KyvernoHelmValuesAdmissionControllerAnnotations = {
   /**
@@ -2432,7 +2570,7 @@ export type KyvernoHelmValuesAdmissionControllerInitContainer = {
   /**
    * Container security context
    *
-   * @default {...} (6 keys)
+   * @default {...} (8 keys)
    */
   securityContext?: KyvernoHelmValuesAdmissionControllerInitContainerSecurityContext;
   /**
@@ -2500,6 +2638,14 @@ export type KyvernoHelmValuesAdmissionControllerInitContainerResourcesRequests =
 
 export type KyvernoHelmValuesAdmissionControllerInitContainerSecurityContext = {
   /**
+   * @default 65534
+   */
+  runAsUser?: number;
+  /**
+   * @default 65534
+   */
+  runAsGroup?: number;
+  /**
    * @default true
    */
   runAsNonRoot?: boolean;
@@ -2552,7 +2698,7 @@ export type KyvernoHelmValuesAdmissionControllerContainer = {
   /**
    * Container security context
    *
-   * @default {...} (6 keys)
+   * @default {...} (8 keys)
    */
   securityContext?: KyvernoHelmValuesAdmissionControllerContainerSecurityContext;
   /**
@@ -2619,6 +2765,14 @@ export type KyvernoHelmValuesAdmissionControllerContainerResourcesRequests = {
 };
 
 export type KyvernoHelmValuesAdmissionControllerContainerSecurityContext = {
+  /**
+   * @default 65534
+   */
+  runAsUser?: number;
+  /**
+   * @default 65534
+   */
+  runAsGroup?: number;
   /**
    * @default true
    */
@@ -2828,6 +2982,19 @@ export type KyvernoHelmValuesAdmissionControllerMetering = {
    */
   port?: number;
   /**
+   * Is TLS required for endpoint
+   *
+   * @default false
+   */
+  secure?: boolean;
+  /**
+   * Key algorithm for self-signed TLS certificates.
+   * Supported values: RSA, ECDSA, Ed25519
+   *
+   * @default "RSA"
+   */
+  tlsKeyAlgorithm?: string;
+  /**
    * Otel collector endpoint
    *
    * @default ""
@@ -2913,6 +3080,12 @@ export type KyvernoHelmValuesBackgroundController = {
   podAnnotations?: KyvernoHelmValuesBackgroundControllerPodAnnotations;
   /**
    * example.com/annotation: foo
+   * Deployment labels.
+   *
+   * @default {}
+   */
+  labels?: KyvernoHelmValuesBackgroundControllerLabels;
+  /**
    * Deployment annotations.
    *
    * @default {}
@@ -3004,7 +3177,7 @@ export type KyvernoHelmValuesBackgroundController = {
   /**
    * Security context for the containers
    *
-   * @default {...} (6 keys)
+   * @default {...} (8 keys)
    */
   securityContext?: KyvernoHelmValuesBackgroundControllerSecurityContext;
   /**
@@ -3015,6 +3188,8 @@ export type KyvernoHelmValuesBackgroundController = {
    * @default {"data":null,"volume":{}}
    */
   caCertificates?: KyvernoHelmValuesBackgroundControllerCaCertificates;
+  extraVolumes?: unknown[];
+  extraVolumeMounts?: unknown[];
   /**
    * @default {...} (6 keys)
    */
@@ -3032,7 +3207,7 @@ export type KyvernoHelmValuesBackgroundController = {
    */
   tracing?: KyvernoHelmValuesBackgroundControllerTracing;
   /**
-   * @default {...} (5 keys)
+   * @default {...} (7 keys)
    */
   metering?: KyvernoHelmValuesBackgroundControllerMetering;
   /**
@@ -3070,7 +3245,7 @@ export type KyvernoHelmValuesBackgroundControllerRbac = {
    */
   viewRoleName?: string;
   /**
-   * @default {"name":null,"annotations":{},"automountServiceAccountToken":true}
+   * @default {...} (4 keys)
    */
   serviceAccount?: KyvernoHelmValuesBackgroundControllerRbacServiceAccount;
   /**
@@ -3093,11 +3268,19 @@ export type KyvernoHelmValuesBackgroundControllerRbacServiceAccount = {
    */
   annotations?: KyvernoHelmValuesBackgroundControllerRbacServiceAccountAnnotations;
   /**
-   * Toggle automounting of the ServiceAccount
+   * Toggle automounting of the ServiceAccount.
+   * When set to false, a projected service account token is used instead
+   * which provides time-limited and audience-bound tokens for improved security.
    *
    * @default true
    */
   automountServiceAccountToken?: boolean;
+  /**
+   * Projected service account token configuration (only used when automountServiceAccountToken is false)
+   *
+   * @default {"expirationSeconds":3600,"audience":""}
+   */
+  projectedServiceAccountToken?: KyvernoHelmValuesBackgroundControllerRbacServiceAccountProjectedServiceAccountToken;
 };
 
 export type KyvernoHelmValuesBackgroundControllerRbacServiceAccountAnnotations =
@@ -3107,6 +3290,24 @@ export type KyvernoHelmValuesBackgroundControllerRbacServiceAccountAnnotations =
      * This is common for config maps, custom settings, and extensible configurations.
      */
     [key: string]: unknown;
+  };
+
+export type KyvernoHelmValuesBackgroundControllerRbacServiceAccountProjectedServiceAccountToken =
+  {
+    /**
+     * Token expiration time in seconds.
+     * The kubelet will request a new token before the token expires.
+     *
+     * @default 3600
+     */
+    expirationSeconds?: number;
+    /**
+     * Audience for the projected service account token.
+     * If not set, the token will have no audience restriction.
+     *
+     * @default ""
+     */
+    audience?: string;
   };
 
 export type KyvernoHelmValuesBackgroundControllerRbacCoreClusterRole = {
@@ -3148,6 +3349,14 @@ export type KyvernoHelmValuesBackgroundControllerImage = {
 export type KyvernoHelmValuesBackgroundControllerPodLabels = object;
 
 export type KyvernoHelmValuesBackgroundControllerPodAnnotations = object;
+
+export type KyvernoHelmValuesBackgroundControllerLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
 
 export type KyvernoHelmValuesBackgroundControllerAnnotations = {
   /**
@@ -3292,6 +3501,14 @@ export type KyvernoHelmValuesBackgroundControllerNodeAffinity = {
 export type KyvernoHelmValuesBackgroundControllerPodSecurityContext = object;
 
 export type KyvernoHelmValuesBackgroundControllerSecurityContext = {
+  /**
+   * @default 65534
+   */
+  runAsUser?: number;
+  /**
+   * @default 65534
+   */
+  runAsGroup?: number;
   /**
    * @default true
    */
@@ -3501,6 +3718,19 @@ export type KyvernoHelmValuesBackgroundControllerMetering = {
    */
   port?: number;
   /**
+   * Is TLS required for endpoint
+   *
+   * @default false
+   */
+  secure?: boolean;
+  /**
+   * Key algorithm for self-signed TLS certificates.
+   * Supported values: RSA, ECDSA, Ed25519
+   *
+   * @default "RSA"
+   */
+  tlsKeyAlgorithm?: string;
+  /**
    * Otel collector endpoint
    *
    * @default ""
@@ -3557,7 +3787,7 @@ export type KyvernoHelmValuesCleanupController = {
    */
   enabled?: boolean;
   /**
-   * @default {"create":true,"serviceAccount":{"name":null,"annotations":{},"automountServiceAccountToken":true},"clusterRole":{"extraResources":[]}}
+   * @default {"create":true,"serviceAccount":{"name":null,"annotations":{},"automountServiceAccountToken":true,"projectedServiceAccountToken":{"expirationSeconds":3600,"audience":""}},"clusterRole":{"extraResources":[]}}
    */
   rbac?: KyvernoHelmValuesCleanupControllerRbac;
   /**
@@ -3615,6 +3845,12 @@ export type KyvernoHelmValuesCleanupController = {
   podAnnotations?: KyvernoHelmValuesCleanupControllerPodAnnotations;
   /**
    * example.com/annotation: foo
+   * Deployment labels.
+   *
+   * @default {}
+   */
+  labels?: KyvernoHelmValuesCleanupControllerLabels;
+  /**
    * Deployment annotations.
    *
    * @default {}
@@ -3737,13 +3973,15 @@ export type KyvernoHelmValuesCleanupController = {
   /**
    * Security context for the containers
    *
-   * @default {...} (6 keys)
+   * @default {...} (8 keys)
    */
   securityContext?: KyvernoHelmValuesCleanupControllerSecurityContext;
   /**
    * @default {...} (4 keys)
    */
   podDisruptionBudget?: KyvernoHelmValuesCleanupControllerPodDisruptionBudget;
+  extraVolumes?: unknown[];
+  extraVolumeMounts?: unknown[];
   /**
    * @default {...} (5 keys)
    */
@@ -3765,7 +4003,7 @@ export type KyvernoHelmValuesCleanupController = {
    */
   tracing?: KyvernoHelmValuesCleanupControllerTracing;
   /**
-   * @default {...} (5 keys)
+   * @default {...} (7 keys)
    */
   metering?: KyvernoHelmValuesCleanupControllerMetering;
   /**
@@ -3784,7 +4022,7 @@ export type KyvernoHelmValuesCleanupControllerRbac = {
    */
   create?: boolean;
   /**
-   * @default {"name":null,"annotations":{},"automountServiceAccountToken":true}
+   * @default {...} (4 keys)
    */
   serviceAccount?: KyvernoHelmValuesCleanupControllerRbacServiceAccount;
   /**
@@ -3806,11 +4044,19 @@ export type KyvernoHelmValuesCleanupControllerRbacServiceAccount = {
    */
   annotations?: KyvernoHelmValuesCleanupControllerRbacServiceAccountAnnotations;
   /**
-   * Toggle automounting of the ServiceAccount
+   * Toggle automounting of the ServiceAccount.
+   * When set to false, a projected service account token is used instead
+   * which provides time-limited and audience-bound tokens for improved security.
    *
    * @default true
    */
   automountServiceAccountToken?: boolean;
+  /**
+   * Projected service account token configuration (only used when automountServiceAccountToken is false)
+   *
+   * @default {"expirationSeconds":3600,"audience":""}
+   */
+  projectedServiceAccountToken?: KyvernoHelmValuesCleanupControllerRbacServiceAccountProjectedServiceAccountToken;
 };
 
 export type KyvernoHelmValuesCleanupControllerRbacServiceAccountAnnotations = {
@@ -3820,6 +4066,24 @@ export type KyvernoHelmValuesCleanupControllerRbacServiceAccountAnnotations = {
    */
   [key: string]: unknown;
 };
+
+export type KyvernoHelmValuesCleanupControllerRbacServiceAccountProjectedServiceAccountToken =
+  {
+    /**
+     * Token expiration time in seconds.
+     * The kubelet will request a new token before the token expires.
+     *
+     * @default 3600
+     */
+    expirationSeconds?: number;
+    /**
+     * Audience for the projected service account token.
+     * If not set, the token will have no audience restriction.
+     *
+     * @default ""
+     */
+    audience?: string;
+  };
 
 export type KyvernoHelmValuesCleanupControllerRbacClusterRole = {
   extraResources?: unknown[];
@@ -3948,6 +4212,14 @@ export type KyvernoHelmValuesCleanupControllerImage = {
 export type KyvernoHelmValuesCleanupControllerPodLabels = object;
 
 export type KyvernoHelmValuesCleanupControllerPodAnnotations = object;
+
+export type KyvernoHelmValuesCleanupControllerLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
 
 export type KyvernoHelmValuesCleanupControllerAnnotations = {
   /**
@@ -4218,6 +4490,14 @@ export type KyvernoHelmValuesCleanupControllerPodSecurityContext = object;
 
 export type KyvernoHelmValuesCleanupControllerSecurityContext = {
   /**
+   * @default 65534
+   */
+  runAsUser?: number;
+  /**
+   * @default 65534
+   */
+  runAsGroup?: number;
+  /**
    * @default true
    */
   runAsNonRoot?: boolean;
@@ -4440,6 +4720,19 @@ export type KyvernoHelmValuesCleanupControllerMetering = {
    */
   port?: number;
   /**
+   * Is TLS required for endpoint
+   *
+   * @default false
+   */
+  secure?: boolean;
+  /**
+   * Key algorithm for self-signed TLS certificates.
+   * Supported values: RSA, ECDSA, Ed25519
+   *
+   * @default "RSA"
+   */
+  tlsKeyAlgorithm?: string;
+  /**
    * Otel collector endpoint
    *
    * @default ""
@@ -4525,6 +4818,12 @@ export type KyvernoHelmValuesReportsController = {
   podAnnotations?: KyvernoHelmValuesReportsControllerPodAnnotations;
   /**
    * example.com/annotation: foo
+   * Deployment labels.
+   *
+   * @default {}
+   */
+  labels?: KyvernoHelmValuesReportsControllerLabels;
+  /**
    * Deployment annotations.
    *
    * @default {}
@@ -4632,7 +4931,7 @@ export type KyvernoHelmValuesReportsController = {
   /**
    * Security context for the containers
    *
-   * @default {...} (6 keys)
+   * @default {...} (8 keys)
    */
   securityContext?: KyvernoHelmValuesReportsControllerSecurityContext;
   /**
@@ -4653,6 +4952,8 @@ export type KyvernoHelmValuesReportsController = {
    * @default {"data":null,"volume":{}}
    */
   caCertificates?: KyvernoHelmValuesReportsControllerCaCertificates;
+  extraVolumes?: unknown[];
+  extraVolumeMounts?: unknown[];
   /**
    * @default {...} (6 keys)
    */
@@ -4670,7 +4971,7 @@ export type KyvernoHelmValuesReportsController = {
    */
   tracing?: KyvernoHelmValuesReportsControllerTracing;
   /**
-   * @default {...} (5 keys)
+   * @default {...} (7 keys)
    */
   metering?: KyvernoHelmValuesReportsControllerMetering;
   /**
@@ -4712,7 +5013,7 @@ export type KyvernoHelmValuesReportsControllerRbac = {
    */
   viewRoleName?: string;
   /**
-   * @default {"name":null,"annotations":{},"automountServiceAccountToken":true}
+   * @default {...} (4 keys)
    */
   serviceAccount?: KyvernoHelmValuesReportsControllerRbacServiceAccount;
   /**
@@ -4735,11 +5036,19 @@ export type KyvernoHelmValuesReportsControllerRbacServiceAccount = {
    */
   annotations?: KyvernoHelmValuesReportsControllerRbacServiceAccountAnnotations;
   /**
-   * Toggle automounting of the ServiceAccount
+   * Toggle automounting of the ServiceAccount.
+   * When set to false, a projected service account token is used instead
+   * which provides time-limited and audience-bound tokens for improved security.
    *
    * @default true
    */
   automountServiceAccountToken?: boolean;
+  /**
+   * Projected service account token configuration (only used when automountServiceAccountToken is false)
+   *
+   * @default {"expirationSeconds":3600,"audience":""}
+   */
+  projectedServiceAccountToken?: KyvernoHelmValuesReportsControllerRbacServiceAccountProjectedServiceAccountToken;
 };
 
 export type KyvernoHelmValuesReportsControllerRbacServiceAccountAnnotations = {
@@ -4749,6 +5058,24 @@ export type KyvernoHelmValuesReportsControllerRbacServiceAccountAnnotations = {
    */
   [key: string]: unknown;
 };
+
+export type KyvernoHelmValuesReportsControllerRbacServiceAccountProjectedServiceAccountToken =
+  {
+    /**
+     * Token expiration time in seconds.
+     * The kubelet will request a new token before the token expires.
+     *
+     * @default 3600
+     */
+    expirationSeconds?: number;
+    /**
+     * Audience for the projected service account token.
+     * If not set, the token will have no audience restriction.
+     *
+     * @default ""
+     */
+    audience?: string;
+  };
 
 export type KyvernoHelmValuesReportsControllerRbacCoreClusterRole = {
   extraResources?: unknown[];
@@ -4782,6 +5109,14 @@ export type KyvernoHelmValuesReportsControllerImage = {
 export type KyvernoHelmValuesReportsControllerPodLabels = object;
 
 export type KyvernoHelmValuesReportsControllerPodAnnotations = object;
+
+export type KyvernoHelmValuesReportsControllerLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
 
 export type KyvernoHelmValuesReportsControllerAnnotations = {
   /**
@@ -4969,6 +5304,14 @@ export type KyvernoHelmValuesReportsControllerNodeAffinity = {
 export type KyvernoHelmValuesReportsControllerPodSecurityContext = object;
 
 export type KyvernoHelmValuesReportsControllerSecurityContext = {
+  /**
+   * @default 65534
+   */
+  runAsUser?: number;
+  /**
+   * @default 65534
+   */
+  runAsGroup?: number;
   /**
    * @default true
    */
@@ -5183,6 +5526,19 @@ export type KyvernoHelmValuesReportsControllerMetering = {
    * @default 8000
    */
   port?: number;
+  /**
+   * Is TLS required for endpoint
+   *
+   * @default false
+   */
+  secure?: boolean;
+  /**
+   * Key algorithm for self-signed TLS certificates.
+   * Supported values: RSA, ECDSA, Ed25519
+   *
+   * @default "RSA"
+   */
+  tlsKeyAlgorithm?: string;
   collector?: unknown;
   creds?: unknown;
 };
@@ -5218,7 +5574,7 @@ export type KyvernoHelmValuesReportsControllerProfiling = {
 
 export type KyvernoHelmValues = {
   /**
-   * @default {...} (9 keys)
+   * @default {...} (10 keys)
    */
   global?: KyvernoHelmValuesGlobal;
   nameOverride?: unknown;
@@ -5255,9 +5611,17 @@ export type KyvernoHelmValues = {
    */
   crds?: KyvernoHelmValuesCrds;
   /**
+   * Scoped token injected into outbound APICall and CEL http requests.
+   * This token carries a custom audience so that if leaked to an external service
+   * it cannot be replayed against the Kubernetes API server.
+   *
+   * @default {"audience":"kyverno-svc.kyverno.io","expirationSeconds":3600}
+   */
+  apiCallToken?: KyvernoHelmValuesApiCallToken;
+  /**
    * Configuration
    *
-   * @default {...} (23 keys)
+   * @default {...} (24 keys)
    */
   config?: KyvernoHelmValuesConfig;
   /**
@@ -5276,7 +5640,7 @@ export type KyvernoHelmValues = {
   /**
    * Tests configuration
    *
-   * @default {...} (9 keys)
+   * @default {...} (10 keys)
    */
   test?: KyvernoHelmValuesTest;
   /**
@@ -5286,7 +5650,7 @@ export type KyvernoHelmValues = {
    */
   customLabels?: KyvernoHelmValuesCustomLabels;
   /**
-   * @default {...} (15 keys)
+   * @default {...} (14 keys)
    */
   webhooksCleanup?: KyvernoHelmValuesWebhooksCleanup;
   /**
@@ -5302,19 +5666,19 @@ export type KyvernoHelmValues = {
   /**
    * Admission controller configuration
    *
-   * @default {...} (48 keys)
+   * @default {...} (51 keys)
    */
   admissionController?: KyvernoHelmValuesAdmissionController;
   /**
-   * @default {...} (37 keys)
+   * @default {...} (40 keys)
    */
   backgroundController?: KyvernoHelmValuesBackgroundController;
   /**
-   * @default {...} (43 keys)
+   * @default {...} (46 keys)
    */
   cleanupController?: KyvernoHelmValuesCleanupController;
   /**
-   * @default {...} (42 keys)
+   * @default {...} (45 keys)
    */
   reportsController?: KyvernoHelmValuesReportsController;
 };
@@ -5328,6 +5692,7 @@ export type KyvernoHelmParameters = {
   "global.resyncPeriod"?: string;
   "global.crdWatcher"?: string;
   "global.caCertificates.data"?: string;
+  "global.priorityClassName"?: string;
   "global.extraEnvVars"?: string;
   "global.tolerations"?: string;
   nameOverride?: string;
@@ -5387,6 +5752,10 @@ export type KyvernoHelmParameters = {
   "crds.migration.podResources.requests.cpu"?: string;
   "crds.migration.podResources.requests.memory"?: string;
   "crds.migration.serviceAccount.automountServiceAccountToken"?: string;
+  "crds.migration.serviceAccount.projectedServiceAccountToken.expirationSeconds"?: string;
+  "crds.migration.serviceAccount.projectedServiceAccountToken.audience"?: string;
+  "apiCallToken.audience"?: string;
+  "apiCallToken.expirationSeconds"?: string;
   "config.create"?: string;
   "config.preserve"?: string;
   "config.name"?: string;
@@ -5397,6 +5766,7 @@ export type KyvernoHelmParameters = {
   "config.excludeRoles"?: string;
   "config.excludeClusterRoles"?: string;
   "config.generateSuccessEvents"?: string;
+  "config.successEventActions"?: string;
   "config.maxContextSize"?: string;
   "config.resourceFilters"?: string;
   "config.updateRequestThreshold"?: string;
@@ -5446,9 +5816,10 @@ export type KyvernoHelmParameters = {
   "test.securityContext.capabilities.drop"?: string;
   "test.securityContext.seccompProfile.type"?: string;
   "test.automountServiceAccountToken"?: string;
+  "test.projectedServiceAccountToken.expirationSeconds"?: string;
+  "test.projectedServiceAccountToken.audience"?: string;
   "test.tolerations"?: string;
   "webhooksCleanup.enabled"?: string;
-  "webhooksCleanup.autoDeleteWebhooks.enabled"?: string;
   "webhooksCleanup.image.registry"?: string;
   "webhooksCleanup.image.repository"?: string;
   "webhooksCleanup.image.tag"?: string;
@@ -5468,6 +5839,8 @@ export type KyvernoHelmParameters = {
   "webhooksCleanup.resources.requests.cpu"?: string;
   "webhooksCleanup.resources.requests.memory"?: string;
   "webhooksCleanup.serviceAccount.automountServiceAccountToken"?: string;
+  "webhooksCleanup.serviceAccount.projectedServiceAccountToken.expirationSeconds"?: string;
+  "webhooksCleanup.serviceAccount.projectedServiceAccountToken.audience"?: string;
   "grafana.enabled"?: string;
   "grafana.configMapName"?: string;
   "grafana.namespace"?: string;
@@ -5500,6 +5873,7 @@ export type KyvernoHelmParameters = {
   "features.generateMutatingAdmissionPolicy.enabled"?: string;
   "features.dumpPatches.enabled"?: string;
   "features.globalContext.maxApiCallResponseLength"?: string;
+  "features.globalContext.apiCallTimeout"?: string;
   "features.logging.format"?: string;
   "features.logging.verbosity"?: string;
   "features.omitEvents.eventTypes"?: string;
@@ -5517,12 +5891,15 @@ export type KyvernoHelmParameters = {
   "admissionController.autoscaling.minReplicas"?: string;
   "admissionController.autoscaling.maxReplicas"?: string;
   "admissionController.autoscaling.targetCPUUtilizationPercentage"?: string;
+  "admissionController.autoscaling.targetMemoryUtilizationPercentage"?: string;
   "admissionController.featuresOverride.admissionReports.backPressureThreshold"?: string;
   "admissionController.rbac.create"?: string;
   "admissionController.rbac.createViewRoleBinding"?: string;
   "admissionController.rbac.viewRoleName"?: string;
   "admissionController.rbac.serviceAccount.name"?: string;
   "admissionController.rbac.serviceAccount.automountServiceAccountToken"?: string;
+  "admissionController.rbac.serviceAccount.projectedServiceAccountToken.expirationSeconds"?: string;
+  "admissionController.rbac.serviceAccount.projectedServiceAccountToken.audience"?: string;
   "admissionController.rbac.coreClusterRole.extraResources"?: string;
   "admissionController.rbac.clusterRole.extraResources"?: string;
   "admissionController.createSelfSignedCert"?: string;
@@ -5601,6 +5978,8 @@ export type KyvernoHelmParameters = {
   "admissionController.initContainer.resources.limits.memory"?: string;
   "admissionController.initContainer.resources.requests.cpu"?: string;
   "admissionController.initContainer.resources.requests.memory"?: string;
+  "admissionController.initContainer.securityContext.runAsUser"?: string;
+  "admissionController.initContainer.securityContext.runAsGroup"?: string;
   "admissionController.initContainer.securityContext.runAsNonRoot"?: string;
   "admissionController.initContainer.securityContext.privileged"?: string;
   "admissionController.initContainer.securityContext.allowPrivilegeEscalation"?: string;
@@ -5616,6 +5995,8 @@ export type KyvernoHelmParameters = {
   "admissionController.container.resources.limits.memory"?: string;
   "admissionController.container.resources.requests.cpu"?: string;
   "admissionController.container.resources.requests.memory"?: string;
+  "admissionController.container.securityContext.runAsUser"?: string;
+  "admissionController.container.securityContext.runAsGroup"?: string;
   "admissionController.container.securityContext.runAsNonRoot"?: string;
   "admissionController.container.securityContext.privileged"?: string;
   "admissionController.container.securityContext.allowPrivilegeEscalation"?: string;
@@ -5625,6 +6006,8 @@ export type KyvernoHelmParameters = {
   "admissionController.container.extraEnvVars"?: string;
   "admissionController.extraInitContainers"?: string;
   "admissionController.extraContainers"?: string;
+  "admissionController.extraVolumes"?: string;
+  "admissionController.extraVolumeMounts"?: string;
   "admissionController.service.port"?: string;
   "admissionController.service.type"?: string;
   "admissionController.service.nodePort"?: string;
@@ -5650,6 +6033,8 @@ export type KyvernoHelmParameters = {
   "admissionController.metering.disabled"?: string;
   "admissionController.metering.config"?: string;
   "admissionController.metering.port"?: string;
+  "admissionController.metering.secure"?: string;
+  "admissionController.metering.tlsKeyAlgorithm"?: string;
   "admissionController.metering.collector"?: string;
   "admissionController.metering.creds"?: string;
   "admissionController.profiling.enabled"?: string;
@@ -5662,6 +6047,8 @@ export type KyvernoHelmParameters = {
   "backgroundController.rbac.viewRoleName"?: string;
   "backgroundController.rbac.serviceAccount.name"?: string;
   "backgroundController.rbac.serviceAccount.automountServiceAccountToken"?: string;
+  "backgroundController.rbac.serviceAccount.projectedServiceAccountToken.expirationSeconds"?: string;
+  "backgroundController.rbac.serviceAccount.projectedServiceAccountToken.audience"?: string;
   "backgroundController.rbac.coreClusterRole.extraResources.apiGroups"?: string;
   "backgroundController.rbac.coreClusterRole.extraResources.resources"?: string;
   "backgroundController.rbac.coreClusterRole.extraResources.verbs"?: string;
@@ -5694,6 +6081,8 @@ export type KyvernoHelmParameters = {
   "backgroundController.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.labelSelector.matchExpressions.values"?: string;
   "backgroundController.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.topologyKey"?: string;
   "backgroundController.topologySpreadConstraints"?: string;
+  "backgroundController.securityContext.runAsUser"?: string;
+  "backgroundController.securityContext.runAsGroup"?: string;
   "backgroundController.securityContext.runAsNonRoot"?: string;
   "backgroundController.securityContext.privileged"?: string;
   "backgroundController.securityContext.allowPrivilegeEscalation"?: string;
@@ -5705,6 +6094,8 @@ export type KyvernoHelmParameters = {
   "backgroundController.podDisruptionBudget.maxUnavailable"?: string;
   "backgroundController.podDisruptionBudget.unhealthyPodEvictionPolicy"?: string;
   "backgroundController.caCertificates.data"?: string;
+  "backgroundController.extraVolumes"?: string;
+  "backgroundController.extraVolumeMounts"?: string;
   "backgroundController.metricsService.create"?: string;
   "backgroundController.metricsService.port"?: string;
   "backgroundController.metricsService.type"?: string;
@@ -5726,6 +6117,8 @@ export type KyvernoHelmParameters = {
   "backgroundController.metering.disabled"?: string;
   "backgroundController.metering.config"?: string;
   "backgroundController.metering.port"?: string;
+  "backgroundController.metering.secure"?: string;
+  "backgroundController.metering.tlsKeyAlgorithm"?: string;
   "backgroundController.metering.collector"?: string;
   "backgroundController.metering.creds"?: string;
   "backgroundController.server.port"?: string;
@@ -5737,6 +6130,8 @@ export type KyvernoHelmParameters = {
   "cleanupController.rbac.create"?: string;
   "cleanupController.rbac.serviceAccount.name"?: string;
   "cleanupController.rbac.serviceAccount.automountServiceAccountToken"?: string;
+  "cleanupController.rbac.serviceAccount.projectedServiceAccountToken.expirationSeconds"?: string;
+  "cleanupController.rbac.serviceAccount.projectedServiceAccountToken.audience"?: string;
   "cleanupController.rbac.clusterRole.extraResources"?: string;
   "cleanupController.createSelfSignedCert"?: string;
   "cleanupController.tlsKeyAlgorithm"?: string;
@@ -5802,6 +6197,8 @@ export type KyvernoHelmParameters = {
   "cleanupController.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.labelSelector.matchExpressions.values"?: string;
   "cleanupController.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.topologyKey"?: string;
   "cleanupController.topologySpreadConstraints"?: string;
+  "cleanupController.securityContext.runAsUser"?: string;
+  "cleanupController.securityContext.runAsGroup"?: string;
   "cleanupController.securityContext.runAsNonRoot"?: string;
   "cleanupController.securityContext.privileged"?: string;
   "cleanupController.securityContext.allowPrivilegeEscalation"?: string;
@@ -5812,6 +6209,8 @@ export type KyvernoHelmParameters = {
   "cleanupController.podDisruptionBudget.minAvailable"?: string;
   "cleanupController.podDisruptionBudget.maxUnavailable"?: string;
   "cleanupController.podDisruptionBudget.unhealthyPodEvictionPolicy"?: string;
+  "cleanupController.extraVolumes"?: string;
+  "cleanupController.extraVolumeMounts"?: string;
   "cleanupController.service.port"?: string;
   "cleanupController.service.type"?: string;
   "cleanupController.service.nodePort"?: string;
@@ -5837,6 +6236,8 @@ export type KyvernoHelmParameters = {
   "cleanupController.metering.disabled"?: string;
   "cleanupController.metering.config"?: string;
   "cleanupController.metering.port"?: string;
+  "cleanupController.metering.secure"?: string;
+  "cleanupController.metering.tlsKeyAlgorithm"?: string;
   "cleanupController.metering.collector"?: string;
   "cleanupController.metering.creds"?: string;
   "cleanupController.profiling.enabled"?: string;
@@ -5849,6 +6250,8 @@ export type KyvernoHelmParameters = {
   "reportsController.rbac.viewRoleName"?: string;
   "reportsController.rbac.serviceAccount.name"?: string;
   "reportsController.rbac.serviceAccount.automountServiceAccountToken"?: string;
+  "reportsController.rbac.serviceAccount.projectedServiceAccountToken.expirationSeconds"?: string;
+  "reportsController.rbac.serviceAccount.projectedServiceAccountToken.audience"?: string;
   "reportsController.rbac.coreClusterRole.extraResources"?: string;
   "reportsController.rbac.clusterRole.extraResources"?: string;
   "reportsController.image.registry"?: string;
@@ -5884,6 +6287,8 @@ export type KyvernoHelmParameters = {
   "reportsController.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.labelSelector.matchExpressions.values"?: string;
   "reportsController.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.topologyKey"?: string;
   "reportsController.topologySpreadConstraints"?: string;
+  "reportsController.securityContext.runAsUser"?: string;
+  "reportsController.securityContext.runAsGroup"?: string;
   "reportsController.securityContext.runAsNonRoot"?: string;
   "reportsController.securityContext.privileged"?: string;
   "reportsController.securityContext.allowPrivilegeEscalation"?: string;
@@ -5896,6 +6301,8 @@ export type KyvernoHelmParameters = {
   "reportsController.podDisruptionBudget.unhealthyPodEvictionPolicy"?: string;
   "reportsController.tufRootMountPath"?: string;
   "reportsController.caCertificates.data"?: string;
+  "reportsController.extraVolumes"?: string;
+  "reportsController.extraVolumeMounts"?: string;
   "reportsController.metricsService.create"?: string;
   "reportsController.metricsService.port"?: string;
   "reportsController.metricsService.type"?: string;
@@ -5917,6 +6324,8 @@ export type KyvernoHelmParameters = {
   "reportsController.metering.disabled"?: string;
   "reportsController.metering.config"?: string;
   "reportsController.metering.port"?: string;
+  "reportsController.metering.secure"?: string;
+  "reportsController.metering.tlsKeyAlgorithm"?: string;
   "reportsController.metering.collector"?: string;
   "reportsController.metering.creds"?: string;
   "reportsController.server.port"?: string;
