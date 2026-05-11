@@ -30,10 +30,12 @@ describe("pr-review-metrics", () => {
     expect(exposition).toMatch(/pr_review_latency_seconds_bucket\{le="\+Inf"/);
   });
 
-  test("pr_review_cost_usd is labeled by model", async () => {
+  test("pr_review_cost_usd is labeled by model and specialist", async () => {
     const exposition = await register.metrics();
-    // No samples yet, but the help text must announce the label.
-    expect(exposition).toMatch(/pr_review_cost_usd .*per-model leg/i);
+    // No samples yet, but the help text must announce the labels. Phase 3
+    // extended the original (`model`-only) histogram with a `specialist`
+    // label so per-specialist cost can be broken out in Grafana.
+    expect(exposition).toMatch(/pr_review_cost_usd.*model and specialist/i);
   });
 
   test("pr_review_count_total uses status labels matching Phase 8 alerts", async () => {

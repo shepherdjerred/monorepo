@@ -21,7 +21,11 @@ func newTestServer(t *testing.T) *httptest.Server {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("POST /login.cgi", func(w http.ResponseWriter, r *http.Request) {
-		auth := r.FormValue("login_authorization")
+		if !parseLimitedForm(t, w, r) {
+			return
+		}
+
+		auth := r.PostForm.Get("login_authorization")
 		if auth == "" {
 			writeJSON(t, w, map[string]string{"error_status": "2"})
 
@@ -39,7 +43,11 @@ func newTestServer(t *testing.T) *httptest.Server {
 			return
 		}
 
-		hook := r.FormValue("hook")
+		if !parseLimitedForm(t, w, r) {
+			return
+		}
+
+		hook := r.PostForm.Get("hook")
 		result := map[string]string{}
 
 		for _, h := range strings.Split(hook, ";") {
@@ -61,7 +69,11 @@ func newTestServer(t *testing.T) *httptest.Server {
 			return
 		}
 
-		actionMode := r.FormValue("action_mode")
+		if !parseLimitedForm(t, w, r) {
+			return
+		}
+
+		actionMode := r.PostForm.Get("action_mode")
 		if actionMode != "apply" {
 			writeJSON(t, w, map[string]string{"modify": "0"})
 
@@ -69,7 +81,7 @@ func newTestServer(t *testing.T) *httptest.Server {
 		}
 
 		resp := map[string]string{"modify": "1"}
-		if svc := r.FormValue("rc_service"); svc != "" {
+		if svc := r.PostForm.Get("rc_service"); svc != "" {
 			resp["run_service"] = svc
 		}
 
@@ -77,6 +89,19 @@ func newTestServer(t *testing.T) *httptest.Server {
 	})
 
 	return httptest.NewServer(mux)
+}
+
+func parseLimitedForm(t *testing.T, w http.ResponseWriter, r *http.Request) bool {
+	t.Helper()
+
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "invalid form", http.StatusBadRequest)
+		t.Errorf("parsing form: %v", err)
+		return false
+	}
+
+	return true
 }
 
 func writeJSON(t *testing.T, w http.ResponseWriter, v any) {
@@ -237,7 +262,11 @@ func TestClientTokenReauthOnExpiry(t *testing.T) {
 			return
 		}
 
-		hook := r.FormValue("hook")
+		if !parseLimitedForm(t, w, r) {
+			return
+		}
+
+		hook := r.PostForm.Get("hook")
 		result := map[string]string{}
 
 		for _, h := range strings.Split(hook, ";") {

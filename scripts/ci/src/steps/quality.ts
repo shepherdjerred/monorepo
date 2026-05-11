@@ -29,9 +29,9 @@ function annotatedScanCmd(cmd: string, context: string): string {
   return [
     `set -o pipefail`,
     `${cmd} 2>&1 | tee ${outFile}`,
-    `status=$?`,
-    `if [ $status -ne 0 ] && [ -s ${outFile} ]; then buildkite-agent annotate --style warning --context ${context} < ${outFile}; fi`,
-    `exit $status`,
+    `status=$$?`,
+    `if [ $$status -ne 0 ] && [ -s ${outFile} ]; then buildkite-agent annotate --style warning --context ${context} < ${outFile}; fi`,
+    `exit $$status`,
   ].join("; ");
 }
 

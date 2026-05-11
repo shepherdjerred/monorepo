@@ -12,26 +12,26 @@ This plan implements **every** SOTA technique surfaced in the audit: parallel sp
 
 ## Scope — Everything In
 
-| #   | Capability                                                                              | Source of evidence                              |
-| --- | --------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| 1   | Webhook → Temporal ingress with HMAC signature verification                             | Existing pattern in `packages/temporal`         |
-| 2   | 5 parallel specialist reviewers (correctness/security/perf/convention/deps)             | Refute-or-Promote, Copilot 2026 agentic         |
-| 3   | Randomized diff slicing, N=3 passes per specialist, consensus voting                    | Cursor BugBot blog                              |
-| 4   | Extended thinking on Opus 4.7 specialists (24K thinking budget)                         | Anthropic extended-thinking docs                |
-| 5   | Empirical verification activity: re-runs typecheck/eslint/grep/test before posting      | CodeRabbit agentic validation                   |
-| 6   | Tree-sitter AST-structured diff (BlockDiff/FuncDiff style)                              | "To Diff or Not to Diff?" arxiv 2604.27296      |
-| 7   | Code-graph retrieval: tree-sitter symbol index + `toolkit recall` hybrid search         | Greptile v4 architecture, RARe arxiv 2511.05302 |
-| 8   | Per-repo dismissed-comment KV store + dedupe before posting                             | CodeRabbit learning loop                        |
-| 9   | Haiku PR summary sibling workflow                                                       | Original 04-25 plan                             |
-| 10  | Prompt caching on stable context (CLAUDE.md, eslint configs, AGENTS.md)                 | Anthropic SDK cache-control                     |
-| 11  | Prometheus metrics + Grafana dashboard (FPR, acceptance, latency, $cost)                | Octoverse 2025 SLOs                             |
-| 12  | OTel tracing across activities (existing Tempo backend)                                 | `otel-observability` skill                      |
-| 13  | Continuous-eval harness: nightly run against held-out fixture set + regression alerting | SWR-Bench methodology                           |
-| 14  | A/B prompt experimentation framework (two variants, significance tracking)              | Standard ML eval                                |
-| 15  | Shadow-mode dogfood for 2 weeks alongside old step before retiring                      | Risk control                                    |
-| 16  | Retire `code-review.ts` step + `codeReviewHelper` in Dagger                             | Cleanup                                         |
-| 17  | Mark `2026-04-25_pr-review-and-summary-bot.md` as superseded, move to archive           | Doc discipline                                  |
-| 18  | New `pr-review-bot` skill documenting invocation, escalation, kill switch               | Operator UX                                     |
+| #   | Capability                                                                                            | Source of evidence                              |
+| --- | ----------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| 1   | Webhook → Temporal ingress with HMAC signature verification                                           | Existing pattern in `packages/temporal`         |
+| 2   | 5 parallel specialist reviewers (correctness/security/perf/convention/deps)                           | Refute-or-Promote, Copilot 2026 agentic         |
+| 3   | Randomized diff slicing, N=3 passes per specialist, consensus voting                                  | Cursor BugBot blog                              |
+| 4   | Adaptive thinking on Opus 4.7 specialists, depth via `effort` tiers (high; xhigh once SDK type lands) | Anthropic adaptive-thinking + effort docs       |
+| 5   | Empirical verification activity: re-runs typecheck/eslint/grep/test before posting                    | CodeRabbit agentic validation                   |
+| 6   | Tree-sitter AST-structured diff (BlockDiff/FuncDiff style)                                            | "To Diff or Not to Diff?" arxiv 2604.27296      |
+| 7   | Code-graph retrieval: tree-sitter symbol index + `toolkit recall` hybrid search                       | Greptile v4 architecture, RARe arxiv 2511.05302 |
+| 8   | Per-repo dismissed-comment KV store + dedupe before posting                                           | CodeRabbit learning loop                        |
+| 9   | Haiku PR summary sibling workflow                                                                     | Original 04-25 plan                             |
+| 10  | Prompt caching on stable context (CLAUDE.md, eslint configs, AGENTS.md)                               | Anthropic SDK cache-control                     |
+| 11  | Prometheus metrics + Grafana dashboard (FPR, acceptance, latency, $cost)                              | Octoverse 2025 SLOs                             |
+| 12  | OTel tracing across activities (existing Tempo backend)                                               | `otel-observability` skill                      |
+| 13  | Continuous-eval harness: nightly run against held-out fixture set + regression alerting               | SWR-Bench methodology                           |
+| 14  | A/B prompt experimentation framework (two variants, significance tracking)                            | Standard ML eval                                |
+| 15  | Shadow-mode dogfood for 2 weeks alongside old step before retiring                                    | Risk control                                    |
+| 16  | Retire `code-review.ts` step + `codeReviewHelper` in Dagger                                           | Cleanup                                         |
+| 17  | Mark `2026-04-25_pr-review-and-summary-bot.md` as superseded, move to archive                         | Doc discipline                                  |
+| 18  | New `pr-review-bot` skill documenting invocation, escalation, kill switch                             | Operator UX                                     |
 
 ## Architecture
 
@@ -49,22 +49,34 @@ Temporal workflow: prReviewParent
   │     • fetch CLAUDE.md / eslint configs / AGENTS.md (cached prompt block)
   │
   ├─ activity: runSpecialists  [parallel, retry-once]
-  │     ├─ correctnessReviewer  (Opus 4.7 + 24K thinking, randomized diff order ×3)
-  │     ├─ securityReviewer     (Opus 4.7 + 24K thinking, OWASP-aware system prompt)
-  │     ├─ perfReviewer         (Opus 4.7, performance-aware system prompt)
-  │     ├─ conventionReviewer   (Sonnet 4.6, reads CLAUDE.md hierarchy)
-  │     └─ depsReviewer         (Sonnet 4.6, Renovate/lockfile/version-management aware)
+  │     ├─ correctnessReviewer  (Opus 4.7 + adaptive thinking + effort:high, randomized diff order ×3)
+  │     ├─ securityReviewer     (Opus 4.7 + adaptive thinking + effort:high, OWASP-aware system prompt)
+  │     ├─ perfReviewer         (Opus 4.7 + adaptive thinking + effort:high, performance-aware system prompt)
+  │     ├─ conventionReviewer   (Sonnet 4.6 + effort:medium, reads CLAUDE.md hierarchy)
+  │     └─ depsReviewer         (Sonnet 4.6 + effort:medium, Renovate/lockfile/version-management aware)
+  │
+  │     Note: the plan's original "24K thinking budget" is a 4.6-era field. `budget_tokens`
+  │     is removed on `claude-opus-4-7`; depth is controlled via `output_config.effort` and
+  │     `thinking: { type: "adaptive" }`. Bump correctness/security to `effort: "xhigh"` once
+  │     the SDK type catches up (effort enum is currently low|medium|high|max).
   │
   ├─ activity: consensusVote
-  │     • cluster findings by (file, line-range, kind) using normalized hash
-  │     • keep iff ≥2/3 randomized passes within a specialist agree, OR ≥2 specialists agree
+  │     • cluster findings by (file, line-range) — kind is NOT in the key; the cluster
+  │       representative carries `kindsObserved: Set<FindingKind>` so cross-specialist
+  │       agreement actually fires (security and correctness flagging the same line
+  │       would land in different clusters under a kind-strict key)
+  │     • keep iff ≥2/3 randomized passes within a specialist agree, OR ≥2 distinct specialists agree
   │     • attach vote count + per-agent confidence to finding metadata
   │
-  ├─ activity: verifyFindings  [parallel per finding]
+  ├─ activity: verifyFindings  [parallel per finding, 60s per verifier]
   │     • finding declares verifier kind: typecheck | eslint | grep | test | none
-  │     • run verifier in sandboxed Dagger container against PR head
+  │       AND verifierTarget params (packagePath / ruleId / pattern / testName)
+  │     • run verifier as Bun.spawn subprocess against bootstrap workdir
+  │       (Phase 4 host-side; Phase 5+ swaps to sandboxed Dagger container)
   │     • drop finding if verifier contradicts the claim
-  │     • flag finding "verified" if verifier supports it
+  │     • keep + flag "verified" if verifier supports the claim
+  │     • keep + flag "unverified" if verifier errors / times out / no target
+  │       (verifier failures never hide bugs — always surface as unverified)
   │
   ├─ activity: dedupeAgainstHistory
   │     • query Redis KV: dismissed_comments:{repo}:{path}:{kind}
@@ -166,14 +178,14 @@ Total active dev: ~14 days. Phases 1–4 are MVU (minimum viable upgrade). Phase
 
 ## Cost & Model Choices
 
-| Component                                                      | Model             | Per PR cost (medium diff) |
-| -------------------------------------------------------------- | ----------------- | ------------------------- |
-| 3 × specialist (Opus 4.7 + 24K thinking, ×3 randomized passes) | claude-opus-4-7   | ~$2.40                    |
-| 2 × specialist (Sonnet 4.6, ×3 randomized passes)              | claude-sonnet-4-6 | ~$0.30                    |
-| Verification activity (no LLM, runs typecheck/eslint locally)  | n/a               | ~$0                       |
-| Summary                                                        | claude-haiku-4-5  | ~$0.05                    |
-| Embeddings for dedupe (Voyage AI or local)                     | voyage-3-lite     | ~$0.01                    |
-| **Total**                                                      |                   | **~$2.75/PR**             |
+| Component                                                                         | Model             | Per PR cost (medium diff) |
+| --------------------------------------------------------------------------------- | ----------------- | ------------------------- |
+| 3 × specialist (Opus 4.7 + adaptive thinking + effort:high, ×3 randomized passes) | claude-opus-4-7   | ~$2.40                    |
+| 2 × specialist (Sonnet 4.6, ×3 randomized passes)                                 | claude-sonnet-4-6 | ~$0.30                    |
+| Verification activity (no LLM, runs typecheck/eslint locally)                     | n/a               | ~$0                       |
+| Summary                                                                           | claude-haiku-4-5  | ~$0.05                    |
+| Embeddings for dedupe (Voyage AI or local)                                        | voyage-3-lite     | ~$0.01                    |
+| **Total**                                                                         |                   | **~$2.75/PR**             |
 
 Prompt caching cuts ~40% off repeat-context tokens (CLAUDE.md, eslint configs, AGENTS.md, package CLAUDE.md). Cost cap enforced at $10/PR — bot aborts and posts a degraded summary if exceeded. Daily cap $50 → page on breach.
 
