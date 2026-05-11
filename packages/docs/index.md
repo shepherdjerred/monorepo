@@ -58,6 +58,7 @@ AI-maintained knowledge base for the monorepo.
 - [NVMe Firmware Update Runbook](plans/2026-05-10_firmware-update-runbook.md) - Single-window 4B2QJXD7 → 8B2QJXD7 update for both Samsung 990 PRO drives on single-node Talos; pre-flight + execution + rollback
 - [SOTA PR Review Bot](plans/2026-05-10_sota-pr-review-bot.md) - Full-spec multi-agent + verification + retrieval + continuous-eval PR review bot; supersedes 2026-04-25 plan
 - [PR Review Bot Cluster-Key](plans/2026-05-10_pr-review-bot-cluster-key.md) - Pure-utility cluster-key bucketing for Phase 3 consensus + Phase 10 eval grader (Task 3 prep)
+- [PR Review Bot Phase 3 — Specialists × Consensus](plans/2026-05-10_pr-review-bot-specialists-consensus.md) - 5 parallel specialists × 3 randomized passes + clustering and voting; replaces single-agent Phase 2
 - [PR Review Bot Phase 8 — Measurement](plans/2026-05-10_pr-review-bot-phase-8-measurement.md) - Prometheus metrics, Grafana dashboard, and PagerDuty alerts for the SOTA PR review bot
 - [PR Review Bot Phase 8 Emit-Site Wiring](plans/2026-05-10_pr-review-bot-emit-site-wiring.md) - Fire the Phase 8 metrics from the workflow + activity path; status counters, latency, drop rates
 - [PR Review Bot Phase 10 — Continuous-Eval Harness](plans/2026-05-10_pr-review-bot-phase-10-continuous-eval.md) - Held-out fixture corpus, nightly Temporal cron, Postgres eval store, and precision-regression alerts

@@ -11,7 +11,7 @@ describe("clusterKey", () => {
     expect(clusterKey("a.ts", 14)).toBe("a.ts|14");
   });
 
-  it("uses path as part of the key so identical lines on different files do not cluster", () => {
+  it("uses the file path as part of the key so identical lines on different files do not cluster", () => {
     expect(clusterKey("a.ts", 10)).not.toBe(clusterKey("b.ts", 10));
   });
 
@@ -33,11 +33,11 @@ describe("clusterKey", () => {
 describe("clusterFindings", () => {
   it("groups findings sharing a cluster key", () => {
     const result = clusterFindings([
-      { path: "a.ts", lineStart: 10 },
-      { path: "a.ts", lineStart: 12 },
-      { path: "a.ts", lineStart: 13 },
-      { path: "a.ts", lineStart: 14 },
-      { path: "b.ts", lineStart: 12 },
+      { file: "a.ts", lineStart: 10 },
+      { file: "a.ts", lineStart: 12 },
+      { file: "a.ts", lineStart: 13 },
+      { file: "a.ts", lineStart: 14 },
+      { file: "b.ts", lineStart: 12 },
     ]);
     expect([...result.keys()].toSorted()).toEqual([
       "a.ts|14",
@@ -55,9 +55,9 @@ describe("clusterFindings", () => {
 
   it("preserves insertion order within a cluster", () => {
     const findings = [
-      { path: "a.ts", lineStart: 8, tag: "first" as const },
-      { path: "a.ts", lineStart: 9, tag: "second" as const },
-      { path: "a.ts", lineStart: 10, tag: "third" as const },
+      { file: "a.ts", lineStart: 8, tag: "first" as const },
+      { file: "a.ts", lineStart: 9, tag: "second" as const },
+      { file: "a.ts", lineStart: 10, tag: "third" as const },
     ];
     const cluster = clusterFindings(findings).get("a.ts|7");
     expect(cluster?.map((f) => f.tag)).toEqual(["first", "second", "third"]);
@@ -65,9 +65,9 @@ describe("clusterFindings", () => {
 
   it("accepts extra fields via the generic constraint", () => {
     // Compile-time check that arbitrary extra fields are preserved.
-    type Rich = { path: string; lineStart: number; severity: "warning" };
+    type Rich = { file: string; lineStart: number; severity: "warning" };
     const findings: Rich[] = [
-      { path: "a.ts", lineStart: 10, severity: "warning" },
+      { file: "a.ts", lineStart: 10, severity: "warning" },
     ];
     const cluster = clusterFindings(findings).get("a.ts|7");
     expect(cluster?.[0]?.severity).toBe("warning");
