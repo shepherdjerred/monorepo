@@ -243,11 +243,51 @@ function captureWithContext(error: unknown, request: SpecialistRequest): void {
 }
 
 /**
- * Output schema factory: every specialist's schema has the same shape but
- * adds a Zod refinement pinning `kind` to the specialist's own category.
- * This is the second layer of defense after the system prompt — even if
- * the model hallucinates a `kind: "security"` from the correctness
- * specialist, the schema rejects it.
+ * Shared verifier-instruction block appended to each specialist's system
+ * prompt. Documents the `verifierTarget` Phase 4 contract so specialists
+ * emit correctly-shaped findings on the first try. The schema refinement
+ * below is the load-bearing guarantee, but front-loading the instruction
+ * cuts retry rate (and prompt-cache misses on retries).
+ *
+ * `verifierTarget` parameters per `verifier`:
+ *   - typecheck → { kind: "typecheck", packagePath, expectedOutputSubstring }
+ *   - eslint    → { kind: "eslint", filePath, ruleId }
+ *   - grep      → { kind: "grep", pattern, isLiteral, pathGlob, mustMatch }
+ *   - test      → { kind: "test", packagePath, testNamePattern, expectPass }
+ *   - none      → { kind: "none", reason }
+ */
+export const VERIFIER_TARGET_INSTRUCTIONS = `\
+When you emit a finding, you MUST also fill in the \`verifierTarget\` field with the parameters the downstream verification activity needs to run the empirical check. The schema rejects findings with \`verifier !== "none"\` but no \`verifierTarget\`, so unverifiable findings get dropped before they reach the reviewer.
+
+The shape depends on the \`verifier\` you declare:
+
+- \`verifier: "typecheck"\` → \`verifierTarget: { kind: "typecheck", packagePath: "packages/<name>", expectedOutputSubstring: "<unique-substring-of-the-tsc-error>" }\`. The verifier runs \`bun run typecheck\` in \`packagePath\` and looks for \`expectedOutputSubstring\` in the output. Choose a substring that uniquely identifies the error you predicted (typically \`file(line,col)\` plus an error symbol or type name).
+
+- \`verifier: "eslint"\` → \`verifierTarget: { kind: "eslint", filePath: "<repo-relative-file-path>", ruleId: "<eslint-rule-id>" }\`. The verifier runs \`bunx eslint <filePath> --rule "<ruleId>: error"\` and checks whether the rule fired.
+
+- \`verifier: "grep"\` → \`verifierTarget: { kind: "grep", pattern: "<regex-or-literal>", isLiteral: <true|false>, pathGlob: "<glob>", mustMatch: <true|false> }\`. The verifier runs ripgrep with the supplied pattern. Set \`mustMatch: true\` when your claim asserts the pattern EXISTS in the code; set \`false\` when your claim asserts it does NOT exist. Use \`isLiteral: true\` if the pattern is a literal string (not a regex) — this passes \`-F\` to ripgrep.
+
+- \`verifier: "test"\` → \`verifierTarget: { kind: "test", packagePath: "packages/<name>", testNamePattern: "<bun-test-pattern>", expectPass: <true|false> }\`. The verifier runs \`bun test --testNamePattern <pattern>\` in \`packagePath\`. Set \`expectPass: true\` when your claim is "this test passes / would pass"; \`false\` when "this test fails / would fail".
+
+- \`verifier: "none"\` → \`verifierTarget: { kind: "none", reason: "<why-no-verifier-applies>" }\`. Use this honestly for subjective design calls, architectural concerns, or any finding where no empirical check applies. Findings with \`verifier: "none"\` ride entirely on consensus voting — they survive only if multiple specialists or passes agree.
+
+The \`verifierTarget.kind\` MUST match \`verifier\` exactly. The schema rejects mismatches.`;
+
+/**
+ * Output schema factory. Two refinements layered on top of the base
+ * `FindingSchema`:
+ *
+ *   1. `kind` is pinned to the specialist's own category — defense against
+ *      a security specialist hallucinating a `kind: "correctness"` finding,
+ *      etc. (the system prompt already says "always set kind to X", but
+ *      schema enforcement is the load-bearing guarantee).
+ *
+ *   2. When `verifier !== "none"`, `verifierTarget` MUST be present and its
+ *      `kind` discriminator MUST match `verifier`. The verify activity
+ *      (Phase 4) relies on this — a finding with `verifier: "grep"` but
+ *      no target can't be empirically checked, so we reject it at parse
+ *      time and force the specialist to either supply a target or declare
+ *      `verifier: "none"`.
  */
 export function specialistOutputSchema(
   expectedKind: FindingKind,
@@ -256,7 +296,17 @@ export function specialistOutputSchema(
     findings: z.array(
       FindingSchema.refine((f) => f.kind === expectedKind, {
         message: `Specialist may only emit kind="${expectedKind}"`,
-      }),
+      }).refine(
+        (f) => {
+          if (f.verifier === "none") return true;
+          if (f.verifierTarget === undefined) return false;
+          return f.verifierTarget.kind === f.verifier;
+        },
+        {
+          message:
+            'verifierTarget is required when verifier!="none", and its kind must match verifier',
+        },
+      ),
     ),
   });
 }

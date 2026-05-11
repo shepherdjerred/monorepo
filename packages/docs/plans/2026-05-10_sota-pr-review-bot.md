@@ -68,11 +68,15 @@ Temporal workflow: prReviewParent
   │     • keep iff ≥2/3 randomized passes within a specialist agree, OR ≥2 distinct specialists agree
   │     • attach vote count + per-agent confidence to finding metadata
   │
-  ├─ activity: verifyFindings  [parallel per finding]
+  ├─ activity: verifyFindings  [parallel per finding, 60s per verifier]
   │     • finding declares verifier kind: typecheck | eslint | grep | test | none
-  │     • run verifier in sandboxed Dagger container against PR head
+  │       AND verifierTarget params (packagePath / ruleId / pattern / testName)
+  │     • run verifier as Bun.spawn subprocess against bootstrap workdir
+  │       (Phase 4 host-side; Phase 5+ swaps to sandboxed Dagger container)
   │     • drop finding if verifier contradicts the claim
-  │     • flag finding "verified" if verifier supports it
+  │     • keep + flag "verified" if verifier supports the claim
+  │     • keep + flag "unverified" if verifier errors / times out / no target
+  │       (verifier failures never hide bugs — always surface as unverified)
   │
   ├─ activity: dedupeAgainstHistory
   │     • query Redis KV: dismissed_comments:{repo}:{path}:{kind}

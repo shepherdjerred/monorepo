@@ -259,6 +259,19 @@ export const prReviewConsensusFindingsTotal = new Counter({
   registers: [register],
 });
 
+// Phase 4 verification outcome counter: each finding entering the verify
+// stage records exactly one observation. `outcome ∈ {verified, unverified,
+// contradicted}` — the `contradicted` count divided by the total is the
+// `pr_review_verification_drop_rate` gauge in `./pr-review-metrics.ts`.
+// Labeled by `verifier` (typecheck/eslint/grep/test/none) so dashboards
+// can attribute drop rate to the verifier that fired.
+export const prReviewVerifyFindingsTotal = new Counter({
+  name: "pr_review_verify_findings_total",
+  help: "Findings entering the verify stage, by verifier kind and post-verification outcome (verified | unverified | contradicted)",
+  labelNames: ["verifier", "outcome"] as const,
+  registers: [register],
+});
+
 let server: ReturnType<typeof Bun.serve> | undefined;
 
 function jsonLog(

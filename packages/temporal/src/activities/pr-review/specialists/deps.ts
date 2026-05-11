@@ -14,6 +14,7 @@ import type { PrReviewPipelineInput } from "#shared/schemas.ts";
 import {
   defaultSpecialistClient,
   runSpecialistPass,
+  VERIFIER_TARGET_INSTRUCTIONS,
   withSentryCapture,
   type SpecialistAnthropicClient,
   type SpecialistConfig,
@@ -45,7 +46,9 @@ Ground every claim in the actual diff. If the package.json / bun.lock / versions
 
 For each finding, fill in every required field of the schema. Use \`file\` for the repo-relative path. Use \`verifier\` to declare the empirical check (\`typecheck\` / \`eslint\` / \`grep\` / \`test\` / \`none\`) — most dep findings are \`grep\`-verifiable. \`confidence\` is your self-reported probability that the finding is real (0..1). \`id\` should be a short stable token derived from file + line + claim.
 
-Always set \`kind\` to \`"deps"\` — other specialists handle correctness, security, performance, and convention; do not encroach.`;
+Always set \`kind\` to \`"deps"\` — other specialists handle correctness, security, performance, and convention; do not encroach.
+
+${VERIFIER_TARGET_INSTRUCTIONS}`;
 
 export const DEPS_CONFIG: SpecialistConfig = {
   id: "deps",
