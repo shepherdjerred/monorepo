@@ -269,8 +269,11 @@ describe("formatRetrievedSymbols", () => {
   });
 
   it("formats a single retrieved entry with snippet from disk", async () => {
-    // Write a tiny file we can read back.
-    const dir = await Bun.$`mktemp -d -t retrieval-test`.text();
+    // Write a tiny file we can read back. GNU `mktemp -t <prefix>` requires
+    // the template to contain at least 3 trailing X's; BSD `mktemp` on macOS
+    // tolerates a bare prefix. Use the explicit `<prefix>.XXXXXX` form so
+    // both implementations agree.
+    const dir = await Bun.$`mktemp -d -t retrieval-test.XXXXXX`.text();
     const repoRoot = dir.trim();
     const filePath = `${repoRoot}/src/a.ts`;
     await Bun.write(

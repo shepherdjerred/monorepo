@@ -76,6 +76,10 @@ const EXCLUDED_FILES = [
   // the git username when cloning the private monorepo-pr-review-fixtures
   // repo for the nightly continuous-eval workflow.
   "packages/temporal/src/activities/pr-review-eval/load.ts",
+  // Same pattern: GIT_ASKPASS script for the pr-review-bot workdir clone.
+  // The literal "x-access-token" is the username GitHub's HTTPS clone
+  // expects when the password is a PAT; not a token-in-URL.
+  "packages/temporal/src/lib/pr-review-workdir.ts",
 ];
 
 type Finding = {

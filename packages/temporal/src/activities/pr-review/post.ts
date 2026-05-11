@@ -4,6 +4,7 @@ import * as Sentry from "@sentry/bun";
 import { withSpan } from "#observability/tracing.ts";
 import type { Finding } from "#shared/pr-review/finding.ts";
 import type { PrReviewPipelineInput } from "#shared/schemas.ts";
+import { clusterKey } from "#shared/pr-review/cluster-key.ts";
 
 const COMPONENT = "pr-review-pipeline";
 
@@ -109,18 +110,82 @@ export function markerFor(workflowId: string): string {
   return `${COMMENT_MARKER_PREFIX} id="${workflowId}" -->`;
 }
 
+/** Maximum claim length surfaced in the marker. Phase 9 only uses it as a
+ * recovery aid; the bulk text stays in the visible bullet body. 80 chars
+ * is enough to disambiguate near-duplicates without bloating the comment. */
+const MARKER_CLAIM_MAX = 80;
+
+/**
+ * HTML-comment marker prepended to each finding's bullet so the Phase 9
+ * dismissed-comments listener can recover the (cluster, kind, file, claim)
+ * triple it dedups against. Encoded with `encodeURIComponent` so a literal
+ * `-->` in the claim can't break out of the comment.
+ */
+export function findingMarker(finding: Finding): string {
+  const truncatedClaim = finding.claim.slice(0, MARKER_CLAIM_MAX);
+  const cluster = clusterKey(finding.file, finding.lineStart);
+  return [
+    "<!-- pr-review-finding",
+    `cluster="${encodeURIComponent(cluster)}"`,
+    `kind="${encodeURIComponent(finding.kind)}"`,
+    `file="${encodeURIComponent(finding.file)}"`,
+    `claim="${encodeURIComponent(truncatedClaim)}"`,
+    "-->",
+  ].join(" ");
+}
+
 function renderFinding(finding: Finding): string {
   const lineRange =
     finding.lineStart === finding.lineEnd
       ? `L${String(finding.lineStart)}`
       : `L${String(finding.lineStart)}-L${String(finding.lineEnd)}`;
   const lines: string[] = [];
+  lines.push(findingMarker(finding));
   lines.push(`- **\`${finding.file}\`** ${lineRange} — ${finding.claim}`);
   lines.push(
     `  - _kind_: ${finding.kind}; _verifier_: \`${finding.verifier}\`; _confidence_: ${finding.confidence.toFixed(2)}`,
   );
   lines.push(`  - _evidence_: ${finding.evidence}`);
   return lines.join("\n");
+}
+
+/**
+ * Parser for the `findingMarker` format. Used by the Phase 9 listener to
+ * recover the (cluster, kind, file, claim) triple from an existing PR
+ * comment. Returns `null` for lines that aren't a finding marker.
+ *
+ * Exposed alongside the writer so the two stay in lockstep — a marker
+ * format change here breaks Phase 9 immediately at the regression-test
+ * boundary instead of silently in prod.
+ */
+const MARKER_RE =
+  /^<!-- pr-review-finding cluster="([^"]*)" kind="([^"]*)" file="([^"]*)" claim="([^"]*)" -->$/;
+
+export type ParsedFindingMarker = {
+  cluster: string;
+  kind: string;
+  file: string;
+  claim: string;
+};
+
+export function parseFindingMarker(line: string): ParsedFindingMarker | null {
+  const match = MARKER_RE.exec(line.trim());
+  if (match === null) return null;
+  const [, cluster, kind, file, claim] = match;
+  if (
+    cluster === undefined ||
+    kind === undefined ||
+    file === undefined ||
+    claim === undefined
+  ) {
+    return null;
+  }
+  return {
+    cluster: decodeURIComponent(cluster),
+    kind: decodeURIComponent(kind),
+    file: decodeURIComponent(file),
+    claim: decodeURIComponent(claim),
+  };
 }
 
 export function renderCommentBody(
