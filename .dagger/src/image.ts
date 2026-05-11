@@ -3,7 +3,7 @@
  *
  * These are plain functions (not decorated) — the @func() wrappers live in index.ts.
  */
-import { dag, Container, Directory, Secret } from "@dagger.io/dagger";
+import { dag, Container, Directory, Platform, Secret } from "@dagger.io/dagger";
 
 import {
   ARGOCD_CLI_VERSION,
@@ -768,7 +768,13 @@ export async function pushDiscordPlaysPokemonImageHelper(
 
 /** Build the CI base image from .buildkite/ci-image/Dockerfile. */
 export function buildCiBaseImageHelper(context: Directory): Container {
-  return context.dockerBuild();
+  // Explicitly target linux/amd64 — the cluster node (torvalds) is amd64.
+  // Without this, dockerBuild() can produce a wrong-arch image (observed:
+  // ci-base:405 came out arm64, causing `exec format error` on /bin/sh in
+  // every CI Job pod). Platform is a branded string in the Dagger SDK with
+  // no public constructor, so a typed cast is the pragmatic way to pin it.
+  const platform: Platform = "linux/amd64" as unknown as Platform;
+  return context.dockerBuild({ platform });
 }
 
 /** Build and push the CI base image. Returns the digest. */

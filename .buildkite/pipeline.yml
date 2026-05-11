@@ -13,7 +13,7 @@ steps:
             serviceAccountName: buildkite-agent-stack-k8s-controller
             containers:
               - name: container-0
-                image: "ghcr.io/shepherdjerred/ci-base:405"
+                image: "ghcr.io/shepherdjerred/ci-base:404"
                 resources:
                   requests:
                     cpu: "250m"
