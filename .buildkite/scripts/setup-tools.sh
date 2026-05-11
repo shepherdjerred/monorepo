@@ -13,13 +13,13 @@ KUBECTL_VERSION="v1.36.0"
 SHELLCHECK_VERSION="0.11.0"
 
 # renovate: datasource=github-releases depName=astral-sh/uv
-UV_VERSION="0.11.7"
+UV_VERSION="0.11.12"
 
 # renovate: datasource=github-releases depName=helm/helm
 HELM_VERSION="v4.1.4"
 
 # renovate: datasource=github-tags depName=aws/aws-cli versioning=semver
-AWSCLI_VERSION="2.34.35"
+AWSCLI_VERSION="2.34.45"
 
 # renovate: datasource=github-releases depName=opentofu/opentofu
 OPENTOFU_VERSION="1.11.6"
@@ -28,7 +28,7 @@ OPENTOFU_VERSION="1.11.6"
 BUN_VERSION="1.3.13"
 
 # renovate: datasource=github-releases depName=cli/cli
-GH_VERSION="2.91.0"
+GH_VERSION="2.92.0"
 
 # renovate: datasource=github-tags depName=rust-lang/rustup versioning=semver
 RUSTUP_VERSION="1.29.0"
@@ -40,7 +40,7 @@ GITLEAKS_VERSION="8.30.1"
 TRIVY_VERSION="0.70.0"
 
 # renovate: datasource=pypi depName=semgrep
-SEMGREP_VERSION="1.161.0"
+SEMGREP_VERSION="1.162.0"
 
 
 install_base() {
