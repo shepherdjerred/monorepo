@@ -62,11 +62,13 @@ import {
   buildScoutImageHelper,
   buildDiscordPlaysPokemonImageHelper,
   buildTemporalWorkerImageHelper,
+  buildTrmnlDashboardImageHelper,
   pushCaddyS3ProxyImageHelper,
   pushObsidianHeadlessImageHelper,
   pushScoutImageHelper,
   pushDiscordPlaysPokemonImageHelper,
   pushTemporalWorkerImageHelper,
+  pushTrmnlDashboardImageHelper,
   buildCiBaseImageHelper,
   pushCiBaseImageHelper,
 } from "./image";
@@ -99,6 +101,7 @@ import {
   smokeTestCaddyS3ProxyHelper,
   smokeTestObsidianHeadlessHelper,
   smokeTestDiscordPlaysPokemonHelper,
+  smokeTestTrmnlDashboardHelper,
 } from "./misc";
 
 @object()
@@ -529,6 +532,52 @@ export class Monorepo {
     gitSha: string = "unknown",
   ): Promise<string> {
     return pushTemporalWorkerImageHelper(
+      pkgDir,
+      tags,
+      registryUsername,
+      registryPassword,
+      depNames,
+      depDirs,
+      version,
+      gitSha,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // trmnl-dashboard image
+  // ---------------------------------------------------------------------------
+
+  /** Build the trmnl-dashboard image (Bun service, runs as UID 1000). */
+  @func()
+  buildTrmnlDashboardImage(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Container {
+    return buildTrmnlDashboardImageHelper(
+      pkgDir,
+      depNames,
+      depDirs,
+      version,
+      gitSha,
+    );
+  }
+
+  /** Push a trmnl-dashboard image to a registry. Returns digest. */
+  @func({ cache: "never" })
+  async pushTrmnlDashboardImage(
+    pkgDir: Directory,
+    tags: string[],
+    registryUsername: string,
+    registryPassword: Secret,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Promise<string> {
+    return pushTrmnlDashboardImageHelper(
       pkgDir,
       tags,
       registryUsername,
@@ -1204,5 +1253,15 @@ export class Monorepo {
     depDirs: Directory[] = [],
   ): Promise<string> {
     return smokeTestDiscordPlaysPokemonHelper(pkgDir, depNames, depDirs);
+  }
+
+  /** Smoke test trmnl-dashboard: builds image, boots Bun.serve, killed at timeout. */
+  @func()
+  async smokeTestTrmnlDashboard(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+  ): Promise<string> {
+    return smokeTestTrmnlDashboardHelper(pkgDir, depNames, depDirs);
   }
 }
