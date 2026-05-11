@@ -146,6 +146,8 @@ async function replayImpl(input: ReplayInput): Promise<ReplayResult> {
         workdir: "",
         changedFiles,
         claudeMdHierarchy: [],
+        retrievedSymbols: [],
+        blockDiffs: [],
       };
       const pipeline: PrReviewPipelineInput = {
         owner: "shepherdjerred",
