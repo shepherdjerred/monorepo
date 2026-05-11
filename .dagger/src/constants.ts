@@ -68,7 +68,7 @@ export const GITHUB_MCP_SERVER_VERSION = "1.0.3";
 export const TALOSCTL_VERSION = "v1.13.0";
 
 // renovate: datasource=github-releases depName=opentofu/opentofu
-export const TOFU_VERSION = "1.11.5";
+export const TOFU_VERSION = "1.11.6";
 
 // renovate: datasource=github-releases depName=argoproj/argo-cd
 export const ARGOCD_CLI_VERSION = "v3.2.4";
