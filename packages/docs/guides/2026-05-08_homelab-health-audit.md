@@ -1,6 +1,6 @@
 # Homelab Infrastructure Health Audit — 2026-05-08
 
-Produced by running the [Homelab Audit Runbook](2026-04-04_homelab-audit-runbook.md) across 8 parallel agents (Sections 1–13) plus a Phase B PagerDuty deep-dive and a Phase C major-issue deep-dive. All checks were read-only; no remediation has been applied. Window: last 48h (2026-05-06 → 2026-05-08), with the [2026-05-05 audit](2026-05-05_homelab-health-audit.md) as the delta baseline.
+Produced by running the [Homelab Audit Runbook](2026-04-04_homelab-audit-runbook.md) across 8 parallel agents (Sections 1–13) plus a Phase B PagerDuty deep-dive and a Phase C major-issue deep-dive. All checks were read-only; no remediation has been applied. Window: last 48h (2026-05-06 → 2026-05-08), with the [2026-05-05 audit](../archive/superseded/2026-05-05_homelab-health-audit.md) as the delta baseline.
 
 ## TL;DR
 

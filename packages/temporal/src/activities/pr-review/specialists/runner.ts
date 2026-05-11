@@ -221,6 +221,11 @@ function jsonLog(
   );
 }
 
+function isAnthropicCreditBalanceError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes("credit balance is too low");
+}
+
 function captureWithContext(error: unknown, request: SpecialistRequest): void {
   Sentry.withScope((scope) => {
     const info = Context.current().info;
@@ -238,6 +243,10 @@ function captureWithContext(error: unknown, request: SpecialistRequest): void {
       specialist: request.config.id,
       passId: request.passId,
     });
+    if (isAnthropicCreditBalanceError(error)) {
+      scope.setTag("provider_error", "anthropic_credit_balance_low");
+      scope.setFingerprint(["anthropic-credit-balance-low"]);
+    }
     Sentry.captureException(error);
   });
 }

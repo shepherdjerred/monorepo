@@ -72,6 +72,10 @@ const EXCLUDED_FILES = [
   // This is the recommended pattern that the CLAUDE.md rule actually points
   // toward — the ban is on putting `x-access-token` in URLs, not in askpass.
   "packages/temporal/src/activities/data-dragon.ts",
+  // Same GIT_ASKPASS pattern as data-dragon.ts — emits "x-access-token" as
+  // the git username when cloning the private monorepo-pr-review-fixtures
+  // repo for the nightly continuous-eval workflow.
+  "packages/temporal/src/activities/pr-review-eval/load.ts",
 ];
 
 type Finding = {

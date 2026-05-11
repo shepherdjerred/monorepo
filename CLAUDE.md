@@ -32,21 +32,29 @@ archive/                     # Legacy projects (do not modify)
 
 ## Documentation Discipline — Per Session
 
-**Every session must produce or update a plan file in-repo, and end with a written summary appended to that plan file.** This applies even to one-shot edits — the plan file may be brief, but it must exist.
+**Every session must produce one of: a session log OR a plan**, and end with a written summary appended to it. Default to a log; reserve plans for substantive design work.
 
-### Plan files (in-repo)
+### Log vs Plan — which one?
 
-- **Location:** `packages/docs/plans/<YYYY-MM-DD>_<kebab-case-slug>.md`
-- **Mirror harness plans.** When plan mode is used, copy the approved plan from `~/.claude/plans/<slug>.md` into `packages/docs/plans/` using the dated naming convention before beginning implementation.
-- **Create a plan even without plan mode.** For non-plan-mode sessions, write a brief plan file capturing intent, scope, files to touch, and verification steps before edits begin.
+- **Log** (`packages/docs/logs/<YYYY-MM-DD>_<kebab-slug>.md`) — the default. Use for one-shot fixes, bug recaps, Q&A sessions, single-file edits, and any session where there was no real planning to write down.
+- **Plan** (`packages/docs/plans/<YYYY-MM-DD>_<kebab-slug>.md`) — use when (a) plan mode was used, or (b) the work is multi-step, has design choices to commit to, or introduces follow-up tasks for future sessions.
+
+**Rule of thumb:** if the design itself is the artifact, it's a plan. If you just need a journal of what happened, it's a log.
+
+### Mirroring harness plans
+
+When plan mode is used, copy the approved plan from `~/.claude/plans/<slug>.md` into `packages/docs/plans/` using the dated naming convention before beginning implementation.
+
+### Conventions (both logs and plans)
+
 - **Include a `## Status` line** near the top: `In Progress`, `Complete`, `Partially Complete`, or `Abandoned`.
 - **Raw Markdown only** — never render to PDF or Typst.
-- **Update `packages/docs/index.md`** when adding a new plan file.
-- See `packages/docs/CLAUDE.md` for the broader docs taxonomy (architecture / patterns / decisions / guides / plans).
+- **Update `packages/docs/index.md`** only when adding a new _plan_. Logs are not individually indexed — `packages/docs/logs/` is linked as a directory.
+- See `packages/docs/CLAUDE.md` for the broader docs taxonomy (architecture / patterns / decisions / guides / plans / logs).
 
 ### End-of-session summary
 
-Before ending any session, append a section to the plan file:
+Before ending any session, append a section to whichever file you produced (log or plan):
 
 ```markdown
 ## Session Log — <YYYY-MM-DD>
@@ -64,7 +72,11 @@ Before ending any session, append a section to the plan file:
 - <known issues, deferred decisions, surprises, warnings the next agent needs>
 ```
 
-If a session spans multiple plan files, append a Session Log to each. **Also restate the same Done / Remaining / Caveats inline as the final chat message** so the user sees it without opening the file.
+If a session spans multiple files, append a Session Log to each. **Also restate the same Done / Remaining / Caveats inline as the final chat message** so the user sees it without opening the file.
+
+### When a plan is finished
+
+When a plan in `packages/docs/plans/` reaches `Status: Complete` and the work is shipped, `git mv` it to `packages/docs/archive/completed/` and prune its entry from `packages/docs/index.md` under `## Plans`. Don't leave finished plans accumulating in `plans/`.
 
 ## Dagger & CI Code — Banned Patterns
 

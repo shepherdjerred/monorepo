@@ -180,7 +180,7 @@ export async function spawnWithTimeout(input: {
   }, input.timeoutMs);
 
   let exitCode: number;
-  let output = "";
+  let output: string;
   try {
     // `stdout: "pipe", stderr: "pipe"` above guarantees stdout/stderr are
     // ReadableStream<Uint8Array>; `new Response(...)` accepts that and the

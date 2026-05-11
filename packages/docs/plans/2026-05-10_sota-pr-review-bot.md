@@ -2,11 +2,11 @@
 
 ## Status
 
-In Progress — Phase 1 (foundation) implementation landed in PR #728; subsequent phases tracked via the team task list. Supersedes [`2026-04-25_pr-review-and-summary-bot.md`](./2026-04-25_pr-review-and-summary-bot.md), which should move to `archive/superseded/` once this plan is approved.
+In Progress — Phase 1 (foundation) implementation landed in PR #728; subsequent phases tracked via the team task list. Supersedes [`2026-04-25_pr-review-and-summary-bot.md`](../archive/superseded/2026-04-25_pr-review-and-summary-bot.md), which should move to `archive/superseded/` once this plan is approved.
 
 ## Context
 
-The monorepo's current AI code review surface is a soft-failing single-shot Dagger step (`scripts/ci/src/steps/code-review.ts` → `codeReviewHelper` in `.dagger/src/release.ts:853`) that posts unverified comments via `claude -p`. The earlier pending plan ([2026-04-25](./2026-04-25_pr-review-and-summary-bot.md)) sketched a Temporal webhook bot but predates the 2026 SOTA shift to multi-agent consensus + empirical verification (Cursor BugBot v11, Greptile v4, Copilot Code Review March 2026, Refute-or-Promote arxiv 2604.19049).
+The monorepo's current AI code review surface is a soft-failing single-shot Dagger step (`scripts/ci/src/steps/code-review.ts` → `codeReviewHelper` in `.dagger/src/release.ts:853`) that posts unverified comments via `claude -p`. The earlier pending plan ([2026-04-25](../archive/superseded/2026-04-25_pr-review-and-summary-bot.md)) sketched a Temporal webhook bot but predates the 2026 SOTA shift to multi-agent consensus + empirical verification (Cursor BugBot v11, Greptile v4, Copilot Code Review March 2026, Refute-or-Promote arxiv 2604.19049).
 
 This plan implements **every** SOTA technique surfaced in the audit: parallel specialist agents with randomized-diff consensus voting, mandatory empirical verification, retrieval over a code graph (not just diff text), structure-aware AST diffing, dismissed-comment learning, continuous evaluation against a held-out fixture set, prompt-caching, OTel tracing, A/B prompt experimentation, and shadow-mode dogfooding before cutover. Cost target $1–5/PR (quality-first). Total estimated effort ~14 dev-days, parallelizable.
 
