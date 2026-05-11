@@ -14,10 +14,10 @@ export const BUN_IMAGE =
   "oven/bun:1.3.13@sha256:87416c977a612a204eb54ab9f3927023c2a3c971f4f345a01da08ea6262ae30e";
 // renovate: datasource=docker depName=rust
 export const RUST_IMAGE =
-  "rust:1.94.1-bookworm@sha256:6ae102bdbf528294bc79ad6e1fae682f6f7c2a6e6621506ba959f9685b308a55";
+  "rust:1.95.0-bookworm@sha256:503651ea31e66ecb74623beabde781059a5978df1595a9e8ed03974d5fec1bf0";
 // renovate: datasource=docker depName=golang
 export const GO_IMAGE =
-  "golang:1.26.1-bookworm@sha256:ab3d6955bbc813a0f3fdf220c1d817dd89c0b3f283777db8ece4a32fe7858edd";
+  "golang:1.26.3-bookworm@sha256:252599aeb51ad60b83e4d8821802068127c528c707cb7dd7afd93be057c6011c";
 // renovate: datasource=docker depName=mcr.microsoft.com/playwright
 export const PLAYWRIGHT_IMAGE =
   "mcr.microsoft.com/playwright:v1.59.1-noble@sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53";
@@ -38,10 +38,10 @@ export const TEXLIVE_IMAGE =
   "texlive/texlive:TL2024-historic@sha256:fd576ce8b1cfd03cdabc15ca75682fb050eb10de5c057d81449883c2ad644855";
 // renovate: datasource=docker depName=caddy
 export const CADDY_IMAGE =
-  "caddy:2.11.1-alpine@sha256:3b2a0196e0687279c14c27adff9fc6b44acfa318dbb97eaebe385bdf99e5364c";
+  "caddy:2.11.2-alpine@sha256:834468128c7696cec0ceea6172f7d692daf645ae51983ca76e39da54a97c570d";
 // renovate: datasource=docker depName=caddy
 export const CADDY_BUILDER_IMAGE =
-  "caddy:2.11.1-builder-alpine@sha256:fd1e631d06bcf264896debacf16929ff8cd6d5a3502c361ea36fb87ed850299b";
+  "caddy:2.11.2-builder-alpine@sha256:ced7ea0d093d2ce6d3e28869640f0513afb96e42675f399de062a17bab54b434";
 // renovate: datasource=docker depName=python
 export const PYTHON_IMAGE =
   "python:3.14-slim@sha256:1697e8e8d39bf168e177ac6b5fdab6df86d81cfc24dae17dfb96cfc3ef76b4dd";
@@ -65,7 +65,7 @@ export const RELEASE_PLEASE_VERSION = "17.6.0";
 export const CLAUDE_CODE_VERSION = "2.1.138";
 
 // renovate: datasource=github-releases depName=golangci/golangci-lint
-export const GOLANGCI_LINT_VERSION = "v2.11.4";
+export const GOLANGCI_LINT_VERSION = "v2.12.2";
 
 // renovate: datasource=github-releases depName=cli/cli
 export const GH_CLI_VERSION = "2.92.0";
@@ -83,7 +83,7 @@ export const TALOSCTL_VERSION = "v1.13.0";
 export const TOFU_VERSION = "1.11.6";
 
 // renovate: datasource=github-releases depName=argoproj/argo-cd
-export const ARGOCD_CLI_VERSION = "v3.3.6";
+export const ARGOCD_CLI_VERSION = "v3.4.1";
 
 // renovate: datasource=github-releases depName=vmware-tanzu/velero
 export const VELERO_CLI_VERSION = "v1.18.0";

@@ -38,7 +38,7 @@ RUN curl -fsSL "https://dl.dagger.io/dagger/releases/${DAGGER_VERSION}/dagger_v$
     chmod +x /usr/local/bin/dagger
 
 # renovate: datasource=github-releases depName=astral-sh/uv
-ARG UV_VERSION=0.11.12
+ARG UV_VERSION=0.11.13
 RUN curl -LsSf "https://astral.sh/uv/${UV_VERSION}/install.sh" | sh && \
     mv /root/.local/bin/uv /usr/local/bin/uv && \
     mv /root/.local/bin/uvx /usr/local/bin/uvx || true
@@ -47,13 +47,13 @@ ENV UV_LINK_MODE=copy
 # semgrep via uv (covers install_semgrep() — the largest single per-pod writer
 # at ~835 MB to /root/.local/share/uv + /root/.cache/uv)
 # renovate: datasource=pypi depName=semgrep
-ARG SEMGREP_VERSION=1.161.0
+ARG SEMGREP_VERSION=1.162.0
 RUN uv tool install --python 3.12 "semgrep==${SEMGREP_VERSION}" --with setuptools
 ENV PATH="/root/.local/bin:${PATH}"
 
 # GitHub CLI (covers install_gh())
 # renovate: datasource=github-releases depName=cli/cli
-ARG GH_VERSION=2.91.0
+ARG GH_VERSION=2.92.0
 RUN curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_amd64.tar.gz" | tar xz -C /tmp && \
     cp "/tmp/gh_${GH_VERSION}_linux_amd64/bin/gh" /usr/local/bin/gh && \
     chmod +x /usr/local/bin/gh && \
@@ -75,7 +75,7 @@ RUN curl -fsSL https://get.opentofu.org/install-opentofu.sh | \
 
 # AWS CLI (covers install_awscli())
 # renovate: datasource=github-tags depName=aws/aws-cli versioning=semver
-ARG AWSCLI_VERSION=2.34.35
+ARG AWSCLI_VERSION=2.34.45
 RUN curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWSCLI_VERSION}.zip" -o /tmp/awscliv2.zip && \
     unzip -q /tmp/awscliv2.zip -d /tmp/aws-install && \
     /tmp/aws-install/aws/install && \

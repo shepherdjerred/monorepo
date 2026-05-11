@@ -67,6 +67,7 @@ AI-maintained knowledge base for the monorepo.
 - [trmnl-dashboard Dagger Image](plans/2026-05-10_trmnl-dashboard-dagger-image.md) - Build trmnl-dashboard via Dagger (no Dockerfile) with non-root user; unblock degraded ArgoCD app
 - [TaskNotes Recurring Fix + Wiring](plans/2026-05-10_tasknotes-recurring-and-wiring.md) - Fix recurring-task drop bug; wire half-built subsystems (offline sync, Pomodoro, Live Activities, time-tracking UI, markdown rendering)
 - [update-versions.ts: same-line entry fix](plans/2026-05-10_update-versions-script-fix.md) - Fix commit-back script clobbering closing `};` in versions.ts when key+value share a line
+- [Update docker / helm / infra-tool pins (round 2)](plans/2026-05-10_update-docker-helm-images-round2.md) - Bundle Renovate dashboard #481 docker/CI-tool bumps after #748: prod tags, Dagger base images, ci-base tools
 
 ## Guides
 
