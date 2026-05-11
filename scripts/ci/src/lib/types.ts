@@ -11,6 +11,8 @@ export interface AffectedPackages {
   hasImagePackages: Set<string>;
   hasSitePackages: Set<string>;
   hasNpmPackages: Set<string>;
+  /** True when .buildkite/ci-image/VERSION changed. Non-generated commits fail fast. */
+  ciImageVersionChanged: boolean;
   /** True when only version strings changed (commit-back). Skips image builds and version-commit-back. */
   versionBumpOnly: boolean;
   /** True when the current commit is a release-please merge. Triggers prod npm publishes alongside dev. */

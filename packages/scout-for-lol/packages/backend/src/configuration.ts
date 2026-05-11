@@ -1,5 +1,6 @@
 import "dotenv/config";
 import env from "env-var";
+import { z } from "zod";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("config");
@@ -38,14 +39,22 @@ function getOptionalEnvVar(
   }
 }
 
+const EnvironmentSchema = z.enum(["dev", "beta", "prod"]);
+
+export function resolveEnvironment(): z.infer<typeof EnvironmentSchema> {
+  const raw = env.get("ENVIRONMENT").default("dev").asString();
+  const parsed = EnvironmentSchema.safeParse(raw);
+  if (parsed.success) return parsed.data;
+  throw new Error(
+    `Invalid ENVIRONMENT="${raw}", expected one of: dev, beta, prod`,
+  );
+}
+
 export default {
   version: getRequiredEnvVar("VERSION"),
   gitSha: getRequiredEnvVar("GIT_SHA"),
   sentryDsn: getOptionalEnvVar("SENTRY_DSN"),
-  environment: env
-    .get("ENVIRONMENT")
-    .default("dev")
-    .asEnum(["dev", "beta", "prod"]),
+  environment: resolveEnvironment(),
   discordToken: getRequiredEnvVar("DISCORD_TOKEN"),
   applicationId: getRequiredEnvVar("APPLICATION_ID"),
   discordClientSecret: getOptionalEnvVar("DISCORD_CLIENT_SECRET"),

@@ -11,6 +11,7 @@ import { prAgentActivities } from "./pr-agent.ts";
 import { prReviewActivities } from "./pr-review/index.ts";
 import { prSummaryActivities } from "./pr-review/summary.ts";
 import { veleroOrphanAuditActivities } from "./velero-orphan-audit.ts";
+import { outcomeActivities } from "./outcome.ts";
 
 export const activities = {
   ...fetcherActivities,
@@ -26,4 +27,5 @@ export const activities = {
   ...prReviewActivities,
   ...prSummaryActivities,
   ...veleroOrphanAuditActivities,
+  ...outcomeActivities,
 };

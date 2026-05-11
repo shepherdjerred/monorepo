@@ -222,6 +222,19 @@ export const prReviewFindingsPerPr = new Histogram({
   registers: [register],
 });
 
+// ---------------------------------------------------------------------------
+// Workflow outcome metric — distinguishes "did the work" from "skipped
+// intentionally" for check-and-skip workflows (vacuum, goodMorning*) where
+// Temporal status alone (`Completed`) cannot tell the two apart.
+// ---------------------------------------------------------------------------
+
+export const workflowOutcomeTotal = new Counter({
+  name: "temporal_workflow_outcome_total",
+  help: "Outcomes of check-and-skip workflows: executed (body ran) vs skipped (gate short-circuited)",
+  labelNames: ["workflow", "outcome", "reason"] as const,
+  registers: [register],
+});
+
 let server: ReturnType<typeof Bun.serve> | undefined;
 
 function jsonLog(

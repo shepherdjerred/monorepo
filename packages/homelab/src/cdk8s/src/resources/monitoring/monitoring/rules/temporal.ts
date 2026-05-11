@@ -155,6 +155,73 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
             severity: "warning",
           },
         },
+        {
+          // Catches the "low-volume daily schedule, fails consistently for
+          // days, no one notices" pattern — exactly what kept Scout Data
+          // Dragon broken silently from 2026-05-02 to 2026-05-08. Existing
+          // TemporalWorkflowActivityFailing requires >5 failures in 30m,
+          // which a once-daily schedule can never hit.
+          //
+          // PR workflows (prReview, prSummary) excluded because they
+          // legitimately fail per-PR (lint errors, agent timeouts, etc.) and
+          // would otherwise drown out the signal.
+          alert: "TemporalScheduledWorkflowFailingDaily",
+          annotations: {
+            summary: escapePrometheusTemplate(
+              "Scheduled workflow {{ $labels.workflowType }} failing repeatedly",
+            ),
+            description: escapePrometheusTemplate(
+              "{{ $labels.workflowType }} has had {{ $value }} activity failures across the last 48h. A daily schedule that fails twice in a row is broken — check the Temporal UI and worker logs.",
+            ),
+          },
+          // Workflows excluded: PR review/summary fail per-PR legitimately;
+          // HA-presence + iOS-action workflows are event-triggered (their
+          // schedules are user actions, not crons), so a "2 in 48h" rate
+          // doesn't indicate a broken schedule.
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            [
+              "increase(activity_task_fail{",
+              'namespace="default",',
+              `workflowType!~"${["prReview", "prSummary", "welcomeHome", "leavingHome", "goodNight"].join("|")}"`,
+              "}[48h]) >= 2",
+            ].join(""),
+          ),
+          for: "30m",
+          labels: {
+            severity: "warning",
+          },
+        },
+      ],
+    },
+    {
+      name: "temporal-workflow-outcomes",
+      rules: [
+        {
+          // Surfaces drift in check-and-skip workflows: e.g. if vacuum
+          // suddenly only skips for 5 days straight, presence detection may
+          // be broken even though Temporal reports Completed.
+          //
+          // Backed by `temporal_workflow_outcome_total` (emitted by
+          // setOutcome() in workflows/ha/util.ts). Fires on the absence of
+          // any `executed` outcome over 5 days for a workflow that normally
+          // executes — heuristic but catches the silent-failure class.
+          alert: "TemporalCheckAndSkipNeverExecuted",
+          annotations: {
+            summary: escapePrometheusTemplate(
+              "{{ $labels.workflow }} has skipped every run for 5 days",
+            ),
+            description: escapePrometheusTemplate(
+              "Workflow {{ $labels.workflow }} has emitted only `skipped` outcomes for 5 days, never `executed`. Either no one was ever home/away as expected, or the gating condition is permanently stuck. Check HA presence entities.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'sum by (workflow) (increase(temporal_workflow_outcome_total{outcome="skipped"}[5d])) > 5\nunless on (workflow)\n  sum by (workflow) (increase(temporal_workflow_outcome_total{outcome="executed"}[5d])) > 0',
+          ),
+          for: "1h",
+          labels: {
+            severity: "warning",
+          },
+        },
       ],
     },
     {

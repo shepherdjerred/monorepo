@@ -157,13 +157,30 @@ async function runCommand(
   command: string[],
   options: {
     cwd: string;
-    env?: Record<string, string>;
+    env?: Record<string, string | undefined>;
     redactOutput?: boolean;
   },
 ): Promise<string> {
+  const clearedEnvKeys = new Set(
+    Object.entries(options.env ?? {})
+      .filter(([, value]) => value === undefined)
+      .map(([key]) => key),
+  );
+  const childEnv: Record<string, string> = {};
+  for (const [key, value] of Object.entries(Bun.env)) {
+    if (value !== undefined && !clearedEnvKeys.has(key)) {
+      childEnv[key] = value;
+    }
+  }
+  for (const [key, value] of Object.entries(options.env ?? {})) {
+    if (value !== undefined) {
+      childEnv[key] = value;
+    }
+  }
+
   const proc = Bun.spawn(command, {
     cwd: options.cwd,
-    env: { ...Bun.env, ...options.env },
+    env: childEnv,
     stdout: "pipe",
     stderr: "pipe",
   });
@@ -340,8 +357,9 @@ export const dataDragonActivities = {
           // loads scout's `configuration.ts` whose `env-var` validator only
           // accepts ENVIRONMENT ∈ {dev, beta, prod}. The Temporal worker pod
           // runs with ENVIRONMENT=production and the subprocess inherits it,
-          // failing validation. Pin to "dev" for the subprocess only.
-          env: { ENVIRONMENT: "dev" },
+          // failing validation. Clear it at the subprocess boundary so Scout
+          // falls back to its own default instead of inheriting pod config.
+          env: { ENVIRONMENT: undefined },
         },
       );
 
