@@ -8,6 +8,7 @@ import {
   Secret,
   Service,
   ServiceAccount,
+  Volume,
 } from "cdk8s-plus-31";
 import {
   IntOrString,
@@ -75,12 +76,13 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
     },
   });
 
-  deployment.addContainer(
+  const container = deployment.addContainer(
     withCommonProps({
       name: "trmnl-dashboard",
       image: `ghcr.io/shepherdjerred/trmnl-dashboard:${versions["shepherdjerred/trmnl-dashboard"]}`,
       ports: [{ number: 3000, name: "http" }],
       envVariables: {
+        HOME: EnvValue.fromValue("/tmp"),
         PORT: EnvValue.fromValue("3000"),
         TRMNL_API_KEY: EnvValue.fromSecretValue({
           secret,
@@ -137,6 +139,11 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
       }),
     }),
   );
+
+  // Bun writes runtime state under $HOME while starting TypeScript directly.
+  // Keep the root filesystem read-only by pointing HOME at a writable emptyDir.
+  const tmpVolume = Volume.fromEmptyDir(chart, "trmnl-dashboard-tmp", "tmp");
+  container.mount("/tmp", tmpVolume);
 
   setRevisionHistoryLimit(deployment, 5);
 
