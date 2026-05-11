@@ -23,6 +23,9 @@ import { escapePrometheusTemplate } from "./shared.ts";
  *     - pr_review_consensus_drop_rate                                 (Gauge)
  *     - pr_review_verification_drop_rate                              (Gauge)
  *     - pr_review_dedupe_drop_rate                                    (Gauge)
+ *   Phase 10 Part 2 (`packages/temporal/src/observability/pr-review-eval-metrics.ts`):
+ *     - pr_review_eval_regression_active                              (Gauge; 0|1)
+ *     - pr_review_eval_runs_total{outcome=ok|failed}                  (Counter)
  */
 export function getPrReviewBotRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
@@ -108,6 +111,40 @@ export function getPrReviewBotRuleGroups(): PrometheusRuleSpecGroups[] {
               /
               sum without(pod, instance, container, endpoint, repo, status) (rate(pr_review_count_total[1h]))
             ) > 0.25`,
+          ),
+          for: "30m",
+          labels: { severity: "warning" },
+        },
+      ],
+    },
+    {
+      name: "pr-review-bot-eval",
+      rules: [
+        {
+          alert: "PrReviewBotEvalPrecisionRegression",
+          annotations: {
+            description: escapePrometheusTemplate(
+              "pr-review-bot nightly eval precision dropped > 5pp below the trailing-7-day mean. A prompt/model regression may be shipping unnoticed. Drill in via the Postgres `eval_runs` table (`fixture_id`, `precision_value`) to identify which fixtures flipped.",
+            ),
+            summary: "pr-review-bot eval precision regression > 5pp",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "max without(pod, instance, container, endpoint) (pr_review_eval_regression_active) > 0.5",
+          ),
+          for: "5m",
+          // critical → PagerDuty page
+          labels: { severity: "critical" },
+        },
+        {
+          alert: "PrReviewBotEvalRunFailed",
+          annotations: {
+            description: escapePrometheusTemplate(
+              "pr-review-bot nightly eval workflow failed. The continuous-eval signal is dark; precision/recall regressions won't be detected until this is fixed. Check the prReviewEvalWorkflow Temporal history.",
+            ),
+            summary: "pr-review-bot nightly eval run failed",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'sum without(pod, instance, container, endpoint) (increase(pr_review_eval_runs_total{outcome="failed"}[6h])) > 0',
           ),
           for: "30m",
           labels: { severity: "warning" },

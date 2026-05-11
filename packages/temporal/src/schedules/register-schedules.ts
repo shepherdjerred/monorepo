@@ -5,6 +5,7 @@ import {
 } from "@temporalio/client";
 import type { Duration } from "@temporalio/common";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { EVAL_FIXTURES_PIN } from "#shared/pr-review/eval-fixture.ts";
 
 // All cron expressions below are wall-clock local time for the homelab.
 const SCHEDULE_TIMEZONE = "America/Los_Angeles";
@@ -116,6 +117,20 @@ export const SCHEDULES: ScheduleDefinition[] = [
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "15 minutes",
     memo: "Daily Velero orphan ZFS snapshot detection — emits Prometheus metrics for the orphan-snapshot pathology (see packages/docs/decisions/2026-05-05_velero-orphan-snapshot-prevention.md)",
+  },
+  {
+    id: "pr-review-eval-nightly",
+    workflowType: "prReviewEvalWorkflow",
+    args: [{ pin: EVAL_FIXTURES_PIN }],
+    // 04:00 PT — staggered after velero-orphan-audit (03:30) so the
+    // worker pod isn't fighting two cron workflows for resources. The
+    // eval workflow takes ~10-20 min depending on corpus size + LLM
+    // latency; an hour of headroom before any 5am workflows is fine.
+    cronExpression: "0 4 * * *",
+    taskQueue: TASK_QUEUES.PR_REVIEW,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "2 hours",
+    memo: "Nightly pr-review-bot continuous-eval — replay against fixture corpus, persist precision/recall to pr_review_eval Postgres, fire PD alert on > 5pp drop vs trailing-7d mean",
   },
   {
     id: "golink-sync",

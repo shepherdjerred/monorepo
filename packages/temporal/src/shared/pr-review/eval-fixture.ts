@@ -2,6 +2,15 @@
  * Held-out fixture corpus loader + grader for the pr-review bot's
  * continuous-eval harness (Phase 10).
  *
+ * Pin: bump `EVAL_FIXTURES_PIN` below when a corpus update should
+ * roll into the nightly cron. The nightly workflow clones the
+ * fixtures repo at exactly this SHA, so updating the corpus is a
+ * two-PR motion: (a) PR in `monorepo-pr-review-fixtures`, (b) PR
+ * here that bumps the pin to the new merge SHA. This decoupling
+ * keeps fixture changes from immediately changing the bot's
+ * performance numbers — the team explicitly chooses when to pick up
+ * a corpus update.
+ *
  * Fixture metadata is stored in the sibling
  * `shepherdjerred/monorepo-pr-review-fixtures` repo (private). This module
  * defines the on-the-wire Zod schema for one fixture, plus a `grade()`
@@ -43,6 +52,16 @@
 import { z } from "zod/v4";
 import { FindingSchema, type Finding } from "./finding.ts";
 import { clusterKey, clusterFindings } from "./cluster-key.ts";
+
+/**
+ * Pinned merge commit SHA in `shepherdjerred/monorepo-pr-review-fixtures`
+ * that the nightly `prReviewEvalWorkflow` clones. Bump this in a
+ * dedicated PR when the corpus is updated and the change is ready to
+ * affect nightly precision/recall numbers.
+ *
+ * See the module docstring above for rationale on the two-PR motion.
+ */
+export const EVAL_FIXTURES_PIN = "3fb7ea820fbbc4d90e3379d5c1356dae900fe767";
 
 // ---------------------------------------------------------------------------
 // Schema
