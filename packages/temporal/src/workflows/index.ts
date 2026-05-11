@@ -35,6 +35,10 @@ import type {
   WeeklySignificanceWorkflowInput,
   WeeklySignificanceWorkflowResult,
 } from "./pr-review-eval/weekly-significance.ts";
+import {
+  prReactionListener as _prReactionListener,
+  type PrReactionListenerInput,
+} from "./pr-reaction-listener/index.ts";
 import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab-audit.ts";
 import type { RunHomelabAuditWorkflowInput } from "./homelab-audit.ts";
 import type {
@@ -150,4 +154,10 @@ export async function prReviewWeeklySignificanceWorkflow(
   input: WeeklySignificanceWorkflowInput = {},
 ): Promise<WeeklySignificanceWorkflowResult> {
   return _prReviewWeeklySignificanceWorkflow(input);
+}
+
+export async function prReactionListener(
+  input: PrReactionListenerInput,
+): Promise<void> {
+  return _prReactionListener(input);
 }

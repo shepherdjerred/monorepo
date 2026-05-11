@@ -395,6 +395,38 @@ export function createTemporalWorkerDeployment(
         // packages/temporal/src/activities/pr-review/post.ts `isPostEnabled`.
         PR_REVIEW_POST_ENABLED: EnvValue.fromValue("false"),
         GITHUB_WEBHOOK_PORT: EnvValue.fromValue("9466"),
+        // pr-review-bot dismissed-comments KV (Phase 9). Single Redis
+        // instance is deployed inside the temporal chart via the shared
+        // Redis cdk8s construct; service name is `temporal-redis-master`
+        // per Bitnami standalone naming. Port 6379, no auth — intra-
+        // namespace ClusterIP locked down by netpol to temporal-worker
+        // only. The bot fail-closes if Redis is unreachable (skips
+        // dedupe, posts all findings) so REDIS_URL pointing at a dead
+        // service degrades gracefully rather than failing the workflow.
+        REDIS_URL: EnvValue.fromValue(
+          "redis://temporal-redis-master.temporal.svc.cluster.local:6379",
+        ),
+        // Voyage AI API key for the pr-review-bot dedupe activity
+        // (Phase 9). Primary embedding provider for the dismissed-
+        // comments cosine-similarity match; @xenova/transformers
+        // `bge-small-en-v1.5` is the local fallback when this is
+        // unset, rate-limited, or 5xx-ing. Both produce 384-d vectors
+        // so Redis entries are provider-agnostic. New field on the
+        // existing 1P item — per `feedback_dont_modify_1p_items`,
+        // never rename/duplicate; add only. Marked optional so the
+        // pod still starts when the field is unset (local fallback
+        // kicks in transparently).
+        VOYAGE_API_KEY: EnvValue.fromSecretValue(
+          { secret, key: "VOYAGE_API_KEY" },
+          { optional: true },
+        ),
+        // Comma-separated list of `owner/repo` pairs the pr-review
+        // reaction-listener workflow polls every 15 min for
+        // thumbs-down reactions + resolved-without-followup signals
+        // (Phase 9). Empty / unset → listener is a no-op. Hard-coded
+        // here rather than from 1P because the value is non-sensitive
+        // and rotates with repo lineage rather than credentials.
+        PR_REVIEW_LISTENER_REPOS: EnvValue.fromValue("shepherdjerred/monorepo"),
         // Bugsink (Sentry-compatible) error tracking. Read by initSentry()
         // in worker.ts; when unset, Sentry init is a no-op.
         SENTRY_DSN: EnvValue.fromSecretValue(

@@ -8,6 +8,7 @@ import {
   startEventBridge,
   type EventBridgeHandle,
 } from "./event-bridge/index.ts";
+import { startPrReactionListener } from "./event-bridge/start-pr-reaction-listener.ts";
 import { initializeTracing, shutdownTracing } from "./observability/tracing.ts";
 import {
   startMetricsServer,
@@ -219,6 +220,13 @@ async function main(): Promise<void> {
   const client = new Client({ connection: clientConnection });
   await registerSchedules(client);
   jsonLog("info", "Schedules registered");
+
+  // Phase 9: idempotently start the long-running pr-review reaction
+  // listener. It self-recycles via continue-as-new every ~24h to keep
+  // history bounded; this call is a no-op when the workflow is already
+  // running.
+  await startPrReactionListener(client);
+  jsonLog("info", "pr-review reaction listener boot attempted");
 
   const eventBridge = startEventBridgeSupervisor(client);
 
