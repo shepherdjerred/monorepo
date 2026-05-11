@@ -762,6 +762,78 @@ export async function pushDiscordPlaysPokemonImageHelper(
   );
 }
 
+/**
+ * Build a trmnl-dashboard image — plain Bun service, no Prisma, no codegen.
+ * Runs as numeric UID 1000:1000 so the cdk8s-plus default `runAsNonRoot: true`
+ * passes without any chart-side `ensureNonRoot: false` workaround.
+ */
+export function buildTrmnlDashboardImageHelper(
+  pkgDir: Directory,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Container {
+  const excludes = ["node_modules", "dist", ".eslintcache"];
+
+  let container = dag
+    .container()
+    .from(BUN_IMAGE)
+    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
+    .withWorkdir("/workspace")
+    .withDirectory("/workspace/packages/trmnl-dashboard", pkgDir, {
+      exclude: excludes,
+    });
+
+  for (let i = 0; i < depNames.length; i++) {
+    container = container.withDirectory(
+      `/workspace/packages/${depNames[i]}`,
+      depDirs[i],
+      { exclude: excludes },
+    );
+  }
+
+  return container
+    .withWorkdir("/workspace/packages/trmnl-dashboard")
+    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withLabel(
+      "org.opencontainers.image.source",
+      "https://github.com/shepherdjerred/monorepo",
+    )
+    .withLabel("org.opencontainers.image.version", version)
+    .withLabel("org.opencontainers.image.revision", gitSha)
+    .withEnvVariable("VERSION", version)
+    .withEnvVariable("GIT_SHA", gitSha)
+    .withUser("1000:1000")
+    .withEntrypoint(["bun", "run", "src/index.ts"]);
+}
+
+/** Push a trmnl-dashboard image to a registry. */
+export async function pushTrmnlDashboardImageHelper(
+  pkgDir: Directory,
+  tags: string[],
+  registryUsername: string,
+  registryPassword: Secret,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Promise<string> {
+  const container = buildTrmnlDashboardImageHelper(
+    pkgDir,
+    depNames,
+    depDirs,
+    version,
+    gitSha,
+  );
+  return pushContainerHelper(
+    container,
+    tags,
+    registryUsername,
+    registryPassword,
+  );
+}
+
 // ---------------------------------------------------------------------------
 // CI base image (Dockerfile-based build)
 // ---------------------------------------------------------------------------

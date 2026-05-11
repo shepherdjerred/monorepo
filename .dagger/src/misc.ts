@@ -22,6 +22,7 @@ import {
   buildObsidianHeadlessImageHelper,
   buildScoutImageHelper,
   buildDiscordPlaysPokemonImageHelper,
+  buildTrmnlDashboardImageHelper,
 } from "./image";
 
 import versions from "./versions";
@@ -490,4 +491,25 @@ enabled = false
     "Invalid token",
     "Used disallowed intents",
   ]);
+}
+
+/**
+ * Smoke test trmnl-dashboard image.
+ * Verifies: Zod config parses with required env vars present, Bun.serve binds to port 3000.
+ * No external auth attempted at boot — `timeout` kills the running server (exit 124 → pass).
+ * Required env vars come from packages/trmnl-dashboard/src/config.ts (TRMNL_API_KEY, HA_TOKEN).
+ */
+export async function smokeTestTrmnlDashboardHelper(
+  pkgDir: Directory,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+): Promise<string> {
+  const container = buildTrmnlDashboardImageHelper(pkgDir, depNames, depDirs)
+    .withEnvVariable("TRMNL_API_KEY", "smoke-test-dummy")
+    .withEnvVariable("HA_TOKEN", "smoke-test-dummy")
+    .withEnvVariable("HA_URL", "http://127.0.0.1:9999")
+    .withEntrypoint([])
+    .withExec(["sh", "-c", "timeout 15s bun run src/index.ts 2>&1"]);
+
+  return runSmokeTest(container, ["listening on :3000"]);
 }

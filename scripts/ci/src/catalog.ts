@@ -48,7 +48,12 @@ export const IMAGE_PUSH_TARGETS: ImageTarget[] = [
     buildFn: "build-temporal-worker-image",
     pushFn: "push-temporal-worker-image",
   },
-  { name: "trmnl-dashboard", versionKey: "shepherdjerred/trmnl-dashboard" },
+  {
+    name: "trmnl-dashboard",
+    versionKey: "shepherdjerred/trmnl-dashboard",
+    buildFn: "build-trmnl-dashboard-image",
+    pushFn: "push-trmnl-dashboard-image",
+  },
 ];
 
 export const INFRA_PUSH_TARGETS: ImageTarget[] = [
