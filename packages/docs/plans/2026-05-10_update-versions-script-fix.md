@@ -55,13 +55,12 @@ updated file.
 
 ## Remaining
 
-PR #755's working file on the `chore/version-bump-pending` branch is still broken. Two
-options:
+None. Both fixes shipped:
 
-1. Close the PR — the next commit-back run after this fix lands will regenerate it correctly.
-2. Manually push a fix-up commit replacing line 241 with the real value and restoring `};`.
-
-User to decide which path.
+- Script root-cause fix in PR #756 (this branch).
+- Fix-up commit pushed directly to `chore/version-bump-pending` (PR #755): restored the
+  closing `};`, replaced `"latest"` with the digest the script intended to write, and
+  removed the now-stale TODO comment.
 
 ## Session Log — 2026-05-10
 
@@ -74,8 +73,7 @@ User to decide which path.
 
 ### Remaining
 
-- Decide whether to close PR #755 (auto-regenerates with fixed script) or push a fix-up
-  commit to the broken branch.
+- None. PR #755 fix-up pushed; PR #756 opened for the script fix.
 
 ### Caveats
 
