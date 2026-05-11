@@ -282,11 +282,39 @@ async function exec(cmd: string[]): Promise<ExecResult> {
   return { stdout: stdout.trim(), exitCode };
 }
 
+// Buildkite's checkout uses --depth=100 and only fetches the PR HEAD ref, so
+// `origin/main` is often missing as a remote-tracking ref. Fetch it explicitly
+// before any merge-base call.
+async function ensureOriginMain(execFn: ExecFn): Promise<void> {
+  const check = await execFn([
+    "git",
+    "rev-parse",
+    "--verify",
+    "--quiet",
+    "refs/remotes/origin/main",
+  ]);
+  if (check.exitCode === 0 && check.stdout !== "") {
+    return;
+  }
+  const fetch = await execFn([
+    "git",
+    "fetch",
+    "--no-tags",
+    "--depth=100",
+    "origin",
+    "+refs/heads/main:refs/remotes/origin/main",
+  ]);
+  if (fetch.exitCode !== 0) {
+    throw new Error("Unable to fetch origin/main for merge-base computation");
+  }
+}
+
 async function getBaseRevision(execFn: ExecFn = exec): Promise<string> {
   const branch = process.env["BUILDKITE_BRANCH"] ?? "";
   const pullRequest = process.env["BUILDKITE_PULL_REQUEST"] ?? "false";
 
   if (pullRequest && pullRequest !== "false") {
+    await ensureOriginMain(execFn);
     const result = await execFn(["git", "merge-base", "HEAD", "origin/main"]);
     if (result.exitCode !== 0 || result.stdout === "") {
       throw new Error("Unable to compute merge-base with origin/main");
@@ -299,6 +327,7 @@ async function getBaseRevision(execFn: ExecFn = exec): Promise<string> {
   }
 
   // Feature branch without PR
+  await ensureOriginMain(execFn);
   const result = await execFn(["git", "merge-base", "HEAD", "origin/main"]);
   if (result.exitCode !== 0 || result.stdout === "") {
     throw new Error("Unable to compute merge-base with origin/main");

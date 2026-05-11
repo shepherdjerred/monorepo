@@ -62,6 +62,7 @@ Per-session journals (one-shot fixes, Q&A answers, bug recaps). Not individually
 - [trmnl-dashboard Dagger Image](plans/2026-05-10_trmnl-dashboard-dagger-image.md) - Build trmnl-dashboard via Dagger (no Dockerfile) with non-root user; unblock degraded ArgoCD app
 - [TaskNotes Recurring Fix + Wiring](plans/2026-05-10_tasknotes-recurring-and-wiring.md) - Fix recurring-task drop bug; wire half-built subsystems (offline sync, Pomodoro, Live Activities, time-tracking UI, markdown rendering)
 - [update-versions.ts: same-line entry fix](plans/2026-05-10_update-versions-script-fix.md) - Fix commit-back script clobbering closing `};` in versions.ts when key+value share a line
+- [Update docker / helm / infra-tool pins (round 2)](plans/2026-05-10_update-docker-helm-images-round2.md) - Bundle Renovate dashboard #481 docker/CI-tool bumps after #748: prod tags, Dagger base images, ci-base tools
 - [Talos/Kubernetes Connectivity Investigation](plans/2026-05-10_talos-k8s-connectivity.md) - Diagnose local Talos and Kubernetes access failures from configured contexts and network reachability
 - [Bugsink/Temporal Error Spike Investigation](plans/2026-05-10_bugsink-temporal-error-spike.md) - Correlate current Bugsink issue influx with Temporal worker/server and Kubernetes restart fallout
 

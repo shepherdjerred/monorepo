@@ -593,10 +593,60 @@ describe("fail-fast base detection", () => {
   it("rejects when merge-base cannot be computed", async () => {
     process.env["BUILDKITE_BRANCH"] = "feature";
     process.env["BUILDKITE_PULL_REQUEST"] = "42";
-    const execFn: ExecFn = async () => ({ stdout: "", exitCode: 1 });
+    // Pretend origin/main is already resolvable so ensureOriginMain short-circuits;
+    // merge-base then fails (e.g. shallow clone history doesn't reach the common ancestor).
+    const execFn: ExecFn = async (cmd) => {
+      if (cmd[1] === "rev-parse") {
+        return { stdout: "deadbeef", exitCode: 0 };
+      }
+      return { stdout: "", exitCode: 1 };
+    };
 
     await expect(_getBaseRevision(execFn)).rejects.toThrow(
       "Unable to compute merge-base",
+    );
+  });
+
+  it("fetches origin/main when missing before merge-base", async () => {
+    process.env["BUILDKITE_BRANCH"] = "feature";
+    process.env["BUILDKITE_PULL_REQUEST"] = "42";
+    const calls: string[][] = [];
+    const execFn: ExecFn = async (cmd) => {
+      calls.push(cmd);
+      if (cmd[1] === "rev-parse") {
+        return { stdout: "", exitCode: 1 };
+      }
+      if (cmd[1] === "fetch") {
+        return { stdout: "", exitCode: 0 };
+      }
+      if (cmd[1] === "merge-base") {
+        return { stdout: "abc123", exitCode: 0 };
+      }
+      return { stdout: "", exitCode: 1 };
+    };
+
+    const base = await _getBaseRevision(execFn);
+    expect(base).toBe("abc123");
+    const fetchCmd = calls.find((c) => c[1] === "fetch");
+    expect(fetchCmd).toBeDefined();
+    expect(fetchCmd).toContain("+refs/heads/main:refs/remotes/origin/main");
+  });
+
+  it("rejects when origin/main fetch fails", async () => {
+    process.env["BUILDKITE_BRANCH"] = "feature";
+    process.env["BUILDKITE_PULL_REQUEST"] = "42";
+    const execFn: ExecFn = async (cmd) => {
+      if (cmd[1] === "rev-parse") {
+        return { stdout: "", exitCode: 1 };
+      }
+      if (cmd[1] === "fetch") {
+        return { stdout: "", exitCode: 128 };
+      }
+      return { stdout: "", exitCode: 1 };
+    };
+
+    await expect(_getBaseRevision(execFn)).rejects.toThrow(
+      "Unable to fetch origin/main",
     );
   });
 
@@ -604,6 +654,9 @@ describe("fail-fast base detection", () => {
     process.env["BUILDKITE_BRANCH"] = "feature";
     process.env["BUILDKITE_PULL_REQUEST"] = "false";
     const execFn: ExecFn = async (cmd) => {
+      if (cmd[1] === "rev-parse") {
+        return { stdout: "deadbeef", exitCode: 0 };
+      }
       if (cmd[1] === "merge-base") {
         return { stdout: "abc123", exitCode: 0 };
       }

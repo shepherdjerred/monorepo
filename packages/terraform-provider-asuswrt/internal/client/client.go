@@ -155,7 +155,7 @@ func (c *Client) executeRequest(ctx context.Context, path string, form url.Value
 
 	c.setCommonHeaders(req)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.AddCookie(&http.Cookie{Name: "asus_token", Value: c.token})
+	req.Header.Set("Cookie", "asus_token="+c.token)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
