@@ -235,6 +235,30 @@ export const workflowOutcomeTotal = new Counter({
   registers: [register],
 });
 
+// Phase 3 latency telemetry per specialist call. Companions the
+// `pr_review_cost_usd{model, specialist}` histogram in
+// `./pr-review-metrics.ts` so a single dashboard row can plot
+// (cost, latency) per specialist.
+export const prReviewSpecialistLatencySeconds = new Histogram({
+  name: "pr_review_specialist_latency_seconds",
+  help: "Per-specialist-call wall-clock latency in seconds, by model and specialist",
+  labelNames: ["model", "specialist"] as const,
+  buckets: [1, 5, 10, 30, 60, 120, 300, 600],
+  registers: [register],
+});
+
+// Phase 3 consensus drop-rate counter: every raw finding is either kept or
+// dropped, exactly once. `(dropped / (kept+dropped))` is the consensus drop
+// rate and a load-bearing alert signal — if it falls to zero, voting has
+// silently degenerated to passthrough. Pairs with the per-run gauge
+// `pr_review_consensus_drop_rate` in `./pr-review-metrics.ts`.
+export const prReviewConsensusFindingsTotal = new Counter({
+  name: "pr_review_consensus_findings_total",
+  help: "Findings entering the consensus stage, by post-consensus outcome (kept | dropped)",
+  labelNames: ["outcome"] as const,
+  registers: [register],
+});
+
 let server: ReturnType<typeof Bun.serve> | undefined;
 
 function jsonLog(
