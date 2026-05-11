@@ -35,6 +35,7 @@ import {
   clauderonCollectBinariesHelper,
   clauderonUploadHelper,
   versionCommitBackHelper,
+  ciBaseVersionCommitBackHelper,
   releasePleaseHelper,
   codeReviewHelper,
   cargoDenyHelper,
@@ -1047,6 +1048,16 @@ export class Monorepo {
     dryrun = false,
   ): Promise<string> {
     return versionCommitBackHelper(digests, version, ghToken, dryrun).stdout();
+  }
+
+  /** Update the CI base image version pointer and create auto-merge PR */
+  @func({ cache: "never" })
+  async ciBaseVersionCommitBack(
+    version: string,
+    ghToken: Secret,
+    dryrun = false,
+  ): Promise<string> {
+    return ciBaseVersionCommitBackHelper(version, ghToken, dryrun).stdout();
   }
 
   /** Run release-please to create release PRs and GitHub releases */

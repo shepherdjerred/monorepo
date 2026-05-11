@@ -631,6 +631,7 @@ export function clauderonUploadHelper(
 // ---------------------------------------------------------------------------
 
 const VERSION_BUMP_BRANCH = "chore/version-bump-pending";
+const CI_BASE_VERSION_BUMP_BRANCH = "chore/ci-base-version-bump-pending";
 
 /** Update versions.ts with new image digests and create or refresh an auto-merge PR. */
 export function versionCommitBackHelper(
@@ -704,6 +705,66 @@ export function versionCommitBackHelper(
         `if [ "$HAS_VERSION_CHANGES" = "0" ] && git diff --quiet origin/main...HEAD; then echo "No version changes and pending branch has no diff"; exit 0; fi`,
         `git push --force-with-lease -u origin "${VERSION_BUMP_BRANCH}"`,
         `PR_NUMBER=$(gh pr list --head "${VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty'); if [ -z "$PR_NUMBER" ]; then gh pr create --base main --head "${VERSION_BUMP_BRANCH}" --title "chore: bump pending image versions" --body "Auto-generated version bump"; PR_NUMBER=$(gh pr view "${VERSION_BUMP_BRANCH}" --json number -q .number); fi; gh pr merge "$PR_NUMBER" --auto --merge`,
+      ].join(" && "),
+    ]);
+}
+
+/** Update the CI base image version pointer and create or refresh an auto-merge PR. */
+export function ciBaseVersionCommitBackHelper(
+  version: string,
+  ghToken: Secret,
+  dryrun = false,
+): Container {
+  const container = dag
+    .container()
+    .from(BUN_IMAGE)
+    .withExec(["apt-get", "update", "-qq"])
+    .withExec([
+      "apt-get",
+      "install",
+      "-y",
+      "-qq",
+      "--no-install-recommends",
+      "git",
+      "curl",
+      "ca-certificates",
+    ])
+    .withExec([
+      "sh",
+      "-c",
+      `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
+    ])
+    .withSecretVariable("GH_TOKEN", ghToken);
+
+  if (dryrun) {
+    return container.withExec([
+      "echo",
+      `DRYRUN: would update ${CI_BASE_VERSION_BUMP_BRANCH} with ci-base version ${version}`,
+    ]);
+  }
+
+  return container
+    .withExec([
+      "sh",
+      "-c",
+      `printf '#!/bin/sh\\necho "$GH_TOKEN"\\n' > /usr/local/bin/git-askpass && chmod +x /usr/local/bin/git-askpass`,
+    ])
+    .withEnvVariable("GIT_ASKPASS", "/usr/local/bin/git-askpass")
+    .withExec([
+      "sh",
+      "-c",
+      [
+        `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
+        `cd /repo`,
+        `git config user.email "ci@sjer.red"`,
+        `git config user.name "CI Bot"`,
+        `if git ls-remote --exit-code --heads origin "${CI_BASE_VERSION_BUMP_BRANCH}" >/dev/null 2>&1; then git fetch origin main:refs/remotes/origin/main "${CI_BASE_VERSION_BUMP_BRANCH}:${CI_BASE_VERSION_BUMP_BRANCH}" && git checkout "${CI_BASE_VERSION_BUMP_BRANCH}" && git rebase origin/main; else git fetch origin main:refs/remotes/origin/main && git checkout -b "${CI_BASE_VERSION_BUMP_BRANCH}" origin/main; fi`,
+        `printf '%s\\n' "${version}" > .buildkite/ci-image/VERSION`,
+        `git add -- .buildkite/ci-image/VERSION`,
+        `if git diff --cached --quiet; then HAS_VERSION_CHANGES=0; echo "No ci-base version changes to commit"; else HAS_VERSION_CHANGES=1; git commit -m "chore: bump ci-base image to ${version}" -m "Auto-Generated: ci-bot"; fi`,
+        `if [ "$HAS_VERSION_CHANGES" = "0" ] && git diff --quiet origin/main...HEAD; then echo "No ci-base version changes and pending branch has no diff"; exit 0; fi`,
+        `git push --force-with-lease -u origin "${CI_BASE_VERSION_BUMP_BRANCH}"`,
+        `PR_NUMBER=$(gh pr list --head "${CI_BASE_VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty'); if [ -z "$PR_NUMBER" ]; then gh pr create --base main --head "${CI_BASE_VERSION_BUMP_BRANCH}" --title "chore: bump ci-base image to ${version}" --body "Auto-generated ci-base version bump"; PR_NUMBER=$(gh pr view "${CI_BASE_VERSION_BUMP_BRANCH}" --json number -q .number); fi; gh pr merge "$PR_NUMBER" --auto --merge`,
       ].join(" && "),
     ]);
 }
