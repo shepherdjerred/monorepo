@@ -54,6 +54,7 @@ const CONTEXT: PrReviewContext = {
     },
   ],
   retrievedSymbols: [],
+  blockDiffs: [],
 };
 
 const INPUT: CorrectnessReviewInput = {
