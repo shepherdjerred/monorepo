@@ -33,7 +33,7 @@
       "description": "Dagger TypeScript constants — `export const NAME = \"value\"` style image/version pins",
       "managerFilePatterns": [".dagger/src/constants.ts"],
       "matchStrings": [
-        "\\/\\/\\s*renovate:\\s*datasource=(?<datasource>[a-z-]+)\\s+depName=(?<depName>[^\\s]+?)(?:\\s+versioning=(?<versioning>[a-z-]+))?\\s*\\nexport const \\w+\\s*=\\s*\"(?:[^:\"]+:)?(?<currentValue>[^@\"]+?)(?:@(?<currentDigest>sha256:[a-f0-9]+))?\""
+        "\\/\\/\\s*renovate:\\s*datasource=(?<datasource>[a-z-]+)(?:\\s+registryUrl=(?<registryUrl>[^\\s]+?))?\\s+depName=(?<depName>[^\\s]+?)(?:\\s+versioning=(?<versioning>[a-z-]+))?\\s*\\nexport const \\w+\\s*=\\s*\"(?:[^:\"]+:)?(?<currentValue>[^@\"]+?)(?:@(?<currentDigest>sha256:[a-f0-9]+))?\""
       ]
     },
     {
