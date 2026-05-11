@@ -171,6 +171,29 @@ export function buildSpecialistUserText(request: SpecialistRequest): string {
     }
   }
 
+  if (context.retrievedSymbols.length > 0) {
+    lines.push("## Related symbols (from code-graph retrieval)");
+    lines.push("");
+    lines.push(
+      "These symbols were retrieved from the repo's tree-sitter symbol index using identifiers from the changed lines. Use them as cross-file context — they are NOT the diff under review.",
+    );
+    lines.push("");
+    for (const r of context.retrievedSymbols) {
+      lines.push(
+        `### \`${r.entry.name}\` (${r.entry.kind}) — \`${r.entry.file}:${String(r.entry.line)}\``,
+      );
+      lines.push("");
+      if (r.snippet.length > 0) {
+        lines.push("```");
+        lines.push(r.snippet);
+        lines.push("```");
+      } else {
+        lines.push("_(snippet unavailable — workdir not cloned)_");
+      }
+      lines.push("");
+    }
+  }
+
   lines.push("## Changed files");
   lines.push("");
   if (filesDropped > 0) {

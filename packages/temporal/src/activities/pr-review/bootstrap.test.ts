@@ -153,4 +153,12 @@ describe("foundation: bootstrap.runBootstrap", () => {
     expect(result.changedFiles).toEqual([]);
     expect(result.claudeMdHierarchy).toEqual([]);
   });
+
+  it("returns retrievedSymbols as the empty array until the bootstrap clone+index lands", async () => {
+    const octokit = makeOctokit({ files: [], contents: new Map() });
+    const result = await runBootstrap(octokit, PIPELINE, () => {
+      // intentionally silent
+    });
+    expect(result.retrievedSymbols).toEqual([]);
+  });
 });

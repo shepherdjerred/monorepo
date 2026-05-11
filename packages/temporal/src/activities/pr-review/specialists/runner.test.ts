@@ -47,6 +47,7 @@ const CONTEXT: PrReviewContext = {
     },
   ],
   claudeMdHierarchy: [],
+  retrievedSymbols: [],
 };
 
 const CFG: SpecialistConfig = {
@@ -216,6 +217,76 @@ describe("buildSpecialistUserText", () => {
       passId: 2,
     });
     expect(text).toContain("security #2");
+  });
+
+  it("omits the Related symbols section when no symbols were retrieved", () => {
+    const text = buildSpecialistUserText({
+      config: CFG,
+      pipeline: PIPELINE,
+      context: CONTEXT,
+      passId: 0,
+    });
+    expect(text).not.toContain("Related symbols");
+  });
+
+  it("renders retrieved symbols above the Changed files section with the snippet inline", () => {
+    const ctx: PrReviewContext = {
+      ...CONTEXT,
+      retrievedSymbols: [
+        {
+          entry: {
+            name: "computeFoo",
+            kind: "function",
+            file: "packages/foo/src/index.ts",
+            line: 42,
+            endLine: 60,
+          },
+          score: 0.123,
+          snippet: "export function computeFoo() {\n  return 1;\n}",
+        },
+      ],
+    };
+    const text = buildSpecialistUserText({
+      config: CFG,
+      pipeline: PIPELINE,
+      context: ctx,
+      passId: 0,
+    });
+    expect(text).toContain("Related symbols (from code-graph retrieval)");
+    expect(text).toContain("`computeFoo` (function)");
+    expect(text).toContain("packages/foo/src/index.ts:42");
+    expect(text).toContain("export function computeFoo()");
+    // Section ordering: Related symbols precedes Changed files.
+    const relatedIdx = text.indexOf("Related symbols");
+    const filesIdx = text.indexOf("## Changed files");
+    expect(relatedIdx).toBeGreaterThan(-1);
+    expect(filesIdx).toBeGreaterThan(relatedIdx);
+  });
+
+  it("renders a placeholder for retrieved symbols when no snippet is available (workdir unstaged)", () => {
+    const ctx: PrReviewContext = {
+      ...CONTEXT,
+      retrievedSymbols: [
+        {
+          entry: {
+            name: "noSnippet",
+            kind: "function",
+            file: "x.ts",
+            line: 1,
+            endLine: 5,
+          },
+          score: 0.1,
+          snippet: "",
+        },
+      ],
+    };
+    const text = buildSpecialistUserText({
+      config: CFG,
+      pipeline: PIPELINE,
+      context: ctx,
+      passId: 0,
+    });
+    expect(text).toContain("snippet unavailable");
   });
 });
 
