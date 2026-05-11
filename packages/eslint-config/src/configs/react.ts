@@ -1,9 +1,12 @@
 /**
  * React and React Hooks linting configuration
  */
+import { fixupPluginRules } from "@eslint/compat";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const reactPlugin = fixupPluginRules(react);
 
 /**
  * Configuration for React and React Hooks linting
@@ -13,7 +16,7 @@ export function reactConfig(): TSESLint.FlatConfig.ConfigArray {
     {
       files: ["**/*.tsx", "**/*.jsx"],
       plugins: {
-        react,
+        react: reactPlugin,
         "react-hooks": reactHooks,
       },
       settings: {

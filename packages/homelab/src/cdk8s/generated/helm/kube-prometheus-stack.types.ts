@@ -1236,7 +1236,7 @@ export type KubeprometheusstackHelmValuesAlertmanager = {
    */
   ingress?: KubeprometheusstackHelmValuesAlertmanagerIngress;
   /**
-   * @default {"main":{"enabled":false,"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","annotations":{},"labels":{},"hostnames":[],"parentRefs":[],"httpsRedirect":false,"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"filters":[],"additionalRules":[]}}
+   * @default {"main":{"enabled":false,"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","annotations":{},"labels":{},"hostnames":[],"parentRefs":[],"httpsRedirect":false,"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"filters":[],"sessionPersistence":{},"additionalRules":[]}}
    */
   route?: KubeprometheusstackHelmValuesAlertmanagerRoute;
   /**
@@ -1575,7 +1575,7 @@ export type KubeprometheusstackHelmValuesAlertmanagerIngressLabels = {
 
 export type KubeprometheusstackHelmValuesAlertmanagerRoute = {
   /**
-   * @default {...} (11 keys)
+   * @default {...} (12 keys)
    */
   main?: KubeprometheusstackHelmValuesAlertmanagerRouteMain;
 };
@@ -1620,6 +1620,12 @@ export type KubeprometheusstackHelmValuesAlertmanagerRouteMain = {
   httpsRedirect?: boolean;
   matches?: KubeprometheusstackHelmValuesAlertmanagerRouteMainMatchesElement[];
   filters?: unknown[];
+  /**
+   * Session persistence configuration for the route rule.
+   *
+   * @default {}
+   */
+  sessionPersistence?: KubeprometheusstackHelmValuesAlertmanagerRouteMainSessionPersistence;
   additionalRules?: unknown[];
 };
 
@@ -1656,6 +1662,15 @@ export type KubeprometheusstackHelmValuesAlertmanagerRouteMainMatchesPath = {
    */
   value?: string;
 };
+
+export type KubeprometheusstackHelmValuesAlertmanagerRouteMainSessionPersistence =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
 export type KubeprometheusstackHelmValuesAlertmanagerSecret = {
   /**
@@ -2329,7 +2344,7 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecImage = {
    */
   repository?: string;
   /**
-   * @default "v0.31.1"
+   * @default "v0.32.1"
    */
   tag?: string;
   /**
@@ -3082,6 +3097,14 @@ export type KubeprometheusstackHelmValuesKubeApiServer = {
    * @default {...} (14 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesKubeApiServerServiceMonitor;
+  /**
+   * Override the job label used for the apiserver.
+   * This allows users who scrape apiserver metrics under a different job name (e.g. k3s-server via PushProx)
+   * to align the recording rules and alerts with their actual job label.
+   *
+   * @default ""
+   */
+  jobNameOverride?: string;
 };
 
 export type KubeprometheusstackHelmValuesKubeApiServerTlsConfig = {
@@ -5639,7 +5662,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatc
      */
     repository?: string;
     /**
-     * @default "1.8.0"
+     * @default "1.8.2"
      */
     tag?: string;
     /**
@@ -6393,7 +6416,7 @@ export type KubeprometheusstackHelmValuesPrometheus = {
    * Being BETA this can/will change in the future without notice, do not use unless you want to take that risk
    * [[ref]](https://gateway-api.sigs.k8s.io/reference/spec/#gateway.networking.k8s.io%2fv1alpha2)
    *
-   * @default {"main":{"enabled":false,"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","annotations":{},"labels":{},"hostnames":[],"parentRefs":[],"httpsRedirect":false,"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"filters":[],"additionalRules":[]}}
+   * @default {"main":{"enabled":false,"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","annotations":{},"labels":{},"hostnames":[],"parentRefs":[],"httpsRedirect":false,"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"filters":[],"sessionPersistence":{},"additionalRules":[]}}
    */
   route?: KubeprometheusstackHelmValuesPrometheusRoute;
   /**
@@ -7084,7 +7107,7 @@ export type KubeprometheusstackHelmValuesPrometheusIngressLabels = {
 
 export type KubeprometheusstackHelmValuesPrometheusRoute = {
   /**
-   * @default {...} (11 keys)
+   * @default {...} (12 keys)
    */
   main?: KubeprometheusstackHelmValuesPrometheusRouteMain;
 };
@@ -7129,6 +7152,12 @@ export type KubeprometheusstackHelmValuesPrometheusRouteMain = {
   httpsRedirect?: boolean;
   matches?: KubeprometheusstackHelmValuesPrometheusRouteMainMatchesElement[];
   filters?: unknown[];
+  /**
+   * Session persistence configuration for the route rule.
+   *
+   * @default {}
+   */
+  sessionPersistence?: KubeprometheusstackHelmValuesPrometheusRouteMainSessionPersistence;
   additionalRules?: unknown[];
 };
 
@@ -7165,6 +7194,15 @@ export type KubeprometheusstackHelmValuesPrometheusRouteMainMatchesPath = {
    */
   value?: string;
 };
+
+export type KubeprometheusstackHelmValuesPrometheusRouteMainSessionPersistence =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
 export type KubeprometheusstackHelmValuesPrometheusIngressPerReplica = {
   /**
@@ -8063,7 +8101,7 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecImage = {
    */
   repository?: string;
   /**
-   * @default "v3.11.0"
+   * @default "v3.11.3"
    */
   tag?: string;
   /**
@@ -8236,7 +8274,7 @@ export type KubeprometheusstackHelmValuesThanosRuler = {
    */
   ingress?: KubeprometheusstackHelmValuesThanosRulerIngress;
   /**
-   * @default {"main":{"enabled":false,"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","annotations":{},"labels":{},"hostnames":[],"parentRefs":[],"httpsRedirect":false,"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"filters":[],"additionalRules":[]}}
+   * @default {"main":{"enabled":false,"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","annotations":{},"labels":{},"hostnames":[],"parentRefs":[],"httpsRedirect":false,"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"filters":[],"sessionPersistence":{},"additionalRules":[]}}
    */
   route?: KubeprometheusstackHelmValuesThanosRulerRoute;
   /**
@@ -8352,7 +8390,7 @@ export type KubeprometheusstackHelmValuesThanosRulerIngressLabels = {
 
 export type KubeprometheusstackHelmValuesThanosRulerRoute = {
   /**
-   * @default {...} (11 keys)
+   * @default {...} (12 keys)
    */
   main?: KubeprometheusstackHelmValuesThanosRulerRouteMain;
 };
@@ -8397,6 +8435,12 @@ export type KubeprometheusstackHelmValuesThanosRulerRouteMain = {
   httpsRedirect?: boolean;
   matches?: KubeprometheusstackHelmValuesThanosRulerRouteMainMatchesElement[];
   filters?: unknown[];
+  /**
+   * Session persistence configuration for the route rule.
+   *
+   * @default {}
+   */
+  sessionPersistence?: KubeprometheusstackHelmValuesThanosRulerRouteMainSessionPersistence;
   additionalRules?: unknown[];
 };
 
@@ -8433,6 +8477,15 @@ export type KubeprometheusstackHelmValuesThanosRulerRouteMainMatchesPath = {
    */
   value?: string;
 };
+
+export type KubeprometheusstackHelmValuesThanosRulerRouteMainSessionPersistence =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
 
 export type KubeprometheusstackHelmValuesThanosRulerService = {
   /**
@@ -9128,7 +9181,7 @@ export type KubeprometheusstackHelmValues = {
    * ref: https://prometheus.io/docs/alerting/alertmanager/
    * foo:$apr1$OFG3Xybp$ckL0FHDAkoXYIlH9.cysT0
    * someoneelse:$apr1$DMZX2Z4q$6SbQIfyuLQd.xmo/P0m2c.
-   * Using default values from https://github.com/grafana/helm-charts/blob/main/charts/grafana/values.yaml
+   * Using default values from https://github.com/grafana-community/helm-charts/blob/main/charts/grafana/values.yaml
    *
    * @default {...} (24 keys)
    */
@@ -9146,7 +9199,7 @@ export type KubeprometheusstackHelmValues = {
   /**
    * Component scraping the kube api server
    *
-   * @default {"enabled":true,"tlsConfig":{"serverName":"kubernetes","insecureSkipVerify":false},"serviceMonitor":{"enabled":true,"interval":"","sampleLimit":0,"targetLimit":0,"labelLimit":0,"labelNameLengthLimit":0,"labelValueLengthLimit":0,"proxyUrl":"","jobLabel":"component","selector":{"matchLabels":{"component":"apiserver","provider":"kubernetes"}},"metricRelabelings":[{"action":"drop","regex":"(etcd_request|apiserver_request_slo|apiserver_request_sli|apiserver_request)_duration_seconds_bucket;(0\\.15|0\\.2|0\\.3|0\\.35|0\\.4|0\\.45|0\\.6|0\\.7|0\\.8|0\\.9|1\\.25|1\\.5|1\\.75|2|3|3\\.5|4|4\\.5|6|7|8|9|15|20|40|45|50)(\\.0)?","sourceLabels":["__name__","le"]}],"relabelings":[],"additionalLabels":{},"targetLabels":[]}}
+   * @default {...} (4 keys)
    */
   kubeApiServer?: KubeprometheusstackHelmValuesKubeApiServer;
   /**
@@ -9560,6 +9613,7 @@ export type KubeprometheusstackHelmParameters = {
   "kubeApiServer.serviceMonitor.metricRelabelings.sourceLabels"?: string;
   "kubeApiServer.serviceMonitor.relabelings"?: string;
   "kubeApiServer.serviceMonitor.targetLabels"?: string;
+  "kubeApiServer.jobNameOverride"?: string;
   "kubelet.enabled"?: string;
   "kubelet.namespace"?: string;
   "kubelet.jobNameOverride"?: string;

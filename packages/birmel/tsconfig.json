@@ -6,6 +6,6 @@
       "@shepherdjerred/birmel/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*", "tests/**/*", "eslint.config.ts"],
+  "include": ["src/**/*", "tests/**/*", "eslint.config.ts", "prisma.config.ts"],
   "exclude": ["node_modules", "dist"]
 }

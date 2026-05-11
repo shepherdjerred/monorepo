@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@sentry/bun": "^10.49.0",
-    "discord.js": "^14.26.3",
+    "discord.js": "^14.26.4",
     "dotenv": "^17.4.2",
     "env-var": "^7.5.0",
     "lodash": "4.18.1",
@@ -39,14 +39,14 @@
     "url": "https://github.com/shepherdjerred/monorepo/issues"
   },
   "devDependencies": {
-    "@commitlint/types": "^20.5.0",
+    "@commitlint/types": "^21.0.0",
     "@shepherdjerred/eslint-config": "file:../eslint-config",
     "@total-typescript/ts-reset": "^0.6.1",
     "@types/bun": "^1.3.13",
     "@types/lodash": "^4.17.24",
     "bun-types": "latest",
-    "eslint": "^9.39.4",
-    "jiti": "^2.6.1",
+    "eslint": "^10.3.0",
+    "jiti": "^2.7.0",
     "typescript": "^6.0.3"
   }
 }

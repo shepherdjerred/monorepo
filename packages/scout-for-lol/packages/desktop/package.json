@@ -36,11 +36,11 @@
     "@tauri-apps/plugin-fs": "^2.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "^1.8.0",
-    "react": "^19.2.5",
+    "lucide-react": "^1.14.0",
+    "react": "19.2.6",
     "react-dom": "^19.1.1",
     "tailwind-merge": "^3.4.0",
-    "zod": "^4.0.0"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.17",
@@ -51,11 +51,11 @@
     "@vitejs/plugin-react": "^6.0.1",
     "autoprefixer": "^10.4.22",
     "bun-types": "latest",
-    "eslint": "^9.39.4",
+    "eslint": "^10.3.0",
     "postcss": "^8.5.8",
     "tailwindcss": "^4.1.17",
-    "typescript": "^6",
-    "vite": "^8.0.9",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.11",
     "vite-tsconfig-paths": "^6.0.0"
   },
   "description": "Desktop client for Scout for League of Legends live game updates",

@@ -15,16 +15,16 @@
   },
   "dependencies": {
     "@scout-for-lol/data": "file:../data",
-    "react": "^19.2.5"
+    "react": "19.2.6"
   },
   "devDependencies": {
     "@types/react": "^19.2.14",
     "bun-types": "latest",
-    "eslint": "^9.39.4",
-    "typescript": "^6"
+    "eslint": "^10.3.0",
+    "typescript": "^6.0.3"
   },
   "peerDependencies": {
-    "react": "^19.0.0"
+    "react": "19.2.6"
   },
   "imports": {
     "#src/*": "./src/*"

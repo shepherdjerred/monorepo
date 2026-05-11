@@ -24,7 +24,7 @@
     <lwjgl.version>3.4.1</lwjgl.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <immutables.version>2.10.1</immutables.version>
-    <log4j2.version>2.25.4</log4j2.version>
+    <log4j2.version>2.26.0</log4j2.version>
     <java.version>25</java.version>
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -196,7 +196,7 @@
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-all</artifactId>
-      <version>4.2.12.Final</version>
+      <version>4.2.13.Final</version>
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>

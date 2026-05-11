@@ -40,7 +40,7 @@
     "rss-parser": "^3.13.0",
     "sanitize-html": "^2.17.3",
     "truncate-html": "^1.2.2",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@shepherdjerred/eslint-config": "file:../eslint-config",
@@ -50,10 +50,10 @@
     "@types/express": "^5.0.6",
     "@types/node": "^25.6.0",
     "@types/sanitize-html": "^2.16.1",
-    "eslint": "^9.39.4",
+    "eslint": "^10.3.0",
     "express": "^5.2.1",
     "globals": "^17.5.0",
-    "jiti": "^2.6.1",
+    "jiti": "^2.7.0",
     "typedoc": "^0.28.19",
     "typedoc-plugin-extras": "^4.0.1",
     "typedoc-plugin-zod": "^1.4.3",

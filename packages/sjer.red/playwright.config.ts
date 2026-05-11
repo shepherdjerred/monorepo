@@ -1,6 +1,42 @@
-import { defineConfig, devices } from "@playwright/test";
+import {
+  defineConfig,
+  devices,
+  type PlaywrightTestConfig,
+} from "@playwright/test";
 
 const isCI = process.env.CI === "true";
+const includeBrandedBrowsers =
+  process.env.PLAYWRIGHT_BRANDED_BROWSERS === "true";
+
+const brandedBrowserProjects = [
+  {
+    name: "Microsoft Edge",
+    use: { ...devices["Desktop Edge"], channel: "msedge" },
+  },
+  {
+    name: "Google Chrome",
+    use: { ...devices["Desktop Chrome"], channel: "chrome" },
+  },
+] satisfies NonNullable<PlaywrightTestConfig["projects"]>;
+
+const brandedBrowserDarkProjects = [
+  {
+    name: "Microsoft Edge (Dark)",
+    use: {
+      ...devices["Desktop Edge"],
+      channel: "msedge",
+      colorScheme: "dark",
+    },
+  },
+  {
+    name: "Google Chrome (Dark)",
+    use: {
+      ...devices["Desktop Chrome"],
+      channel: "chrome",
+      colorScheme: "dark",
+    },
+  },
+] satisfies NonNullable<PlaywrightTestConfig["projects"]>;
 
 export default defineConfig({
   testDir: "./test",
@@ -8,7 +44,7 @@ export default defineConfig({
   forbidOnly: isCI,
   retries: 1,
   workers: 2,
-  reporter: isCI ? "github" : "html",
+  reporter: isCI ? "github" : "list",
   use: {
     baseURL: "http://localhost:4321",
     trace: "on-first-retry",
@@ -40,60 +76,29 @@ export default defineConfig({
       name: "Mobile Safari",
       use: { ...devices["iPhone 12"] },
     },
-    // msedge and chrome channels require separate browser installs (not in CI container)
-    ...(isCI
-      ? []
-      : [
-          {
-            name: "Microsoft Edge",
-            use: { ...devices["Desktop Edge"], channel: "msedge" as const },
-          },
-          {
-            name: "Google Chrome",
-            use: { ...devices["Desktop Chrome"], channel: "chrome" as const },
-          },
-        ]),
+    ...(includeBrandedBrowsers ? brandedBrowserProjects : []),
 
     {
       name: "chromium (Dark)",
-      use: { ...devices["Desktop Chrome"], colorScheme: "dark" as const },
+      use: { ...devices["Desktop Chrome"], colorScheme: "dark" },
     },
     {
       name: "firefox (Dark)",
-      use: { ...devices["Desktop Firefox"], colorScheme: "dark" as const },
+      use: { ...devices["Desktop Firefox"], colorScheme: "dark" },
     },
     {
       name: "webkit (Dark)",
-      use: { ...devices["Desktop Safari"], colorScheme: "dark" as const },
+      use: { ...devices["Desktop Safari"], colorScheme: "dark" },
     },
     {
       name: "Mobile Chrome (Dark)",
-      use: { ...devices["Pixel 5"], colorScheme: "dark" as const },
+      use: { ...devices["Pixel 5"], colorScheme: "dark" },
     },
     {
       name: "Mobile Safari (Dark)",
-      use: { ...devices["iPhone 12"], colorScheme: "dark" as const },
+      use: { ...devices["iPhone 12"], colorScheme: "dark" },
     },
-    ...(isCI
-      ? []
-      : [
-          {
-            name: "Microsoft Edge (Dark)",
-            use: {
-              ...devices["Desktop Edge"],
-              channel: "msedge" as const,
-              colorScheme: "dark" as const,
-            },
-          },
-          {
-            name: "Google Chrome (Dark)",
-            use: {
-              ...devices["Desktop Chrome"],
-              channel: "chrome" as const,
-              colorScheme: "dark" as const,
-            },
-          },
-        ]),
+    ...(includeBrandedBrowsers ? brandedBrowserDarkProjects : []),
   ],
   webServer: {
     // Use bun for both local and CI (CI container now has Bun installed)

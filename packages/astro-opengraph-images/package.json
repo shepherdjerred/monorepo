@@ -58,7 +58,7 @@
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
     "jsdom": "^29.0.2",
-    "react": "^19.2.5",
+    "react": "19.2.6",
     "satori": "^0.26.0"
   },
   "peerDependencies": {
@@ -74,8 +74,8 @@
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "astro": "^6.1.9",
-    "eslint": "^9.39.4",
-    "jiti": "^2.6.1",
+    "eslint": "^10.3.0",
+    "jiti": "^2.7.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.5"
   },

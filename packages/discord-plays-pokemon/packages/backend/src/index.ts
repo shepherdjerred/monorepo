@@ -11,7 +11,6 @@ import { sendGameCommand } from "./browser/game.ts";
 import { handleMessages } from "./discord/message-handler.ts";
 import type { WebDriver } from "selenium-webdriver";
 import { Browser, Builder } from "selenium-webdriver";
-import { writeFile } from "node:fs/promises";
 import { Options } from "selenium-webdriver/firefox.js";
 import { handleSlashCommands } from "./discord/slashCommands/index.ts";
 import type { CommandInput } from "./game/command/command-input.ts";
@@ -132,7 +131,7 @@ if (getConfig().stream.enabled || getConfig().game.enabled) {
     logger.error(error);
     try {
       const screenshot = await gameDriver.takeScreenshot();
-      await writeFile("error.png", screenshot, "base64");
+      await Bun.write("error.png", Buffer.from(screenshot, "base64"));
     } catch (error_) {
       logger.error("unable to take screenshot while handling another error");
       throw error_;

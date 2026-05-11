@@ -13,22 +13,22 @@
     "@trpc/client": "^11.10.0",
     "@trpc/react-query": "^11.10.0",
     "clsx": "^2.1.1",
-    "lucide-react": "^0.577.0",
-    "react": "^19.1.0",
+    "lucide-react": "^1.14.0",
+    "react": "19.2.6",
     "react-dom": "^19.1.0",
     "tailwind-merge": "^3.3.0",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@shepherdjerred/eslint-config": "workspace:*",
     "@tailwindcss/postcss": "^4.1.11",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
-    "@vitejs/plugin-react": "^4.6.0",
-    "eslint": "^9.39.2",
+    "@vitejs/plugin-react": "^6.0.1",
+    "eslint": "^10.3.0",
     "postcss": "^8.5.8",
     "tailwindcss": "^4.1.11",
-    "typescript": "^6",
-    "vite": "^6.3.5"
+    "typescript": "^6.0.3",
+    "vite": "^8.0.11"
   }
 }

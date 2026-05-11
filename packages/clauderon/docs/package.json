@@ -13,14 +13,14 @@
   },
   "dependencies": {
     "@astrojs/check": "^0.9.8",
-    "@astrojs/starlight": "^0.38.3",
+    "@astrojs/starlight": "^0.39.2",
     "astro": "^6.1.8",
     "sharp": "^0.34.5",
     "typescript": "^6.0.3"
   },
   "devDependencies": {
     "@shepherdjerred/eslint-config": "file:../../eslint-config",
-    "@typescript-eslint/utils": "^8.59.0",
-    "eslint": "^9.39.4"
+    "@typescript-eslint/utils": "^8.59.2",
+    "eslint": "^10.3.0"
   }
 }

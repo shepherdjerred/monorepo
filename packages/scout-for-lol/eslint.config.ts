@@ -3,9 +3,7 @@ import {
   astroConfig,
   customRulesPlugin,
 } from "@shepherdjerred/eslint-config";
-import type { TSESLint } from "@typescript-eslint/utils";
-
-const config: TSESLint.FlatConfig.ConfigArray = [
+const config = [
   ...recommended({
     tsconfigRootDir: import.meta.dirname,
     projectService: {
@@ -123,11 +121,15 @@ const config: TSESLint.FlatConfig.ConfigArray = [
     files: [
       "scripts/**/*.ts",
       "**/scripts/**/*.ts",
+      "packages/backend/prisma.config.ts",
       "packages/frontend/**/*.ts",
       "packages/frontend/**/*.tsx",
       "packages/report/**/*.ts",
     ],
-    rules: { "no-console": "off" },
+    rules: {
+      "custom-rules/prefer-bun-apis": "off",
+      "no-console": "off",
+    },
   },
   // Library index files re-export intentionally
   {

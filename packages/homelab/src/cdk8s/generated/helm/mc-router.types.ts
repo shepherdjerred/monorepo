@@ -80,6 +80,7 @@ export type McrouterHelmValuesServices = {
   /**
    * Service for Minecraft client connections
    * Service port exposed externally on each node
+   * IP address to assign to LoadBalancer service
    * Additional service specs to be defined
    * Fields set here will be added to the end of the Service spec
    * Can include any fields from https://kubernetes.io/docs/reference/kubernetes-api/service-resources/service-v1/#ServiceSpec

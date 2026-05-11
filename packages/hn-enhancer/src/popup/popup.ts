@@ -103,7 +103,9 @@ function toggleSubOptions(id: string, visible: boolean): void {
 }
 
 function saveSettingsDebounced(): void {
-  if (debounceTimer) clearTimeout(debounceTimer);
+  if (debounceTimer !== undefined) {
+    clearTimeout(debounceTimer);
+  }
   debounceTimer = setTimeout(() => void saveSettings(), 300);
 }
 

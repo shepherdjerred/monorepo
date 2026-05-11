@@ -27,7 +27,6 @@ const result = Bun.spawnSync(
     "db",
     "push",
     `--schema=${schemaPath}`,
-    "--skip-generate",
     "--accept-data-loss",
   ],
   {

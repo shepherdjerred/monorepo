@@ -1,47 +1,44 @@
-import { ztomlSync } from "@d6v/zconf";
-import { ConfigSchema } from "./schema.ts";
+import { readFileSync } from "node:fs";
 import path from "node:path";
+import { parse as parseToml, TomlError } from "smol-toml";
+import { ConfigSchema, type Config } from "./schema.ts";
 import { addErrorLinks, assertPathExists } from "#src/util.ts";
-import { z } from "zod";
 import { logger } from "#src/logger.ts";
 
-const ZodErrorArraySchema = z.array(
-  z
-    .object({
-      code: z.string(),
-      message: z.string(),
-    })
-    .passthrough(),
-);
-
-export function getConfig(file = "config.toml") {
+export function getConfig(file = "config.toml"): Config {
   const configPath = path.resolve(file);
 
   assertPathExists(configPath, "config file");
 
+  let toml: unknown;
+
   try {
-    ztomlSync(ConfigSchema, configPath);
+    toml = parseToml(readFileSync(configPath, "utf8"));
   } catch (error) {
-    if (error instanceof Error) {
-      if (error.name === "SyntaxError") {
-        logger.error(
-          `Your configuration at ${configPath} _is not_ valid TOML.\nCorrect your config to continue\nA TOML validator may be useful, such as an IDE plugin, or https://www.toml-lint.com/\n`,
-        );
-        throw new Error("Invalid TOML configuration");
-      }
-      if (error.name === "ZodError") {
-        const parsed = ZodErrorArraySchema.safeParse(JSON.parse(error.message));
-        const errors = parsed.success ? parsed.data : [];
-        logger.error(
-          `Your configuration at ${configPath} _is_ valid TOML, but it is not a valid configuration for this application.\nThe following problems were found:\n\n`,
-          errors,
-          addErrorLinks(""),
-        );
-        throw new Error("Invalid configuration schema");
-      }
-    } else {
-      throw new Error(`Your configuration is invalid.`, { cause: error });
+    if (error instanceof TomlError) {
+      logger.error(
+        `Your configuration at ${configPath} _is not_ valid TOML.\nCorrect your config to continue\nA TOML validator may be useful, such as an IDE plugin, or https://www.toml-lint.com/\n`,
+      );
+      throw new Error("Invalid TOML configuration", { cause: error });
     }
+
+    throw new Error("Your configuration is invalid.", { cause: error });
   }
-  return ztomlSync(ConfigSchema, configPath);
+
+  const parsed = ConfigSchema.safeParse(toml);
+
+  if (!parsed.success) {
+    logger.error(
+      `Your configuration at ${configPath} _is_ valid TOML, but it is not a valid configuration for this application.\nThe following problems were found:\n\n`,
+      parsed.error.issues.map((issue) => ({
+        code: issue.code,
+        message: issue.message,
+        path: issue.path,
+      })),
+      addErrorLinks(""),
+    );
+    throw new Error("Invalid configuration schema", { cause: parsed.error });
+  }
+
+  return parsed.data;
 }

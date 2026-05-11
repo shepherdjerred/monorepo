@@ -25,19 +25,19 @@
     "@scout-for-lol/data": "file:../data",
     "chroma-js": "^3.2.0",
     "echarts": "^6.0.0",
-    "react": "^19.2.5",
+    "react": "19.2.6",
     "remeda": "^2.21.2",
     "satori": "^0.26.0",
     "ts-pattern": "^5.7.0",
     "yoga-wasm-web": "^0.3.3",
-    "zod": "^4.0.0"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/chroma-js": "^3.1.2",
     "@types/react": "^19.2.14",
     "bun-types": "latest",
-    "eslint": "^9.39.4",
-    "typescript": "^6"
+    "eslint": "^10.3.0",
+    "typescript": "^6.0.3"
   },
   "description": "Generate report images for League of Legends",
   "keywords": [
