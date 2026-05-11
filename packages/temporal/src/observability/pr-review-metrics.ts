@@ -30,14 +30,21 @@ export const prReviewLatencySeconds = new Histogram({
 });
 
 /**
- * Estimated USD cost per PR run, labeled by model so we can attribute spend
- * (Opus specialists vs Sonnet specialists vs Haiku summary).
+ * Per-call USD cost reported by the Anthropic API. One observation per
+ * specialist pass (5 specialists × 3 passes per PR for the Phase 3
+ * pipeline) plus one per Haiku summary call. Sum across labels via
+ * `sum(rate(pr_review_cost_usd_sum[...])) by (pr)` for per-PR rollup.
+ *
+ * `specialist` labels: `correctness`, `security`, `perf`, `convention`,
+ * `deps`, `summary` (Haiku). Buckets tuned for the per-call regime
+ * ($0.001..$5) since Phase 3 records each call individually rather than
+ * the per-PR aggregate.
  */
 export const prReviewCostUsd = new Histogram({
   name: "pr_review_cost_usd",
-  help: "Estimated USD cost per PR review run (per-model leg; sum across labels for total)",
-  labelNames: ["model"] as const,
-  buckets: [0.05, 0.1, 0.25, 0.5, 1, 2, 3, 5, 7.5, 10],
+  help: "Per-call USD cost reported by the Anthropic API, by model and specialist",
+  labelNames: ["model", "specialist"] as const,
+  buckets: [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5],
   registers: [register],
 });
 

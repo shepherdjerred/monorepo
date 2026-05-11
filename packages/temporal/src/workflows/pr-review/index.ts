@@ -15,6 +15,7 @@ import type { MetricsActivities } from "#activities/pr-review/metrics.ts";
 import type { TrackActivities } from "#activities/pr-review/track.ts";
 import type { PrReviewPipelineInput } from "#shared/schemas.ts";
 import type { Finding } from "#shared/pr-review/finding.ts";
+import type { AnnotatedFinding } from "#activities/pr-review/consensus.ts";
 
 /**
  * Activity timeouts and retry policies for the pr-review pipeline.
@@ -104,16 +105,20 @@ export async function prReviewPipeline(
   try {
     const context: BootstrapResult = await bootstrap.prReviewBootstrap(input);
 
-    const rawFindings: Finding[] = await specialists.prReviewRunSpecialists({
-      pipeline: input,
-      context,
+    const annotatedFindings: AnnotatedFinding[] =
+      await specialists.prReviewRunSpecialists({
+        pipeline: input,
+        context,
+      });
+
+    const consensusFindings: Finding[] = await consensus.prReviewConsensus({
+      annotated: annotatedFindings,
     });
 
-    const consensusFindings: Finding[] =
-      await consensus.prReviewConsensus(rawFindings);
-
-    const verifiedFindings: Finding[] =
-      await verify.prReviewVerify(consensusFindings);
+    const verifiedFindings: Finding[] = await verify.prReviewVerify({
+      findings: consensusFindings,
+      workdir: context.workdir,
+    });
 
     const dedupedFindings: Finding[] = await dedupe.prReviewDedupe({
       owner: input.owner,
@@ -139,7 +144,7 @@ export async function prReviewPipeline(
       // emitting a fake value.
       costs: [],
       stageDrops: {
-        consensusInput: rawFindings.length,
+        consensusInput: annotatedFindings.length,
         consensusOutput: consensusFindings.length,
         verificationOutput: verifiedFindings.length,
         dedupeOutput: dedupedFindings.length,

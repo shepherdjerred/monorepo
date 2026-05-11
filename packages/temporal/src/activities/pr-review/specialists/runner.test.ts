@@ -1,0 +1,248 @@
+import { describe, expect, it } from "bun:test";
+import type { PrReviewContext } from "#shared/pr-review/context.ts";
+import type { PrReviewPipelineInput } from "#shared/schemas.ts";
+import {
+  buildSpecialistUserText,
+  runSpecialistPass,
+  specialistOutputSchema,
+  type SpecialistAnthropicClient,
+  type SpecialistConfig,
+  type SpecialistOutput,
+} from "./runner.ts";
+
+const PIPELINE: PrReviewPipelineInput = {
+  owner: "shepherdjerred",
+  repo: "monorepo",
+  prNumber: 999,
+  commitSha: "abc1234567890",
+  baseRef: "main",
+  headRef: "feature/foo",
+  prTitle: "Test PR",
+  prAuthor: "alice",
+};
+
+const CONTEXT: PrReviewContext = {
+  workdir: "",
+  changedFiles: [
+    {
+      path: "a.ts",
+      status: "modified",
+      additions: 1,
+      deletions: 0,
+      patch: "@@\n+const a = 1;",
+    },
+    {
+      path: "b.ts",
+      status: "modified",
+      additions: 1,
+      deletions: 0,
+      patch: "@@\n+const b = 2;",
+    },
+    {
+      path: "c.ts",
+      status: "modified",
+      additions: 1,
+      deletions: 0,
+      patch: "@@\n+const c = 3;",
+    },
+  ],
+  claudeMdHierarchy: [],
+};
+
+const CFG: SpecialistConfig = {
+  id: "security",
+  kind: "security",
+  model: "claude-opus-4-7",
+  effort: "high",
+  maxTokens: 16_000,
+  systemPrompt: "security system prompt",
+  maxFilesInPrompt: 150,
+};
+
+describe("specialistOutputSchema", () => {
+  it("accepts findings whose kind matches the expected specialist kind", () => {
+    const schema = specialistOutputSchema("security");
+    const sample: SpecialistOutput = {
+      findings: [
+        {
+          id: "f1",
+          file: "a.ts",
+          lineStart: 1,
+          lineEnd: 1,
+          kind: "security",
+          severity: "warning",
+          verifier: "none",
+          claim: "x",
+          evidence: "y",
+          confidence: 0.7,
+        },
+      ],
+    };
+    expect(() => schema.parse(sample)).not.toThrow();
+  });
+
+  it("rejects findings whose kind does not match the specialist (encroachment guard)", () => {
+    const schema = specialistOutputSchema("security");
+    expect(() =>
+      schema.parse({
+        findings: [
+          {
+            id: "f1",
+            file: "a.ts",
+            lineStart: 1,
+            lineEnd: 1,
+            kind: "correctness", // wrong specialist
+            severity: "warning",
+            verifier: "none",
+            claim: "x",
+            evidence: "y",
+            confidence: 0.7,
+          },
+        ],
+      }),
+    ).toThrow();
+  });
+});
+
+describe("buildSpecialistUserText", () => {
+  it("permutes file order across passes (pass 0 = identity, pass 1 != identity)", () => {
+    const pass0 = buildSpecialistUserText({
+      config: CFG,
+      pipeline: PIPELINE,
+      context: CONTEXT,
+      passId: 0,
+    });
+    const pass1 = buildSpecialistUserText({
+      config: CFG,
+      pipeline: PIPELINE,
+      context: CONTEXT,
+      passId: 1,
+    });
+    // Pass 0 = identity: files appear in canonical order
+    const a0 = pass0.indexOf("`a.ts`");
+    const b0 = pass0.indexOf("`b.ts`");
+    const c0 = pass0.indexOf("`c.ts`");
+    expect(a0).toBeLessThan(b0);
+    expect(b0).toBeLessThan(c0);
+    // Pass 1: order differs from pass 0
+    expect(pass1).not.toBe(pass0);
+  });
+
+  it("includes the specialist id and passId so the model can see its provenance", () => {
+    const text = buildSpecialistUserText({
+      config: CFG,
+      pipeline: PIPELINE,
+      context: CONTEXT,
+      passId: 2,
+    });
+    expect(text).toContain("security #2");
+  });
+});
+
+const VALID_OUTPUT: SpecialistOutput = {
+  findings: [
+    {
+      id: "f1",
+      file: "a.ts",
+      lineStart: 1,
+      lineEnd: 1,
+      kind: "security",
+      severity: "warning",
+      verifier: "grep",
+      claim: "x",
+      evidence: "y",
+      confidence: 0.7,
+    },
+  ],
+};
+
+function makeClient(output: SpecialistOutput): {
+  client: SpecialistAnthropicClient;
+  parseCalls: Parameters<SpecialistAnthropicClient["messages"]["parse"]>[0][];
+} {
+  const parseCalls: Parameters<
+    SpecialistAnthropicClient["messages"]["parse"]
+  >[0][] = [];
+  return {
+    parseCalls,
+    client: {
+      messages: {
+        parse: async (params) => {
+          parseCalls.push(params);
+          await Promise.resolve();
+          return {
+            parsed_output: output,
+            usage: {
+              input_tokens: 100,
+              output_tokens: 10,
+              cache_creation_input_tokens: 0,
+              cache_read_input_tokens: 90,
+            },
+            cost_usd: 0.005,
+          };
+        },
+      },
+    },
+  };
+}
+
+describe("runSpecialistPass", () => {
+  it("invokes the SDK with adaptive thinking, ephemeral cache, and the specialist's effort", async () => {
+    const { client, parseCalls } = makeClient(VALID_OUTPUT);
+    await runSpecialistPass(client, {
+      config: CFG,
+      pipeline: PIPELINE,
+      context: CONTEXT,
+      passId: 0,
+    });
+    expect(parseCalls).toHaveLength(1);
+    const call = parseCalls[0];
+    if (call === undefined) throw new Error("expected one parse call");
+    expect(call.model).toBe("claude-opus-4-7");
+    expect(call.thinking).toEqual({ type: "adaptive" });
+    expect(call.output_config.effort).toBe("high");
+    expect(call.system[0]?.text).toBe("security system prompt");
+    expect(call.system[0]?.cache_control).toEqual({ type: "ephemeral" });
+  });
+
+  it("returns the parsed findings, duration, cost, and token bookkeeping", async () => {
+    const { client } = makeClient(VALID_OUTPUT);
+    const result = await runSpecialistPass(client, {
+      config: CFG,
+      pipeline: PIPELINE,
+      context: CONTEXT,
+      passId: 0,
+    });
+    expect(result.findings).toHaveLength(1);
+    expect(result.costUsd).toBe(0.005);
+    expect(result.tokens.cacheRead).toBe(90);
+    expect(result.durationMs).toBeGreaterThanOrEqual(0);
+  });
+
+  it("returns empty findings on parser refusal (parsed_output: null)", async () => {
+    const refusalClient: SpecialistAnthropicClient = {
+      messages: {
+        parse: async () => {
+          await Promise.resolve();
+          return {
+            parsed_output: null,
+            usage: {
+              input_tokens: 50,
+              output_tokens: 0,
+              cache_creation_input_tokens: 0,
+              cache_read_input_tokens: 0,
+            },
+          };
+        },
+      },
+    };
+    const result = await runSpecialistPass(refusalClient, {
+      config: CFG,
+      pipeline: PIPELINE,
+      context: CONTEXT,
+      passId: 0,
+    });
+    expect(result.findings).toEqual([]);
+    expect(result.costUsd).toBeNull();
+  });
+});
