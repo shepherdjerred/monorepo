@@ -14,6 +14,8 @@ User asked to work in a new dissociated clone, update as much of Renovate dashbo
 
 - Created dissociated clone at `/Users/jerred/git/monorepo-renovate-481-max`.
 - Created branch `chore/renovate-481-max` from fresh `origin/main`.
+- Opened draft PR #773: <https://github.com/shepherdjerred/monorepo/pull/773>.
+- Pushed commit `a7ee0bdbc` (`chore(root): update renovate dashboard 481 dependencies`).
 - Applied the Renovate dashboard sweep across Bun/npm package manifests and locks, Rust crates, Maven deps, Swift packages, Go modules, Terraform/OpenTofu providers, tool pins, Gradle wrapper, and Docker/image digests.
 - Migrated Prisma 7 generation/runtime setup for Birmel and Scout backend, including Prisma config files and libSQL adapters.
 - Updated Zod 4 call sites and replaced the DPP config loader's `zconf` dependency with TOML parsing plus explicit Zod validation.
