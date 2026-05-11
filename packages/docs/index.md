@@ -19,7 +19,7 @@ AI-maintained knowledge base for the monorepo.
 - [Unified Versioning Strategy](decisions/2026-04-04_unified-versioning-strategy.md) - Restored Era 1 versioning with `2.0.0-BUILD` format
 - [Env Var Naming Convention](decisions/2026-03-27_env-var-naming-convention.md) - Canonical env var names across 1Password, K8s, CI, and shells
 - [Kueue for Buildkite Resource Management](decisions/2026-03-18_kueue-buildkite-resource-management.md) - Why Kueue replaced ResourceQuota for CI job admission
-- [Dagger Disk Write Amplification](decisions/2026-02-23_dagger-disk-write-amplification.md) - Historical Dagger engine I/O incident and mitigation notes
+- [Dagger Disk Write Amplification](decisions/2026-02-23_dagger-disk-write-amplification.md) - Disk-write amplification analysis and mitigation; supplemented by the 2026-05-10 disk-write-reduction work in `archive/completed/`
 - [1Password Deduplication](decisions/2026-03-08_1password-deduplication.md) - Deduplicating 1Password secret references
 - [Renovate HA Manager Disabled](decisions/2026-04-05_renovate-homeassistant-manager-disabled.md) - Disabled homeassistant-manifest manager for non-HA manifests
 - [CI Build Scoping Fixes](decisions/2026-04-26_ci-build-scoping-fixes.md) - Three bugs causing every main build to rebuild all 25 packages; fixed baseline lookup and Renovate fast-track
@@ -27,6 +27,8 @@ AI-maintained knowledge base for the monorepo.
 - [ZFS Fragmentation Acceptance](decisions/2026-05-05_zfs-fragmentation-acceptance.md) - Why we raised the fragmentation alert thresholds on SSD pools instead of mitigating
 
 ## Plans
+
+Active or upcoming plans only. Completed plans live in `archive/completed/`; thin per-session journals live in `logs/`.
 
 - [Bedrock Waker](plans/2026-03-01_bedrock-waker.md) - UDP proxy to wake sleeping Minecraft Bedrock servers
 - [CI Reporting & Artifact Collection](plans/2026-04-04_ci-reporting-artifacts.md) - Structured CI reports, coverage, and artifacts
@@ -39,30 +41,23 @@ AI-maintained knowledge base for the monorepo.
 - [Dagger CI Infrastructure Fixes](plans/2026-04-21_dagger-ci-infra-fixes.md) - Punch list for ciAllHelper and Dagger infra bugs
 - [Temporal Tailscale Exposure](plans/2026-04-21_temporal-tailscale-exposure.md) - Expose Temporal gRPC over Tailscale without port-forwarding
 - [Homelab Ops Hardening Backlog](plans/2026-04-25_homelab-ops-hardening-backlog.md) - Active follow-ups from the archived homelab ops audit
+- [Monarch Match-Rate Fixes](plans/2026-04-25_monarch-match-rate-fixes.md) - Diagnose and fix Monarch transaction classifier match rate
+- [Polyrepo → Monorepo Link Audit](plans/2026-04-25_polyrepo-link-audit.md) - Rewrite all stale polyrepo URLs to monorepo + add lychee CI link-check gate
 - [Renovate Blocked Majors](plans/2026-04-25_renovate-blocked-majors.md) - Dedicated-session dependency upgrades and deploy promotions
 - [Shared Glitter-Context Package](plans/2026-04-25_shared-glitter-context-package.md) - De-duplicate style cards and lore across Birmel and Scout
 - [Tasks for Obsidian iOS Target Wiring](plans/2026-04-25_tasks-for-obsidian-ios-target-wiring.md) - Finish native iOS target wiring after the completed audit
-- [PR Review and Summary Bot](plans/2026-04-25_pr-review-and-summary-bot.md) - GH webhook → Temporal → claude -p + GitHub MCP for auto code-review and PR summaries
-- [Polyrepo → Monorepo Link Audit](plans/2026-04-25_polyrepo-link-audit.md) - Rewrite all stale polyrepo URLs to monorepo + add lychee CI link-check gate
+- [HomeKit Vacuum via Matter Hub](plans/2026-05-05_homekit-vacuum-via-matter-hub.md) - Deploy `t0bst4r/home-assistant-matter-hub` to expose HA `vacuum.*` entities to Apple Home
 - [Mysa HACS Max-Temp Cap](plans/2026-05-05_mysa-max-temp-cap.md) - Local hotfix at 30 °C while upstream PR kgelinas/Mysa_HA#18 lands the 40 °C support
-- [HomeKit Vacuum via Matter Hub](plans/2026-05-05_homekit-vacuum-via-matter-hub.md) - Deploy `t0bst4r/home-assistant-matter-hub` to expose HA `vacuum.*` entities to Apple Home (HomeKit Bridge can't carry vacuums)
-- [CLAUDE.md Documentation Discipline](plans/2026-05-09_claude-md-doc-discipline.md) - Require every session to mirror its plan into `packages/docs/plans/` and end with a Session Log
-- [Bypass Mode Defaults](plans/2026-05-09_bypass-mode-defaults.md) - Enable bypass-by-default for Claude Code + Codex; tier-A deny-list hardening
-- [pi Codex Quota Fix](plans/2026-05-09_pi-codex-quota-fix.md) - `pi` v0.74.0 quota error: `defaultProvider` was `openai` (needs API key) instead of `openai-codex` (OAuth) — one-line settings fix
-- [Dissociated-Clone Workflow Skill](plans/2026-05-09_dissociated-clone-workflow-skill.md) - New `dissociated-clone-workflow` skill + monorepo CLAUDE.md guidance: prefer `git clone --shared --dissociate` over worktrees for parallel work to avoid shared stash/reflog
-- [Renovate Coverage Audit & Fixes](plans/2026-05-09_renovate-coverage-audit.md) - Close gaps where deps are unmanaged or appear tracked but aren't (`.dagger/src/constants.ts` dead annotations, `mise.toml` `latest` pins, CI image VERSION drift, Talos installer manager, etc.)
-- [Daily Homelab Audit Email](plans/2026-05-09_daily-homelab-audit-email.md) - Daily Temporal workflow that runs the homelab-audit-runbook via `claude -p` and emails the result via Postal at 06:30 PT
-- [Pi Overview Answer](plans/2026-05-10_pi-overview.md) - Session plan for summarizing how the installed Pi coding-agent harness works
-- [Pi Feature Roadmap](plans/2026-05-10_pi-feature-roadmap.md) - Map requested Pi features to extensions, settings, and built-in skills support
-- [Fix toolkit recall search Zod crash](plans/2026-05-10_fix-toolkit-recall-zod-vector.md) - Drop `vector` from search schema; LanceDB 0.27.2 returns Apache Arrow Vector wrapper, not `number[]`
-- [NVMe Firmware Update Runbook](plans/2026-05-10_firmware-update-runbook.md) - Single-window 4B2QJXD7 → 8B2QJXD7 update for both Samsung 990 PRO drives on single-node Talos; pre-flight + execution + rollback
-- [SOTA PR Review Bot](plans/2026-05-10_sota-pr-review-bot.md) - Full-spec multi-agent + verification + retrieval + continuous-eval PR review bot; supersedes 2026-04-25 plan
-- [PR Review Bot Cluster-Key](plans/2026-05-10_pr-review-bot-cluster-key.md) - Pure-utility cluster-key bucketing for Phase 3 consensus + Phase 10 eval grader (Task 3 prep)
-- [PR Review Bot Phase 3 — Specialists × Consensus](plans/2026-05-10_pr-review-bot-specialists-consensus.md) - 5 parallel specialists × 3 randomized passes + clustering and voting; replaces single-agent Phase 2
-- [PR Review Bot Phase 4 — Verification](plans/2026-05-10_pr-review-bot-verification.md) - Empirical verification (typecheck/eslint/grep/test) of consensus findings; drop-on-contradict, keep-on-error, hallucinated-claim fixture
-- [PR Review Bot Phase 8 — Measurement](plans/2026-05-10_pr-review-bot-phase-8-measurement.md) - Prometheus metrics, Grafana dashboard, and PagerDuty alerts for the SOTA PR review bot
-- [PR Review Bot Phase 8 Emit-Site Wiring](plans/2026-05-10_pr-review-bot-emit-site-wiring.md) - Fire the Phase 8 metrics from the workflow + activity path; status counters, latency, drop rates
+- [Docs Grooming: plans/logs split](plans/2026-05-10_docs-grooming-plans-logs-split.md) - Split `plans/` into `plans/` + new `logs/`; broader docs staleness/status/link audit
+- [NVMe Firmware Update Runbook](plans/2026-05-10_firmware-update-runbook.md) - Single-window 4B2QJXD7 → 8B2QJXD7 update for both Samsung 990 PRO drives on single-node Talos
+- [PR Review Bot Phase 8 Emit-Site Wiring](plans/2026-05-10_pr-review-bot-emit-site-wiring.md) - Fire the Phase 8 metrics from the workflow + activity path
 - [PR Review Bot Phase 10 — Continuous-Eval Harness](plans/2026-05-10_pr-review-bot-phase-10-continuous-eval.md) - Held-out fixture corpus, nightly Temporal cron, Postgres eval store, and precision-regression alerts
+- [PR Review Bot Phase 8 — Measurement](plans/2026-05-10_pr-review-bot-phase-8-measurement.md) - Prometheus metrics, Grafana dashboard, and PagerDuty alerts for the SOTA PR review bot
+- [SOTA PR Review Bot](plans/2026-05-10_sota-pr-review-bot.md) - Full-spec multi-agent + verification + retrieval + continuous-eval PR review bot; supersedes the archived 2026-04-25 plan
+
+## Logs
+
+Per-session journals (one-shot fixes, Q&A answers, bug recaps). Not individually indexed — see [`logs/`](logs/) for the directory listing.
 - [Fix trmnl-dashboard helm chart](plans/2026-05-10_fix-trmnl-dashboard-helm-chart.md) - Add the missing `Chart.yaml` skeleton so Dagger's `helmPackageHelper` can package the chart (Buildkite #1915)
 - [trmnl-dashboard Dagger Image](plans/2026-05-10_trmnl-dashboard-dagger-image.md) - Build trmnl-dashboard via Dagger (no Dockerfile) with non-root user; unblock degraded ArgoCD app
 - [TaskNotes Recurring Fix + Wiring](plans/2026-05-10_tasknotes-recurring-and-wiring.md) - Fix recurring-task drop bug; wire half-built subsystems (offline sync, Pomodoro, Live Activities, time-tracking UI, markdown rendering)
@@ -81,12 +76,12 @@ AI-maintained knowledge base for the monorepo.
 - [NVMe Wear Attribution](guides/2026-04-21_nvme-wear-attribution.md) - Byte-level accounting of NVMe write sources
 - [Type-safe Home Assistant Client](guides/2026-04-21_type-safe-home-assistant-client.md) - `ha-codegen`, generated schema, and Temporal usage
 - [Birmel Remediation Follow-ups](guides/2026-04-25_birmel-remediation-followups.md) - Post-deploy checks and deferred cleanup from Birmel remediation
-- [Homelab Health Audit](guides/2026-05-08_homelab-health-audit.md) - Current cluster health audit snapshot
-- [Homelab Issue Investigation (2026-05-08)](guides/2026-05-08_homelab-issue-investigation.md) - Root-cause deep dive on every Yellow row, PD incident, and Bugsink issue from the audit
-- [Homelab Health Audit (2026-05-05)](guides/2026-05-05_homelab-health-audit.md) - Prior audit (delta baseline); archive when next audit lands
+- [Home Assistant Cleanup Followups](guides/2026-04-25_home-assistant-cleanup-followups.md) - HA cleanup tasks from the 2026-04-25 audit
 - [Minecraft Server Ops](guides/2026-04-25_minecraft-server-ops.md) - Operational reference for deployed modded Minecraft servers
 - [Home Assistant Kumo Troubleshooting](guides/2026-05-04_home-assistant-kumo-troubleshooting.md) - Diagnosing `device_authentication_error`, the V3 cloud / Socket.IO password flow, the Murata-OUI DHCP-filter gap, and the cache-rewrite fix recipe
 - [Velero Orphan-Snapshot Remediation](guides/2026-05-05_velero-orphan-snapshot-remediation.md) - Procedure for manually pruning orphan ZFS snapshots and R2 objects when the audit workflow alerts
+- [Homelab Health Audit (2026-05-08)](guides/2026-05-08_homelab-health-audit.md) - Current cluster health audit snapshot
+- [Homelab Issue Investigation (2026-05-08)](guides/2026-05-08_homelab-issue-investigation.md) - Root-cause deep dive on every Yellow row, PD incident, and Bugsink issue from the audit
 
 ## Archive
 
@@ -94,10 +89,10 @@ Historical docs preserved for reference. These are no longer actively maintained
 
 - [`archive/bazel/`](archive/bazel/) - 12 docs from the Bazel era
 - [`archive/changelogs/`](archive/changelogs/) - 1 historical changelog
-- [`archive/completed/`](archive/completed/) - 2 completed plans and audits
+- [`archive/completed/`](archive/completed/) - Plans whose work has shipped (preserves design context)
 - [`archive/dagger-migration/`](archive/dagger-migration/) - 18 Dagger migration plans and audits
 - [`archive/homelab-audits/`](archive/homelab-audits/) - 9 superseded homelab health audit snapshots
 - [`archive/on-hold/`](archive/on-hold/) - 4 on-hold Sentinel architecture and implementation docs
 - [`archive/scout-followups/`](archive/scout-followups/) - 1 time-boxed Scout follow-up checklist
 - [`archive/stale/`](archive/stale/) - 7 stale operational snapshots and superseded plans
-- [`archive/superseded/`](archive/superseded/) - 7 older superseded plans
+- [`archive/superseded/`](archive/superseded/) - Plans/guides replaced by newer versions

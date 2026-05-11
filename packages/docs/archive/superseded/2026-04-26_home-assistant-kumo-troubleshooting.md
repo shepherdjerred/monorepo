@@ -127,5 +127,5 @@ The integration's noise can starve HA's executor pool — every `pykumo` poll is
 
 ## Related
 
-- [Home Assistant Cleanup Followups](2026-04-25_home-assistant-cleanup-followups.md) — covers the `litterrobot` reload, Sonos Bedroom Wi-Fi flapping, and orphaned-entity cleanup that surfaced alongside this Kumo investigation.
-- [Type-safe Home Assistant Client](2026-04-21_type-safe-home-assistant-client.md) — `ha-codegen` and the typed REST client used elsewhere for HA automation.
+- [Home Assistant Cleanup Followups](../../guides/2026-04-25_home-assistant-cleanup-followups.md) — covers the `litterrobot` reload, Sonos Bedroom Wi-Fi flapping, and orphaned-entity cleanup that surfaced alongside this Kumo investigation.
+- [Type-safe Home Assistant Client](../../guides/2026-04-21_type-safe-home-assistant-client.md) — `ha-codegen` and the typed REST client used elsewhere for HA automation.

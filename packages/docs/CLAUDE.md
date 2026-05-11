@@ -18,10 +18,12 @@ docs/
 ├── patterns/          # Reusable patterns and conventions (ESLint, coding standards)
 ├── decisions/         # Architectural decision records (ADRs) and audits
 ├── guides/            # How-to guides, runbooks, operational docs, research notes
-├── plans/             # Implementation plans (future work, in-progress, or reference)
+├── plans/             # Implementation plans (substantive multi-step work, in-progress or upcoming)
+├── logs/              # Per-session journals (one-shot fixes, Q&A, bug recaps) — the default for sessions
 └── archive/           # Historical docs no longer actively maintained
     ├── bazel/         # Bazel-era docs (Bazel removed from monorepo)
-    └── superseded/    # Plans superseded by newer docs
+    ├── completed/     # Plans whose work shipped (preserved for design context)
+    └── superseded/    # Docs replaced by a newer version
 ```
 
 ## Where to Put New Docs
@@ -33,8 +35,11 @@ docs/
 | "We decided X because Y"                   | `decisions/`    | Technology choices, audits, tradeoff analyses                  |
 | "How to do X" or operational knowledge     | `guides/`       | Deployment runbooks, health audits, research notes, changelogs |
 | "We plan to build X" (future/in-progress)  | `plans/`        | Implementation plans, feature proposals, migration plans       |
+| Per-session journal (default)              | `logs/`         | Bug-fix recaps, one-shot edits, Q&A answers                    |
 
-**When in doubt:** If it records a choice and its reasoning, it's a decision. If it describes steps to follow, it's a guide. If it describes something to build, it's a plan.
+**When in doubt:** If it records a choice and its reasoning, it's a decision. If it describes steps to follow, it's a guide. If it describes something to build, it's a plan. If it's a journal of what one session did, it's a log.
+
+**Plan vs Log:** Default to a log. Promote to a plan only when the design itself is the artifact — multi-step work, design choices to commit to, or follow-up tasks for future sessions.
 
 ## Conventions
 

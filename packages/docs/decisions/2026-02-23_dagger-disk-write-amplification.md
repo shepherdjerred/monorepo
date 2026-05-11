@@ -1,6 +1,6 @@
 # Decision: Reduce Dagger Engine Disk Write Amplification
 
-> **Note (2026-03-19):** Dagger has been removed from the CI pipeline entirely. This decision record is kept for historical context.
+> **Note (2026-03-19 → revised 2026-05-10):** Dagger was temporarily removed from the CI pipeline (per the 2026-03-19 note) but has since been re-introduced and is in active use. The disk-write-amplification analysis below remains technically accurate; the most recent disk-write hardening work lives in `../archive/completed/2026-05-10_ci-disk-write-reduction.md`.
 
 **Date:** 2026-02-24
 **Status:** Proposed
