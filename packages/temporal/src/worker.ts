@@ -4,7 +4,10 @@ import { NativeConnection, Runtime, Worker } from "@temporalio/worker";
 import { TASK_QUEUES } from "./shared/task-queues.ts";
 import { registerSchedules } from "./schedules/register-schedules.ts";
 import { activities } from "./activities/index.ts";
-import { startEventBridge } from "./event-bridge/index.ts";
+import {
+  startEventBridge,
+  type EventBridgeHandle,
+} from "./event-bridge/index.ts";
 import { initializeTracing, shutdownTracing } from "./observability/tracing.ts";
 import {
   startMetricsServer,
@@ -79,6 +82,88 @@ function initSentry(): void {
   jsonLog("info", "Sentry initialized");
 }
 
+async function sleepUnlessClosed(
+  delayMs: number,
+  isClosed: () => boolean,
+): Promise<void> {
+  const deadline = Date.now() + delayMs;
+  while (!isClosed() && Date.now() < deadline) {
+    const remainingMs = deadline - Date.now();
+    await Bun.sleep(Math.min(remainingMs, 1000));
+  }
+}
+
+function formatError(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+type EventBridgeSupervisorState = {
+  closed: boolean;
+  currentHandle: EventBridgeHandle | undefined;
+};
+
+function isEventBridgeSupervisorClosed(
+  state: EventBridgeSupervisorState,
+): boolean {
+  return state.closed;
+}
+
+async function runEventBridgeSupervisor(
+  client: Client,
+  state: EventBridgeSupervisorState,
+): Promise<void> {
+  try {
+    let attempt = 0;
+    while (!isEventBridgeSupervisorClosed(state)) {
+      try {
+        const handle = await startEventBridge(client);
+        if (isEventBridgeSupervisorClosed(state)) {
+          await handle.close();
+          return;
+        }
+        state.currentHandle = handle;
+        jsonLog("info", "Event bridge started");
+        return;
+      } catch (error: unknown) {
+        attempt += 1;
+        Sentry.captureException(error);
+        const retryDelayMs = Math.min(300_000, 10_000 * attempt);
+        jsonLog("error", "Event bridge failed to start; retrying", {
+          attempt,
+          retryDelayMs,
+          error: formatError(error),
+        });
+        await sleepUnlessClosed(retryDelayMs, () =>
+          isEventBridgeSupervisorClosed(state),
+        );
+      }
+    }
+  } catch (error: unknown) {
+    Sentry.captureException(error);
+    jsonLog("error", "Event bridge supervisor stopped unexpectedly", {
+      error: formatError(error),
+    });
+  }
+}
+
+function startEventBridgeSupervisor(client: Client): EventBridgeHandle {
+  const state: EventBridgeSupervisorState = {
+    closed: false,
+    currentHandle: undefined,
+  };
+
+  void runEventBridgeSupervisor(client, state);
+
+  return {
+    async close() {
+      state.closed = true;
+      if (state.currentHandle !== undefined) {
+        await state.currentHandle.close();
+      }
+    },
+  };
+}
+
 async function main(): Promise<void> {
   installRuntime();
   initSentry();
@@ -135,7 +220,7 @@ async function main(): Promise<void> {
   await registerSchedules(client);
   jsonLog("info", "Schedules registered");
 
-  const eventBridge = await startEventBridge(client);
+  const eventBridge = startEventBridgeSupervisor(client);
 
   // Guard against double-shutdown. Kubernetes may deliver SIGTERM more than
   // once during pod termination, and the Temporal SDK throws

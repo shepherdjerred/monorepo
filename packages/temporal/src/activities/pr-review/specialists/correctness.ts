@@ -115,6 +115,11 @@ function jsonLog(
   );
 }
 
+function isAnthropicCreditBalanceError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes("credit balance is too low");
+}
+
 function captureWithContext(
   error: unknown,
   input: CorrectnessReviewInput,
@@ -134,6 +139,10 @@ function captureWithContext(
       prNumber: input.pipeline.prNumber,
       ...extra,
     });
+    if (isAnthropicCreditBalanceError(error)) {
+      scope.setTag("provider_error", "anthropic_credit_balance_low");
+      scope.setFingerprint(["anthropic-credit-balance-low"]);
+    }
     Sentry.captureException(error);
   });
 }
