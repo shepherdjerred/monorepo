@@ -14,6 +14,7 @@ import type { PrReviewPipelineInput } from "#shared/schemas.ts";
 import {
   defaultSpecialistClient,
   runSpecialistPass,
+  VERIFIER_TARGET_INSTRUCTIONS,
   withSentryCapture,
   type SpecialistAnthropicClient,
   type SpecialistConfig,
@@ -44,7 +45,9 @@ Ground every claim in code you can cite by path and line number from the supplie
 
 For each finding, fill in every required field of the schema. Use \`file\` for the repo-relative path. Use \`verifier\` to declare the empirical check that would prove the bug (\`typecheck\` / \`eslint\` / \`grep\` / \`test\` / \`none\`); a downstream activity will run it and drop findings the verifier contradicts. \`confidence\` is your self-reported probability that the finding is real (0..1). \`id\` should be a short stable token derived from file + line + claim so dedupe can cluster across passes.
 
-Always set \`kind\` to \`"security"\` — other specialists handle correctness, performance, convention, and deps; do not encroach.`;
+Always set \`kind\` to \`"security"\` — other specialists handle correctness, performance, convention, and deps; do not encroach.
+
+${VERIFIER_TARGET_INSTRUCTIONS}`;
 
 export const SECURITY_CONFIG: SpecialistConfig = {
   id: "security",

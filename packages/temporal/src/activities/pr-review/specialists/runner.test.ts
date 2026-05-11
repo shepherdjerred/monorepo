@@ -102,6 +102,86 @@ describe("specialistOutputSchema", () => {
       }),
     ).toThrow();
   });
+
+  it("rejects findings with verifier!=none but no verifierTarget (Phase 4 contract)", () => {
+    const schema = specialistOutputSchema("security");
+    expect(() =>
+      schema.parse({
+        findings: [
+          {
+            id: "f1",
+            file: "a.ts",
+            lineStart: 1,
+            lineEnd: 1,
+            kind: "security",
+            severity: "warning",
+            verifier: "grep",
+            // verifierTarget intentionally missing
+            claim: "x",
+            evidence: "y",
+            confidence: 0.7,
+          },
+        ],
+      }),
+    ).toThrow();
+  });
+
+  it("rejects findings whose verifierTarget.kind disagrees with verifier", () => {
+    const schema = specialistOutputSchema("security");
+    expect(() =>
+      schema.parse({
+        findings: [
+          {
+            id: "f1",
+            file: "a.ts",
+            lineStart: 1,
+            lineEnd: 1,
+            kind: "security",
+            severity: "warning",
+            verifier: "grep",
+            verifierTarget: {
+              kind: "test",
+              packagePath: "packages/x",
+              testNamePattern: "foo",
+              expectPass: true,
+            },
+            claim: "x",
+            evidence: "y",
+            confidence: 0.7,
+          },
+        ],
+      }),
+    ).toThrow();
+  });
+
+  it("accepts verifier=grep findings with a matching grep verifierTarget", () => {
+    const schema = specialistOutputSchema("security");
+    expect(() =>
+      schema.parse({
+        findings: [
+          {
+            id: "f1",
+            file: "a.ts",
+            lineStart: 1,
+            lineEnd: 1,
+            kind: "security",
+            severity: "warning",
+            verifier: "grep",
+            verifierTarget: {
+              kind: "grep",
+              pattern: "foo",
+              isLiteral: true,
+              pathGlob: "src/**",
+              mustMatch: true,
+            },
+            claim: "x",
+            evidence: "y",
+            confidence: 0.7,
+          },
+        ],
+      }),
+    ).not.toThrow();
+  });
 });
 
 describe("buildSpecialistUserText", () => {
