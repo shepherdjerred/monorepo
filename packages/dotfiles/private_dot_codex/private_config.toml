@@ -3,6 +3,7 @@ model_reasoning_effort = "high"
 plan_mode_reasoning_effort = "xhigh"
 approval_policy = "never"
 sandbox_mode = "danger-full-access"
+project_doc_fallback_filenames = ["CLAUDE.md"]
 
 [notice]
   [notice.model_migrations]
@@ -15,6 +16,12 @@ sandbox_mode = "danger-full-access"
     trust_level = "trusted"
   [projects."/Users/jerred/git/scout-for-lol"]
     trust_level = "trusted"
+
+[projects."/Users/jerred"]
+trust_level = "trusted"
+
+[projects."/Users/jerred/Desktop/plants"]
+trust_level = "trusted"
 
 [plugins."github@openai-curated"]
 enabled = true
@@ -32,7 +39,7 @@ enabled = true
 enabled = true
 
 [tui]
-theme = "catppuccin-latte"
+theme = "catppuccin-mocha"
 
 [tui.model_availability_nux]
 "gpt-5.5" = 4

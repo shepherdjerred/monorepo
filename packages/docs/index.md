@@ -58,6 +58,12 @@ Active or upcoming plans only. Completed plans live in `archive/completed/`; thi
 ## Logs
 
 Per-session journals (one-shot fixes, Q&A answers, bug recaps). Not individually indexed — see [`logs/`](logs/) for the directory listing.
+- [Fix trmnl-dashboard helm chart](plans/2026-05-10_fix-trmnl-dashboard-helm-chart.md) - Add the missing `Chart.yaml` skeleton so Dagger's `helmPackageHelper` can package the chart (Buildkite #1915)
+- [trmnl-dashboard Dagger Image](plans/2026-05-10_trmnl-dashboard-dagger-image.md) - Build trmnl-dashboard via Dagger (no Dockerfile) with non-root user; unblock degraded ArgoCD app
+- [TaskNotes Recurring Fix + Wiring](plans/2026-05-10_tasknotes-recurring-and-wiring.md) - Fix recurring-task drop bug; wire half-built subsystems (offline sync, Pomodoro, Live Activities, time-tracking UI, markdown rendering)
+- [update-versions.ts: same-line entry fix](plans/2026-05-10_update-versions-script-fix.md) - Fix commit-back script clobbering closing `};` in versions.ts when key+value share a line
+- [Talos/Kubernetes Connectivity Investigation](plans/2026-05-10_talos-k8s-connectivity.md) - Diagnose local Talos and Kubernetes access failures from configured contexts and network reachability
+- [Bugsink/Temporal Error Spike Investigation](plans/2026-05-10_bugsink-temporal-error-spike.md) - Correlate current Bugsink issue influx with Temporal worker/server and Kubernetes restart fallout
 
 ## Guides
 

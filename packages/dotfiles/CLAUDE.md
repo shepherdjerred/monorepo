@@ -49,20 +49,9 @@ These apply to all work — code, infrastructure, configuration, CI pipelines, s
 - When researching topics, emphasize **GitHub**, **Hacker News**, and **Wikipedia** as primary sources.
 - Prefer a mix of authoritative first-party sources (official docs, Wikipedia, project READMEs) with real-world anecdotes and discussion from Hacker News.
 
-## Plan Mode — Typst PDF Export
+## Plan Mode — Raw Markdown Only
 
-In plan mode, **before calling ExitPlanMode**, render the plan as a PDF:
-
-1. Load the `typst-authoring` skill for Typst language reference
-2. Read the plan `.md` file
-3. Convert to a well-formatted Typst document designed for quick reviewer comprehension. Use tables for structured comparisons, diagrams (fletcher, CeTZ) for architecture and flow, callout boxes (gentle-clues) for key decisions and risks, and clear visual hierarchy. Do not just convert Markdown to Typst — invest effort so the reviewer can scan the plan in 60 seconds
-4. Save to `~/.claude-extra/plans/[topic-slug].typ`
-5. Compile with `typst compile` to PDF
-6. Open the PDF with `open`
-7. If compilation fails, fix the Typst source and retry
-8. Then call ExitPlanMode
-
-This is an **explicit exception** to plan mode's read-only restriction: writing `.typ` files to `~/.claude-extra/plans/` and running `typst compile` are permitted during plan mode.
+In plan mode, write plans as raw Markdown to the plan file. Do **not** convert plans to Typst or PDF — the `.md` file is the deliverable. Keep plans scannable with tables, headings, and concise bullet points directly in Markdown.
 
 ## Typst Files — Always Render to PDF
 
