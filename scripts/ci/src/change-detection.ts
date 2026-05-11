@@ -282,6 +282,25 @@ async function exec(cmd: string[]): Promise<ExecResult> {
   return { stdout: stdout.trim(), exitCode };
 }
 
+const ORIGIN_MAIN_REFSPEC = "+refs/heads/main:refs/remotes/origin/main";
+
+async function fetchOriginMain(
+  execFn: ExecFn,
+  depthArg: string,
+): Promise<void> {
+  const fetch = await execFn([
+    "git",
+    "fetch",
+    "--no-tags",
+    depthArg,
+    "origin",
+    ORIGIN_MAIN_REFSPEC,
+  ]);
+  if (fetch.exitCode !== 0) {
+    throw new Error("Unable to fetch origin/main for merge-base computation");
+  }
+}
+
 // Buildkite's checkout uses --depth=100 and only fetches the PR HEAD ref, so
 // `origin/main` is often missing as a remote-tracking ref. Fetch it explicitly
 // before any merge-base call.
@@ -296,17 +315,31 @@ async function ensureOriginMain(execFn: ExecFn): Promise<void> {
   if (check.exitCode === 0 && check.stdout !== "") {
     return;
   }
-  const fetch = await execFn([
-    "git",
-    "fetch",
-    "--no-tags",
-    "--depth=100",
-    "origin",
-    "+refs/heads/main:refs/remotes/origin/main",
-  ]);
-  if (fetch.exitCode !== 0) {
-    throw new Error("Unable to fetch origin/main for merge-base computation");
+  await fetchOriginMain(execFn, "--depth=100");
+}
+
+async function getMergeBaseWithOriginMain(execFn: ExecFn): Promise<string> {
+  await ensureOriginMain(execFn);
+
+  const initial = await execFn(["git", "merge-base", "HEAD", "origin/main"]);
+  if (initial.exitCode === 0 && initial.stdout !== "") {
+    return initial.stdout;
   }
+
+  // The remote-tracking ref can exist while the shallow clone still lacks the
+  // common ancestor. Deepen in bounded steps so normal PRs stay cheap while
+  // long-lived branches still get a fair retry before failing.
+  for (const depthArg of ["--deepen=1000", "--deepen=10000"]) {
+    await fetchOriginMain(execFn, depthArg);
+    const result = await execFn(["git", "merge-base", "HEAD", "origin/main"]);
+    if (result.exitCode === 0 && result.stdout !== "") {
+      return result.stdout;
+    }
+  }
+
+  throw new Error(
+    "Unable to compute merge-base with origin/main after deepening shallow history",
+  );
 }
 
 async function getBaseRevision(execFn: ExecFn = exec): Promise<string> {
@@ -314,12 +347,7 @@ async function getBaseRevision(execFn: ExecFn = exec): Promise<string> {
   const pullRequest = process.env["BUILDKITE_PULL_REQUEST"] ?? "false";
 
   if (pullRequest && pullRequest !== "false") {
-    await ensureOriginMain(execFn);
-    const result = await execFn(["git", "merge-base", "HEAD", "origin/main"]);
-    if (result.exitCode !== 0 || result.stdout === "") {
-      throw new Error("Unable to compute merge-base with origin/main");
-    }
-    return result.stdout;
+    return getMergeBaseWithOriginMain(execFn);
   }
 
   if (branch === "main") {
@@ -327,12 +355,7 @@ async function getBaseRevision(execFn: ExecFn = exec): Promise<string> {
   }
 
   // Feature branch without PR
-  await ensureOriginMain(execFn);
-  const result = await execFn(["git", "merge-base", "HEAD", "origin/main"]);
-  if (result.exitCode !== 0 || result.stdout === "") {
-    throw new Error("Unable to compute merge-base with origin/main");
-  }
-  return result.stdout;
+  return getMergeBaseWithOriginMain(execFn);
 }
 
 async function getChangedFiles(execFn: ExecFn = exec): Promise<string[]> {
