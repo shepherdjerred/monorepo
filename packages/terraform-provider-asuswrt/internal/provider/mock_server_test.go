@@ -27,7 +27,11 @@ func (m *mockRouter) handler(t *testing.T) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("POST /login.cgi", func(w http.ResponseWriter, r *http.Request) {
-		auth := r.FormValue("login_authorization")
+		if !parseLimitedTestForm(t, w, r) {
+			return
+		}
+
+		auth := r.PostForm.Get("login_authorization")
 		if auth == "" {
 			writeTestJSON(t, w, map[string]string{"error_status": "2"})
 			return
@@ -41,7 +45,11 @@ func (m *mockRouter) handler(t *testing.T) http.Handler {
 			writeTestJSON(t, w, map[string]string{"error_status": "2"})
 			return
 		}
-		hook := r.FormValue("hook")
+		if !parseLimitedTestForm(t, w, r) {
+			return
+		}
+
+		hook := r.PostForm.Get("hook")
 		result := map[string]string{}
 		m.mu.Lock()
 		for _, h := range strings.Split(hook, ";") {
@@ -61,8 +69,7 @@ func (m *mockRouter) handler(t *testing.T) http.Handler {
 			writeTestJSON(t, w, map[string]string{"error_status": "2"})
 			return
 		}
-		if err := r.ParseForm(); err != nil {
-			t.Errorf("parsing form: %v", err)
+		if !parseLimitedTestForm(t, w, r) {
 			return
 		}
 		m.mu.Lock()
@@ -77,6 +84,19 @@ func (m *mockRouter) handler(t *testing.T) http.Handler {
 	})
 
 	return mux
+}
+
+func parseLimitedTestForm(t *testing.T, w http.ResponseWriter, r *http.Request) bool {
+	t.Helper()
+
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "invalid form", http.StatusBadRequest)
+		t.Errorf("parsing form: %v", err)
+		return false
+	}
+
+	return true
 }
 
 func writeTestJSON(t *testing.T, w http.ResponseWriter, v any) {

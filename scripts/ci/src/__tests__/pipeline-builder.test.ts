@@ -68,6 +68,38 @@ function isWait(step: unknown): step is { wait: string } {
   return typeof step === "object" && step !== null && "wait" in step;
 }
 
+function collectSteps(steps: unknown[], allSteps: BuildkiteStep[]): void {
+  for (const s of steps) {
+    if (isStep(s)) allSteps.push(s);
+    if (
+      typeof s === "object" &&
+      s !== null &&
+      "steps" in s &&
+      Array.isArray((s as Record<string, unknown>)["steps"])
+    ) {
+      collectSteps(
+        (s as Record<string, unknown>)["steps"] as unknown[],
+        allSteps,
+      );
+    }
+  }
+}
+
+function withBuildkitePullRequest<T>(value: string, fn: () => T): T {
+  const original = process.env["BUILDKITE_PULL_REQUEST"];
+  process.env["BUILDKITE_PULL_REQUEST"] = value;
+
+  try {
+    return fn();
+  } finally {
+    if (original === undefined) {
+      delete process.env["BUILDKITE_PULL_REQUEST"];
+    } else {
+      process.env["BUILDKITE_PULL_REQUEST"] = original;
+    }
+  }
+}
+
 describe("buildPipeline", () => {
   describe("no changes", () => {
     it("returns a minimal pipeline with no-changes and ci-complete steps", () => {
@@ -403,23 +435,18 @@ describe("buildPipeline", () => {
     });
 
     it("tofu plan steps are PR-only", () => {
-      const pipeline = buildPipeline(fullBuild());
-      const allSteps: BuildkiteStep[] = [];
+      const mainPipeline = withBuildkitePullRequest("false", () =>
+        buildPipeline(fullBuild()),
+      );
+      const mainSteps: BuildkiteStep[] = [];
+      collectSteps(mainPipeline.steps, mainSteps);
+      expect(mainSteps.some((s) => s.key.startsWith("tofu-plan-"))).toBe(false);
 
-      function collect(steps: unknown[]) {
-        for (const s of steps) {
-          if (isStep(s)) allSteps.push(s);
-          if (
-            typeof s === "object" &&
-            s !== null &&
-            "steps" in s &&
-            Array.isArray((s as Record<string, unknown>)["steps"])
-          ) {
-            collect((s as Record<string, unknown>)["steps"] as unknown[]);
-          }
-        }
-      }
-      collect(pipeline.steps);
+      const pipeline = withBuildkitePullRequest("123", () =>
+        buildPipeline(fullBuild()),
+      );
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
 
       const planSteps = allSteps.filter((s) => s.key.startsWith("tofu-plan-"));
       expect(planSteps.length).toBeGreaterThan(0);
