@@ -30,6 +30,11 @@ import type {
   PrReviewEvalWorkflowInput,
   PrReviewEvalWorkflowResult,
 } from "./pr-review-eval/index.ts";
+import { prReviewWeeklySignificanceWorkflow as _prReviewWeeklySignificanceWorkflow } from "./pr-review-eval/weekly-significance.ts";
+import type {
+  WeeklySignificanceWorkflowInput,
+  WeeklySignificanceWorkflowResult,
+} from "./pr-review-eval/weekly-significance.ts";
 import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab-audit.ts";
 import type { RunHomelabAuditWorkflowInput } from "./homelab-audit.ts";
 import type {
@@ -139,4 +144,10 @@ export async function prReviewEvalWorkflow(
   input: PrReviewEvalWorkflowInput,
 ): Promise<PrReviewEvalWorkflowResult> {
   return _prReviewEvalWorkflow(input);
+}
+
+export async function prReviewWeeklySignificanceWorkflow(
+  input: WeeklySignificanceWorkflowInput = {},
+): Promise<WeeklySignificanceWorkflowResult> {
+  return _prReviewWeeklySignificanceWorkflow(input);
 }
