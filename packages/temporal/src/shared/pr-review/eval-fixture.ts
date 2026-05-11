@@ -194,11 +194,12 @@ function describePattern(pattern: Pattern): string {
  * rely on it.
  */
 export function grade(fixture: Fixture, posted: Finding[]): GradeResult {
-  // Project Finding (`file` field) into the cluster-key shape (`path` field).
   // Keep the original Finding attached so we can surface the full claim
-  // text and identity downstream.
+  // text and identity downstream. The `file` + `lineStart` fields satisfy
+  // the `clusterFindings` generic constraint directly (since the Phase 3
+  // rename, the cluster utility uses `file` to match `Finding.file`).
   const postedProjections = posted.map((f) => ({
-    path: f.file,
+    file: f.file,
     lineStart: f.lineStart,
     finding: f,
   }));
