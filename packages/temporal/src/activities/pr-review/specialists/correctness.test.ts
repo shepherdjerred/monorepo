@@ -53,6 +53,7 @@ const CONTEXT: PrReviewContext = {
       content: "# temporal CLAUDE\n\nUse @sentry/bun, not @sentry/node.",
     },
   ],
+  retrievedSymbols: [],
 };
 
 const INPUT: CorrectnessReviewInput = {

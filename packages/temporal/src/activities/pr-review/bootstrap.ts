@@ -4,7 +4,11 @@ import * as Sentry from "@sentry/bun";
 import { z } from "zod/v4";
 import { withSpan } from "#observability/tracing.ts";
 import type { PrReviewPipelineInput } from "#shared/schemas.ts";
-import type { ClaudeMdFile, PrFileDiff } from "#shared/pr-review/context.ts";
+import type {
+  ClaudeMdFile,
+  PrFileDiff,
+  RetrievedSymbolForPrompt,
+} from "#shared/pr-review/context.ts";
 
 /**
  * Narrowing schema for the `getContent` response when the path resolves to a
@@ -34,6 +38,14 @@ export type BootstrapResult = {
   workdir: string;
   changedFiles: PrFileDiff[];
   claudeMdHierarchy: ClaudeMdFile[];
+  /**
+   * Phase 5 retrieval output (related symbols + snippets). Empty until the
+   * bootstrap rewrite clones the PR head into the workdir and invokes
+   * `buildSymbolIndex` + `hybridSearch`; the activity / runner already
+   * threads it through so we can light up retrieval without further plumbing
+   * once the workdir lands.
+   */
+  retrievedSymbols: RetrievedSymbolForPrompt[];
 };
 
 const CLAUDE_MD_FILENAME = "CLAUDE.md";
@@ -263,6 +275,7 @@ export async function runBootstrap(
     workdir: "",
     changedFiles,
     claudeMdHierarchy,
+    retrievedSymbols: [],
   };
 }
 

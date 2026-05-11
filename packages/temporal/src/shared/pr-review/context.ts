@@ -1,4 +1,5 @@
 import { z } from "zod/v4";
+import { SymbolEntrySchema } from "#lib/symbol-index.ts";
 
 /**
  * One file's slice of a PR diff. `patch` is the unified-diff hunk text as
@@ -32,16 +33,40 @@ export const ClaudeMdFileSchema = z.object({
 });
 
 /**
+ * Inlined `RetrievedSymbol` for the specialist prompt — the `hybrid-retrieval`
+ * module's `RetrievedSymbol` carries a `sources` array used for debugging /
+ * OTel, which isn't needed at the prompt boundary. We carry just the entry
+ * itself, an optional rendered snippet (resolved when the workdir exists), and
+ * the score so downstream code can debug ranking.
+ */
+export const RetrievedSymbolForPromptSchema = z.object({
+  entry: SymbolEntrySchema,
+  score: z.number(),
+  /**
+   * Source code snippet around the symbol body, rendered by
+   * `formatRetrievedSymbols`. Empty string when no workdir was available
+   * (Phase-5-initial; full clone-and-render lands with the bootstrap rewrite).
+   */
+  snippet: z.string(),
+});
+export type RetrievedSymbolForPrompt = z.infer<
+  typeof RetrievedSymbolForPromptSchema
+>;
+
+/**
  * The full review context: the PR metadata the model needs, every file the PR
- * touches, and the CLAUDE.md hierarchy that was in effect at the PR head.
+ * touches, the CLAUDE.md hierarchy in effect at the PR head, and the
+ * Phase 5 retrieval results (related symbols).
  *
  * `workdir` is populated when the bootstrap activity has staged a real clone
- * (Phase 5+ work); Phase 2 leaves it empty.
+ * (Phase 5+ work); Phase 2 leaves it empty. `retrievedSymbols` is `[]` until
+ * the bootstrap rewrite wires retrieval against the cloned workdir.
  */
 export const PrReviewContextSchema = z.object({
   workdir: z.string(),
   changedFiles: z.array(PrFileDiffSchema),
   claudeMdHierarchy: z.array(ClaudeMdFileSchema),
+  retrievedSymbols: z.array(RetrievedSymbolForPromptSchema),
 });
 
 export type PrFileDiff = z.infer<typeof PrFileDiffSchema>;
