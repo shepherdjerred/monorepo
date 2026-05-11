@@ -92,3 +92,72 @@ export const prReviewCountTotal = new Counter({
   labelNames: ["repo", "status"] as const,
   registers: [register],
 });
+
+// ---------------------------------------------------------------------------
+// Phase 9 — dismissed-comments learning loop
+// ---------------------------------------------------------------------------
+
+/**
+ * Per-finding dedupe drops. Distinct from `pr_review_dedupe_drop_rate`
+ * (per-run gauge): this is a long-running counter for trend / total-drops
+ * dashboards. `reason` is always `dismissed-similar` today; reserved for
+ * future heuristic-specific drop reasons.
+ */
+export const prReviewDedupeDropTotal = new Counter({
+  name: "pr_review_dedupe_drop_total",
+  help: "pr-review findings dropped by dedupe-against-dismissed-history, by repo, kind, reason",
+  labelNames: ["repo", "kind", "reason"] as const,
+  registers: [register],
+});
+
+/**
+ * Redis connection / command failures from the dedupe activity. When this
+ * fires the activity fail-closes (returns all findings unmodified) so the
+ * bot keeps posting; alert if sustained.
+ */
+export const prReviewDedupeRedisErrorTotal = new Counter({
+  name: "pr_review_dedupe_redis_error_total",
+  help: "pr-review dedupe activity errors talking to Redis, by stage (connect | query | parse)",
+  labelNames: ["stage"] as const,
+  registers: [register],
+});
+
+/**
+ * Embedding provider fallback / unavailability counters. `provider` is
+ * `voyage` or `local`. `pr_review_embedding_fallback_total` fires when the
+ * primary (Voyage) is unavailable and the local fallback succeeds.
+ * `pr_review_embedding_unavailable_total` fires when BOTH providers fail —
+ * the dedupe activity then fail-closes for that finding.
+ */
+export const prReviewEmbeddingFallbackTotal = new Counter({
+  name: "pr_review_embedding_fallback_total",
+  help: "pr-review embedding calls that fell back from Voyage to the local provider, by trigger reason",
+  labelNames: ["reason"] as const,
+  registers: [register],
+});
+
+export const prReviewEmbeddingUnavailableTotal = new Counter({
+  name: "pr_review_embedding_unavailable_total",
+  help: "pr-review embedding calls where both Voyage and the local fallback failed",
+  registers: [register],
+});
+
+/**
+ * Reaction-listener workflow activity outcomes. Long-running 15-minute
+ * polling loop; each poll fires `started`, then either `ingested` with a
+ * count or `errored`. The `kind` label distinguishes thumbs-down vs.
+ * resolved-without-followup heuristic.
+ */
+export const prReviewReactionIngestTotal = new Counter({
+  name: "pr_review_reaction_ingest_total",
+  help: "pr-review reaction-listener dismissals ingested into the Redis KV, by kind (thumbs-down | resolved-without-followup) and outcome (ingested | skipped-duplicate | errored)",
+  labelNames: ["kind", "outcome"] as const,
+  registers: [register],
+});
+
+export const prReviewReactionPollErrorTotal = new Counter({
+  name: "pr_review_reaction_poll_error_total",
+  help: "pr-review reaction-listener poll cycles that errored, by stage (github | redis | embedding)",
+  labelNames: ["stage"] as const,
+  registers: [register],
+});

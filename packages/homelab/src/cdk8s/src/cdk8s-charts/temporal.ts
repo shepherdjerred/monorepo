@@ -11,6 +11,7 @@ import { createTemporalServerDeployment } from "@shepherdjerred/homelab/cdk8s/sr
 import { createTemporalUiDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/ui.ts";
 import { createTemporalNamespaceInitJob } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/namespace-init.ts";
 import { createTemporalWorkerDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/worker.ts";
+import { Redis } from "@shepherdjerred/homelab/cdk8s/src/resources/common/redis.ts";
 
 export function createTemporalChart(app: App) {
   const chart = new Chart(app, "temporal", {
@@ -29,6 +30,18 @@ export function createTemporalChart(app: App) {
   const server = createTemporalServerDeployment(chart, { dynamicConfigMap });
   createTemporalUiDeployment(chart, { serverService: server.service });
   createTemporalNamespaceInitJob(chart, { serverService: server.service });
+
+  // Redis instance for the pr-review-bot dismissed-comments learning loop
+  // (Phase 9 of packages/docs/plans/2026-05-10_sota-pr-review-bot.md). Key
+  // prefix `pr-review:dismissed:{repo}:{path}:{kind}` — single-tenant for
+  // now; the prefix leaves room for future temporal-namespace consumers
+  // without collision. Standalone, no auth (intra-namespace ClusterIP),
+  // no persistence: dismissal entries are best-effort hints, the bot
+  // fail-closes on Redis unavailable, and the dataset is tiny (<1 MB
+  // steady state). If load profile changes, flip `persistence.enabled`
+  // in the Redis construct.
+  new Redis(chart, "temporal-redis", { namespace: "temporal" });
+
   createTemporalWorkerDeployment(chart, {
     serverServiceName: server.service.name,
   });
@@ -250,6 +263,31 @@ export function createTemporalChart(app: App) {
     },
   });
 
+  // NetworkPolicy for the pr-review-bot dismissed-comments Redis
+  // (Phase 9). Only the temporal-worker pod talks to it; nothing else
+  // in the cluster has business connecting.
+  new KubeNetworkPolicy(chart, "temporal-redis-netpol", {
+    metadata: { name: "temporal-redis-netpol" },
+    spec: {
+      podSelector: {
+        matchLabels: { "app.kubernetes.io/instance": "temporal-redis" },
+      },
+      policyTypes: ["Ingress"],
+      ingress: [
+        {
+          from: [
+            {
+              podSelector: {
+                matchLabels: { app: "temporal-worker" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(6379), protocol: "TCP" }],
+        },
+      ],
+    },
+  });
+
   // NetworkPolicy for Temporal Worker
   // Worker needs broad egress: Temporal server, HA, GitHub, OpenAI, Postal, S3, golink
   new KubeNetworkPolicy(chart, "temporal-worker-netpol", {
@@ -299,9 +337,21 @@ export function createTemporalChart(app: App) {
           ],
           ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
         },
-        // External HTTPS (HA, GitHub, OpenAI, Postal, S3, golink, Firestore)
+        // External HTTPS (HA, GitHub, OpenAI, Postal, S3, golink, Firestore,
+        // Voyage AI for pr-review-bot Phase 9 dedupe embeddings)
         {
           ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }],
+        },
+        // Redis (pr-review-bot dismissed-comments KV — Phase 9)
+        {
+          to: [
+            {
+              podSelector: {
+                matchLabels: { "app.kubernetes.io/instance": "temporal-redis" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(6379), protocol: "TCP" }],
         },
         // Postal internal (HTTP within cluster)
         {

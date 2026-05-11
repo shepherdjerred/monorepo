@@ -6,6 +6,7 @@ import { dedupeActivities } from "./dedupe.ts";
 import { postActivities } from "./post.ts";
 import { metricsActivities } from "./metrics.ts";
 import { trackActivities } from "./track.ts";
+import { ingestDismissalsActivities } from "./ingest-dismissals.ts";
 
 export const prReviewActivities = {
   ...bootstrapActivities,
@@ -16,6 +17,7 @@ export const prReviewActivities = {
   ...postActivities,
   ...metricsActivities,
   ...trackActivities,
+  ...ingestDismissalsActivities,
 };
 
 export type PrReviewActivities = typeof prReviewActivities;
