@@ -234,12 +234,9 @@ const versions = {
     "2.0.0-2097@sha256:ac9ce9cc333ffcbc90147975baa3c03dfdc43001f60f6e20659e79845768c913",
   // Custom TRMNL dashboard image - updated by CI pipeline
   // not managed by renovate
-  // TODO: replace `latest` with the first `2.0.0-NNNN@sha256:...` once the
-  // initial trmnl-dashboard image lands in ghcr; the version-commit-back
-  // step in `.dagger/src/release.ts` will rewrite this entry on every main
-  // build thereafter (same pattern as `shepherdjerred/temporal-worker`).
-  "shepherdjerred/trmnl-dashboard": "latest",
-"2.0.0-2097@sha256:a35e0d2a6e7fc97f1a2f3014c368d8784177cf32824cb3972511145a8aaf9165",
+  "shepherdjerred/trmnl-dashboard":
+    "2.0.0-2097@sha256:a35e0d2a6e7fc97f1a2f3014c368d8784177cf32824cb3972511145a8aaf9165",
+};
 
 /**
  * SHA-256 of the GitHub release tarball for `fuatakgun/eufy_security`, pinned
