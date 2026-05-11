@@ -115,10 +115,8 @@ export async function prReviewPipeline(
       annotated: annotatedFindings,
     });
 
-    const verifiedFindings: Finding[] = await verify.prReviewVerify({
-      findings: consensusFindings,
-      workdir: context.workdir,
-    });
+    const verifiedFindings: Finding[] =
+      await verify.prReviewVerify(consensusFindings);
 
     const dedupedFindings: Finding[] = await dedupe.prReviewDedupe({
       owner: input.owner,
