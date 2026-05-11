@@ -593,18 +593,47 @@ describe("fail-fast base detection", () => {
   it("rejects when merge-base cannot be computed", async () => {
     process.env["BUILDKITE_BRANCH"] = "feature";
     process.env["BUILDKITE_PULL_REQUEST"] = "42";
-    // Pretend origin/main is already resolvable so ensureOriginMain short-circuits;
-    // merge-base then fails (e.g. shallow clone history doesn't reach the common ancestor).
     const execFn: ExecFn = async (cmd) => {
       if (cmd[1] === "rev-parse") {
         return { stdout: "deadbeef", exitCode: 0 };
+      }
+      if (cmd[1] === "fetch") {
+        return { stdout: "", exitCode: 0 };
       }
       return { stdout: "", exitCode: 1 };
     };
 
     await expect(_getBaseRevision(execFn)).rejects.toThrow(
-      "Unable to compute merge-base",
+      "Unable to compute merge-base with origin/main after deepening shallow history",
     );
+  });
+
+  it("deepens origin/main history when the shallow checkout lacks a merge-base", async () => {
+    process.env["BUILDKITE_BRANCH"] = "feature";
+    process.env["BUILDKITE_PULL_REQUEST"] = "42";
+    const calls: string[][] = [];
+    let mergeBaseCalls = 0;
+    const execFn: ExecFn = async (cmd) => {
+      calls.push(cmd);
+      if (cmd[1] === "rev-parse") {
+        return { stdout: "deadbeef", exitCode: 0 };
+      }
+      if (cmd[1] === "fetch") {
+        return { stdout: "", exitCode: 0 };
+      }
+      if (cmd[1] === "merge-base") {
+        mergeBaseCalls += 1;
+        if (mergeBaseCalls === 1) {
+          return { stdout: "", exitCode: 1 };
+        }
+        return { stdout: "abc123", exitCode: 0 };
+      }
+      return { stdout: "", exitCode: 1 };
+    };
+
+    const base = await _getBaseRevision(execFn);
+    expect(base).toBe("abc123");
+    expect(calls.some((c) => c.includes("--deepen=1000"))).toBe(true);
   });
 
   it("fetches origin/main when missing before merge-base", async () => {
@@ -629,6 +658,7 @@ describe("fail-fast base detection", () => {
     expect(base).toBe("abc123");
     const fetchCmd = calls.find((c) => c[1] === "fetch");
     expect(fetchCmd).toBeDefined();
+    expect(fetchCmd).toContain("--depth=100");
     expect(fetchCmd).toContain("+refs/heads/main:refs/remotes/origin/main");
   });
 
