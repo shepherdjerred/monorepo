@@ -10,34 +10,46 @@
 // ---------------------------------------------------------------------------
 
 // renovate: datasource=docker depName=oven/bun
-export const BUN_IMAGE = "oven/bun:1.3.13";
+export const BUN_IMAGE =
+  "oven/bun:1.3.13@sha256:87416c977a612a204eb54ab9f3927023c2a3c971f4f345a01da08ea6262ae30e";
 // renovate: datasource=docker depName=rust
-export const RUST_IMAGE = "rust:1.89.0-bookworm";
+export const RUST_IMAGE =
+  "rust:1.94.1-bookworm@sha256:6ae102bdbf528294bc79ad6e1fae682f6f7c2a6e6621506ba959f9685b308a55";
 // renovate: datasource=docker depName=golang
-export const GO_IMAGE = "golang:1.25.4-bookworm";
+export const GO_IMAGE =
+  "golang:1.26.1-bookworm@sha256:ab3d6955bbc813a0f3fdf220c1d817dd89c0b3f283777db8ece4a32fe7858edd";
 // renovate: datasource=docker depName=mcr.microsoft.com/playwright
-export const PLAYWRIGHT_IMAGE = "mcr.microsoft.com/playwright:v1.59.1-noble";
+export const PLAYWRIGHT_IMAGE =
+  "mcr.microsoft.com/playwright:v1.59.1-noble@sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53";
 // renovate: datasource=docker depName=ghcr.io/realm/swiftlint
-export const SWIFTLINT_IMAGE = "ghcr.io/realm/swiftlint:0.58.2";
+export const SWIFTLINT_IMAGE =
+  "ghcr.io/realm/swiftlint:0.63.2@sha256:8db376ff8a26e56fa506b56b8c70ea9c5583dc52d5746ce23b6c2c4d4ee00e31";
 // renovate: datasource=docker depName=alpine
-export const ALPINE_IMAGE = "alpine:3.21";
-// renovate: datasource=docker depName=opentofu/opentofu
-export const TOFU_IMAGE = "ghcr.io/opentofu/opentofu:1.11.5";
+export const ALPINE_IMAGE =
+  "alpine:3.23@sha256:5b10f432ef3da1b8d4c7eb6c487f2f5a8f096bc91145e68878dd4a5019afde11";
+// renovate: datasource=docker registryUrl=https://ghcr.io depName=opentofu/opentofu
+export const TOFU_IMAGE =
+  "ghcr.io/opentofu/opentofu:1.11.6@sha256:9180b542ee250ea2f26b22144190980d8bfbc86885213f6cb18d48a621d4abff";
 // renovate: datasource=docker depName=maven
-export const MAVEN_IMAGE = "maven:3.9.15-eclipse-temurin-25";
+export const MAVEN_IMAGE =
+  "maven:3.9.15-eclipse-temurin-25@sha256:1c3a703ab39fee7ac0880f46e6ccd22c0d701f17f0616e6e66a258ddc1c637d2";
 // renovate: datasource=docker depName=texlive/texlive
-export const TEXLIVE_IMAGE = "texlive/texlive:TL2024-historic";
+export const TEXLIVE_IMAGE =
+  "texlive/texlive:TL2024-historic@sha256:fd576ce8b1cfd03cdabc15ca75682fb050eb10de5c057d81449883c2ad644855";
 // renovate: datasource=docker depName=caddy
-export const CADDY_IMAGE = "caddy:2.9.1-alpine";
+export const CADDY_IMAGE =
+  "caddy:2.11.1-alpine@sha256:3b2a0196e0687279c14c27adff9fc6b44acfa318dbb97eaebe385bdf99e5364c";
 // renovate: datasource=docker depName=caddy
 export const CADDY_BUILDER_IMAGE =
-  "caddy:2-builder-alpine@sha256:ced7ea0d093d2ce6d3e28869640f0513afb96e42675f399de062a17bab54b434";
+  "caddy:2.11.1-builder-alpine@sha256:fd1e631d06bcf264896debacf16929ff8cd6d5a3502c361ea36fb87ed850299b";
 // renovate: datasource=docker depName=python
-export const PYTHON_IMAGE = "python:3.13-slim";
+export const PYTHON_IMAGE =
+  "python:3.14-slim@sha256:1697e8e8d39bf168e177ac6b5fdab6df86d81cfc24dae17dfb96cfc3ef76b4dd";
 
 // Base image for obsidian-headless container (uses Node, not Bun, due to native better-sqlite3 addon).
 // renovate: datasource=docker depName=node
-export const OBSIDIAN_HEADLESS_BASE_IMAGE = "node:22-slim";
+export const OBSIDIAN_HEADLESS_BASE_IMAGE =
+  "node:24-slim@sha256:24dc26ef1e3c3690f27ebc4136c9c186c3133b25563ae4d7f0692e4d1fe5db0e";
 // renovate: datasource=docker depName=alpine/helm
 export const HELM_IMAGE =
   "alpine/helm:4.1.4@sha256:4b0bdd2cf18ff6bca12aba0b2c5671384dab5035c19c57f0c58b854a0baf65be";
@@ -47,16 +59,16 @@ export const HELM_IMAGE =
 export const BUN_VERSION = "1.3.13";
 
 // renovate: datasource=npm depName=release-please
-export const RELEASE_PLEASE_VERSION = "17.3.0";
+export const RELEASE_PLEASE_VERSION = "17.6.0";
 
 // renovate: datasource=npm depName=@anthropic-ai/claude-code
-export const CLAUDE_CODE_VERSION = "2.1.117";
+export const CLAUDE_CODE_VERSION = "2.1.138";
 
 // renovate: datasource=github-releases depName=golangci/golangci-lint
-export const GOLANGCI_LINT_VERSION = "v2.1.6";
+export const GOLANGCI_LINT_VERSION = "v2.11.4";
 
 // renovate: datasource=github-releases depName=cli/cli
-export const GH_CLI_VERSION = "2.91.0";
+export const GH_CLI_VERSION = "2.92.0";
 
 // renovate: datasource=github-releases depName=kubernetes/kubectl
 export const KUBECTL_VERSION = "v1.35.0";
@@ -68,10 +80,10 @@ export const GITHUB_MCP_SERVER_VERSION = "1.0.3";
 export const TALOSCTL_VERSION = "v1.13.0";
 
 // renovate: datasource=github-releases depName=opentofu/opentofu
-export const TOFU_VERSION = "1.11.5";
+export const TOFU_VERSION = "1.11.6";
 
 // renovate: datasource=github-releases depName=argoproj/argo-cd
-export const ARGOCD_CLI_VERSION = "v3.2.4";
+export const ARGOCD_CLI_VERSION = "v3.3.6";
 
 // renovate: datasource=github-releases depName=vmware-tanzu/velero
 export const VELERO_CLI_VERSION = "v1.18.0";

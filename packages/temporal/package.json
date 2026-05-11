@@ -9,7 +9,8 @@
     "#workflows/*": "./src/workflows/*",
     "#generated/*": "./src/generated/*",
     "#observability/*": "./src/observability/*",
-    "#lib/*": "./src/lib/*"
+    "#lib/*": "./src/lib/*",
+    "#db/*": "./src/db/*"
   },
   "scripts": {
     "start": "bun run src/worker.ts",

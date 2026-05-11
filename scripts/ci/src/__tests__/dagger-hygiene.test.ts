@@ -87,19 +87,13 @@ describe("version commit-back", () => {
 
 describe("image tags", () => {
   function getImageConstants(): string[] {
-    const result = execSync(
-      `grep -rEoh 'const \\w+_IMAGE\\s*=\\s*"[^"]+"' ${daggerSrc}`,
-      { encoding: "utf-8" },
+    const constantsSource = readFileSync(`${daggerSrc}/constants.ts`, "utf-8");
+    const matches = constantsSource.matchAll(
+      /export const \w+_IMAGE\s*=\s*"([^"]+)"/gs,
     );
-    return result
-      .trim()
-      .split("\n")
-      .filter(Boolean)
-      .flatMap((line) => {
-        const match = /"([^"]+)"/.exec(line);
-        const value = match?.[1];
-        return value !== undefined ? [value] : [];
-      });
+    return Array.from(matches, (match) => match[1]).filter(
+      (value): value is string => value !== undefined,
+    );
   }
 
   it("no image constant uses :latest", () => {
