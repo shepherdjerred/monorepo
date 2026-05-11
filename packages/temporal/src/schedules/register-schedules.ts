@@ -119,6 +119,20 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Daily Velero orphan ZFS snapshot detection — emits Prometheus metrics for the orphan-snapshot pathology (see packages/docs/decisions/2026-05-05_velero-orphan-snapshot-prevention.md)",
   },
   {
+    id: "pr-review-ab-weekly-report",
+    workflowType: "prReviewWeeklySignificanceWorkflow",
+    args: [{}],
+    // Monday 09:00 PT — the team is back from the weekend and can act
+    // on a Discord report before standup. Workflow is cheap (single
+    // Postgres query per experiment + 100k MC samples per arm), so we
+    // don't bother staggering against the nightly cron.
+    cronExpression: "0 9 * * 1",
+    taskQueue: TASK_QUEUES.PR_REVIEW,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "10 minutes",
+    memo: "Weekly pr-review-bot A/B significance report — Bayesian posterior over real-PR acceptance, Discord post Mon 09:00 PT",
+  },
+  {
     id: "pr-review-eval-nightly",
     workflowType: "prReviewEvalWorkflow",
     args: [{ pin: EVAL_FIXTURES_PIN }],
