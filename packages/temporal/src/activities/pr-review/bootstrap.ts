@@ -9,7 +9,21 @@ import type {
   PrFileDiff,
   RetrievedSymbolForPrompt,
 } from "#shared/pr-review/context.ts";
-import type { FileBlockDiff } from "#lib/block-diff.ts";
+import { computeFileBlockDiff, type FileBlockDiff } from "#lib/block-diff.ts";
+import { buildSymbolIndex, type SymbolIndex } from "#lib/symbol-index.ts";
+import {
+  formatRetrievedSymbols,
+  hybridSearch,
+  runToolkitRecallSearch,
+  type RecallSearchFn,
+} from "#lib/hybrid-retrieval.ts";
+import {
+  cleanupWorkdir as cleanupWorkdirImpl,
+  defaultWorkdirDeps,
+  provisionWorkdir,
+  type WorkdirDeps,
+  type WorkdirEnv,
+} from "#lib/pr-review-workdir.ts";
 
 /**
  * Narrowing schema for the `getContent` response when the path resolves to a
@@ -288,6 +302,188 @@ export async function runBootstrap(
   };
 }
 
+/**
+ * Dependencies for the workdir-enrichment pass. Production uses the
+ * defaults; tests stub them.
+ */
+export type EnrichDeps = {
+  /** Workdir provisioning (mkdir, rmrf, git clone, file reads). */
+  workdir: WorkdirDeps;
+  /** Recall subprocess for the semantic retrieval pass; `null` skips it. */
+  recallSearch: RecallSearchFn | null;
+};
+
+export type EnrichBootstrapInput = {
+  base: BootstrapResult;
+  pipeline: PrReviewPipelineInput;
+  workflowId: string;
+  env: WorkdirEnv;
+  deps: EnrichDeps;
+  heartbeat: (note: string) => void;
+  /** Maximum number of retrieved symbols to surface in the prompt. */
+  retrievalTopK?: number;
+};
+
+/**
+ * Stitch together the concatenated patch text from every changed file
+ * with a non-null patch. Used as the "diff" query for hybrid retrieval —
+ * identifiers come from added/removed lines, so adding `+`/`-` headers
+ * matters less than concatenation order.
+ */
+function concatenatePatchesForRetrieval(files: readonly PrFileDiff[]): string {
+  const lines: string[] = [];
+  for (const f of files) {
+    if (f.patch === null) continue;
+    lines.push(`--- a/${f.path}`);
+    lines.push(`+++ b/${f.path}`);
+    lines.push(f.patch);
+    lines.push("");
+  }
+  return lines.join("\n");
+}
+
+/**
+ * Compute per-file block diffs for every changed file with a patch and
+ * a readable workdir copy. Files that are deleted from the head (no
+ * readable copy) and binary files (patch is null) are silently skipped.
+ */
+async function computeBlockDiffsForFiles(
+  workdir: string,
+  files: readonly PrFileDiff[],
+  workdirDeps: WorkdirDeps,
+): Promise<FileBlockDiff[]> {
+  const out: FileBlockDiff[] = [];
+  for (const f of files) {
+    if (f.patch === null) continue;
+    if (f.status === "removed") continue;
+    const newSource = await workdirDeps.readFileUtf8(`${workdir}/${f.path}`);
+    if (newSource === null) continue;
+    const diff = await computeFileBlockDiff({
+      filePath: f.path,
+      newSource,
+      patch: f.patch,
+    });
+    out.push(diff);
+  }
+  return out;
+}
+
+/**
+ * Map a `RetrievedSymbol` (with debug `sources`) into the prompt-facing
+ * `RetrievedSymbolForPrompt` shape (entry + score + snippet). Reads the
+ * surrounding source for each entry directly from the workdir.
+ */
+type BuildPromptSymbolsParams = {
+  workdir: string;
+  index: SymbolIndex;
+  diff: string;
+  recallSearch: RecallSearchFn | null;
+  topK: number;
+};
+
+async function buildPromptSymbolsForIndex(
+  params: BuildPromptSymbolsParams,
+): Promise<RetrievedSymbolForPrompt[]> {
+  const { workdir, index, diff, recallSearch, topK } = params;
+  const retrieved = await hybridSearch({
+    diff,
+    index,
+    repoRoot: workdir,
+    k: topK,
+    recallSearch,
+  });
+  // `formatRetrievedSymbols` returns one Markdown string; we need per-entry
+  // snippet strings so we can render each in its own section. Compute the
+  // formatted block by calling formatRetrievedSymbols with a single-element
+  // array per result — keeps the snippet logic in one place.
+  const out: RetrievedSymbolForPrompt[] = [];
+  for (const r of retrieved) {
+    const formatted = await formatRetrievedSymbols([r], { repoRoot: workdir });
+    // Strip the leading "## <name> ..." line so the runner.ts header doesn't
+    // double up. formatRetrievedSymbols's block is "## name (kind) — file:line\n```\n<snippet>\n```".
+    const fenceStart = formatted.indexOf("```");
+    const fenceEnd = formatted.lastIndexOf("```");
+    const snippet =
+      fenceStart !== -1 && fenceEnd > fenceStart
+        ? formatted.slice(fenceStart + 3, fenceEnd).trim()
+        : "";
+    out.push({ entry: r.entry, score: r.score, snippet });
+  }
+  return out;
+}
+
+/**
+ * Provision a workdir, clone the PR head, then populate
+ * `retrievedSymbols` + `blockDiffs` against it. Throws on clone failure
+ * or missing `git` — we deliberately do NOT silently fall back to empty
+ * arrays.
+ *
+ * Caller is responsible for invoking `cleanupWorkdir(result.workdir)` on
+ * workflow completion. We don't auto-clean here because failure-path
+ * inspection (e.g. shadow-mode diff dumps) depends on the workdir still
+ * being present.
+ */
+export async function enrichBootstrapWithWorkdir(
+  input: EnrichBootstrapInput,
+): Promise<BootstrapResult> {
+  const { base, pipeline, workflowId, env, deps, heartbeat } = input;
+  const topK = input.retrievalTopK ?? 1;
+
+  heartbeat("provisioning-workdir");
+  const workdir = await provisionWorkdir({
+    workflowId,
+    owner: pipeline.owner,
+    repo: pipeline.repo,
+    ref: pipeline.commitSha,
+    env,
+    deps: deps.workdir,
+  });
+
+  heartbeat("building-symbol-index");
+  const index = await buildSymbolIndex({
+    repoRoot: workdir,
+    commitSha: pipeline.commitSha,
+  });
+
+  heartbeat("running-hybrid-retrieval");
+  const diff = concatenatePatchesForRetrieval(base.changedFiles);
+  const retrievedSymbols =
+    diff.length === 0
+      ? []
+      : await buildPromptSymbolsForIndex({
+          workdir,
+          index,
+          diff,
+          recallSearch: deps.recallSearch,
+          topK,
+        });
+
+  heartbeat("computing-block-diffs");
+  const blockDiffs = await computeBlockDiffsForFiles(
+    workdir,
+    base.changedFiles,
+    deps.workdir,
+  );
+
+  return {
+    workdir,
+    changedFiles: base.changedFiles,
+    claudeMdHierarchy: base.claudeMdHierarchy,
+    retrievedSymbols,
+    blockDiffs,
+  };
+}
+
+/**
+ * Public wrapper so callers (workflows, replay CLI) can tear down a
+ * workdir without reaching into `#lib/`. Thin pass-through over the lib
+ * function — kept here so bootstrap.ts is the single import surface for
+ * workdir lifecycle operations.
+ */
+export async function cleanupWorkdir(workdir: string): Promise<void> {
+  await cleanupWorkdirImpl(workdir);
+}
+
 async function bootstrapContextImpl(
   input: PrReviewPipelineInput,
 ): Promise<BootstrapResult> {
@@ -307,14 +503,29 @@ async function bootstrapContextImpl(
       const octokit = new Octokit({ auth: token });
 
       try {
-        const result = await runBootstrap(octokit, input, sendHeartbeat);
+        const base = await runBootstrap(octokit, input, sendHeartbeat);
+        const workflowId = Context.current().info.workflowExecution.workflowId;
+        const enriched = await enrichBootstrapWithWorkdir({
+          base,
+          pipeline: input,
+          workflowId,
+          env: { GH_TOKEN: token },
+          deps: {
+            workdir: defaultWorkdirDeps,
+            recallSearch: runToolkitRecallSearch,
+          },
+          heartbeat: sendHeartbeat,
+        });
         jsonLog("info", "bootstrapContext fetched diff + CLAUDE.md hierarchy", {
           prNumber: input.prNumber,
           commitSha: input.commitSha,
-          changedFilesCount: result.changedFiles.length,
-          claudeMdCount: result.claudeMdHierarchy.length,
+          changedFilesCount: enriched.changedFiles.length,
+          claudeMdCount: enriched.claudeMdHierarchy.length,
+          workdir: enriched.workdir,
+          retrievedSymbolCount: enriched.retrievedSymbols.length,
+          blockDiffCount: enriched.blockDiffs.length,
         });
-        return result;
+        return enriched;
       } catch (error: unknown) {
         captureWithContext(error, input);
         jsonLog("error", "bootstrapContext failed", {

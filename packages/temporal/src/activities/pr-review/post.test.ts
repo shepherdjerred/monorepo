@@ -1,12 +1,15 @@
 import { describe, expect, it, mock } from "bun:test";
 import {
+  findingMarker,
   isPostEnabled,
   markerFor,
+  parseFindingMarker,
   renderCommentBody,
   runPostReview,
   type PostReviewInput,
   type PostReviewOctokit,
 } from "./post.ts";
+import type { Finding } from "#shared/pr-review/finding.ts";
 import type { PrReviewPipelineInput } from "#shared/schemas.ts";
 
 const PIPELINE: PrReviewPipelineInput = {
@@ -116,6 +119,9 @@ describe("foundation: pr-review postReview", () => {
       expect(marker.endsWith("-->")).toBe(true);
     });
   });
+
+  // findingMarker / parseFindingMarker tests live in top-level describes
+  // below — `max-lines-per-function` caps the parent describe at 200 lines.
 
   describe("renderCommentBody", () => {
     it("emits the marker on the first line and the empty-findings sentence when no findings are present", () => {
@@ -321,6 +327,95 @@ describe("foundation: pr-review postReview", () => {
       expect(isPostEnabled("true")).toBe(true);
       expect(isPostEnabled("TRUE")).toBe(true);
       expect(isPostEnabled("True")).toBe(true);
+    });
+  });
+});
+
+const SAMPLE_FINDING: Finding = {
+  id: "f1",
+  file: "packages/foo/src/api.ts",
+  lineStart: 42,
+  lineEnd: 42,
+  kind: "security",
+  severity: "warning",
+  verifier: "none",
+  verifierTarget: { kind: "none", reason: "design call" },
+  claim: "SQL injection via unparameterized query in `getUser`",
+  evidence: "see L42 — string concat into query",
+  confidence: 0.8,
+};
+
+describe("findingMarker (Phase 9 dedup hook)", () => {
+  it("emits a valid HTML comment that round-trips through parseFindingMarker", () => {
+    const marker = findingMarker(SAMPLE_FINDING);
+    expect(marker.startsWith("<!--")).toBe(true);
+    expect(marker.endsWith("-->")).toBe(true);
+    const parsed = parseFindingMarker(marker);
+    expect(parsed).not.toBeNull();
+    expect(parsed?.kind).toBe("security");
+    expect(parsed?.file).toBe("packages/foo/src/api.ts");
+    expect(parsed?.claim).toContain("SQL injection");
+    // Cluster key uses 7-line buckets, so line 42 → bucket 42.
+    expect(parsed?.cluster).toBe("packages/foo/src/api.ts|42");
+  });
+
+  it("escapes a literal `-->` in the claim so it cannot break out of the comment", () => {
+    const malicious: Finding = {
+      ...SAMPLE_FINDING,
+      claim: "evil --> <script>alert(1)</script>",
+    };
+    const marker = findingMarker(malicious);
+    // The encoded `-->` should not appear in the raw marker — exactly one
+    // terminating `-->` is allowed.
+    expect(marker.split("-->").length).toBe(2);
+    const parsed = parseFindingMarker(marker);
+    expect(parsed?.claim).toContain("evil");
+  });
+
+  it("truncates very long claims to 80 chars (the marker is a recovery aid, not the body)", () => {
+    const long: Finding = {
+      ...SAMPLE_FINDING,
+      claim: "x".repeat(200),
+    };
+    const marker = findingMarker(long);
+    const parsed = parseFindingMarker(marker);
+    expect(parsed?.claim.length).toBeLessThanOrEqual(80);
+  });
+
+  it("appears directly above the bullet for every finding in the rendered body", () => {
+    const body = renderCommentBody(
+      {
+        pipeline: PIPELINE,
+        findings: [SAMPLE_FINDING],
+      },
+      markerFor(WORKFLOW_ID),
+    );
+    const markerIdx = body.indexOf("<!-- pr-review-finding ");
+    const bulletIdx = body.indexOf("- **`packages/foo/src/api.ts`**");
+    expect(markerIdx).toBeGreaterThan(-1);
+    expect(bulletIdx).toBeGreaterThan(markerIdx);
+    // Marker is on its own line — Phase 9's parser splits on \n.
+    const markerLine = body.slice(markerIdx).split("\n", 1)[0];
+    expect(parseFindingMarker(markerLine ?? "")).not.toBeNull();
+  });
+});
+
+describe("parseFindingMarker", () => {
+  it("returns null for non-marker lines", () => {
+    expect(parseFindingMarker("just a regular line")).toBeNull();
+    expect(parseFindingMarker("<!-- some other comment -->")).toBeNull();
+    expect(parseFindingMarker("")).toBeNull();
+  });
+
+  it("returns the parsed triple for a well-formed marker", () => {
+    const parsed = parseFindingMarker(
+      `<!-- pr-review-finding cluster="a.ts%7C0" kind="security" file="a.ts" claim="x" -->`,
+    );
+    expect(parsed).toEqual({
+      cluster: "a.ts|0",
+      kind: "security",
+      file: "a.ts",
+      claim: "x",
     });
   });
 });

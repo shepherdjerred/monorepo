@@ -223,7 +223,9 @@ describe("buildSymbolIndex", () => {
   beforeAll(async () => {
     // `mktemp -d` via Bun.$ avoids the no-restricted-imports lint against
     // `node:fs`'s `mkdtempSync`. Output ends with a newline which we trim.
-    const mkdirOut = await Bun.$`mktemp -d -t symbol-index-test`.text();
+    // GNU `mktemp -t <prefix>` requires ≥3 trailing X's; BSD on macOS tolerates
+    // a bare prefix. Use the explicit `<prefix>.XXXXXX` form so both agree.
+    const mkdirOut = await Bun.$`mktemp -d -t symbol-index-test.XXXXXX`.text();
     tmpRepo = mkdirOut.trim();
     // Build a minimal repo layout that matches the default include globs:
     //   packages/<pkg>/src/**/*.{ts,tsx,...}
