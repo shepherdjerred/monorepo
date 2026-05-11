@@ -25,6 +25,11 @@ import {
   prSummaryPipeline as _prSummaryPipeline,
 } from "./pr-summary/index.ts";
 import { prReviewPipeline as _prReviewPipeline } from "./pr-review/index.ts";
+import { prReviewEvalWorkflow as _prReviewEvalWorkflow } from "./pr-review-eval/index.ts";
+import type {
+  PrReviewEvalWorkflowInput,
+  PrReviewEvalWorkflowResult,
+} from "./pr-review-eval/index.ts";
 import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab-audit.ts";
 import type { RunHomelabAuditWorkflowInput } from "./homelab-audit.ts";
 import type {
@@ -128,4 +133,10 @@ export async function runHomelabAuditWorkflow(
   input: RunHomelabAuditWorkflowInput = {},
 ): Promise<void> {
   return _runHomelabAuditWorkflow(input);
+}
+
+export async function prReviewEvalWorkflow(
+  input: PrReviewEvalWorkflowInput,
+): Promise<PrReviewEvalWorkflowResult> {
+  return _prReviewEvalWorkflow(input);
 }
