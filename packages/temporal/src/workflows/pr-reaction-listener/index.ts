@@ -4,18 +4,24 @@ import {
   sleep,
   workflowInfo,
 } from "@temporalio/workflow";
-import type { Duration } from "@temporalio/common";
 import type {
   IngestDismissalsActivities,
   IngestDismissalsResult,
 } from "#activities/pr-review/ingest-dismissals.ts";
 
 /**
- * Polling cadence. 15 minutes balances responsiveness (suppressed-comment
- * appears on next push within a quarter hour of dismissal) against
- * GitHub rate-limit budget. Tunable via the input.
+ * Polling cadence in milliseconds (15 minutes). Balances responsiveness
+ * (suppressed-comment appears on next push within a quarter hour of
+ * dismissal) against GitHub rate-limit budget. Tunable via the input.
+ *
+ * Typed as `number` rather than `@temporalio/common`'s `Duration` because
+ * `Duration = StringValue | number` resolves to `any` under some CI
+ * dependency-resolution states (the `ms` package's template-literal
+ * `StringValue` doesn't survive every dedupe), which trips
+ * `@typescript-eslint/no-unsafe-assignment`. Sticking to milliseconds
+ * keeps the type concrete in every environment.
  */
-const DEFAULT_POLL_INTERVAL: Duration = "15 minutes";
+const DEFAULT_POLL_INTERVAL_MS = 15 * 60 * 1000;
 
 /**
  * Per-loop iteration cap before continue-as-new. Temporal advises
@@ -47,10 +53,9 @@ export type PrReactionListenerInput = {
    */
   readonly initialSince?: string;
   /**
-   * Override the poll interval for testing / shadow mode. Same units
-   * as `@temporalio/common` Duration.
+   * Override the poll interval in milliseconds for testing / shadow mode.
    */
-  readonly pollInterval?: Duration;
+  readonly pollIntervalMs?: number;
 };
 
 /**
@@ -66,7 +71,8 @@ export async function prReactionListener(
   let cursor =
     input.initialSince ??
     new Date(startTime.getTime() - 24 * 60 * 60 * 1000).toISOString();
-  const pollInterval = input.pollInterval ?? DEFAULT_POLL_INTERVAL;
+  const pollIntervalMs: number =
+    input.pollIntervalMs ?? DEFAULT_POLL_INTERVAL_MS;
 
   for (let i = 0; i < ITERATIONS_PER_RUN; i++) {
     const perRepoResults: IngestDismissalsResult[] = [];
@@ -85,14 +91,14 @@ export async function prReactionListener(
     }
     cursor = nextCursor;
 
-    await sleep(pollInterval);
+    await sleep(pollIntervalMs);
   }
 
   await continueAsNew<typeof prReactionListener>({
     repositories: input.repositories,
     initialSince: cursor,
-    ...(input.pollInterval === undefined
+    ...(input.pollIntervalMs === undefined
       ? {}
-      : { pollInterval: input.pollInterval }),
+      : { pollIntervalMs: input.pollIntervalMs }),
   });
 }
