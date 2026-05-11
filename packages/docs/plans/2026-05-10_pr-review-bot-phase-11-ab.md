@@ -119,3 +119,34 @@ temporal workflow start --type prReviewWeeklySignificanceWorkflow \
 - **Schedule rollback**: delete the `pr-review-ab-weekly-report` entry in `register-schedules.ts`, redeploy worker, the schedule's `update`-or-create path will leave the now-orphaned schedule. The leftover orphan can be reaped via `temporal schedule delete --schedule-id pr-review-ab-weekly-report`.
 - **Discord post failure**: soft-fail by design. The Postgres row is the canonical record; Discord is a courtesy.
 - **Webhook secret exposure**: webhook URL stays in 1Password Connect, injected as env var. Never logged.
+
+## Session Log — 2026-05-10
+
+### Done
+
+- Authored migration `003_real_pr_experiments.sql` (per-PR experiment row with sticky-hash variant, outcome counters, tristate `accepted`).
+- Authored `shared/pr-review/variant.ts` with Zod `Experiment` / `VariantArm` schemas, `ACTIVE_EXPERIMENTS` registry, pure SHA-256 sticky-hash `assignVariant()`, and `findActiveExperiment()`.
+- Authored three variant activities (`activities/pr-review-eval/variant.ts`): `prReviewAssignVariant`, `prReviewRecordExperimentOutcome` (INSERT ON CONFLICT upsert with `xmax <> 0` conflict detection), `prReviewRecordAcceptance` (called by Phase 9).
+- Authored Bayesian significance engine (`activities/pr-review-eval/significance.ts`): Marsaglia & Tsang Gamma sampler, ratio-of-Gammas Beta sampler, 100k-sample Monte Carlo `P(arm > rest)`, verdict logic with pure `summarize()` exported for tests.
+- Authored Discord post activity (`activities/pr-review-eval/discord-post.ts`): direct `fetch()` to `DISCORD_PR_REVIEW_WEBHOOK`, color-coded embed (green/amber/grey), soft-fail behavior.
+- Authored experiment Prom metrics + workflow-callable metrics activity (`activities/pr-review-eval/experiment-metrics.ts`, `observability/pr-review-experiment-metrics.ts`).
+- Authored `prReviewWeeklySignificanceWorkflow` (`workflows/pr-review-eval/weekly-significance.ts`) and registered it in `workflows/index.ts`.
+- Added `pr-review-ab-weekly-report` schedule entry (Mon 09:00 PT, PR_REVIEW queue, 10-min timeout).
+- Wrote three test files: `variant.test.ts` (16 tests), `significance.test.ts` (6 tests), `discord-post.test.ts` (5 tests).
+- Committed (0c1eb743f) and pushed; opened draft PR #770 stacked on PR #769.
+- Verified clean: typecheck (`bunx tsc --noEmit`), tests (61 pass / 0 fail), eslint, prettier, markdownlint, all pre-commit hooks (gitleaks, env-var-names, large-files, check-suppressions, migration-guard, homelab-helm-lint, homelab-typecheck, tunnel-dns-coverage, quality-ratchet).
+
+### Remaining
+
+- **Variant plumbing into the specialists runner** — not in scope this PR. Hook is a 1-line change in `correctness.ts` `CORRECTNESS_SYSTEM_PROMPT` once Phase 3's specialist runner stabilizes (owned by retrieval teammate / Task #2).
+- **Acceptance backfill wire-up** — Phase 9 (feedback teammate / Task #3) must call `prReviewRecordAcceptance` from the reaction listener. Without that, every row stays `accepted=NULL` and the weekly verdict is `insufficient-data` (correct fail-closed behavior).
+- **Migration apply** — the migrator runs against live Postgres needs to be triggered after PR merge: `PR_REVIEW_EVAL_DATABASE_URL=<dsn> bun run packages/temporal/scripts/run-pr-review-eval-migrations.ts` (or wait for the worker-boot migrator hook to land).
+- **First real experiment** — `ACTIVE_EXPERIMENTS` ships with one placeholder (`correctness-system-prompt-v1`); a real prompt-variant experiment is a follow-up PR.
+
+### Caveats
+
+- The workflow can't import `variant.ts` directly because `node:crypto` is non-deterministic from Temporal's perspective. Workaround: `experiment-metrics.ts` activity exposes `ACTIVE_EXPERIMENTS.map(e => e.id)` to the workflow. Documented in the workflow comment.
+- Bayesian over SPRT was a judgment call captured in `variant.ts` docstring. If a teammate wants SPRT later, the `significance.ts` summarizer is replaceable while keeping the same `SignificanceReport` shape.
+- 100k Monte Carlo samples per pairwise comparison gives std err ~0.001 at probability=0.5. Multi-arm experiments scale as O(arms² × 100k); 5-arm experiments are still under 2.5M samples, sub-second.
+- The `pr-review-ab-weekly-report` schedule will register on the next worker restart; if a manual trigger is needed before that, run `temporal workflow start --type prReviewWeeklySignificanceWorkflow --task-queue pr-review --input '{}'`.
+- The PR stacks on PR #769. Rebase to main after #769 lands; if there's churn in `register-schedules.ts` between now and then, the PR #769 schedule entry stays, and Phase 11's entry needs to land cleanly above it.
