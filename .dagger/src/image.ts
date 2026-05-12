@@ -643,7 +643,7 @@ export function buildScoutImageHelper(
     .withWorkdir("/workspace/packages/scout-for-lol")
     .withExec(["bun", "install", "--frozen-lockfile"])
     .withWorkdir("/workspace/packages/scout-for-lol/packages/backend")
-    .withExec(["bunx", "--trust", "prisma@6", "generate"])
+    .withExec(["bunx", "--trust", "prisma", "generate"])
     .withLabel(
       "org.opencontainers.image.source",
       "https://github.com/shepherdjerred/monorepo",
