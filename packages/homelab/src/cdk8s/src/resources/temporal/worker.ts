@@ -377,23 +377,24 @@ export function createTemporalWorkerDeployment(
           key: "GITHUB_PERSONAL_ACCESS_TOKEN",
         }),
         // Anthropic: OAuth → legacy `claude -p`, API key → SDK pr-summary.
-        // Shadow-mode billing caveat in packages/temporal/CLAUDE.md.
+        // Sole auth for both legacy `claude -p` and the new SDK-based bot.
+        // The new bot reads this via `new Anthropic({ authToken: ... })` so
+        // all work bills against the Claude Code subscription. The
+        // ANTHROPIC_API_KEY env var was removed once the SDK switched to
+        // OAuth — keep that flag out so a leaked key can't accidentally
+        // start charging direct-API billing.
         CLAUDE_CODE_OAUTH_TOKEN: EnvValue.fromSecretValue({
           secret,
           key: "CLAUDE_CODE_OAUTH_TOKEN",
         }),
-        ANTHROPIC_API_KEY: EnvValue.fromSecretValue({
-          secret,
-          key: "ANTHROPIC_API_KEY",
-        }),
-        // Kill switch for the new pr-review pipeline's live posting. Defaults
-        // "false" so the pipeline runs end-to-end (bootstrap, specialists,
-        // render) and logs the would-be comment but does NOT mutate the PR.
-        // Flip to "true" only after shadow-mode dogfooding (Phase 12 of the
-        // SOTA plan) gives a precision/FPR baseline we trust. The post
-        // activity reads this directly from the env at runtime — see
-        // packages/temporal/src/activities/pr-review/post.ts `isPostEnabled`.
-        PR_REVIEW_POST_ENABLED: EnvValue.fromValue("false"),
+        // Kill switch for the new pr-review pipeline's live posting. Set
+        // "true" once the bot is dogfooded — every non-draft PR will then
+        // receive a `<!-- pr-review-finding ... -->` comment. Flip back to
+        // "false" to suppress posts while still running the full pipeline
+        // for log inspection. The post activity reads this directly at
+        // runtime — see packages/temporal/src/activities/pr-review/post.ts
+        // `isPostEnabled`.
+        PR_REVIEW_POST_ENABLED: EnvValue.fromValue("true"),
         GITHUB_WEBHOOK_PORT: EnvValue.fromValue("9466"),
         // pr-review-bot dismissed-comments KV (Phase 9). Single Redis
         // instance is deployed inside the temporal chart via the shared
