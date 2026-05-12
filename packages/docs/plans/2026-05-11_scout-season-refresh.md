@@ -14,11 +14,11 @@ There is no reliable Riot API for season boundaries (`seasons.ts:7` comment conf
 
 ## Deliverables
 
-| # | Deliverable | Status |
-|---|---|---|
-| 1 | One-shot update to `seasons.ts` with Pandemonium Acts 1 + 2 | PR [#775](https://github.com/shepherdjerred/monorepo/pull/775) |
-| 2 | Temporal workflow `runScoutSeasonRefreshWorkflow` — code only (no schedule) | PR [#777](https://github.com/shepherdjerred/monorepo/pull/777) |
-| 3 | Follow-up PR — register `scout-season-refresh-weekly` cron (Mon 07:00 PT) | Pending manual UI trigger after #777 |
+| #   | Deliverable                                                                 | Status                                                         |
+| --- | --------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| 1   | One-shot update to `seasons.ts` with Pandemonium Acts 1 + 2                 | PR [#775](https://github.com/shepherdjerred/monorepo/pull/775) |
+| 2   | Temporal workflow `runScoutSeasonRefreshWorkflow` — code only (no schedule) | PR [#777](https://github.com/shepherdjerred/monorepo/pull/777) |
+| 3   | Follow-up PR — register `scout-season-refresh-weekly` cron (Mon 07:00 PT)   | Pending manual UI trigger after #777                           |
 
 ## Part 1 — Manual fix
 
@@ -44,16 +44,16 @@ Pattern mirrors `data-dragon.ts` (clone + git + gh) and `pr-agent.ts` / `homelab
 
 ### Files
 
-| Path | Purpose |
-|---|---|
-| `packages/temporal/src/activities/scout-season-refresh.ts` | Main `run()` orchestration |
-| `packages/temporal/src/activities/scout-season-refresh-claude.ts` | `claude -p` subprocess wrapper |
-| `packages/temporal/src/activities/scout-season-refresh-git.ts` | git/gh helpers + `openSeasonRefreshPr` |
-| `packages/temporal/src/activities/scout-season-refresh-prompt.ts` | Prompt builder |
-| `packages/temporal/src/activities/scout-season-refresh-prompt.test.ts` | 8 prompt safety unit tests |
-| `packages/temporal/src/workflows/scout-season-refresh.ts` | Workflow wrapper |
-| `packages/temporal/scripts/run-scout-season-refresh-local.ts` | Local Layer-2 harness |
-| `packages/temporal/src/observability/metrics.ts` | 4 new Prometheus metrics |
+| Path                                                                   | Purpose                                |
+| ---------------------------------------------------------------------- | -------------------------------------- |
+| `packages/temporal/src/activities/scout-season-refresh.ts`             | Main `run()` orchestration             |
+| `packages/temporal/src/activities/scout-season-refresh-claude.ts`      | `claude -p` subprocess wrapper         |
+| `packages/temporal/src/activities/scout-season-refresh-git.ts`         | git/gh helpers + `openSeasonRefreshPr` |
+| `packages/temporal/src/activities/scout-season-refresh-prompt.ts`      | Prompt builder                         |
+| `packages/temporal/src/activities/scout-season-refresh-prompt.test.ts` | 8 prompt safety unit tests             |
+| `packages/temporal/src/workflows/scout-season-refresh.ts`              | Workflow wrapper                       |
+| `packages/temporal/scripts/run-scout-season-refresh-local.ts`          | Local Layer-2 harness                  |
+| `packages/temporal/src/observability/metrics.ts`                       | 4 new Prometheus metrics               |
 
 ### Cron (Part 3, separate PR)
 
@@ -78,11 +78,11 @@ Also: add `runScoutSeasonRefreshWorkflow` to `WORKFLOWS_WITHOUT_LONG_SLEEPS` in 
 
 Local Layer-2 harness (`scripts/run-scout-season-refresh-local.ts`) must produce a clean run before the cron lands.
 
-| Scenario | Status |
-|---|---|
-| **C2 — drift detected** (DRY_RUN=1, default fresh-clone of origin/main, Opus, 40 turns) | **PASS** — 28 turns, $1.64, 229s. Diff covers Pandemonium Act 1+2 + For Demacia date corrections. `pr-skipped-dry-run` outcome reported. |
-| **C1 — no drift** (run after PR #775 + #777 merge, then again with the cron-PR's seasons.ts matching claude's research) | Deferred until #775 + #777 merge |
-| **Cluster Trigger Now** — manual workflow start from Temporal UI | Pending #777 merge |
+| Scenario                                                                                                                | Status                                                                                                                                   |
+| ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **C2 — drift detected** (DRY_RUN=1, default fresh-clone of origin/main, Opus, 40 turns)                                 | **PASS** — 28 turns, $1.64, 229s. Diff covers Pandemonium Act 1+2 + For Demacia date corrections. `pr-skipped-dry-run` outcome reported. |
+| **C1 — no drift** (run after PR #775 + #777 merge, then again with the cron-PR's seasons.ts matching claude's research) | Deferred until #775 + #777 merge                                                                                                         |
+| **Cluster Trigger Now** — manual workflow start from Temporal UI                                                        | Pending #777 merge                                                                                                                       |
 
 ### Static checks
 
