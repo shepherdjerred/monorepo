@@ -19,6 +19,11 @@ import { runBugsinkHousekeepingWorkflow as _runBugsinkHousekeepingWorkflow } fro
 import { runVeleroOrphanAuditWorkflow as _runVeleroOrphanAuditWorkflow } from "./velero-orphan-audit.ts";
 import { runScoutDataDragonUpdate as _runScoutDataDragonUpdate } from "./data-dragon.ts";
 import type { DataDragonUpdateResult } from "#activities/data-dragon.ts";
+import { runScoutSeasonRefreshWorkflow as _runScoutSeasonRefreshWorkflow } from "./scout-season-refresh.ts";
+import type {
+  ScoutSeasonRefreshInput,
+  ScoutSeasonRefreshResult,
+} from "#activities/scout-season-refresh.ts";
 import { prReview as _prReview } from "./pr-review.ts";
 import {
   prSummary as _prSummary,
@@ -116,6 +121,12 @@ export async function runScoutDataDragonWeeklyRefresh(): Promise<
   DataDragonUpdateResult | undefined
 > {
   return _runScoutDataDragonUpdate("weekly-refresh");
+}
+
+export async function runScoutSeasonRefreshWorkflow(
+  input: ScoutSeasonRefreshInput = {},
+): Promise<ScoutSeasonRefreshResult> {
+  return _runScoutSeasonRefreshWorkflow(input);
 }
 
 export async function prReview(input: PrAgentInput): Promise<PrAgentResult> {

@@ -132,6 +132,44 @@ export const homelabAuditEmailSentTotal = new Counter({
 });
 
 // ---------------------------------------------------------------------------
+// scout-season-refresh workflow metrics
+//
+// Weekly LoL season-date drift check. claude -p researches the current season
+// schedule and edits packages/scout-for-lol/.../seasons.ts when Riot has
+// announced new acts or moved dates. Activity opens a PR (human review, no
+// auto-merge) when there's drift; no-op when seasons.ts is already accurate.
+// ---------------------------------------------------------------------------
+
+export const scoutSeasonRefreshRunsTotal = new Counter({
+  name: "scout_season_refresh_runs_total",
+  help: "scout-season-refresh activity runs, by outcome (no-drift | pr-created | failed)",
+  labelNames: ["outcome"] as const,
+  registers: [register],
+});
+
+export const scoutSeasonRefreshDurationSeconds = new Histogram({
+  name: "scout_season_refresh_duration_seconds",
+  help: "Wall-clock duration of scout-season-refresh activity runs",
+  labelNames: ["outcome"] as const,
+  buckets: [60, 180, 300, 600, 900, 1500, 1800],
+  registers: [register],
+});
+
+export const scoutSeasonRefreshSubprocessExitTotal = new Counter({
+  name: "scout_season_refresh_subprocess_exit_total",
+  help: "scout-season-refresh claude subprocess exits, by exit code",
+  labelNames: ["exit_code"] as const,
+  registers: [register],
+});
+
+export const scoutSeasonRefreshTokensTotal = new Counter({
+  name: "scout_season_refresh_tokens_total",
+  help: "Tokens consumed by the scout-season-refresh claude subprocess, by model and direction",
+  labelNames: ["model", "direction"] as const,
+  registers: [register],
+});
+
+// ---------------------------------------------------------------------------
 // velero-orphan-audit workflow metrics
 //
 // Detection-only metrics for orphan ZFS snapshots created by the Velero

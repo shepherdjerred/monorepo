@@ -7,6 +7,7 @@ import { homelabAuditActivities } from "./homelab-audit.ts";
 import { zfsMaintenanceActivities } from "./zfs-maintenance.ts";
 import { bugsinkHousekeepingActivities } from "./bugsink.ts";
 import { dataDragonActivities } from "./data-dragon.ts";
+import { scoutSeasonRefreshActivities } from "./scout-season-refresh.ts";
 import { prAgentActivities } from "./pr-agent.ts";
 import { prReviewActivities } from "./pr-review/index.ts";
 import { prReviewEvalActivities } from "./pr-review-eval/index.ts";
@@ -24,6 +25,7 @@ export const activities = {
   ...zfsMaintenanceActivities,
   ...bugsinkHousekeepingActivities,
   ...dataDragonActivities,
+  ...scoutSeasonRefreshActivities,
   ...prAgentActivities,
   ...prReviewActivities,
   ...prReviewEvalActivities,
