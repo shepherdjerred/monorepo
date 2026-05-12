@@ -16,6 +16,8 @@ export const SeasonIdSchema = z.enum([
   "2025_SEASON_3_ACT_2",
   "2026_SEASON_1_ACT_1",
   "2026_SEASON_1_ACT_2",
+  "2026_SEASON_2_ACT_1",
+  "2026_SEASON_2_ACT_2",
 ]);
 
 export type SeasonId = z.infer<typeof SeasonIdSchema>;
@@ -53,7 +55,19 @@ export const SEASONS: Record<SeasonId, SeasonData> = {
     id: "2026_SEASON_1_ACT_2",
     displayName: "For Demacia (Act 2)",
     startDate: new Date("2026-03-05T00:00:00-08:00"),
-    endDate: new Date("2026-04-30T23:59:59-07:00"),
+    endDate: new Date("2026-04-28T23:59:59-07:00"),
+  },
+  "2026_SEASON_2_ACT_1": {
+    id: "2026_SEASON_2_ACT_1",
+    displayName: "Pandemonium (Act 1)",
+    startDate: new Date("2026-04-29T00:00:00-07:00"),
+    endDate: new Date("2026-06-09T23:59:59-07:00"),
+  },
+  "2026_SEASON_2_ACT_2": {
+    id: "2026_SEASON_2_ACT_2",
+    displayName: "Pandemonium (Act 2)",
+    startDate: new Date("2026-06-10T00:00:00-07:00"),
+    endDate: new Date("2026-08-12T23:59:59-07:00"),
   },
 };
 
