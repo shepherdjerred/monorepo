@@ -101,7 +101,7 @@ const versions = {
   openebs: "4.4.0",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/scout-for-lol/beta":
-    "2.0.0-2370@sha256:bea9aa38162413497ad378fb293f6f5fc0ea718b8ac1607135bf3a346b2d1229",
+    "2.0.0-2379@sha256:fef56d2bf99166a7d7bd2494cbabeadea312b62bc4908841ea6c71d02e5eed3a",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
   "shepherdjerred/scout-for-lol/prod":
     "2.0.0-2389@sha256:5eeb9f77289409ab97dd1e4a8b311ef809832e71d4035a4a99d24b36aa9d98d0",
