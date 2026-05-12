@@ -451,16 +451,20 @@ export function makeSpecialistClient(
 }
 
 /**
- * Build a real Anthropic-backed client, reading `ANTHROPIC_API_KEY` from
- * the environment. Throws if the key is missing — callers should treat this
- * as a deployment misconfiguration, not a per-PR failure.
+ * Build a real Anthropic-backed client, reading `CLAUDE_CODE_OAUTH_TOKEN`
+ * from the environment so the SDK bills against the user's Claude Code
+ * subscription (same auth path as the legacy `claude -p` workflow). Throws
+ * if the token is missing — callers should treat this as a deployment
+ * misconfiguration, not a per-PR failure.
  */
 export function defaultSpecialistClient(): SpecialistAnthropicClient {
-  const apiKey = Bun.env["ANTHROPIC_API_KEY"];
-  if (apiKey === undefined || apiKey === "") {
-    throw new Error("ANTHROPIC_API_KEY is required for specialist activities");
+  const authToken = Bun.env["CLAUDE_CODE_OAUTH_TOKEN"];
+  if (authToken === undefined || authToken === "") {
+    throw new Error(
+      "CLAUDE_CODE_OAUTH_TOKEN is required for specialist activities",
+    );
   }
-  return makeSpecialistClient(new Anthropic({ apiKey }));
+  return makeSpecialistClient(new Anthropic({ authToken }));
 }
 
 /**

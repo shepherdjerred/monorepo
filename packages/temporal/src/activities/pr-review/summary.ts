@@ -462,10 +462,10 @@ export type PrSummaryActivities = typeof prSummaryActivities;
 
 export const prSummaryActivities = {
   async runPrSummaryPipeline(pr: PrSummaryInput): Promise<RunSummaryResult> {
-    const anthropicKey = envOrThrow("ANTHROPIC_API_KEY");
+    const authToken = envOrThrow("CLAUDE_CODE_OAUTH_TOKEN");
     const githubToken = envOrThrow("GITHUB_PERSONAL_ACCESS_TOKEN");
 
-    const anthropic = new Anthropic({ apiKey: anthropicKey });
+    const anthropic = new Anthropic({ authToken });
     const octokit = new Octokit({ auth: githubToken });
     const adapter = adaptOctokit(octokit);
 

@@ -342,9 +342,10 @@ export function makeCorrectnessClient(
 }
 
 /**
- * In-process entry point for the correctness reviewer. Reads `ANTHROPIC_API_KEY`
- * from the environment, builds a real client, and dispatches through
- * `runCorrectnessReviewer`. Used by `runSpecialists` (single-call Phase 2
+ * In-process entry point for the correctness reviewer. Reads
+ * `CLAUDE_CODE_OAUTH_TOKEN` from the environment so the SDK bills against
+ * the user's Claude Code subscription (same auth path as the legacy
+ * `claude -p` workflow). Used by `runSpecialists` (single-call Phase 2
  * baseline) and by the `replay-pr-review.ts` CLI.
  *
  * Wrapped in `withSpan` so OTel sees one `prReview.correctnessReviewer` span
@@ -363,13 +364,13 @@ export async function correctnessReviewer(
       "claudeMd.count": input.context.claudeMdHierarchy.length,
     },
     async () => {
-      const apiKey = Bun.env["ANTHROPIC_API_KEY"];
-      if (apiKey === undefined || apiKey === "") {
+      const authToken = Bun.env["CLAUDE_CODE_OAUTH_TOKEN"];
+      if (authToken === undefined || authToken === "") {
         throw new Error(
-          "ANTHROPIC_API_KEY is required for the correctness reviewer",
+          "CLAUDE_CODE_OAUTH_TOKEN is required for the correctness reviewer",
         );
       }
-      const client = makeCorrectnessClient(new Anthropic({ apiKey }));
+      const client = makeCorrectnessClient(new Anthropic({ authToken }));
       try {
         return await runCorrectnessReviewer(client, input);
       } catch (error: unknown) {
