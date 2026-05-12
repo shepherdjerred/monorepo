@@ -211,7 +211,7 @@ export async function embedClaim(
   const fetchImpl = deps.voyageFetch ?? fetch;
   const localEmbedder = deps.localEmbedder;
 
-  let fallbackReason: string | null = null;
+  let fallbackReason: string;
   if (apiKey === "") {
     fallbackReason = "no-key";
   } else {

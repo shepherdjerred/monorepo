@@ -17,8 +17,25 @@ export const RETRY = {
   ],
 };
 
-/** Returns "--dryrun" if DRYRUN env var is set, empty string otherwise. */
-export const DRYRUN_FLAG = process.env["DRYRUN"] === "true" ? " --dryrun" : "";
+/**
+ * Returns "--dryrun" when:
+ * - `DRYRUN=true` is explicitly set, OR
+ * - the pipeline is being generated for a non-default branch (PR builds).
+ *
+ * Lets PRs run the same deploy/release jobs as main but skip the production
+ * side effect (S3 sync, ChartMuseum push, etc.). Without this, those steps
+ * stay gated to `MAIN_ONLY` and PRs cannot validate them at all — which is
+ * how renovate-481 broke main while showing green PR CI.
+ */
+function isPullRequestBranch(): boolean {
+  const branch = process.env["BUILDKITE_BRANCH"];
+  const defaultBranch = process.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"];
+  if (branch === undefined || branch === "") return false;
+  if (defaultBranch === undefined || defaultBranch === "") return false;
+  return branch !== defaultBranch;
+}
+export const DRYRUN_FLAG =
+  process.env["DRYRUN"] === "true" || isPullRequestBranch() ? " --dryrun" : "";
 
 /** Dagger environment variables for CI steps. */
 export const DAGGER_ENV: Record<string, string> = {
