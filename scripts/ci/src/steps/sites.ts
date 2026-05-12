@@ -1,5 +1,10 @@
 /**
  * Site deploy step generators.
+ *
+ * Deploy steps run on every branch (PRs included). On non-main branches the
+ * deploy command receives `--dryrun` via DRYRUN_FLAG, so the build runs but
+ * the SeaweedFS sync is skipped — PRs catch SSR/build regressions without
+ * publishing assets.
  */
 import type { DeploySite } from "../catalog.ts";
 import { DEPLOY_SITES, PACKAGE_TO_SITE } from "../catalog.ts";
@@ -7,8 +12,6 @@ import { safeKey, RETRY, DAGGER_ENV, DRYRUN_FLAG } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
-
-const MAIN_ONLY = "build.branch == pipeline.default_branch";
 
 function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
   const cpu = "250m";
@@ -44,7 +47,6 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
   return {
     label: `:ship: Deploy ${site.name}`,
     key: `deploy-${safeKey(site.bucket)}`,
-    if: MAIN_ONLY,
     depends_on: dependsOn,
     command: args.join(" ") + DRYRUN_FLAG,
     timeout_in_minutes: 15,
@@ -81,7 +83,6 @@ export function mkdocsDeployStep(dependsOn: string[]): BuildkiteStep {
   return {
     label: ":book: Deploy discord-plays-pokemon docs",
     key: "deploy-discord-plays-pokemon-docs",
-    if: MAIN_ONLY,
     depends_on: dependsOn,
     command:
       [

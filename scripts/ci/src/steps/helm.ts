@@ -16,9 +16,10 @@ import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
 const MAIN_ONLY = "build.branch == pipeline.default_branch";
 
 /**
- * cdk8s synth step — still runs standalone for cdk8s manifest validation
- * and for downstream steps like ArgoCD sync that need the manifests.
- * No longer uploads artifacts — helm push uses Dagger caching instead.
+ * cdk8s synth step — pure validation, runs on every branch.
+ * Used standalone for cdk8s manifest validation and for downstream steps
+ * (e.g. ArgoCD sync) that need the manifests. No production side effect,
+ * so PRs run it to catch synth regressions before they land on main.
  */
 export function cdk8sSynthStep(dependsOn: string[]): BuildkiteStep {
   const deps = WORKSPACE_DEPS["homelab/src/cdk8s"] ?? [];
@@ -28,7 +29,6 @@ export function cdk8sSynthStep(dependsOn: string[]): BuildkiteStep {
   return {
     label: ":cdk8s: Build cdk8s Manifests",
     key: "homelab-cdk8s",
-    if: MAIN_ONLY,
     depends_on: dependsOn,
     command: `dagger call homelab-synth --pkg-dir ./packages/homelab/src/cdk8s ${depFlags} --tsconfig ./tsconfig.base.json`,
     timeout_in_minutes: 15,
