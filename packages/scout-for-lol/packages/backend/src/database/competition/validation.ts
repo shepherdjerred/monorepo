@@ -13,6 +13,7 @@ import { z } from "zod";
 import { differenceInCalendarDays } from "date-fns";
 
 import { getLimit } from "#src/configuration/flags.ts";
+import { activeOnlyWhere } from "#src/database/competition/queries.ts";
 
 // ============================================================================
 // Constants
@@ -189,13 +190,7 @@ export async function validateOwnerLimit(
     where: {
       serverId,
       ownerId,
-      isCancelled: false,
-      OR: [
-        // Season-based competitions (no endDate)
-        { endDate: null },
-        // Fixed-date competitions that haven't ended yet
-        { endDate: { gt: now } },
-      ],
+      ...activeOnlyWhere(now),
     },
   });
 
@@ -228,13 +223,7 @@ export async function validateServerLimit(
   const activeCompetitionCount = await prisma.competition.count({
     where: {
       serverId,
-      isCancelled: false,
-      OR: [
-        // Season-based competitions (no endDate)
-        { endDate: null },
-        // Fixed-date competitions that haven't ended yet
-        { endDate: { gt: now } },
-      ],
+      ...activeOnlyWhere(now),
     },
   });
 

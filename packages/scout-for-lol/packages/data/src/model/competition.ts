@@ -7,7 +7,6 @@ import type {
 } from "#src/model/discord.ts";
 import { RankSchema } from "#src/model/rank.ts";
 import type { SeasonId } from "#src/seasons.ts";
-import { getSeasonById } from "#src/seasons.ts";
 
 /**
  * Competition database row shape — mirrors backend/prisma/schema.prisma.
@@ -340,6 +339,27 @@ export function participantStatusToString(status: ParticipantStatus): string {
 // ============================================================================
 
 /**
+ * Competition with the Season relation eagerly loaded.
+ *
+ * Backend queries that flow through `parseCompetition()` must `include: { season: true }`
+ * so the dates can be resolved relationally for season-based competitions.
+ * `competitionWithSeasonInclude` in the backend keeps this consistent.
+ *
+ * The `season.id` is a plain `string`, not the branded `SeasonId` from
+ * `seasons.ts`, because Prisma's generated relation types don't propagate
+ * the brand-types post-processing through join shapes. The dates are what
+ * `parseCompetition` reads anyway.
+ */
+export type CompetitionWithSeason = Competition & {
+  season: {
+    id: string;
+    displayName: string;
+    startDate: Date;
+    endDate: Date;
+  } | null;
+};
+
+/**
  * Competition with parsed criteria (domain type)
  * This is what we use in application code
  */
@@ -353,11 +373,14 @@ export type CompetitionWithCriteria = Omit<
 /**
  * Parse raw competition from database to domain type
  * Validates and parses criteriaConfig JSON
- * Transparently populates startDate/endDate from seasonId if present
+ * Transparently populates startDate/endDate from the eagerly-loaded season
+ * relation if `seasonId` is set
  *
  * @throws {Error} if criteriaConfig is invalid JSON or doesn't match schema
  */
-export function parseCompetition(raw: Competition): CompetitionWithCriteria {
+export function parseCompetition(
+  raw: CompetitionWithSeason,
+): CompetitionWithCriteria {
   // Parse the JSON config
   let criteriaConfig: unknown;
   try {
@@ -392,18 +415,17 @@ export function parseCompetition(raw: Competition): CompetitionWithCriteria {
     );
   }
 
-  const { criteriaType: _type, criteriaConfig: _config, ...rest } = raw;
+  const { criteriaType: _type, criteriaConfig: _config, season, ...rest } = raw;
 
-  // Transparently populate dates from season if seasonId is set
+  // Transparently populate dates from the relational season row when present.
+  // Season-based competitions have `startDate/endDate = null` in the DB; the
+  // effective dates live on the `Season` row pointed at by `seasonId`.
   let startDate = raw.startDate;
   let endDate = raw.endDate;
 
-  if (raw.seasonId !== null && raw.startDate === null && raw.endDate === null) {
-    const season = getSeasonById(raw.seasonId);
-    if (season) {
-      startDate = season.startDate;
-      endDate = season.endDate;
-    }
+  if (season !== null && raw.startDate === null && raw.endDate === null) {
+    startDate = season.startDate;
+    endDate = season.endDate;
   }
 
   return {

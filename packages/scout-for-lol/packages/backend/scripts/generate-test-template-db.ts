@@ -47,4 +47,31 @@ if (result.exitCode !== 0) {
   process.exit(1);
 }
 
+// `prisma db push` creates the schema but doesn't run migration data steps,
+// so the Season table is empty. Seed it so tests that create season-based
+// competitions don't trip the FK constraint.
+const { PrismaClient } = await import("#generated/prisma/client/index.js");
+const { PrismaLibSql } = await import("@prisma/adapter-libsql");
+const { SEASONS } = await import("@scout-for-lol/data");
+const seedPrisma = new PrismaClient({
+  adapter: new PrismaLibSql({ url: `file:${templatePath}` }),
+});
+for (const season of Object.values(SEASONS)) {
+  await seedPrisma.season.upsert({
+    where: { id: season.id },
+    update: {
+      displayName: season.displayName,
+      startDate: season.startDate,
+      endDate: season.endDate,
+    },
+    create: {
+      id: season.id,
+      displayName: season.displayName,
+      startDate: season.startDate,
+      endDate: season.endDate,
+    },
+  });
+}
+await seedPrisma.$disconnect();
+
 logger.info(`Template database generated at: ${templatePath}`);

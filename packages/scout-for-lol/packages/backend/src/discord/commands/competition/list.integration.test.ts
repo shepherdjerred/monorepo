@@ -232,15 +232,15 @@ describe("Competition List Query", () => {
     expect(activeComps[0]?.title).toBe("Ongoing Comp");
   });
 
-  test("activeOnly includes season-based competitions", async () => {
-    // Create season-based competition (no end date)
+  test("activeOnly includes season-based competitions whose season is still active", async () => {
+    // 2026_SEASON_2_ACT_2 ends 2026-08-12 — still future-ending as of 2026-05-11
     await createCompetition(
       prisma,
       createTestCompetitionInput(serverId, ownerId1, channelId, {
         title: "Season Comp",
         dates: {
           type: "SEASON",
-          seasonId: "2025_SEASON_3_ACT_1",
+          seasonId: "2026_SEASON_2_ACT_2",
         },
       }),
     );
