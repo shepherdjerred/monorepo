@@ -36,3 +36,24 @@ User asked to work in a new dissociated clone, update as much of Renovate dashbo
 - CI pickup fix validation passed: `cd scripts/ci && bun test src/__tests__/change-detection.test.ts`, `cd scripts/ci && bun run typecheck`, `cd scripts/ci && bun test`, and local PR pipeline generation with `BUILDKITE_PULL_REQUEST=773`.
 - Android validation installed NDK `26.1.10909125` into `/Users/jerred/Library/Android/sdk` because the updated Gradle project requested it.
 - Some validators still print non-fatal warnings/hints: SwiftLint renamed-rule warnings, Astro inline-script hints, Gradle deprecation warnings, and KSP warnings under Kotlin 2.3.20.
+
+## Session Log — 2026-05-11 (CI failure follow-up)
+
+### Done
+
+- Diagnosed PR #773 Buildkite build #2326 hard failures: lint for `discord-plays-pokemon` + `scout-for-lol` and typecheck for `tasks-for-obsidian` (`knip`/`trivy` were soft).
+- Root cause for lint: `@shepherdjerred/eslint-config@0.3.0` added `@eslint/compat` as a dep (used by `src/configs/react-native.ts`), but every consumer's `bun.lock` had cached the pre-bump dep list, so Bun's isolated install layout never placed `@eslint/compat` next to the eslint-config source. ESLint 10 surfaced this as `Oops! ESLint: 10.3.0 ResolveMessage {}` because `src/index.ts` re-exports `reactNativeConfig` eagerly.
+- Refreshed file: dep entries with targeted `bun update --filter '*' @shepherdjerred/eslint-config` (and `tasknotes-types`, plus `astro-opengraph-images`/`webring` for `sjer.red`) in 20 consumer lockfiles. No transitive bumps beyond what the file: sources required.
+- Root cause for tasks-for-obsidian typecheck: `tasknotes-types` bumped to `zod ^4.4.3` but `tasks-for-obsidian/bun.lock` still pinned its `tasknotes-types/zod` to `^4.3.6`. The two zod copies were structurally different to TS, so `z.array(InlineTimeEntrySchema)` rejected the imported schemas. `bun update tasknotes-types` aligned both copies on `zod@4.4.3`.
+- Fixed lint regression in `packages/scout-for-lol/packages/frontend/src/components/Button.astro` — `no-useless-assignment` correctly flagged the initial `let sizeClasses = ""` because every switch branch including `default` writes to it. Declared as `let sizeClasses: string` instead.
+- Verified locally with Dagger: `lint`/`typecheck` for `discord-plays-pokemon`, `scout-for-lol`, and `tasks-for-obsidian` all green.
+- Committed as `4014a1add` and pushed to `chore/renovate-481-max`.
+
+### Remaining
+
+- Awaiting CI rerun on the new commit (Buildkite picks up automatically on push).
+- The pre-existing soft-failures (`knip`, `trivy`) were left as-is per project convention; they do not block the PR.
+
+### Caveats
+
+- Bun's isolated-install layout silently skips dep-list refresh for `file:` deps when the consumer lockfile is satisfiable; the only way to surface the new dep was `bun update <file-dep>`. Worth keeping in mind for future cross-workspace dep additions.
