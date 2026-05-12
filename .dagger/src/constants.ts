@@ -20,7 +20,7 @@ export const GO_IMAGE =
   "golang:1.26.3-bookworm@sha256:252599aeb51ad60b83e4d8821802068127c528c707cb7dd7afd93be057c6011c";
 // renovate: datasource=docker depName=mcr.microsoft.com/playwright
 export const PLAYWRIGHT_IMAGE =
-  "mcr.microsoft.com/playwright:v1.59.1-noble@sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53";
+  "mcr.microsoft.com/playwright:v1.60.0-noble@sha256:9bd26ad900bb5e0f4dee75839e957a89ae89c2b7ab1e76050e559790e946b948";
 // renovate: datasource=docker depName=ghcr.io/realm/swiftlint
 export const SWIFTLINT_IMAGE =
   "ghcr.io/realm/swiftlint:0.63.2@sha256:8db376ff8a26e56fa506b56b8c70ea9c5583dc52d5746ce23b6c2c4d4ee00e31";
@@ -29,7 +29,7 @@ export const ALPINE_IMAGE =
   "alpine:3.23@sha256:5b10f432ef3da1b8d4c7eb6c487f2f5a8f096bc91145e68878dd4a5019afde11";
 // renovate: datasource=docker registryUrl=https://ghcr.io depName=opentofu/opentofu
 export const TOFU_IMAGE =
-  "ghcr.io/opentofu/opentofu:1.11.6@sha256:9180b542ee250ea2f26b22144190980d8bfbc86885213f6cb18d48a621d4abff";
+  "ghcr.io/opentofu/opentofu:1.11.7@sha256:6166f12d09520dbbb431a13951973c5b1046c01f801fa8c7b73e89511a0fff34";
 // renovate: datasource=docker depName=maven
 export const MAVEN_IMAGE =
   "maven:3.9.15-eclipse-temurin-25@sha256:1c3a703ab39fee7ac0880f46e6ccd22c0d701f17f0616e6e66a258ddc1c637d2";
@@ -44,7 +44,7 @@ export const CADDY_BUILDER_IMAGE =
   "caddy:2.11.2-builder-alpine@sha256:ced7ea0d093d2ce6d3e28869640f0513afb96e42675f399de062a17bab54b434";
 // renovate: datasource=docker depName=python
 export const PYTHON_IMAGE =
-  "python:3.14-slim@sha256:1697e8e8d39bf168e177ac6b5fdab6df86d81cfc24dae17dfb96cfc3ef76b4dd";
+  "python:3.14-slim@sha256:33ef7446e8c14b21cb247e23afbcdc90e98853b70812ca46b2265e769a7dfb8b";
 
 // Base image for obsidian-headless container (uses Node, not Bun, due to native better-sqlite3 addon).
 // renovate: datasource=docker depName=node
@@ -62,7 +62,7 @@ export const BUN_VERSION = "1.3.13";
 export const RELEASE_PLEASE_VERSION = "17.6.0";
 
 // renovate: datasource=npm depName=@anthropic-ai/claude-code
-export const CLAUDE_CODE_VERSION = "2.1.138";
+export const CLAUDE_CODE_VERSION = "2.1.140";
 
 // renovate: datasource=github-releases depName=golangci/golangci-lint
 export const GOLANGCI_LINT_VERSION = "v2.12.2";
@@ -71,19 +71,19 @@ export const GOLANGCI_LINT_VERSION = "v2.12.2";
 export const GH_CLI_VERSION = "2.92.0";
 
 // renovate: datasource=github-releases depName=kubernetes/kubectl
-export const KUBECTL_VERSION = "v1.35.0";
+export const KUBECTL_VERSION = "v1.36.1";
 
 // renovate: datasource=github-releases depName=github/github-mcp-server
-export const GITHUB_MCP_SERVER_VERSION = "1.0.3";
+export const GITHUB_MCP_SERVER_VERSION = "1.0.4";
 
 // renovate: datasource=github-releases depName=siderolabs/talos
-export const TALOSCTL_VERSION = "v1.13.0";
+export const TALOSCTL_VERSION = "v1.13.2";
 
 // renovate: datasource=github-releases depName=opentofu/opentofu
-export const TOFU_VERSION = "1.11.6";
+export const TOFU_VERSION = "1.11.7";
 
 // renovate: datasource=github-releases depName=argoproj/argo-cd
-export const ARGOCD_CLI_VERSION = "v3.4.1";
+export const ARGOCD_CLI_VERSION = "v3.4.2";
 
 // renovate: datasource=github-releases depName=vmware-tanzu/velero
 export const VELERO_CLI_VERSION = "v1.18.0";

@@ -141,6 +141,79 @@ describe("queryMatchesByDateRange - single day", () => {
     ]);
   });
 
+  test("paginates through all S3 list results for a day", async () => {
+    const date = new Date("2025-01-15T12:00:00Z");
+    const puuid = "PUUID-PAGINATION";
+    const prefix = "games/2025/01/15/";
+    const match1 = createMockMatch("TEST_2001", [puuid], date);
+    const match2 = createMockMatch("TEST_2002", [puuid], date);
+    const key1 = generateMatchKey("TEST_2001", date);
+    const key2 = generateMatchKey("TEST_2002", date);
+
+    s3Mock
+      .on(ListObjectsV2Command, { Prefix: prefix })
+      .resolvesOnce({
+        Contents: [{ Key: key1 }],
+        IsTruncated: true,
+        NextContinuationToken: "page-2",
+      })
+      .resolvesOnce({ Contents: [{ Key: key2 }], IsTruncated: false });
+    s3Mock
+      .on(GetObjectCommand, { Key: key1 })
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match1)));
+    s3Mock
+      .on(GetObjectCommand, { Key: key2 })
+      .callsFake(() => createMockGetObjectResponse(JSON.stringify(match2)));
+
+    const results = await queryMatchesByDateRange(
+      new Date("2025-01-15T00:00:00Z"),
+      new Date("2025-01-15T23:59:59Z"),
+      [puuid],
+    );
+
+    expect(results.map((m) => m.metadata.matchId).toSorted()).toEqual([
+      "TEST_2001",
+      "TEST_2002",
+    ]);
+  });
+
+  test("filters parsed matches by actual game creation time", async () => {
+    const requestedDate = new Date("2025-01-15T12:00:00Z");
+    const previousDate = new Date("2025-01-14T23:59:59Z");
+    const puuid = "PUUID-ACTUAL-GAME-TIME";
+    const prefix = "games/2025/01/15/";
+    const inWindowMatch = createMockMatch("TEST_2011", [puuid], requestedDate);
+    const outsideWindowMatch = createMockMatch(
+      "TEST_2012",
+      [puuid],
+      previousDate,
+    );
+    const inWindowKey = generateMatchKey("TEST_2011", requestedDate);
+    const outsideWindowKey = generateMatchKey("TEST_2012", requestedDate);
+
+    s3Mock.on(ListObjectsV2Command, { Prefix: prefix }).resolves({
+      Contents: [{ Key: inWindowKey }, { Key: outsideWindowKey }],
+    });
+    s3Mock
+      .on(GetObjectCommand, { Key: inWindowKey })
+      .callsFake(() =>
+        createMockGetObjectResponse(JSON.stringify(inWindowMatch)),
+      );
+    s3Mock
+      .on(GetObjectCommand, { Key: outsideWindowKey })
+      .callsFake(() =>
+        createMockGetObjectResponse(JSON.stringify(outsideWindowMatch)),
+      );
+
+    const results = await queryMatchesByDateRange(
+      new Date("2025-01-15T00:00:00Z"),
+      new Date("2025-01-15T23:59:59Z"),
+      [puuid],
+    );
+
+    expect(results.map((m) => m.metadata.matchId)).toEqual(["TEST_2011"]);
+  });
+
   test("filters matches by participant PUUID", async () => {
     const date = new Date("2025-01-15T12:00:00Z");
     const targetPuuid = "PUUID-TARGET";

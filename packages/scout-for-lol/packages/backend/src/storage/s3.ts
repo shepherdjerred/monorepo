@@ -40,6 +40,8 @@ export async function saveMatchToS3(
     metadata: {
       matchId: matchId,
       gameMode: match.info.gameMode,
+      gameCreation: match.info.gameCreation.toString(),
+      gameEndTimestamp: match.info.gameEndTimestamp.toString(),
       queueId: match.info.queueId.toString(),
       participantCount: match.info.participants.length.toString(),
       gameDuration: match.info.gameDuration.toString(),
@@ -54,6 +56,7 @@ export async function saveMatchToS3(
     logMessage: "Saving match to S3",
     errorContext: "match",
     returnUrl: false,
+    keyDate: new Date(match.info.gameCreation),
     additionalLogDetails: {
       participants: match.info.participants.length,
       gameMode: match.info.gameMode,

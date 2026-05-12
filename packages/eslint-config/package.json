@@ -37,7 +37,7 @@
     "jiti": "^2.7.0",
     "@eslint-community/eslint-plugin-eslint-comments": "^4.7.1",
     "@eslint/js": "^10.0.1",
-    "@typescript-eslint/utils": "^8.59.2",
+    "@typescript-eslint/utils": "^8.59.3",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-import-resolver-typescript-bun": "^0.0.104",

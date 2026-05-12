@@ -82,6 +82,11 @@
       "schedule": ["at any time"]
     },
     {
+      "description": "Talos factory images are not digest-compatible with the base ghcr.io/siderolabs/installer image digest.",
+      "matchPackageNames": ["ghcr.io/siderolabs/installer"],
+      "pinDigests": false
+    },
+    {
       "description": "Prod images - no delay, no automerge",
       "matchPackageNames": [
         "shepherdjerred/scout-for-lol/prod",

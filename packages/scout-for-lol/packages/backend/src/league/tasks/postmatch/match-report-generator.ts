@@ -226,6 +226,8 @@ async function processStandardMatch(
           queueType: queue,
           rankBefore: previousRank,
           rankAfter: currentRank,
+          matchGameCreationTimestamp: matchData.info.gameCreation,
+          matchGameEndTimestamp: matchData.info.gameEndTimestamp,
         });
 
         playerRanksMap.set(puuid, {

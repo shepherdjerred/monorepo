@@ -6,8 +6,11 @@
 import { fixupPluginRules } from "@eslint/compat";
 import reactNative from "eslint-plugin-react-native";
 import type { TSESLint } from "@typescript-eslint/utils";
+import { withLegacyContextMethods } from "./legacy-context.js";
 
-const reactNativePlugin = fixupPluginRules(reactNative);
+const reactNativePlugin = withLegacyContextMethods(
+  fixupPluginRules(reactNative),
+);
 
 /**
  * Configuration for React Native projects

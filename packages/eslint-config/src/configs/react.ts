@@ -5,8 +5,9 @@ import { fixupPluginRules } from "@eslint/compat";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import type { TSESLint } from "@typescript-eslint/utils";
+import { withLegacyContextMethods } from "./legacy-context.js";
 
-const reactPlugin = fixupPluginRules(react);
+const reactPlugin = withLegacyContextMethods(fixupPluginRules(react));
 
 /**
  * Configuration for React and React Hooks linting

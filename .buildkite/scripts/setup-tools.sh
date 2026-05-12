@@ -7,13 +7,13 @@ set -euo pipefail
 RIPGREP_VERSION="15.1.0"
 
 # renovate: datasource=github-releases depName=kubernetes/kubernetes
-KUBECTL_VERSION="v1.36.0"
+KUBECTL_VERSION="v1.36.1"
 
 # renovate: datasource=github-releases depName=koalaman/shellcheck
 SHELLCHECK_VERSION="0.11.0"
 
 # renovate: datasource=github-releases depName=astral-sh/uv
-UV_VERSION="0.11.12"
+UV_VERSION="0.11.14"
 
 # renovate: datasource=github-releases depName=helm/helm
 HELM_VERSION="v4.1.4"
@@ -22,7 +22,7 @@ HELM_VERSION="v4.1.4"
 AWSCLI_VERSION="2.34.45"
 
 # renovate: datasource=github-releases depName=opentofu/opentofu
-OPENTOFU_VERSION="1.11.6"
+OPENTOFU_VERSION="1.11.7"
 
 # renovate: datasource=github-releases depName=oven-sh/bun
 BUN_VERSION="1.3.13"

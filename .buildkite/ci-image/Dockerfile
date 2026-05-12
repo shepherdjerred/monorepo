@@ -38,7 +38,7 @@ RUN curl -fsSL "https://dl.dagger.io/dagger/releases/${DAGGER_VERSION}/dagger_v$
     chmod +x /usr/local/bin/dagger
 
 # renovate: datasource=github-releases depName=astral-sh/uv
-ARG UV_VERSION=0.11.13
+ARG UV_VERSION=0.11.14
 RUN curl -LsSf "https://astral.sh/uv/${UV_VERSION}/install.sh" | sh && \
     mv /root/.local/bin/uv /usr/local/bin/uv && \
     mv /root/.local/bin/uvx /usr/local/bin/uvx || true
@@ -69,7 +69,7 @@ RUN curl -fsSL "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz" | t
 
 # OpenTofu (covers install_tofu())
 # renovate: datasource=github-releases depName=opentofu/opentofu
-ARG OPENTOFU_VERSION=1.11.6
+ARG OPENTOFU_VERSION=1.11.7
 RUN curl -fsSL https://get.opentofu.org/install-opentofu.sh | \
     bash -s -- --install-method standalone --opentofu-version "${OPENTOFU_VERSION}"
 

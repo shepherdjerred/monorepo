@@ -32,7 +32,7 @@ const logger = createLogger("competition-lifecycle");
  */
 async function postCompetitionStarted(
   competition: CompetitionWithCriteria,
-): Promise<void> {
+): Promise<string> {
   const message = `🎯 **Competition Started!**
 
 **${competition.title}**
@@ -56,7 +56,7 @@ Good luck! 🍀`;
         serverId: competition.serverId,
       },
     );
-    await sendChannelMessage(
+    const sentMessage = await sendChannelMessage(
       message,
       competition.channelId,
       competition.serverId,
@@ -64,6 +64,7 @@ Good luck! 🍀`;
     logger.info(
       `[CompetitionLifecycle] ✅ Posted start notification for competition ${competition.id.toString()}`,
     );
+    return sentMessage.id;
   } catch (error) {
     // Handle permission errors gracefully - they're expected in some cases
     const channelSendError = z.instanceof(ChannelSendError).safeParse(error);
@@ -82,7 +83,7 @@ Good luck! 🍀`;
         },
       });
     }
-    // Don't throw - notification failure shouldn't stop the lifecycle transition
+    throw error;
   }
 }
 
@@ -133,7 +134,12 @@ function formatLeaderboardEntry(entry: RankedLeaderboardEntry): string {
     scoreDisplay = `${rankScore.tier} ${rankScore.division.toString()} ${rankScore.lp.toString()} LP`;
   }
 
-  return `${rankEmoji} **${entry.playerName}** - ${scoreDisplay}`;
+  const playerName =
+    entry.metadata?.["participantStatus"] === "LEFT"
+      ? `${entry.playerName} (left)`
+      : entry.playerName;
+
+  return `${rankEmoji} **${playerName}** - ${scoreDisplay}`;
 }
 
 /**
@@ -142,7 +148,7 @@ function formatLeaderboardEntry(entry: RankedLeaderboardEntry): string {
 async function postFinalLeaderboard(
   competition: CompetitionWithCriteria,
   leaderboard: RankedLeaderboardEntry[],
-): Promise<void> {
+): Promise<string> {
   // Take top 10 entries
   const topEntries = leaderboard.slice(0, 10);
 
@@ -174,7 +180,7 @@ async function postFinalLeaderboard(
       channelId: competition.channelId,
       serverId: competition.serverId,
     });
-    await sendChannelMessage(
+    const sentMessage = await sendChannelMessage(
       message,
       competition.channelId,
       competition.serverId,
@@ -182,6 +188,7 @@ async function postFinalLeaderboard(
     logger.info(
       `[CompetitionLifecycle] ✅ Posted final leaderboard for competition ${competition.id.toString()}`,
     );
+    return sentMessage.id;
   } catch (error) {
     // Handle permission errors gracefully - they're expected in some cases
     const channelSendError = z.instanceof(ChannelSendError).safeParse(error);
@@ -200,7 +207,7 @@ async function postFinalLeaderboard(
         },
       });
     }
-    // Don't throw - notification failure shouldn't stop the lifecycle transition
+    throw error;
   }
 }
 
@@ -214,7 +221,7 @@ async function postFinalLeaderboard(
  *
  * Filters at the DB level, joining to the `Season` row for season-based comps.
  */
-async function handleCompetitionStarts(
+export async function handleCompetitionStarts(
   prismaClient: ExtendedPrismaClient,
   now: Date,
 ): Promise<void> {
@@ -250,12 +257,27 @@ async function handleCompetitionStarts(
         `[CompetitionLifecycle] Starting competition ${competition.id.toString()}: ${competition.title}`,
       );
 
-      // Mark as processed immediately to prevent re-processing.
-      // This happens before snapshot creation so failures don't cause repeated notifications.
-      // Also seed `nextScheduledUpdateAt` from the row's CRON expression so the
-      // per-minute scheduled-update dispatcher has a real next-fire to match
-      // against (null is treated as self-heal but persisting a concrete time
-      // keeps the dispatcher query cheap and observable).
+      // Create START snapshots for all participants
+      await createSnapshotsForAllParticipants(
+        prismaClient,
+        competition.id,
+        "START",
+        competition.criteria,
+      );
+
+      if (competition.startNotifiedAt === null) {
+        const messageId = await postCompetitionStarted(competition);
+        await prismaClient.competition.update({
+          where: { id: competition.id },
+          data: {
+            startNotifiedAt: now,
+            startNotificationMessageId: messageId,
+          },
+        });
+      }
+
+      // Mark as processed after notification succeeds so transient Discord
+      // failures are retried. Also seed the per-competition scheduled update.
       const cronExpression =
         competition.updateCronExpression ?? DEFAULT_COMPETITION_CRON;
       await prismaClient.competition.update({
@@ -268,17 +290,6 @@ async function handleCompetitionStarts(
           ),
         },
       });
-
-      // Create START snapshots for all participants
-      await createSnapshotsForAllParticipants(
-        prismaClient,
-        competition.id,
-        "START",
-        competition.criteria,
-      );
-
-      // Post start notification to channel
-      await postCompetitionStarted(competition);
 
       logger.info(
         `[CompetitionLifecycle] ✅ Competition ${competition.id.toString()} started successfully`,
@@ -305,7 +316,7 @@ async function handleCompetitionStarts(
  *
  * Filters at the DB level, joining to the `Season` row for season-based comps.
  */
-async function handleCompetitionEnds(
+export async function handleCompetitionEnds(
   prismaClient: ExtendedPrismaClient,
   now: Date,
 ): Promise<void> {
@@ -342,12 +353,6 @@ async function handleCompetitionEnds(
         `[CompetitionLifecycle] Ending competition ${competition.id.toString()}: ${competition.title}`,
       );
 
-      // Mark as processed immediately to prevent re-processing
-      await prismaClient.competition.update({
-        where: { id: competition.id },
-        data: { endProcessedAt: now },
-      });
-
       // Create END snapshots for all participants
       await createSnapshotsForAllParticipants(
         prismaClient,
@@ -358,7 +363,21 @@ async function handleCompetitionEnds(
 
       // Calculate and post final leaderboard
       const leaderboard = await calculateLeaderboard(prismaClient, competition);
-      await postFinalLeaderboard(competition, leaderboard);
+      if (competition.endNotifiedAt === null) {
+        const messageId = await postFinalLeaderboard(competition, leaderboard);
+        await prismaClient.competition.update({
+          where: { id: competition.id },
+          data: {
+            endNotifiedAt: now,
+            endNotificationMessageId: messageId,
+          },
+        });
+      }
+
+      await prismaClient.competition.update({
+        where: { id: competition.id },
+        data: { endProcessedAt: now },
+      });
 
       logger.info(
         `[CompetitionLifecycle] ✅ Competition ${competition.id.toString()} ended successfully`,

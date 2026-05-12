@@ -23,13 +23,13 @@ model Subscription {
 }
 
 model Player {
-  id                       Int                       @id @default(autoincrement())
-  alias                    String
-  discordId                String?
-  accounts                 Account[]
-  subscriptions            Subscription[]
-  competitionParticipants  CompetitionParticipant[]
-  competitionSnapshots     CompetitionSnapshot[]
+  id                      Int                      @id @default(autoincrement())
+  alias                   String
+  discordId               String?
+  accounts                Account[]
+  subscriptions           Subscription[]
+  competitionParticipants CompetitionParticipant[]
+  competitionSnapshots    CompetitionSnapshot[]
 
   // metadata
   serverId         String
@@ -51,8 +51,8 @@ model Account {
 
   // Match processing tracking
   lastProcessedMatchId String? // Track last match we've processed to avoid duplicates
-  lastMatchTime DateTime? // Timestamp of the last match this player was in (for dynamic polling)
-  lastCheckedAt DateTime? // Timestamp of when we last checked for new matches (for polling intervals)
+  lastMatchTime        DateTime? // Timestamp of the last match this player was in (for dynamic polling)
+  lastCheckedAt        DateTime? // Timestamp of when we last checked for new matches (for polling intervals)
 
   // metadata
   serverId         String
@@ -64,19 +64,22 @@ model Account {
 }
 
 model MatchRankHistory {
-  id         Int      @id @default(autoincrement())
-  matchId    String   // Riot match ID
-  puuid      String   // Player PUUID
-  queueType  String   // "solo" or "flex"
+  id        Int    @id @default(autoincrement())
+  matchId   String // Riot match ID
+  puuid     String // Player PUUID
+  queueType String // "solo" or "flex"
 
   // Rank snapshots (JSON serialized, nullable for unranked)
-  rankBefore String?  // JSON: {tier, division, lp, wins, losses}
-  rankAfter  String?  // JSON: {tier, division, lp, wins, losses}
+  rankBefore String? // JSON: {tier, division, lp, wins, losses}
+  rankAfter  String? // JSON: {tier, division, lp, wins, losses}
 
-  capturedAt DateTime // When this was recorded
+  matchGameCreationAt DateTime? // Riot match info.gameCreation for historical attribution
+  matchGameEndAt      DateTime? // Riot match info.gameEndTimestamp for rank ordering
+  capturedAt          DateTime // When this was recorded
 
   @@unique([matchId, puuid, queueType])
   @@index([puuid, capturedAt])
+  @@index([puuid, queueType, matchGameEndAt])
   @@index([matchId])
 }
 
@@ -91,28 +94,32 @@ model Season {
 }
 
 model Competition {
-  id               Int                       @id @default(autoincrement())
-  serverId         String
-  ownerId          String // Discord user ID
-  title            String
-  description      String
-  channelId        String
-  isCancelled      Boolean                   @default(false)
-  visibility       String // OPEN, INVITE_ONLY, SERVER_WIDE
-  criteriaType     String // Enum stored as string
-  criteriaConfig   String // JSON stored as string
-  maxParticipants  Int                       @default(50)
+  id              Int     @id @default(autoincrement())
+  serverId        String
+  ownerId         String // Discord user ID
+  title           String
+  description     String
+  channelId       String
+  isCancelled     Boolean @default(false)
+  visibility      String // OPEN, INVITE_ONLY, SERVER_WIDE
+  criteriaType    String // Enum stored as string
+  criteriaConfig  String // JSON stored as string
+  maxParticipants Int     @default(50)
 
   // Time configuration (XOR: either fixed dates OR season)
-  startDate        DateTime?
-  endDate          DateTime?
-  seasonId         String?
-  season           Season?                   @relation(fields: [seasonId], references: [id])
+  startDate DateTime?
+  endDate   DateTime?
+  seasonId  String?
+  season    Season?   @relation(fields: [seasonId], references: [id])
 
   // Lifecycle tracking - when start/end processing was attempted
   // These prevent re-processing even if snapshot creation fails
-  startProcessedAt DateTime?
-  endProcessedAt   DateTime?
+  startProcessedAt           DateTime?
+  endProcessedAt             DateTime?
+  startNotifiedAt            DateTime?
+  endNotifiedAt              DateTime?
+  startNotificationMessageId String?
+  endNotificationMessageId   String?
 
   // Leaderboard-post schedule (CRON expression evaluated in UTC).
   // NULL is treated as the legacy default '0 0 * * *' (daily midnight UTC).
@@ -126,8 +133,8 @@ model Competition {
   lastScheduledUpdateAt DateTime?
 
   // Relations
-  participants     CompetitionParticipant[]
-  snapshots        CompetitionSnapshot[]
+  participants CompetitionParticipant[]
+  snapshots    CompetitionSnapshot[]
 
   // Metadata
   creatorDiscordId String
@@ -143,7 +150,7 @@ model Competition {
 }
 
 model CompetitionParticipant {
-  id            Int         @id @default(autoincrement())
+  id            Int       @id @default(autoincrement())
   competitionId Int
   playerId      Int
   status        String // INVITED, JOINED, LEFT
@@ -153,24 +160,24 @@ model CompetitionParticipant {
   leftAt        DateTime? // When left (nullable - null if still participating)
 
   // Relations
-  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
-  player        Player      @relation(fields: [playerId], references: [id])
+  competition Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  player      Player      @relation(fields: [playerId], references: [id])
 
   @@unique([competitionId, playerId])
   @@index([competitionId, status])
 }
 
 model CompetitionSnapshot {
-  id           Int         @id @default(autoincrement())
+  id            Int      @id @default(autoincrement())
   competitionId Int
-  playerId     Int
-  snapshotType String // START, END
-  snapshotData String // JSON stored as string
-  snapshotTime DateTime
+  playerId      Int
+  snapshotType  String // START, END
+  snapshotData  String // JSON stored as string
+  snapshotTime  DateTime
 
   // Relations
-  competition  Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
-  player       Player      @relation(fields: [playerId], references: [id])
+  competition Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  player      Player      @relation(fields: [playerId], references: [id])
 
   @@unique([competitionId, playerId, snapshotType])
 }
@@ -187,18 +194,18 @@ model ServerPermission {
 }
 
 model GuildPermissionError {
-  id                    Int      @id @default(autoincrement())
+  id                    Int       @id @default(autoincrement())
   serverId              String
   channelId             String
   errorType             String // Type of permission error
   errorReason           String? // Detailed reason
   firstOccurrence       DateTime // When this error first occurred
   lastOccurrence        DateTime // Most recent occurrence
-  consecutiveErrorCount Int      @default(1) // Number of consecutive errors
+  consecutiveErrorCount Int       @default(1) // Number of consecutive errors
   lastSuccessfulSend    DateTime? // Last time a message was successfully sent to this server
-  ownerNotified         Boolean  @default(false) // Whether owner was notified about abandonment
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  ownerNotified         Boolean   @default(false) // Whether owner was notified about abandonment
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   @@unique([serverId, channelId])
   @@index([serverId, consecutiveErrorCount])
@@ -260,18 +267,18 @@ model DesktopClient {
 }
 
 model SoundPack {
-  id          Int       @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   userId      String
-  user        User      @relation(fields: [userId], references: [discordId], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [discordId], onDelete: Cascade)
   name        String
-  version     String    @default("1.0.0")
+  version     String   @default("1.0.0")
   description String?
-  isPublic    Boolean   @default(false) // Whether other users can use this pack
+  isPublic    Boolean  @default(false) // Whether other users can use this pack
   settings    String // JSON: { masterVolume: number, normalization: boolean }
   defaults    String // JSON: { gameStart?: SoundPool, kill?: SoundPool, ... }
   rules       String // JSON: SoundRule[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   desktopClients DesktopClient[]
 
