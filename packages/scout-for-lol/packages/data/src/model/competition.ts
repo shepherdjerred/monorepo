@@ -6,7 +6,7 @@ import type {
   DiscordGuildId,
 } from "#src/model/discord.ts";
 import { RankSchema } from "#src/model/rank.ts";
-import type { SeasonData, SeasonId } from "#src/seasons.ts";
+import type { SeasonId } from "#src/seasons.ts";
 
 /**
  * Competition database row shape — mirrors backend/prisma/schema.prisma.
@@ -344,9 +344,19 @@ export function participantStatusToString(status: ParticipantStatus): string {
  * Backend queries that flow through `parseCompetition()` must `include: { season: true }`
  * so the dates can be resolved relationally for season-based competitions.
  * `competitionWithSeasonInclude` in the backend keeps this consistent.
+ *
+ * The `season.id` is a plain `string`, not the branded `SeasonId` from
+ * `seasons.ts`, because Prisma's generated relation types don't propagate
+ * the brand-types post-processing through join shapes. The dates are what
+ * `parseCompetition` reads anyway.
  */
 export type CompetitionWithSeason = Competition & {
-  season: SeasonData | null;
+  season: {
+    id: string;
+    displayName: string;
+    startDate: Date;
+    endDate: Date;
+  } | null;
 };
 
 /**

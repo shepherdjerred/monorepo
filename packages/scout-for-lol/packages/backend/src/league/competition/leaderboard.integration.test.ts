@@ -516,6 +516,7 @@ describe("calculateLeaderboard - HIGHEST_RANK Criteria", () => {
 
     const updatedCompetition = await prisma.competition.findUnique({
       where: { id: competition.id },
+      include: { season: true },
     });
     if (!updatedCompetition) {
       throw new Error("Competition not found");
