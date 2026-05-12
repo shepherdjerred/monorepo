@@ -37,6 +37,7 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runHomelabAuditWorkflow",
   "runScoutDataDragonVersionCheck",
   "runScoutDataDragonWeeklyRefresh",
+  "runScoutSeasonRefreshWorkflow",
   "runZfsMaintenanceWorkflow",
   "runBugsinkHousekeepingWorkflow",
   "runVeleroOrphanAuditWorkflow",
