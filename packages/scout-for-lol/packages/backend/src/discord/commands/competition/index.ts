@@ -141,6 +141,36 @@ export const competitionCommand = new SlashCommandBuilder()
             "Add all server members with linked accounts (admin only)",
           )
           .setRequired(false),
+      )
+      .addStringOption((option) =>
+        option
+          .setName("update-cron")
+          .setDescription(
+            "Leaderboard post schedule (CRON, UTC, min 1/day). Default: 0 0 * * * (midnight UTC).",
+          )
+          .setRequired(false)
+          .setAutocomplete(true),
+      ),
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("update-schedule")
+      .setDescription("Update the leaderboard post schedule for a competition")
+      .addIntegerOption((option) =>
+        option
+          .setName("competition-id")
+          .setDescription("ID of the competition")
+          .setRequired(true)
+          .setMinValue(1),
+      )
+      .addStringOption((option) =>
+        option
+          .setName("update-cron")
+          .setDescription(
+            "New leaderboard post schedule (CRON, UTC, min 1/day)",
+          )
+          .setRequired(true)
+          .setAutocomplete(true),
       ),
   )
   .addSubcommand((subcommand) =>

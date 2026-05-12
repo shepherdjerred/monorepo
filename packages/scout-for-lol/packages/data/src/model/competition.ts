@@ -47,6 +47,9 @@ export type Competition = {
   seasonId: SeasonId | null;
   startProcessedAt: Date | null;
   endProcessedAt: Date | null;
+  updateCronExpression: string | null;
+  nextScheduledUpdateAt: Date | null;
+  lastScheduledUpdateAt: Date | null;
   creatorDiscordId: DiscordAccountId;
   createdTime: Date;
   updatedTime: Date;

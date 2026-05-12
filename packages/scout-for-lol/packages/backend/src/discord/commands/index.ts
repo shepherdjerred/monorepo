@@ -14,6 +14,8 @@ const logger = createLogger("discord-commands");
 import { executeHelp } from "#src/discord/commands/help.ts";
 import { executeCompetitionCreate } from "#src/discord/commands/competition/create.ts";
 import { executeCompetitionEdit } from "#src/discord/commands/competition/edit.ts";
+import { executeCompetitionUpdateSchedule } from "#src/discord/commands/competition/update-schedule.ts";
+import { CronPresets } from "@scout-for-lol/data/model/competition-cron.ts";
 import { executeCompetitionCancel } from "#src/discord/commands/competition/cancel.ts";
 import { executeGrantPermission } from "#src/discord/commands/competition/grant-permission.ts";
 import { executeCompetitionJoin } from "#src/discord/commands/competition/join.ts";
@@ -76,6 +78,28 @@ export function handleCommands(client: Client) {
               name: champion.name,
               value: champion.id.toString(), // Store ID as string value
             })),
+          );
+          return;
+        }
+
+        // CRON preset suggestions for /competition create + update-schedule.
+        // Users can still type a custom value; the value is validated on submit.
+        if (
+          commandName === "competition" &&
+          focusedOption.name === "update-cron"
+        ) {
+          const query = focusedOption.value.toLowerCase();
+          const matchingPresets = query
+            ? CronPresets.filter(
+                (preset) =>
+                  preset.label.toLowerCase().includes(query) ||
+                  preset.value.includes(query),
+              )
+            : CronPresets;
+          await interaction.respond(
+            matchingPresets
+              .slice(0, 25)
+              .map((preset) => ({ name: preset.label, value: preset.value })),
           );
           return;
         }
@@ -148,6 +172,9 @@ export function handleCommands(client: Client) {
             await match(subcommandName)
               .with("create", async () => executeCompetitionCreate(interaction))
               .with("edit", async () => executeCompetitionEdit(interaction))
+              .with("update-schedule", async () =>
+                executeCompetitionUpdateSchedule(interaction),
+              )
               .with("cancel", async () => executeCompetitionCancel(interaction))
               .with("grant-permission", async () =>
                 executeGrantPermission(interaction),

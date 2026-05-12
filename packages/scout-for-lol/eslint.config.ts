@@ -146,10 +146,12 @@ const config = [
     ],
     rules: { "custom-rules/no-re-exports": "off" },
   },
-  // Large test file (1673 lines, test files have 1500 line limit)
+  // Large test file (1723 lines, test files have 1500 line limit).
+  // Grew past the previous 1700 override after the Season-table and
+  // per-competition CRON feature merges added new mocks/test cases.
   {
     files: ["packages/data/src/model/competition.test.ts"],
-    rules: { "max-lines": ["error", { max: 1700 }] },
+    rules: { "max-lines": ["error", { max: 1800 }] },
   },
   // Test fixtures contain long hash-like strings (PUUIDs, match IDs)
   {

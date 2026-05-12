@@ -57,6 +57,7 @@
         "@sentry/bun": "^10.0.0",
         "@trpc/server": "11",
         "cron": "^4.1.4",
+        "cron-parser": "^5.5.0",
         "date-fns": "^4.1.0",
         "discord.js": "^14.26.4",
         "dotenv": "^17.0.1",
@@ -89,6 +90,7 @@
       "name": "@scout-for-lol/data",
       "version": "0.1.0",
       "dependencies": {
+        "cron-parser": "^5.5.0",
         "date-fns": "^4.1.0",
         "remeda": "^2.21.2",
         "ts-pattern": "^5.7.0",
@@ -1618,6 +1620,8 @@
     "core-js-compat": ["core-js-compat@3.49.0", "", { "dependencies": { "browserslist": "^4.28.1" } }, "sha512-VQXt1jr9cBz03b331DFDCCP90b3fanciLkgiOoy8SBHy06gNf+vQ1A3WFLqG7I8TipYIKeYK9wxd0tUrvHcOZA=="],
 
     "cron": ["cron@4.4.0", "", { "dependencies": { "@types/luxon": "~3.7.0", "luxon": "~3.7.0" } }, "sha512-fkdfq+b+AHI4cKdhZlppHveI/mgz2qpiYxcm+t5E5TsxX7QrLS1VE0+7GENEk9z0EeGPcpSciGv6ez24duWhwQ=="],
+
+    "cron-parser": ["cron-parser@5.5.0", "", { "dependencies": { "luxon": "^3.7.1" } }, "sha512-oML4lKUXxizYswqmxuOCpgFS8BNUJpIu6k/2HVHyaL8Ynnf3wdf9tkns0yRdJLSIjkJ+b0DXHMZEHGpMwjnPww=="],
 
     "cross-spawn": ["cross-spawn@7.0.6", "", { "dependencies": { "path-key": "^3.1.0", "shebang-command": "^2.0.0", "which": "^2.0.1" } }, "sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA=="],
 
@@ -3201,15 +3205,15 @@
 
     "@rollup/pluginutils/estree-walker": ["estree-walker@2.0.2", "", {}, "sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w=="],
 
-    "@scout-for-lol/backend/@scout-for-lol/data": ["@scout-for-lol/data@file:packages/data", { "dependencies": { "date-fns": "^4.1.0", "remeda": "^2.21.2", "ts-pattern": "^5.7.0", "zod": "^4.4.3" }, "devDependencies": { "bun-types": "latest", "eslint": "^10.3.0", "twisted": "^1.73.0", "typescript": "^6.0.3" } }],
+    "@scout-for-lol/backend/@scout-for-lol/data": ["@scout-for-lol/data@file:packages/data", { "dependencies": { "cron-parser": "^5.5.0", "date-fns": "^4.1.0", "remeda": "^2.21.2", "ts-pattern": "^5.7.0", "zod": "^4.4.3" }, "devDependencies": { "bun-types": "latest", "eslint": "^10.3.0", "twisted": "^1.73.0", "typescript": "^6.0.3" } }],
 
-    "@scout-for-lol/desktop/@scout-for-lol/data": ["@scout-for-lol/data@file:packages/data", { "dependencies": { "date-fns": "^4.1.0", "remeda": "^2.21.2", "ts-pattern": "^5.7.0", "zod": "^4.4.3" }, "devDependencies": { "bun-types": "latest", "eslint": "^10.3.0", "twisted": "^1.73.0", "typescript": "^6.0.3" } }],
+    "@scout-for-lol/desktop/@scout-for-lol/data": ["@scout-for-lol/data@file:packages/data", { "dependencies": { "cron-parser": "^5.5.0", "date-fns": "^4.1.0", "remeda": "^2.21.2", "ts-pattern": "^5.7.0", "zod": "^4.4.3" }, "devDependencies": { "bun-types": "latest", "eslint": "^10.3.0", "twisted": "^1.73.0", "typescript": "^6.0.3" } }],
 
-    "@scout-for-lol/frontend/@scout-for-lol/data": ["@scout-for-lol/data@file:packages/data", { "dependencies": { "date-fns": "^4.1.0", "remeda": "^2.21.2", "ts-pattern": "^5.7.0", "zod": "^4.4.3" }, "devDependencies": { "bun-types": "latest", "eslint": "^10.3.0", "twisted": "^1.73.0", "typescript": "^6.0.3" } }],
+    "@scout-for-lol/frontend/@scout-for-lol/data": ["@scout-for-lol/data@file:packages/data", { "dependencies": { "cron-parser": "^5.5.0", "date-fns": "^4.1.0", "remeda": "^2.21.2", "ts-pattern": "^5.7.0", "zod": "^4.4.3" }, "devDependencies": { "bun-types": "latest", "eslint": "^10.3.0", "twisted": "^1.73.0", "typescript": "^6.0.3" } }],
 
-    "@scout-for-lol/report/@scout-for-lol/data": ["@scout-for-lol/data@file:packages/data", { "dependencies": { "date-fns": "^4.1.0", "remeda": "^2.21.2", "ts-pattern": "^5.7.0", "zod": "^4.4.3" }, "devDependencies": { "bun-types": "latest", "eslint": "^10.3.0", "twisted": "^1.73.0", "typescript": "^6.0.3" } }],
+    "@scout-for-lol/report/@scout-for-lol/data": ["@scout-for-lol/data@file:packages/data", { "dependencies": { "cron-parser": "^5.5.0", "date-fns": "^4.1.0", "remeda": "^2.21.2", "ts-pattern": "^5.7.0", "zod": "^4.4.3" }, "devDependencies": { "bun-types": "latest", "eslint": "^10.3.0", "twisted": "^1.73.0", "typescript": "^6.0.3" } }],
 
-    "@scout-for-lol/ui/@scout-for-lol/data": ["@scout-for-lol/data@file:packages/data", { "dependencies": { "date-fns": "^4.1.0", "remeda": "^2.21.2", "ts-pattern": "^5.7.0", "zod": "^4.4.3" }, "devDependencies": { "bun-types": "latest", "eslint": "^10.3.0", "twisted": "^1.73.0", "typescript": "^6.0.3" } }],
+    "@scout-for-lol/ui/@scout-for-lol/data": ["@scout-for-lol/data@file:packages/data", { "dependencies": { "cron-parser": "^5.5.0", "date-fns": "^4.1.0", "remeda": "^2.21.2", "ts-pattern": "^5.7.0", "zod": "^4.4.3" }, "devDependencies": { "bun-types": "latest", "eslint": "^10.3.0", "twisted": "^1.73.0", "typescript": "^6.0.3" } }],
 
     "@sinonjs/samsam/type-detect": ["type-detect@4.1.0", "", {}, "sha512-Acylog8/luQ8L7il+geoSxhEkazvkslg7PSNKOX59mbB9cOveP5aq9h74Y7YU8yDpJwetzQQrfIwtf4Wp4LKcw=="],
 
