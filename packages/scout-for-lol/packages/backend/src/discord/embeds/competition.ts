@@ -11,6 +11,12 @@ import {
   getMedalEmoji,
 } from "#src/discord/embeds/competition-format-helpers.ts";
 
+function formatLeaderboardPlayerName(entry: RankedLeaderboardEntry): string {
+  return entry.metadata?.["participantStatus"] === "LEFT"
+    ? `${entry.playerName} (left)`
+    : entry.playerName;
+}
+
 // ============================================================================
 // Main Embed Generation Functions
 // ============================================================================
@@ -90,7 +96,8 @@ export function generateLeaderboardEmbed(
           viewingUserId !== undefined &&
           viewingUserId.length > 0 &&
           entry.discordId === viewingUserId;
-        const baseText = `${medal} **${entry.rank.toString()}.** ${entry.playerName} - ${score}`;
+        const playerName = formatLeaderboardPlayerName(entry);
+        const baseText = `${medal} **${entry.rank.toString()}.** ${playerName} - ${score}`;
         return isViewingUser ? `${baseText} 👤` : baseText;
       })
       .join("\n");
@@ -121,9 +128,10 @@ export function generateLeaderboardEmbed(
         competition.criteria,
         userEntry.metadata,
       );
+      const playerName = formatLeaderboardPlayerName(userEntry);
       embed.addFields({
         name: "Your Position",
-        value: `**${userEntry.rank.toString()}.** ${userEntry.playerName} - ${score} 👤`,
+        value: `**${userEntry.rank.toString()}.** ${playerName} - ${score} 👤`,
         inline: false,
       });
     }

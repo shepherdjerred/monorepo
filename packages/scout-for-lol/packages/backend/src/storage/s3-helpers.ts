@@ -18,9 +18,9 @@ function generateS3Key(
   matchId: MatchId,
   assetType: string,
   extension: string,
+  keyDate: Date,
 ): string {
-  const now = new Date();
-  const dateStr = format(now, "yyyy/MM/dd");
+  const dateStr = format(keyDate, "yyyy/MM/dd");
 
   return `games/${dateStr}/${matchId}/${assetType}.${extension}`;
 }
@@ -37,6 +37,7 @@ type SaveToS3Config = {
   errorContext: string;
   returnUrl?: boolean;
   additionalLogDetails?: Record<string, unknown>;
+  keyDate?: Date;
 };
 
 /**
@@ -57,6 +58,7 @@ export async function saveToS3(
     errorContext,
     returnUrl,
     additionalLogDetails,
+    keyDate,
   } = config;
   const bucket = configuration.s3BucketName;
 
@@ -71,7 +73,12 @@ export async function saveToS3(
 
   try {
     const client = createS3Client();
-    const key = generateS3Key(matchId, assetType, extension);
+    const key = generateS3Key(
+      matchId,
+      assetType,
+      extension,
+      keyDate ?? new Date(),
+    );
     const StringSchema = z.string();
     const BytesSchema = z.instanceof(Uint8Array);
 

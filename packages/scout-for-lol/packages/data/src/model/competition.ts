@@ -50,6 +50,10 @@ export type Competition = {
   updateCronExpression: string | null;
   nextScheduledUpdateAt: Date | null;
   lastScheduledUpdateAt: Date | null;
+  startNotifiedAt: Date | null;
+  endNotifiedAt: Date | null;
+  startNotificationMessageId: string | null;
+  endNotificationMessageId: string | null;
   creatorDiscordId: DiscordAccountId;
   createdTime: Date;
   updatedTime: Date;

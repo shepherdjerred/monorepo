@@ -84,12 +84,25 @@ function matchIncludesParticipant(match: RawMatch, puuids: string[]): boolean {
   return match.metadata.participants.some((puuid) => puuids.includes(puuid));
 }
 
+function matchIsWithinDateRange(
+  match: RawMatch,
+  startDate: Date,
+  endDate: Date,
+): boolean {
+  const gameCreation = match.info.gameCreation;
+  return (
+    gameCreation >= startDate.getTime() && gameCreation <= endDate.getTime()
+  );
+}
+
 /**
  * Process match download results and filter by participant PUUIDs
  */
 function processMatchResults(
   results: PromiseSettledResult<{ key: string; match: RawMatch | null }>[],
   puuids: string[],
+  startDate: Date,
+  endDate: Date,
 ): RawMatch[] {
   const matches: RawMatch[] = [];
   for (const result of results) {
@@ -99,6 +112,13 @@ function processMatchResults(
 
     const { match } = result.value;
     if (!matchIncludesParticipant(match, puuids)) {
+      continue;
+    }
+
+    if (!matchIsWithinDateRange(match, startDate, endDate)) {
+      logger.debug(
+        `[S3Query] Skipping ${match.metadata.matchId}: gameCreation ${new Date(match.info.gameCreation).toISOString()} outside requested range`,
+      );
       continue;
     }
 
@@ -219,6 +239,39 @@ async function getMatchFromS3(
   return null;
 }
 
+async function listMatchJsonKeysForPrefix(
+  client: S3Client,
+  bucket: string,
+  prefix: string,
+): Promise<string[]> {
+  const keys: string[] = [];
+  let continuationToken: string | undefined;
+
+  do {
+    const listCommand =
+      continuationToken === undefined
+        ? new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix })
+        : new ListObjectsV2Command({
+            Bucket: bucket,
+            Prefix: prefix,
+            ContinuationToken: continuationToken,
+          });
+
+    const response = await client.send(listCommand, {
+      abortSignal: AbortSignal.timeout(S3_REQUEST_TIMEOUT_MS),
+    });
+
+    keys.push(
+      ...(response.Contents ?? []).flatMap((obj) =>
+        obj.Key?.endsWith("/match.json") === true ? [obj.Key] : [],
+      ),
+    );
+    continuationToken = response.NextContinuationToken;
+  } while (continuationToken !== undefined);
+
+  return keys;
+}
+
 /**
  * Query matches from S3 within a date range, filtered by participant PUUIDs
  *
@@ -273,28 +326,16 @@ export async function queryMatchesByDateRange(
 
     for (const prefix of batch) {
       try {
-        const listCommand = new ListObjectsV2Command({
-          Bucket: bucket,
-          Prefix: prefix,
-        });
+        const matchJsonKeys = await listMatchJsonKeysForPrefix(
+          client,
+          bucket,
+          prefix,
+        );
 
-        const response = await client.send(listCommand, {
-          abortSignal: AbortSignal.timeout(S3_REQUEST_TIMEOUT_MS),
-        });
-
-        if (!response.Contents || response.Contents.length === 0) {
+        if (matchJsonKeys.length === 0) {
           logger.info(`[S3Query] No objects found for prefix: ${prefix}`);
           continue;
         }
-
-        logger.info(
-          `[S3Query] Found ${response.Contents.length.toString()} object(s) in ${prefix}`,
-        );
-
-        // Filter for only match.json files (games/{date}/{matchId}/match.json)
-        const matchJsonKeys = response.Contents.flatMap((obj) =>
-          obj.Key?.endsWith("/match.json") === true ? [obj.Key] : [],
-        ).slice(0, 1000); // Limit to prevent memory issues
 
         logger.info(
           `[S3Query] Found ${matchJsonKeys.length.toString()} match.json file(s) in ${prefix}`,
@@ -326,7 +367,12 @@ export async function queryMatchesByDateRange(
           });
 
           const results = await Promise.allSettled(matchPromises);
-          const batchMatches = processMatchResults(results, puuids);
+          const batchMatches = processMatchResults(
+            results,
+            puuids,
+            startDate,
+            endDate,
+          );
           matches.push(...batchMatches);
           matchedObjects += batchMatches.length;
         }

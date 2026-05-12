@@ -8,7 +8,6 @@ import {
   type SnapshotType,
   type WinsSnapshotData,
 } from "@scout-for-lol/data/index.ts";
-import { getParticipants } from "#src/database/competition/participants.ts";
 import { fetchSnapshotData } from "#src/league/competition/leaderboard.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -199,7 +198,7 @@ export async function getSnapshot(
 // ============================================================================
 
 /**
- * Create snapshots for all JOINED participants in a competition
+ * Create snapshots for every player who has ever joined a competition
  *
  * @param prisma Prisma client instance
  * @param competitionId Competition ID
@@ -219,13 +218,14 @@ export async function createSnapshotsForAllParticipants(
     `[Snapshots] Creating ${snapshotType} snapshots for competition ${competitionId.toString()}`,
   );
 
-  // Get all JOINED participants
-  const participants = await getParticipants(
-    prisma,
-    competitionId,
-    "JOINED",
-    true,
-  );
+  const participants = await prisma.competitionParticipant.findMany({
+    where: {
+      competitionId,
+      joinedAt: { not: null },
+    },
+    include: { player: true },
+    orderBy: { joinedAt: "asc" },
+  });
 
   logger.info(
     `[Snapshots] Found ${participants.length.toString()} participants`,

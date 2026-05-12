@@ -114,6 +114,8 @@ function main() {
     });
   }
 
+  instantiatePayloadReferences(sourceFile);
+
   // Debug: Check if file was actually modified
   const wasModified =
     sourceFile.getImportDeclarations().length > 0 || transformCount > 0;
@@ -133,6 +135,52 @@ function main() {
   logger.info(`✅ Transformed ${transformCount.toString()} properties`);
   logger.info(`✅ Added imports: ${[...BRANDED_TYPES_TO_IMPORT].join(", ")}`);
   logger.info("🎉 Prisma types successfully branded!");
+}
+
+function instantiatePayloadReferences(
+  sourceFile: ReturnType<Project["addSourceFileAtPath"]>,
+): void {
+  const modelNames = Object.keys(MODEL_ID_MAP)
+    .concat([
+      "MatchRankHistory",
+      "User",
+      "GuildInstall",
+      "BotState",
+      "ActiveGame",
+      "MatchAiAttempt",
+    ])
+    .toSorted((left, right) => right.length - left.length);
+  const payloadNames = modelNames
+    .map((modelName) => String.raw`\$${modelName}Payload`)
+    .join("|");
+
+  const fullText = sourceFile.getFullText();
+  const transformedText = fullText
+    .replace(
+      new RegExp(
+        String.raw`\$Result\.DefaultSelection<Prisma\.(${payloadNames})>`,
+        "g",
+      ),
+      "$Result.DefaultSelection<Prisma.$1<$Extensions.DefaultArgs>>",
+    )
+    .replace(
+      new RegExp(
+        String.raw`\$Result\.GetResult<Prisma\.(${payloadNames}),`,
+        "g",
+      ),
+      "$Result.GetResult<Prisma.$1<ExtArgs>,",
+    )
+    .replace(
+      new RegExp(
+        String.raw`\$Utils\.PayloadToResult<Prisma\.(${payloadNames})>`,
+        "g",
+      ),
+      "$Utils.PayloadToResult<Prisma.$1<ExtArgs>>",
+    );
+
+  if (transformedText !== fullText) {
+    sourceFile.replaceWithText(transformedText);
+  }
 }
 
 function transformFieldTypeInContent(

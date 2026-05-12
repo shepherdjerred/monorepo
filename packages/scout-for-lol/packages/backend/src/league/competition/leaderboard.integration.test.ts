@@ -257,7 +257,6 @@ describe("calculateLeaderboard integration tests - Scoring", () => {
       },
     });
 
-    // Add participants
     await addParticipant({
       prisma,
       competitionId: competition.id,
@@ -282,148 +281,6 @@ describe("calculateLeaderboard integration tests - Scoring", () => {
     expect(leaderboard[0]?.rank).toBe(1);
     expect(leaderboard[1]?.score).toBe(0);
     expect(leaderboard[1]?.rank).toBe(1);
-  });
-});
-
-describe("calculateLeaderboard integration tests - Rank Scoring", () => {
-  test.skip("should handle HIGHEST_RANK criteria with START snapshots (active competition)", async () => {
-    // NOTE: This test is skipped because ACTIVE competitions now fetch current rank from Riot API
-    // in real-time, not from stored snapshots. This test would require mocking the Riot API.
-    // Create players
-    const player1 = await prisma.player.create({
-      data: {
-        discordId: testAccountId("100000000"),
-        alias: "Player1",
-        serverId: testGuildId("000000"),
-        creatorDiscordId: testAccountId("100000000"),
-        createdTime: new Date(),
-        updatedTime: new Date(),
-        accounts: {
-          create: [
-            {
-              puuid: testPuuid("1"),
-              alias: "Player1",
-              region: "AMERICA_NORTH",
-              serverId: testGuildId("000000"),
-              creatorDiscordId: testAccountId("100000000"),
-              createdTime: new Date(),
-              updatedTime: new Date(),
-            },
-          ],
-        },
-      },
-    });
-
-    const player2 = await prisma.player.create({
-      data: {
-        discordId: testAccountId("200000000"),
-        alias: "Player2",
-        serverId: testGuildId("000000"),
-        creatorDiscordId: testAccountId("200000000"),
-        createdTime: new Date(),
-        updatedTime: new Date(),
-        accounts: {
-          create: [
-            {
-              puuid: testPuuid("2"),
-              alias: "Player2",
-              region: "AMERICA_NORTH",
-              serverId: testGuildId("000000"),
-              creatorDiscordId: testAccountId("200000000"),
-              createdTime: new Date(),
-              updatedTime: new Date(),
-            },
-          ],
-        },
-      },
-    });
-
-    // Create ACTIVE competition with HIGHEST_RANK criteria
-    const dates = getActiveCompetitionDates();
-    const competition = await createCompetition(prisma, {
-      serverId: testGuildId("000000"),
-      ownerId: testAccountId("10000000100"),
-      channelId: testChannelId("1000000001"),
-      title: "Rank Competition",
-      description: "Test",
-      visibility: "OPEN",
-      maxParticipants: 10,
-      dates: {
-        type: "FIXED_DATES",
-        ...dates,
-      },
-      criteria: {
-        type: "HIGHEST_RANK",
-        queue: "SOLO",
-      },
-    });
-
-    // Add participants
-    await addParticipant({
-      prisma,
-      competitionId: competition.id,
-      playerId: player1.id,
-      status: "JOINED",
-    });
-    await addParticipant({
-      prisma,
-      competitionId: competition.id,
-      playerId: player2.id,
-      status: "JOINED",
-    });
-
-    // Create START snapshots with rank data (realistic for active competition)
-    const goldRank: Rank = {
-      tier: "gold",
-      division: 2,
-      lp: 50,
-      wins: 100,
-      losses: 80,
-    };
-
-    const silverRank: Rank = {
-      tier: "silver",
-      division: 1,
-      lp: 75,
-      wins: 80,
-      losses: 70,
-    };
-
-    // Player 1 starts at Gold
-    await prisma.competitionSnapshot.create({
-      data: {
-        competitionId: competition.id,
-        playerId: player1.id,
-        snapshotType: "START",
-        snapshotData: JSON.stringify({ solo: goldRank }),
-        snapshotTime: new Date(),
-      },
-    });
-
-    // Player 2 starts at Silver
-    await prisma.competitionSnapshot.create({
-      data: {
-        competitionId: competition.id,
-        playerId: player2.id,
-        snapshotType: "START",
-        snapshotData: JSON.stringify({ solo: silverRank }),
-        snapshotTime: new Date(),
-      },
-    });
-
-    const leaderboard = await calculateLeaderboard(prisma, competition);
-
-    expect(leaderboard).toHaveLength(2);
-
-    // Player 1 (Gold) should be rank 1
-    expect(leaderboard[0]?.playerId).toBe(PlayerIdSchema.parse(player1.id));
-    expect(leaderboard[0]?.rank).toBe(1);
-    expect(leaderboard[0]?.score).toMatchObject(goldRank);
-
-    // Player 2 (Silver) should be rank 2
-    expect(leaderboard[1]?.playerId).toBe(PlayerIdSchema.parse(player2.id));
-    expect(leaderboard[1]?.rank).toBe(2);
-    expect(leaderboard[1]?.score).toMatchObject(silverRank);
   });
 });
 
@@ -538,11 +395,7 @@ describe("calculateLeaderboard - HIGHEST_RANK Criteria", () => {
 });
 
 describe("calculateLeaderboard - MOST_RANK_CLIMB Criteria", () => {
-  test.skip("should handle MOST_RANK_CLIMB criteria with START and END snapshots", async () => {
-    // NOTE: This test is skipped because it's for an ACTIVE competition,
-    // which now fetches current rank from Riot API instead of using stored END snapshots.
-    // For ACTIVE competitions: START snapshot (stored) + CURRENT rank (from API)
-    // For ENDED competitions: START snapshot (stored) + END snapshot (stored)
+  test("should handle MOST_RANK_CLIMB criteria with START and END snapshots", async () => {
     // Create players
     const player1 = await prisma.player.create({
       data: {
@@ -593,7 +446,6 @@ describe("calculateLeaderboard - MOST_RANK_CLIMB Criteria", () => {
     });
 
     // Create competition with MOST_RANK_CLIMB criteria
-    const dates = getActiveCompetitionDates();
     const competition = await createCompetition(prisma, {
       serverId: testGuildId("000000"),
       ownerId: testAccountId("10000000100"),
@@ -604,7 +456,8 @@ describe("calculateLeaderboard - MOST_RANK_CLIMB Criteria", () => {
       maxParticipants: 10,
       dates: {
         type: "FIXED_DATES",
-        ...dates,
+        startDate: new Date("2025-01-01T00:00:00Z"),
+        endDate: new Date("2025-01-31T23:59:59Z"),
       },
       criteria: {
         type: "MOST_RANK_CLIMB",
@@ -612,18 +465,21 @@ describe("calculateLeaderboard - MOST_RANK_CLIMB Criteria", () => {
       },
     });
 
-    // Add participants
-    await addParticipant({
-      prisma,
-      competitionId: competition.id,
-      playerId: player1.id,
-      status: "JOINED",
+    await prisma.competitionParticipant.create({
+      data: {
+        competitionId: competition.id,
+        playerId: player1.id,
+        status: "JOINED",
+        joinedAt: new Date("2025-01-01T00:00:00Z"),
+      },
     });
-    await addParticipant({
-      prisma,
-      competitionId: competition.id,
-      playerId: player2.id,
-      status: "JOINED",
+    await prisma.competitionParticipant.create({
+      data: {
+        competitionId: competition.id,
+        playerId: player2.id,
+        status: "JOINED",
+        joinedAt: new Date("2025-01-01T00:00:00Z"),
+      },
     });
 
     // Player 1: Silver 1 50LP → Gold 2 50LP (climbed ~2 divisions = 400 LP)
@@ -699,8 +555,80 @@ describe("calculateLeaderboard - MOST_RANK_CLIMB Criteria", () => {
   });
 });
 
+describe("calculateLeaderboard integration tests - rank history", () => {
+  test("uses rank history for ended HIGHEST_RANK competitions without requiring END snapshots", async () => {
+    const serverId = testGuildId("000000");
+    const puuid = testPuuid("rh1");
+    const player = await createTestPlayer(
+      "400000000",
+      "RankHistoryPlayer",
+      serverId,
+      "rh1",
+    );
+    const competition = await createCompetition(prisma, {
+      serverId,
+      ownerId: testAccountId("10000000100"),
+      channelId: testChannelId("1000000001"),
+      title: "Highest Rank History",
+      description: "Test",
+      visibility: "OPEN",
+      maxParticipants: 10,
+      dates: {
+        type: "FIXED_DATES",
+        startDate: new Date("2025-01-01T00:00:00Z"),
+        endDate: new Date("2025-01-31T23:59:59Z"),
+      },
+      criteria: {
+        type: "HIGHEST_RANK",
+        queue: "SOLO",
+      },
+    });
+    await prisma.competitionParticipant.create({
+      data: {
+        competitionId: competition.id,
+        playerId: player.id,
+        status: "JOINED",
+        joinedAt: new Date("2025-01-01T00:00:00Z"),
+      },
+    });
+
+    const lowerRank: Rank = {
+      tier: "silver",
+      division: 4,
+      lp: 0,
+      wins: 10,
+      losses: 10,
+    };
+    const peakRank: Rank = {
+      tier: "gold",
+      division: 2,
+      lp: 55,
+      wins: 20,
+      losses: 15,
+    };
+    await prisma.matchRankHistory.create({
+      data: {
+        matchId: "NA1_999999999",
+        puuid,
+        queueType: "solo",
+        rankBefore: JSON.stringify(lowerRank),
+        rankAfter: JSON.stringify(peakRank),
+        matchGameCreationAt: new Date("2025-01-15T01:00:00Z"),
+        matchGameEndAt: new Date("2025-01-15T01:30:00Z"),
+        capturedAt: new Date("2025-01-15T01:35:00Z"),
+      },
+    });
+
+    const leaderboard = await calculateLeaderboard(prisma, competition);
+
+    expect(leaderboard).toHaveLength(1);
+    expect(leaderboard[0]?.playerId).toBe(player.id);
+    expect(leaderboard[0]?.score).toEqual(peakRank);
+  });
+});
+
 describe("calculateLeaderboard integration tests - Filters", () => {
-  test("should only include JOINED participants, not INVITED or LEFT", async () => {
+  test("should include ever-joined participants and exclude invited-never-joined players", async () => {
     // Create players
     const player1 = await prisma.player.create({
       data: {
@@ -806,7 +734,7 @@ describe("calculateLeaderboard integration tests - Filters", () => {
       competitionId: competition.id,
       playerId: player2.id,
       status: "INVITED",
-    }); // Should not appear
+    }); // Should not appear because joinedAt is null
     await addParticipant({
       prisma,
       competitionId: competition.id,
@@ -830,8 +758,20 @@ describe("calculateLeaderboard integration tests - Filters", () => {
 
     const leaderboard = await calculateLeaderboard(prisma, competition);
 
-    // Should only include player1 (JOINED)
-    expect(leaderboard).toHaveLength(1);
-    expect(leaderboard[0]?.playerId).toBe(PlayerIdSchema.parse(player1.id));
+    const playerIds = leaderboard
+      .map((entry) => entry.playerId)
+      .toSorted((left, right) => left - right);
+
+    expect(playerIds).toEqual(
+      [
+        PlayerIdSchema.parse(player1.id),
+        PlayerIdSchema.parse(player3.id),
+      ].toSorted((left, right) => left - right),
+    );
+    expect(
+      leaderboard.find((entry) => entry.playerId === player3.id)?.metadata?.[
+        "participantStatus"
+      ],
+    ).toBe("LEFT");
   });
 });

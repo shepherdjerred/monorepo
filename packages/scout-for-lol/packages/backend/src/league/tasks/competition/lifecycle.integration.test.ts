@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, test } from "bun:test";
+import { afterAll, beforeEach, describe, expect, mock, test } from "bun:test";
 import {
   createCompetition,
   type CreateCompetitionInput,
@@ -18,8 +18,35 @@ import {
 } from "#src/testing/test-ids.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 
+let sendShouldFail = false;
+let sentMessages: { channelId: string; content: string }[] = [];
+
+class ChannelSendError extends Error {
+  constructor(
+    message: string,
+    public readonly channelId: string,
+    public readonly permissionError: boolean,
+    public readonly originalError?: unknown,
+  ) {
+    super(message);
+    this.name = "ChannelSendError";
+  }
+}
+
+void mock.module("../../discord/channel.js", () => ({
+  send: (message: string, channelId: string) => {
+    if (sendShouldFail) {
+      return Promise.reject(new Error("temporary discord failure"));
+    }
+    sentMessages.push({ channelId, content: message });
+    return Promise.resolve({ id: "mock-message-id" });
+  },
+  ChannelSendError,
+}));
+
 // Create a test database
 const { prisma } = createTestDatabase("lifecycle-test");
+const { handleCompetitionStarts } = await import("./lifecycle.js");
 
 // Test helpers
 async function createTestCompetition(
@@ -95,6 +122,8 @@ async function addTestParticipant(
 }
 
 beforeEach(async () => {
+  sendShouldFail = false;
+  sentMessages = [];
   // Clean up before each test
   await prisma.competitionSnapshot.deleteMany();
   await prisma.competitionParticipant.deleteMany();
@@ -266,6 +295,49 @@ describe("Competition Lifecycle - Query for Starting", () => {
     });
 
     expect(competitionsToStart.length).toBe(0);
+  });
+});
+
+describe("Competition Lifecycle - Start Retry Semantics", () => {
+  test("does not mark start processed when start notification fails", async () => {
+    const criteria: CompetitionCriteria = {
+      type: "MOST_GAMES_PLAYED",
+      queue: "SOLO",
+    };
+    const now = new Date("2025-01-15T12:00:00Z");
+    const startDate = new Date("2025-01-15T10:00:00Z");
+    const endDate = new Date("2025-01-20T12:00:00Z");
+    const { competitionId } = await createTestCompetition(
+      criteria,
+      startDate,
+      endDate,
+    );
+    const { playerId } = await createTestPlayer(
+      "Player One",
+      testPuuid("life1"),
+      "AMERICA_NORTH",
+    );
+    await addTestParticipant(competitionId, playerId);
+
+    sendShouldFail = true;
+    await handleCompetitionStarts(prisma, now);
+
+    const afterFailure = await prisma.competition.findUniqueOrThrow({
+      where: { id: competitionId },
+    });
+    expect(afterFailure.startProcessedAt).toBeNull();
+    expect(afterFailure.startNotifiedAt).toBeNull();
+
+    sendShouldFail = false;
+    await handleCompetitionStarts(prisma, now);
+
+    const afterRetry = await prisma.competition.findUniqueOrThrow({
+      where: { id: competitionId },
+    });
+    expect(afterRetry.startProcessedAt).toEqual(now);
+    expect(afterRetry.startNotifiedAt).toEqual(now);
+    expect(afterRetry.startNotificationMessageId).toBe("mock-message-id");
+    expect(sentMessages).toHaveLength(1);
   });
 });
 

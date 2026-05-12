@@ -1,6 +1,6 @@
 import type { MatchId, LeaguePuuid, Rank } from "@scout-for-lol/data";
-import { RankSchema } from "@scout-for-lol/data";
-import { prisma } from "#src/database/index.ts";
+import { rankToLeaguePoints, RankSchema } from "@scout-for-lol/data";
+import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("rank-history");
@@ -14,8 +14,26 @@ export async function saveMatchRankHistory(params: {
   queueType: "solo" | "flex";
   rankBefore: Rank | undefined;
   rankAfter: Rank | undefined;
+  matchGameCreationTimestamp: number | undefined;
+  matchGameEndTimestamp: number | undefined;
 }): Promise<void> {
-  const { matchId, puuid, queueType, rankBefore, rankAfter } = params;
+  const {
+    matchId,
+    puuid,
+    queueType,
+    rankBefore,
+    rankAfter,
+    matchGameCreationTimestamp,
+    matchGameEndTimestamp,
+  } = params;
+  const matchGameCreationAt =
+    matchGameCreationTimestamp === undefined
+      ? null
+      : new Date(matchGameCreationTimestamp);
+  const matchGameEndAt =
+    matchGameEndTimestamp === undefined
+      ? null
+      : new Date(matchGameEndTimestamp);
 
   await prisma.matchRankHistory.upsert({
     where: {
@@ -27,10 +45,15 @@ export async function saveMatchRankHistory(params: {
       queueType,
       rankBefore: rankBefore ? JSON.stringify(rankBefore) : null,
       rankAfter: rankAfter ? JSON.stringify(rankAfter) : null,
+      matchGameCreationAt,
+      matchGameEndAt,
       capturedAt: new Date(),
     },
     update: {
+      rankBefore: rankBefore ? JSON.stringify(rankBefore) : null,
       rankAfter: rankAfter ? JSON.stringify(rankAfter) : null,
+      matchGameCreationAt,
+      matchGameEndAt,
       capturedAt: new Date(),
     },
   });
@@ -48,28 +71,91 @@ export async function getLatestRankBefore(
   queueType: "solo" | "flex",
   beforeTimestamp: number,
 ): Promise<Rank | undefined> {
+  const before = new Date(beforeTimestamp);
   const records = await prisma.matchRankHistory.findMany({
     where: {
       puuid,
       queueType,
-      capturedAt: {
-        lt: new Date(beforeTimestamp),
-      },
+      OR: [
+        { matchGameEndAt: { lt: before } },
+        { matchGameEndAt: null, capturedAt: { lt: before } },
+      ],
     },
-    orderBy: {
-      capturedAt: "desc",
-    },
-    take: 1,
+    orderBy: { capturedAt: "desc" },
+    take: 50,
   });
 
   if (records.length === 0) {
     return undefined;
   }
 
-  const record = records[0];
+  const record = records.toSorted((left, right) => {
+    const leftTime = (left.matchGameEndAt ?? left.capturedAt).getTime();
+    const rightTime = (right.matchGameEndAt ?? right.capturedAt).getTime();
+    return rightTime - leftTime;
+  })[0];
   return record?.rankAfter !== undefined &&
     record.rankAfter !== null &&
     record.rankAfter.length > 0
     ? RankSchema.parse(JSON.parse(record.rankAfter))
     : undefined;
+}
+
+function maxRank(
+  left: Rank | undefined,
+  right: Rank | undefined,
+): Rank | undefined {
+  if (left === undefined) {
+    return right;
+  }
+  if (right === undefined) {
+    return left;
+  }
+  return rankToLeaguePoints(right) > rankToLeaguePoints(left) ? right : left;
+}
+
+function parseStoredRank(serialized: string | null): Rank | undefined {
+  if (serialized === null || serialized.length === 0) {
+    return undefined;
+  }
+  return RankSchema.parse(JSON.parse(serialized));
+}
+
+export async function getHighestRankForPuuidsInWindow(params: {
+  prismaClient: ExtendedPrismaClient;
+  puuids: LeaguePuuid[];
+  queueType: "solo" | "flex";
+  startDate: Date;
+  endDate: Date;
+}): Promise<Rank | undefined> {
+  const { prismaClient, puuids, queueType, startDate, endDate } = params;
+  if (puuids.length === 0) {
+    return undefined;
+  }
+
+  const records = await prismaClient.matchRankHistory.findMany({
+    where: {
+      puuid: { in: puuids },
+      queueType,
+      OR: [
+        { matchGameEndAt: { gte: startDate, lte: endDate } },
+        { matchGameEndAt: null, capturedAt: { gte: startDate, lte: endDate } },
+      ],
+    },
+  });
+
+  let highestRank: Rank | undefined;
+  for (const record of records) {
+    highestRank = maxRank(highestRank, parseStoredRank(record.rankBefore));
+    highestRank = maxRank(highestRank, parseStoredRank(record.rankAfter));
+  }
+
+  return highestRank;
+}
+
+export function getHigherRank(
+  left: Rank | undefined,
+  right: Rank | undefined,
+): Rank | undefined {
+  return maxRank(left, right);
 }

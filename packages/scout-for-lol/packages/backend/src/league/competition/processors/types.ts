@@ -2,6 +2,7 @@ import type {
   AccountId,
   DiscordAccountId,
   LeaguePuuid,
+  ParticipantStatus,
   PlayerId,
   Rank,
   Region,
@@ -15,6 +16,8 @@ export type PlayerWithAccounts = {
   id: PlayerId;
   alias: string;
   discordId: DiscordAccountId | null;
+  participantStatus?: ParticipantStatus;
+  leftAt?: Date | null;
   accounts: {
     id: AccountId;
     alias: string;

@@ -10,7 +10,7 @@ const versions = {
   // renovate: datasource=helm registryUrl=https://kubernetes-sigs.github.io/node-feature-discovery/charts versioning=semver
   "node-feature-discovery": "0.18.3",
   // renovate: datasource=helm registryUrl=https://prometheus-community.github.io/helm-charts versioning=semver
-  "kube-prometheus-stack": "84.5.0",
+  "kube-prometheus-stack": "85.0.1",
   // renovate: datasource=helm registryUrl=https://prometheus-community.github.io/helm-charts versioning=semver
   "prometheus-adapter": "5.3.0",
   // renovate: datasource=helm registryUrl=https://prometheus-community.github.io/helm-charts versioning=semver
@@ -79,7 +79,7 @@ const versions = {
   "fuatakgun/eufy_security": "v8.2.4",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "linuxserver/syncthing":
-    "2.0.16@sha256:237fd79ce3f1e1cc9e80317024f65a396cb5b759e2a827ca80010b24fbe37659",
+    "2.1.0@sha256:50025b5b39c0c1b0ae28e2a40f1a17b28b1575a1249e6ffc0cc477b66914b2c7",
   // renovate: datasource=github-releases versioning=semver-coerced
   "dotdc/grafana-dashboards-kubernetes": "v3.0.6",
   // renovate: datasource=helm registryUrl=https://chartmuseum.github.io/charts versioning=semver
@@ -104,13 +104,13 @@ const versions = {
     "2.0.0-2370@sha256:bea9aa38162413497ad378fb293f6f5fc0ea718b8ac1607135bf3a346b2d1229",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
   "shepherdjerred/scout-for-lol/prod":
-    "2.0.0-2286@sha256:04c9761721e2d9e98e0366dae56a227e9402662427f7774f8f43389fda84d7fa",
+    "2.0.0-2379@sha256:fef56d2bf99166a7d7bd2494cbabeadea312b62bc4908841ea6c71d02e5eed3a",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
     "2.0.0-2370@sha256:bbeac477bf76dac547a87113747812c37909c60bf5e3fe2bd3440128787f60c9",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/starlight-karma-bot
   "shepherdjerred/starlight-karma-bot/prod":
-    "2.0.0-2286@sha256:d6d69dfbfbe0a4a3ae8750c8ffc77f4eff8efd19e85f06d274c701400a91b70b",
+    "2.0.0-2370@sha256:bbeac477bf76dac547a87113747812c37909c60bf5e3fe2bd3440128787f60c9",
   // not managed by renovate
   "shepherdjerred/birmel":
     "2.0.0-2370@sha256:29d12f8790211629216559ae491f58d7317b0cf40e7e334f242f5d031c8c4b23",
@@ -130,7 +130,7 @@ const versions = {
     "0.17.2@sha256:70df8358acb05a89bb9b9123278183d9b054851d65601498f5c42b1513cc878b",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "library/python":
-    "3.14-alpine@sha256:dd4d2bd5b53d9b25a51da13addf2be586beebd5387e289e798e4083d94ca837a",
+    "3.14-alpine@sha256:a3de013592ea520507c1f18d880592338bd21abfe706237e68ed4126e21b6900",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "bitnamilegacy/kubectl":
     "1.33.4@sha256:ed0b31a0508da84ee655c5c6e01bd3897fc56ad6cf69debb27fa1893a06d2246",
@@ -145,14 +145,14 @@ const versions = {
   "openebs/velero-plugin":
     "3.6.0@sha256:9ea3331d891e436a7239e37e68ca4c8888500cb122be7cdc9d8400f345555c76",
   // renovate: datasource=github-releases versioning=semver
-  "kubernetes/kubernetes": "v1.36.0",
+  "kubernetes/kubernetes": "v1.36.1",
   // renovate: datasource=custom.papermc versioning=semver
   paper: "26.1.2",
   // renovate: datasource=docker registryUrl=https://ghcr.io/recyclarr versioning=docker
   recyclarr:
     "8.6.0@sha256:3c38ceeb54438dd8327e4e65c9b48ba601a6d20fff833342d93c9b0bc4b1930b",
   // renovate: datasource=github-releases versioning=semver
-  "siderolabs/talos": "1.13.0",
+  "siderolabs/talos": "1.13.2",
   // renovate: datasource=helm registryUrl=https://opensource.zalando.com/postgres-operator/charts/postgres-operator versioning=semver
   "postgres-operator": "1.15.1",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
@@ -165,7 +165,7 @@ const versions = {
   "jsclayton/prometheus-plex-exporter":
     "main@sha256:18ef1b2197efbcb75bd7276380955760995f10a9fbe55106809a6fcff91c2940",
   // renovate: datasource=helm registryUrl=https://charts.bitnami.com/bitnami versioning=semver
-  redis: "25.5.2",
+  redis: "25.5.3",
   // renovate: datasource=helm registryUrl=https://seaweedfs.github.io/seaweedfs/helm versioning=semver
   seaweedfs: "4.23.0",
   // renovate: datasource=helm registryUrl=https://charts.bitnami.com/bitnami versioning=semver

@@ -15,7 +15,7 @@
   ],
   "devDependencies": {
     "@shepherdjerred/eslint-config": "file:../eslint-config",
-    "@typescript-eslint/utils": "^8.59.2",
+    "@typescript-eslint/utils": "^8.59.3",
     "jiti": "^2.7.0"
   },
   "dependencies": {}
