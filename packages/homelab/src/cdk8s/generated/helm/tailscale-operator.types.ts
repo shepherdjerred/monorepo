@@ -217,7 +217,7 @@ export type TailscaleoperatorHelmValuesApiServerProxyConfig = {
 
 export type TailscaleoperatorHelmValues = {
   /**
-   * Copyright (c) Tailscale Inc & AUTHORS
+   * Copyright (c) Tailscale Inc & contributors
    * Operator oauth credentials. If unset a Secret named operator-oauth must be
    * precreated or oauthSecretVolume needs to be adjusted. This block will be
    * overridden by oauthSecretVolume, if set.

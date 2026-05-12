@@ -1,4 +1,5 @@
 import { PrismaClient } from "#generated/prisma/client/index.js";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 import {
   type DiscordChannelId,
   type LeaguePuuid,
@@ -18,7 +19,11 @@ const logger = createLogger("database");
 
 logger.info("🗄️  Initializing Prisma database client");
 
-const basePrisma = new PrismaClient();
+const basePrisma = new PrismaClient({
+  adapter: new PrismaLibSql({
+    url: Bun.env["DATABASE_URL"] ?? "file:./db.sqlite",
+  }),
+});
 
 export const prisma = basePrisma.$extends({
   query: {

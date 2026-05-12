@@ -15,6 +15,7 @@ import {
   upsertSummaryComment,
   type OctokitForUpsert,
 } from "#lib/pr-summary-comment.ts";
+import { workflowExecutionContext } from "#activities/temporal-context.ts";
 import {
   SUMMARY_MARKER,
   buildSummarySystemBlocks,
@@ -142,8 +143,7 @@ function workflowFields(): Record<string, unknown> {
     const info = Context.current().info;
     return {
       workflow: info.workflowType,
-      workflowId: info.workflowExecution.workflowId,
-      runId: info.workflowExecution.runId,
+      ...workflowExecutionContext(info),
       activity: info.activityType,
       attempt: info.attempt,
     };

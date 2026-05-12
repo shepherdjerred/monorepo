@@ -1,6 +1,17 @@
 import { InteractionContextType, SlashCommandBuilder } from "discord.js";
 import { getSeasonChoices } from "@scout-for-lol/data";
 
+// Evaluated once at module load so a stale `SEASONS` list (every entry already
+// past `endDate`) fails fast instead of silently degrading the `season` option
+// to a free-text input — `.addChoices(...[])` is a no-op in discord.js.
+const seasonChoices = getSeasonChoices();
+if (seasonChoices.length === 0) {
+  throw new Error(
+    "Refusing to register /competition: no active LoL seasons defined. " +
+      "Update SEASONS in packages/scout-for-lol/packages/data/src/seasons.ts.",
+  );
+}
+
 /**
  * Main competition command with subcommands
  */
@@ -68,7 +79,7 @@ export const competitionCommand = new SlashCommandBuilder()
           .setName("season")
           .setDescription("Season (alternative to fixed dates)")
           .setRequired(false)
-          .addChoices(...getSeasonChoices()),
+          .addChoices(...seasonChoices),
       )
       // Criteria-specific options
       .addStringOption((option) =>
@@ -202,7 +213,7 @@ export const competitionCommand = new SlashCommandBuilder()
           .setName("season")
           .setDescription("New season (DRAFT only, alternative to dates)")
           .setRequired(false)
-          .addChoices(...getSeasonChoices()),
+          .addChoices(...seasonChoices),
       )
       // Criteria options (DRAFT only)
       .addStringOption((option) =>

@@ -43,6 +43,8 @@ describe("seasons", () => {
         "2025_SEASON_3_ACT_1",
         "2026_SEASON_1_ACT_1",
         "2026_SEASON_1_ACT_2",
+        "2026_SEASON_2_ACT_1",
+        "2026_SEASON_2_ACT_2",
       ] as const;
       for (const id of validIds) {
         const result = SeasonIdSchema.safeParse(id);
@@ -113,6 +115,12 @@ describe("seasons", () => {
   });
 
   describe("getSeasonChoices", () => {
+    test("should return at least one active season (guards against stale SEASONS data)", () => {
+      // Empty choices silently degrade /competition's season option to a
+      // free-text input in Discord; this test fails CI before that ships.
+      expect(getSeasonChoices().length).toBeGreaterThan(0);
+    });
+
     test("should return Discord choices for non-ended seasons", () => {
       const choices = getSeasonChoices();
       expect(choices).toBeArray();

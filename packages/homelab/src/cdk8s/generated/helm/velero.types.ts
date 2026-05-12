@@ -480,7 +480,7 @@ export type VeleroHelmValuesConfiguration = {
    * Parameters for the VolumeSnapshotLocation(s). Configure multiple by adding other element(s) to the volumeSnapshotLocation slice.
    * See https://velero.io/docs/v1.6/api-types/volumesnapshotlocation/
    *
-   * @default [{"name":null,"provider":"","bucket":"","caCert":null,"prefix":null,"default":false,"validationFrequency":null,"accessMode":"ReadWrite","credential":{"name":null,"key":null},"config":{},"annotations":{}}]
+   * @default [{"name":null,"provider":"","bucket":"","caCert":null,"prefix":null,"default":false,"validationFrequency":null,"backupSyncPeriod":null,"accessMode":"ReadWrite","credential":{"name":null,"key":null},"config":{},"annotations":{}}]
    */
   backupStorageLocation?: object[];
   /**

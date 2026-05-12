@@ -2831,9 +2831,7 @@ export type SeaweedfsHelmValuesWorker = {
    */
   adminServer?: string;
   /**
-   * Worker job types - comma-separated list
-   *
-   * @default "vacuum,volume_balance,erasure_coding"
+   * @default "all"
    */
   jobType?: string;
   /**

@@ -22,8 +22,8 @@
   },
   "devDependencies": {
     "@shepherdjerred/eslint-config": "file:../../../eslint-config",
-    "eslint": "^9.39.4",
-    "jiti": "^2.6.1",
-    "typescript": "^6"
+    "eslint": "^10.3.0",
+    "jiti": "^2.7.0",
+    "typescript": "^6.0.3"
   }
 }

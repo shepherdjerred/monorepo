@@ -1,4 +1,5 @@
 import { PrismaClient } from "#generated/prisma/client/index.js";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 
 /**
@@ -54,11 +55,9 @@ export function createTestDatabase(testName: string): {
   Bun.spawnSync(["cp", TEMPLATE_DB_PATH, testDbPath]);
 
   const basePrisma = new PrismaClient({
-    datasources: {
-      db: {
-        url: testDbUrl,
-      },
-    },
+    adapter: new PrismaLibSql({
+      url: testDbUrl,
+    }),
   });
 
   return {

@@ -10,6 +10,7 @@ import {
 import { getTraceContext } from "#observability/tracing.ts";
 import { parseClaudeResultMessage } from "#shared/claude-result.ts";
 import { redactSecrets } from "#shared/redact.ts";
+import { workflowExecutionContext } from "#activities/temporal-context.ts";
 import { buildReviewPrompt, buildSummaryPrompt } from "./pr-prompts.ts";
 
 const COMPONENT = "pr-agent";
@@ -48,8 +49,7 @@ function workflowFields(): Record<string, unknown> {
   const info = Context.current().info;
   return {
     workflow: info.workflowType,
-    workflowId: info.workflowExecution.workflowId,
-    runId: info.workflowExecution.runId,
+    ...workflowExecutionContext(info),
     activity: info.activityType,
     attempt: info.attempt,
   };
@@ -67,8 +67,7 @@ function captureWithContext(
     scope.setTag("component", COMPONENT);
     scope.setTag("kind", kind);
     scope.setContext("prAgent", {
-      workflowId: info.workflowExecution.workflowId,
-      runId: info.workflowExecution.runId,
+      ...workflowExecutionContext(info),
       attempt: info.attempt,
       kind,
       ...extra,

@@ -12,7 +12,7 @@ path = "src/main.rs"
 
 [dependencies]
 # Async runtime
-tokio = { version = "1", features = ["full"] }
+tokio = { version = "1.52.3", features = ["full"] }
 tokio-util = { version = "0.7", features = ["codec"] }
 
 # CLI
@@ -50,7 +50,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 tracing-appender = "0.2"
 
 # Error reporting
-sentry = { version = "0.47", default-features = false, features = ["backtrace", "contexts", "panic", "rustls", "reqwest", "tracing"] }
+sentry = { version = "0.48", default-features = false, features = ["backtrace", "contexts", "panic", "rustls", "reqwest", "tracing"] }
 
 # Utilities
 rand = "0.10"
@@ -71,7 +71,7 @@ http = "1"
 base64 = "0.22"
 
 # TLS (used by reqwest, rustls crypto provider)
-rustls = { version = "0.23.39", default-features = false, features = ["ring", "std", "tls12", "logging"] }
+rustls = { version = "0.23.40", default-features = false, features = ["ring", "std", "tls12", "logging"] }
 
 # Config files
 toml = "1"
@@ -84,24 +84,24 @@ time = "0.3"
 axum = { version = "0.8", features = ["ws"] }
 axum-extra = { version = "0.12", features = ["cookie", "multipart"] }
 tower = "0.5"
-tower-http = { version = "0.6", features = ["cors", "trace", "fs"] }
+tower-http = { version = "0.6.10", features = ["cors", "trace", "fs"] }
 hyper = { version = "1", features = ["full"] }
 hyper-util = { version = "0.1", features = ["tokio", "server"] }
 http-body-util = "0.1"
 
 # Authentication
-webauthn-rs = { version = "0.5", features = ["danger-allow-state-serialisation"] }
-webauthn-rs-proto = "0.5"
+webauthn-rs = { version = "0.5.5", features = ["danger-allow-state-serialisation"] }
+webauthn-rs-proto = "0.5.5"
 
 # HTTP client (for Claude.ai API)
-reqwest = { version = "0.13", features = ["json", "rustls"], default-features = false }
+reqwest = { version = "0.13.3", features = ["json", "rustls"], default-features = false }
 
 [dev-dependencies]
 tempfile = "3"
 proptest = "1.0"
 
 # HTTP client for integration tests
-reqwest = { version = "0.13", features = ["json", "blocking"] }
+reqwest = { version = "0.13.3", features = ["json", "blocking"] }
 tokio-test = "0.4"
 
 # Screenshot generation (TUI PNG rendering)

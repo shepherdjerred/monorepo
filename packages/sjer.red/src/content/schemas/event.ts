@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "astro/zod";
 
 export const LocationSchema = z.object({
   text: z.string(),

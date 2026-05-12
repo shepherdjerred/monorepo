@@ -14,16 +14,16 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.4.0",
     "@shepherdjerred/eslint-config": "file:../eslint-config",
     "@types/chrome": "^0.1.40",
-    "eslint": "^9.39.4",
-    "jiti": "^2.6.1",
+    "eslint": "^10.3.0",
+    "jiti": "^2.7.0",
     "typescript": "^6.0.3",
-    "vite": "^8.0.9"
+    "vite": "^8.0.11"
   },
   "repository": {
     "type": "git",

@@ -1652,6 +1652,13 @@ export type ArgocdHelmValuesDex = {
    */
   pdb?: ArgocdHelmValuesDexPdb;
   /**
+   * Dex Vertical Pod Autoscaler
+   * Ref: https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/
+   *
+   * @default {...} (5 keys)
+   */
+  vpa?: ArgocdHelmValuesDexVpa;
+  /**
    * Dex image
    *
    * @default {"repository":"ghcr.io/dexidp/dex","tag":"v2.45.1","imagePullPolicy":""}
@@ -2003,6 +2010,56 @@ export type ArgocdHelmValuesDexPdbAnnotations = {
    */
   [key: string]: unknown;
 };
+
+export type ArgocdHelmValuesDexVpa = {
+  /**
+   * Deploy a [VerticalPodAutoscaler](https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/) for the Dex server
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Labels to be added to Dex server vpa
+   *
+   * @default {}
+   */
+  labels?: ArgocdHelmValuesDexVpaLabels;
+  /**
+   * Annotations to be added to Dex server vpa
+   *
+   * @default {}
+   */
+  annotations?: ArgocdHelmValuesDexVpaAnnotations;
+  /**
+   * @default "Initial"
+   */
+  updateMode?: string;
+  /**
+   * Controls how VPA computes the recommended resources for Dex server container
+   * Ref: https://github.com/kubernetes/autoscaler/blob/master/vertical-pod-autoscaler/examples/hamster.yaml
+   *
+   * @default {}
+   */
+  containerPolicy?: ArgocdHelmValuesDexVpaContainerPolicy;
+};
+
+export type ArgocdHelmValuesDexVpaLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type ArgocdHelmValuesDexVpaAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type ArgocdHelmValuesDexVpaContainerPolicy = object;
 
 export type ArgocdHelmValuesDexImage = {
   /**
@@ -2380,6 +2437,13 @@ export type ArgocdHelmValuesRedis = {
    */
   pdb?: ArgocdHelmValuesRedisPdb;
   /**
+   * Redis Vertical Pod Autoscaler
+   * Ref: https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/
+   *
+   * @default {...} (5 keys)
+   */
+  vpa?: ArgocdHelmValuesRedisVpa;
+  /**
    * Redis image
    *
    * @default {"repository":"ecr-public.aws.com/docker/library/redis","tag":"8.2.3-alpine","imagePullPolicy":""}
@@ -2578,6 +2642,56 @@ export type ArgocdHelmValuesRedisPdbAnnotations = {
   [key: string]: unknown;
 };
 
+export type ArgocdHelmValuesRedisVpa = {
+  /**
+   * Deploy a [VerticalPodAutoscaler](https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/) for the Redis
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Labels to be added to Redis vpa
+   *
+   * @default {}
+   */
+  labels?: ArgocdHelmValuesRedisVpaLabels;
+  /**
+   * Annotations to be added to Redis vpa
+   *
+   * @default {}
+   */
+  annotations?: ArgocdHelmValuesRedisVpaAnnotations;
+  /**
+   * @default "Initial"
+   */
+  updateMode?: string;
+  /**
+   * Controls how VPA computes the recommended resources for Redis container
+   * Ref: https://github.com/kubernetes/autoscaler/blob/master/vertical-pod-autoscaler/examples/hamster.yaml
+   *
+   * @default {}
+   */
+  containerPolicy?: ArgocdHelmValuesRedisVpaContainerPolicy;
+};
+
+export type ArgocdHelmValuesRedisVpaLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type ArgocdHelmValuesRedisVpaAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type ArgocdHelmValuesRedisVpaContainerPolicy = object;
+
 export type ArgocdHelmValuesRedisImage = {
   /**
    * Redis repository
@@ -2611,7 +2725,7 @@ export type ArgocdHelmValuesRedisExporter = {
   /**
    * Prometheus redis-exporter image
    *
-   * @default {"repository":"ghcr.io/oliver006/redis_exporter","tag":"v1.82.0","imagePullPolicy":""}
+   * @default {"repository":"ghcr.io/oliver006/redis_exporter","tag":"v1.83.0","imagePullPolicy":""}
    */
   image?: ArgocdHelmValuesRedisExporterImage;
   /**
@@ -2649,7 +2763,7 @@ export type ArgocdHelmValuesRedisExporterImage = {
   /**
    * Tag to use for the redis-exporter
    *
-   * @default "v1.82.0"
+   * @default "v1.83.0"
    */
   tag?: string;
   /**
@@ -3698,6 +3812,13 @@ export type ArgocdHelmValuesServer = {
    */
   pdb?: ArgocdHelmValuesServerPdb;
   /**
+   * Argo CD server Vertical Pod Autoscaler
+   * Ref: https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/
+   *
+   * @default {...} (5 keys)
+   */
+  vpa?: ArgocdHelmValuesServerVpa;
+  /**
    * Argo CD server image
    *
    * @default {"repository":"","tag":"","imagePullPolicy":""}
@@ -4016,6 +4137,56 @@ export type ArgocdHelmValuesServerPdbAnnotations = {
   [key: string]: unknown;
 };
 
+export type ArgocdHelmValuesServerVpa = {
+  /**
+   * Deploy a [VerticalPodAutoscaler](https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/) for the Argo CD server
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Labels to be added to Argo CD server vpa
+   *
+   * @default {}
+   */
+  labels?: ArgocdHelmValuesServerVpaLabels;
+  /**
+   * Annotations to be added to Argo CD server vpa
+   *
+   * @default {}
+   */
+  annotations?: ArgocdHelmValuesServerVpaAnnotations;
+  /**
+   * @default "Initial"
+   */
+  updateMode?: string;
+  /**
+   * Controls how VPA computes the recommended resources for Argo CD server container
+   * Ref: https://github.com/kubernetes/autoscaler/blob/master/vertical-pod-autoscaler/examples/hamster.yaml
+   *
+   * @default {}
+   */
+  containerPolicy?: ArgocdHelmValuesServerVpaContainerPolicy;
+};
+
+export type ArgocdHelmValuesServerVpaLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type ArgocdHelmValuesServerVpaAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type ArgocdHelmValuesServerVpaContainerPolicy = object;
+
 export type ArgocdHelmValuesServerImage = {
   /**
    * defaults to global.image.repository
@@ -4051,7 +4222,7 @@ export type ArgocdHelmValuesServerExtensions = {
   /**
    * Argo CD extension installer image
    *
-   * @default {"repository":"quay.io/argoprojlabs/argocd-extension-installer","tag":"v0.0.9","imagePullPolicy":""}
+   * @default {"repository":"quay.io/argoprojlabs/argocd-extension-installer","tag":"v1.0.0","imagePullPolicy":""}
    */
   image?: ArgocdHelmValuesServerExtensionsImage;
   extensionList?: unknown[];
@@ -4079,7 +4250,7 @@ export type ArgocdHelmValuesServerExtensionsImage = {
   /**
    * Tag to use for extension installer image
    *
-   * @default "v0.0.9"
+   * @default "v1.0.0"
    */
   tag?: string;
   /**
@@ -5252,6 +5423,13 @@ export type ArgocdHelmValuesRepoServer = {
    */
   pdb?: ArgocdHelmValuesRepoServerPdb;
   /**
+   * Repo server Vertical Pod Autoscaler
+   * Ref: https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/
+   *
+   * @default {...} (5 keys)
+   */
+  vpa?: ArgocdHelmValuesRepoServerVpa;
+  /**
    * Repo server image
    *
    * @default {"repository":"","tag":"","imagePullPolicy":""}
@@ -5270,7 +5448,7 @@ export type ArgocdHelmValuesRepoServer = {
   extraContainers?: unknown[];
   initContainers?: unknown[];
   /**
-   * @default {"resources":{}}
+   * @default {"extraArgs":"--update=none","resources":{}}
    */
   copyutil?: ArgocdHelmValuesRepoServerCopyutil;
   volumeMounts?: unknown[];
@@ -5533,6 +5711,56 @@ export type ArgocdHelmValuesRepoServerPdbAnnotations = {
   [key: string]: unknown;
 };
 
+export type ArgocdHelmValuesRepoServerVpa = {
+  /**
+   * Deploy a [VerticalPodAutoscaler](https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/) for the repo server
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Labels to be added to repo server vpa
+   *
+   * @default {}
+   */
+  labels?: ArgocdHelmValuesRepoServerVpaLabels;
+  /**
+   * Annotations to be added to repo server vpa
+   *
+   * @default {}
+   */
+  annotations?: ArgocdHelmValuesRepoServerVpaAnnotations;
+  /**
+   * @default "Initial"
+   */
+  updateMode?: string;
+  /**
+   * Controls how VPA computes the recommended resources for repo server container
+   * Ref: https://github.com/kubernetes/autoscaler/blob/master/vertical-pod-autoscaler/examples/hamster.yaml
+   *
+   * @default {}
+   */
+  containerPolicy?: ArgocdHelmValuesRepoServerVpaContainerPolicy;
+};
+
+export type ArgocdHelmValuesRepoServerVpaLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type ArgocdHelmValuesRepoServerVpaAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type ArgocdHelmValuesRepoServerVpaContainerPolicy = object;
+
 export type ArgocdHelmValuesRepoServerImage = {
   /**
    * Repository to use for the repo server
@@ -5557,6 +5785,12 @@ export type ArgocdHelmValuesRepoServerImage = {
 export type ArgocdHelmValuesRepoServerLifecycle = object;
 
 export type ArgocdHelmValuesRepoServerCopyutil = {
+  /**
+   * Extra arguments for the cp command in the repo server copyutil initContainer
+   *
+   * @default "--update=none"
+   */
+  extraArgs?: string;
   /**
    * Resource limits and requests for the repo server copyutil initContainer
    *
@@ -6076,6 +6310,13 @@ export type ArgocdHelmValuesApplicationSet = {
    */
   pdb?: ArgocdHelmValuesApplicationSetPdb;
   /**
+   * ApplicationSet controller Vertical Pod Autoscaler
+   * Ref: https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/
+   *
+   * @default {...} (5 keys)
+   */
+  vpa?: ArgocdHelmValuesApplicationSetVpa;
+  /**
    * ApplicationSet controller image
    *
    * @default {"repository":"","tag":"","imagePullPolicy":""}
@@ -6228,8 +6469,14 @@ export type ArgocdHelmValuesApplicationSet = {
    */
   ingress?: ArgocdHelmValuesApplicationSetIngress;
   /**
-   * Enable ApplicationSet in any namespace feature
+   * Support depends on your Gateway controller implementation
+   * Some controllers may require additional configuration (e.g., BackendTLSPolicy for HTTPS backends)
+   * Refer to https://gateway-api.sigs.k8s.io/implementations/ for controller-specific details
    *
+   * @default {...} (6 keys)
+   */
+  httproute?: ArgocdHelmValuesApplicationSetHttproute;
+  /**
    * @default false
    */
   allowAnyNamespace?: boolean;
@@ -6290,6 +6537,56 @@ export type ArgocdHelmValuesApplicationSetPdbAnnotations = {
    */
   [key: string]: unknown;
 };
+
+export type ArgocdHelmValuesApplicationSetVpa = {
+  /**
+   * Deploy a [VerticalPodAutoscaler](https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/) for the ApplicationSet controller
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Labels to be added to ApplicationSet controller vpa
+   *
+   * @default {}
+   */
+  labels?: ArgocdHelmValuesApplicationSetVpaLabels;
+  /**
+   * Annotations to be added to ApplicationSet controller vpa
+   *
+   * @default {}
+   */
+  annotations?: ArgocdHelmValuesApplicationSetVpaAnnotations;
+  /**
+   * @default "Initial"
+   */
+  updateMode?: string;
+  /**
+   * Controls how VPA computes the recommended resources for ApplicationSet controller container
+   * Ref: https://github.com/kubernetes/autoscaler/blob/master/vertical-pod-autoscaler/examples/hamster.yaml
+   *
+   * @default {}
+   */
+  containerPolicy?: ArgocdHelmValuesApplicationSetVpaContainerPolicy;
+};
+
+export type ArgocdHelmValuesApplicationSetVpaLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type ArgocdHelmValuesApplicationSetVpaAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type ArgocdHelmValuesApplicationSetVpaContainerPolicy = object;
 
 export type ArgocdHelmValuesApplicationSetImage = {
   /**
@@ -6903,6 +7200,68 @@ export type ArgocdHelmValuesApplicationSetIngressAnnotations = {
   [key: string]: unknown;
 };
 
+export type ArgocdHelmValuesApplicationSetHttproute = {
+  /**
+   * Enable HTTPRoute resource for Argo CD Applicationset Webhook (Gateway API)
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Additional HTTPRoute labels
+   *
+   * @default {}
+   */
+  labels?: ArgocdHelmValuesApplicationSetHttprouteLabels;
+  /**
+   * Additional HTTPRoute annotations
+   *
+   * @default {}
+   */
+  annotations?: ArgocdHelmValuesApplicationSetHttprouteAnnotations;
+  parentRefs?: unknown[];
+  hostnames?: unknown[];
+  rules?: ArgocdHelmValuesApplicationSetHttprouteRulesElement[];
+};
+
+export type ArgocdHelmValuesApplicationSetHttprouteLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type ArgocdHelmValuesApplicationSetHttprouteAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type ArgocdHelmValuesApplicationSetHttprouteRulesElement = {
+  matches?: ArgocdHelmValuesApplicationSetHttprouteRulesMatchesElement[];
+};
+
+export type ArgocdHelmValuesApplicationSetHttprouteRulesMatchesElement = {
+  /**
+   * @default {"type":"PathPrefix","value":"/api/webhook"}
+   */
+  path?: ArgocdHelmValuesApplicationSetHttprouteRulesMatchesPath;
+};
+
+export type ArgocdHelmValuesApplicationSetHttprouteRulesMatchesPath = {
+  /**
+   * @default "PathPrefix"
+   */
+  type?: string;
+  /**
+   * @default "/api/webhook"
+   */
+  value?: string;
+};
+
 export type ArgocdHelmValuesApplicationSetNetworkPolicy = {
   /**
    * Default network policy rules used by ApplicationSet controller
@@ -6944,6 +7303,13 @@ export type ArgocdHelmValuesNotifications = {
    * @default {...} (5 keys)
    */
   pdb?: ArgocdHelmValuesNotificationsPdb;
+  /**
+   * Notifications controller Vertical Pod Autoscaler
+   * Ref: https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/
+   *
+   * @default {...} (5 keys)
+   */
+  vpa?: ArgocdHelmValuesNotificationsVpa;
   /**
    * Notifications controller image
    *
@@ -7171,6 +7537,56 @@ export type ArgocdHelmValuesNotificationsPdbAnnotations = {
    */
   [key: string]: unknown;
 };
+
+export type ArgocdHelmValuesNotificationsVpa = {
+  /**
+   * Deploy a [VerticalPodAutoscaler](https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/) for the notifications controller
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Labels to be added to notifications controller vpa
+   *
+   * @default {}
+   */
+  labels?: ArgocdHelmValuesNotificationsVpaLabels;
+  /**
+   * Annotations to be added to notifications controller vpa
+   *
+   * @default {}
+   */
+  annotations?: ArgocdHelmValuesNotificationsVpaAnnotations;
+  /**
+   * @default "Initial"
+   */
+  updateMode?: string;
+  /**
+   * Controls how VPA computes the recommended resources for notifications controller container
+   * Ref: https://github.com/kubernetes/autoscaler/blob/master/vertical-pod-autoscaler/examples/hamster.yaml
+   *
+   * @default {}
+   */
+  containerPolicy?: ArgocdHelmValuesNotificationsVpaContainerPolicy;
+};
+
+export type ArgocdHelmValuesNotificationsVpaLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type ArgocdHelmValuesNotificationsVpaAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type ArgocdHelmValuesNotificationsVpaContainerPolicy = object;
 
 export type ArgocdHelmValuesNotificationsImage = {
   /**
@@ -7759,6 +8175,13 @@ export type ArgocdHelmValuesCommitServer = {
    * @default {"create":false}
    */
   networkPolicy?: ArgocdHelmValuesCommitServerNetworkPolicy;
+  /**
+   * Commit server Vertical Pod Autoscaler
+   * Ref: https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/
+   *
+   * @default {...} (5 keys)
+   */
+  vpa?: ArgocdHelmValuesCommitServerVpa;
 };
 
 export type ArgocdHelmValuesCommitServerImage = {
@@ -8070,6 +8493,56 @@ export type ArgocdHelmValuesCommitServerNetworkPolicy = {
   create?: boolean;
 };
 
+export type ArgocdHelmValuesCommitServerVpa = {
+  /**
+   * Deploy a [VerticalPodAutoscaler](https://kubernetes.io/docs/concepts/workloads/autoscaling/#scaling-workloads-vertically/) for the commit server
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Labels to be added to commit server vpa
+   *
+   * @default {}
+   */
+  labels?: ArgocdHelmValuesCommitServerVpaLabels;
+  /**
+   * Annotations to be added to commit server vpa
+   *
+   * @default {}
+   */
+  annotations?: ArgocdHelmValuesCommitServerVpaAnnotations;
+  /**
+   * @default "Initial"
+   */
+  updateMode?: string;
+  /**
+   * Controls how VPA computes the recommended resources for commit server container
+   * Ref: https://github.com/kubernetes/autoscaler/blob/master/vertical-pod-autoscaler/examples/hamster.yaml
+   *
+   * @default {}
+   */
+  containerPolicy?: ArgocdHelmValuesCommitServerVpaContainerPolicy;
+};
+
+export type ArgocdHelmValuesCommitServerVpaLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type ArgocdHelmValuesCommitServerVpaAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type ArgocdHelmValuesCommitServerVpaContainerPolicy = object;
+
 export type ArgocdHelmValues = {
   /**
    * Ref: https://github.com/argoproj/argo-cd
@@ -8159,13 +8632,13 @@ export type ArgocdHelmValues = {
    * Dex log level. One of: `debug`, `info`, `warn`, `error`
    * Redis
    *
-   * @default {...} (43 keys)
+   * @default {...} (44 keys)
    */
   dex?: ArgocdHelmValuesDex;
   /**
    * Redis container port
    *
-   * @default {...} (38 keys)
+   * @default {...} (39 keys)
    */
   redis?: ArgocdHelmValuesRedis;
   /**
@@ -8188,29 +8661,29 @@ export type ArgocdHelmValues = {
   /**
    * Server
    *
-   * @default {...} (50 keys)
+   * @default {...} (51 keys)
    */
   server?: ArgocdHelmValuesServer;
   /**
    * Repo Server
    *
-   * @default {...} (46 keys)
+   * @default {...} (47 keys)
    */
   repoServer?: ArgocdHelmValuesRepoServer;
   /**
    * ApplicationSet controller
    *
-   * @default {...} (40 keys)
+   * @default {...} (42 keys)
    */
   applicationSet?: ArgocdHelmValuesApplicationSet;
   /**
    * Notifications controller
    *
-   * @default {...} (44 keys)
+   * @default {...} (45 keys)
    */
   notifications?: ArgocdHelmValuesNotifications;
   /**
-   * @default {...} (31 keys)
+   * @default {...} (32 keys)
    */
   commitServer?: ArgocdHelmValuesCommitServer;
 };
@@ -8374,6 +8847,8 @@ export type ArgocdHelmParameters = {
   "dex.pdb.enabled"?: string;
   "dex.pdb.minAvailable"?: string;
   "dex.pdb.maxUnavailable"?: string;
+  "dex.vpa.enabled"?: string;
+  "dex.vpa.updateMode"?: string;
   "dex.image.repository"?: string;
   "dex.image.tag"?: string;
   "dex.image.imagePullPolicy"?: string;
@@ -8440,6 +8915,8 @@ export type ArgocdHelmParameters = {
   "redis.pdb.enabled"?: string;
   "redis.pdb.minAvailable"?: string;
   "redis.pdb.maxUnavailable"?: string;
+  "redis.vpa.enabled"?: string;
+  "redis.vpa.updateMode"?: string;
   "redis.image.repository"?: string;
   "redis.image.tag"?: string;
   "redis.image.imagePullPolicy"?: string;
@@ -8578,6 +9055,8 @@ export type ArgocdHelmParameters = {
   "server.pdb.enabled"?: string;
   "server.pdb.minAvailable"?: string;
   "server.pdb.maxUnavailable"?: string;
+  "server.vpa.enabled"?: string;
+  "server.vpa.updateMode"?: string;
   "server.image.repository"?: string;
   "server.image.tag"?: string;
   "server.image.imagePullPolicy"?: string;
@@ -8728,6 +9207,8 @@ export type ArgocdHelmParameters = {
   "repoServer.pdb.enabled"?: string;
   "repoServer.pdb.minAvailable"?: string;
   "repoServer.pdb.maxUnavailable"?: string;
+  "repoServer.vpa.enabled"?: string;
+  "repoServer.vpa.updateMode"?: string;
   "repoServer.image.repository"?: string;
   "repoServer.image.tag"?: string;
   "repoServer.image.imagePullPolicy"?: string;
@@ -8737,6 +9218,7 @@ export type ArgocdHelmParameters = {
   "repoServer.envFrom"?: string;
   "repoServer.extraContainers"?: string;
   "repoServer.initContainers"?: string;
+  "repoServer.copyutil.extraArgs"?: string;
   "repoServer.volumeMounts"?: string;
   "repoServer.volumes"?: string;
   "repoServer.emptyDir.sizeLimit"?: string;
@@ -8800,6 +9282,8 @@ export type ArgocdHelmParameters = {
   "applicationSet.pdb.enabled"?: string;
   "applicationSet.pdb.minAvailable"?: string;
   "applicationSet.pdb.maxUnavailable"?: string;
+  "applicationSet.vpa.enabled"?: string;
+  "applicationSet.vpa.updateMode"?: string;
   "applicationSet.image.repository"?: string;
   "applicationSet.image.tag"?: string;
   "applicationSet.image.imagePullPolicy"?: string;
@@ -8879,6 +9363,11 @@ export type ArgocdHelmParameters = {
   "applicationSet.ingress.extraPaths"?: string;
   "applicationSet.ingress.extraRules"?: string;
   "applicationSet.ingress.extraTls"?: string;
+  "applicationSet.httproute.enabled"?: string;
+  "applicationSet.httproute.parentRefs"?: string;
+  "applicationSet.httproute.hostnames"?: string;
+  "applicationSet.httproute.rules.matches.path.type"?: string;
+  "applicationSet.httproute.rules.matches.path.value"?: string;
   "applicationSet.allowAnyNamespace"?: string;
   "applicationSet.networkPolicy.create"?: string;
   "notifications.enabled"?: string;
@@ -8888,6 +9377,8 @@ export type ArgocdHelmParameters = {
   "notifications.pdb.enabled"?: string;
   "notifications.pdb.minAvailable"?: string;
   "notifications.pdb.maxUnavailable"?: string;
+  "notifications.vpa.enabled"?: string;
+  "notifications.vpa.updateMode"?: string;
   "notifications.image.repository"?: string;
   "notifications.image.tag"?: string;
   "notifications.image.imagePullPolicy"?: string;
@@ -8986,4 +9477,6 @@ export type ArgocdHelmParameters = {
   "commitServer.topologySpreadConstraints"?: string;
   "commitServer.priorityClassName"?: string;
   "commitServer.networkPolicy.create"?: string;
+  "commitServer.vpa.enabled"?: string;
+  "commitServer.vpa.updateMode"?: string;
 };

@@ -54,6 +54,7 @@ Active or upcoming plans only. Completed plans live in `archive/completed/`; thi
 - [PR Review Bot Phase 10 — Continuous-Eval Harness](plans/2026-05-10_pr-review-bot-phase-10-continuous-eval.md) - Held-out fixture corpus, nightly Temporal cron, Postgres eval store, and precision-regression alerts
 - [PR Review Bot Phase 8 — Measurement](plans/2026-05-10_pr-review-bot-phase-8-measurement.md) - Prometheus metrics, Grafana dashboard, and PagerDuty alerts for the SOTA PR review bot
 - [SOTA PR Review Bot](plans/2026-05-10_sota-pr-review-bot.md) - Full-spec multi-agent + verification + retrieval + continuous-eval PR review bot; supersedes the archived 2026-04-25 plan
+- [Scout Season Dropdown Hardening](plans/2026-05-11_scout-season-dropdown-hardening.md) - Fail-fast guard so an empty `getSeasonChoices()` no longer degrades `/competition`'s season option to free text
 - [Scout Season-Date Refresh](plans/2026-05-11_scout-season-refresh.md) - Manual Pandemonium fix + weekly Temporal workflow that re-researches LoL season dates and opens drift PRs
 
 ## Logs
