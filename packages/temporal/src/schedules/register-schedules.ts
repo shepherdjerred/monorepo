@@ -87,6 +87,16 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Weekly Scout Data Dragon refresh even when version is unchanged",
   },
   {
+    id: "scout-season-refresh-weekly",
+    workflowType: "runScoutSeasonRefreshWorkflow",
+    args: [],
+    cronExpression: "0 7 * * 1",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
+    memo: "Weekly LoL season-date drift check (claude -p → PR if drifted)",
+  },
+  {
     id: "zfs-maintenance-weekly",
     workflowType: "runZfsMaintenanceWorkflow",
     args: [],

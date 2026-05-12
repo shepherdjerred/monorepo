@@ -731,10 +731,10 @@ describe("processHighestRank", () => {
     );
   });
 
-  it("should use unranked (Iron IV 0 LP) for players without rank", () => {
+  it("should skip players absent from the ranks map (fetch failed or unranked)", () => {
     const currentRanks: Record<number, Ranks> = {
       [playerA.id]: { solo: diamondII },
-      // playerB has no rank
+      // playerB has no rank entry at all
     };
 
     const result = processCriteria(
@@ -748,14 +748,60 @@ describe("processHighestRank", () => {
       },
     );
 
-    const playerBEntry = result.find((e) => e.playerId === playerB.id);
-    expect(playerBEntry?.score).toEqual({
+    expect(result.length).toBe(1);
+    expect(result[0]?.playerId).toBe(playerA.id);
+    expect(result.find((e) => e.playerId === playerB.id)).toBeUndefined();
+  });
+
+  it("should skip players whose ranks entry is missing the requested queue", () => {
+    const currentRanks: Record<number, Ranks> = {
+      [playerA.id]: { solo: diamondII },
+      // playerB has a ranks entry but no SOLO rank (flex-only)
+      [playerB.id]: { flex: platinumI },
+    };
+
+    const result = processCriteria(
+      { type: "HIGHEST_RANK", queue: "SOLO" },
+      [],
+      [playerA, playerB],
+      {
+        currentRanks,
+        startSnapshots: {},
+        endSnapshots: {},
+      },
+    );
+
+    expect(result.length).toBe(1);
+    expect(result[0]?.playerId).toBe(playerA.id);
+    expect(result.find((e) => e.playerId === playerB.id)).toBeUndefined();
+  });
+
+  it("should not fabricate Iron IV 0 LP entries for any participant", () => {
+    const currentRanks: Record<number, Ranks> = {
+      [playerA.id]: { solo: diamondII },
+    };
+
+    const result = processCriteria(
+      { type: "HIGHEST_RANK", queue: "SOLO" },
+      [],
+      [playerA, playerB, playerC],
+      {
+        currentRanks,
+        startSnapshots: {},
+        endSnapshots: {},
+      },
+    );
+
+    const ironIvShape = {
       tier: "iron",
       division: 4,
       lp: 0,
       wins: 0,
       losses: 0,
-    });
+    };
+    for (const entry of result) {
+      expect(entry.score).not.toEqual(ironIvShape);
+    }
   });
 });
 

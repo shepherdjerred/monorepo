@@ -55,7 +55,9 @@ Active or upcoming plans only. Completed plans live in `archive/completed/`; thi
 - [PR Review Bot Phase 8 — Measurement](plans/2026-05-10_pr-review-bot-phase-8-measurement.md) - Prometheus metrics, Grafana dashboard, and PagerDuty alerts for the SOTA PR review bot
 - [SOTA PR Review Bot](plans/2026-05-10_sota-pr-review-bot.md) - Full-spec multi-agent + verification + retrieval + continuous-eval PR review bot; supersedes the archived 2026-04-25 plan
 - [Competition Active-Only Season Drift Fix](plans/2026-05-11_competition-active-only-season-drift.md) - Root-cause fix for `/competition list active-only:true` returning ended season-based competitions; introduces `Season` table + seeder + silent backfill
+- [Scout HIGHEST_RANK chart drops-to-0 fix](plans/2026-05-11_scout-highest-rank-chart-fix.md) - Stop fabricating Iron IV / 0 LP entries, hide chart dot markers, clean active-competition S3 snapshots
 - [Scout Season Dropdown Hardening](plans/2026-05-11_scout-season-dropdown-hardening.md) - Fail-fast guard so an empty `getSeasonChoices()` no longer degrades `/competition`'s season option to free text
+- [Scout Season-Date Refresh](plans/2026-05-11_scout-season-refresh.md) - Manual Pandemonium fix + weekly Temporal workflow that re-researches LoL season dates and opens drift PRs
 - [Renovate-481 Fixes & CI Gap](plans/2026-05-12_renovate-481-fixes-and-ci-gap.md) - Unbreak main after the renovate-481 sweep (Prisma 7 schemas, react-dom skew, birmel start, temporal lint) and remove `MAIN_ONLY` from validation-only CI steps so PRs catch the same class of regression pre-merge
 
 ## Logs
