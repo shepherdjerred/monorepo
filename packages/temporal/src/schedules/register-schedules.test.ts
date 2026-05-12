@@ -42,6 +42,8 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runBugsinkHousekeepingWorkflow",
   "runVeleroOrphanAuditWorkflow",
   "syncGolinks",
+  "prReviewEvalWorkflow",
+  "prReviewWeeklySignificanceWorkflow",
 ]);
 
 const SLACK_MS = 5 * ONE_MINUTE;

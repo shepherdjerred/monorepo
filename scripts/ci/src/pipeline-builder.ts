@@ -31,7 +31,6 @@ import {
   mergeConflictStep,
   largeFileStep,
 } from "./steps/quality.ts";
-import { codeReviewStep } from "./steps/code-review.ts";
 import { releasePleaseStep } from "./steps/release.ts";
 import {
   buildImagesWithSmokeGroup,
@@ -162,11 +161,6 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     const caddyStep = caddyfileValidateStep();
     steps.push(caddyStep);
     releaseDeps.push(caddyStep.key);
-  }
-
-  // --- Code Review (PRs only) ---
-  if (pullRequestBuild) {
-    steps.push(codeReviewStep());
   }
 
   // --- Main-only steps ---

@@ -42,28 +42,6 @@ export const prWebhookSignatureFailuresTotal = new Counter({
   registers: [register],
 });
 
-export const prAgentSubprocessDurationSeconds = new Histogram({
-  name: "pr_agent_subprocess_duration_seconds",
-  help: "Wall-clock duration of `claude -p` subprocess invocations for PR review/summary agents",
-  labelNames: ["kind", "model", "exit_code"] as const,
-  buckets: [10, 30, 60, 120, 300, 600, 900, 1500],
-  registers: [register],
-});
-
-export const prAgentSubprocessExitTotal = new Counter({
-  name: "pr_agent_subprocess_exit_total",
-  help: "PR-agent claude subprocess exits, by kind (review/summary) and exit code",
-  labelNames: ["kind", "exit_code"] as const,
-  registers: [register],
-});
-
-export const prAgentTokensTotal = new Counter({
-  name: "pr_agent_tokens_total",
-  help: "Tokens consumed by PR-agent claude subprocesses, by kind, model, and direction (input/output/cache_create/cache_read)",
-  labelNames: ["kind", "model", "direction"] as const,
-  registers: [register],
-});
-
 // ---------------------------------------------------------------------------
 // PR summary (SDK-native, Haiku) — Phase 7 of the SOTA PR review bot plan
 // ---------------------------------------------------------------------------
