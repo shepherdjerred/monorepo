@@ -77,7 +77,7 @@ export const KUBECTL_VERSION = "v1.35.0";
 export const GITHUB_MCP_SERVER_VERSION = "1.0.3";
 
 // renovate: datasource=github-releases depName=siderolabs/talos
-export const TALOSCTL_VERSION = "v1.13.0";
+export const TALOSCTL_VERSION = "v1.13.2";
 
 // renovate: datasource=github-releases depName=opentofu/opentofu
 export const TOFU_VERSION = "1.11.6";
