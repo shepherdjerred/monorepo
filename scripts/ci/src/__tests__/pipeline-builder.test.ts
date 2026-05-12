@@ -786,6 +786,7 @@ describe("buildPipeline", () => {
         "quality-ratchet",
         "compliance-check",
         "env-var-names",
+        "line-endings-check",
         "migration-guard",
         "dagger-hygiene",
         "merge-conflict-check",

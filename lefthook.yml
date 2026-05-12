@@ -48,6 +48,9 @@ pre-commit:
                       exit 1
                     fi
 
+                - name: line-endings
+                  run: bun scripts/check-line-endings.ts {staged_files}
+
           - name: check-suppressions
             run: bun scripts/check-suppressions.ts
 
