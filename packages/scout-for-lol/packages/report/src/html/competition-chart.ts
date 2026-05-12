@@ -44,30 +44,15 @@ const PALETTE_SIZE = 10;
 const SERIES_PALETTE = generateSeriesPalette(PALETTE_SIZE);
 
 /**
- * Symbol shape per series — cycles through 5 shapes so each color also gets
- * a unique silhouette. With 10 series, the first 5 get one line style and
- * the second 5 get a dashed variant, giving a unique (color, shape, dash)
- * tuple for every line.
+ * Solid for the top half (ranks 1–5), dashed for the bottom half (6–10) —
+ * trivially distinguishable from the leaders even before reading the legend.
+ * Markers/dots are intentionally disabled on the line series for a cleaner
+ * look; see `showSymbol: false` in `buildLineOption`.
  */
-const SYMBOL_SHAPES = [
-  "circle",
-  "triangle",
-  "rect",
-  "diamond",
-  "roundRect",
-] as const;
+const SOLID_LINE_THRESHOLD = 5;
 
-/**
- * Solid for the top half, dashed for the bottom half. Ranks 1–5 stay calm
- * and easy to read; 6–10 get the dashed pattern so they're trivially
- * distinguishable from the leaders even before reading the legend.
- */
 function lineDashFor(index: number): "solid" | "dashed" {
-  return index < SYMBOL_SHAPES.length ? "solid" : "dashed";
-}
-
-function symbolFor(index: number): string {
-  return SYMBOL_SHAPES[index % SYMBOL_SHAPES.length] ?? "circle";
+  return index < SOLID_LINE_THRESHOLD ? "solid" : "dashed";
 }
 
 const SPIEGEL_FONT_FILES = [
@@ -252,19 +237,16 @@ function buildLineOption(
       return {
         name: s.playerName,
         type: "line",
-        showSymbol: true,
-        symbol: symbolFor(index),
-        symbolSize: 14,
+        showSymbol: false,
         connectNulls: false,
         smooth: false,
         lineStyle: {
+          color: seriesColor,
           width: index === 0 ? 4 : 3,
           type: lineDashFor(index),
         },
         itemStyle: {
           color: seriesColor,
-          borderColor: palette.gold[5],
-          borderWidth: 1.5,
         },
         data: s.points.map((p) => [p.date.getTime(), p.value]),
       };
