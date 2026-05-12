@@ -5,8 +5,8 @@ import type {
   ScoutSeasonRefreshResult,
 } from "#activities/scout-season-refresh.ts";
 
-const { runScoutSeasonRefresh } =
-  proxyActivities<ScoutSeasonRefreshActivities>({
+const { runScoutSeasonRefresh } = proxyActivities<ScoutSeasonRefreshActivities>(
+  {
     // Long: clones the monorepo, runs `claude -p` with WebFetch/WebSearch
     // (research can take many minutes), runs `bun test`, optionally opens a
     // PR via `gh`. Heartbeats fire every 10s (see activity) so worker death
@@ -19,7 +19,8 @@ const { runScoutSeasonRefresh } =
       backoffCoefficient: 2,
       maximumInterval: "15 minutes",
     },
-  });
+  },
+);
 
 export async function runScoutSeasonRefreshWorkflow(
   input: ScoutSeasonRefreshInput = {},

@@ -87,15 +87,7 @@ export async function getUnifiedDiff(
   paths: readonly string[],
 ): Promise<string> {
   return await runCommand(
-    [
-      "git",
-      "-c",
-      "core.pager=cat",
-      "diff",
-      "--no-color",
-      "--",
-      ...paths,
-    ],
+    ["git", "-c", "core.pager=cat", "diff", "--no-color", "--", ...paths],
     { cwd: repoDir },
   );
 }

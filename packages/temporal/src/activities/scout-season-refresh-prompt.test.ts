@@ -6,8 +6,7 @@ describe("buildSeasonRefreshPrompt", () => {
     today: "2026-05-11",
     workdir: "/tmp/scout-season-refresh-abc/monorepo",
     seasonsFile: "packages/scout-for-lol/packages/data/src/seasons.ts",
-    seasonsTestFile:
-      "packages/scout-for-lol/packages/data/src/seasons.test.ts",
+    seasonsTestFile: "packages/scout-for-lol/packages/data/src/seasons.test.ts",
     noDriftSentinel: "NO_DRIFT",
     driftedSentinel: "DRIFTED",
   };
