@@ -192,6 +192,21 @@ export function envVarNamesStep(): BuildkiteStep {
   });
 }
 
+/**
+ * Plain step: only needs bun + git (in ci-base). Verifies every tracked file's
+ * index line endings match its .gitattributes declaration. Catches the class
+ * of bug from renovate-481 where a file with mixed CRLF/LF leaked into a
+ * Unix-only path and nothing flagged it pre-merge.
+ */
+export function lineEndingsCheckStep(): BuildkiteStep {
+  return plainStep({
+    label: ":scroll: Line Endings",
+    key: "line-endings-check",
+    command: "bun scripts/check-line-endings.ts",
+    timeoutMinutes: 5,
+  });
+}
+
 /** Plain step: only needs bun (in ci-base). Guards against package exclusions. */
 export function migrationGuardStep(): BuildkiteStep {
   return plainStep({
