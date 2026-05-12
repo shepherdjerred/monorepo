@@ -37,7 +37,6 @@ import {
   versionCommitBackHelper,
   ciBaseVersionCommitBackHelper,
   releasePleaseHelper,
-  codeReviewHelper,
   cargoDenyHelper,
 } from "./release";
 
@@ -1132,26 +1131,6 @@ export class Monorepo {
       version,
       ghToken,
       dryrun,
-    ).stdout();
-  }
-
-  /** Run AI code review on a PR */
-  @func({ cache: "never" })
-  async codeReview(
-    source: Directory,
-    prNumber: string,
-    baseBranch: string,
-    commitSha: string,
-    ghToken: Secret,
-    claudeToken: Secret,
-  ): Promise<string> {
-    return codeReviewHelper(
-      source,
-      prNumber,
-      baseBranch,
-      commitSha,
-      ghToken,
-      claudeToken,
     ).stdout();
   }
 

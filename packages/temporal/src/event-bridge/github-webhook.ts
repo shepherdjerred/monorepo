@@ -80,10 +80,6 @@ function jsonLog(
   );
 }
 
-function workflowIdFor(kind: PrAgentInput["kind"], pr: PrAgentInput): string {
-  return `pr-${kind}-${pr.owner}-${pr.repo}-${String(pr.prNumber)}-${pr.commitSha}`;
-}
-
 function pipelineWorkflowIdFor(pr: PrReviewPipelineInput): string {
   return `pr-review-pipeline-${pr.owner}-${pr.repo}-${String(pr.prNumber)}-${pr.commitSha}`;
 }
@@ -172,24 +168,12 @@ async function startPrWorkflows(
     prAuthor: input.prAuthor,
   };
 
+  // SOTA review pipeline (multi-specialist consensus + verification) +
+  // summary pipeline (Haiku 4.5 + prompt caching) are now the sole path.
+  // The legacy `prReview` + `prSummary` claude -p workflows were retired
+  // in the cutover commit — see
+  // packages/docs/plans/2026-05-10_sota-pr-review-bot.md addendum.
   await Promise.all([
-    client.workflow.start("prReview", {
-      taskQueue: TASK_QUEUES.DEFAULT,
-      workflowId: workflowIdFor("review", input),
-      workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE,
-      args: [{ ...input, kind: "review" }],
-    }),
-    client.workflow.start("prSummary", {
-      taskQueue: TASK_QUEUES.DEFAULT,
-      workflowId: workflowIdFor("summary", input),
-      workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE,
-      args: [{ ...input, kind: "summary" }],
-    }),
-    // SOTA review pipeline (multi-specialist consensus + verification) and
-    // SOTA summary pipeline (Haiku 4.5 + prompt caching). Both run in
-    // shadow mode alongside the legacy claude -p workflows during the
-    // multi-phase rollout — see
-    // packages/docs/plans/2026-05-10_sota-pr-review-bot.md.
     startPrReviewPipeline(client, pipelineInput),
     startPrSummaryPipeline(client, summaryInput),
   ]);

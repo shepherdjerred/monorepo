@@ -24,11 +24,7 @@ import type {
   ScoutSeasonRefreshInput,
   ScoutSeasonRefreshResult,
 } from "#activities/scout-season-refresh.ts";
-import { prReview as _prReview } from "./pr-review.ts";
-import {
-  prSummary as _prSummary,
-  prSummaryPipeline as _prSummaryPipeline,
-} from "./pr-summary/index.ts";
+import { prSummaryPipeline as _prSummaryPipeline } from "./pr-summary/index.ts";
 import { prReviewPipeline as _prReviewPipeline } from "./pr-review/index.ts";
 import { prReviewEvalWorkflow as _prReviewEvalWorkflow } from "./pr-review-eval/index.ts";
 import type {
@@ -46,12 +42,7 @@ import {
 } from "./pr-reaction-listener/index.ts";
 import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab-audit.ts";
 import type { RunHomelabAuditWorkflowInput } from "./homelab-audit.ts";
-import type {
-  PrAgentInput,
-  PrReviewPipelineInput,
-  PrSummaryInput,
-} from "#shared/schemas.ts";
-import type { PrAgentResult } from "#activities/pr-agent.ts";
+import type { PrReviewPipelineInput, PrSummaryInput } from "#shared/schemas.ts";
 import type { PrReviewPipelineResult } from "./pr-review/index.ts";
 import type { RunSummaryResult } from "#activities/pr-review/summary.ts";
 
@@ -127,14 +118,6 @@ export async function runScoutSeasonRefreshWorkflow(
   input: ScoutSeasonRefreshInput = {},
 ): Promise<ScoutSeasonRefreshResult> {
   return _runScoutSeasonRefreshWorkflow(input);
-}
-
-export async function prReview(input: PrAgentInput): Promise<PrAgentResult> {
-  return _prReview(input);
-}
-
-export async function prSummary(input: PrAgentInput): Promise<PrAgentResult> {
-  return _prSummary(input);
 }
 
 export async function prReviewPipeline(
