@@ -80,6 +80,16 @@ model MatchRankHistory {
   @@index([matchId])
 }
 
+// Season metadata seeded from packages/data/src/seasons.ts on every bot startup.
+// Competition.seasonId is a FK to Season.id; date drift is resolved by re-seeding.
+model Season {
+  id           String        @id
+  displayName  String
+  startDate    DateTime
+  endDate      DateTime
+  competitions Competition[]
+}
+
 model Competition {
   id               Int                       @id @default(autoincrement())
   serverId         String
@@ -97,6 +107,7 @@ model Competition {
   startDate        DateTime?
   endDate          DateTime?
   seasonId         String?
+  season           Season?                   @relation(fields: [seasonId], references: [id])
 
   // Lifecycle tracking - when start/end processing was attempted
   // These prevent re-processing even if snapshot creation fails

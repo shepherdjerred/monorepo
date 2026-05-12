@@ -31,7 +31,11 @@ import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
 } from "#src/model/discord.ts";
-import type { Competition } from "#src/model/competition.ts";
+import { SeasonIdSchema } from "#src/seasons.ts";
+import type {
+  Competition,
+  CompetitionWithSeason,
+} from "#src/model/competition.ts";
 
 describe("CompetitionId branded type", () => {
   test("accepts positive integers", () => {
@@ -1494,7 +1498,7 @@ describe("getSnapshotSchemaForCriteria", () => {
 // ============================================================================
 
 describe("parseCompetition", () => {
-  const baseRawCompetition: Competition = {
+  const baseRawCompetition: CompetitionWithSeason = {
     id: CompetitionIdSchema.parse(42),
     serverId: DiscordGuildIdSchema.parse("123456789012345678"),
     ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
@@ -1509,6 +1513,7 @@ describe("parseCompetition", () => {
     startDate: new Date("2025-01-01"),
     endDate: new Date("2025-01-31"),
     seasonId: null,
+    season: null,
     startProcessedAt: null,
     endProcessedAt: null,
     creatorDiscordId: DiscordAccountIdSchema.parse("987654321098765432"),
@@ -1517,7 +1522,7 @@ describe("parseCompetition", () => {
   };
 
   test("parses MOST_GAMES_PLAYED criteria correctly", () => {
-    const raw: Competition = {
+    const raw: CompetitionWithSeason = {
       ...baseRawCompetition,
       criteriaType: "MOST_GAMES_PLAYED",
       criteriaConfig: JSON.stringify({ queue: "SOLO" }),
@@ -1534,7 +1539,7 @@ describe("parseCompetition", () => {
   });
 
   test("parses HIGHEST_RANK criteria correctly", () => {
-    const raw: Competition = {
+    const raw: CompetitionWithSeason = {
       ...baseRawCompetition,
       criteriaType: "HIGHEST_RANK",
       criteriaConfig: JSON.stringify({ queue: "FLEX" }),
@@ -1549,7 +1554,7 @@ describe("parseCompetition", () => {
   });
 
   test("parses MOST_WINS_CHAMPION criteria correctly", () => {
-    const raw: Competition = {
+    const raw: CompetitionWithSeason = {
       ...baseRawCompetition,
       criteriaType: "MOST_WINS_CHAMPION",
       criteriaConfig: JSON.stringify({
@@ -1568,7 +1573,7 @@ describe("parseCompetition", () => {
   });
 
   test("parses HIGHEST_WIN_RATE criteria with default minGames", () => {
-    const raw: Competition = {
+    const raw: CompetitionWithSeason = {
       ...baseRawCompetition,
       criteriaType: "HIGHEST_WIN_RATE",
       criteriaConfig: JSON.stringify({ queue: "FLEX" }),
@@ -1581,6 +1586,27 @@ describe("parseCompetition", () => {
       minGames: 10, // default value
       queue: "FLEX",
     });
+  });
+
+  test("populates startDate/endDate from the eagerly-loaded season relation", () => {
+    const raw: CompetitionWithSeason = {
+      ...baseRawCompetition,
+      startDate: null,
+      endDate: null,
+      seasonId: SeasonIdSchema.parse("2025_SEASON_3_ACT_2"),
+      season: {
+        id: SeasonIdSchema.parse("2025_SEASON_3_ACT_2"),
+        displayName: "Worlds 2025",
+        startDate: new Date("2025-10-22T07:00:00.000Z"),
+        endDate: new Date("2026-01-08T07:59:59.000Z"),
+      },
+    };
+
+    const parsed = parseCompetition(raw);
+
+    expect(parsed.startDate?.toISOString()).toBe("2025-10-22T07:00:00.000Z");
+    expect(parsed.endDate?.toISOString()).toBe("2026-01-08T07:59:59.000Z");
+    expect(parsed.seasonId).toBe(raw.seasonId);
   });
 
   test("preserves all original fields except criteriaType and criteriaConfig", () => {
@@ -1611,7 +1637,7 @@ describe("parseCompetition", () => {
   });
 
   test("throws on invalid JSON in criteriaConfig", () => {
-    const raw: Competition = {
+    const raw: CompetitionWithSeason = {
       ...baseRawCompetition,
       criteriaConfig: "{ invalid json",
     };
@@ -1620,7 +1646,7 @@ describe("parseCompetition", () => {
   });
 
   test("throws when criteriaConfig is not an object", () => {
-    const raw: Competition = {
+    const raw: CompetitionWithSeason = {
       ...baseRawCompetition,
       criteriaConfig: JSON.stringify("not an object"),
     };
@@ -1631,7 +1657,7 @@ describe("parseCompetition", () => {
   });
 
   test("throws when criteriaConfig is null", () => {
-    const raw: Competition = {
+    const raw: CompetitionWithSeason = {
       ...baseRawCompetition,
       criteriaConfig: JSON.stringify(null),
     };
@@ -1642,7 +1668,7 @@ describe("parseCompetition", () => {
   });
 
   test("throws when criteriaType doesn't match config", () => {
-    const raw: Competition = {
+    const raw: CompetitionWithSeason = {
       ...baseRawCompetition,
       criteriaType: "MOST_WINS_CHAMPION",
       criteriaConfig: JSON.stringify({ queue: "SOLO" }), // missing championId
@@ -1652,7 +1678,7 @@ describe("parseCompetition", () => {
   });
 
   test("throws when criteria has missing required fields", () => {
-    const raw: Competition = {
+    const raw: CompetitionWithSeason = {
       ...baseRawCompetition,
       criteriaType: "MOST_GAMES_PLAYED",
       criteriaConfig: JSON.stringify({}), // missing queue
@@ -1662,7 +1688,7 @@ describe("parseCompetition", () => {
   });
 
   test("throws when criteria has invalid queue for HIGHEST_RANK", () => {
-    const raw: Competition = {
+    const raw: CompetitionWithSeason = {
       ...baseRawCompetition,
       criteriaType: "HIGHEST_RANK",
       criteriaConfig: JSON.stringify({ queue: "ARENA" }), // not SOLO/FLEX

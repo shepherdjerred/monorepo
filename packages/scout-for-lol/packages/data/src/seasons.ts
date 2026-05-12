@@ -6,6 +6,18 @@ import { isWithinInterval, isAfter } from "date-fns";
  *
  * Season start/end dates are manually maintained since there's no reliable API.
  * Dates are in UTC and represent the start of the first day and end of the last day.
+ *
+ * APPEND-ONLY: Once a season is referenced by a Competition row, it must
+ * remain in this map. The `Season` table in the backend is seeded from this
+ * constant on every bot startup, and `Competition.seasonId` is a FK to
+ * `Season.id` — removing an entry breaks referential integrity for any
+ * existing competition tied to that season.
+ *
+ * To retire an old season from the UI, prefer adjusting `getSeasonChoices`
+ * (which already filters by `endDate >= now`) rather than deleting it here.
+ * When Riot shifts a season's end date, edit the entry in place — the
+ * startup seeder will propagate the new value to the `Season` table on the
+ * next boot, and every season-based Competition picks it up via the FK join.
  */
 
 /**

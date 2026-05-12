@@ -8,9 +8,34 @@ import {
   type SeasonId,
   parseCompetition,
 } from "@scout-for-lol/data";
+import type { Prisma } from "#generated/prisma/client/index.js";
 import { match } from "ts-pattern";
 import { type ExtendedPrismaClient } from "#src/database/index.ts";
 import { type CompetitionDates } from "#src/database/competition/validation.ts";
+import { competitionWithSeasonInclude } from "#src/database/competition/include.ts";
+
+// ============================================================================
+// Internal helpers
+// ============================================================================
+
+/**
+ * Where-clause fragment for "the competition is active right now".
+ *
+ * "Active" means: not cancelled, lifecycle cron has not yet ended it, and the
+ * effective end date is still in the future. The end date is on the row for
+ * fixed-date competitions and on the joined `Season` row for season-based
+ * competitions.
+ */
+export function activeOnlyWhere(now: Date): Prisma.CompetitionWhereInput {
+  return {
+    isCancelled: false,
+    endProcessedAt: null,
+    OR: [
+      { endDate: { gt: now } },
+      { season: { is: { endDate: { gt: now } } } },
+    ],
+  };
+}
 
 // ============================================================================
 // Types
@@ -85,9 +110,9 @@ export async function createCompetition(
       createdTime: now,
       updatedTime: now,
     },
+    include: competitionWithSeasonInclude,
   });
 
-  // parseCompetition transparently populates dates from seasonId
   return parseCompetition(raw);
 }
 
@@ -108,13 +133,13 @@ export async function getCompetitionById(
 ): Promise<CompetitionWithCriteria | undefined> {
   const raw = await prisma.competition.findUnique({
     where: { id },
+    include: competitionWithSeasonInclude,
   });
 
   if (!raw) {
     return undefined;
   }
 
-  // parseCompetition transparently populates dates from seasonId
   return parseCompetition(raw);
 }
 
@@ -140,20 +165,14 @@ export async function getCompetitionsByServer(
     where: {
       serverId,
       ...(options?.ownerId && { ownerId: options.ownerId }),
-      ...(options?.activeOnly === true && {
-        isCancelled: false,
-        OR: [
-          { endDate: null }, // Season-based, no end date
-          { endDate: { gt: now } }, // Fixed dates, not ended yet
-        ],
-      }),
+      ...(options?.activeOnly === true && activeOnlyWhere(now)),
     },
     orderBy: {
       createdTime: "desc",
     },
+    include: competitionWithSeasonInclude,
   });
 
-  // parseCompetition transparently populates dates from seasonId
   return raw.map((item) => parseCompetition(item));
 }
 
@@ -170,19 +189,13 @@ export async function getActiveCompetitions(
   const now = new Date();
 
   const raw = await prisma.competition.findMany({
-    where: {
-      isCancelled: false,
-      OR: [
-        { endDate: null }, // Season-based, no end date
-        { endDate: { gt: now } }, // Fixed dates, not ended yet
-      ],
-    },
+    where: activeOnlyWhere(now),
     orderBy: {
       createdTime: "desc",
     },
+    include: competitionWithSeasonInclude,
   });
 
-  // parseCompetition transparently populates dates from seasonId
   return raw.map((item) => parseCompetition(item));
 }
 
@@ -284,9 +297,9 @@ export async function updateCompetition(
   const raw = await prisma.competition.update({
     where: { id },
     data: updateData,
+    include: competitionWithSeasonInclude,
   });
 
-  // parseCompetition transparently populates dates from seasonId
   return parseCompetition(raw);
 }
 
@@ -307,6 +320,7 @@ export async function getCompetitionsByChannelId(
     where: {
       channelId,
     },
+    include: competitionWithSeasonInclude,
   });
 
   return raw.map((item) => parseCompetition(item));
@@ -332,8 +346,8 @@ export async function cancelCompetition(
       isCancelled: true,
       updatedTime: now,
     },
+    include: competitionWithSeasonInclude,
   });
 
-  // parseCompetition transparently populates dates from seasonId
   return parseCompetition(raw);
 }

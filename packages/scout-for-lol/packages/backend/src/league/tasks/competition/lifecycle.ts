@@ -1,6 +1,7 @@
 import type { CompetitionWithCriteria } from "@scout-for-lol/data/index.ts";
 import { parseCompetition } from "@scout-for-lol/data/index.ts";
 import { prisma } from "#src/database/index.ts";
+import { competitionWithSeasonInclude } from "#src/database/competition/include.ts";
 import { createSnapshotsForAllParticipants } from "#src/league/competition/snapshots.ts";
 import {
   calculateLeaderboard,
@@ -205,11 +206,9 @@ async function postFinalLeaderboard(
 
 /**
  * Handle competitions that need to start
- * Finds DRAFT competitions where startDate <= now and creates START snapshots
+ * Finds DRAFT competitions where startDate <= now and creates START snapshots.
  *
- * Note: Season-based competitions have startDate: null in DB, so we must query
- * all unprocessed competitions and filter client-side after parseCompetition()
- * populates dates from seasonId
+ * Filters at the DB level, joining to the `Season` row for season-based comps.
  */
 async function handleCompetitionStarts(
   prismaClient: ExtendedPrismaClient,
@@ -217,20 +216,19 @@ async function handleCompetitionStarts(
 ): Promise<void> {
   logger.info("[CompetitionLifecycle] Checking for competitions to start...");
 
-  // Query all competitions that haven't been started yet
-  // We can't filter by startDate in the DB query because season-based
-  // competitions have startDate: null until parseCompetition() populates it
-  const unprocessedCompetitions = await prismaClient.competition.findMany({
+  const rows = await prismaClient.competition.findMany({
     where: {
       isCancelled: false,
-      startProcessedAt: null, // Not yet processed
+      startProcessedAt: null,
+      OR: [
+        { startDate: { lte: now } },
+        { season: { is: { startDate: { lte: now } } } },
+      ],
     },
+    include: competitionWithSeasonInclude,
   });
 
-  // Parse to get client-side dates from seasonId, then filter by date
-  const competitionsToStart = unprocessedCompetitions
-    .map((item) => parseCompetition(item))
-    .filter((comp) => comp.startDate !== null && comp.startDate <= now);
+  const competitionsToStart = rows.map((item) => parseCompetition(item));
 
   if (competitionsToStart.length === 0) {
     logger.info("[CompetitionLifecycle] No competitions to start");
@@ -287,11 +285,9 @@ async function handleCompetitionStarts(
 
 /**
  * Handle competitions that need to end
- * Finds ACTIVE competitions where endDate <= now and creates END snapshots
+ * Finds ACTIVE competitions where endDate <= now and creates END snapshots.
  *
- * Note: Season-based competitions have endDate: null in DB, so we must query
- * all unended competitions and filter client-side after parseCompetition()
- * populates dates from seasonId
+ * Filters at the DB level, joining to the `Season` row for season-based comps.
  */
 async function handleCompetitionEnds(
   prismaClient: ExtendedPrismaClient,
@@ -299,21 +295,20 @@ async function handleCompetitionEnds(
 ): Promise<void> {
   logger.info("[CompetitionLifecycle] Checking for competitions to end...");
 
-  // Query all competitions that have been started but not ended yet
-  // We can't filter by endDate in the DB query because season-based
-  // competitions have endDate: null until parseCompetition() populates it
-  const unendedCompetitions = await prismaClient.competition.findMany({
+  const rows = await prismaClient.competition.findMany({
     where: {
       isCancelled: false,
-      startProcessedAt: { not: null }, // Has been started
-      endProcessedAt: null, // Not yet ended
+      startProcessedAt: { not: null },
+      endProcessedAt: null,
+      OR: [
+        { endDate: { lte: now } },
+        { season: { is: { endDate: { lte: now } } } },
+      ],
     },
+    include: competitionWithSeasonInclude,
   });
 
-  // Parse to get client-side dates from seasonId, then filter by date
-  const competitionsToEnd = unendedCompetitions
-    .map((item) => parseCompetition(item))
-    .filter((comp) => comp.endDate !== null && comp.endDate <= now);
+  const competitionsToEnd = rows.map((item) => parseCompetition(item));
 
   if (competitionsToEnd.length === 0) {
     logger.info("[CompetitionLifecycle] No competitions to end");
@@ -377,6 +372,18 @@ async function handleCompetitionEnds(
  * This function is called by the cron job
  */
 export async function runLifecycleCheck(): Promise<void> {
+  // Deploy-time escape hatch: when running the Season backfill we want the
+  // cron paused so it doesn't fire retroactive end notifications between
+  // the FK migration and the backfill script. Set
+  // `DISABLE_COMPETITION_LIFECYCLE_CRON=1` in the env for the bot process
+  // during that window.
+  if (Bun.env["DISABLE_COMPETITION_LIFECYCLE_CRON"] === "1") {
+    logger.info(
+      "[CompetitionLifecycle] Skipping run — DISABLE_COMPETITION_LIFECYCLE_CRON=1",
+    );
+    return;
+  }
+
   logger.info("[CompetitionLifecycle] Running lifecycle check");
 
   const now = new Date();

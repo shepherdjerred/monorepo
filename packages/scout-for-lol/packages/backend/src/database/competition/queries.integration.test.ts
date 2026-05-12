@@ -234,6 +234,82 @@ describe("getCompetitionsByServer", () => {
     expect(activeOnly[0]?.title).toBe("Active");
   });
 
+  test("activeOnly excludes season-based comp tied to an ended season", async () => {
+    // 2025_SEASON_3_ACT_2 ended 2026-01-07; today is 2026-05-11
+    await createCompetition(prisma, {
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("987654321098765432"),
+      channelId: testChannelId("111222333444555666"),
+      title: "Ended-Season Comp",
+      description: "Test",
+      visibility: "OPEN",
+      maxParticipants: 50,
+      dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_2" },
+      criteria: { type: "HIGHEST_RANK", queue: "SOLO" },
+    });
+
+    const activeOnly = await getCompetitionsByServer(
+      prisma,
+      testGuildId("123456789012345678"),
+      { activeOnly: true },
+    );
+
+    expect(activeOnly).toHaveLength(0);
+  });
+
+  test("activeOnly includes season-based comp tied to a future-ending season", async () => {
+    // 2026_SEASON_2_ACT_2 ends 2026-08-12 — still active as of 2026-05-11
+    await createCompetition(prisma, {
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("987654321098765432"),
+      channelId: testChannelId("111222333444555666"),
+      title: "Active-Season Comp",
+      description: "Test",
+      visibility: "OPEN",
+      maxParticipants: 50,
+      dates: { type: "SEASON", seasonId: "2026_SEASON_2_ACT_2" },
+      criteria: { type: "HIGHEST_RANK", queue: "SOLO" },
+    });
+
+    const activeOnly = await getCompetitionsByServer(
+      prisma,
+      testGuildId("123456789012345678"),
+      { activeOnly: true },
+    );
+
+    expect(activeOnly).toHaveLength(1);
+    expect(activeOnly[0]?.title).toBe("Active-Season Comp");
+  });
+
+  test("activeOnly excludes comp with endProcessedAt set even if season is still active", async () => {
+    const comp = await createCompetition(prisma, {
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("987654321098765432"),
+      channelId: testChannelId("111222333444555666"),
+      title: "Already-Processed Comp",
+      description: "Test",
+      visibility: "OPEN",
+      maxParticipants: 50,
+      dates: { type: "SEASON", seasonId: "2026_SEASON_2_ACT_2" },
+      criteria: { type: "HIGHEST_RANK", queue: "SOLO" },
+    });
+
+    // Simulate the lifecycle cron having wrapped this comp up early
+    // (e.g., season was later extended). State-machine rule: once ended, stays ended.
+    await prisma.competition.update({
+      where: { id: comp.id },
+      data: { endProcessedAt: new Date() },
+    });
+
+    const activeOnly = await getCompetitionsByServer(
+      prisma,
+      testGuildId("123456789012345678"),
+      { activeOnly: true },
+    );
+
+    expect(activeOnly).toHaveLength(0);
+  });
+
   test("filters by ownerId", async () => {
     // Create competitions with different owners
     await createCompetition(prisma, {
@@ -352,6 +428,41 @@ describe("getActiveCompetitions", () => {
 
     const active = await getActiveCompetitions(prisma);
     expect(active).toHaveLength(0);
+  });
+
+  test("excludes season-based comp tied to an ended season", async () => {
+    await createCompetition(prisma, {
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("987654321098765432"),
+      channelId: testChannelId("111222333444555666"),
+      title: "Ended-Season Cron Comp",
+      description: "Test",
+      visibility: "OPEN",
+      maxParticipants: 50,
+      dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
+      criteria: { type: "HIGHEST_RANK", queue: "SOLO" },
+    });
+
+    const active = await getActiveCompetitions(prisma);
+    expect(active).toHaveLength(0);
+  });
+
+  test("includes season-based comp tied to a future-ending season", async () => {
+    await createCompetition(prisma, {
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("987654321098765432"),
+      channelId: testChannelId("111222333444555666"),
+      title: "Active-Season Cron Comp",
+      description: "Test",
+      visibility: "OPEN",
+      maxParticipants: 50,
+      dates: { type: "SEASON", seasonId: "2026_SEASON_2_ACT_2" },
+      criteria: { type: "HIGHEST_RANK", queue: "SOLO" },
+    });
+
+    const active = await getActiveCompetitions(prisma);
+    expect(active).toHaveLength(1);
+    expect(active[0]?.title).toBe("Active-Season Cron Comp");
   });
 });
 

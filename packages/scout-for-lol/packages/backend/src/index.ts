@@ -49,6 +49,11 @@ await validateChampionAssets();
 logger.info("🔌 Starting Discord bot initialization");
 import "@scout-for-lol/backend/discord/index.ts";
 
+logger.info("🌱 Seeding Season table from SEASONS constant");
+import { prisma } from "#src/database/index.ts";
+import { seedSeasons } from "#src/database/season-seeder.ts";
+await seedSeasons(prisma);
+
 logger.info("⏰ Starting cron job scheduler");
 import { startCronJobs } from "#src/league/cron.ts";
 void startCronJobs();
