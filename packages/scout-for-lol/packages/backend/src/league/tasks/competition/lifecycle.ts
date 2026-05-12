@@ -1,5 +1,9 @@
 import type { CompetitionWithCriteria } from "@scout-for-lol/data/index.ts";
 import { parseCompetition } from "@scout-for-lol/data/index.ts";
+import {
+  computeNextScheduledUpdateAt,
+  DEFAULT_COMPETITION_CRON,
+} from "@scout-for-lol/data/model/competition-cron.ts";
 import { prisma } from "#src/database/index.ts";
 import { competitionWithSeasonInclude } from "#src/database/competition/include.ts";
 import { createSnapshotsForAllParticipants } from "#src/league/competition/snapshots.ts";
@@ -246,11 +250,23 @@ async function handleCompetitionStarts(
         `[CompetitionLifecycle] Starting competition ${competition.id.toString()}: ${competition.title}`,
       );
 
-      // Mark as processed immediately to prevent re-processing
-      // This happens before snapshot creation so failures don't cause repeated notifications
+      // Mark as processed immediately to prevent re-processing.
+      // This happens before snapshot creation so failures don't cause repeated notifications.
+      // Also seed `nextScheduledUpdateAt` from the row's CRON expression so the
+      // per-minute scheduled-update dispatcher has a real next-fire to match
+      // against (null is treated as self-heal but persisting a concrete time
+      // keeps the dispatcher query cheap and observable).
+      const cronExpression =
+        competition.updateCronExpression ?? DEFAULT_COMPETITION_CRON;
       await prismaClient.competition.update({
         where: { id: competition.id },
-        data: { startProcessedAt: now },
+        data: {
+          startProcessedAt: now,
+          nextScheduledUpdateAt: computeNextScheduledUpdateAt(
+            cronExpression,
+            now,
+          ),
+        },
       });
 
       // Create START snapshots for all participants

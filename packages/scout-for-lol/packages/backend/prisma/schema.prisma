@@ -114,6 +114,17 @@ model Competition {
   startProcessedAt DateTime?
   endProcessedAt   DateTime?
 
+  // Leaderboard-post schedule (CRON expression evaluated in UTC).
+  // NULL is treated as the legacy default '0 0 * * *' (daily midnight UTC).
+  // Validated at write time to fire at most once per day.
+  updateCronExpression  String?
+  // Next time the dispatcher should post a leaderboard update for this row.
+  // The dispatcher selects rows where this is <= now (or NULL, as self-heal)
+  // and recomputes this field from updateCronExpression after each post.
+  nextScheduledUpdateAt DateTime?
+  // Wall-clock time of the most recent dispatched leaderboard post.
+  lastScheduledUpdateAt DateTime?
+
   // Relations
   participants     CompetitionParticipant[]
   snapshots        CompetitionSnapshot[]
@@ -128,6 +139,7 @@ model Competition {
   // The "one active competition per owner" rule is enforced in application logic
   @@index([serverId, isCancelled])
   @@index([serverId, ownerId, isCancelled])
+  @@index([nextScheduledUpdateAt])
 }
 
 model CompetitionParticipant {

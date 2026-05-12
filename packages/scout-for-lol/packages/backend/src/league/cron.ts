@@ -1,7 +1,7 @@
 import { checkPostMatch } from "#src/league/tasks/postmatch/index.ts";
 import { checkPreMatch } from "#src/league/tasks/prematch/index.ts";
 import { runLifecycleCheck } from "#src/league/tasks/competition/lifecycle.ts";
-import { runDailyLeaderboardUpdate } from "#src/league/tasks/competition/daily-update.ts";
+import { runScheduledCompetitionUpdates } from "#src/league/tasks/competition/scheduled-update-dispatcher.ts";
 import { runPlayerPruning } from "#src/league/tasks/cleanup/prune-players.ts";
 import { checkAbandonedGuilds } from "#src/league/tasks/cleanup/abandoned-guilds.ts";
 import { runDataValidation } from "#src/league/tasks/cleanup/validate-data.ts";
@@ -67,16 +67,21 @@ export async function startCronJobs() {
     runOnInit: true,
   });
 
-  // post daily leaderboard updates at midnight UTC
-  logger.info("📅 Setting up daily leaderboard update job (midnight UTC)");
+  // dispatch per-competition scheduled leaderboard updates every minute.
+  // The dispatcher matches rows whose `nextScheduledUpdateAt` has passed and
+  // advances the next-fire from each row's CRON expression after posting.
+  logger.info(
+    "📅 Setting up scheduled competition leaderboard updates (every minute)",
+  );
   createCronJob({
-    schedule: "0 0 0 * * *",
-    jobName: "daily_leaderboard_update",
-    task: runDailyLeaderboardUpdate,
-    logMessage: "📊 Running daily leaderboard update",
+    schedule: "0 * * * * *",
+    jobName: "scheduled_competition_updates",
+    task: runScheduledCompetitionUpdates,
+    logMessage: "📊 Dispatching scheduled competition leaderboard updates",
     timezone: "UTC",
     runOnInit: false, // Don't run on init - prevents startup notifications
-    logTrigger: "Posting daily leaderboard updates for active competitions",
+    logTrigger:
+      "Posting due per-competition leaderboard updates and advancing next-fire",
   });
 
   // prune orphaned players daily at 3 AM UTC
@@ -152,7 +157,7 @@ export async function startCronJobs() {
   logger.info("✅ Cron jobs initialized successfully");
   logger.info(
     "📊 Pre-match check (30s), match history polling (1min), competition lifecycle (15min), data validation (hourly), " +
-      "match time refresh (6hr), daily leaderboard (midnight UTC), player pruning (3AM UTC), " +
-      "abandoned guild cleanup (4AM UTC), and weekly pairing update (Sunday 6PM UTC) cron jobs are now active",
+      "match time refresh (6hr), per-competition scheduled leaderboards (every minute, dispatched per row), " +
+      "player pruning (3AM UTC), abandoned guild cleanup (4AM UTC), and weekly pairing update (Sunday 6PM UTC) cron jobs are now active",
   );
 }

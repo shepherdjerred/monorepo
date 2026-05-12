@@ -55,6 +55,8 @@ export type CreateCompetitionInput = {
   maxParticipants: number;
   dates: CompetitionDates;
   criteria: CompetitionCriteria;
+  /** CRON expression (UTC); null/undefined defers to the dispatcher's default. */
+  updateCronExpression?: string | null;
 };
 
 // ============================================================================
@@ -106,6 +108,7 @@ export async function createCompetition(
       startDate,
       endDate,
       seasonId,
+      updateCronExpression: input.updateCronExpression ?? null,
       creatorDiscordId: input.ownerId,
       createdTime: now,
       updatedTime: now,
@@ -192,6 +195,39 @@ export async function getActiveCompetitions(
     where: activeOnlyWhere(now),
     orderBy: {
       createdTime: "desc",
+    },
+    include: competitionWithSeasonInclude,
+  });
+
+  return raw.map((item) => parseCompetition(item));
+}
+
+/**
+ * Get competitions whose scheduled leaderboard update is due.
+ *
+ * A row is due when it has been activated (`startProcessedAt` set), has not
+ * ended (`endProcessedAt` is null), is not cancelled, and either:
+ *   - `nextScheduledUpdateAt` is at or before `now`, or
+ *   - `nextScheduledUpdateAt` is null (self-heal path for rows that never had
+ *     a scheduled time computed — e.g. migration race or missed lifecycle
+ *     initialization).
+ */
+export async function getDueCompetitions(
+  prisma: ExtendedPrismaClient,
+  now: Date,
+): Promise<CompetitionWithCriteria[]> {
+  const raw = await prisma.competition.findMany({
+    where: {
+      isCancelled: false,
+      startProcessedAt: { not: null },
+      endProcessedAt: null,
+      OR: [
+        { nextScheduledUpdateAt: { lte: now } },
+        { nextScheduledUpdateAt: null },
+      ],
+    },
+    orderBy: {
+      nextScheduledUpdateAt: "asc",
     },
     include: competitionWithSeasonInclude,
   });

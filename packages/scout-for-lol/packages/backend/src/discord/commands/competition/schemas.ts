@@ -7,6 +7,7 @@ import {
   DiscordGuildIdSchema,
   SeasonIdSchema,
 } from "@scout-for-lol/data";
+import { CompetitionCronSchema } from "@scout-for-lol/data/model/competition-cron.ts";
 
 /**
  * Shared date validation helper for fixed dates
@@ -91,6 +92,7 @@ export const CommonArgsSchema = z.object({
   visibility: CompetitionVisibilitySchema.optional(),
   maxParticipants: z.number().int().min(2).max(100).optional(),
   addAllMembers: z.boolean().optional(),
+  updateCron: CompetitionCronSchema.optional(),
 });
 
 /**

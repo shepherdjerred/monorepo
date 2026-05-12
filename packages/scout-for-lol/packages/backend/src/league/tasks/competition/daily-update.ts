@@ -214,24 +214,121 @@ async function calculateLeaderboardSafely(
 }
 
 /**
- * Post daily leaderboard updates for all active competitions
+ * Post a leaderboard update for a single competition.
  *
- * This function:
- * 1. Finds all ACTIVE competitions across all servers
- * 2. For each competition:
- *    - Calculates current leaderboard
- *    - Generates formatted embed
- *    - Posts to competition channel
- * 3. Handles errors per-competition (doesn't fail all if one fails)
- * 4. Respects rate limits with delays between posts
- *
- * Called by cron job daily at midnight UTC
+ * Handles all per-competition errors internally (channel permission errors,
+ * snapshot-missing errors, S3 cache failures) so the caller can iterate
+ * without losing rows. Returns `{ success: false }` when no leaderboard post
+ * was sent, including when status drifts off ACTIVE.
+ */
+export async function postLeaderboardUpdate(
+  competition: CompetitionWithCriteria,
+): Promise<{ success: boolean }> {
+  try {
+    logger.info(
+      `[DailyLeaderboard] Updating competition ${competition.id.toString()}: ${competition.title}`,
+    );
+
+    const status = getCompetitionStatus(competition);
+    if (status !== "ACTIVE") {
+      logger.info(
+        `[DailyLeaderboard] Skipping competition ${competition.id.toString()} - status is ${status}, not ACTIVE`,
+      );
+      return { success: false };
+    }
+
+    // MOST_RANK_CLIMB-specific: late-ranked participants get their START snapshot now.
+    await backfillStartSnapshots(competition);
+
+    const leaderboard = await calculateLeaderboardSafely(competition);
+    if (!leaderboard) {
+      return { success: false };
+    }
+
+    const cachedLeaderboard: CachedLeaderboard = {
+      version: "v1",
+      competitionId: competition.id,
+      calculatedAt: new Date().toISOString(),
+      entries: leaderboard,
+    };
+
+    try {
+      await saveCachedLeaderboard(cachedLeaderboard);
+      logger.info(
+        `[DailyLeaderboard] ✅ Cached leaderboard to S3 for competition ${competition.id.toString()}`,
+      );
+    } catch (error) {
+      logger.error(
+        `[DailyLeaderboard] ⚠️  Failed to cache leaderboard to S3 for competition ${competition.id.toString()}:`,
+        error,
+      );
+      Sentry.captureException(error, {
+        tags: {
+          source: "cache-leaderboard-s3",
+          competitionId: competition.id.toString(),
+        },
+      });
+      // Caching failure must not block the Discord post.
+    }
+
+    const embed = generateLeaderboardEmbed(competition, leaderboard);
+    const chartAttachment = await buildCompetitionChartAttachment(
+      competition,
+      leaderboard,
+    );
+
+    logNotification("DAILY_LEADERBOARD", "daily-update:postLeaderboardUpdate", {
+      competitionId: competition.id,
+      competitionTitle: competition.title,
+      channelId: competition.channelId,
+      serverId: competition.serverId,
+    });
+    await sendChannelMessage(
+      {
+        content: `📊 **Daily Leaderboard Update** - ${competition.title}`,
+        embeds: [embed],
+        files: chartAttachment ? [chartAttachment] : [],
+      },
+      competition.channelId,
+      competition.serverId,
+    );
+
+    logger.info(
+      `[DailyLeaderboard] ✅ Updated competition ${competition.id.toString()}`,
+    );
+    return { success: true };
+  } catch (error) {
+    const channelSendError = z.instanceof(ChannelSendError).safeParse(error);
+    if (channelSendError.success && channelSendError.data.permissionError) {
+      logger.warn(
+        `[DailyLeaderboard] ⚠️  Cannot update competition ${competition.id.toString()} - missing permissions in channel ${competition.channelId}. Server owner has been notified.`,
+      );
+    } else {
+      logger.error(
+        `[DailyLeaderboard] ❌ Error updating competition ${competition.id.toString()}:`,
+        error,
+      );
+      Sentry.captureException(error, {
+        tags: {
+          source: "daily-leaderboard-update",
+          competitionId: competition.id.toString(),
+        },
+      });
+    }
+    return { success: false };
+  }
+}
+
+/**
+ * Post leaderboard updates for every active competition, ignoring per-row
+ * schedules. Used by the `/debug force-leaderboard-update` admin command and
+ * exercised by integration tests; the scheduled per-minute cron uses
+ * `runScheduledCompetitionUpdates` instead.
  */
 export async function runDailyLeaderboardUpdate(): Promise<void> {
   logger.info("[DailyLeaderboard] Running daily leaderboard update");
 
   try {
-    // Get all active competitions (across all servers)
     const activeCompetitions = await getActiveCompetitions(prisma);
 
     logger.info(
@@ -243,126 +340,19 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
       return;
     }
 
-    // Process each competition
     let successCount = 0;
     let failureCount = 0;
 
     for (const competition of activeCompetitions) {
-      try {
-        logger.info(
-          `[DailyLeaderboard] Updating competition ${competition.id.toString()}: ${competition.title}`,
-        );
-
-        // Verify competition is actually ACTIVE (not DRAFT, ENDED, or CANCELLED)
-        const status = getCompetitionStatus(competition);
-        if (status !== "ACTIVE") {
-          logger.info(
-            `[DailyLeaderboard] Skipping competition ${competition.id.toString()} - status is ${status}, not ACTIVE`,
-          );
-          continue;
-        }
-
-        // Backfill START snapshots for players who were unranked but are now ranked
-        // This is specific to MOST_RANK_CLIMB competitions
-        await backfillStartSnapshots(competition);
-
-        // Calculate current leaderboard
-        const leaderboard = await calculateLeaderboardSafely(competition);
-        if (!leaderboard) {
-          failureCount++;
-          continue;
-        }
-
-        // Cache leaderboard to S3 (both current and historical snapshot)
-        const cachedLeaderboard: CachedLeaderboard = {
-          version: "v1",
-          competitionId: competition.id,
-          calculatedAt: new Date().toISOString(),
-          entries: leaderboard,
-        };
-
-        try {
-          await saveCachedLeaderboard(cachedLeaderboard);
-          logger.info(
-            `[DailyLeaderboard] ✅ Cached leaderboard to S3 for competition ${competition.id.toString()}`,
-          );
-        } catch (error) {
-          logger.error(
-            `[DailyLeaderboard] ⚠️  Failed to cache leaderboard to S3 for competition ${competition.id.toString()}:`,
-            error,
-          );
-          Sentry.captureException(error, {
-            tags: {
-              source: "cache-leaderboard-s3",
-              competitionId: competition.id.toString(),
-            },
-          });
-          // Continue - caching failure shouldn't stop the Discord update
-        }
-
-        // Generate embed for the leaderboard
-        const embed = generateLeaderboardEmbed(competition, leaderboard);
-
-        // Generate trend chart attachment (best-effort; null if too few snapshots)
-        const chartAttachment = await buildCompetitionChartAttachment(
-          competition,
-          leaderboard,
-        );
-
-        // Post to competition channel
-        logNotification(
-          "DAILY_LEADERBOARD",
-          "daily-update:runDailyLeaderboardUpdate",
-          {
-            competitionId: competition.id,
-            competitionTitle: competition.title,
-            channelId: competition.channelId,
-            serverId: competition.serverId,
-          },
-        );
-        await sendChannelMessage(
-          {
-            content: `📊 **Daily Leaderboard Update** - ${competition.title}`,
-            embeds: [embed],
-            files: chartAttachment ? [chartAttachment] : [],
-          },
-          competition.channelId,
-          competition.serverId,
-        );
-
-        logger.info(
-          `[DailyLeaderboard] ✅ Updated competition ${competition.id.toString()}`,
-        );
+      const { success } = await postLeaderboardUpdate(competition);
+      if (success) {
         successCount++;
-
-        // Small delay to avoid rate limits (1 second between posts)
-        // Discord rate limit is 5 messages per 5 seconds per channel
-        // But we're posting to different channels, so 1 second is conservative
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      } catch (error) {
-        // Handle permission errors gracefully - they're expected in some cases
-        const channelSendError = z
-          .instanceof(ChannelSendError)
-          .safeParse(error);
-        if (channelSendError.success && channelSendError.data.permissionError) {
-          logger.warn(
-            `[DailyLeaderboard] ⚠️  Cannot update competition ${competition.id.toString()} - missing permissions in channel ${competition.channelId}. Server owner has been notified.`,
-          );
-        } else {
-          logger.error(
-            `[DailyLeaderboard] ❌ Error updating competition ${competition.id.toString()}:`,
-            error,
-          );
-          Sentry.captureException(error, {
-            tags: {
-              source: "daily-leaderboard-update",
-              competitionId: competition.id.toString(),
-            },
-          });
-        }
+      } else {
         failureCount++;
-        // Continue with other competitions - don't let one failure stop all updates
       }
+
+      // Conservative cross-channel rate limit (Discord allows 5 msgs / 5s / channel).
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
     logger.info(

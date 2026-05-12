@@ -123,6 +123,7 @@ async function parseCreateArgs(
         interaction.options.getInteger("max-participants") ?? undefined,
       addAllMembers:
         interaction.options.getBoolean("add-all-members") ?? undefined,
+      updateCron: interaction.options.getString("update-cron") ?? undefined,
     });
 
     logger.info(`✅ Command arguments validated successfully`);
@@ -319,6 +320,7 @@ export async function executeCompetitionCreate(
       maxParticipants: args.maxParticipants ?? 50,
       dates,
       criteria,
+      updateCronExpression: args.updateCron ?? null,
     };
 
     logger.info(`✅ Competition input built (fully type-safe)`);
