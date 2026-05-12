@@ -34,10 +34,12 @@ const TARGETS: BuildTarget[] = [
 
 export function clauderonBuildGroup(pkgKey?: string): BuildkiteGroup {
   const dependsOn = pkgKey ? ["quality-gate", pkgKey] : ["quality-gate"];
+  // Per-target Rust build is pure validation (cross-compile, no upload), so
+  // it runs on every branch — change-detection scopes to clauderon-affected
+  // PRs only. The upload step (clauderonUploadStep) stays MAIN_ONLY.
   const buildSteps: BuildkiteStep[] = TARGETS.map((t) => ({
     label: `:rust: Build clauderon (${t.label})`,
     key: t.key,
-    if: MAIN_ONLY,
     depends_on: dependsOn,
     command: `dagger call rust-build --pkg-dir ./packages/clauderon --target ${t.target}`,
     timeout_in_minutes: 20,

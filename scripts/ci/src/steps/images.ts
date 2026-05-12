@@ -1,8 +1,13 @@
 /**
  * Image build and push step generators.
  *
- * Build steps (build-phase) warm the Dagger cache and run smoke tests.
- * Push steps (release-phase) publish to GHCR, reusing the cached build.
+ * Build and smoke steps run on every branch (PRs included) — they are pure
+ * validation with no production side effect. Change-detection scopes them to
+ * actually-affected packages (see scripts/ci/src/change-detection.ts).
+ *
+ * Push steps stay gated to `MAIN_ONLY` because they need GHCR credentials and
+ * publish a versioned artifact. Anything below MAIN_ONLY-gated should produce
+ * a real production side effect; pure validation runs on PRs.
  */
 import type { ImageTarget } from "../catalog.ts";
 import {
@@ -81,7 +86,6 @@ function imageBuildStep(
   return {
     label: `:docker: Build ${img.name}`,
     key: `build-${safeKey(img.name)}`,
-    if: MAIN_ONLY,
     depends_on: dependsOn,
     command: cmd,
     timeout_in_minutes: 15,
@@ -155,7 +159,6 @@ function smokeTestStep(
   return {
     label: `:heartbeat: Smoke ${img.name}`,
     key: `smoke-${safeKey(img.name)}`,
-    if: MAIN_ONLY,
     depends_on: dependsOn,
     command: cmd,
     timeout_in_minutes: 10,
