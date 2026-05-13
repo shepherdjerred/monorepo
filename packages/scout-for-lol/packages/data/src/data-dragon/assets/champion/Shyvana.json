@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.9.1",
+  "version": "16.10.1",
   "data": {
     "Shyvana": {
       "id": "Shyvana",
@@ -218,7 +218,7 @@
       },
       "stats": {
         "hp": 625,
-        "hpperlevel": 100,
+        "hpperlevel": 95,
         "mp": 100,
         "mpperlevel": 0,
         "movespeed": 350,
@@ -384,7 +384,7 @@
           "id": "ShyvanaW",
           "name": "Inferno Aegis",
           "description": "Shyvana gains a shield, movement speed, and after a short delay, the area around her detonates.  While in Dragon Form, the explosion will heal her if it strikes an enemy champion.",
-          "tooltip": "Shyvana wraps herself in flames for {{ duration }} seconds, gaining <shield>{{ calc_shield }} Shield</shield>, increased by <shield>{{ calc_shield_per_nearby_champion }}</shield> per nearby enemy champion and <speed>{{ movespeed }} Move Speed</speed>, increased to <speed>{{ movespeedtowardsenemies }}</speed> when moving towards enemy champions.<br /><br />When the effect ends, the <shield>Shield</shield> is broken, or upon <recast>Recast</recast> the area around her detonates, dealing <magicDamage>{{ damage }} magic damage</magicDamage>.<br /><br /><keywordMajor>Dragon Form:</keywordMajor> If the detonation hits an enemy champion Shyvana <healing> {{ calc_base_heal }} + {{ calc_missing_health_heal }} Missing Health</healing>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Shyvana wraps herself in flames for {{ duration }} seconds, gaining <shield>{{ calc_shield }} Shield</shield>, increased by <shield>{{ calc_shield_per_nearby_champion }}</shield> per nearby enemy champion and <speed>{{ movespeed }} Move Speed</speed>, increased to <speed>{{ movespeedtowardsenemies }}</speed> when moving towards enemy champions.<br /><br />When the effect ends, the <shield>Shield</shield> is broken, or upon <recast>Recast</recast> the area around her detonates, dealing <magicDamage>{{ damage }} magic damage</magicDamage>.<br /><br /><keywordMajor>Dragon Form:</keywordMajor> If the detonation hits an enemy champion Shyvana heals for <healing> {{ calc_base_heal }} + {{ calc_missing_health_heal }} Missing Health</healing>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Cooldown",
@@ -400,12 +400,12 @@
           "maxrank": 5,
           "cooldown": [
             13,
-            12,
-            11,
-            10,
-            9
+            12.25,
+            11.5,
+            10.75,
+            10
           ],
-          "cooldownBurn": "13/12/11/10/9",
+          "cooldownBurn": "13/12.25/11.5/10.75/10",
           "cost": [
             0,
             0,

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.9.1",
+  "version": "16.10.1",
   "data": {
     "LeeSin": {
       "id": "LeeSin",
@@ -747,7 +747,7 @@
           "id": "LeeSinWOne",
           "name": "Safeguard / Iron Will",
           "description": "Safeguard: Lee Sin rushes to target ally, shielding himself from damage. If the ally is a champion, they are also shielded. After using Safeguard, Lee Sin can cast Iron Will.<br>Iron Will: Lee Sin's intense training allows him to thrive in battle. Lee Sin gains Omnivamp.",
-          "tooltip": "Lee Sin dashes to an ally or ward. If the target is a champion, Lee Sin grants them and himself <shield>{{ shieldamount }} Shield</shield> for {{ shieldduration }} seconds and reduces this Ability's Cooldown by {{ w1cooldownrecovered*100 }}%. Lee Sin may <recast>Recast</recast> for the next {{ w1reactivatetime }} seconds.<br /><br /><recast>Recast:</recast> Lee Sin gains {{ lifestealandspellvamp }}% Omnivamp for {{ lifestealandspellvamptime }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Lee Sin dashes to an ally or ward. If the target is a champion, Lee Sin grants them and himself <shield>{{ shieldamount }} Shield</shield> for {{ shieldduration }}. Lee Sin may <recast>Recast</recast> for the next {{ w1reactivatetime }} seconds.<br /><br /><recast>Recast:</recast> Lee Sin gains {{ lifestealandspellvamp }}% Omnivamp for {{ lifestealandspellvamptime }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Safeguard Shield Absorption",
@@ -760,13 +760,13 @@
           },
           "maxrank": 5,
           "cooldown": [
-            12,
-            12,
-            12,
-            12,
-            12
+            7,
+            7,
+            7,
+            7,
+            7
           ],
-          "cooldownBurn": "12",
+          "cooldownBurn": "7",
           "cost": [
             50,
             50,

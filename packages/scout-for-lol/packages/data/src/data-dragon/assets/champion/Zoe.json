@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.9.1",
+  "version": "16.10.1",
   "data": {
     "Zoe": {
       "id": "Zoe",
@@ -516,7 +516,7 @@
           "id": "ZoeW",
           "name": "Spell Thief",
           "description": "Zoe can pick up the remnants of enemy summoner spell and active item casts and cast them once herself. Whenever she casts a summoner spell, she gains 3 missiles that fire at the nearest target.",
-          "tooltip": "<spellPassive>Passive:</spellPassive> Enemies drop spell shards when casting a Summoner Spell or using an Active Item. Specific minions also drop a spell shard when Zoe or a nearby ally kills them. Zoe can pick up this shard to cast that ability once.<br /><br /><spellPassive>Passive:</spellPassive> When Zoe casts this Ability or any Summoner Spell, she gains <speed>{{ e9 }}% Move Speed</speed> for {{ e0 }} seconds and tosses 3 missiles at the target she Attacked most recently. These missiles deal <magicDamage>{{ missiledamagetooltip }} magic damage</magicDamage> each.<br /><br /><spellActive>Active:</spellActive> Cast the Ability from a spell shard Zoe has picked up.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Enemies drop spell shards when casting a Summoner Spell or using an Active Item. Specific minions also drop a spell shard when Zoe or a nearby ally kills them. Zoe can pick up this shard to cast that ability once.<br /><br /><spellPassive>Passive:</spellPassive> When Zoe casts this Ability or any Summoner Spell, she gains <speed>{{ movementspeed*100 }}% Move Speed</speed> for {{ msduration }} seconds and tosses 3 missiles at the target she Attacked most recently. These missiles deal <magicDamage>{{ missiledamagetooltip }} magic damage</magicDamage> each.<br /><br /><spellActive>Active:</spellActive> Cast the Ability from a spell shard Zoe has picked up.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Total Damage",
@@ -606,11 +606,11 @@
               0
             ],
             [
-              30,
-              40,
-              50,
-              60,
-              70
+              0.3,
+              0.4,
+              0.5,
+              0.6,
+              0.7
             ],
             [
               2,
@@ -630,7 +630,7 @@
             "20/50/80/110/140",
             "0.2",
             "0",
-            "30/40/50/60/70",
+            "0.3/0.4/0.5/0.6/0.7",
             "2/2.25/2.5/2.75/3"
           ],
           "vars": [],

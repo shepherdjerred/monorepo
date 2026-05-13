@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.9.1",
+  "version": "16.10.1",
   "data": {
     "Ivern": {
       "id": "Ivern",
@@ -221,6 +221,68 @@
           "num": 30,
           "name": "Spirit Blossom Ivern",
           "chromas": false
+        },
+        {
+          "id": "427031",
+          "num": 31,
+          "name": "Rain Shepherd Ivern",
+          "chromas": false
+        },
+        {
+          "id": "427032",
+          "num": 32,
+          "name": "Rain Shepherd Ivern (Ruby)",
+          "chromas": true,
+          "parentSkin": 31
+        },
+        {
+          "id": "427033",
+          "num": 33,
+          "name": "Rain Shepherd Ivern (Catseye)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "427034",
+          "num": 34,
+          "name": "Rain Shepherd Ivern (Sapphire)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "427035",
+          "num": 35,
+          "name": "Rain Shepherd Ivern (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "427036",
+          "num": 36,
+          "name": "Rain Shepherd Ivern (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "427037",
+          "num": 37,
+          "name": "Rain Shepherd Ivern (Turquoise)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "427038",
+          "num": 38,
+          "name": "Rain Shepherd Ivern (Pearl)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "427039",
+          "num": 39,
+          "name": "Rain Shepherd Ivern (Obsidian)",
+          "chromas": false,
+          "parentSkin": 31
         }
       ],
       "lore": "Ivern Bramblefoot, known to many as the Green Father, is a peculiar half man, half tree who roams Runeterra's forests, cultivating life everywhere he goes. He knows the secrets of the natural world, and holds deep friendships with all things that grow, fly, and scuttle. Ivern wanders the wilderness, imparting strange wisdom to any he meets, enriching the forests, and occasionally entrusting loose-lipped butterflies with his secrets.",

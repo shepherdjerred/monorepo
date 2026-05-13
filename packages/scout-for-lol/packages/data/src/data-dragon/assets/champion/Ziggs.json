@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.9.1",
+  "version": "16.10.1",
   "data": {
     "Ziggs": {
       "id": "Ziggs",
@@ -572,7 +572,7 @@
               "Tower Destruction Threshold"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ turretdestroypercent*100.000000 }}% -> {{ turretdestroypercentnl*100.000000 }}%"
             ]
@@ -707,7 +707,7 @@
           "id": "ZiggsE",
           "name": "Hexplosive Minefield",
           "description": "Ziggs scatters proximity mines that detonate on enemy contact, dealing magic damage and slowing. Successive mine detonations on the same target deal reduced damage.",
-          "tooltip": "Ziggs scatters proximity mines that detonate on enemy contact, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slows</status> by {{ slow*-100 }}% for {{ e4 }} seconds. Mines last {{ mineduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Ziggs scatters proximity mines that detonate on enemy contact, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slows</status> by {{ slow*-100 }}% for {{ slowduration }} seconds. Mines last {{ mineduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Mine Damage",

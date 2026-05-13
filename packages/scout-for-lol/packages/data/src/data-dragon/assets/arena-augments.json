@@ -1630,9 +1630,9 @@
         1,
         2,
         3,
-        3,
-        3,
-        3
+        4,
+        4,
+        4
       ],
       "MaxLevel": [
         2,
@@ -2817,8 +2817,8 @@
       "CritDamage": [
         1.399999976158142,
         1.399999976158142,
+        1.5,
         1.600000023841858,
-        1.7999999523162842,
         1.7999999523162842,
         1.7999999523162842,
         1.7999999523162842
@@ -5059,13 +5059,13 @@
         50
       ],
       "MaxLevel": [
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
       ]
     },
     "calculations": {},
@@ -6787,10 +6787,10 @@
     "rarity": "gold",
     "dataValues": {
       "BonusAD": [
-        0.15000000596046448,
         0.25,
+        0.25,
+        0.30000001192092896,
         0.3499999940395355,
-        0.44999998807907104,
         0.550000011920929,
         0.6499999761581421,
         0.75
@@ -6805,10 +6805,10 @@
         0.44999998807907104
       ],
       "BonusHP": [
-        0.15000000596046448,
         0.25,
+        0.25,
+        0.30000001192092896,
         0.3499999940395355,
-        0.44999998807907104,
         0.550000011920929,
         0.6499999761581421,
         0.75
@@ -6823,13 +6823,13 @@
         0.25
       ],
       "BonusMS": [
-        0.20000000298023224,
-        0.20000000298023224,
-        0.20000000298023224,
-        0.20000000298023224,
-        0.20000000298023224,
-        0.20000000298023224,
-        0.20000000298023224
+        0.15000000596046448,
+        0.15000000596046448,
+        0.15000000596046448,
+        0.15000000596046448,
+        0.15000000596046448,
+        0.15000000596046448,
+        0.15000000596046448
       ],
       "ExtraStackAttackRangeCeiling": [
         650,
@@ -7979,11 +7979,11 @@
       "BonusLives": [
         1,
         1,
+        2,
         3,
         4,
-        5,
-        6,
-        7
+        4,
+        4
       ],
       "CapstoneAllyBonusLives": [
         1,
@@ -7995,13 +7995,13 @@
         1
       ],
       "MaxLevel": [
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
       ],
       "ReviveArmTime": [
         2,
@@ -9472,7 +9472,7 @@
     "apiName": "FanTheHammer",
     "name": "Fan the Hammer",
     "desc": "When you Attack, fire @AdditionalBolts@ bolts that each deal <physicalDamage>physical damage</physicalDamage> and apply applies your {{ Item_Keyword_OnHit }}.",
-    "tooltip": "When you Attack, fire @AdditionalBolts@ bolts that each deal <physicalDamage>@DamagePerBolt@ physical damage</physicalDamage>. Each cardinal direction has a @Cooldown@ second Cooldown.<br><br>Each bolt can <crit>Critically Strike</crit> and applies {{ Item_Keyword_OnHit }} at @OnHitRatio*100@% effectiveness.",
+    "tooltip": "When you Attack enemy champions, fire @AdditionalBolts@ bolts that each deal <physicalDamage>@DamagePerBolt@ physical damage</physicalDamage>. Each cardinal direction has a @Cooldown@ second Cooldown.<br><br>Each bolt can <crit>Critically Strike</crit> and applies {{ Item_Keyword_OnHit }} at @OnHitRatio*100@% effectiveness.",
     "iconLarge": "assets/ux/cherry/augments/icons/fanthehammer_large.png",
     "iconSmall": "assets/ux/cherry/augments/icons/fanthehammer_small.png",
     "rarity": "gold",
@@ -9498,20 +9498,20 @@
       "Cooldown": [
         7,
         7,
-        6,
+        5,
         5,
         4,
         3,
         2
       ],
       "MaxLevel": [
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
       ],
       "MaxLevelAdditionalBolts": [
         1,
@@ -9860,13 +9860,13 @@
         3
       ],
       "PercentStatAmp": [
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612
+        0.20000000298023224,
+        0.20000000298023224,
+        0.20000000298023224,
+        0.20000000298023224,
+        0.20000000298023224,
+        0.20000000298023224,
+        0.20000000298023224
       ]
     },
     "calculations": {},
@@ -9901,13 +9901,13 @@
         3
       ],
       "PercentStatAmp": [
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612
+        0.20000000298023224,
+        0.20000000298023224,
+        0.20000000298023224,
+        0.20000000298023224,
+        0.20000000298023224,
+        0.20000000298023224,
+        0.20000000298023224
       ]
     },
     "calculations": {},
@@ -9942,13 +9942,13 @@
         3
       ],
       "PercentStatAmp": [
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612
+        0.20000000298023224,
+        0.20000000298023224,
+        0.20000000298023224,
+        0.20000000298023224,
+        0.20000000298023224,
+        0.20000000298023224,
+        0.20000000298023224
       ]
     },
     "calculations": {},
@@ -9958,8 +9958,8 @@
     "id": 229,
     "apiName": "FireSale",
     "name": "Fire Sale",
-    "desc": "Instantly sell all your non-quest items for @SellValueTooltip@% of their direct buy price. Great for all those discounted anvils.",
-    "tooltip": "Instantly sell all your non-quest items for @SellValueTooltip@% of their direct buy price. Great for all those discounted anvils.",
+    "desc": "Instantly sell all your non-quest items for @SellValueTooltip@% of their direct buy price. <br><br>Great for all those discounted anvils.",
+    "tooltip": "Instantly sell all your non-quest items for @SellValueTooltip@% of their direct buy price. Great for all those discounted anvils.<br><br>When removed or replaced gain <gold>+%i:goldCoins% @f1@ gold</gold> equal to @RemovalGoalGainPercentage*100@% of the gold gained from <keywordMajor>FireSale</keywordMajor>.",
     "iconLarge": "assets/ux/cherry/augments/icons/firesale_large.png",
     "iconSmall": "assets/ux/cherry/augments/icons/firesale_small.png",
     "rarity": "silver",
@@ -9999,6 +9999,15 @@
         3750,
         3750,
         3750
+      ],
+      "RemovalGoalGainPercentage": [
+        0.30000001192092896,
+        0.30000001192092896,
+        0.30000001192092896,
+        0.30000001192092896,
+        0.30000001192092896,
+        0.30000001192092896,
+        0.30000001192092896
       ],
       "SellValueTooltip": [
         100,
@@ -10248,8 +10257,8 @@
         1000
       ],
       "LegendaryCostReduction": [
-        500,
-        500,
+        750,
+        750,
         750,
         750,
         750,
@@ -10266,22 +10275,22 @@
         1000
       ],
       "MaxLevel": [
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
       ],
       "PrismaticCostReduction": [
-        -1500,
-        -1500,
-        -2000,
-        -2000,
-        -2000,
-        -2000,
-        -2000
+        1500,
+        1500,
+        2000,
+        2000,
+        2000,
+        2000,
+        2000
       ],
       "PrismaticGoldBasisDiscount": [
         1250,
@@ -10293,8 +10302,8 @@
         1250
       ],
       "StatCostReduction": [
-        150,
-        150,
+        250,
+        250,
         300,
         300,
         300,
@@ -12352,7 +12361,7 @@
     "apiName": "BravestoftheBrave",
     "name": "Bravest of the Brave",
     "desc": "Increase future augment offerings by @tierValueIncrease@ tier. If the augments were already Prismatic tier, gain a bonus @GoldAmount@ gold.",
-    "tooltip": "Increase future %i:Augment%Augment offerings by @tierValueIncrease@ tier. If the Augment's tier was already Prismatic, gain <gold>+%i:goldCoins%@GoldAmount@ gold</gold>.",
+    "tooltip": "Increase future %i:Augment%Augment offerings by @tierValueIncrease@ tier(s). If the Augment's tier was already Prismatic, gain <gold>+%i:goldCoins%@GoldAmount@ gold</gold>.",
     "iconLarge": "assets/ux/cherry/augments/icons/bravestofthebrave_large.png",
     "iconSmall": "assets/ux/cherry/augments/icons/bravestofthebrave_small.png",
     "rarity": "silver",
@@ -12360,11 +12369,11 @@
       "GoldAmount": [
         750,
         750,
-        750,
-        750,
-        750,
-        750,
-        750
+        1500,
+        1500,
+        1500,
+        1500,
+        1500
       ],
       "MaxLevel": [
         2,
@@ -12732,6 +12741,123 @@
     "calculations": {},
     "type": "full"
   },
+  "338": {
+    "id": 338,
+    "apiName": "HiveMind",
+    "name": "Hive Mind",
+    "desc": "Start each round with @StartingBees@ Bee, gain additonal Bees by harvesting flowers. Damaging an enemy champion sends a Bee dealing <magicDamage>@BeeDamage@ magic damage</magicDamage> over @DebuffDuration@ seconds on arrival, before returning to you.<br>",
+    "tooltip": "Start each round with @StartingBees@ Bee, gain additonal Bees by harvesting flowers. Damaging an enemy champion sends a Bee dealing <magicDamage>@BeeDamage@ magic damage</magicDamage> over @DebuffDuration@ seconds on arrival, before returning to you.",
+    "iconLarge": "assets/ux/cherry/augments/icons/hive_mind_large.png",
+    "iconSmall": "assets/ux/cherry/augments/icons/hive_mind_small.png",
+    "rarity": "gold",
+    "dataValues": {
+      "ASReduction": [
+        0,
+        0,
+        0,
+        0.30000001192092896,
+        0.30000001192092896,
+        0.30000001192092896,
+        0.30000001192092896
+      ],
+      "BaseDamageMax": [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      "BaseDamageMin": [
+        40,
+        40,
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "BeeRange": [
+        25000,
+        25000,
+        25000,
+        25000,
+        25000,
+        25000,
+        25000
+      ],
+      "DebuffDuration": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "MaxBeeStacks": [
+        8,
+        8,
+        12,
+        16,
+        99,
+        99,
+        99
+      ],
+      "MaxLevel": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "SpellCooldown": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "StartingBees": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    "calculations": {
+      "BeeDamage": {
+        "__type": "GameCalculation",
+        "mFormulaParts": [
+          {
+            "__type": "{ee18a47b}",
+            "{0589a59c}": "BaseDamageMin",
+            "{0b65bc23}": "BaseDamageMax"
+          },
+          {
+            "__type": "StatByCoefficientCalculationPart",
+            "mCoefficient": 0.20000000298023224
+          },
+          {
+            "__type": "StatByCoefficientCalculationPart",
+            "mCoefficient": 0.20000000298023224,
+            "mStat": 2,
+            "mStatFormula": 2
+          }
+        ],
+        "{72c5c2a8}": 1
+      }
+    },
+    "type": "full"
+  },
   "340": {
     "id": 340,
     "apiName": "CraftingPrisStatAnvil",
@@ -12766,13 +12892,13 @@
     "rarity": "silver",
     "dataValues": {
       "RoundsUntilFreeAugment": [
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
       ],
       "SlotsToGrant": [
         1,
@@ -12879,9 +13005,9 @@
       "SpellDamagePerStack": [
         0.019999999552965164,
         0.019999999552965164,
+        0.029999999329447746,
         0.03999999910593033,
-        0.05999999865889549,
-        0.05999999865889549,
+        0.05000000074505806,
         0.07000000029802322,
         0.07999999821186066
       ]
@@ -13145,10 +13271,10 @@
         200,
         200,
         300,
-        300,
-        300,
-        300,
-        300
+        400,
+        400,
+        400,
+        400
       ],
       "MSDuration": [
         2,
@@ -13160,16 +13286,16 @@
         2
       ],
       "MaxLevel": [
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
       ],
       "MoveSpeedAmp": [
-        0,
+        0.4000000059604645,
         0.4000000059604645,
         0.4000000059604645,
         0.4000000059604645,
@@ -13324,13 +13450,13 @@
         1
       ],
       "RevivesLost": [
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
       ],
       "SizeMod": [
         0.20000000298023224,
@@ -13457,13 +13583,13 @@
       ],
       "HealthCost": 0,
       "HealthRestorePercent": [
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10
       ]
     },
     "calculations": {},
@@ -13498,13 +13624,13 @@
         1
       ],
       "HealthRestorePercent": [
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10
       ]
     },
     "calculations": {
@@ -13551,13 +13677,13 @@
       ],
       "HealthCost": 0,
       "HealthRestorePercent": [
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10
       ]
     },
     "calculations": {},
@@ -13739,13 +13865,13 @@
     "rarity": "silver",
     "dataValues": {
       "GoldToGrant": [
-        3000,
-        3000,
-        3000,
-        3000,
-        3000,
-        3000,
-        3000
+        2500,
+        2500,
+        2500,
+        2500,
+        2500,
+        2500,
+        2500
       ],
       "HealthReductionPercent": [
         15,
@@ -13800,13 +13926,13 @@
         10
       ],
       "AnvilsGranted": [
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
       ],
       "HealthReductionPercent": [
         15,

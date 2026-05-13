@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.9.1",
+  "version": "16.10.1",
   "data": {
     "Rakan": {
       "id": "Rakan",
@@ -745,7 +745,7 @@
           "id": "RakanE",
           "name": "Battle Dance",
           "description": "Flies to an allied champion granting them a shield. Can be re-cast for free for a short duration.",
-          "tooltip": "Rakan dashes to an allied champion, granting them <shield>{{ totalshield }} Shield</shield> for {{ e3 }} seconds.<br /><br />Rakan can <recast>Recast</recast> this Ability once within {{ e2 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Rakan dashes to an allied champion, granting them <shield>{{ totalshield }} Shield</shield> for {{ duration }} seconds.<br /><br />Rakan can <recast>Recast</recast> this Ability once within {{ recastwindow }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Shield Health",
@@ -754,8 +754,8 @@
             ],
             "effect": [
               "{{ baseshield }} -> {{ baseshieldNL }}",
-              "{{ e4 }} -> {{ e4NL }}",
-              "{{ e5 }} -> {{ e5NL }}"
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
@@ -888,7 +888,7 @@
           "id": "RakanR",
           "name": "The Quickness",
           "description": "Gains Move Speed, charming and dealing magic damage to enemies touched.",
-          "tooltip": "Rakan gains <speed>{{ e5 }}% Move Speed</speed> for {{ e2 }} seconds. Rakan deals <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> and <status>Charms</status> enemies for {{ e3 }} second(s) the first time he touches them. The first champion touched grants Rakan <speed>{{ e6 }}% decaying Move Speed</speed>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Rakan gains <speed>{{ initialcastspeed }}% Move Speed</speed> for {{ duration }} seconds. Rakan deals <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> and <status>Charms</status> enemies for {{ charmduration }} second(s) the first time he touches them. The first champion touched grants Rakan <speed>{{ touchspeed }}% decaying Move Speed</speed>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Charm Duration",
@@ -896,8 +896,8 @@
               "Cooldown"
             ],
             "effect": [
-              "{{ e3 }} -> {{ e3NL }}",
-              "{{ e1 }} -> {{ e1NL }}",
+              "{{ charmduration }} -> {{ charmdurationNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
