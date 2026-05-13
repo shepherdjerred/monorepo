@@ -116,7 +116,7 @@ const versions = {
     "2.0.0-2422@sha256:2ded181e1b800fed35915554c26f090fb532ea2518e255fcc2ef4b05c8c9c73e",
   // not managed by renovate
   "shepherdjerred/discord-plays-pokemon":
-    "2.0.0-2422@sha256:109e81c81117fa4c1d098680bf90e7f795e20f0dc300f34a463b9f9cdadd2aef",
+    "2.0.0-2441@sha256:b52f11c51fc24aadbc489b102f24f0ab2add779b9339e58b17e2aae8dad0a61b",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "freshrss/freshrss":
     "1.29.0@sha256:cca8988d05cd449e1c6c69405971b1e6fc2c2116ceeb45c9fa3fc33837997a75",
@@ -206,7 +206,7 @@ const versions = {
   // Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3
   // not managed by renovate
   "shepherdjerred/caddy-s3proxy":
-    "2.0.0-2429@sha256:260e37d648c1133f5dedb8b3d6318bf9c97e8b8d08603d16d21e386f86d8c538",
+    "2.0.0-2441@sha256:08c70d076f78ceb26780ac264086773e817d02e4a9e5b6584d8098b886185330",
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
@@ -214,7 +214,7 @@ const versions = {
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
-    "2.0.0-2429@sha256:232543e803f0c8d97b9adb8a0836b77c73e13362692b99724eaaeb4d5e40e327",
+    "2.0.0-2441@sha256:4d698629a49a0c7219b7d146f14eb5fd53455ddd33caa26facf31255885682b1",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "temporalio/auto-setup":
     "1.29.6@sha256:1263120feed69d82e4ca23b8ca6f1d702c3029fe70714e382966d0192318eab6",
