@@ -30,8 +30,8 @@ import {
   argoCdSyncHelper,
   argoCdHealthWaitHelper,
   cooklangBuildHelper,
-  cooklangPushHelper,
-  cooklangCreateReleaseHelper,
+  cooklangPublishHelper,
+  cooklangVersionCommitBackHelper,
   clauderonCollectBinariesHelper,
   clauderonUploadHelper,
   versionCommitBackHelper,
@@ -1008,22 +1008,27 @@ export class Monorepo {
       .withoutDirectory("node_modules");
   }
 
-  /** Push cooklang artifacts to GitHub repository */
+  /**
+   * Publish built cooklang artifacts to the plugin repo: compute next patch
+   * version from the latest release tag, update manifest + versions.json,
+   * commit to main, and cut the GitHub release.
+   */
   @func({ cache: "never" })
-  async cooklangPush(
+  async cooklangPublish(
     source: Directory,
-    version: string,
     ghToken: Secret,
     dryrun = false,
   ): Promise<string> {
-    return cooklangPushHelper(source, version, ghToken, dryrun).stdout();
+    return cooklangPublishHelper(source, ghToken, dryrun).stdout();
   }
 
-  /** Build and push cooklang artifacts in a single pipeline */
+  /**
+   * Build cooklang, publish to plugin repo, and open the monorepo
+   * commit-back PR — full release pipeline in one call.
+   */
   @func({ cache: "never" })
-  async cooklangBuildAndPush(
+  async cooklangBuildAndPublish(
     pkgDir: Directory,
-    version: string,
     ghToken: Secret,
     depNames: string[] = [],
     depDirs: Directory[] = [],
@@ -1031,22 +1036,29 @@ export class Monorepo {
     dryrun = false,
   ): Promise<string> {
     const dist = this.cooklangBuild(pkgDir, depNames, depDirs, tsconfig);
-    return cooklangPushHelper(dist, version, ghToken, dryrun).stdout();
-  }
-
-  /** Build cooklang and create a GitHub release in a single pipeline */
-  @func({ cache: "never" })
-  async cooklangBuildAndRelease(
-    pkgDir: Directory,
-    version: string,
-    ghToken: Secret,
-    depNames: string[] = [],
-    depDirs: Directory[] = [],
-    tsconfig: File | null = null,
-    dryrun = false,
-  ): Promise<string> {
-    const dist = this.cooklangBuild(pkgDir, depNames, depDirs, tsconfig);
-    return cooklangCreateReleaseHelper(dist, version, ghToken, dryrun).stdout();
+    const publishOutput = await cooklangPublishHelper(
+      dist,
+      ghToken,
+      dryrun,
+    ).stdout();
+    const lines = publishOutput.trim().split("\n");
+    const newVersion = lines[lines.length - 1]?.trim() ?? "";
+    if (!/^\d+\.\d+\.\d+$/.test(newVersion)) {
+      throw new Error(
+        `cooklangPublish did not emit a semver version on its last line: got ${JSON.stringify(newVersion)}`,
+      );
+    }
+    const minAppVersion = await dist
+      .file("manifest.json")
+      .contents()
+      .then((c) => JSON.parse(c).minAppVersion as string);
+    const commitBackOutput = await cooklangVersionCommitBackHelper(
+      newVersion,
+      minAppVersion,
+      ghToken,
+      dryrun,
+    ).stdout();
+    return `${publishOutput}\n${commitBackOutput}`;
   }
 
   /** Build clauderon for multiple targets and collect binaries into one Directory */
@@ -1118,17 +1130,20 @@ export class Monorepo {
     return releasePleaseHelper(source, ghToken, dryrun).stdout();
   }
 
-  /** Create a GitHub release for cooklang-rich-preview */
+  /**
+   * Commit-back the cooklang plugin version + versions.json bump to the
+   * monorepo source after a successful publish.
+   */
   @func({ cache: "never" })
-  async cooklangCreateRelease(
-    artifacts: Directory,
+  async cooklangVersionCommitBack(
     version: string,
+    minAppVersion: string,
     ghToken: Secret,
     dryrun = false,
   ): Promise<string> {
-    return cooklangCreateReleaseHelper(
-      artifacts,
+    return cooklangVersionCommitBackHelper(
       version,
+      minAppVersion,
       ghToken,
       dryrun,
     ).stdout();
