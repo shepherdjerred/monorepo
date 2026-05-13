@@ -11,13 +11,13 @@
     "src"
   ],
   "scripts": {
-    "start": "bunx --trust prisma generate && bunx prisma db push && bun run src/index.ts",
+    "start": "bun run generate && bunx prisma db push && bun run src/index.ts",
     "dev": "bun run --watch src/index.ts",
     "build": "true",
-    "generate": "bunx --trust prisma generate",
-    "test": "bunx --env-file=.env.test --trust prisma generate && bun --env-file=.env.test test",
-    "typecheck": "bunx --trust prisma generate && tsc --noEmit",
-    "lint": "bunx --trust prisma generate && eslint ."
+    "generate": "bun run scripts/generate-prisma.ts",
+    "test": "bun --env-file=.env.test run generate && bun --env-file=.env.test test",
+    "typecheck": "bun run generate && tsc --noEmit",
+    "lint": "bun run generate && eslint ."
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.63",

@@ -213,6 +213,6 @@ talosctl upgrade --nodes 192.168.1.81 \
 ### Upgrade Kubernetes
 
 ```bash {"interpreter":"/opt/homebrew/bin/bash"}
-VERSION=1.36.1
+VERSION=1.36.0
 talosctl --nodes 192.168.1.81 upgrade-k8s --to $VERSION
 ```
