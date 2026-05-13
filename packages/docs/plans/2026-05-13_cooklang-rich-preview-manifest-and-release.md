@@ -76,9 +76,11 @@ released and avoids two concurrent CI runs producing the same version
 ### New
 
 - `packages/cooklang-for-obsidian/versions.json` — seed file:
+
   ```json
   { "1.0.0": "1.0.0" }
   ```
+
   Records the directory's existing v1.0.0 release so the first new flow
   run computes 1.0.0 → 1.0.1 correctly.
 
@@ -97,7 +99,8 @@ released and avoids two concurrent CI runs producing the same version
   - **Replace** `cooklangPushHelper` with a unified
     `cooklangPublishHelper(artifacts, ghToken, dryrun)` that performs steps
     2–4 above. Pseudocode:
-    ```
+
+    ```sh
     clone https://github.com/shepherdjerred/cooklang-for-obsidian into /repo
     latest=$(gh release list --repo shepherdjerred/cooklang-for-obsidian \
               --json tagName -q '.[].tagName' | head -1)
@@ -112,6 +115,7 @@ released and avoids two concurrent CI runs producing the same version
       --repo shepherdjerred/cooklang-for-obsidian --title "v$new" --generate-notes
     echo "$new" > /version.out   # stdout for caller
     ```
+
     Emit the new version on stdout so the commit-back step can consume it.
     Use `GIT_ASKPASS` for auth (same pattern as `versionCommitBackHelper`),
     not tokens in URLs (per `CLAUDE.md` banned-patterns list).
