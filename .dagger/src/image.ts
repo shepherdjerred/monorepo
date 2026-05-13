@@ -22,6 +22,9 @@ import {
 } from "./constants";
 import versions from "./versions";
 
+export const PRISMA_BUN_SERVICE_START_COMMAND =
+  "bunx --trust prisma generate && bunx prisma db push && bun run src/index.ts";
+
 function withGitHubCli(container: Container): Container {
   return container
     .withExec(["apt-get", "update", "-qq"])
@@ -354,7 +357,7 @@ export function buildImageHelper(
     .withEnvVariable("GIT_SHA", gitSha)
     .withEntrypoint(
       usePrisma
-        ? ["/bin/sh", "-c", "bunx prisma db push && bun run src/index.ts"]
+        ? ["/bin/sh", "-c", PRISMA_BUN_SERVICE_START_COMMAND]
         : ["bun", "run", "src/index.ts"],
     );
 }

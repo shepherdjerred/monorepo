@@ -85,6 +85,19 @@ describe("version commit-back", () => {
   });
 });
 
+describe("Birmel smoke coverage", () => {
+  it("uses the same Prisma startup command as production images", () => {
+    const imageSource = readFileSync(`${daggerSrc}/image.ts`, "utf-8");
+    const miscSource = readFileSync(`${daggerSrc}/misc.ts`, "utf-8");
+
+    expect(imageSource).toContain("PRISMA_BUN_SERVICE_START_COMMAND");
+    expect(imageSource).toContain("bunx --trust prisma generate");
+    expect(miscSource).toContain("PRISMA_BUN_SERVICE_START_COMMAND");
+    expect(miscSource).toContain("/* usePrisma */ true");
+    expect(miscSource).not.toContain("timeout 30s bun run start 2>&1");
+  });
+});
+
 describe("image tags", () => {
   function getImageConstants(): string[] {
     const constantsSource = readFileSync(`${daggerSrc}/constants.ts`, "utf-8");

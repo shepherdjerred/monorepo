@@ -21,7 +21,6 @@ import { createKyvernoPoliciesChart } from "./cdk8s-charts/kyverno-policies.ts";
 import { createMcpGatewayChart } from "./cdk8s-charts/mcp-gateway.ts";
 import { createBugsinkChart } from "./cdk8s-charts/bugsink.ts";
 import { createTasknotesChart } from "./cdk8s-charts/tasknotes.ts";
-import { createStatusPageChart } from "./cdk8s-charts/status-page.ts";
 import { createTemporalChart } from "./cdk8s-charts/temporal.ts";
 import { createTrmnlDashboardChart } from "./cdk8s-charts/trmnl-dashboard.ts";
 
@@ -63,7 +62,6 @@ export async function setupCharts(app: App): Promise<void> {
   await createMcpGatewayChart(app);
   createBugsinkChart(app);
   createTasknotesChart(app);
-  createStatusPageChart(app);
   createTemporalChart(app);
   createTrmnlDashboardChart(app);
 }

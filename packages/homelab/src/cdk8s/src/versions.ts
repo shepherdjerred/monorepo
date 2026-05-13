@@ -215,10 +215,6 @@ const versions = {
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
     "2.0.0-2370@sha256:078b019f4a03b16040f8607eff9af18eedb35441e8f489a97fd480bcabc29124",
-  // Custom status-page-api image - Status page API
-  // not managed by renovate
-  "shepherdjerred/status-page-api":
-    "1.1.138@sha256:d8a35c286800ea21b880389b0405e333c8428c1c7af50dabe947f7ff9ca6a745",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "temporalio/auto-setup":
     "1.29.6@sha256:1263120feed69d82e4ca23b8ca6f1d702c3029fe70714e382966d0192318eab6",

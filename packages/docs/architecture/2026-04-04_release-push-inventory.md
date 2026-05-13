@@ -48,11 +48,11 @@ Code: `.dagger/src/image.ts`, `scripts/ci/src/steps/images.ts`, `scripts/ci/src/
 
 ## Helm Charts → ChartMuseum
 
-26 charts from `packages/homelab/src/cdk8s/helm/`. Version: `2.0.0-{BUILD_NUMBER}`.
+25 charts from `packages/homelab/src/cdk8s/helm/`. Version: `2.0.0-{BUILD_NUMBER}`.
 
 Code: `.dagger/src/release.ts`, `scripts/ci/src/steps/helm.ts`
 
-ddns, apps, scout-beta, scout-prod, starlight-karma-bot-beta, starlight-karma-bot-prod, redlib, plausible, birmel, cloudflare-tunnel, media, home, postal, syncthing, golink, freshrss, pokemon, gickup, grafana-db, mcp-gateway, s3-static-sites, kyverno-policies, bugsink, tasknotes, status-page, temporal
+ddns, apps, scout-beta, scout-prod, starlight-karma-bot-beta, starlight-karma-bot-prod, redlib, plausible, birmel, cloudflare-tunnel, media, home, postal, syncthing, golink, freshrss, pokemon, gickup, grafana-db, mcp-gateway, s3-static-sites, kyverno-policies, bugsink, tasknotes, temporal
 
 ## npm Packages → npm Registry
 
