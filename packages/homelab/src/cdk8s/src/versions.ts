@@ -157,7 +157,7 @@ const versions = {
   "postgres-operator": "1.15.1",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "cooperspencer/gickup":
-    "0.10.42@sha256:f46a0710ae0c9e931c93b9b8f092793253e73add93d86f63d3af646b7ec0f5e4",
+    "0.10.43@sha256:ad81910605280b2f0fc7495d732c594052790810582fc1a2fa1b2a9704096f52",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "esanchezm/prometheus-qbittorrent-exporter":
     "v1.6.0@sha256:b987d19693a5b2fe7314b22009c6302e084ec801fcf96afaf14065b4cdafc842",
