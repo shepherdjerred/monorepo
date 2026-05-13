@@ -62,7 +62,7 @@ const versions = {
     "latest@sha256:73edef388bab61c5a1df8171d5f3a0bd6b398e24e4baec752d63e1cd4044ecea",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "cloudflare/cloudflared":
-    "2026.3.0@sha256:6b599ca3e974349ead3286d178da61d291961182ec3fe9c505e1dd02c8ac31b0",
+    "2026.5.0@sha256:59bab8d3aceec09bf6bdb07d6beca0225ca5cd7ab79436a87ea97978fe1dc4f9",
   // not managed by renovate
   "shepherdjerred/golink":
     "main@sha256:3a204341938acc2cf78da4311487875e604643320a4143d6fd0dfd3eb6102822",
