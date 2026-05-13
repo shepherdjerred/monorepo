@@ -11,7 +11,7 @@
 # throttling nvme0n1.
 
 # renovate: datasource=docker depName=oven/bun versioning=docker
-FROM oven/bun:debian@sha256:87416c977a612a204eb54ab9f3927023c2a3c971f4f345a01da08ea6262ae30e
+FROM oven/bun:debian@sha256:9dba1a1b43ce28c9d7931bfc4eb00feb63b0114720a0277a8f939ae4dfc9db6f
 
 LABEL org.opencontainers.image.title="ci-base"
 LABEL org.opencontainers.image.description="CI base image: Dagger CLI, Bun, Node.js, uv, semgrep, gh, helm, opentofu, awscli, ripgrep, shellcheck, gitleaks, trivy, plus build-essentials"
