@@ -55,8 +55,6 @@ Partially Complete
 - Added Birmel empty-stream retry support via `packages/birmel/src/voltagent/message-stream.ts`, stable Bugsink fingerprint support in `packages/birmel/src/observability/sentry.ts`, and a Prisma generation wrapper for the deployed Bun image path.
 - Updated `.dagger/src/image.ts` so Prisma-enabled generic images run the package `generate` script before `prisma db push`.
 - Added/updated tests for Scout queue `3200`, Temporal provider-error handling and concurrency, and Birmel empty-stream retry behavior.
-- Investigated Buildkite build `2393`; the hard failures were Prettier formatting drift and Scout's frozen lockfile install after the queue `3200` test change.
-- Ran Prettier on the five reported files and updated `packages/scout-for-lol/bun.lock` so Scout's Dagger install path is frozen-lockfile clean.
 - Verification passed:
   - `cd packages/scout-for-lol && bun test packages/data/src/model/state.test.ts packages/backend/src/league/tasks/prematch/__tests__/loading-screen-builder.integration.test.ts`
   - `cd packages/scout-for-lol && bun run typecheck`
@@ -69,10 +67,6 @@ Partially Complete
   - `cd packages/birmel && bunx eslint . --fix`
   - `dagger develop`
   - `dagger call smoke-test-birmel --pkg-dir ./packages/birmel --pkg birmel --dep-names eslint-config --dep-dirs ./packages/eslint-config`
-  - `bash .buildkite/scripts/prettier.sh`
-  - `dagger call generate-and-lint --pkg-dir ./packages/scout-for-lol --pkg scout-for-lol --dep-names eslint-config --dep-dirs ./packages/eslint-config --tsconfig ./tsconfig.base.json`
-  - `dagger call generate-and-typecheck --pkg-dir ./packages/scout-for-lol --pkg scout-for-lol --dep-names eslint-config --dep-dirs ./packages/eslint-config --tsconfig ./tsconfig.base.json`
-  - `dagger call generate-and-test --pkg-dir ./packages/scout-for-lol --pkg scout-for-lol --dep-names eslint-config --dep-dirs ./packages/eslint-config --tsconfig ./tsconfig.base.json`
 
 ### Remaining
 
@@ -84,4 +78,3 @@ Partially Complete
 - Birmel production is still running the old image `ghcr.io/shepherdjerred/birmel:2.0.0-2370` and remains `0/1` with `Cannot find module '.prisma/client/default'` until a new image is deployed.
 - Bugsink still lists the old unresolved issues because code changes have not been deployed and issues were not manually resolved.
 - `dagger call smoke-test-birmel` verified the fixed image path reaches the expected dummy Discord-token auth error instead of the Prisma client import crash.
-- Buildkite build `2393` also showed Knip and Trivy as soft failures, plus broken downstream publish/deploy jobs caused by the hard failures above.
