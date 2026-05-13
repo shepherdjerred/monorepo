@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.9.1",
+  "version": "16.10.1",
   "data": {
     "Pyke": {
       "id": "Pyke",
@@ -795,7 +795,7 @@
           "id": "PykeW",
           "name": "Ghostwater Dive",
           "description": "Pyke enters Camouflage and gains significant Move Speed that decays over time.",
-          "tooltip": "Pyke gains <keywordStealth>Camouflage</keywordStealth> and <speed>{{ movespeed }}% Move Speed</speed> decaying over {{ e0 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Pyke gains <keywordStealth>Camouflage</keywordStealth> and <speed>{{ movespeed }}% Move Speed</speed> decaying over {{ camoduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Cooldown"

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.9.1",
+  "version": "16.10.1",
   "data": {
     "Xerath": {
       "id": "Xerath",
@@ -586,7 +586,7 @@
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
@@ -721,7 +721,7 @@
           "id": "XerathLocusOfPower2",
           "name": "Rite of the Arcane",
           "description": "Xerath immobilizes himself and gains numerous long-range barrages.",
-          "tooltip": "Xerath ascends to his true form and channels for {{ e1 }} seconds. During this time he may <recast>Recast</recast> up to {{ e2 }} times.<br /><br /><recast>Recast:</recast> Xerath launches a magical artillery, dealing <magicDamage>{{ tooltiptotaldamage }} magic damage</magicDamage>. For each champion hit, the artillery deals an additional <magicDamage>{{ rampdamagecalc }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Xerath ascends to his true form and channels for {{ duration }} seconds. During this time he may <recast>Recast</recast> up to {{ numberofshots }} times.<br /><br /><recast>Recast:</recast> Xerath launches a magical artillery, dealing <magicDamage>{{ tooltiptotaldamage }} magic damage</magicDamage>. For each champion hit, the artillery deals an additional <magicDamage>{{ rampdamagecalc }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -730,8 +730,8 @@
               "Cooldown"
             ],
             "effect": [
-              "{{ e3 }} -> {{ e3NL }}",
-              "{{ e2 }} -> {{ e2NL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ numberofshots }} -> {{ numberofshotsNL }}",
               "{{ rampbasedamage }} -> {{ rampbasedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]

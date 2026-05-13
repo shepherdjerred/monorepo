@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.9.1",
+  "version": "16.10.1",
   "data": {
     "Orianna": {
       "id": "Orianna",
@@ -335,14 +335,14 @@
           "id": "OrianaIzunaCommand",
           "name": "Command: Attack",
           "description": "Orianna commands her Ball to fire toward a target location, dealing magic damage to targets along the way (deals less damage to subsequent targets). Her Ball remains at the target location after.",
-          "tooltip": "Orianna commands her <keywordMajor>Ball</keywordMajor> to move to an area, dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> to surrounding enemies and to enemies it passes through. Deals {{ e2 }}% less damage to all enemies after the first.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Orianna commands her <keywordMajor>Ball</keywordMajor> to move to an area, dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> to surrounding enemies and to enemies it passes through. Deals {{ reduceddamagepercent }}% less damage to all enemies after the first.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
               "Cooldown"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -621,7 +621,7 @@
           "id": "OrianaRedactCommand",
           "name": "Command: Protect",
           "description": "Orianna commands her Ball to attach to an allied champion, Shielding them and dealing magic damage to any enemies it passes through on the way. Additionally, the Ball grants additional Armor and Magic Resist to the champion it is attached to.",
-          "tooltip": "<spellPassive>Passive: </spellPassive>The <keywordMajor>Ball</keywordMajor> adds <scaleArmor>{{ e2 }} Armor</scaleArmor> and <scaleMR>{{ e2 }} Magic Resist</scaleMR> to the allied champion it is attached to.<br /><br /><spellActive>Active: </spellActive>Orianna commands her <keywordMajor>Ball</keywordMajor> to attach to an allied champion, granting them <shield>{{ totalshieldtooltip }} Shield</shield> for {{ e5 }} seconds. Enemies the <keywordMajor>Ball</keywordMajor> passes through take <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive: </spellPassive>The <keywordMajor>Ball</keywordMajor> adds <scaleArmor>{{ defensebonus }} Armor</scaleArmor> and <scaleMR>{{ defensebonus }} Magic Resist</scaleMR> to the allied champion it is attached to.<br /><br /><spellActive>Active: </spellActive>Orianna commands her <keywordMajor>Ball</keywordMajor> to attach to an allied champion, granting them <shield>{{ totalshieldtooltip }} Shield</shield> for {{ shieldduration }} seconds. Enemies the <keywordMajor>Ball</keywordMajor> passes through take <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -630,10 +630,10 @@
               "Shield Amount"
             ],
             "effect": [
-              "{{ e3 }} -> {{ e3NL }}",
-              "{{ e2 }} -> {{ e2NL }}",
-              "{{ e2 }} -> {{ e2NL }}",
-              "{{ e1 }} -> {{ e1NL }}"
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ defensebonus }} -> {{ defensebonusNL }}",
+              "{{ defensebonus }} -> {{ defensebonusNL }}",
+              "{{ shieldamount }} -> {{ shieldamountNL }}"
             ]
           },
           "maxrank": 5,

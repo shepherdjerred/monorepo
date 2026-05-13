@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.9.1",
+  "version": "16.10.1",
   "data": {
     "Xayah": {
       "id": "Xayah",
@@ -650,7 +650,7 @@
           "id": "XayahW",
           "name": "Deadly Plumage",
           "description": "Xayah creates a storm of blades that increase her Attack Speed and damage while also granting her Move Speed if she attacks a champion.",
-          "tooltip": "Xayah creates a storm of blades for {{ e2 }} seconds that grants her <attackSpeed>{{ e1 }}% Attack Speed</attackSpeed> and cause her Attacks to fire a secondary blade that deals {{ bonusdamagepercent }}% damage.<br /><br />When the secondary blade hits a champion, she grants herself <speed>{{ e3 }}% Move Speed</speed> for {{ e4 }} seconds.<br /><br />If Rakan is nearby he will also gain the effects of this Ability, except he gains <speed>Move Speed</speed> when <i>Xayah</i> strikes a target.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Xayah creates a storm of blades for {{ wattackspeedduration }} seconds that grants her <attackSpeed>{{ wattackspeedamount }}% Attack Speed</attackSpeed> and cause her Attacks to fire a secondary blade that deals {{ bonusdamagepercent }}% damage.<br /><br />When the secondary blade hits a champion, she grants herself <speed>{{ wmovespeedamount }}% Move Speed</speed> for {{ wmovespeedduration }} seconds.<br /><br />If Rakan is nearby he will also gain the effects of this Ability, except he gains <speed>Move Speed</speed> when <i>Xayah</i> strikes a target.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Attack Speed",
@@ -658,7 +658,7 @@
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ e1 }}% -> {{ e1NL }}%",
+              "{{ wattackspeedamount }}% -> {{ wattackspeedamountNL }}%",
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]

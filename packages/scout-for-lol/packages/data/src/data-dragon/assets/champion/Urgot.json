@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.9.1",
+  "version": "16.10.1",
   "data": {
     "Urgot": {
       "id": "Urgot",
@@ -491,7 +491,7 @@
           "id": "UrgotW",
           "name": "Purge",
           "description": "Urgot slows himself while he unloads his weapon on nearby enemies. Prioritizes enemy champions Urgot has recently struck with other abilities and triggers Echoing Flames.",
-          "tooltip": "<spellPassive>Passive:</spellPassive> Urgot's other Abilities mark the last champion hit for 5 seconds.<br /><br /><spellActive>Active:</spellActive> Urgot begins firing his chain gun at the closest enemy, prioritizing marked enemies. He Attacks them {{ e8 }} times a second dealing <physicalDamage>{{ damagepershot }} physical damage</physicalDamage> per shot. Urgot can move while firing and has {{ e2 }}% <status>Slow</status> resistance, but loses <speed>{{ e5 }} Move Speed</speed>.<br /><br />At max rank, this Ability lasts indefinitely and can be <toggle>Toggled</toggle> on and off.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Urgot's other Abilities mark the last champion hit for 5 seconds.<br /><br /><spellActive>Active:</spellActive> Urgot begins firing his chain gun at the closest enemy, prioritizing marked enemies. He Attacks them {{ wattackspersecond }} times a second dealing <physicalDamage>{{ damagepershot }} physical damage</physicalDamage> per shot. Urgot can move while firing and has {{ slowresistance }}% <status>Slow</status> resistance, but loses <speed>{{ movespeedmod }} Move Speed</speed>.<br /><br />At max rank, this Ability lasts indefinitely and can be <toggle>Toggled</toggle> on and off.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Cooldown",
@@ -500,7 +500,7 @@
             ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ e7 }}% -> {{ e7NL }}%",
+              "{{ adratiott }}% -> {{ adratiottNL }}%",
               "{{ cost }} -> {{ costNL }}"
             ]
           },

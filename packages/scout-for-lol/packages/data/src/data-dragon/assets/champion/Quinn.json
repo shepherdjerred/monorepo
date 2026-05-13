@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.9.1",
+  "version": "16.10.1",
   "data": {
     "Quinn": {
       "id": "Quinn",
@@ -178,6 +178,68 @@
           "name": "Star Guardian Quinn (Brilliant)",
           "chromas": false,
           "parentSkin": 14
+        },
+        {
+          "id": "133024",
+          "num": 24,
+          "name": "PROJECT: Quinn",
+          "chromas": true
+        },
+        {
+          "id": "133025",
+          "num": 25,
+          "name": "PROJECT: Quinn (Ruby)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "133026",
+          "num": 26,
+          "name": "PROJECT: Quinn (Catseye)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "133027",
+          "num": 27,
+          "name": "PROJECT: Quinn (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "133028",
+          "num": 28,
+          "name": "PROJECT: Quinn (Turquoise)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "133029",
+          "num": 29,
+          "name": "PROJECT: Quinn (Sapphire)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "133030",
+          "num": 30,
+          "name": "PROJECT: Quinn (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "133031",
+          "num": 31,
+          "name": "PROJECT: Quinn (Obsidian)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "133032",
+          "num": 32,
+          "name": "PROJECT: Quinn (Pearl)",
+          "chromas": false,
+          "parentSkin": 24
         }
       ],
       "lore": "Quinn is an elite ranger-knight of Demacia, who undertakes dangerous missions deep in enemy territory. She and her legendary eagle, Valor, share an unbreakable bond, and their foes are often slain before they realize they are fighting not one, but two of the kingdom's greatest heroes. Nimble and acrobatic when required, Quinn takes aim with her crossbow while Valor marks their elusive targets from above, making them a deadly pair on the battlefield.",
@@ -682,11 +744,11 @@
           ],
           "cooldownBurn": "3",
           "cost": [
-            100,
             50,
+            25,
             0
           ],
-          "costBurn": "100/50/0",
+          "costBurn": "50/25/0",
           "datavalues": {},
           "effect": [
             null,

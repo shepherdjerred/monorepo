@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.9.1",
+  "version": "16.10.1",
   "data": {
     "Anivia": {
       "id": "Anivia",
@@ -419,8 +419,8 @@
         "mp": 495,
         "mpperlevel": 45,
         "movespeed": 325,
-        "armor": 21,
-        "armorperlevel": 4.5,
+        "armor": 19,
+        "armorperlevel": 4.1,
         "spellblock": 30,
         "spellblockperlevel": 1.3,
         "attackrange": 600,

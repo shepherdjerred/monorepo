@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.9.1",
+  "version": "16.10.1",
   "data": {
     "Olaf": {
       "id": "Olaf",
@@ -831,7 +831,7 @@
             "0"
           ],
           "vars": [],
-          "costType": "Health",
+          "costType": " Health",
           "maxammo": "-1",
           "range": [
             325,
@@ -850,7 +850,7 @@
             "w": 48,
             "h": 48
           },
-          "resource": "Health"
+          "resource": "{{ healthcostcalc }} Health"
         },
         {
           "id": "OlafRagnarok",

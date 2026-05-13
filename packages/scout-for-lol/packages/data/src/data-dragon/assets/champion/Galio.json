@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.9.1",
+  "version": "16.10.1",
   "data": {
     "Galio": {
       "id": "Galio",
@@ -410,13 +410,13 @@
           ],
           "cooldownBurn": "11/10/9/8/7",
           "cost": [
+            60,
+            65,
             70,
             75,
-            80,
-            85,
-            90
+            80
           ],
-          "costBurn": "70/75/80/85/90",
+          "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,

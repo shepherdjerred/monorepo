@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.9.1",
+  "version": "16.10.1",
   "data": {
     "Taliyah": {
       "id": "Taliyah",
@@ -236,7 +236,7 @@
           "id": "TaliyahQ",
           "name": "Threaded Volley",
           "description": "Taliyah throws a volley of rocks in a target direction, moving freely as she casts. This creates Worked Ground below her. If Taliyah casts Threaded Volley on Worked Ground, she consumes the ground to throw a stronger boulder that slows enemies.",
-          "tooltip": "Taliyah hurls 5 rocks, each dealing <magicDamage>{{ rockdamage }} magic damage</magicDamage> in an area around the first enemy hit while creating Worked Ground at that area. Subsequent hits against the same enemy deal {{ extramissilereduceddamagepercent }}% less damage.<br /><br />Casts on worked ground cost {{ e7 }} Mana and have {{ workedgroundcdr*100 }}% less Cooldown, consume the Worked Ground, and hurl a boulder that <status>Slows</status> enemies it hits by {{ slowpercent*100 }}% for {{ slowduration }} seconds, dealing <magicDamage>{{ bigrockdamage }} magic damage</magicDamage> to the primary target. Monsters hit by the boulder are <status>Stunned</status> for {{ monsterstunduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Taliyah hurls 5 rocks, each dealing <magicDamage>{{ rockdamage }} magic damage</magicDamage> in an area around the first enemy hit while creating Worked Ground at that area. Subsequent hits against the same enemy deal {{ extramissilereduceddamagepercent }}% less damage.<br /><br />Casts on worked ground cost {{ bigrockmanacost }} Mana and have {{ workedgroundcdr*100 }}% less Cooldown, consume the Worked Ground, and hurl a boulder that <status>Slows</status> enemies it hits by {{ slowpercent*100 }}% for {{ slowduration }} seconds, dealing <magicDamage>{{ bigrockdamage }} magic damage</magicDamage> to the primary target. Monsters hit by the boulder are <status>Stunned</status> for {{ monsterstunduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -665,7 +665,7 @@
           "id": "TaliyahR",
           "name": "Weaver's Wall",
           "description": "Taliyah creates a very long wall and then surfs it.",
-          "tooltip": "Taliyah creates a massive earthen wall for {{ e1 }} seconds. If she immediately <recast>Recasts</recast>, she will ride along the wall as it unravels. Moving or being immobilized will end the ride.<br /><br />This ability cannot be cast if Taliyah has taken damage from Champions or structures within the last {{ damagelockouttime }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Taliyah creates a massive earthen wall for {{ wallduration }} seconds. If she immediately <recast>Recasts</recast>, she will ride along the wall as it unravels. Moving or being immobilized will end the ride.<br /><br />This ability cannot be cast if Taliyah has taken damage from Champions or structures within the last {{ damagelockouttime }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Wall length",
