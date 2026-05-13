@@ -24,6 +24,7 @@ describe("parseQueueType", () => {
     [1900, "urf"],
     [2300, "brawl"],
     [2400, "aram mayhem"],
+    [3200, "aram mayhem"],
     [3270, "aram mayhem"],
     [3100, "custom"],
     [3130, "easy doom bots"],

@@ -1,12 +1,12 @@
 import { toError } from "@shepherdjerred/birmel/utils/errors.ts";
 import type { MessageContext } from "@shepherdjerred/birmel/discord/events/message-create.ts";
 import { getRoutingAgent } from "./agents/routing-agent.ts";
+import { createMessagingAgent } from "./agents/specialized/messaging-agent.ts";
 import {
   getChannelConversationId,
   getServerWorkingMemory,
   getOwnerWorkingMemory,
 } from "./memory/index.ts";
-import { OPENAI_RESPONSES_PROVIDER_OPTIONS } from "@shepherdjerred/birmel/voltagent/openai-provider-options.ts";
 import { getGuildPersona } from "@shepherdjerred/birmel/persona/guild-persona.ts";
 import { buildPersonaPrompt } from "@shepherdjerred/birmel/persona/style-transform.ts";
 import { buildMessageContent } from "@shepherdjerred/birmel/agent-tools/utils/message-builder.ts";
@@ -18,20 +18,11 @@ import {
   captureException,
 } from "@shepherdjerred/birmel/observability/sentry.ts";
 import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
-
-// Typing cursor for progressive updates
-const TYPING_CURSOR = " \u258C";
-
-// Minimum interval between Discord message edits (ms) to avoid rate limits
-const EDIT_INTERVAL_MS = 1500;
-
-// Minimum content length before showing in progressive update
-const MIN_CONTENT_LENGTH = 20;
-
-// Hard cap on a single streamText turn. If a sub-agent hangs upstream
-// (model stalls, tool deadlock) the user would otherwise stare at a typing
-// cursor forever; aborting here surfaces the failure as a visible reply.
-const STREAM_TIMEOUT_MS = 60_000;
+import {
+  TYPING_CURSOR,
+  streamWithEmptyRetry,
+  type StreamWithRetryResult,
+} from "@shepherdjerred/birmel/voltagent/message-stream.ts";
 
 // User-visible fallback when streamText resolves with zero text. This is
 // the silent-typing-cursor case: a sub-agent reached `bail()` without
@@ -118,74 +109,57 @@ ${memoryContext}`;
     logger.debug("Starting streaming response", { requestId, persona });
     const genStartTime = Date.now();
 
-    let accumulated = "";
-    let lastEditTime = Date.now();
-
     const conversationId = getChannelConversationId(context.channelId);
 
     // Serialize concurrent turns on the same channel — see conversation-lock.ts
     // for the GPT-5 reasoning-replay race that motivates this. Without it,
     // a user firing several pings back-to-back poisons the libSQL memory and
     // sub-agents start bailing with empty output.
-    await withConversationLock(conversationId, async () =>
-      runWithRequestContext(
-        {
-          sourceChannelId: context.channelId,
-          sourceMessageId: context.message.id,
-          guildId: context.guildId,
-          userId: context.userId,
-        },
-        async () => {
-          // Wrap multimodal content in a message object with role
-          const input = Array.isArray(messageContent)
-            ? { role: "user" as const, content: messageContent }
-            : messageContent;
-
-          const inputStr =
-            typeof input === "string" ? input : JSON.stringify(input);
-          const response = await agent.streamText(inputStr, {
+    const streamResult: StreamWithRetryResult = await withConversationLock(
+      conversationId,
+      async () =>
+        runWithRequestContext(
+          {
+            sourceChannelId: context.channelId,
+            sourceMessageId: context.message.id,
+            guildId: context.guildId,
             userId: context.userId,
-            conversationId,
-            // OpenAI Responses options applied at every layer — see
-            // openai-provider-options.ts for why store:false + reasoning include
-            // is required for GPT-5 reasoning replay correctness.
-            providerOptions: OPENAI_RESPONSES_PROVIDER_OPTIONS,
-            // Bound the upstream call so a hang surfaces as an error reply
-            // instead of an indefinitely-stuck typing cursor.
-            abortSignal: AbortSignal.timeout(STREAM_TIMEOUT_MS),
-          });
+          },
+          async () => {
+            // Wrap multimodal content in a message object with role
+            const input = Array.isArray(messageContent)
+              ? { role: "user" as const, content: messageContent }
+              : messageContent;
 
-          // Process the text stream with progressive edits
-          for await (const chunk of response.textStream) {
-            accumulated += chunk;
-
-            // Edit every EDIT_INTERVAL_MS to avoid rate limits
-            const now = Date.now();
-            if (
-              now - lastEditTime >= EDIT_INTERVAL_MS &&
-              accumulated.length >= MIN_CONTENT_LENGTH
-            ) {
-              try {
-                await placeholderMsg.edit(accumulated + TYPING_CURSOR);
-                lastEditTime = now;
-              } catch (editError) {
-                // If edit fails (e.g., message deleted), log and continue
-                logger.debug("Failed to edit placeholder message", {
-                  editError,
-                });
-              }
-            }
-          }
-        },
-      ),
+            const inputStr =
+              typeof input === "string" ? input : JSON.stringify(input);
+            return await streamWithEmptyRetry({
+              routerAgent: agent,
+              directMessagingAgentFactory: () =>
+                createMessagingAgent(personaPrompt),
+              input: inputStr,
+              userId: context.userId,
+              conversationId,
+              placeholderMessage: placeholderMsg,
+              requestId,
+              persona,
+            });
+          },
+        ),
     );
 
     // 9. Final edit removes cursor
     const genDuration = Date.now() - genStartTime;
+    const accumulated = streamResult.text;
     logger.info("Streaming complete", {
       requestId,
       durationMs: genDuration,
       responseLength: accumulated.length,
+      attempts: streamResult.attempts.map((attempt) => ({
+        name: attempt.name,
+        durationMs: attempt.durationMs,
+        responseLength: attempt.text.length,
+      })),
     });
 
     if (accumulated.length > 0) {
@@ -214,7 +188,13 @@ ${memoryContext}`;
           persona,
           emptyStream: true,
           durationMs: genDuration,
+          attempts: streamResult.attempts.map((attempt) => ({
+            name: attempt.name,
+            durationMs: attempt.durationMs,
+            responseLength: attempt.text.length,
+          })),
         },
+        fingerprint: ["birmel-empty-stream"],
       });
       try {
         await placeholderMsg.edit(EMPTY_STREAM_FALLBACK);

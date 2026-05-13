@@ -21,12 +21,11 @@
  *
  * # Concurrency
  *
- * All 15 calls run in parallel via `Promise.allSettled` — one slow
- * specialist doesn't gate the others. A failed pass is logged + reported
- * to Sentry/Bugsink but does NOT fail the activity: consensus voting
- * tolerates 1–2 missing passes (the rule degrades gracefully). If
- * EVERY pass fails, the activity returns an empty annotated array and
- * lets postReview log "no findings".
+ * Calls run through a small bounded-concurrency queue. A failed pass is
+ * logged + reported to Sentry/Bugsink but does NOT fail the activity:
+ * consensus voting tolerates 1–2 missing passes (the rule degrades
+ * gracefully). If EVERY pass fails, the activity returns an empty annotated
+ * array and lets postReview log "no findings".
  *
  * # Cost / latency emission
  *
@@ -62,6 +61,7 @@ import type {
 } from "./specialists/runner.ts";
 
 const COMPONENT = "pr-review-pipeline";
+export const SPECIALIST_PASS_CONCURRENCY = 3;
 
 function jsonLog(
   level: "info" | "warning" | "error",
@@ -165,6 +165,34 @@ async function runSinglePass(
   }
 }
 
+export async function runWithConcurrency<T>(
+  jobs: readonly (() => Promise<T>)[],
+  concurrency: number,
+): Promise<T[]> {
+  if (concurrency < 1) {
+    throw new Error("concurrency must be at least 1");
+  }
+  const results: T[] = [];
+  let nextIndex = 0;
+  const workerCount = Math.min(concurrency, jobs.length);
+
+  async function worker(): Promise<void> {
+    while (nextIndex < jobs.length) {
+      const jobIndex = nextIndex;
+      nextIndex++;
+      const job = jobs[jobIndex];
+      if (job === undefined) {
+        throw new Error(`missing specialist job at index ${String(jobIndex)}`);
+      }
+      results[jobIndex] = await job();
+    }
+  }
+
+  const workers = Array.from({ length: workerCount }, () => worker());
+  await Promise.all(workers);
+  return results;
+}
+
 /**
  * Fan out every (specialist × pass) combination in parallel, collect the
  * annotated findings, log failures, and return the union.
@@ -181,13 +209,16 @@ async function runAllSpecialistsImpl(
       "passes.perSpecialist": PASSES_PER_SPECIALIST,
     },
     async () => {
-      const jobs: Promise<AnnotatedFinding[] | null>[] = [];
+      const jobs: (() => Promise<AnnotatedFinding[] | null>)[] = [];
       for (const dispatcher of SPECIALISTS) {
         for (let passId = 0; passId < PASSES_PER_SPECIALIST; passId++) {
-          jobs.push(runSinglePass(input, dispatcher, passId));
+          jobs.push(() => runSinglePass(input, dispatcher, passId));
         }
       }
-      const results = await Promise.all(jobs);
+      const results = await runWithConcurrency(
+        jobs,
+        SPECIALIST_PASS_CONCURRENCY,
+      );
       const annotated: AnnotatedFinding[] = [];
       let failed = 0;
       for (const r of results) {

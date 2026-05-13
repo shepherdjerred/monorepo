@@ -3,12 +3,20 @@ import type { PrReviewContext } from "#shared/pr-review/context.ts";
 import type { PrReviewPipelineInput } from "#shared/schemas.ts";
 import {
   buildSpecialistUserText,
+  classifyAnthropicProviderError,
+  resetAnthropicProviderErrorReporterForTests,
   runSpecialistPass,
+  shouldReportAnthropicProviderError,
   specialistOutputSchema,
   type SpecialistAnthropicClient,
   type SpecialistConfig,
   type SpecialistOutput,
 } from "./runner.ts";
+
+class AnthropicRateLimitFixture extends Error {
+  readonly status = 429;
+  readonly error = { type: "rate_limit_error" };
+}
 
 const PIPELINE: PrReviewPipelineInput = {
   owner: "shepherdjerred",
@@ -466,5 +474,75 @@ describe("runSpecialistPass", () => {
     });
     expect(result.findings).toEqual([]);
     expect(result.costUsd).toBeNull();
+  });
+});
+
+describe("classifyAnthropicProviderError", () => {
+  it("normalizes credit balance errors and extracts the request id", () => {
+    const classification = classifyAnthropicProviderError(
+      new Error(
+        '400 {"type":"error","error":{"type":"invalid_request_error","message":"Your credit balance is too low to access the Anthropic API"},"request_id":"req_abc123"}',
+      ),
+    );
+
+    expect(classification).not.toBeNull();
+    expect(classification?.kind).toBe("credit_balance_low");
+    expect(classification?.captureMessage).toBe(
+      "Anthropic provider error: credit_balance_low",
+    );
+    expect(classification?.fingerprint).toBe("anthropic-credit-balance-low");
+    expect(classification?.requestId).toBe("req_abc123");
+  });
+
+  it("normalizes Anthropic rate limit errors", () => {
+    const classification = classifyAnthropicProviderError(
+      new AnthropicRateLimitFixture(
+        "429 rate_limit_error request_id: req_rate_limit_1",
+      ),
+    );
+
+    expect(classification).not.toBeNull();
+    expect(classification?.kind).toBe("rate_limit");
+    expect(classification?.captureMessage).toBe(
+      "Anthropic provider error: rate_limit",
+    );
+    expect(classification?.fingerprint).toBe("anthropic-rate-limit");
+    expect(classification?.requestId).toBe("req_rate_limit_1");
+  });
+
+  it("does not classify unrelated errors", () => {
+    expect(
+      classifyAnthropicProviderError(new Error("plain failure")),
+    ).toBeNull();
+  });
+});
+
+describe("shouldReportAnthropicProviderError", () => {
+  it("captures one provider error per kind per reporting window", () => {
+    resetAnthropicProviderErrorReporterForTests();
+    const classification = classifyAnthropicProviderError(
+      new Error("429 rate_limit_error request_id: req_1"),
+    );
+    if (classification === null) {
+      throw new Error("expected rate limit classification");
+    }
+
+    const startMs = 1000;
+    const fifteenMinutesMs = 15 * 60 * 1000;
+    expect(shouldReportAnthropicProviderError(classification, startMs)).toBe(
+      true,
+    );
+    expect(
+      shouldReportAnthropicProviderError(
+        classification,
+        startMs + fifteenMinutesMs - 1,
+      ),
+    ).toBe(false);
+    expect(
+      shouldReportAnthropicProviderError(
+        classification,
+        startMs + fifteenMinutesMs,
+      ),
+    ).toBe(true);
   });
 });

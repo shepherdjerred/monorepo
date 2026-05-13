@@ -61,6 +61,7 @@ function determineLayout(gameInfo: RawCurrentGameInfo): LoadingScreenLayout {
     .with(450, () => "aram" as const) // ARAM
     .with(720, () => "aram" as const) // ARAM Clash
     .with(2400, () => "aram" as const) // ARAM: Mayhem
+    .with(3200, () => "aram" as const) // ARAM: Mayhem MMR variant
     .with(3270, () => "aram" as const) // ARAM: Mayhem
     .with(ARENA_QUEUE_ID, () => "arena" as const) // Arena
     .with(0, () => "standard" as const) // Custom

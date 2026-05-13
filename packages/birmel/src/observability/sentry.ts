@@ -154,6 +154,7 @@ export function captureException(
     operation?: string;
     discord?: DiscordContext;
     extra?: Record<string, unknown>;
+    fingerprint?: string[];
   },
 ): void {
   if (!sentryInitialized) {
@@ -169,6 +170,9 @@ export function captureException(
     }
     if (context?.extra != null) {
       scope.setExtras(context.extra);
+    }
+    if (context?.fingerprint != null) {
+      scope.setFingerprint(context.fingerprint);
     }
     Sentry.captureException(error);
   });
