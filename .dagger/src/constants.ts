@@ -56,7 +56,7 @@ export const HELM_IMAGE =
 
 // Pinned Bun version for containers that install Bun manually (e.g. Playwright)
 // renovate: datasource=npm depName=bun
-export const BUN_VERSION = "1.3.13";
+export const BUN_VERSION = "1.3.14";
 
 // renovate: datasource=npm depName=release-please
 export const RELEASE_PLEASE_VERSION = "17.6.0";
