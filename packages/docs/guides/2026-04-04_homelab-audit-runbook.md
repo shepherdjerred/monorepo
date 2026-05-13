@@ -514,7 +514,6 @@ observability, ingress, or child-resource signal.
 | `seaweedfs`                    | `seaweedfs`                    | Master, filer, volume, and S3 workloads ready; ServiceMonitors scrape; filer and S3 ingress proxies ready; S3-backed apps can read/write.                                                   |
 | `starlight-karma-bot-beta`     | `starlight-karma-bot-beta`     | Deployment ready; logs show Discord connection/heartbeat and no sustained API/auth failures; Bugsink release/issues current.                                                                |
 | `starlight-karma-bot-prod`     | `starlight-karma-bot-prod`     | Deployment ready; logs show Discord connection/heartbeat and no sustained API/auth failures; Bugsink release/issues current.                                                                |
-| `status-page`                  | `status-page`                  | Deployment ready; `/healthz` readiness passes; Cloudflare endpoint `status-api.sjer.red` responds; no metrics endpoint is expected.                                                         |
 | `syncthing`                    | `syncthing`                    | Deployment ready; Tailscale ingress proxy ready; Syncthing UI/API reports connected peers and no paused/error folders.                                                                      |
 | `tailscale`                    | `tailscale`                    | Operator deployment ready; every generated `ts-*-ingress-*-0` pod ready; missing ingress proxy is Red for the exposed app.                                                                  |
 | `tasknotes`                    | `tasknotes`                    | Both `tasknotes-server` and `obsidian-headless` containers ready; `/api/health` passes; ServiceMonitor scrapes; sync-client-down, high latency/error, or PVC alerts are Red.                |
@@ -527,7 +526,7 @@ observability, ingress, or child-resource signal.
 Some apps intentionally have no app-native metrics. For these, the matrix uses
 workload readiness, logs, ingress response, Bugsink, and dependency checks:
 `birmel`, `ddns`, `freshrss`, `golink`, `mcp-gateway`, `redlib`,
-`starlight-karma-bot-*`, `status-page`, `syncthing`, and idle game servers.
+`starlight-karma-bot-*`, `syncthing`, and idle game servers.
 Report them as Green only after the row-specific non-metric check passes.
 
 ## Output Format

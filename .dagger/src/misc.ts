@@ -17,6 +17,7 @@ import {
 } from "./constants";
 
 import {
+  PRISMA_BUN_SERVICE_START_COMMAND,
   buildImageHelper,
   buildCaddyS3ProxyImageHelper,
   buildObsidianHeadlessImageHelper,
@@ -218,7 +219,7 @@ export async function smokeTestBirmelHelper(
     depDirs,
     /* version */ "dev",
     /* gitSha */ "unknown",
-    /* usePrisma */ false,
+    /* usePrisma */ true,
     /* installEditorClis */ true,
   )
     .withEnvVariable("DISCORD_TOKEN", "smoke-test-dummy")
@@ -234,7 +235,7 @@ export async function smokeTestBirmelHelper(
       // Verify both CLIs are installed before launching the bot. If either is
       // missing the smoke test fails immediately rather than silently
       // shipping an image where the editor agent will warn at runtime.
-      "command -v gh >/dev/null && command -v claude >/dev/null && timeout 30s bun run start 2>&1",
+      `command -v gh >/dev/null && command -v claude >/dev/null && timeout 30s ${PRISMA_BUN_SERVICE_START_COMMAND} 2>&1`,
     ]);
 
   return runSmokeTest(container, [

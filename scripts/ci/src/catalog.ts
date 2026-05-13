@@ -249,7 +249,6 @@ export const HELM_CHARTS: string[] = [
   "kyverno-policies",
   "bugsink",
   "tasknotes",
-  "status-page",
   "temporal",
   "trmnl-dashboard",
 ];

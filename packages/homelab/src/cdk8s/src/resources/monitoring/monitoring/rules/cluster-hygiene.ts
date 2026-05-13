@@ -16,7 +16,7 @@ export function getClusterHygieneRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'count(kube_persistentvolume_status_phase{phase="Released"}) > 5',
+            'sum(kube_persistentvolume_status_phase{phase="Released"}) > 5',
           ),
           for: "24h",
           labels: {
