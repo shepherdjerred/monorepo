@@ -436,8 +436,9 @@ function getVeleroOrphanSnapshotRuleGroup(): PrometheusRuleSpecGroups {
             "The velero-orphan-audit Temporal workflow has not incremented its success counter in 36h+. Detection metrics may be stale. Investigate the workflow in the Temporal UI.",
           ),
         },
-        // Workflow runs daily at 03:30 PT; alert if no successful run has been
-        // reported across the full 36h lookback window.
+        // Workflow runs daily at 03:30 PT; alert if success metrics disappear
+        // for 36h. The counter is low-frequency and resets on worker rollouts,
+        // so rate/increase are unreliable freshness checks.
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
           'absent_over_time(velero_orphan_audit_runs_total{outcome="success"}[36h])',
         ),
