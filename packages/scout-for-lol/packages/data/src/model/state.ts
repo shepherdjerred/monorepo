@@ -22,7 +22,9 @@ export const QueueTypeSchema = z.enum([
   "custom",
 ]);
 
-// from https://static.developer.riotgames.com/docs/lol/queues.json
+// Most queue IDs come from Riot's queues.json. Queue 3200 is currently absent
+// from that file, but live Spectator payloads report it for ARAM: Mayhem games
+// on Howling Abyss.
 export function parseQueueType(input: number): QueueType | undefined {
   return match(input)
     .returnType<QueueType | undefined>()
@@ -39,6 +41,7 @@ export function parseQueueType(input: number): QueueType | undefined {
     .with(1700, () => "arena")
     .with(2300, () => "brawl")
     .with(2400, () => "aram mayhem")
+    .with(3200, () => "aram mayhem")
     .with(3270, () => "aram mayhem")
     .with(3100, () => "custom")
     .with(1900, () => "urf")

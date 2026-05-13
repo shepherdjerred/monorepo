@@ -354,7 +354,11 @@ export function buildImageHelper(
     .withEnvVariable("GIT_SHA", gitSha)
     .withEntrypoint(
       usePrisma
-        ? ["/bin/sh", "-c", "bunx prisma db push && bun run src/index.ts"]
+        ? [
+            "/bin/sh",
+            "-c",
+            "bun run generate && bunx prisma db push && bun run src/index.ts",
+          ]
         : ["bun", "run", "src/index.ts"],
     );
 }

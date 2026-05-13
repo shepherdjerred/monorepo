@@ -126,29 +126,33 @@ describe("buildLoadingScreenData with real spectator payload", () => {
     expect(reksai?.championDisplayName).toBe("Reksai");
   });
 
-  test("queue 3270 (ARAM: Mayhem) resolves to ARAM layout", async () => {
-    const baseGameInfo = await loadSpectatorPayload(
-      `${currentDir}testdata/spectator-ranked-flex.json`,
-    );
+  test.each([3200, 3270])(
+    "queue %i (ARAM: Mayhem) resolves to ARAM layout",
+    async (queueId) => {
+      const baseGameInfo = await loadSpectatorPayload(
+        `${currentDir}testdata/spectator-ranked-flex.json`,
+      );
 
-    const gameInfo = RawCurrentGameInfoSchema.parse({
-      ...baseGameInfo,
-      gameQueueConfigId: 3270,
-      mapId: 12,
-      gameMode: "ARAM",
-      bannedChampions: [],
-    });
+      const gameInfo = RawCurrentGameInfoSchema.parse({
+        ...baseGameInfo,
+        gameQueueConfigId: queueId,
+        mapId: 12,
+        gameMode: "ARAM",
+        bannedChampions: [],
+      });
 
-    const result = await buildLoadingScreenData(
-      gameInfo,
-      new Set(),
-      "AMERICA_NORTH",
-    );
+      const result = await buildLoadingScreenData(
+        gameInfo,
+        new Set(),
+        "AMERICA_NORTH",
+      );
 
-    const parsed = LoadingScreenDataSchema.parse(result);
-    expect(parsed.queueType).toBe("aram mayhem");
-    expect(parsed.layout).toBe("aram");
-  });
+      const parsed = LoadingScreenDataSchema.parse(result);
+      expect(parsed.queueType).toBe("aram mayhem");
+      expect(parsed.layout).toBe("aram");
+      expect(parsed.mapName).toBe("Howling Abyss");
+    },
+  );
 
   test("queue 3100 (Custom) resolves to standard layout", async () => {
     const baseGameInfo = await loadSpectatorPayload(
