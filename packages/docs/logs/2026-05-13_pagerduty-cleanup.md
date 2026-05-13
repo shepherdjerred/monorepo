@@ -38,6 +38,8 @@ push`, and changed the Birmel smoke test to exercise the same Prisma startup
   `zfspv-pool-nvme/restored-d89486b5-32ba-42d7-a636-cc6bddb0c5e6`.
 - Resolved PagerDuty incidents #4486, #4496, and #4521 after confirming they no
   longer matched live Alertmanager alerts.
+- Merged `origin/main` into `feature/pagerduty-cleanup` and pushed merge commit
+  `8622afe4b` to PR #800.
 
 ### Remaining
 
@@ -55,3 +57,5 @@ push`, and changed the Birmel smoke test to exercise the same Prisma startup
 - PagerDuty still has live incidents for disk writes/temperature/ZFS/Birmel and
   the undeployed status/Velero fixes. Closing those now would risk immediate
   re-triggering.
+- Trivy, Knip, and Semgrep are optional PR checks for this branch; no dependency
+  churn was kept for those optional gates.
