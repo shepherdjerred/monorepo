@@ -12,12 +12,13 @@ Cluster health is currently green (`talosctl health` all OK).
 
 ## State
 
-| Component | Running | Target | Source of truth |
-|---|---|---|---|
-| Talos | v1.12.0 | **v1.13.2** | `packages/homelab/src/talos/patches/image.yaml:8` |
-| Kubernetes | v1.35.0 | **v1.36.1** | `packages/homelab/src/cdk8s/src/versions.ts:148` |
+| Component  | Running | Target      | Source of truth                                   |
+| ---------- | ------- | ----------- | ------------------------------------------------- |
+| Talos      | v1.12.0 | **v1.13.2** | `packages/homelab/src/talos/patches/image.yaml:8` |
+| Kubernetes | v1.35.0 | **v1.36.1** | `packages/homelab/src/cdk8s/src/versions.ts:148`  |
 
 Talos installer image (already pinned in repo):
+
 ```
 factory.talos.dev/metal-installer-secureboot/a0f205c1e29abaf83e16257c04c83267b5a54feac3861eedc1080edab9827fc3:v1.13.2@sha256:f689384831eb907d1f9d10b161d0cce47377e03fc5c0eef29851a40b687e3e6f
 ```
