@@ -532,10 +532,23 @@ export function cooklangBuildHelper(
     .withExec(["bun", "run", "build"]);
 }
 
-/** Push cooklang artifacts to a GitHub repository. */
-export function cooklangPushHelper(
+const COOKLANG_PLUGIN_REPO = "shepherdjerred/cooklang-for-obsidian";
+
+/**
+ * Publish cooklang plugin artifacts to the external plugin repository.
+ *
+ * Determines the next semver patch from the latest release tag (or the
+ * built manifest's version if no releases exist), rewrites
+ * artifacts/manifest.json with the new version, commits the three plugin
+ * files + an updated versions.json to the plugin repo's main branch, and
+ * cuts a GitHub release tagged with the bare version (Obsidian directory
+ * convention).
+ *
+ * Emits the new version as the final line on stdout so callers can chain
+ * a commit-back step.
+ */
+export function cooklangPublishHelper(
   source: Directory,
-  version: string,
   ghToken: Secret,
   dryrun = false,
 ): Container {
@@ -545,7 +558,7 @@ export function cooklangPushHelper(
     .withExec([
       "sh",
       "-c",
-      "apk add --no-cache curl git && curl -fsSL https://github.com/cli/cli/releases/download/v2.74.0/gh_2.74.0_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_2.74.0_linux_amd64/bin/gh",
+      `apk add --no-cache curl git jq && curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
     ])
     .withSecretVariable("GH_TOKEN", ghToken)
     .withWorkdir("/artifacts")
@@ -553,31 +566,65 @@ export function cooklangPushHelper(
 
   if (dryrun) {
     return container.withExec([
-      "echo",
-      `DRYRUN: would push cooklang artifacts v${version}`,
+      "sh",
+      "-c",
+      [
+        `set -eu`,
+        `latest=$(gh release list --repo ${COOKLANG_PLUGIN_REPO} --limit 50 --json tagName --jq '.[].tagName' | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+$' | head -1)`,
+        `base="\${latest:-$(jq -r .version /artifacts/manifest.json)}"`,
+        `major=$(echo "$base" | cut -d. -f1)`,
+        `minor=$(echo "$base" | cut -d. -f2)`,
+        `patch=$(echo "$base" | cut -d. -f3)`,
+        `new="$major.$minor.$((patch + 1))"`,
+        `echo "DRYRUN: cooklang plugin $base -> $new (would commit + release on ${COOKLANG_PLUGIN_REPO})"`,
+        `echo "$new"`,
+      ].join(" && "),
     ]);
   }
-  return container.withExec([
-    "sh",
-    "-c",
-    `for f in main.js manifest.json styles.css; do
-        if [ -f "$f" ]; then
-          # Get existing SHA — 404 means file is new (no SHA needed), other errors are real failures
-          existing_sha=""
-          http_code="$(gh api repos/shepherdjerred/cooklang-for-obsidian/contents/$f --jq .sha 2>&1)" && existing_sha="$http_code" || {
-            case "$http_code" in
-              *"404"*|*"Not Found"*) existing_sha="" ;;
-              *) echo "Failed to check $f: $http_code" >&2; exit 1 ;;
-            esac
-          }
-          gh api repos/shepherdjerred/cooklang-for-obsidian/contents/$f \
-            --method PUT \
-            -f message="chore: update $f v${version}" \
-            -f content="$(base64 < $f)" \
-            -f sha="$existing_sha"
-        fi
-      done`,
-  ]);
+
+  return container
+    .withExec([
+      "sh",
+      "-c",
+      `printf '#!/bin/sh\\necho "$GH_TOKEN"\\n' > /usr/local/bin/git-askpass && chmod +x /usr/local/bin/git-askpass`,
+    ])
+    .withEnvVariable("GIT_ASKPASS", "/usr/local/bin/git-askpass")
+    .withExec([
+      "sh",
+      "-c",
+      [
+        `set -eu`,
+        // Clone plugin repo
+        `git clone https://github.com/${COOKLANG_PLUGIN_REPO}.git /repo`,
+        `cd /repo`,
+        `git config user.email "ci@sjer.red"`,
+        `git config user.name "CI Bot"`,
+        // Compute next version: latest semver release tag + 1 patch, fallback to artifacts manifest
+        `latest=$(gh release list --repo ${COOKLANG_PLUGIN_REPO} --limit 50 --json tagName --jq '.[].tagName' | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+$' | head -1)`,
+        `base="\${latest:-$(jq -r .version /artifacts/manifest.json)}"`,
+        `major=$(echo "$base" | cut -d. -f1)`,
+        `minor=$(echo "$base" | cut -d. -f2)`,
+        `patch=$(echo "$base" | cut -d. -f3)`,
+        `new="$major.$minor.$((patch + 1))"`,
+        `echo "cooklang plugin: $base -> $new"`,
+        // Rewrite artifacts manifest with new version
+        `jq --arg v "$new" '.version = $v' /artifacts/manifest.json > /artifacts/manifest.json.tmp`,
+        `mv /artifacts/manifest.json.tmp /artifacts/manifest.json`,
+        `min=$(jq -r .minAppVersion /artifacts/manifest.json)`,
+        // Copy artifacts to repo + update versions.json
+        `cp /artifacts/main.js /artifacts/manifest.json /artifacts/styles.css /repo/`,
+        `if [ ! -f /repo/versions.json ]; then echo '{}' > /repo/versions.json; fi`,
+        `jq --arg v "$new" --arg m "$min" '. + {($v): $m}' /repo/versions.json > /repo/versions.json.tmp`,
+        `mv /repo/versions.json.tmp /repo/versions.json`,
+        // Commit + push to plugin repo main
+        `git -C /repo add main.js manifest.json styles.css versions.json`,
+        `if git -C /repo diff --cached --quiet; then echo "No artifact changes to commit"; else git -C /repo commit -m "release: v$new" -m "Auto-Generated: ci-bot"; git -C /repo push origin HEAD:main; fi`,
+        // Create the GitHub release on the plugin repo (idempotent: skip if tag already exists)
+        `if gh release view "$new" --repo ${COOKLANG_PLUGIN_REPO} >/dev/null 2>&1; then echo "Release $new already exists on ${COOKLANG_PLUGIN_REPO}, skipping"; else gh release create "$new" /artifacts/main.js /artifacts/manifest.json /artifacts/styles.css --repo ${COOKLANG_PLUGIN_REPO} --title "v$new" --generate-notes; fi`,
+        // Last line of stdout = new version, for callers
+        `printf '%s\\n' "$new"`,
+      ].join(" && "),
+    ]);
 }
 
 // ---------------------------------------------------------------------------
@@ -632,6 +679,7 @@ export function clauderonUploadHelper(
 
 const VERSION_BUMP_BRANCH = "chore/version-bump-pending";
 const CI_BASE_VERSION_BUMP_BRANCH = "chore/ci-base-version-bump-pending";
+const COOKLANG_VERSION_BUMP_BRANCH = "chore/cooklang-version-bump-pending";
 
 /** Update versions.ts with new image digests and create or refresh an auto-merge PR. */
 export function versionCommitBackHelper(
@@ -769,6 +817,76 @@ export function ciBaseVersionCommitBackHelper(
     ]);
 }
 
+/**
+ * Bump packages/cooklang-for-obsidian/manifest.json + versions.json in the
+ * monorepo to track a release that was just published to the plugin repo,
+ * then open or refresh an auto-merge PR. Mirrors versionCommitBackHelper.
+ */
+export function cooklangVersionCommitBackHelper(
+  version: string,
+  minAppVersion: string,
+  ghToken: Secret,
+  dryrun = false,
+): Container {
+  const container = dag
+    .container()
+    .from(BUN_IMAGE)
+    .withExec(["apt-get", "update", "-qq"])
+    .withExec([
+      "apt-get",
+      "install",
+      "-y",
+      "-qq",
+      "--no-install-recommends",
+      "git",
+      "curl",
+      "ca-certificates",
+      "jq",
+    ])
+    .withExec([
+      "sh",
+      "-c",
+      `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
+    ])
+    .withSecretVariable("GH_TOKEN", ghToken);
+
+  if (dryrun) {
+    return container.withExec([
+      "echo",
+      `DRYRUN: would update ${COOKLANG_VERSION_BUMP_BRANCH} with cooklang plugin version ${version} (minAppVersion ${minAppVersion})`,
+    ]);
+  }
+
+  return container
+    .withExec([
+      "sh",
+      "-c",
+      `printf '#!/bin/sh\\necho "$GH_TOKEN"\\n' > /usr/local/bin/git-askpass && chmod +x /usr/local/bin/git-askpass`,
+    ])
+    .withEnvVariable("GIT_ASKPASS", "/usr/local/bin/git-askpass")
+    .withExec([
+      "sh",
+      "-c",
+      [
+        `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
+        `cd /repo`,
+        `git config user.email "ci@sjer.red"`,
+        `git config user.name "CI Bot"`,
+        `if git ls-remote --exit-code --heads origin "${COOKLANG_VERSION_BUMP_BRANCH}" >/dev/null 2>&1; then git fetch origin main:refs/remotes/origin/main "${COOKLANG_VERSION_BUMP_BRANCH}:${COOKLANG_VERSION_BUMP_BRANCH}" && git checkout "${COOKLANG_VERSION_BUMP_BRANCH}" && git rebase origin/main; else git fetch origin main:refs/remotes/origin/main && git checkout -b "${COOKLANG_VERSION_BUMP_BRANCH}" origin/main; fi`,
+        `jq --arg v "${version}" '.version = $v' packages/cooklang-for-obsidian/manifest.json > packages/cooklang-for-obsidian/manifest.json.tmp`,
+        `mv packages/cooklang-for-obsidian/manifest.json.tmp packages/cooklang-for-obsidian/manifest.json`,
+        `if [ ! -f packages/cooklang-for-obsidian/versions.json ]; then echo '{}' > packages/cooklang-for-obsidian/versions.json; fi`,
+        `jq --arg v "${version}" --arg m "${minAppVersion}" '. + {($v): $m}' packages/cooklang-for-obsidian/versions.json > packages/cooklang-for-obsidian/versions.json.tmp`,
+        `mv packages/cooklang-for-obsidian/versions.json.tmp packages/cooklang-for-obsidian/versions.json`,
+        `git add packages/cooklang-for-obsidian/manifest.json packages/cooklang-for-obsidian/versions.json`,
+        `if git diff --cached --quiet; then HAS_CHANGES=0; echo "No cooklang version changes to commit"; else HAS_CHANGES=1; git commit -m "chore(cooklang): bump to v${version}" -m "Auto-Generated: ci-bot"; fi`,
+        `if [ "$HAS_CHANGES" = "0" ] && git diff --quiet origin/main...HEAD; then echo "No cooklang changes and pending branch has no diff"; exit 0; fi`,
+        `git push --force-with-lease -u origin "${COOKLANG_VERSION_BUMP_BRANCH}"`,
+        `PR_NUMBER=$(gh pr list --head "${COOKLANG_VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty'); if [ -z "$PR_NUMBER" ]; then gh pr create --base main --head "${COOKLANG_VERSION_BUMP_BRANCH}" --title "chore(cooklang): bump plugin manifest version" --body "Auto-generated cooklang manifest version bump"; PR_NUMBER=$(gh pr view "${COOKLANG_VERSION_BUMP_BRANCH}" --json number -q .number); fi; gh pr merge "$PR_NUMBER" --auto --merge`,
+      ].join(" && "),
+    ]);
+}
+
 // ---------------------------------------------------------------------------
 // Clauderon multi-arch binary collection
 // ---------------------------------------------------------------------------
@@ -868,43 +986,6 @@ export function releasePleaseHelper(
       `release-please release-pr --token=$GH_TOKEN --repo-url=shepherdjerred/monorepo --target-branch=main`,
       `release-please github-release --token=$GH_TOKEN --repo-url=shepherdjerred/monorepo --target-branch=main`,
     ].join(" && "),
-  ]);
-}
-
-// ---------------------------------------------------------------------------
-// Cooklang GitHub release
-// ---------------------------------------------------------------------------
-
-/** Create a GitHub release for cooklang-rich-preview with built artifacts. */
-export function cooklangCreateReleaseHelper(
-  artifacts: Directory,
-  version: string,
-  ghToken: Secret,
-  dryrun = false,
-): Container {
-  const container = dag
-    .container()
-    .from(ALPINE_IMAGE)
-    .withExec([
-      "sh",
-      "-c",
-      `apk add --no-cache curl && curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
-    ])
-    .withSecretVariable("GH_TOKEN", ghToken)
-    .withWorkdir("/artifacts")
-    .withDirectory("/artifacts", artifacts);
-
-  if (dryrun) {
-    return container.withExec([
-      "sh",
-      "-c",
-      `echo "DRYRUN: would create cooklang release v${version}" && ls -la /artifacts/`,
-    ]);
-  }
-  return container.withExec([
-    "sh",
-    "-c",
-    `if gh release view "cooklang-rich-preview-v${version}" --repo shepherdjerred/monorepo; then echo "Release cooklang-rich-preview-v${version} already exists, skipping"; else gh release create "cooklang-rich-preview-v${version}" /artifacts/main.js /artifacts/manifest.json /artifacts/styles.css --repo shepherdjerred/monorepo --title "cooklang-rich-preview v${version}" --generate-notes; fi`,
   ]);
 }
 

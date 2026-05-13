@@ -65,6 +65,7 @@ Active or upcoming plans only. Completed plans live in `archive/completed/`; thi
 - [Talos + Kubernetes Upgrade on `torvalds`](plans/2026-05-12_talos-k8s-upgrade.md) - Apply already-pinned Talos v1.13.2 + Kubernetes v1.36.1 to the live single-node cluster
 - [Renovate Dashboard Update Batch](plans/2026-05-13_renovate-dashboard-update.md) - Apply the current actionable Renovate dashboard Docker digest, Helm chart, and production image pin updates
 - [Bugsink Cleanup: Scout, Temporal, Birmel](plans/2026-05-13_bugsink-cleanup-scout-temporal-birmel.md) - Manual Scout DB repair, queue 3200 support, Temporal de-spam, and Birmel empty-stream fix
+- [Cooklang Rich Preview Manifest + Automated Versioned Releases](plans/2026-05-13_cooklang-rich-preview-manifest-and-release.md) - Fix the failed Obsidian directory review and rebuild the broken plugin release flow (auto patch-bump from plugin repo's latest tag, publish to `shepherdjerred/cooklang-for-obsidian` with matching tag + `versions.json`, commit-back to monorepo)
 
 ## Logs
 
