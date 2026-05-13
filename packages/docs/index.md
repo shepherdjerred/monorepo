@@ -63,6 +63,7 @@ Active or upcoming plans only. Completed plans live in `archive/completed/`; thi
 - [Competition CRON Schedule](plans/2026-05-11_competition-cron-schedule.md) - Per-`Competition` CRON expression gating leaderboard posts; replaces global midnight-UTC cron with a per-minute dispatcher
 - [Renovate Dashboard Residual Dependency Updates](plans/2026-05-12_renovate-dashboard-residual-updates.md) - Finish remaining dashboard #481 package, Docker, Helm, Rust, and Maven updates
 - [Talos + Kubernetes Upgrade on `torvalds`](plans/2026-05-12_talos-k8s-upgrade.md) - Apply already-pinned Talos v1.13.2 + Kubernetes v1.36.0 to the live single-node cluster
+- [Renovate Dashboard Update Batch](plans/2026-05-13_renovate-dashboard-update.md) - Apply the current actionable Renovate dashboard Docker digest, Helm chart, and production image pin updates
 
 ## Logs
 
