@@ -169,7 +169,7 @@ const versions = {
   // renovate: datasource=helm registryUrl=https://seaweedfs.github.io/seaweedfs/helm versioning=semver
   seaweedfs: "4.23.0",
   // renovate: datasource=helm registryUrl=https://charts.bitnami.com/bitnami versioning=semver
-  mariadb: "25.1.1",
+  mariadb: "25.1.2",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "postalserver/postal":
     "3.3.6@sha256:55fa8fcc8b1e40dd07e5ba9d1c421ab7e5b4b4d5675371584dd7699a131e1c59",
