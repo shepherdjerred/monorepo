@@ -38,10 +38,10 @@ export const TEXLIVE_IMAGE =
   "texlive/texlive:TL2024-historic@sha256:fd576ce8b1cfd03cdabc15ca75682fb050eb10de5c057d81449883c2ad644855";
 // renovate: datasource=docker depName=caddy
 export const CADDY_IMAGE =
-  "caddy:2.11.2-alpine@sha256:834468128c7696cec0ceea6172f7d692daf645ae51983ca76e39da54a97c570d";
+  "caddy:2.11.3-alpine@sha256:bb56e6200ec26a67f04be90255993dc390c9815967f67f24b4ca6466e88de64b";
 // renovate: datasource=docker depName=caddy
 export const CADDY_BUILDER_IMAGE =
-  "caddy:2.11.2-builder-alpine@sha256:ced7ea0d093d2ce6d3e28869640f0513afb96e42675f399de062a17bab54b434";
+  "caddy:2.11.3-builder-alpine@sha256:7d2315853f99b425d0daa6bcad826e8b0d65b4af1f70fcaeb6b152157d81771d";
 // renovate: datasource=docker depName=python
 export const PYTHON_IMAGE =
   "python:3.14-slim@sha256:33ef7446e8c14b21cb247e23afbcdc90e98853b70812ca46b2265e769a7dfb8b";
@@ -52,7 +52,7 @@ export const OBSIDIAN_HEADLESS_BASE_IMAGE =
   "node:24-slim@sha256:24dc26ef1e3c3690f27ebc4136c9c186c3133b25563ae4d7f0692e4d1fe5db0e";
 // renovate: datasource=docker depName=alpine/helm
 export const HELM_IMAGE =
-  "alpine/helm:4.1.4@sha256:4b0bdd2cf18ff6bca12aba0b2c5671384dab5035c19c57f0c58b854a0baf65be";
+  "alpine/helm:4.1.4@sha256:8edcaedab4d9864886b7f443d55731be87d4b5ec7dca714c24551455707a8aac";
 
 // Pinned Bun version for containers that install Bun manually (e.g. Playwright)
 // renovate: datasource=npm depName=bun
