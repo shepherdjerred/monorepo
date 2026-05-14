@@ -21,7 +21,7 @@ macOS system libraries and headers are provided with the Docker image. This shou
 
 The cross-compilers are available as a Docker image. This is easiest way to distribute the project since there are so many host dependencies. If you are interested in using this without Docker, you should take a look at [osxcross](https://github.com/tpoechtrager/osxcross) which forms the base of this project.
 
-The Docker image is available at [ghcr.io/shepherdjerred/macos-cross-compiler](https://github.com/shepherdjerred/macos-cross-compiler/pkgs/container/macos-cross-compiler).
+The Docker image is available at [ghcr.io/shepherdjerred/macos-cross-compiler](https://github.com/shepherdjerred/monorepo/tree/main/packages/macos-cross-compiler/pkgs/container/macos-cross-compiler).
 
 ## Quick Start
 

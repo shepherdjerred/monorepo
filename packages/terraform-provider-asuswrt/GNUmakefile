@@ -17,7 +17,7 @@ lint-fix:
 
 fmt:
 	gofumpt -w .
-	goimports -w -local github.com/shepherdjerred/terraform-provider-asuswrt .
+	goimports -w -local https://github.com/shepherdjerred/monorepo/tree/main/packages/terraform-provider-asuswrt .
 
 install: build
 	mkdir -p ~/.terraform.d/plugins/registry.opentofu.org/shepherdjerred/asuswrt/0.1.0/$$(go env GOOS)_$$(go env GOARCH)

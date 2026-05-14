@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/shepherdjerred/terraform-provider-asuswrt/internal/client"
+	"https://github.com/shepherdjerred/monorepo/tree/main/packages/terraform-provider-asuswrt/internal/client"
 )
 
 func TestParseDHCPStaticList(t *testing.T) {

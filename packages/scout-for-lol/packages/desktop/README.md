@@ -163,6 +163,6 @@ GPL-3.0-only
 
 ## Links
 
-- [Main Repository](https://github.com/shepherdjerred/scout-for-lol)
+- [Main Repository](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol)
 - [Tauri Documentation](https://tauri.app/)
 - [LCU API Documentation](https://hextechdocs.dev/)

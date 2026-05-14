@@ -101,7 +101,7 @@ released and avoids two concurrent CI runs producing the same version
     2–4 above. Pseudocode:
 
     ```sh
-    clone https://github.com/shepherdjerred/cooklang-for-obsidian into /repo
+    clone https://github.com/shepherdjerred/monorepo/tree/main/packages/cooklang-for-obsidian into /repo
     latest=$(gh release list --repo shepherdjerred/cooklang-for-obsidian \
               --json tagName -q '.[].tagName' | head -1)
     base=${latest:-$(jq -r .version /artifacts/manifest.json)}

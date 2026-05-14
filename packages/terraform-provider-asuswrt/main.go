@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 
-	"github.com/shepherdjerred/terraform-provider-asuswrt/internal/provider"
+	"https://github.com/shepherdjerred/monorepo/tree/main/packages/terraform-provider-asuswrt/internal/provider"
 )
 
 var version = "dev"

@@ -13,12 +13,18 @@ import CTA from "../components/CTA.astro";
 import GalleryItem from "../components/GalleryItem.astro";
 import BenefitCard from "../components/BenefitCard.astro";
 import ProcessStep from "../components/ProcessStep.astro";
+
+import matchImg from "../assets/images/match.png";
+import loadingScreenImg from "../assets/images/loading-screen.png";
+import arenaDiscordImg from "../assets/images/arena-discord.png";
+import soloDiscordImg from "../assets/images/solo-discord.png";
+import leaderboardLpImg from "../assets/images/leaderboard-lp.png";
 ---
 
 <Layout>
   <div class="bg-white dark:bg-gray-900">
-    <Navbar activePage="home" />
     <WhatsNewBanner />
+    <Navbar activePage="home" />
 
     <Hero
       title="Scout for League of Legends"
@@ -88,7 +94,7 @@ import ProcessStep from "../components/ProcessStep.astro";
 
         <div class="mx-auto mt-16 max-w-5xl">
           <GalleryItem
-            imageSrc="/match.png"
+            imageSrc={matchImg}
             imageAlt="Example League of Legends match report showing team compositions, player statistics, KDA, damage dealt, gold earned, and items"
           />
 
@@ -132,7 +138,7 @@ import ProcessStep from "../components/ProcessStep.astro";
           <FeatureWithImage
             title="Pre-Match Loading Screens"
             description="Scout detects when tracked players enter a game and posts a full loading-screen preview to your Discord channel — complete with champion splash art, summoner spells, runes, and live rank badges for every player on both teams."
-            imageSrc="/loading-screen.png"
+            imageSrc={loadingScreenImg}
             imageAlt="Pre-match loading screen showing both teams' champion picks, runes, summoner spells, and ranks for a ranked flex game"
             imagePosition="right"
             badge={{
@@ -152,7 +158,7 @@ import ProcessStep from "../components/ProcessStep.astro";
           <FeatureWithImage
             title="Complete Arena Coverage"
             description="Full support for League's Arena mode with detailed stats for 18-player 3v3 matches, augments tracking, and placement results. Scout automatically detects Arena matches, including CHERRY games that Riot reports as custom, and still renders legacy duo reports."
-            imageSrc="/arena-discord.png"
+            imageSrc={arenaDiscordImg}
             imageAlt="Arena mode match notification in Discord showing detailed stats, augments, and placements"
             imagePosition="left"
             badge={{
@@ -171,7 +177,7 @@ import ProcessStep from "../components/ProcessStep.astro";
           <FeatureWithImage
             title="Real-Time Match Notifications"
             description="Get instant notifications when your friends finish their ranked games. See their performance, LP gains/losses, and rank changes in beautiful, easy-to-read Discord messages."
-            imageSrc="/solo-discord.png"
+            imageSrc={soloDiscordImg}
             imageAlt="Ranked match notification showing player stats, KDA, and LP gains in Discord"
             imagePosition="right"
             badge={{
@@ -190,7 +196,7 @@ import ProcessStep from "../components/ProcessStep.astro";
           <FeatureWithImage
             title="Custom Leaderboards"
             description="Create custom competitions for your server with flexible criteria and time periods. Track LP gains, most wins, champion mastery, and more. Perfect for friendly competition!"
-            imageSrc="/leaderboard-lp.png"
+            imageSrc={leaderboardLpImg}
             imageAlt="Server leaderboard showing LP competition rankings"
             imagePosition="left"
             badge={{

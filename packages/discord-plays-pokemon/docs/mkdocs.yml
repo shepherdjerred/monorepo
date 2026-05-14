@@ -1,6 +1,6 @@
 site_name: Discord Plays Pokémon
 site_url: https://docs.discord-plays-pokemon.com/
-repo_url: https://github.com/shepherdjerred/discord-plays-pokemon
+repo_url: https://github.com/shepherdjerred/monorepo/tree/main/packages/discord-plays-pokemon
 edit_uri: edit/main/docs/docs/
 nav:
   - Home: index.md

@@ -11,7 +11,7 @@ import game from "./xstate/game.png";
 import diagram from "./xstate/diagram.png";
 import simulation from "./xstate/simulation.mp4";
 
-My current side project, [Discord Plays Pokémon](https://github.com/shepherdjerred/discord-plays-pokemon), has a lot of dependencies. The application streams video with Discord, which presents a challenge. Discord does not provide APIs for streaming video, and I didn't want to have to reverse-engineer the client. I chose to automate interactions with Discord's web application using Selenium, which has yielded great results. It can programmatically stream video to a specific voice channel. This has worked very well so far -- users are able to play real-time games of Pokémon with each other just using Discord's text chat!
+My current side project, [Discord Plays Pokémon](https://github.com/shepherdjerred/monorepo/tree/main/packages/discord-plays-pokemon), has a lot of dependencies. The application streams video with Discord, which presents a challenge. Discord does not provide APIs for streaming video, and I didn't want to have to reverse-engineer the client. I chose to automate interactions with Discord's web application using Selenium, which has yielded great results. It can programmatically stream video to a specific voice channel. This has worked very well so far -- users are able to play real-time games of Pokémon with each other just using Discord's text chat!
 
 <figure>
   <Image src={channel} alt="A screenshot of Discord text chat with two users inputting commands" height="100px" />

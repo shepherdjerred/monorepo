@@ -7,6 +7,9 @@ import ProcessStep from "../components/ProcessStep.astro"; // Changed from StepC
 import InfoBox from "../components/InfoBox.astro";
 import CommandBox from "../components/CommandBox.astro";
 import GalleryItem from "../components/GalleryItem.astro";
+import { Image } from "astro:assets";
+import soloDiscordImg from "../assets/images/solo-discord.png";
+import leaderboardLpImg from "../assets/images/leaderboard-lp.png";
 ---
 
 <Layout>
@@ -196,7 +199,7 @@ import GalleryItem from "../components/GalleryItem.astro";
                 Here's what your match notifications will look like:
               </h4>
               <GalleryItem
-                imageSrc="/solo-discord.png"
+                imageSrc={soloDiscordImg}
                 imageAlt="Example of a Scout match notification in Discord showing player stats, KDA, and LP gains"
                 caption="Scout automatically posts detailed match reports right in your Discord channel"
               />
@@ -227,10 +230,10 @@ import GalleryItem from "../components/GalleryItem.astro";
                 > command.
               </p>
               <div class="mt-4 mb-4">
-                <img
-                  src="/leaderboard-lp.png"
+                <Image
+                  src={leaderboardLpImg}
                   alt="Example of a Scout competition leaderboard showing LP rankings"
-                  class="w-full rounded-lg shadow-md ring-1 ring-gray-400/10 dark:ring-gray-600"
+                  class="w-full h-auto rounded-lg shadow-md ring-1 ring-gray-400/10 dark:ring-gray-600"
                   loading="lazy"
                 />
               </div>

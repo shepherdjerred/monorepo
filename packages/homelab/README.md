@@ -33,7 +33,7 @@ some things I'm proud of:
   - For Docker images (w/ pinned SHAs)
   - For Helm charts
   - For Bun dependencies
-  - [My approach](https://github.com/shepherdjerred/homelab/blob/main/src/cdk8s/src/versions.ts)
+  - [My approach](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/versions.ts)
     allows all of my dependencies to be pinned and updated regularly
 
 - Static typing for:

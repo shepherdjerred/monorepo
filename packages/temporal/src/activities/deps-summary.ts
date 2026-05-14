@@ -6,7 +6,7 @@ import { traceOpenAi } from "@shepherdjerred/llm-observability";
 import { sendPostalEmail, resolvePostalAddresses } from "#shared/postal.ts";
 
 const VERSIONS_FILE_PATH = "src/cdk8s/src/versions.ts";
-const REPO_URL = "https://github.com/shepherdjerred/homelab.git";
+const REPO_URL = "https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab.git";
 
 const VERSION_LINE_REGEX = /"([^"]+)":\s*"([^"]+)"/;
 export const DEPS_SUMMARY_CLONE_ARGS = [

@@ -66,7 +66,7 @@ Credentials for your cluster are stored at `/etc/rancher/k3s/k3s.yaml`. You can 
 
 ## Bootstrapping
 
-This does require a small amount of manual bootstrapping, which I describe in my [repository README](https://github.com/shepherdjerred/homelab/blob/main/README.md). Whenever I setup a new cluster/node, I need to:
+This does require a small amount of manual bootstrapping, which I describe in my [repository README](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/README.md). Whenever I setup a new cluster/node, I need to:
 
 - Install ArgoCD: `kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml`
 - Create a secrets to access my 1Password vaults

@@ -17,5 +17,5 @@ devcontainer:
   RUN --push --secret GITHUB_TOKEN=github_token echo $GITHUB_TOKEN | docker login ghcr.io -u shepherdjerred --password-stdin
   WITH DOCKER
     RUN devpod provider add docker && \
-      devpod build github.com/shepherdjerred/devcontainers-features --repository ghcr.io/shepherdjerred/devcontainers-features
+      devpod build https://github.com/shepherdjerred/monorepo/tree/main/archive/devcontainers-features --repository ghcr.io/shepherdjerred/devcontainers-features
   END

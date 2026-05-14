@@ -6,7 +6,7 @@ date: 2024-10-14Z-0700
 
 import demo from "./pokemon/demo2.mp4";
 
-This is a half-baked post I decided to publish because it was clear I wasn't ever going to finish it. You can find the source code of this project on [GitHub](https://github.com/shepherdjerred/discord-plays-pokemon).
+This is a half-baked post I decided to publish because it was clear I wasn't ever going to finish it. You can find the source code of this project on [GitHub](https://github.com/shepherdjerred/monorepo/tree/main/packages/discord-plays-pokemon).
 
 ## Idea
 
@@ -41,10 +41,10 @@ Twitch Plays Pokémon, but for Discord
 
 Use a headful browser (Chrome) running Pokémon with [EmulatorJS](https://emulatorjs.org/). Stream the video of headless browser to Discord. Use the stream video as a webcam input and pipe the audio as a microphone input.
 
-- Create a virtual display using `xvfb` and `xvfb-run`: https://github.com/shepherdjerred/discord-plays-pokemon/blob/b8b67522ca05e0dd37c740741d7a94569d372a69/Dockerfile#L21-L25
-- Use `ffmpeg` and `v4l2loopback` to create a virtual webcam device with v4l2: https://github.com/shepherdjerred/discord-plays-pokemon/blob/b8b67522ca05e0dd37c740741d7a94569d372a69/load.sh#L16
-- Stream emulator output to the virtual webcam using `ffmpeg`: https://github.com/shepherdjerred/discord-plays-pokemon/blob/b8b67522ca05e0dd37c740741d7a94569d372a69/src/emulator.ts#L31-L42
-- Turn on camera in Discord: https://github.com/shepherdjerred/discord-plays-pokemon/blob/b8b67522ca05e0dd37c740741d7a94569d372a69/src/discord.ts#L46
+- Create a virtual display using `xvfb` and `xvfb-run`: https://github.com/shepherdjerred/monorepo/blob/main/packages/discord-plays-pokemon/Dockerfile#L21-L25
+- Use `ffmpeg` and `v4l2loopback` to create a virtual webcam device with v4l2: https://github.com/shepherdjerred/monorepo/blob/main/packages/discord-plays-pokemon/load.sh#L16
+- Stream emulator output to the virtual webcam using `ffmpeg`: https://github.com/shepherdjerred/monorepo/blob/main/packages/discord-plays-pokemon/src/emulator.ts#L31-L42
+- Turn on camera in Discord: https://github.com/shepherdjerred/monorepo/blob/main/packages/discord-plays-pokemon/src/discord.ts#L46
 
 This would require that the host could install kernel modules since there is a dependency on [DKMS](https://en.wikipedia.org/wiki/Dynamic_Kernel_Module_Support).
 

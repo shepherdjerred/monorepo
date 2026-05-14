@@ -1,6 +1,6 @@
 # Ansible Playbook
 
-[![License](https://img.shields.io/github/license/shepherdjerred/ansible-playbook)](https://github.com/shepherdjerred/ansible-playbook/LICENSE)
+[![License](https://img.shields.io/github/license/shepherdjerred/ansible-playbook)](https://github.com/shepherdjerred/monorepo/tree/main/archive/ansible-playbook/LICENSE)
 [![Ansible Lint](https://github.com/shepherdjerred/ansible-playbook/actions/workflows/ansible-lint.yml/badge.svg)](https://github.com/shepherdjerred/ansible-playbook/actions/workflows/ansible-lint.yml)
 [![Ansible Deploy](https://github.com/shepherdjerred/ansible-playbook/actions/workflows/ansible-deploy.yml/badge.svg)](https://github.com/shepherdjerred/ansible-playbook/actions/workflows/ansible-deploy.yml)
 
