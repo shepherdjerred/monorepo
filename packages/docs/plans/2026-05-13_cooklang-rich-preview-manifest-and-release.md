@@ -26,7 +26,7 @@ fundamentally broken in a way that prevents shipping any fix.
 - `cooklangCreateReleaseHelper` creates a release on the **wrong repo**
   (`shepherdjerred/monorepo`) tagged `cooklang-rich-preview-v2.0.0-${BUILD_NUMBER}`.
   The Obsidian directory never sees it.
-- The directory wants a release on the *plugin's own* repo, tagged exactly
+- The directory wants a release on the _plugin's own_ repo, tagged exactly
   matching `manifest.json#version`, plus a `versions.json` mapping each
   released version to its `minAppVersion`. We have none of that.
 - The only release the directory ever saw (v1.0.0, Mar 4 2026) was created
@@ -39,7 +39,7 @@ fundamentally broken in a way that prevents shipping any fix.
   has since fixed four of those; only `authorUrl` remains (verified
   `HEAD https://sjer.red` → 405, `GET` → 200, Cloudflare/Astro default).
 
-**Goal:** ship a corrected manifest *and* establish a fully-automated
+**Goal:** ship a corrected manifest _and_ establish a fully-automated
 release flow that mirrors the existing `versionCommitBackHelper` pattern,
 so every main-branch change to `packages/cooklang-for-obsidian/` produces a
 real, directory-visible release on the plugin's repo.
@@ -119,6 +119,7 @@ released and avoids two concurrent CI runs producing the same version
     Emit the new version on stdout so the commit-back step can consume it.
     Use `GIT_ASKPASS` for auth (same pattern as `versionCommitBackHelper`),
     not tokens in URLs (per `CLAUDE.md` banned-patterns list).
+
   - **Add** `cooklangVersionCommitBackHelper(version, ghToken, dryrun)`:
     same shape as `versionCommitBackHelper` (`.dagger/src/release.ts:636`)
     but:
@@ -132,7 +133,7 @@ released and avoids two concurrent CI runs producing the same version
     `cooklangBuildAndRelease`, `cooklangCreateRelease` Dagger entrypoints
     (lines 1011–1050, 1121–1135).
   - **Add** `cooklangBuildAndPublish(pkgDir, ghToken, depNames, depDirs,
-    tsconfig, dryrun)`: builds, then calls `cooklangPublishHelper`,
+tsconfig, dryrun)`: builds, then calls `cooklangPublishHelper`,
     returning new version.
   - **Add** `cooklangVersionCommitBack(version, ghToken, dryrun)`:
     wraps the new commit-back helper.
@@ -150,7 +151,7 @@ released and avoids two concurrent CI runs producing the same version
 
 ## Edge cases & race conditions
 
-- **Concurrent main builds**: each build reads the latest *published* tag
+- **Concurrent main builds**: each build reads the latest _published_ tag
   from the plugin repo before bumping, so a build that finishes second
   picks up the first's tag and produces version N+2. No collision.
 - **Commit-back PR conflicts**: the same `--force-with-lease` + rebase
@@ -168,7 +169,7 @@ released and avoids two concurrent CI runs producing the same version
 ## Verification
 
 1. Local sanity — `cd packages/cooklang-for-obsidian && bun run typecheck
-   && bun run build` succeeds; `main.js`, `manifest.json`, `styles.css`
+&& bun run build` succeeds; `main.js`, `manifest.json`, `styles.css`
    produced.
 2. `bun run test` and `cd scripts/ci && bun run test` pass after pipeline
    test updates.
@@ -176,8 +177,8 @@ released and avoids two concurrent CI runs producing the same version
    new Dagger code.
 4. Dry-run end-to-end:
    `dagger call cooklang-build-and-publish --pkg-dir ./packages/cooklang-for-obsidian
-   --dep-names eslint-config --dep-dirs ./packages/eslint-config
-   --tsconfig ./tsconfig.base.json --gh-token env:GH_TOKEN --dryrun`
+--dep-names eslint-config --dep-dirs ./packages/eslint-config
+--tsconfig ./tsconfig.base.json --gh-token env:GH_TOKEN --dryrun`
    should print the computed next version and the actions it would take,
    without touching either repo.
 5. First real run after merge produces release `1.0.1` on
@@ -200,7 +201,7 @@ released and avoids two concurrent CI runs producing the same version
 ## Critical files (quick reference)
 
 - `packages/cooklang-for-obsidian/manifest.json`
-- `packages/cooklang-for-obsidian/versions.json` *(new)*
+- `packages/cooklang-for-obsidian/versions.json` _(new)_
 - `.dagger/src/release.ts` (cooklang helpers + commit-back pattern at line 636)
 - `.dagger/src/index.ts` (lines 998–1050, 1121–1135)
 - `scripts/ci/src/steps/cooklang.ts`
@@ -243,8 +244,8 @@ released and avoids two concurrent CI runs producing the same version
 - `packages/docs/architecture/2026-04-04_release-push-inventory.md` —
   updated the inventory entry to describe the new flow + helpers.
 - Verification: `bun run scripts/check-dagger-hygiene.ts` clean; `cd
-  scripts/ci && bun run test` passes (146/146); `cd scripts/ci && bunx
-  tsc --noEmit` clean; cooklang `manifest.json` + `versions.json`
+scripts/ci && bun run test` passes (146/146); `cd scripts/ci && bunx
+tsc --noEmit` clean; cooklang `manifest.json` + `versions.json`
   validated with `jq .`. Root `bun run typecheck` failures are
   pre-existing (env without `bun run scripts/setup.ts`) and unrelated.
 
