@@ -86,7 +86,7 @@ All possible configuration values can be seen by looking at the [`typedoc` site]
 
 ## Example
 
-An example of using this project with Astro is located in `example`. The relevant file is [`src/pages/blog/[...slug].astro`](https://github.com/shepherdjerred/webring/blob/971a77ecd0c612850faeb9d16f7775d3e7ca7253/example/src/pages/blog/%5B...slug%5D.astro#L18).
+An example of using this project with Astro is located in `example`. The relevant file is [`src/pages/blog/[...slug].astro`](https://github.com/shepherdjerred/monorepo/blob/main/packages/webring/example/src/pages/blog/%5B...slug%5D.astro#L18).
 
 ```typescript
 ---

@@ -43,13 +43,13 @@
   "license": "GPL-3.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/shepherdjerred/homelab.git",
+    "url": "https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab.git",
     "directory": "src/helm-types"
   },
   "bugs": {
     "url": "https://github.com/shepherdjerred/homelab/issues"
   },
-  "homepage": "https://github.com/shepherdjerred/homelab/tree/main/src/helm-types#readme",
+  "homepage": "https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab/src/helm-types#readme",
   "publishConfig": {
     "access": "public"
   },

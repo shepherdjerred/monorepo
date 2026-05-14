@@ -11,7 +11,7 @@ export default class Footer extends Component {
               <a href="https://shepherdjerred.com/">Jerred Shepherd</a>.
               <br />
               Source available on{" "}
-              <a href="https://github.com/shepherdjerred/usher">GitHub</a>
+              <a href="https://github.com/shepherdjerred/monorepo/tree/main/archive/usher">GitHub</a>
               <br />
               <a href="mailto:shepherdjerred@gmail.com">Contact Me</a>
             </p>

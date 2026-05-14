@@ -72,7 +72,7 @@ if [ -n "${DOTFILES_LOCAL_PATH:-}" ] && [ -d "${DOTFILES_LOCAL_PATH}" ]; then
     chezmoi init --source "${DOTFILES_LOCAL_PATH}" --apply --keep-going || true
 else
     log_info "Cloning dotfiles from GitHub"
-    chezmoi init --apply https://github.com/shepherdjerred/dotfiles --keep-going || true
+    chezmoi init --apply https://github.com/shepherdjerred/monorepo/tree/main/packages/dotfiles --keep-going || true
 fi
 
 # Install Brewfile

@@ -8,7 +8,7 @@
     state: directory
 - name: clone dotfiles repository
   git:
-    repo: https://github.com/shepherdjerred/dotfiles
+    repo: https://github.com/shepherdjerred/monorepo/tree/main/packages/dotfiles
     dest: "/home/{{ target_user }}/.local/share/chezmoi"
     update: true
     force: true

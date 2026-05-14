@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Desktop client for Scout for League of Legends"
 authors = ["Scout for LoL Team"]
 license = "GPL-3.0-only"
-repository = "https://github.com/shepherdjerred/scout-for-lol"
+repository = "https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol"
 edition = "2021"
 
 [lints.rust]

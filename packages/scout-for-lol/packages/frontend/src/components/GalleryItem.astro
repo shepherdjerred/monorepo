@@ -1,6 +1,8 @@
 ---
+import { Image } from "astro:assets";
+
 interface Props {
-  imageSrc: string;
+  imageSrc: ImageMetadata;
   imageAlt: string;
   caption?: string;
   fullWidth?: boolean;
@@ -11,10 +13,10 @@ const { imageSrc, imageAlt, caption, fullWidth = false } = Astro.props;
 
 <div class={fullWidth ? "w-full" : "mx-auto max-w-5xl"}>
   <div class="relative">
-    <img
+    <Image
       src={imageSrc}
       alt={imageAlt}
-      class="w-full rounded-xl shadow-xl ring-1 ring-gray-400/10 dark:ring-gray-600"
+      class="w-full h-auto rounded-xl shadow-xl ring-1 ring-gray-400/10 dark:ring-gray-600"
       loading="lazy"
     />
     <div

@@ -18,7 +18,7 @@
 
     <scm>
         <url>https://github.com/ShepherdJerred/funsheet/</url>
-        <connection>scm:git:git://github.com/shepherdjerred/funsheet.git</connection>
+        <connection>scm:git:git://https://github.com/shepherdjerred/monorepo/tree/main/archive/funsheet.git</connection>
         <developerConnection>scm:git:git@github.com:shepherdjerred/funsheet.git</developerConnection>
     </scm>
 

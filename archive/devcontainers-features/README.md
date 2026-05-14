@@ -1,6 +1,6 @@
 # Dev Container
 
-[![Open in DevPod!](https://devpod.sh/assets/open-in-devpod.svg)](https://devpod.sh/open#https://github.com/shepherdjerred/devcontainers-features)
+[![Open in DevPod!](https://devpod.sh/assets/open-in-devpod.svg)](https://devpod.sh/open#https://github.com/shepherdjerred/monorepo/tree/main/archive/devcontainers-features)
 
 This repository contains [Dev Container features](https://containers.dev/implementors/features/) authored by me.
 

@@ -11,7 +11,7 @@ So, with cdk8s I have an execellent way to author my Kubernetes manifests. How d
 
 [ArgoCD](https://argo-cd.readthedocs.io/en/stable/)!
 
-The workflow is actually quite simple. I store my Kubernetes manifests in a [GitHub repo](https://github.com/shepherdjerred/homelab/tree/main/cdk8s/dist) and I point ArgoCD to it.
+The workflow is actually quite simple. I store my Kubernetes manifests in a [GitHub repo](https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab/cdk8s/dist) and I point ArgoCD to it.
 
 How do I configure ArgoCD? With cdk8s, of course:
 
@@ -28,7 +28,7 @@ export function createLamportApp(chart: Chart) {
     spec: {
       project: "default",
       source: {
-        repoUrl: "https://github.com/shepherdjerred/homelab",
+        repoUrl: "https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab",
         path: "cdk8s/dist/",
         targetRevision: "main",
       },
