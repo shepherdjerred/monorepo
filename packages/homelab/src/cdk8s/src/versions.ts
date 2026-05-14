@@ -101,22 +101,22 @@ const versions = {
   openebs: "4.4.0",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/scout-for-lol/beta":
-    "2.0.0-2429@sha256:d13de825791e57387b3ac6c16016b9c297295e00ca8776942459c1df97e769a6",
+    "2.0.0-2451@sha256:fc884381bb442445710b449e2cad8badc10a1120592e0d807dbc2d402ae7abb7",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
   "shepherdjerred/scout-for-lol/prod":
     "2.0.0-2389@sha256:5eeb9f77289409ab97dd1e4a8b311ef809832e71d4035a4a99d24b36aa9d98d0",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
-    "2.0.0-2422@sha256:28b00a559b599f967e3ea2b39a221d8c92b03aeb48daf202201c8fc8fe6da73d",
+    "2.0.0-2451@sha256:8c0b75554de3868e54153aa5ac1f23fb822a01f9876b274a845b7effcc8ce13a",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/starlight-karma-bot
   "shepherdjerred/starlight-karma-bot/prod":
     "2.0.0-2389@sha256:2e7d70440860bcd872d4d4f0dddda88e6436ec6e86b0990a0b9450549ebdf012",
   // not managed by renovate
   "shepherdjerred/birmel":
-    "2.0.0-2422@sha256:2ded181e1b800fed35915554c26f090fb532ea2518e255fcc2ef4b05c8c9c73e",
+    "2.0.0-2451@sha256:b8380f8feeabf1fa3af84cd779d5d2f91488a60a08795fec6b10ab6d6f87621e",
   // not managed by renovate
   "shepherdjerred/discord-plays-pokemon":
-    "2.0.0-2441@sha256:b52f11c51fc24aadbc489b102f24f0ab2add779b9339e58b17e2aae8dad0a61b",
+    "2.0.0-2451@sha256:9d7d27eb18706e59abef0bed7a86f2ee4ee071ae34f592a09cacefe8f69e49da",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "freshrss/freshrss":
     "1.29.0@sha256:cca8988d05cd449e1c6c69405971b1e6fc2c2116ceeb45c9fa3fc33837997a75",
@@ -206,15 +206,15 @@ const versions = {
   // Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3
   // not managed by renovate
   "shepherdjerred/caddy-s3proxy":
-    "2.0.0-2441@sha256:08c70d076f78ceb26780ac264086773e817d02e4a9e5b6584d8098b886185330",
+    "2.0.0-2451@sha256:391c414e3277e26617d3f6c4614c99abd69c99a98c3179d90b68ef13f19110da",
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
-    "2.0.0-2422@sha256:8a9216a4322daade833e9f89531b772e002c877f4a69786b561add7f5090ab4c",
+    "2.0.0-2451@sha256:7d6933b8c163ab7f363028ede05c0cd497a0ad844f39ab3828c53be9ef28a0e9",
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
-    "2.0.0-2441@sha256:4d698629a49a0c7219b7d146f14eb5fd53455ddd33caa26facf31255885682b1",
+    "2.0.0-2451@sha256:4b13ed4d42e562088e527ead1f5211a0d4d7a4771f60fdf0015e8f472e226564",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "temporalio/auto-setup":
     "1.29.6@sha256:1263120feed69d82e4ca23b8ca6f1d702c3029fe70714e382966d0192318eab6",
@@ -227,11 +227,11 @@ const versions = {
   // Custom temporal-worker image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/temporal-worker":
-    "2.0.0-2422@sha256:76311b8a364789769f0ff49f93dd8fa1a66822fb62e35407babd093e95fbcf6c",
+    "2.0.0-2451@sha256:2b953942bec87dacb4d907b2586ee36eabe7461637ac1c158fb5564e238d26bf",
   // Custom TRMNL dashboard image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/trmnl-dashboard":
-    "2.0.0-2422@sha256:fcc4b1656f807a03d9fb6f708837e076a4cb12f789fefecf4f7fa41c8454b5f6",
+    "2.0.0-2451@sha256:00a2308520391e999bf7a67f39d1aa51f8cae57a2f1a497085c4e490293189e4",
 };
 
 /**
