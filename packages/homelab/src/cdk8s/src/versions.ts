@@ -101,7 +101,7 @@ const versions = {
   openebs: "4.4.0",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/scout-for-lol/beta":
-    "2.0.0-2466@sha256:7cc93ec359bdeb604fcc85f9e17e9b7104d604b54667b9a60a1cd3617afa7623",
+    "2.0.0-2470@sha256:93768d90c9efb7a6dc638c5522a940e6232d4fde29dfa1e8cff8b4d29eac1c66",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
   "shepherdjerred/scout-for-lol/prod":
     "2.0.0-2389@sha256:5eeb9f77289409ab97dd1e4a8b311ef809832e71d4035a4a99d24b36aa9d98d0",
@@ -206,7 +206,7 @@ const versions = {
   // Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3
   // not managed by renovate
   "shepherdjerred/caddy-s3proxy":
-    "2.0.0-2466@sha256:4e44ff0749ea48cf59217640d402d2d00b544ceed77cd0823ad0a315c031233a",
+    "2.0.0-2470@sha256:7fe4504af68cb72355260bf5b82464efdcd1ba84f50c17cfac50333dae4db80a",
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
@@ -214,7 +214,7 @@ const versions = {
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
-    "2.0.0-2466@sha256:5f79fe74186b559f0080003b243f9d2c3acf0e47e1f90d03151daaddc5691e28",
+    "2.0.0-2470@sha256:9e50e9b6544d0da16143ab7d65df38616055810243f20c4f5aba81b382bc1e7c",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "temporalio/auto-setup":
     "1.29.6@sha256:1263120feed69d82e4ca23b8ca6f1d702c3029fe70714e382966d0192318eab6",
