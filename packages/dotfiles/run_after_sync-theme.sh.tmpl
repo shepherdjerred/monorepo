@@ -1,4 +1,9 @@
 #!/bin/bash
+set -euo pipefail
 {{ if eq .chezmoi.os "darwin" -}}
-[ -x "$HOME/bin/sync-theme.sh" ] && "$HOME/bin/sync-theme.sh" || true
+if [[ ! -x "$HOME/bin/sync-theme.sh" ]]; then
+    echo "ERROR: $HOME/bin/sync-theme.sh missing or not executable; cannot align live theme to macOS appearance." >&2
+    exit 1
+fi
+"$HOME/bin/sync-theme.sh"
 {{ end -}}

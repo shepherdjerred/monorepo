@@ -126,3 +126,104 @@ the Claude desktop app config (high-churn UI state, same problem class as
   had drifted since last write. The drift was the missing OPENAI/ANTHROPIC
   env exports, which is exactly what apply was supposed to add — so forcing
   was safe. Don't reflexively `--force` future applies; check the diff first.
+
+---
+
+## Round 4 — 2026-05-14 (later that day)
+
+macOS appearance had toggled to **Dark** since Round 3's re-add, leaving
+the six themed configs in live diverged from source (which still held
+the Round 3 latte/light values). This round fixes the recurring drift
+and the root-cause bug in `~/bin/sync-theme.sh`. Plan file:
+`~/.claude/plans/virtual-strolling-hamster.md`.
+
+### What changed
+
+| Path                                                          | Action                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bin/executable_sync-theme.sh` (+ live `~/bin/sync-theme.sh`) | **Bug fix.** Anchored every sed pattern to its line-start key (`^theme "..."` for zellij, `^color_theme = "..."` for btop, `^name = "..."` for atuin). Removed `2>/dev/null \|\| true` from all four sed invocations — they were swallowing real errors. Kept the `pkill -USR2 btop \|\| true` (btop may legitimately not be running).                                                                                                                            |
+| `private_dot_config/zellij/config.kdl` (+ live)               | **Hand-repaired duplicate block names.** Both source and live had collapsed all four theme blocks to a single identifier (`catppuccin-mocha` in live, `catppuccin-latte` in source) because the previous unanchored sed rewrote the declarations along with the selector. Restored the four block names by palette match: `latte` (#acb0be), `frappe` (#626880), `macchiato` (#5b6078), `mocha` (#585b70). `theme "catppuccin-mocha"` selector on line 324 stays. |
+| `run_after_generate-themes.sh.tmpl`                           | **Bug fix.** Replaced hardcoded `$HOME/.local/share/chezmoi/...` (wrong — source root is `/Users/jerred/git/monorepo/packages/dotfiles`) with `{{ .chezmoi.sourceDir }}`. Switched missing-whiskers branch from silent `exit 0` to loud `exit 1` with install hints. Added `set -euo pipefail`.                                                                                                                                                                   |
+| `run_after_sync-theme.sh.tmpl`                                | **Bug fix.** Dropped `\|\| true` and silent `[ -x ]` short-circuit. Missing `~/bin/sync-theme.sh` now exits 1 with a clear error. Added `set -euo pipefail`.                                                                                                                                                                                                                                                                                                      |
+| `dot_claude/private_settings.json`                            | `chezmoi re-add` — captured `theme: dark`.                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `dot_gemini/private_settings.json`                            | `chezmoi re-add` — captured `theme: GitHub`.                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `private_dot_config/private_atuin/private_config.toml`        | `chezmoi re-add` — captured `name = "catppuccin-mocha"`.                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `private_dot_config/starship.toml`                            | `chezmoi re-add` — captured `palette = "catppuccin_mocha"`.                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `private_dot_config/btop/btop.conf.tmpl`                      | **Hand-edited** — `chezmoi re-add` cannot rewrite `.tmpl` files. Changed both `catppuccin_latte` → `catppuccin_mocha` literals (Linux + Darwin branches).                                                                                                                                                                                                                                                                                                         |
+
+After this round, `chezmoi diff` returns only the two `run_after_*.sh.tmpl`
+scripts (expected — they're scripts that will execute on next `chezmoi apply`,
+not destination files) and the pre-existing `.config/gh/hosts.yml` divergence
+(see Caveats below).
+
+### Outstanding
+
+- **`run_after_*.sh.tmpl` install-as-file bug from Round 3 is still latent.**
+  Round 3 flagged that these scripts show in `chezmoi diff` as new files at
+  `~/`. The chezmoi diff in this session confirms it. The likely fix per
+  Round 3's hypothesis (rename hyphens → underscores) was NOT tested. Worth
+  trying `run_after_generate_themes.sh.tmpl` and `run_after_sync_theme.sh.tmpl`
+  in a follow-up.
+- **Drift will recur on next macOS appearance toggle.** `sync-theme.sh`
+  rewrites live theme values whenever macOS switches between Light and Dark.
+  Source stores a fixed value. Until either (a) the run_after script reliably
+  runs sync-theme.sh after each apply, or (b) theme values become templated
+  on `.chezmoi.os` + appearance detection, every macOS mode change creates
+  a new round of `chezmoi diff` for these six files.
+
+### Caveats
+
+- **Pre-existing security issue:** `.config/gh/hosts.yml` in chezmoi source
+  contains a literal `oauth_token: 'ghp_<REDACTED>'`.
+  Live currently has it stripped (gh CLI may have rotated). The source token
+  is committed to git via chezmoi management. **Rotate the token and replace
+  the literal with an `op://...` template reference** before this commit
+  reaches a public branch. Not addressed this session — it was discovered
+  during verification.
+- **Six `bin/executable_*` files** show `git diff` mode changes (100755 →
+  100644, no content changes). They appeared in working tree after this
+  session's `chezmoi re-add ~/bin/sync-theme.sh`. Likely a chezmoi
+  permission-normalization side effect (chezmoi's `executable_` filename
+  prefix governs runtime permission, not the source file mode). Safe to
+  `git checkout -- packages/dotfiles/bin/` if you want to discard them;
+  not addressed here to avoid scope creep.
+- **Commit `04b50ef38 chore(dotfiles): sync chezmoi source with live state`
+  landed on `main` during this session** — that commit shipped Round 3's
+  changes plus the dangling Sublime/Talos/codex modifications listed in
+  the session-start git status. Round 4's source edits sit on top.
+
+### Round 4 Session Log — 2026-05-14
+
+#### Done
+
+- Fixed the unanchored sed in `sync-theme.sh` (both live and source) — root
+  cause of zellij block-name corruption.
+- Repaired zellij `themes { ... }` block names (4 distinct themes) in both
+  source and live.
+- Fixed both `run_after_*.sh.tmpl` scripts: corrected source path, removed
+  silent failure modes, added `set -euo pipefail`.
+- `chezmoi re-add` for the five non-template themed files plus `~/bin/sync-theme.sh`.
+- Hand-edited `btop.conf.tmpl` to flip the latte literals to mocha (template
+  can't be re-added).
+- Verified `chezmoi diff` returns only the expected leftovers (run_after
+  scripts + gh/hosts.yml secret leak).
+
+#### Remaining
+
+- Try renaming `run_after_generate-themes.sh.tmpl` → `run_after_generate_themes.sh.tmpl`
+  (underscore) to fix the install-as-file bug.
+- Rotate the GitHub OAuth token leaked in `dot_config/gh/hosts.yml` source;
+  replace the literal with an `op://...` template ref.
+- Commit Round 4's source changes when ready.
+- Architectural follow-up: stop storing fixed theme values in source. Either
+  templatize on `.chezmoi.os` + appearance detection, or remove these specific
+  keys from chezmoi management entirely and let `sync-theme.sh` own them.
+
+#### Caveats
+
+- macOS was in Dark mode at session end. If you toggle to Light before
+  committing, expect `chezmoi diff` to immediately diverge again. Re-run
+  `/chezmoi-update` or commit first.
+- The `bin/executable_*` mode-change diffs are noise from chezmoi internal
+  permission handling — they don't represent real config drift. Inspect
+  with `git diff` (you'll see "File permissions changed from 100755 to 100644. No changes.") before deciding what to do with them.
