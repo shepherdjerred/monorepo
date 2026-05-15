@@ -1,6 +1,5 @@
 {
   "permissions": {
-    "defaultMode": "bypassPermissions",
     "allow": [
       "Bash(*)",
       "Read(*)",
@@ -125,7 +124,8 @@
       "Bash(aws s3 mv*)",
       "Bash(aws s3 sync*)",
       "Bash(tailscale down*)"
-    ]
+    ],
+    "defaultMode": "bypassPermissions"
   },
   "hooks": {},
   "enabledPlugins": {

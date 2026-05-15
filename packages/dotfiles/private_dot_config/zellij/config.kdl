@@ -275,7 +275,7 @@ themes {
         white "#4c4f69" // Text
     }
 
-    catppuccin-frappe {
+    catppuccin-latte {
         bg "#626880" // Surface2
         fg "#c6d0f5" // Text
         red "#e78284"
@@ -289,7 +289,7 @@ themes {
         white "#c6d0f5" // Text
     }
 
-    catppuccin-macchiato {
+    catppuccin-latte {
         bg "#5b6078" // Surface2
         fg "#cad3f5" // Text
         red "#ed8796"
@@ -303,7 +303,7 @@ themes {
         white "#cad3f5" // Text
     }
 
-    catppuccin-mocha {
+    catppuccin-latte {
         bg "#585b70" // Surface2
         fg "#cdd6f4" // Text
         red "#f38ba8"

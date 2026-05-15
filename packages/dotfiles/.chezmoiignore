@@ -15,3 +15,5 @@ Library/
 _summary.md
 BUILD.bazel
 scripts
+.claude.json
+Library/Application Support/Claude/claude_desktop_config.json

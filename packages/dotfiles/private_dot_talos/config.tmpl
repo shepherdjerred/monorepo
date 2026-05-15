@@ -1,8 +1,10 @@
 context: torvalds
 contexts:
-    torvalds:
-        endpoints: ["torvalds.tailnet-1a49.ts.net"]
-        nodes: ["torvalds.tailnet-1a49.ts.net"]
-        ca: {{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/qtgyg6nwvbcfzu73w4ojmmr2ta/ca" }}
-        crt: {{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/qtgyg6nwvbcfzu73w4ojmmr2ta/crt" }}
-        key: {{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/qtgyg6nwvbcfzu73w4ojmmr2ta/key" }}
+  torvalds:
+    ca: {{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/qtgyg6nwvbcfzu73w4ojmmr2ta/ca" }}
+    crt: {{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/qtgyg6nwvbcfzu73w4ojmmr2ta/crt" }}
+    endpoints:
+    - torvalds.tailnet-1a49.ts.net
+    key: {{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/qtgyg6nwvbcfzu73w4ojmmr2ta/key" }}
+    nodes:
+    - torvalds.tailnet-1a49.ts.net
