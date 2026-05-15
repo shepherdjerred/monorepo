@@ -55,9 +55,12 @@ export function createTestDatabase(testName: string): {
   Bun.spawnSync(["cp", TEMPLATE_DB_PATH, testDbPath]);
 
   const basePrisma = new PrismaClient({
-    adapter: new PrismaLibSql({
-      url: testDbUrl,
-    }),
+    // Must mirror src/database/index.ts so tests exercise the same binding
+    // format as production.
+    adapter: new PrismaLibSql(
+      { url: testDbUrl },
+      { timestampFormat: "unixepoch-ms" },
+    ),
   });
 
   return {
