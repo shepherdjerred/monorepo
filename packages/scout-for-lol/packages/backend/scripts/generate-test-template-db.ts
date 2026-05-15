@@ -54,7 +54,13 @@ const { PrismaClient } = await import("#generated/prisma/client/index.js");
 const { PrismaLibSql } = await import("@prisma/adapter-libsql");
 const { SEASONS } = await import("@scout-for-lol/data");
 const seedPrisma = new PrismaClient({
-  adapter: new PrismaLibSql({ url: `file:${templatePath}` }),
+  // Must match src/database/index.ts so seeded Season rows have INTEGER ms
+  // datetimes; otherwise they would compare incorrectly against the prod
+  // adapter's unixepoch-ms bindings.
+  adapter: new PrismaLibSql(
+    { url: `file:${templatePath}` },
+    { timestampFormat: "unixepoch-ms" },
+  ),
 });
 for (const season of Object.values(SEASONS)) {
   await seedPrisma.season.upsert({

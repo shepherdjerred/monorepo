@@ -684,3 +684,81 @@ describe("Competition Lifecycle - Multiple Competitions", () => {
     expect(competitionsToEnd[0]?.id).toBe(comp3);
   });
 });
+
+// ============================================================================
+// Regression — libsql DateTime affinity bug (Prisma 7 / adapter-libsql)
+//
+// The libsql adapter defaults to `timestampFormat: "iso8601"`, which binds
+// `Date` parameters as TEXT (ISO 8601). Legacy rows written under Prisma 6
+// hold DateTime values as INTEGER ms. SQLite's type affinity makes
+// `INTEGER <= TEXT` always TRUE, so `endDate <= now` predicates wrongly
+// match every legacy row — historically this fired `handleCompetitionEnds`
+// on every active competition and prematurely ended them.
+//
+// Fix: pass `timestampFormat: "unixepoch-ms"` to the adapter so JS Date
+// parameters bind as INTEGER ms, matching legacy storage.
+//
+// This test inserts a row with raw INTEGER `endDate` via `$executeRawUnsafe`
+// (bypassing the adapter's parameter serialization) and asserts the standard
+// "competitions to end" query does NOT match the row when its endDate is in
+// the future. RED under `iso8601`, GREEN under `unixepoch-ms`.
+// ============================================================================
+
+describe("Competition Lifecycle - libsql affinity regression", () => {
+  test("does not match competition with future INTEGER-ms endDate", async () => {
+    const now = new Date("2025-01-18T12:00:00Z");
+    const futureEndDateMs = new Date("2025-12-31T00:00:00Z").getTime();
+    const pastStartProcessedMs = new Date("2025-01-15T00:00:00Z").getTime();
+    const createdMs = pastStartProcessedMs;
+
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO "Competition" (
+        "serverId", "ownerId", "title", "description", "channelId",
+        "isCancelled", "visibility",
+        "criteriaType", "criteriaConfig", "maxParticipants",
+        "endDate", "startProcessedAt",
+        "creatorDiscordId", "createdTime", "updatedTime"
+      ) VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      testGuildId("123456789012345678"),
+      testAccountId("987654321098765432"),
+      "regression-libsql",
+      "regression",
+      testChannelId("111222333444555666"),
+      "OPEN",
+      "HIGHEST_RANK",
+      "{}",
+      50,
+      futureEndDateMs, // INTEGER ms — legacy Prisma 6 storage
+      pastStartProcessedMs, // INTEGER ms
+      testAccountId("987654321098765432"),
+      createdMs,
+      createdMs,
+    );
+
+    // Sanity: the row was written with INTEGER affinity.
+    const types = await prisma.$queryRawUnsafe<
+      { endDateType: string; startProcessedType: string }[]
+    >(
+      `SELECT typeof("endDate") AS "endDateType",
+              typeof("startProcessedAt") AS "startProcessedType"
+       FROM "Competition" WHERE "title" = 'regression-libsql'`,
+    );
+    expect(types[0]?.endDateType).toBe("integer");
+    expect(types[0]?.startProcessedType).toBe("integer");
+
+    // Replicates the WHERE clause of handleCompetitionEnds.
+    const competitionsToEnd = await prisma.competition.findMany({
+      where: {
+        isCancelled: false,
+        startProcessedAt: { not: null },
+        endProcessedAt: null,
+        OR: [
+          { endDate: { lte: now } },
+          { season: { is: { endDate: { lte: now } } } },
+        ],
+      },
+    });
+
+    expect(competitionsToEnd).toHaveLength(0);
+  });
+});
