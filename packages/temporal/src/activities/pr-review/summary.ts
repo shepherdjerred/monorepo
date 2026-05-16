@@ -396,10 +396,11 @@ export async function runPrSummary(
 }
 
 /**
- * Default CLAUDE.md / AGENTS.md loader. Reads the root CLAUDE.md of the
- * repo via the GitHub contents API at the PR's head commit. Falls back to
- * an empty string if the file isn't present — the prompt is still useful
- * without it, just slightly less repo-aware.
+ * Default AGENTS.md / CLAUDE.md loader. Reads the root AGENTS.md of the
+ * repo via the GitHub contents API at the PR's head commit, with CLAUDE.md as
+ * a compatibility fallback for external repos. Falls back to an empty string
+ * if neither file is present — the prompt is still useful without it, just
+ * slightly less repo-aware.
  *
  * We deliberately do NOT read these files from disk on the worker — the
  * worker's local checkout (if any) is a different repo than the one being
@@ -410,30 +411,35 @@ async function defaultLoadRepoConventionsMarkdown(
   octokit: OctokitForSummary,
   pr: PrSummaryInput,
 ): Promise<string> {
-  try {
-    const response = await octokit.getContent({
-      owner: pr.owner,
-      repo: pr.repo,
-      path: "CLAUDE.md",
-      ref: pr.commitSha,
-    });
-    const parsed = RepoContentFileSchema.safeParse(response.data);
-    if (!parsed.success) {
-      // Not a regular file (could be dir/symlink/submodule) or shape we
-      // don't recognize. Bot still runs without repo context.
-      return "";
+  const candidatePaths = ["AGENTS.md", "CLAUDE.md"];
+  const errors: string[] = [];
+
+  for (const path of candidatePaths) {
+    try {
+      const response = await octokit.getContent({
+        owner: pr.owner,
+        repo: pr.repo,
+        path,
+        ref: pr.commitSha,
+      });
+      const parsed = RepoContentFileSchema.safeParse(response.data);
+      if (!parsed.success) {
+        // Not a regular file (could be dir/symlink/submodule) or shape we
+        // don't recognize. Try the next compatible conventions filename.
+        continue;
+      }
+      // GitHub returns base64 with line wraps. Buffer.from handles both.
+      return Buffer.from(parsed.data.content, "base64").toString("utf8");
+    } catch (error: unknown) {
+      errors.push(`${path}: ${error instanceof Error ? error.message : String(error)}`);
     }
-    // GitHub returns base64 with line wraps. Buffer.from handles both.
-    return Buffer.from(parsed.data.content, "base64").toString("utf8");
-  } catch (error: unknown) {
-    // 404 is expected for repos that don't use CLAUDE.md; anything else is
-    // worth logging but not failing the summary over.
-    jsonLog("warning", "Failed to load CLAUDE.md from PR head", {
-      error: error instanceof Error ? error.message : String(error),
-      prNumber: pr.prNumber,
-    });
-    return "";
   }
+
+  jsonLog("warning", "Failed to load repo instructions from PR head", {
+    errors,
+    prNumber: pr.prNumber,
+  });
+  return "";
 }
 
 /**

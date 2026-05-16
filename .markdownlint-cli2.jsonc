@@ -39,6 +39,6 @@
     "packages/glance/**",
     "practice/**",
     "**/.terraform/**",
-    "packages/dotfiles/dot_claude/skills/**",
+    "packages/dotfiles/dot_agents/skills/**",
   ],
 }

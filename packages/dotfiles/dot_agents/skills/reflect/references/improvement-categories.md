@@ -2,11 +2,11 @@
 
 Detailed guidance on each type of improvement that can be suggested.
 
-## CLAUDE.md Improvements
+## AGENTS.md Improvements
 
 ### When to Suggest
 
-- Claude made incorrect assumptions about the project
+- The agent made incorrect assumptions about the project
 - User had to explain project-specific concepts
 - Documentation is outdated or contradictory
 - Missing information caused errors
@@ -288,7 +288,7 @@ npm test
 
 ### When to Suggest
 
-- Claude asked about project structure
+- The agent asked about project structure
 - User explained patterns that weren't documented
 - Assumptions about architecture were wrong
 - Design decisions need recording

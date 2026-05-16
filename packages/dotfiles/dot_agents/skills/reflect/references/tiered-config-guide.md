@@ -1,30 +1,30 @@
 # Tiered Configuration Guide
 
-How to decide where to place Claude Code configuration and improvements.
+How to decide where to place agent configuration and improvements.
 
 ## Configuration Tiers Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     Global (~/.claude/)                      │
+│                     Global (~/.agents/)                      │
 │  User-wide settings, personal preferences, universal rules  │
 ├─────────────────────────────────────────────────────────────┤
 │                     Repository (./)                          │
 │  Project-specific settings, team conventions, local rules   │
 ├─────────────────────────────────────────────────────────────┤
-│                   Nested (**/CLAUDE.md)                      │
+│                   Nested (**/AGENTS.md)                      │
 │  Module-specific overrides, directory-scoped rules          │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Global Tier (~/.claude/)
+## Global Tier (~/.agents/)
 
 ### Files
 
-- `~/.claude/CLAUDE.md` - Global instructions
-- `~/.claude/settings.json` - Global settings and permissions
-- `~/.claude/skills/` - Personal skills
-- `~/.claude/.mcp.json` - Personal MCP servers
+- `~/AGENTS.md` - Global instructions
+- `~/.claude/settings.json` - Claude-specific settings and permissions
+- `~/.agents/skills/` - Personal skills
+- `~/.claude/.mcp.json` - Claude-specific MCP servers
 
 ### Use For
 
@@ -55,7 +55,7 @@ How to decide where to place Claude Code configuration and improvements.
 ### Examples
 
 ```markdown
-# ~/.claude/CLAUDE.md
+# ~/AGENTS.md
 
 ## Communication
 
@@ -84,7 +84,7 @@ How to decide where to place Claude Code configuration and improvements.
 
 ### Files
 
-- `./CLAUDE.md` - Project instructions
+- `./AGENTS.md` - Project instructions
 - `./.claude/settings.local.json` - Project settings
 - `./.claude/commands/` - Project commands
 - `./.mcp.json` - Project MCP servers
@@ -124,7 +124,7 @@ How to decide where to place Claude Code configuration and improvements.
 ### Examples
 
 ```markdown
-# ./CLAUDE.md
+# ./AGENTS.md
 
 ## Project Overview
 
@@ -153,13 +153,13 @@ E-commerce platform built with Next.js and PostgreSQL.
 }
 ```
 
-## Nested Tier (\*\*/CLAUDE.md)
+## Nested Tier (\*\*/AGENTS.md)
 
 ### Files
 
-- `src/components/CLAUDE.md`
-- `packages/core/CLAUDE.md`
-- `modules/auth/CLAUDE.md`
+- `src/components/AGENTS.md`
+- `packages/core/AGENTS.md`
+- `modules/auth/AGENTS.md`
 
 ### Use For
 
@@ -184,7 +184,7 @@ E-commerce platform built with Next.js and PostgreSQL.
 ### Examples
 
 ```markdown
-# src/components/CLAUDE.md
+# src/components/AGENTS.md
 
 ## Component Conventions
 
@@ -200,7 +200,7 @@ E-commerce platform built with Next.js and PostgreSQL.
 ```
 
 ```markdown
-# packages/legacy/CLAUDE.md
+# packages/legacy/AGENTS.md
 
 ## Legacy Code Warning
 
@@ -269,7 +269,7 @@ When starting to share with a team:
 
 ```bash
 # Copy personal settings to repo
-cp ~/.claude/CLAUDE.md ./CLAUDE.md
+cp ~/AGENTS.md ./AGENTS.md
 # Edit to remove personal preferences
 # Keep only project-relevant content
 ```
@@ -280,7 +280,7 @@ When a module needs different rules:
 
 ```bash
 # Create module-specific file
-touch src/module/CLAUDE.md
+touch src/module/AGENTS.md
 # Add only the differences
 # Reference parent for shared rules
 ```

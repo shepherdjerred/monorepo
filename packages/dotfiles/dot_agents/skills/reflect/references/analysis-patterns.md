@@ -6,7 +6,7 @@ This reference documents patterns to look for when analyzing conversation histor
 
 ### Explicit Corrections
 
-Look for phrases indicating Claude misunderstood:
+Look for phrases indicating the agent misunderstood:
 
 - "No, I meant..."
 - "Actually, I wanted..."
@@ -15,7 +15,7 @@ Look for phrases indicating Claude misunderstood:
 - "Wrong file/function/approach"
 - "I said X, not Y"
 
-**Improvement:** Add clarity to CLAUDE.md about the misunderstood concept.
+**Improvement:** Add clarity to AGENTS.md about the misunderstood concept.
 
 ### Implicit Corrections
 
@@ -25,7 +25,7 @@ User providing the same instruction multiple times:
 - Adding more detail to a previous request
 - Breaking down a request into smaller steps
 
-**Improvement:** Document the pattern or terminology in CLAUDE.md.
+**Improvement:** Document the pattern or terminology in AGENTS.md.
 
 ## Permission Patterns
 
@@ -66,47 +66,47 @@ DROP TABLE       → Add to deny list
 
 ### Missing Architecture Knowledge
 
-Questions or confusion indicating Claude doesn't understand the codebase:
+Questions or confusion indicating the agent doesn't understand the codebase:
 
 - "Where is the X module?"
 - "How does Y work in this project?"
 - "What's the pattern for Z here?"
-- Claude making incorrect assumptions about structure
+- The agent making incorrect assumptions about structure
 
-**Improvement:** Add architecture documentation to CLAUDE.md.
+**Improvement:** Add architecture documentation to AGENTS.md.
 
 ### Missing Domain Knowledge
 
-Claude not understanding project-specific terminology:
+The agent not understanding project-specific terminology:
 
 - Asking for clarification on domain terms
 - Using wrong terminology
 - Misunderstanding business logic
 
-**Improvement:** Add glossary or domain context to CLAUDE.md.
+**Improvement:** Add glossary or domain context to AGENTS.md.
 
 ## Style and Convention Patterns
 
 ### Formatting Corrections
 
-User correcting Claude's output style:
+User correcting the agent's output style:
 
 - "Use X format instead"
 - "That's not how we name things"
 - "We use tabs/spaces/quotes differently"
 
-**Improvement:** Add style guide to CLAUDE.md.
+**Improvement:** Add style guide to AGENTS.md.
 
 ### Pattern Violations
 
-Claude not following project patterns:
+The agent not following project patterns:
 
 - Wrong error handling approach
 - Incorrect import style
 - Missing standard boilerplate
 - Wrong file organization
 
-**Improvement:** Document patterns in CLAUDE.md or create pre-commit hooks.
+**Improvement:** Document patterns in AGENTS.md or create pre-commit hooks.
 
 ## Workflow Patterns
 
@@ -123,7 +123,7 @@ Same multi-step workflow appearing 2+ times:
 
 ### Manual Steps Required
 
-Claude asking user to do something manually:
+The agent asking user to do something manually:
 
 - "Please run this command"
 - "You'll need to manually..."
@@ -135,7 +135,7 @@ Claude asking user to do something manually:
 
 ### External Service Access
 
-Claude needing information from external services:
+The agent needing information from external services:
 
 - API documentation lookups
 - Database queries

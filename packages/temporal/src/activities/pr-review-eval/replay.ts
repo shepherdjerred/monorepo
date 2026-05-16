@@ -138,10 +138,10 @@ async function replayImpl(input: ReplayInput): Promise<ReplayResult> {
       // Synthesize the PrReviewContext + PrReviewPipelineInput the
       // specialist expects. workdir is empty (Phase 5 retrieval would
       // populate it from a clone of the snapshot ref; for now the
-      // specialist sees diff text only). CLAUDE.md hierarchy is also
-      // empty — fixtures don't exercise CLAUDE.md-aware reviewers in
+      // specialist sees diff text only). The agent instructions hierarchy is
+      // also empty — fixtures don't exercise AGENTS.md-aware reviewers in
       // this Phase. Future Phase 5 work can extend the fixture schema
-      // with a `repoSnapshotRef` that includes the CLAUDE.md tree.
+      // with a `repoSnapshotRef` that includes the instruction tree.
       const context: PrReviewContext = {
         workdir: "",
         changedFiles,

@@ -83,7 +83,7 @@ Write the summary comment body now, starting with the \`${SUMMARY_MARKER}\` line
 /**
  * Build the Anthropic Messages API `system` content blocks. Two blocks: a
  * stable instructional preamble (volatile only when we tune the prompt) and
- * a repo-conventions block (volatile only when CLAUDE.md hierarchy shifts).
+ * a repo-conventions block (volatile only when the agent instructions hierarchy shifts).
  *
  * The caller pins `cache_control: {type: "ephemeral"}` on the LAST block,
  * which auto-caches the entire prefix (preamble + conventions). Render order

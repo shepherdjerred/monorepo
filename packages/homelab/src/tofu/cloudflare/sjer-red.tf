@@ -153,7 +153,7 @@ resource "cloudflare_dns_record" "sjer_red_cname_pokebot" {
 
 # Receives GitHub `pull_request` webhooks for the temporal worker's pr-agent
 # (prReview / prSummary workflows). TunnelBinding lives in cdk8s; this DNS
-# record completes the public path. See packages/temporal/CLAUDE.md.
+# record completes the public path. See packages/temporal/AGENTS.md.
 resource "cloudflare_dns_record" "sjer_red_cname_pr_bot" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1

@@ -54,9 +54,11 @@ const EXCLUDED_FILES = [
   "packages/temporal/src/generated/ha-schema.stub.ts",
   // Intentional: compile-time type tests — @ts-expect-error is the whole point
   "packages/home-assistant/test/typed-client.test-d.ts",
-  // Documentation: CLAUDE.md files and docs mention suppression patterns as things to avoid
+  // Documentation: AGENTS.md files and docs mention suppression patterns as things to avoid
+  "AGENTS.md",
   "CLAUDE.md",
   "packages/docs/",
+  "packages/dotfiles/AGENTS.md",
   "packages/dotfiles/CLAUDE.md",
   // Contains patterns as search strings
   "scripts/check-dagger-hygiene.ts",
@@ -65,11 +67,11 @@ const EXCLUDED_FILES = [
   // Prometheus exporter shell script: `2>/dev/null` falls back to a 0 metric
   // when zpool/date are unavailable, which is the right behavior for scrape
   // resilience. The 2>/dev/null ban is scoped to .dagger/src/ and
-  // scripts/ci/src/ per CLAUDE.md, not arbitrary shell scripts.
+  // scripts/ci/src/ per AGENTS.md, not arbitrary shell scripts.
   "packages/homelab/src/cdk8s/src/resources/monitoring/scripts/zfs_zpool.sh",
   // Intentional: writes a GIT_ASKPASS script that returns the literal string
   // "x-access-token" as the git username (with $GH_TOKEN as the password).
-  // This is the recommended pattern that the CLAUDE.md rule actually points
+  // This is the recommended pattern that the AGENTS.md rule actually points
   // toward — the ban is on putting `x-access-token` in URLs, not in askpass.
   "packages/temporal/src/activities/data-dragon.ts",
   // Same GIT_ASKPASS pattern as data-dragon.ts — emits "x-access-token" as

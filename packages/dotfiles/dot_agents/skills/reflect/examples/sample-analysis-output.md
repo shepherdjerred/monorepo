@@ -11,13 +11,13 @@ This example shows the expected output format from the reflect skill.
 
 | Tier   | File                          | Status           |
 | ------ | ----------------------------- | ---------------- |
-| Global | ~/.claude/CLAUDE.md           | Found            |
+| Global | ~/AGENTS.md           | Found            |
 | Global | ~/.claude/settings.json       | Found            |
-| Global | ~/.claude/skills/             | Found (3 skills) |
-| Repo   | ./CLAUDE.md                   | Found            |
+| Global | ~/.agents/skills/             | Found (3 skills) |
+| Repo   | ./AGENTS.md                   | Found            |
 | Repo   | ./.claude/settings.local.json | Missing          |
 | Repo   | ./.mcp.json                   | Missing          |
-| Nested | src/components/CLAUDE.md      | Missing          |
+| Nested | src/components/AGENTS.md      | Missing          |
 
 ### Chat Patterns Detected
 
@@ -40,7 +40,7 @@ This example shows the expected output format from the reflect skill.
 
 **Context Gaps:**
 
-- Claude asked "Where is the API client?" at turn 10
+- The agent asked "Where is the API client?" at turn 10
 - User had to explain repository pattern at turn 14
 - Architecture of auth module was unclear at turn 25
 
@@ -51,8 +51,8 @@ This example shows the expected output format from the reflect skill.
 
 ### Current Configuration Issues
 
-- Global CLAUDE.md doesn't mention preference for bun over npm
-- No architecture documentation in repo CLAUDE.md
+- Global AGENTS.md doesn't mention preference for bun over npm
+- No architecture documentation in repo AGENTS.md
 - Test directory location not documented
 - Database type not specified anywhere
   </analysis>
@@ -64,9 +64,9 @@ This example shows the expected output format from the reflect skill.
 
 #### 1. Add Package Manager Preference
 
-- **Type:** CLAUDE.md
+- **Type:** AGENTS.md
 - **Tier:** Global
-- **File:** `~/.claude/CLAUDE.md`
+- **File:** `~/AGENTS.md`
 - **Rationale:** User corrected "use bun not npm" 3 times. This personal preference should apply to all projects.
 - **Change:**
 
@@ -84,10 +84,10 @@ Always use `bun` instead of `npm` or `yarn`:
 
 #### 2. Document Test Directory Structure
 
-- **Type:** CLAUDE.md
+- **Type:** AGENTS.md
 - **Tier:** Repo
-- **File:** `./CLAUDE.md`
-- **Rationale:** Claude looked for tests in wrong location. Test structure is project-specific.
+- **File:** `./AGENTS.md`
+- **Rationale:** The agent looked for tests in wrong location. Test structure is project-specific.
 - **Change:**
 
 ```markdown
@@ -110,10 +110,10 @@ bun test path/file # Specific file
 
 #### 3. Document Database Configuration
 
-- **Type:** CLAUDE.md
+- **Type:** AGENTS.md
 - **Tier:** Repo
-- **File:** `./CLAUDE.md`
-- **Rationale:** Claude assumed SQLite when project uses Postgres. Critical for correct code generation.
+- **File:** `./AGENTS.md`
+- **Rationale:** The agent assumed SQLite when project uses Postgres. Critical for correct code generation.
 - **Change:**
 
 ```markdown
@@ -140,7 +140,7 @@ bun run db:seed
 
 - **Type:** Architecture
 - **Tier:** Repo
-- **File:** `./CLAUDE.md`
+- **File:** `./AGENTS.md`
 - **Rationale:** User explained repository pattern and API client location. Architecture should be documented.
 - **Change:**
 
@@ -288,9 +288,9 @@ Report any failures with file locations.
 
 | Pattern Observed     | Suggested Addition      | Location                 |
 | -------------------- | ----------------------- | ------------------------ |
-| Repository pattern   | Data access layer docs  | CLAUDE.md → Architecture |
-| API client structure | API organization        | CLAUDE.md → Architecture |
-| Service layer        | Business logic patterns | CLAUDE.md → Patterns     |
+| Repository pattern   | Data access layer docs  | AGENTS.md → Architecture |
+| API client structure | API organization        | AGENTS.md → Architecture |
+| Service layer        | Business logic patterns | AGENTS.md → Patterns     |
 
 </improvements>
 
@@ -302,7 +302,7 @@ I found 9 improvements across 3 priority levels:
 
 | Priority     | Count | Types                           |
 | ------------ | ----- | ------------------------------- |
-| Critical     | 3     | CLAUDE.md (3)                   |
+| Critical     | 3     | AGENTS.md (3)                   |
 | High Value   | 3     | Architecture, Skill, Allow-List |
 | Nice to Have | 3     | Allow-List, Deny-List, MCP      |
 
@@ -314,9 +314,9 @@ For each change, you can:
 
 Shall I begin with Priority 1 improvements?
 
-1. Add package manager preference (bun) to global CLAUDE.md
-2. Document test directory structure in repo CLAUDE.md
-3. Document database configuration in repo CLAUDE.md
+1. Add package manager preference (bun) to global AGENTS.md
+2. Document test directory structure in repo AGENTS.md
+3. Document database configuration in repo AGENTS.md
    </final_instructions>
 
 ---
@@ -328,7 +328,7 @@ User: "Accept all Priority 1"
 _Applying improvement 1: Package Manager Preference_
 
 ```diff
-# ~/.claude/CLAUDE.md
+# ~/AGENTS.md
 
 + ## Development Preferences
 +
@@ -339,12 +339,12 @@ _Applying improvement 1: Package Manager Preference_
 + - `bun run` not `npm run`
 ```
 
-✓ Applied to ~/.claude/CLAUDE.md
+✓ Applied to ~/AGENTS.md
 
 _Applying improvement 2: Test Directory Structure_
 
 ```diff
-# ./CLAUDE.md
+# ./AGENTS.md
 
 + ## Testing
 +
@@ -360,12 +360,12 @@ _Applying improvement 2: Test Directory Structure_
 + bun test path/file    # Specific file
 ```
 
-✓ Applied to ./CLAUDE.md
+✓ Applied to ./AGENTS.md
 
 _Applying improvement 3: Database Configuration_
 
 ```diff
-# ./CLAUDE.md
+# ./AGENTS.md
 
 + ## Database
 +
@@ -380,7 +380,7 @@ _Applying improvement 3: Database Configuration_
 + bun run db:seed
 ```
 
-✓ Applied to ./CLAUDE.md
+✓ Applied to ./AGENTS.md
 
 ---
 
@@ -388,9 +388,9 @@ _Applying improvement 3: Database Configuration_
 
 ### Changes Applied (3)
 
-1. ✓ Package manager preference → ~/.claude/CLAUDE.md
-2. ✓ Test directory structure → ./CLAUDE.md
-3. ✓ Database configuration → ./CLAUDE.md
+1. ✓ Package manager preference → ~/AGENTS.md
+2. ✓ Test directory structure → ./AGENTS.md
+3. ✓ Database configuration → ./AGENTS.md
 
 ### Remaining Improvements (6)
 

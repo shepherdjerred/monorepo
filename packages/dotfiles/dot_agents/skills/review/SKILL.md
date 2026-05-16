@@ -46,7 +46,7 @@ When this skill is invoked, perform a comprehensive review of the implementation
 ### 4. Documentation Check
 
 - **Docs updates** - Do any docs need updating?
-- **CLAUDE.md updates** - Does the project CLAUDE.md need updates?
+- **AGENTS.md updates** - Does the project AGENTS.md need updates?
 - **Pattern documentation** - Are there new patterns that should be documented?
 
 ### 5. Skills/Tooling Check

@@ -33,9 +33,9 @@ import {
  * Narrowing schema for the `getContent` response when the path resolves to a
  * file. `content` is base64 (when `encoding === "base64"`) per the contents
  * API spec. Other variants of the union (directories, symlinks, submodules)
- * fail the parse and the CLAUDE.md walker treats them as missing.
+ * fail the parse and the agent-instructions walker treats them as missing.
  */
-const ClaudeMdContentResponseSchema = z.object({
+const AgentInstructionsContentResponseSchema = z.object({
   type: z.literal("file"),
   encoding: z.literal("base64"),
   content: z.string(),
@@ -44,9 +44,10 @@ const ClaudeMdContentResponseSchema = z.object({
 const COMPONENT = "pr-review-pipeline";
 
 /**
- * Bootstrap output — the diff + CLAUDE.md hierarchy the specialist reviewers
- * read against. `workdir` will be populated in Phase 5+ when we start cloning
- * PR heads into ZFS scratch volumes; for now it's the empty string.
+ * Bootstrap output — the diff + agent-instructions hierarchy the specialist
+ * reviewers read against. `workdir` will be populated in Phase 5+ when we
+ * start cloning PR heads into ZFS scratch volumes; for now it's the empty
+ * string.
  *
  * Structurally identical to `PrReviewContext` (see
  * `packages/temporal/src/shared/pr-review/context.ts`); declared locally so
@@ -74,6 +75,7 @@ export type BootstrapResult = {
   blockDiffs: FileBlockDiff[];
 };
 
+const AGENTS_MD_FILENAME = "AGENTS.md";
 const CLAUDE_MD_FILENAME = "CLAUDE.md";
 
 function sendHeartbeat(note: string): void {
@@ -215,17 +217,18 @@ async function fetchChangedFiles(
 
 /**
  * Walk up from each changed file's directory toward the repo root, fetching
- * `CLAUDE.md` at every level via the contents API at the PR head SHA. De-dupe
- * by path so we never fetch the same file twice. Missing files (404) are
- * silently skipped — the CLAUDE.md hierarchy is sparse on purpose.
+ * `AGENTS.md` at every level via the contents API at the PR head SHA. Falls
+ * back to `CLAUDE.md` for repos that have not migrated yet. Missing files
+ * (404) are silently skipped — the instructions hierarchy is sparse on
+ * purpose.
  */
 async function fetchClaudeMdHierarchy(
   octokit: BootstrapOctokit,
   input: PrReviewPipelineInput,
   changedFiles: readonly PrFileDiff[],
 ): Promise<ClaudeMdFile[]> {
-  const candidatePaths = new Set<string>();
-  candidatePaths.add(CLAUDE_MD_FILENAME);
+  const candidateDirs = new Set<string>();
+  candidateDirs.add("");
   for (const f of changedFiles) {
     let dir = f.path;
     for (;;) {
@@ -237,38 +240,24 @@ async function fetchClaudeMdHierarchy(
       if (dir.length === 0) {
         break;
       }
-      candidatePaths.add(`${dir}/${CLAUDE_MD_FILENAME}`);
+      candidateDirs.add(dir);
     }
   }
 
   const found: ClaudeMdFile[] = [];
-  for (const path of candidatePaths) {
-    try {
-      const resp = await octokit.rest.repos.getContent({
-        owner: input.owner,
-        repo: input.repo,
-        path,
-        ref: input.commitSha,
-      });
-      // `resp.data` is `unknown` from the BootstrapOctokit shape (the real
-      // Octokit return is a discriminated union of file/dir/symlink/submodule).
-      // safeParse against the file variant: dirs / symlinks / submodules fail
-      // the parse and we treat them as "no CLAUDE.md at this level".
-      const parsed = ClaudeMdContentResponseSchema.safeParse(resp.data);
-      if (parsed.success) {
-        const decoded = Buffer.from(parsed.data.content, "base64").toString(
-          "utf8",
-        );
-        found.push({ path, content: decoded });
-      }
-    } catch (error: unknown) {
-      // 404 (file not present at this level of the hierarchy) is the
-      // expected case — keep walking. Other errors are real and need to
-      // surface so we don't ship a review against incomplete context.
-      if (error instanceof RequestError && error.status === 404) {
-        continue;
-      }
-      throw error;
+  for (const dir of candidateDirs) {
+    const migratedPath =
+      dir.length === 0 ? AGENTS_MD_FILENAME : `${dir}/${AGENTS_MD_FILENAME}`;
+    const fallbackPath =
+      dir.length === 0 ? CLAUDE_MD_FILENAME : `${dir}/${CLAUDE_MD_FILENAME}`;
+    const file = await fetchAgentInstructionsFile(
+      octokit,
+      input,
+      migratedPath,
+      fallbackPath,
+    );
+    if (file !== null) {
+      found.push(file);
     }
   }
 
@@ -277,6 +266,56 @@ async function fetchClaudeMdHierarchy(
   // `shared/prompt-caching.md` in the claude-api skill).
   found.sort((a, b) => a.path.localeCompare(b.path));
   return found;
+}
+
+async function fetchAgentInstructionsFile(
+  octokit: BootstrapOctokit,
+  input: PrReviewPipelineInput,
+  migratedPath: string,
+  fallbackPath: string,
+): Promise<ClaudeMdFile | null> {
+  const migrated = await fetchAgentInstructionsFileAtPath(
+    octokit,
+    input,
+    migratedPath,
+  );
+  if (migrated !== null) {
+    return migrated;
+  }
+  return fetchAgentInstructionsFileAtPath(octokit, input, fallbackPath);
+}
+
+async function fetchAgentInstructionsFileAtPath(
+  octokit: BootstrapOctokit,
+  input: PrReviewPipelineInput,
+  path: string,
+): Promise<ClaudeMdFile | null> {
+  try {
+    const resp = await octokit.rest.repos.getContent({
+      owner: input.owner,
+      repo: input.repo,
+      path,
+      ref: input.commitSha,
+    });
+    // `resp.data` is `unknown` from the BootstrapOctokit shape (the real
+    // Octokit return is a discriminated union of file/dir/symlink/submodule).
+    // safeParse against the file variant: dirs / symlinks / submodules fail
+    // the parse and we treat them as "no instructions file at this level".
+    const parsed = AgentInstructionsContentResponseSchema.safeParse(resp.data);
+    if (!parsed.success) {
+      return null;
+    }
+    const decoded = Buffer.from(parsed.data.content, "base64").toString("utf8");
+    return { path, content: decoded };
+  } catch (error: unknown) {
+    // 404 (file not present at this level of the hierarchy) is the expected
+    // case. Other errors are real and need to surface so we don't ship a
+    // review against incomplete context.
+    if (error instanceof RequestError && error.status === 404) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 /**
@@ -290,7 +329,7 @@ export async function runBootstrap(
 ): Promise<BootstrapResult> {
   heartbeat("listing-files");
   const changedFiles = await fetchChangedFiles(octokit, input);
-  heartbeat("walking-claude-md-hierarchy");
+  heartbeat("walking-agent-instructions-hierarchy");
   const claudeMdHierarchy = await fetchClaudeMdHierarchy(
     octokit,
     input,
@@ -519,7 +558,7 @@ async function bootstrapContextImpl(
           },
           heartbeat: sendHeartbeat,
         });
-        jsonLog("info", "bootstrapContext fetched diff + CLAUDE.md hierarchy", {
+        jsonLog("info", "bootstrapContext fetched diff + instructions", {
           prNumber: input.prNumber,
           commitSha: input.commitSha,
           changedFilesCount: enriched.changedFiles.length,

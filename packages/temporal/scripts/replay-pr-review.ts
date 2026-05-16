@@ -163,13 +163,13 @@ async function main(): Promise<void> {
   const pipelineInput = await fetchPipelineInput(octokit, args);
 
   process.stderr.write(
-    `Bootstrap: listing files + walking CLAUDE.md hierarchy at ${pipelineInput.commitSha.slice(0, 7)}...\n`,
+    `Bootstrap: listing files + walking agent instructions hierarchy at ${pipelineInput.commitSha.slice(0, 7)}...\n`,
   );
   const context = await runBootstrap(octokit, pipelineInput, (note) => {
     process.stderr.write(`  bootstrap heartbeat: ${note}\n`);
   });
   process.stderr.write(
-    `  ${String(context.changedFiles.length)} files, ${String(context.claudeMdHierarchy.length)} CLAUDE.md files\n`,
+    `  ${String(context.changedFiles.length)} files, ${String(context.claudeMdHierarchy.length)} instruction files\n`,
   );
 
   if (args.printPrompt) {
