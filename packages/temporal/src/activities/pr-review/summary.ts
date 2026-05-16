@@ -431,7 +431,9 @@ async function defaultLoadRepoConventionsMarkdown(
       // GitHub returns base64 with line wraps. Buffer.from handles both.
       return Buffer.from(parsed.data.content, "base64").toString("utf8");
     } catch (error: unknown) {
-      errors.push(`${path}: ${error instanceof Error ? error.message : String(error)}`);
+      errors.push(
+        `${path}: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 

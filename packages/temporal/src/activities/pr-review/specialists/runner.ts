@@ -163,7 +163,9 @@ export function buildSpecialistUserText(request: SpecialistRequest): string {
   lines.push("");
 
   if (context.claudeMdHierarchy.length > 0) {
-    lines.push("## Agent instructions hierarchy (project + package conventions)");
+    lines.push(
+      "## Agent instructions hierarchy (project + package conventions)",
+    );
     lines.push("");
     for (const md of context.claudeMdHierarchy) {
       lines.push(`### \`${md.path}\``);
