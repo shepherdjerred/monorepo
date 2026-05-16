@@ -1,6 +1,6 @@
 ---
 name: reflect
-description: This skill should be used when the user asks to "reflect on this conversation", "optimize my Claude setup", "improve Claude instructions", "analyze chat patterns", "audit CLAUDE.md", "suggest Claude improvements", "fix Claude misunderstandings", or mentions "prompt optimization", "instruction tuning", or "Claude configuration audit". Analyzes chat history and configuration to identify improvements for CLAUDE.md files, skills, MCPs, hooks, and permissions.
+description: This skill should be used when the user asks to "reflect on this conversation", "optimize my agent setup", "improve agent instructions", "analyze chat patterns", "audit AGENTS.md", "suggest agent improvements", "fix agent misunderstandings", or mentions "prompt optimization", "instruction tuning", or "agent configuration audit". Analyzes chat history and configuration to identify improvements for AGENTS.md files, skills, MCPs, hooks, and permissions.
 user-invocable: true
 allowed-tools:
   - Read
@@ -11,13 +11,13 @@ allowed-tools:
   - Write
 ---
 
-# Reflect: Claude Configuration Analyzer
+# Reflect: Agent Configuration Analyzer
 
-Analyze chat history and Claude configuration to suggest targeted improvements for CLAUDE.md files, skills, MCPs, hooks, and permissions.
+Analyze chat history and agent configuration to suggest targeted improvements for AGENTS.md files, skills, MCPs, hooks, and permissions.
 
 ## Overview
 
-This skill performs a comprehensive audit of your Claude Code setup by:
+This skill performs a comprehensive audit of your agent setup by:
 
 1. Discovering all configuration files across tiers (global, repo, nested)
 2. Analyzing the current conversation for friction patterns
@@ -32,20 +32,20 @@ Scan for and read all relevant configuration files:
 
 **Global Configuration (~/.claude/):**
 
-- `~/.claude/CLAUDE.md` - Global instructions
+- `~/AGENTS.md` - Global instructions
 - `~/.claude/settings.json` - Global settings, permissions, allow/deny lists
-- `~/.claude/skills/` - User skills directory
+- `~/.agents/skills/` - User skills directory
 
 **Repository Configuration (./):**
 
-- `./CLAUDE.md` - Repo-level instructions
+- `./AGENTS.md` - Repo-level instructions
 - `./.claude/settings.local.json` - Repo-specific settings
 - `./.claude/commands/` - Custom commands
 - `./.mcp.json` - MCP server configuration
 
 **Nested Configuration:**
 
-- `**/CLAUDE.md` - Module-specific instructions (limit depth to 3)
+- `**/AGENTS.md` - Module-specific instructions (limit depth to 3)
 
 ### Chat History Analysis
 
@@ -53,7 +53,7 @@ Examine the conversation for these friction patterns:
 
 | Pattern                        | Indicators                                     | Improvement Type      |
 | ------------------------------ | ---------------------------------------------- | --------------------- |
-| **Repeated corrections**       | "No, I meant...", "Actually...", "Not that..." | CLAUDE.md clarity     |
+| **Repeated corrections**       | "No, I meant...", "Actually...", "Not that..." | AGENTS.md clarity     |
 | **Permission requests**        | Bash commands approved 2+ times                | Allow list addition   |
 | **Permission denials**         | Commands user rejected/canceled                | Deny list addition    |
 | **Context requests**           | "Where is...", "How does X work here?"         | Architecture docs     |
@@ -77,9 +77,9 @@ Generate a comprehensive report using this exact format:
 
 | Tier   | File                    | Status        |
 | ------ | ----------------------- | ------------- |
-| Global | ~/.claude/CLAUDE.md     | Found/Missing |
+| Global | ~/AGENTS.md     | Found/Missing |
 | Global | ~/.claude/settings.json | Found/Missing |
-| Repo   | ./CLAUDE.md             | Found/Missing |
+| Repo   | ./AGENTS.md             | Found/Missing |
 | ...    | ...                     | ...           |
 
 ### Chat Patterns Detected
@@ -89,7 +89,7 @@ Generate a comprehensive report using this exact format:
 
 ### Current Configuration Issues
 
-- [Gaps between what Claude needs and what's documented]
+- [Gaps between what the agent needs and what's documented]
 - [Outdated or contradictory instructions]
 - [Missing permissions that caused friction]
   </analysis>
@@ -115,7 +115,7 @@ Each improvement follows this format:
 
 #### [Descriptive Title]
 
-- **Type:** CLAUDE.md | Skill | MCP | Hook | Permission | Allow-List | Deny-List | Pre-commit | Architecture
+- **Type:** AGENTS.md | Skill | MCP | Hook | Permission | Allow-List | Deny-List | Pre-commit | Architecture
 - **Tier:** Global | Repo | Nested
 - **File:** [exact path to modify]
 - **Rationale:** [why this improvement matters, with evidence from chat]
@@ -148,8 +148,8 @@ Each improvement follows this format:
 ## Architecture Documentation
 | Pattern Observed | Suggested Addition | Location |
 |------------------|-------------------|----------|
-| Repository pattern | Data access layer docs | CLAUDE.md → Architecture |
-| Custom errors | Error handling strategy | CLAUDE.md → Patterns |
+| Repository pattern | Data access layer docs | AGENTS.md → Architecture |
+| Custom errors | Error handling strategy | AGENTS.md → Patterns |
 </improvements>
 
 <final_instructions>

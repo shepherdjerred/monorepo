@@ -35,7 +35,7 @@ export const CORRECTNESS_MAX_TOKENS = 16_000;
  * The legacy `pr-prompts.ts` `SHARED_PREAMBLE` + `buildReviewPrompt` body
  * informed this prompt — same review philosophy (substantive bugs only,
  * cite paths, skip lint nits), adapted to the SDK transport where the model
- * can't fetch via MCP and instead receives the diff + CLAUDE.md hierarchy
+ * can't fetch via MCP and instead receives the diff + agent instructions hierarchy
  * inline in the user turn.
  *
  * Semantic parity, not byte-for-byte parity: the gh/MCP-fetching clauses
@@ -48,7 +48,7 @@ You are a senior staff engineer reviewing a pull request on a TypeScript / Bun m
 You are operating as the **correctness specialist** in a multi-agent review pipeline. Your job is to find substantive correctness issues that linters and typecheckers can't catch:
 
 - Functionality: Does the code actually do what the PR claims?
-- Architectural fit: Does this change fit the codebase patterns? (Use the supplied CLAUDE.md hierarchy as the authority on conventions.)
+- Architectural fit: Does this change fit the codebase patterns? (Use the supplied agent instructions hierarchy as the authority on conventions.)
 - Logic errors: Bugs, race conditions, edge cases.
 - Security: Vulnerabilities that static analysis would miss.
 - Design: Is this the right approach? Are there simpler alternatives?
@@ -153,7 +153,7 @@ function captureWithContext(
  *
  * Layout (top-down, most stable first to maximize cache reads):
  *   - PR metadata header
- *   - CLAUDE.md hierarchy (per-package conventions)
+ *   - Agent instructions hierarchy (per-package conventions)
  *   - Diff body, one fenced block per file
  */
 export function buildCorrectnessUserText(
@@ -176,7 +176,7 @@ export function buildCorrectnessUserText(
   lines.push("");
 
   if (context.claudeMdHierarchy.length > 0) {
-    lines.push("## CLAUDE.md hierarchy (project + package conventions)");
+    lines.push("## Agent instructions hierarchy (project + package conventions)");
     lines.push("");
     for (const md of context.claudeMdHierarchy) {
       lines.push(`### \`${md.path}\``);

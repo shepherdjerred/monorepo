@@ -24,9 +24,9 @@ export const PrFileDiffSchema = z.object({
 });
 
 /**
- * A single CLAUDE.md file the reviewer should consult. `path` is repo-relative;
- * `content` is the body at the PR head SHA. We include the path because the
- * reviewer's behavior depends on which package the file applies to.
+ * A single agent-instructions file the reviewer should consult. `path` is
+ * repo-relative; `content` is the body at the PR head SHA. We include the path
+ * because the reviewer's behavior depends on which package the file applies to.
  */
 export const ClaudeMdFileSchema = z.object({
   path: z.string().min(1),
@@ -56,7 +56,7 @@ export type RetrievedSymbolForPrompt = z.infer<
 
 /**
  * The full review context: the PR metadata the model needs, every file the PR
- * touches, the CLAUDE.md hierarchy in effect at the PR head, the Phase 5
+ * touches, the agent-instructions hierarchy in effect at the PR head, the Phase 5
  * retrieval results (related symbols), and the Phase 6 AST-structured block
  * diffs (one per changed file, with `lineFallback` for unsupported langs).
  *

@@ -1,6 +1,6 @@
 # Automation Options Reference
 
-Comprehensive guide to Claude Code automation capabilities: skills, MCPs, hooks, and permissions.
+Comprehensive guide to Agent automation capabilities: skills, MCPs, hooks, and permissions.
 
 ## Skills
 
@@ -77,7 +77,7 @@ How to use this skill.
 - Provide access to external services
 - Enable database queries
 - Integrate third-party APIs
-- Extend Claude's capabilities
+- Extend the agent's capabilities
 
 ### MCP Configuration
 
@@ -170,7 +170,7 @@ How to use this skill.
 | -------------- | --------------------- | ---------------------- |
 | `PreToolUse`   | Before tool execution | Validation, blocking   |
 | `PostToolUse`  | After tool execution  | Formatting, logging    |
-| `Stop`         | When Claude stops     | Notification, cleanup  |
+| `Stop`         | When the agent stops     | Notification, cleanup  |
 | `SubagentStop` | When subagent stops   | Aggregation            |
 | `SessionStart` | Session begins        | Setup, context loading |
 | `SessionEnd`   | Session ends          | Cleanup, saving        |
@@ -249,7 +249,7 @@ prettier --write "$FILE" 2>/dev/null || true
 ```bash
 #!/bin/bash
 # notify-complete.sh
-osascript -e 'display notification "Claude task complete" with title "Claude Code"'
+osascript -e 'display notification "Agent task complete" with title "Agent"'
 ```
 
 ## Permissions
@@ -359,7 +359,7 @@ Commands that are always blocked.
 | Pre/post validation     | Hook       |
 | Speed up approvals      | Allow list |
 | Block dangerous ops     | Deny list  |
-| Documentation           | CLAUDE.md  |
+| Documentation           | AGENTS.md  |
 
 ## Combining Automations
 

@@ -55,7 +55,7 @@ ${COMMENT_BODY}
 
 ${CONTEXT}
 
-Read CLAUDE.md and relevant code for context. Be direct and concise.")
+Read AGENTS.md and relevant code for context. Be direct and concise.")
 
 # Post response (truncate if needed)
 if [ ${#RESPONSE} -gt 64000 ]; then

@@ -54,11 +54,11 @@ coverage/
 practice/bevy-experiment/assets/
 packages/castle-casters/assets/
 
-# Legacy / archived projects — repo CLAUDE.md marks archive/ as "do not modify"
+# Legacy / archived projects — repo AGENTS.md marks archive/ as "do not modify"
 archive/
 
 # Vendored/scraped HTML data
-packages/dotfiles/dot_claude/skills/apple-hig-helper/data/
+packages/dotfiles/dot_agents/skills/apple-hig-helper/data/
 packages/discord-plays-pokemon/packages/frontend/public/emulatorjs/
 
 # Vendored Data Dragon snapshot (League of Legends static data)

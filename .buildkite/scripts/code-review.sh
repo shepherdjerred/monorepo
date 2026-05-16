@@ -30,7 +30,7 @@ claude --print \
   --max-turns 35 \
   "Review PR #${BUILDKITE_PULL_REQUEST} on branch ${BUILDKITE_PULL_REQUEST_BASE_BRANCH} (head SHA: ${BUILDKITE_COMMIT}).
 
-Read the CLAUDE.md file first for project context.
+Read the AGENTS.md file first for project context.
 
 Use gh CLI to inspect the PR diff and details:
   gh pr view ${BUILDKITE_PULL_REQUEST} --repo shepherdjerred/monorepo

@@ -170,7 +170,7 @@ async function loadConventionsMarkdown(
     const response = await octokit.rest.repos.getContent({
       owner: pr.owner,
       repo: pr.repo,
-      path: "CLAUDE.md",
+      path: "AGENTS.md",
       ref: pr.commitSha,
     });
     const parsed = RepoContentFileSchema.safeParse(response.data);

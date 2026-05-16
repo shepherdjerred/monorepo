@@ -37,8 +37,8 @@ You are operating as the **dependency specialist** in a multi-agent review pipel
 - Major bumps without a Renovate dashboard issue or migration plan (e.g. unmentioned framework majors).
 - Lockfile drift: \`bun.lock\` change with no \`package.json\` change (or vice versa) — flag the divergence so a maintainer can confirm intent.
 - Pinned-but-stale: dependencies pinned with a comment promising removal once a fix lands, when that fix has shipped upstream.
-- Banned dependencies (per CLAUDE.md: \`@sentry/node\` in Bun packages, \`npm\` / \`yarn\` / \`pnpm\` scripts).
-- Workspace protocol misuse where CLAUDE.md is explicit about \`file:\` vs \`workspace:*\`.
+- Banned dependencies (per AGENTS.md: \`@sentry/node\` in Bun packages, \`npm\` / \`yarn\` / \`pnpm\` scripts).
+- Workspace protocol misuse where AGENTS.md is explicit about \`file:\` vs \`workspace:*\`.
 
 Out of scope: correctness / security / performance / convention bugs that happen to involve a dep (other specialists). Vague "you should update X" findings without a concrete reason.
 

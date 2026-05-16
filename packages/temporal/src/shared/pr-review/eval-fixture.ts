@@ -40,7 +40,7 @@
  *
  * # Convention-drift fixtures
  *
- * Clean base PR with a single CLAUDE.md-rule violation injected. The bot
+ * Clean base PR with a single AGENTS.md-rule violation injected. The bot
  * must catch the violation and cite the rule. One expected finding per
  * fixture.
  *
