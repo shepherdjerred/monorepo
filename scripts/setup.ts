@@ -239,6 +239,27 @@ async function installDependencies(): Promise<void> {
   }
 }
 
+async function refreshBuiltFileDependencies(): Promise<void> {
+  const refreshDirs: Array<{ label: string; cwd: string }> = [
+    {
+      label: "sjer.red local package artifacts",
+      cwd: "packages/sjer.red",
+    },
+  ];
+
+  for (const dir of refreshDirs) {
+    const fullCwd = join(ROOT, dir.cwd);
+    if (!existsSync(fullCwd)) {
+      warn("Deps", `${dir.label} skipped (directory not found)`);
+      continue;
+    }
+
+    await exec("Deps", `${dir.label} refresh`, ["bun", "install", "--force"], {
+      cwd: fullCwd,
+    });
+  }
+}
+
 // ── Phase 3: Build & Generate (DAG) ────────────────────────────────────
 
 type DagTask = {
@@ -451,6 +472,7 @@ try {
   await phase("Tools", ensureTools);
   await phase("Dependencies", installDependencies);
   await phase("Build & Generate", () => runDag(DAG_TASKS));
+  await phase("Refresh Built Dependencies", refreshBuiltFileDependencies);
   await phase("Verify", verifySetup);
 
   console.log(`\nSetup complete (${elapsed(totalStart)})`);
