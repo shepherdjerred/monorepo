@@ -135,6 +135,7 @@
     }
   ],
   "minimumReleaseAge": "30 days",
+  "internalChecksFilter": "strict",
   "schedule": ["after 3am on Sunday"],
   "prHourlyLimit": 5,
   "reviewers": ["shepherdjerred"],
