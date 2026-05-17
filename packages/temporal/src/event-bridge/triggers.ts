@@ -6,6 +6,7 @@ import {
   WorkflowIdReusePolicy,
 } from "@temporalio/client";
 import type {
+  EntityState,
   EventEnvelope,
   HomeAssistantRestClient,
 } from "@shepherdjerred/home-assistant";
@@ -86,7 +87,9 @@ async function othersAllAway(
   transitioningEntityId: string,
 ): Promise<boolean> {
   const others = PERSON_ENTITIES.filter((e) => e !== transitioningEntityId);
-  const states = await Promise.all(others.map((e) => rest.getState(e)));
+  const states: EntityState[] = await Promise.all(
+    others.map((e) => rest.getState(e)),
+  );
   return states.every((s) => s.state === "not_home");
 }
 
