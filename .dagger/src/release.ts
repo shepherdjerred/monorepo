@@ -540,9 +540,9 @@ const COOKLANG_PLUGIN_REPO = "shepherdjerred/cooklang-for-obsidian";
  * Determines the next semver patch from the latest release tag (or the
  * built manifest's version if no releases exist), rewrites
  * artifacts/manifest.json with the new version, commits the three plugin
- * files + an updated versions.json to the plugin repo's main branch, and
- * cuts a GitHub release tagged with the bare version (Obsidian directory
- * convention).
+ * files to the plugin repo's main branch, updates versions.json only when
+ * the release changes the Obsidian compatibility boundary, and cuts a GitHub
+ * release tagged with the bare version (Obsidian directory convention).
  *
  * Emits the new version as the final line on stdout so callers can chain
  * a commit-back step.
@@ -611,13 +611,13 @@ export function cooklangPublishHelper(
         `jq --arg v "$new" '.version = $v' /artifacts/manifest.json > /artifacts/manifest.json.tmp`,
         `mv /artifacts/manifest.json.tmp /artifacts/manifest.json`,
         `min=$(jq -r .minAppVersion /artifacts/manifest.json)`,
-        // Copy artifacts to repo + update versions.json
+        // Copy artifacts to repo + update versions.json only for compatibility boundary changes
         `cp /artifacts/main.js /artifacts/manifest.json /artifacts/styles.css /repo/`,
-        `if [ ! -f /repo/versions.json ]; then echo '{}' > /repo/versions.json; fi`,
-        `jq --arg v "$new" --arg m "$min" '. + {($v): $m}' /repo/versions.json > /repo/versions.json.tmp`,
-        `mv /repo/versions.json.tmp /repo/versions.json`,
+        `if [ ! -s /repo/versions.json ]; then echo '{}' > /repo/versions.json; fi`,
+        `latest_min=$(jq -r 'to_entries | map(select(.key | test("^[0-9]+\\\\.[0-9]+\\\\.[0-9]+$"))) | sort_by(.key | split(".") | map(tonumber)) | (last // {"value": ""}) | .value' /repo/versions.json)`,
+        `if [ -z "$latest_min" ] || [ "$latest_min" != "$min" ]; then jq --arg v "$new" --arg m "$min" '.[$v] = $m' /repo/versions.json > /repo/versions.json.tmp && mv /repo/versions.json.tmp /repo/versions.json && git -C /repo add versions.json; else echo "versions.json compatibility boundary unchanged ($min)"; fi`,
         // Commit + push to plugin repo main
-        `git -C /repo add main.js manifest.json styles.css versions.json`,
+        `git -C /repo add main.js manifest.json styles.css`,
         `if git -C /repo diff --cached --quiet; then echo "No artifact changes to commit"; else git -C /repo commit -m "release: v$new" -m "Auto-Generated: ci-bot"; git -C /repo push origin HEAD:main; fi`,
         // Create the GitHub release on the plugin repo (idempotent: skip if tag already exists)
         `if gh release view "$new" --repo ${COOKLANG_PLUGIN_REPO} >/dev/null 2>&1; then echo "Release $new already exists on ${COOKLANG_PLUGIN_REPO}, skipping"; else gh release create "$new" /artifacts/main.js /artifacts/manifest.json /artifacts/styles.css --repo ${COOKLANG_PLUGIN_REPO} --title "v$new" --generate-notes; fi`,
@@ -818,9 +818,10 @@ export function ciBaseVersionCommitBackHelper(
 }
 
 /**
- * Bump packages/cooklang-for-obsidian/manifest.json + versions.json in the
- * monorepo to track a release that was just published to the plugin repo,
- * then open or refresh an auto-merge PR. Mirrors versionCommitBackHelper.
+ * Bump packages/cooklang-for-obsidian/manifest.json in the monorepo to track
+ * a release that was just published to the plugin repo. Update versions.json
+ * only when the release changes the Obsidian compatibility boundary, then
+ * open or refresh an auto-merge PR. Mirrors versionCommitBackHelper.
  */
 export function cooklangVersionCommitBackHelper(
   version: string,
@@ -875,10 +876,10 @@ export function cooklangVersionCommitBackHelper(
         `if git ls-remote --exit-code --heads origin "${COOKLANG_VERSION_BUMP_BRANCH}" >/dev/null 2>&1; then git fetch origin main:refs/remotes/origin/main "${COOKLANG_VERSION_BUMP_BRANCH}:${COOKLANG_VERSION_BUMP_BRANCH}" && git checkout "${COOKLANG_VERSION_BUMP_BRANCH}" && git rebase origin/main; else git fetch origin main:refs/remotes/origin/main && git checkout -b "${COOKLANG_VERSION_BUMP_BRANCH}" origin/main; fi`,
         `jq --arg v "${version}" '.version = $v' packages/cooklang-for-obsidian/manifest.json > packages/cooklang-for-obsidian/manifest.json.tmp`,
         `mv packages/cooklang-for-obsidian/manifest.json.tmp packages/cooklang-for-obsidian/manifest.json`,
-        `if [ ! -f packages/cooklang-for-obsidian/versions.json ]; then echo '{}' > packages/cooklang-for-obsidian/versions.json; fi`,
-        `jq --arg v "${version}" --arg m "${minAppVersion}" '. + {($v): $m}' packages/cooklang-for-obsidian/versions.json > packages/cooklang-for-obsidian/versions.json.tmp`,
-        `mv packages/cooklang-for-obsidian/versions.json.tmp packages/cooklang-for-obsidian/versions.json`,
-        `git add packages/cooklang-for-obsidian/manifest.json packages/cooklang-for-obsidian/versions.json`,
+        `if [ ! -s packages/cooklang-for-obsidian/versions.json ]; then echo '{}' > packages/cooklang-for-obsidian/versions.json; fi`,
+        `latest_min=$(jq -r 'to_entries | map(select(.key | test("^[0-9]+\\\\.[0-9]+\\\\.[0-9]+$"))) | sort_by(.key | split(".") | map(tonumber)) | (last // {"value": ""}) | .value' packages/cooklang-for-obsidian/versions.json)`,
+        `if [ -z "$latest_min" ] || [ "$latest_min" != "${minAppVersion}" ]; then jq --arg v "${version}" --arg m "${minAppVersion}" '.[$v] = $m' packages/cooklang-for-obsidian/versions.json > packages/cooklang-for-obsidian/versions.json.tmp && mv packages/cooklang-for-obsidian/versions.json.tmp packages/cooklang-for-obsidian/versions.json && git add packages/cooklang-for-obsidian/versions.json; else echo "versions.json compatibility boundary unchanged (${minAppVersion})"; fi`,
+        `git add packages/cooklang-for-obsidian/manifest.json`,
         `if git diff --cached --quiet; then HAS_CHANGES=0; echo "No cooklang version changes to commit"; else HAS_CHANGES=1; git commit -m "chore(cooklang): bump to v${version}" -m "Auto-Generated: ci-bot"; fi`,
         `if [ "$HAS_CHANGES" = "0" ] && git diff --quiet origin/main...HEAD; then echo "No cooklang changes and pending branch has no diff"; exit 0; fi`,
         `git push --force-with-lease -u origin "${COOKLANG_VERSION_BUMP_BRANCH}"`,

@@ -47,15 +47,30 @@ if (normalizedDbPath) {
   await rm(normalizedDbPath, { force: true });
 }
 
-// Push database schema (creates tables if they don't exist)
-// Uses spawnSync with explicit args to avoid shell injection
-// Remove CLAUDECODE env var: Prisma v6+ blocks db push when it detects
-// an AI agent environment. This is a local test database, not production.
-const { CLAUDECODE: _, CLAUDE_CODE_ENTRYPOINT: _2, ...cleanEnv } = Bun.env;
-spawnSync("bunx", ["prisma", "db", "push", "--accept-data-loss"], {
-  stdio: "pipe",
-  env: {
-    ...cleanEnv,
-    DATABASE_URL: `file:${normalizedDbPath}`,
+// Push database schema (creates tables if they don't exist).
+// Keep the child environment minimal because Prisma's schema engine can fail
+// when it inherits agent/tooling-specific variables from the parent process.
+const dbPush = spawnSync(
+  "bunx",
+  ["prisma", "db", "push", "--accept-data-loss"],
+  {
+    stdio: "pipe",
+    env: {
+      HOME: Bun.env["HOME"] ?? "",
+      PATH: Bun.env["PATH"] ?? "",
+      DATABASE_URL: `file:${normalizedDbPath}`,
+    },
   },
-});
+);
+
+if (dbPush.status !== 0) {
+  throw new Error(
+    [
+      "Failed to push Prisma test schema.",
+      dbPush.stdout.toString().trim(),
+      dbPush.stderr.toString().trim(),
+    ]
+      .filter((part) => part.length > 0)
+      .join("\n\n"),
+  );
+}

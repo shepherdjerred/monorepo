@@ -1010,8 +1010,9 @@ export class Monorepo {
 
   /**
    * Publish built cooklang artifacts to the plugin repo: compute next patch
-   * version from the latest release tag, update manifest + versions.json,
-   * commit to main, and cut the GitHub release.
+   * version from the latest release tag, update manifest, update versions.json
+   * only for Obsidian compatibility boundary changes, commit to main, and cut
+   * the GitHub release.
    */
   @func({ cache: "never" })
   async cooklangPublish(
@@ -1048,10 +1049,17 @@ export class Monorepo {
         `cooklangPublish did not emit a semver version on its last line: got ${JSON.stringify(newVersion)}`,
       );
     }
-    const minAppVersion = await dist
-      .file("manifest.json")
-      .contents()
-      .then((c) => JSON.parse(c).minAppVersion as string);
+    const manifestContents = await dist.file("manifest.json").contents();
+    const manifest: unknown = JSON.parse(manifestContents);
+    if (
+      typeof manifest !== "object" ||
+      manifest === null ||
+      !("minAppVersion" in manifest) ||
+      typeof manifest.minAppVersion !== "string"
+    ) {
+      throw new Error("cooklang manifest.json must include minAppVersion");
+    }
+    const { minAppVersion } = manifest;
     const commitBackOutput = await cooklangVersionCommitBackHelper(
       newVersion,
       minAppVersion,
@@ -1131,8 +1139,8 @@ export class Monorepo {
   }
 
   /**
-   * Commit-back the cooklang plugin version + versions.json bump to the
-   * monorepo source after a successful publish.
+   * Commit-back the cooklang plugin version and any compatibility boundary
+   * versions.json update to the monorepo source after a successful publish.
    */
   @func({ cache: "never" })
   async cooklangVersionCommitBack(
