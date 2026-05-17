@@ -124,22 +124,22 @@ All scout-for-lol; issue numbers → `monorepo/issues`:
 
 ### 7. Scripts and runtime URLs
 
-| File                                               | Line | Change                                                                       |
-| -------------------------------------------------- | ---- | ---------------------------------------------------------------------------- |
+| File                                               | Line | Change                                                                                                   |
+| -------------------------------------------------- | ---- | -------------------------------------------------------------------------------------------------------- |
 | `packages/dotfiles/install.sh`                     | 196  | `chezmoi init --apply https://github.com/shepherdjerred/monorepo/tree/main/packages/dotfiles` → monorepo |
-| `packages/dotfiles/install_macos.sh`               | 75   | Same                                                                         |
-| `packages/temporal/src/activities/deps-summary.ts` | 6    | `REPO_URL` for homelab → monorepo                                            |
-| `scripts/scrape-apple-hig.py`                      | 296  | User-Agent string referencing old `glern` repo                               |
+| `packages/dotfiles/install_macos.sh`               | 75   | Same                                                                                                     |
+| `packages/temporal/src/activities/deps-summary.ts` | 6    | `REPO_URL` for homelab → monorepo                                                                        |
+| `scripts/scrape-apple-hig.py`                      | 296  | User-Agent string referencing old `glern` repo                                                           |
 
 ### 7b. Go module migration: terraform-provider-asuswrt
 
-| File                                                    | Change                                                                                                                                          |
-| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| File                                                    | Change                                                                                                                                                                              |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `packages/terraform-provider-asuswrt/go.mod`            | `module https://github.com/shepherdjerred/monorepo/tree/main/packages/terraform-provider-asuswrt` → `module github.com/shepherdjerred/monorepo/packages/terraform-provider-asuswrt` |
-| `packages/terraform-provider-asuswrt/main.go`           | Import path (line 10); confirm registry address (line 22) with user before changing                                                             |
-| `packages/terraform-provider-asuswrt/internal/**/*.go`  | All internal imports (15+ files)                                                                                                                |
-| `packages/terraform-provider-asuswrt/.golangci.yml:185` | Linter exclusion path                                                                                                                           |
-| `packages/terraform-provider-asuswrt/GNUmakefile`       | If it references the old path                                                                                                                   |
+| `packages/terraform-provider-asuswrt/main.go`           | Import path (line 10); confirm registry address (line 22) with user before changing                                                                                                 |
+| `packages/terraform-provider-asuswrt/internal/**/*.go`  | All internal imports (15+ files)                                                                                                                                                    |
+| `packages/terraform-provider-asuswrt/.golangci.yml:185` | Linter exclusion path                                                                                                                                                               |
+| `packages/terraform-provider-asuswrt/GNUmakefile`       | If it references the old path                                                                                                                                                       |
 
 After: run `go mod tidy`, `go build ./...`, `go test ./...`.
 
