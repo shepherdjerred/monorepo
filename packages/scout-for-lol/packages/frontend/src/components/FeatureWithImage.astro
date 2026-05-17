@@ -8,7 +8,7 @@ import type { ColorVariant } from "../lib/colors";
 interface Props {
   title: string;
   description: string;
-  imageSrc: ImageMetadata;
+  imageSrc: ImageMetadata | string;
   imageAlt: string;
   badge?:
     | {
@@ -38,12 +38,23 @@ const {
       ? "order-2 lg:order-1"
       : "order-2 lg:order-2"}
   >
-    <Image
-      src={imageSrc}
-      alt={imageAlt}
-      class="w-full h-auto rounded-xl shadow-xl ring-1 ring-gray-400/10 dark:ring-gray-600"
-      loading="lazy"
-    />
+    {
+      typeof imageSrc === "string" ? (
+        <img
+          src={imageSrc}
+          alt={imageAlt}
+          class="w-full h-auto rounded-xl shadow-xl ring-1 ring-gray-400/10 dark:ring-gray-600"
+          loading="lazy"
+        />
+      ) : (
+        <Image
+          src={imageSrc}
+          alt={imageAlt}
+          class="w-full h-auto rounded-xl shadow-xl ring-1 ring-gray-400/10 dark:ring-gray-600"
+          loading="lazy"
+        />
+      )
+    }
   </div>
   <div
     class={imagePosition === "right"
