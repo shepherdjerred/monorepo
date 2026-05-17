@@ -178,6 +178,10 @@ export async function verifyOneFinding(
         return await runner.grep(target);
       case "test":
         return await runner.test(target);
+      case "container-image":
+        return await runner.containerImage(target);
+      case "package-manifest":
+        return await runner.packageManifest(target);
     }
   } catch (error: unknown) {
     // Runners are documented as total but a programmer error in a fake

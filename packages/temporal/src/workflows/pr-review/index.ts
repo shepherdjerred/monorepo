@@ -3,6 +3,7 @@ import type {
   BootstrapResult,
   BootstrapActivities,
 } from "#activities/pr-review/bootstrap.ts";
+import type { DeterministicSignalActivities } from "#activities/pr-review/deterministic-signals.ts";
 import type { SpecialistActivities } from "#activities/pr-review/specialists.ts";
 import type { ConsensusActivities } from "#activities/pr-review/consensus.ts";
 import type { VerifyActivities } from "#activities/pr-review/verify.ts";
@@ -31,6 +32,11 @@ import type { AnnotatedFinding } from "#activities/pr-review/consensus.ts";
 const bootstrap = proxyActivities<BootstrapActivities>({
   startToCloseTimeout: "10 minutes",
   heartbeatTimeout: "30 seconds",
+  retry: { maximumAttempts: 2 },
+});
+
+const deterministicSignals = proxyActivities<DeterministicSignalActivities>({
+  startToCloseTimeout: "2 minutes",
   retry: { maximumAttempts: 2 },
 });
 
@@ -79,7 +85,40 @@ export type PrReviewPipelineResult = {
   postedFindings: number;
   commentId: number;
   created: boolean;
+  inlineReviewId: number | null;
+  inlineCommentsPosted: number;
+  inlineCommentsSkippedUnanchored: number;
+  inlineCommentsSkippedDuplicate: number;
+  inlineCommentsFailed: boolean;
 };
+
+async function postLifecycleStatus(
+  input: PrReviewPipelineInput,
+  state: "running" | "failed",
+  reason?: string,
+): Promise<void> {
+  try {
+    const statusInput =
+      reason === undefined
+        ? {
+            pipeline: input,
+            state,
+            workflowId: workflowInfo().workflowId,
+          }
+        : {
+            pipeline: input,
+            state,
+            reason,
+            workflowId: workflowInfo().workflowId,
+          };
+    await post.prReviewPostStatus({
+      ...statusInput,
+    });
+  } catch {
+    // Best-effort visibility only. Preserve the main review pipeline result
+    // or original failure instead of replacing it with a status-comment error.
+  }
+}
 
 /**
  * Parent workflow orchestrating the SOTA PR review pipeline. Phase 1 wires
@@ -103,13 +142,21 @@ export async function prReviewPipeline(
   const startedAtMs = workflowInfo().startTime.getTime();
 
   try {
+    await postLifecycleStatus(input, "running");
+
     const context: BootstrapResult = await bootstrap.prReviewBootstrap(input);
 
-    const annotatedFindings: AnnotatedFinding[] =
-      await specialists.prReviewRunSpecialists({
+    const [machineFindings, specialistFindings] = await Promise.all([
+      deterministicSignals.prReviewDeterministicSignals({ context }),
+      specialists.prReviewRunSpecialists({
         pipeline: input,
         context,
-      });
+      }),
+    ]);
+    const annotatedFindings: AnnotatedFinding[] = [
+      ...machineFindings,
+      ...specialistFindings,
+    ];
 
     const consensusFindings: Finding[] = await consensus.prReviewConsensus({
       annotated: annotatedFindings,
@@ -129,6 +176,7 @@ export async function prReviewPipeline(
     const postResult: PostReviewResult = await post.prReviewPost({
       pipeline: input,
       findings: dedupedFindings,
+      changedFiles: context.changedFiles,
     });
 
     await metrics.prReviewEmitMetrics({
@@ -161,6 +209,12 @@ export async function prReviewPipeline(
       postedFindings: dedupedFindings.length,
       commentId: postResult.commentId,
       created: postResult.created,
+      inlineReviewId: postResult.inlineReviewId,
+      inlineCommentsPosted: postResult.inlineCommentsPosted,
+      inlineCommentsSkippedUnanchored:
+        postResult.inlineCommentsSkippedUnanchored,
+      inlineCommentsSkippedDuplicate: postResult.inlineCommentsSkippedDuplicate,
+      inlineCommentsFailed: postResult.inlineCommentsFailed,
     };
   } catch (error: unknown) {
     // Best-effort failure-metrics emission. If this itself throws we still
@@ -177,6 +231,7 @@ export async function prReviewPipeline(
     } catch {
       // Intentionally swallowed — preserve the original error.
     }
+    await postLifecycleStatus(input, "failed", reason);
     throw error;
   }
 }
