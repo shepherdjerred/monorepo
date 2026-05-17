@@ -1,6 +1,7 @@
 import { Context } from "@temporalio/activity";
 import { simpleGit } from "simple-git";
 import { z } from "zod/v4";
+import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { resolvePostalAddresses, sendPostalEmail } from "#shared/postal.ts";
 import {
   buildImageOnlySkipEmailContent,
@@ -185,7 +186,6 @@ export const dataDragonActivities = {
     const id = crypto.randomUUID();
     const tempDir = `/tmp/scout-data-dragon-${id}`;
     const repoDir = `${tempDir}/monorepo`;
-    const ghToken = Bun.env["GH_TOKEN"] ?? "";
 
     // Heartbeat every 10s while the long subprocesses (bun install, bun run
     // update-data-dragon, gh pr create, ...) run. Pairs with the activity's
@@ -198,15 +198,13 @@ export const dataDragonActivities = {
     }, 10_000);
 
     try {
-      if (ghToken === "") {
-        throw new Error("GH_TOKEN is required to publish Data Dragon updates");
-      }
-
+      const tokenResult = await createGitHubAppInstallationToken();
+      const githubToken = tokenResult.token;
       jsonLog("info", "Starting Data Dragon update", input);
       await runCommand(["mkdir", "-p", tempDir], { cwd: "/tmp" });
       const askpass = await writeGitAskpass(tempDir);
       const gitEnv = {
-        GH_TOKEN: ghToken,
+        GH_TOKEN: githubToken,
         GIT_ASKPASS: askpass,
         GIT_TERMINAL_PROMPT: "0",
       };
@@ -361,11 +359,11 @@ export const dataDragonActivities = {
           "--body",
           body,
         ],
-        { cwd: repoDir, env: { GH_TOKEN: ghToken }, redactOutput: true },
+        { cwd: repoDir, env: { GH_TOKEN: githubToken }, redactOutput: true },
       );
       await runCommand(
         ["gh", "pr", "merge", "--repo", REPO_SLUG, "--auto", "--merge", prUrl],
-        { cwd: repoDir, env: { GH_TOKEN: ghToken }, redactOutput: true },
+        { cwd: repoDir, env: { GH_TOKEN: githubToken }, redactOutput: true },
       );
 
       recordRun({

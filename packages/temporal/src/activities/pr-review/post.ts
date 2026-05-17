@@ -2,6 +2,7 @@ import { Context } from "@temporalio/activity";
 import { Octokit, RequestError } from "octokit";
 import * as Sentry from "@sentry/bun";
 import { withSpan } from "#observability/tracing.ts";
+import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import {
   requiredWorkflowId,
   workflowExecutionContext,
@@ -278,14 +279,7 @@ async function postReviewImpl(
         };
       }
 
-      // GH_TOKEN is the same canonical token wired in worker.ts (1Password Connect
-      // field `GH_TOKEN`). Keep this distinct from the OAuth token used by the
-      // claude CLI — different auth surface, different lifecycle.
-      const token = Bun.env["GH_TOKEN"];
-      if (token === undefined || token === "") {
-        throw new Error("GH_TOKEN is required to post review comments");
-      }
-
+      const { token } = await createGitHubAppInstallationToken();
       const octokit = new Octokit({ auth: token });
       return runPostReview(octokit, input, workflowId, (error, extra) => {
         captureWithContext(error, input, extra);
@@ -332,11 +326,7 @@ async function postReviewStatusImpl(
         return { commentId: DRY_RUN_COMMENT_ID, created: false };
       }
 
-      const token = Bun.env["GH_TOKEN"];
-      if (token === undefined || token === "") {
-        throw new Error("GH_TOKEN is required to post review status comments");
-      }
-
+      const { token } = await createGitHubAppInstallationToken();
       const octokit = new Octokit({ auth: token });
       return runPostReviewStatus(octokit, normalizedInput, (error, extra) => {
         captureStatusWithContext(error, normalizedInput, extra);

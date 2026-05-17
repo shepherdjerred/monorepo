@@ -18,8 +18,14 @@ claude --version
 : "${BUILDKITE_PULL_REQUEST:?Required}"
 : "${BUILDKITE_PULL_REQUEST_BASE_BRANCH:?Required}"
 : "${BUILDKITE_COMMIT:?Required}"
-: "${GH_TOKEN:?Required}"
 : "${CLAUDE_CODE_OAUTH_TOKEN:?Required}"
+: "${GITHUB_APP_ID:?Required}"
+: "${GITHUB_APP_INSTALLATION_ID:?Required}"
+: "${GITHUB_APP_PRIVATE_KEY:?Required}"
+
+echo "--- :github: Minting GitHub App installation token"
+export GH_TOKEN
+GH_TOKEN="$(bun packages/temporal/src/lib/github-app-token.ts)"
 
 echo "+++ :robot_face: Running code review"
 

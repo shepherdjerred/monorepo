@@ -15,8 +15,14 @@ uv tool install "cogapp==${COGAPP_VERSION}"
 export PATH="$HOME/.local/bin:$PATH"
 
 # Validate required env vars
-: "${GH_TOKEN:?Required}"
 : "${BUILDKITE_BRANCH:?Required}"
+: "${GITHUB_APP_ID:?Required}"
+: "${GITHUB_APP_INSTALLATION_ID:?Required}"
+: "${GITHUB_APP_PRIVATE_KEY:?Required}"
+
+echo "--- :github: Minting GitHub App installation token"
+export GH_TOKEN
+GH_TOKEN="$(bun packages/temporal/src/lib/github-app-token.ts)"
 
 REPO="shepherdjerred/monorepo"
 BASE_BRANCH="${BUILDKITE_BRANCH}"

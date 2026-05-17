@@ -4,7 +4,7 @@
  * read-only (`--dry-run` writes the body to stdout instead of posting).
  *
  * Default usage:
- *   ANTHROPIC_API_KEY=... GITHUB_PERSONAL_ACCESS_TOKEN=... \
+ *   ANTHROPIC_API_KEY=... GITHUB_APP_ID=... GITHUB_APP_INSTALLATION_ID=... GITHUB_APP_PRIVATE_KEY=... \
  *     bun run packages/temporal/scripts/replay-pr-summary.ts \
  *       --repo shepherdjerred/monorepo --count 10 --dry-run
  *
@@ -23,6 +23,7 @@ import {
   type OctokitForSummary,
 } from "#activities/pr-review/summary.ts";
 import { SUMMARY_MARKER } from "#activities/pr-review/summary-prompts.ts";
+import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import type { PrSummaryInput } from "#shared/schemas.ts";
 
 type CliOptions = {
@@ -239,15 +240,11 @@ async function main(): Promise<void> {
   }
 
   const anthropicKey = Bun.env["ANTHROPIC_API_KEY"];
-  const githubToken = Bun.env["GITHUB_PERSONAL_ACCESS_TOKEN"];
   if (anthropicKey === undefined || anthropicKey === "") {
     throw new Error("ANTHROPIC_API_KEY environment variable is required");
   }
-  if (githubToken === undefined || githubToken === "") {
-    throw new Error(
-      "GITHUB_PERSONAL_ACCESS_TOKEN environment variable is required",
-    );
-  }
+  const tokenResult = await createGitHubAppInstallationToken();
+  const githubToken = tokenResult.token;
 
   const anthropic = new Anthropic({ apiKey: anthropicKey });
   const octokit = new Octokit({ auth: githubToken });

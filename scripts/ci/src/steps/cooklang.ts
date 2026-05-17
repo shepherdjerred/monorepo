@@ -7,7 +7,12 @@
  * compatibility boundary changes, commits, creates the GitHub release) →
  * open auto-merge commit-back PR on the monorepo.
  */
-import { RETRY, DAGGER_ENV, DRYRUN_FLAG } from "../lib/buildkite.ts";
+import {
+  RETRY,
+  DAGGER_ENV,
+  DRYRUN_FLAG,
+  GITHUB_APP_SECRET_ARGS,
+} from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup } from "../lib/types.ts";
 
@@ -27,7 +32,7 @@ export function cooklangReleaseGroup(pkgKey?: string): BuildkiteGroup {
         key: "cooklang-publish",
         if: MAIN_ONLY,
         depends_on: dependsOn,
-        command: `dagger call cooklang-build-and-publish ${COOKLANG_PKG_FLAGS} --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
+        command: `dagger call cooklang-build-and-publish --source . ${COOKLANG_PKG_FLAGS} --gh-token env:GH_TOKEN ${GITHUB_APP_SECRET_ARGS}${DRYRUN_FLAG}`,
         timeout_in_minutes: 15,
         priority: 1,
         retry: RETRY,

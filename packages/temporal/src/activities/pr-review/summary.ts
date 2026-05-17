@@ -15,6 +15,7 @@ import {
   upsertSummaryComment,
   type OctokitForUpsert,
 } from "#lib/pr-summary-comment.ts";
+import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
 import {
   recordProviderIssue,
@@ -513,7 +514,8 @@ export type PrSummaryActivities = typeof prSummaryActivities;
 export const prSummaryActivities = {
   async runPrSummaryPipeline(pr: PrSummaryInput): Promise<RunSummaryResult> {
     const authToken = envOrThrow("CLAUDE_CODE_OAUTH_TOKEN");
-    const githubToken = envOrThrow("GITHUB_PERSONAL_ACCESS_TOKEN");
+    const tokenResult = await createGitHubAppInstallationToken();
+    const githubToken = tokenResult.token;
 
     const anthropic = new Anthropic({ authToken });
     const octokit = new Octokit({ auth: githubToken });
