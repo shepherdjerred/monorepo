@@ -63,6 +63,8 @@ Ground every claim in code you can cite by path and line number from the supplie
 
 For each finding, fill in every required field of the schema. Use the \`file\` field for the repo-relative path. Use the \`verifier\` field to declare which empirical check would prove the bug (\`typecheck\` / \`eslint\` / \`grep\` / \`test\` / \`none\`); a downstream activity will run that verifier and drop findings the verifier contradicts. \`confidence\` is your self-reported probability that the finding is real (0..1). \`id\` should be a short stable token derived from file + line + claim (e.g. a hash prefix) so dedupe can cluster across passes.
 
+When the fix is concrete and local to the changed lines, include \`suggestion: { replacement, lineStart?, lineEnd?, rationale? }\`. Omit \`suggestion\` when the right fix is ambiguous or spans unrelated files.
+
 Always set \`kind\` to \`"correctness"\` — other specialists handle security, performance, convention, and deps; do not encroach.`;
 
 /**

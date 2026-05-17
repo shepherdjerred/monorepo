@@ -132,11 +132,7 @@ async function handleReleases(args: string[]): Promise<void> {
     },
     allowPositionals: true,
   });
-  const project =
-    values.project != null && values.project.length > 0
-      ? Number.parseInt(values.project, 10)
-      : undefined;
-  await releasesCommand({ json: values.json, project });
+  await releasesCommand({ json: values.json, project: values.project });
 }
 
 async function handleRelease(args: string[]): Promise<void> {
@@ -177,7 +173,7 @@ Subcommands:
 
 Options:
   --json                Output as JSON
-  --project <slug>      (issues) Filter by project slug
+  --project <slug|id>   (issues/releases) Filter by project
   --team <uuid>         (projects) Filter by team UUID
   --limit <n>           Maximum number of results
 
@@ -193,7 +189,7 @@ Examples:
   tools bugsink projects --team <uuid>
   tools bugsink events <issue-uuid>
   tools bugsink stacktrace <event-uuid>
-  tools bugsink releases --project 1
+  tools bugsink releases --project my-app
 `);
     process.exit(0);
   }

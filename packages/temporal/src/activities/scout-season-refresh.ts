@@ -7,6 +7,7 @@ import {
 } from "#observability/metrics.ts";
 import { getTraceContext } from "#observability/tracing.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
+import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import {
   runClaude,
   type ClaudeRunResult,
@@ -327,11 +328,6 @@ async function run(
   const start = Date.now();
   const id = crypto.randomUUID();
   const dryRun = input.dryRun === true;
-  const ghToken = Bun.env["GH_TOKEN"] ?? "";
-
-  if (!dryRun && ghToken === "") {
-    throw new Error("GH_TOKEN is required to open season-refresh PRs");
-  }
 
   const envHeartbeat = setInterval(() => {
     safeHeartbeat({ phase: "envelope", elapsedMs: Date.now() - start });
@@ -359,6 +355,11 @@ async function run(
     const durationSeconds = (Date.now() - start) / 1000;
 
     logSentinelDisagreement(files.length, sentinelText);
+    const tokenResult =
+      dryRun || files.length === 0
+        ? undefined
+        : await createGitHubAppInstallationToken();
+    const ghToken = tokenResult?.token ?? "";
 
     return await dispatchOutcome({
       claude,

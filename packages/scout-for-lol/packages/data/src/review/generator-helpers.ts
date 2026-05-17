@@ -49,7 +49,9 @@ export function extractMatchData(
           outcome: `${placement.toString()}${getOrdinalSuffix(placement)} place`,
           kda: `${kills.toString()}/${deaths.toString()}/${assists.toString()}`,
           queueType: arenaMatch.queueType,
-          teammate: player.teammate.championName,
+          teammates: player.teammates
+            .map((teammate) => teammate.championName)
+            .join(", "),
         },
       };
     })

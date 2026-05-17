@@ -24,6 +24,7 @@ import {
   type WorkdirDeps,
   type WorkdirEnv,
 } from "#lib/pr-review-workdir.ts";
+import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import {
   requiredWorkflowId,
   workflowExecutionContext,
@@ -538,10 +539,7 @@ async function bootstrapContextImpl(
       "pr.commitSha": input.commitSha,
     },
     async () => {
-      const token = Bun.env["GH_TOKEN"];
-      if (token === undefined || token === "") {
-        throw new Error("GH_TOKEN is required for pr-review bootstrap");
-      }
+      const { token } = await createGitHubAppInstallationToken();
       const octokit = new Octokit({ auth: token });
 
       try {

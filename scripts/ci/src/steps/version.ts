@@ -4,7 +4,11 @@
  * Collects per-image digests from Buildkite metadata (set by image push steps)
  * and commits updated version references back to the repo.
  */
-import { daggerStep, DRYRUN_FLAG } from "../lib/buildkite.ts";
+import {
+  daggerStep,
+  DRYRUN_FLAG,
+  GITHUB_APP_SECRET_ARGS,
+} from "../lib/buildkite.ts";
 import type { BuildkiteStep } from "../lib/types.ts";
 
 const MAIN_ONLY = "build.branch == pipeline.default_branch";
@@ -24,7 +28,7 @@ export function versionCommitBackStep(
     label: ":bookmark: Version Commit-Back",
     key: "version-commit-back",
     // Version format: 2.0.0-BUILD (matches Docker image tags). Only updates Docker image entries in versions.ts.
-    daggerCmd: `bash .buildkite/scripts/collect-digests.sh /tmp/digests.json ${keyArgs} && dagger call version-commit-back --digests "$(cat /tmp/digests.json)" --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
+    daggerCmd: `bash .buildkite/scripts/collect-digests.sh /tmp/digests.json ${keyArgs} && dagger call version-commit-back --source . --digests "$(cat /tmp/digests.json)" --version "2.0.0-$BUILDKITE_BUILD_NUMBER" ${GITHUB_APP_SECRET_ARGS}${DRYRUN_FLAG}`,
     timeoutMinutes: 10,
     condition: MAIN_ONLY,
     dependsOn,

@@ -1,4 +1,5 @@
 import { bootstrapActivities } from "./bootstrap.ts";
+import { deterministicSignalActivities } from "./deterministic-signals.ts";
 import { specialistActivities } from "./specialists.ts";
 import { consensusActivities } from "./consensus.ts";
 import { verifyActivities } from "./verify.ts";
@@ -10,6 +11,7 @@ import { ingestDismissalsActivities } from "./ingest-dismissals.ts";
 
 export const prReviewActivities = {
   ...bootstrapActivities,
+  ...deterministicSignalActivities,
   ...specialistActivities,
   ...consensusActivities,
   ...verifyActivities,

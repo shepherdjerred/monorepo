@@ -11,9 +11,10 @@ import type {
   DiscordGuildId,
 } from "@scout-for-lol/data/index.ts";
 import {
-  parseQueueType,
   MatchIdSchema,
   queueTypeToDisplayString,
+  resolveQueueTypeFromGame,
+  isArenaQueueOrMode,
 } from "@scout-for-lol/data/index.ts";
 import { getPlayer } from "#src/league/model/player.ts";
 import type { MessageCreateOptions } from "discord.js";
@@ -26,7 +27,6 @@ import {
 } from "@scout-for-lol/report";
 import { saveMatchToS3, saveImageToS3, saveSvgToS3 } from "#src/storage/s3.ts";
 import { toMatch, toArenaMatch } from "#src/league/model/match.ts";
-import { match } from "ts-pattern";
 import { logErrorDetails } from "./match-report-debug.ts";
 import { fetchTimelineIfStandardMatch } from "./match-report-standard.ts";
 import { generateAiReviewIfEnabled } from "./match-report-ai-review.ts";
@@ -70,18 +70,21 @@ function formatGameCompletionMessage(
 
   if (validAliases.length === 1) {
     const soloAlias = z.string().parse(validAliases[0]);
-    return `${soloAlias} finished a ${queueName} game`;
+    const article = queueName === "arena" ? "an" : "a";
+    return `${soloAlias} finished ${article} ${queueName} game`;
   }
 
   if (validAliases.length === 2) {
     const firstAlias = z.string().parse(validAliases[0]);
     const secondAlias = z.string().parse(validAliases[1]);
-    return `${firstAlias} and ${secondAlias} finished a ${queueName} game`;
+    const article = queueName === "arena" ? "an" : "a";
+    return `${firstAlias} and ${secondAlias} finished ${article} ${queueName} game`;
   }
 
   const allButLast = validAliases.slice(0, -1).join(", ");
   const lastAlias = z.string().parse(validAliases.at(-1));
-  return `${allButLast}, and ${lastAlias} finished a ${queueName} game`;
+  const article = queueName === "arena" ? "an" : "a";
+  return `${allButLast}, and ${lastAlias} finished ${article} ${queueName} game`;
 }
 
 /** Create image attachments for Discord message */
@@ -196,7 +199,10 @@ async function processStandardMatch(
     throw new Error("No player data available");
   }
 
-  const queueType = parseQueueType(matchData.info.queueId);
+  const queueType = resolveQueueTypeFromGame(
+    matchData.info.queueId,
+    matchData.info.gameMode,
+  );
   const queue =
     queueType === "solo" || queueType === "flex" ? queueType : undefined;
 
@@ -369,34 +375,38 @@ export async function generateMatchReport(
     );
 
     // Process match based on queue type
-    const result = await match<
-      number,
-      Promise<MessageCreateOptions | undefined>
-    >(matchData.info.queueId)
-      .with(1700, () =>
-        processArenaMatch(players, matchData, matchId, playersInMatch),
-      )
-      .otherwise(() =>
-        processStandardMatch({
+    const result = isArenaQueueOrMode(
+      matchData.info.queueId,
+      matchData.info.gameMode,
+    )
+      ? await processArenaMatch(players, matchData, matchId, playersInMatch)
+      : await processStandardMatch({
           players,
           matchData,
           matchId,
           playersInMatch,
           timelineData,
           targetGuildIds: options.targetGuildIds,
-        }),
-      );
+        });
 
     if (result === undefined) {
       return undefined;
     }
 
-    const queueType = parseQueueType(matchData.info.queueId) ?? "unknown";
+    const queueType =
+      resolveQueueTypeFromGame(
+        matchData.info.queueId,
+        matchData.info.gameMode,
+      ) ?? "unknown";
     reportsGeneratedTotal.inc({ queue_type: queueType });
 
     return result;
   } catch (error) {
-    const queueType = parseQueueType(matchData.info.queueId) ?? "unknown";
+    const queueType =
+      resolveQueueTypeFromGame(
+        matchData.info.queueId,
+        matchData.info.gameMode,
+      ) ?? "unknown";
     reportsFailedTotal.inc({ queue_type: queueType });
     logErrorDetails(error, matchId, matchData, trackedPlayers);
     throw error;

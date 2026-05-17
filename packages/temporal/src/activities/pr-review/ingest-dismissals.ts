@@ -36,6 +36,7 @@ import {
   type PassContext,
 } from "#lib/pr-review/reaction-listener-helpers.ts";
 import { runResolvedWithoutFollowupPass } from "#lib/pr-review/reaction-listener-resolved.ts";
+import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { getRedis } from "./dedupe.ts";
 
 const COMPONENT = "pr-review-pipeline";
@@ -204,10 +205,15 @@ export const ingestDismissalsActivities = {
       "prReview.ingestDismissals",
       { "pr.owner": repo.owner, "pr.repo": repo.repo },
       async () => {
-        const token = Bun.env["GH_TOKEN"] ?? "";
-        if (token === "") {
+        let token: string;
+        try {
+          const tokenResult = await createGitHubAppInstallationToken();
+          token = tokenResult.token;
+        } catch (error) {
           prReviewReactionPollErrorTotal.inc({ stage: "github" });
-          jsonLog("error", "GH_TOKEN unset; skipping ingest", {});
+          jsonLog("error", "GitHub App auth unavailable; skipping ingest", {
+            error: error instanceof Error ? error.message : String(error),
+          });
           return {
             maxObservedAt: new Date().toISOString(),
             thumbsDownIngested: 0,
@@ -216,6 +222,7 @@ export const ingestDismissalsActivities = {
             erroredFindings: 0,
           };
         }
+
         const octokit = new Octokit({ auth: token });
         // Bootstrap and post activities widen the concrete Octokit
         // instance to a minimal slice via structural typing — the

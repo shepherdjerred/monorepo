@@ -1,7 +1,9 @@
 import { describe, test, expect } from "bun:test";
 import {
+  isArenaQueueOrMode,
   parseQueueType,
   queueTypeToDisplayString,
+  resolveQueueTypeFromGame,
   type QueueType,
 } from "./state.ts";
 
@@ -38,6 +40,23 @@ describe("parseQueueType", () => {
 
   test("returns undefined for unknown queue id", () => {
     expect(parseQueueType(99_999)).toBeUndefined();
+  });
+});
+
+describe("Arena queue resolution", () => {
+  test("treats CHERRY custom-shaped games as arena", () => {
+    expect(isArenaQueueOrMode(0, "CHERRY")).toBe(true);
+    expect(resolveQueueTypeFromGame(0, "CHERRY")).toBe("arena");
+  });
+
+  test("keeps ordinary custom games as custom", () => {
+    expect(isArenaQueueOrMode(0, "CLASSIC")).toBe(false);
+    expect(resolveQueueTypeFromGame(0, "CLASSIC")).toBe("custom");
+  });
+
+  test("treats queue 1700 as arena even with a different mode string", () => {
+    expect(isArenaQueueOrMode(1700, "UNKNOWN")).toBe(true);
+    expect(resolveQueueTypeFromGame(1700, "UNKNOWN")).toBe("arena");
   });
 });
 

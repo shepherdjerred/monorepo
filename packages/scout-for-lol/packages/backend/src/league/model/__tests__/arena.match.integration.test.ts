@@ -29,23 +29,28 @@ function makeParticipant(
 
 const longPuuid = (label: string) => (label + "-".repeat(80)).slice(0, 78);
 
-function makeArenaMatchDto(): RawMatch {
+function makeArenaMatchDto({
+  teamCount = 8,
+  teamSize = 2,
+  queueId = 1700,
+}: {
+  teamCount?: number;
+  teamSize?: number;
+  queueId?: number;
+} = {}): RawMatch {
   const participants: RawParticipant[] = [];
-  for (let sub = 1; sub <= 8; sub++) {
-    participants.push(
-      makeParticipant({
-        playerSubteamId: sub,
-        placement: sub,
-        puuid: longPuuid(`A${sub.toString()}`),
-      }),
-    );
-    participants.push(
-      makeParticipant({
-        playerSubteamId: sub,
-        placement: sub,
-        puuid: longPuuid(`B${sub.toString()}`),
-      }),
-    );
+  for (let sub = 1; sub <= teamCount; sub++) {
+    for (let playerIndex = 0; playerIndex < teamSize; playerIndex++) {
+      participants.push(
+        makeParticipant({
+          playerSubteamId: sub,
+          placement: sub,
+          puuid: longPuuid(
+            `${String.fromCodePoint(65 + playerIndex)}${sub.toString()}`,
+          ),
+        }),
+      );
+    }
   }
   return {
     metadata: {
@@ -65,7 +70,7 @@ function makeArenaMatchDto(): RawMatch {
       mapId: 30,
       participants,
       platformId: "NA1",
-      queueId: 1700,
+      queueId,
       teams: [],
       tournamentCode: "",
       endOfGameResult: "WIN",
@@ -75,9 +80,9 @@ function makeArenaMatchDto(): RawMatch {
 }
 
 describe("arena match integration", () => {
-  it("builds valid arena subteams and players from RawMatch", async () => {
+  it("builds valid legacy 8x2 arena subteams and players from RawMatch", async () => {
     const dto = makeArenaMatchDto();
-    const subteams = await toArenaSubteams(dto.info.participants);
+    const subteams = toArenaSubteams(dto.info.participants);
     const players = await Promise.all(
       dto.info.participants.map((p) => participantToArenaChampion(p)),
     );
@@ -89,6 +94,21 @@ describe("arena match integration", () => {
     });
     expect(subteams.length).toBe(8);
     expect(players.length).toBe(16);
+  });
+
+  it("builds valid current 6x3 arena subteams and players from RawMatch", async () => {
+    const dto = makeArenaMatchDto({ teamCount: 6, teamSize: 3 });
+    const subteams = toArenaSubteams(dto.info.participants);
+    const players = await Promise.all(
+      dto.info.participants.map((p) => participantToArenaChampion(p)),
+    );
+
+    subteams.forEach((st) => {
+      const parsed = ArenaTeamSchema.parse(st);
+      expect(parsed.players.length).toBe(3);
+    });
+    expect(subteams.length).toBe(6);
+    expect(players.length).toBe(18);
   });
 
   it("builds full ArenaMatch via toArenaMatch", async () => {
@@ -117,6 +137,30 @@ describe("arena match integration", () => {
     }
     expect(firstPlayer.placement).toBeGreaterThanOrEqual(1);
     expect(firstPlayer.placement).toBeLessThanOrEqual(8);
+    expect(firstPlayer.teammates).toHaveLength(1);
+  });
+
+  it("builds full 3v3 ArenaMatch from CHERRY custom-shaped payload", async () => {
+    const dto = makeArenaMatchDto({ teamCount: 6, teamSize: 3, queueId: 0 });
+    const first = dto.info.participants[0];
+    if (!first) {
+      throw new Error("participants should not be empty in test dto");
+    }
+    const puuid = LeaguePuuidSchema.parse(first.puuid);
+    const player: Player = {
+      config: {
+        alias: "Test",
+        league: { leagueAccount: { puuid, region: "PBE" } },
+        discordAccount: undefined,
+      },
+      ranks: {},
+    };
+    const arenaMatch = await toArenaMatch([player], dto);
+    const parsed = ArenaMatchSchema.parse(arenaMatch);
+    expect(parsed.queueType).toBe("arena");
+    expect(parsed.teams.length).toBe(6);
+    expect(parsed.teams[0]?.players.length).toBe(3);
+    expect(parsed.players[0]?.teammates).toHaveLength(2);
   });
 
   it("builds ArenaMatch with multiple tracked players", async () => {

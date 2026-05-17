@@ -9,6 +9,7 @@ const RESOLVED: Promise<void> = Promise.resolve();
 const noopStart = (_input: PrAgentInput): Promise<void> => RESOLVED;
 
 type StartCall = [PrAgentInput];
+type StatusCall = [PrAgentInput, "draft_skipped"];
 
 function makeBaseEvent(
   overrides: Partial<{
@@ -144,6 +145,30 @@ describe("buildWebhookApp", () => {
     const text = await res.text();
     expect(text).toContain("draft");
     expect(start).not.toHaveBeenCalled();
+  });
+
+  it("posts a visible draft-skipped status for draft PRs", async () => {
+    const start = mock(noopStart);
+    const statusCalls: StatusCall[] = [];
+    const postStatus = mock(
+      async (input: PrAgentInput, state: "draft_skipped") => {
+        statusCalls.push([input, state]);
+      },
+    );
+    const app = buildWebhookApp(SECRET, start, postStatus);
+    const res = await postWebhook(
+      app,
+      makeBaseEvent({ draft: true, action: "synchronize" }),
+    );
+    expect(res.status).toBe(200);
+    expect(start).not.toHaveBeenCalled();
+    expect(postStatus).toHaveBeenCalledTimes(1);
+    const call = statusCalls[0];
+    if (call === undefined) {
+      throw new Error("expected status call");
+    }
+    expect(call[0].prNumber).toBe(42);
+    expect(call[1]).toBe("draft_skipped");
   });
 
   it("processes ready_for_review even when draft is true", async () => {

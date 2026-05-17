@@ -7,7 +7,7 @@ import type {
 import {
   getLaneOpponent,
   invertTeam,
-  parseQueueType,
+  resolveQueueTypeFromGame,
   parseTeam,
   findParticipant,
   getOutcome,
@@ -39,7 +39,10 @@ export function toMatch(
   assert.ok(team !== undefined);
 
   const enemyTeam = invertTeam(team);
-  const queueType = parseQueueType(rawMatch.info.queueId);
+  const queueType = resolveQueueTypeFromGame(
+    rawMatch.info.queueId,
+    rawMatch.info.gameMode,
+  );
 
   if (queueType === "arena") {
     throw new Error("arena matches are not supported");

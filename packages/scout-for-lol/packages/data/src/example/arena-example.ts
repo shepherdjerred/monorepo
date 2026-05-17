@@ -35,7 +35,7 @@ function getMainPlayer() {
     placement: 2 as const,
     teamId: 1 as const,
     champion: createAatroxChampion([createMasterOfDualityAugment()]),
-    teammate: createLeonaChampion([createCourageAugment()]),
+    teammates: [createLeonaChampion([createCourageAugment()])],
   } satisfies ArenaMatchPlayer;
 }
 

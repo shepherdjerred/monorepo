@@ -12,7 +12,6 @@ import type {
   StandardLoadingScreenParticipant,
 } from "@scout-for-lol/data/index.ts";
 import {
-  parseQueueType,
   parseTeam,
   mapIdToName,
   makeQueueDisplayName,
@@ -24,6 +23,8 @@ import {
   ArenaTeamIdSchema,
   GameIdSchema,
   inferStandardLanesWithCurrentPriors,
+  isArenaQueueOrMode,
+  resolveQueueTypeFromGame,
 } from "@scout-for-lol/data/index.ts";
 import {
   getChampionDisplayName,
@@ -38,7 +39,6 @@ const logger = createLogger("prematch-loading-screen-builder");
 
 const RANKED_SOLO_QUEUE_ID = 420;
 const RANKED_FLEX_QUEUE_ID = 440;
-const ARENA_QUEUE_ID = 1700;
 
 export class RecoverableLoadingScreenDataError extends Error {
   constructor(message: string) {
@@ -50,8 +50,6 @@ export class RecoverableLoadingScreenDataError extends Error {
 type BuildParticipantContext = {
   trackedPuuids: ReadonlySet<string>;
   layout: LoadingScreenLayout;
-  participantIndex: number;
-  participantCount: number;
 };
 
 type BaseBuiltParticipant = Omit<NonStandardLoadingScreenParticipant, "ranks">;
@@ -63,13 +61,16 @@ type RankedBuiltParticipant = BaseBuiltParticipant & { ranks?: Ranks };
  * we only attempt to render known queue types.
  */
 function determineLayout(gameInfo: RawCurrentGameInfo): LoadingScreenLayout {
+  if (isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode)) {
+    return "arena";
+  }
+
   return match(gameInfo.gameQueueConfigId)
     .with(450, () => "aram" as const) // ARAM
     .with(720, () => "aram" as const) // ARAM Clash
     .with(2400, () => "aram" as const) // ARAM: Mayhem
     .with(3200, () => "aram" as const) // ARAM: Mayhem MMR variant
     .with(3270, () => "aram" as const) // ARAM: Mayhem
-    .with(ARENA_QUEUE_ID, () => "arena" as const) // Arena
     .with(0, () => "standard" as const) // Custom
     .with(3100, () => "standard" as const) // Custom
     .with(400, () => "standard" as const) // Draft Pick
@@ -94,29 +95,17 @@ function determineLayout(gameInfo: RawCurrentGameInfo): LoadingScreenLayout {
 /**
  * Resolve team assignment for a participant.
  * Standard/ARAM: returns "blue" | "red" via parseTeam (from teamId 100/200).
- * Arena: returns { arenaTeam: 1..8 } from playerSubteamId — Spectator V5
- * reports teamId as 100/200 even for Arena games, so the 8-team subteam
- * must come from the dedicated playerSubteamId field.
- * Throws on invalid IDs or missing Arena subteam info.
+ * Arena: returns { arenaTeam: 1..8 | null } from playerSubteamId. Spectator
+ * reports teamId as 100/200 or even all 100 for Arena games, so we do not
+ * infer subteams when Riot omits the dedicated playerSubteamId field.
  */
 function resolveTeam(
   participant: RawCurrentGameParticipant,
   layout: LoadingScreenLayout,
-  participantIndex: number,
-  participantCount: number,
 ): LoadingScreenTeam {
   if (layout === "arena") {
     if (participant.playerSubteamId === undefined) {
-      if (participantCount === 16) {
-        return {
-          arenaTeam: ArenaTeamIdSchema.parse(
-            Math.floor(participantIndex / 2) + 1,
-          ),
-        };
-      }
-      throw new RecoverableLoadingScreenDataError(
-        `Arena participant missing playerSubteamId and participant count ${participantCount.toString()} cannot be safely inferred`,
-      );
+      return { arenaTeam: null };
     }
     return { arenaTeam: ArenaTeamIdSchema.parse(participant.playerSubteamId) };
   }
@@ -153,12 +142,7 @@ async function buildParticipant(
     championName,
     championDisplayName,
     skinNum,
-    team: resolveTeam(
-      participant,
-      context.layout,
-      context.participantIndex,
-      context.participantCount,
-    ),
+    team: resolveTeam(participant, context.layout),
     spell1Id: SummonerSpellIdSchema.parse(participant.spell1Id),
     spell2Id: SummonerSpellIdSchema.parse(participant.spell2Id),
     keystoneRuneId:
@@ -288,7 +272,10 @@ export async function buildLoadingScreenData(
   trackedPuuids: ReadonlySet<string>,
   region: Region,
 ): Promise<LoadingScreenData> {
-  const queueType = parseQueueType(gameInfo.gameQueueConfigId);
+  const queueType = resolveQueueTypeFromGame(
+    gameInfo.gameQueueConfigId,
+    gameInfo.gameMode,
+  );
   if (queueType === undefined) {
     throw new Error(
       `Unknown queue type for queue config ID ${gameInfo.gameQueueConfigId.toString()} (gameId=${gameInfo.gameId.toString()}, mapId=${gameInfo.mapId.toString()}, gameMode=${gameInfo.gameMode})`,
@@ -312,12 +299,10 @@ export async function buildLoadingScreenData(
 
   // Build base participant data (without ranks)
   const baseParticipants = await Promise.all(
-    gameInfo.participants.map((p, idx) =>
+    gameInfo.participants.map((p) =>
       buildParticipant(p, {
         trackedPuuids,
         layout,
-        participantIndex: idx,
-        participantCount: gameInfo.participants.length,
       }),
     ),
   );

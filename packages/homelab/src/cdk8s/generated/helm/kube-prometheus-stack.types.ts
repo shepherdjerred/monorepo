@@ -4457,6 +4457,10 @@ export type KubeprometheusstackHelmValuesPrometheusnodeexporter = {
    */
   service?: KubeprometheusstackHelmValuesPrometheusnodeexporterService;
   /**
+   * @default {"distroless":true}
+   */
+  image?: KubeprometheusstackHelmValuesPrometheusnodeexporterImage;
+  /**
    * @default {"monitor":{"enabled":true,"jobLabel":"jobLabel","interval":"","sampleLimit":0,"targetLimit":0,"labelLimit":0,"labelNameLengthLimit":0,"labelValueLengthLimit":0,"scrapeTimeout":"","proxyUrl":"","metricRelabelings":[],"relabelings":[]},"podMonitor":{"enabled":false,"jobLabel":"jobLabel"}}
    */
   prometheus?: KubeprometheusstackHelmValuesPrometheusnodeexporterPrometheus;
@@ -4528,6 +4532,18 @@ export type KubeprometheusstackHelmValuesPrometheusnodeexporterServiceLabels = {
    * @default "node-exporter"
    */
   jobLabel?: string;
+};
+
+export type KubeprometheusstackHelmValuesPrometheusnodeexporterImage = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+  /**
+   * @default true
+   */
+  distroless?: boolean;
 };
 
 export type KubeprometheusstackHelmValuesPrometheusnodeexporterPrometheus = {
@@ -8101,7 +8117,7 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecImage = {
    */
   repository?: string;
   /**
-   * @default "v3.11.3"
+   * @default "v3.11.3-distroless"
    */
   tag?: string;
   /**
@@ -9265,7 +9281,7 @@ export type KubeprometheusstackHelmValues = {
   /**
    * Configuration for prometheus-node-exporter subchart
    *
-   * @default {...} (7 keys)
+   * @default {...} (8 keys)
    */
   "prometheus-node-exporter"?: KubeprometheusstackHelmValuesPrometheusnodeexporter;
   /**
@@ -9823,6 +9839,7 @@ export type KubeprometheusstackHelmParameters = {
   "prometheus-node-exporter.service.ipDualStack.ipFamilies"?: string;
   "prometheus-node-exporter.service.ipDualStack.ipFamilyPolicy"?: string;
   "prometheus-node-exporter.service.labels.jobLabel"?: string;
+  "prometheus-node-exporter.image.distroless"?: string;
   "prometheus-node-exporter.prometheus.monitor.enabled"?: string;
   "prometheus-node-exporter.prometheus.monitor.jobLabel"?: string;
   "prometheus-node-exporter.prometheus.monitor.interval"?: string;

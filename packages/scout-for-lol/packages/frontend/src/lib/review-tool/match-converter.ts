@@ -2,7 +2,7 @@
  * Match conversion utilities for transforming Riot API data to internal format
  */
 import {
-  parseQueueType,
+  resolveQueueTypeFromGame,
   getLaneOpponent,
   parseTeam,
   invertTeam,
@@ -12,6 +12,7 @@ import {
   type RawMatch,
   type ArenaMatch,
   type CompletedMatch,
+  type QueueType,
 } from "@scout-for-lol/data";
 import { getExampleMatch } from "@scout-for-lol/data";
 import { getOutcome, participantToChampion } from "./s3-helpers.ts";
@@ -20,7 +21,7 @@ import { getOutcome, participantToChampion } from "./s3-helpers.ts";
  * Get the base example match structure for a given queue type
  */
 function getBaseMatch(
-  queueType: ReturnType<typeof parseQueueType>,
+  queueType: QueueType | undefined,
 ): CompletedMatch | ArenaMatch {
   switch (queueType) {
     case "arena":
@@ -100,7 +101,10 @@ export function convertRawMatchToInternalFormat(
   rawMatch: RawMatch,
   selectedPlayerName?: string,
 ): CompletedMatch | ArenaMatch {
-  const queueType = parseQueueType(rawMatch.info.queueId);
+  const queueType = resolveQueueTypeFromGame(
+    rawMatch.info.queueId,
+    rawMatch.info.gameMode,
+  );
   const baseMatch = getBaseMatch(queueType);
   const reorderedParticipants = reorderParticipants(
     rawMatch.info.participants,
@@ -211,7 +215,10 @@ export function extractMatchMetadataFromRawMatch(
   rawMatch: RawMatch,
   key: string,
 ): MatchMetadata[] {
-  const queueType = parseQueueType(rawMatch.info.queueId);
+  const queueType = resolveQueueTypeFromGame(
+    rawMatch.info.queueId,
+    rawMatch.info.gameMode,
+  );
   const timestamp = new Date(rawMatch.info.gameEndTimestamp);
 
   return rawMatch.info.participants.map((participant) => {

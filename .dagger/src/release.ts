@@ -20,6 +20,43 @@ import {
 
 import { rustBaseContainer } from "./base";
 
+const GITHUB_APP_TOKEN_SCRIPT = "packages/temporal/src/lib/github-app-token.ts";
+const GITHUB_APP_TOKEN_SCRIPT_PATH = "/usr/local/bin/github-app-token.ts";
+const GITHUB_APP_TOKEN_PATH = "/tmp/github-app-token";
+
+function withGithubAppToken(
+  container: Container,
+  source: Directory,
+  githubAppId: Secret,
+  githubAppInstallationId: Secret,
+  githubAppPrivateKey: Secret,
+): Container {
+  return container
+    .withFile(
+      GITHUB_APP_TOKEN_SCRIPT_PATH,
+      source.file(GITHUB_APP_TOKEN_SCRIPT),
+    )
+    .withSecretVariable("GITHUB_APP_ID", githubAppId)
+    .withSecretVariable("GITHUB_APP_INSTALLATION_ID", githubAppInstallationId)
+    .withSecretVariable("GITHUB_APP_PRIVATE_KEY", githubAppPrivateKey)
+    .withExec([
+      "sh",
+      "-c",
+      `bun ${GITHUB_APP_TOKEN_SCRIPT_PATH} > ${GITHUB_APP_TOKEN_PATH}`,
+    ]);
+}
+
+function writeGithubAppAskpassCommand(): string {
+  return [
+    `printf '#!/bin/sh\\ncase "$1" in\\n  *Username*) printf "%s%s\\\\n" "x-access" "-token" ;;\\n  *) cat ${GITHUB_APP_TOKEN_PATH} ;;\\nesac\\n' > /usr/local/bin/git-askpass`,
+    `chmod +x /usr/local/bin/git-askpass`,
+  ].join(" && ");
+}
+
+function exportGithubAppTokenCommand(): string {
+  return `export GH_TOKEN="$(cat ${GITHUB_APP_TOKEN_PATH})"`;
+}
+
 // ---------------------------------------------------------------------------
 // Helm
 // ---------------------------------------------------------------------------
@@ -683,9 +720,12 @@ const COOKLANG_VERSION_BUMP_BRANCH = "chore/cooklang-version-bump-pending";
 
 /** Update versions.ts with new image digests and create or refresh an auto-merge PR. */
 export function versionCommitBackHelper(
+  source: Directory,
   digests: string,
   version: string,
-  ghToken: Secret,
+  githubAppId: Secret,
+  githubAppInstallationId: Secret,
+  githubAppPrivateKey: Secret,
   dryrun = false,
 ): Container {
   const container = dag
@@ -706,8 +746,7 @@ export function versionCommitBackHelper(
       "sh",
       "-c",
       `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
-    ])
-    .withSecretVariable("GH_TOKEN", ghToken);
+    ]);
 
   if (dryrun) {
     return container.withExec([
@@ -731,17 +770,22 @@ export function versionCommitBackHelper(
       })()
     : "";
 
-  return container
-    .withExec([
-      "sh",
-      "-c",
-      `printf '#!/bin/sh\\necho "$GH_TOKEN"\\n' > /usr/local/bin/git-askpass && chmod +x /usr/local/bin/git-askpass`,
-    ])
+  const authedContainer = withGithubAppToken(
+    container,
+    source,
+    githubAppId,
+    githubAppInstallationId,
+    githubAppPrivateKey,
+  );
+
+  return authedContainer
+    .withExec(["sh", "-c", writeGithubAppAskpassCommand()])
     .withEnvVariable("GIT_ASKPASS", "/usr/local/bin/git-askpass")
     .withExec([
       "sh",
       "-c",
       [
+        exportGithubAppTokenCommand(),
         `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
         `cd /repo`,
         `git config user.email "ci@sjer.red"`,
@@ -759,8 +803,11 @@ export function versionCommitBackHelper(
 
 /** Update the CI base image version pointer and create or refresh an auto-merge PR. */
 export function ciBaseVersionCommitBackHelper(
+  source: Directory,
   version: string,
-  ghToken: Secret,
+  githubAppId: Secret,
+  githubAppInstallationId: Secret,
+  githubAppPrivateKey: Secret,
   dryrun = false,
 ): Container {
   const container = dag
@@ -781,8 +828,7 @@ export function ciBaseVersionCommitBackHelper(
       "sh",
       "-c",
       `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
-    ])
-    .withSecretVariable("GH_TOKEN", ghToken);
+    ]);
 
   if (dryrun) {
     return container.withExec([
@@ -791,17 +837,22 @@ export function ciBaseVersionCommitBackHelper(
     ]);
   }
 
-  return container
-    .withExec([
-      "sh",
-      "-c",
-      `printf '#!/bin/sh\\necho "$GH_TOKEN"\\n' > /usr/local/bin/git-askpass && chmod +x /usr/local/bin/git-askpass`,
-    ])
+  const authedContainer = withGithubAppToken(
+    container,
+    source,
+    githubAppId,
+    githubAppInstallationId,
+    githubAppPrivateKey,
+  );
+
+  return authedContainer
+    .withExec(["sh", "-c", writeGithubAppAskpassCommand()])
     .withEnvVariable("GIT_ASKPASS", "/usr/local/bin/git-askpass")
     .withExec([
       "sh",
       "-c",
       [
+        exportGithubAppTokenCommand(),
         `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
         `cd /repo`,
         `git config user.email "ci@sjer.red"`,
@@ -824,9 +875,12 @@ export function ciBaseVersionCommitBackHelper(
  * open or refresh an auto-merge PR. Mirrors versionCommitBackHelper.
  */
 export function cooklangVersionCommitBackHelper(
+  source: Directory,
   version: string,
   minAppVersion: string,
-  ghToken: Secret,
+  githubAppId: Secret,
+  githubAppInstallationId: Secret,
+  githubAppPrivateKey: Secret,
   dryrun = false,
 ): Container {
   const container = dag
@@ -848,8 +902,7 @@ export function cooklangVersionCommitBackHelper(
       "sh",
       "-c",
       `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
-    ])
-    .withSecretVariable("GH_TOKEN", ghToken);
+    ]);
 
   if (dryrun) {
     return container.withExec([
@@ -858,17 +911,22 @@ export function cooklangVersionCommitBackHelper(
     ]);
   }
 
-  return container
-    .withExec([
-      "sh",
-      "-c",
-      `printf '#!/bin/sh\\necho "$GH_TOKEN"\\n' > /usr/local/bin/git-askpass && chmod +x /usr/local/bin/git-askpass`,
-    ])
+  const authedContainer = withGithubAppToken(
+    container,
+    source,
+    githubAppId,
+    githubAppInstallationId,
+    githubAppPrivateKey,
+  );
+
+  return authedContainer
+    .withExec(["sh", "-c", writeGithubAppAskpassCommand()])
     .withEnvVariable("GIT_ASKPASS", "/usr/local/bin/git-askpass")
     .withExec([
       "sh",
       "-c",
       [
+        exportGithubAppTokenCommand(),
         `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
         `cd /repo`,
         `git config user.email "ci@sjer.red"`,
@@ -954,7 +1012,9 @@ export function clauderonCollectBinariesHelper(
 /** Run release-please to create release PRs and GitHub releases. */
 export function releasePleaseHelper(
   source: Directory,
-  ghToken: Secret,
+  githubAppId: Secret,
+  githubAppInstallationId: Secret,
+  githubAppPrivateKey: Secret,
   dryrun = false,
 ): Container {
   const container = dag
@@ -971,8 +1031,7 @@ export function releasePleaseHelper(
     ])
     .withExec(["bun", "add", "-g", `release-please@${RELEASE_PLEASE_VERSION}`])
     .withWorkdir("/workspace")
-    .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES })
-    .withSecretVariable("GH_TOKEN", ghToken);
+    .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES });
 
   if (dryrun) {
     return container.withExec([
@@ -980,12 +1039,21 @@ export function releasePleaseHelper(
       "DRYRUN: would run release-please (release-pr + github-release)",
     ]);
   }
-  return container.withExec([
+  const authedContainer = withGithubAppToken(
+    container,
+    source,
+    githubAppId,
+    githubAppInstallationId,
+    githubAppPrivateKey,
+  );
+
+  return authedContainer.withExec([
     "sh",
     "-c",
     [
-      `release-please release-pr --token=$GH_TOKEN --repo-url=shepherdjerred/monorepo --target-branch=main`,
-      `release-please github-release --token=$GH_TOKEN --repo-url=shepherdjerred/monorepo --target-branch=main`,
+      exportGithubAppTokenCommand(),
+      `release-please release-pr --token="$GH_TOKEN" --repo-url=shepherdjerred/monorepo --target-branch=main`,
+      `release-please github-release --token="$GH_TOKEN" --repo-url=shepherdjerred/monorepo --target-branch=main`,
     ].join(" && "),
   ]);
 }

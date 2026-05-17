@@ -347,6 +347,8 @@ function captureWithContext(error: unknown, request: SpecialistRequest): void {
  *   - eslint    → { kind: "eslint", filePath, ruleId }
  *   - grep      → { kind: "grep", pattern, isLiteral, pathGlob, mustMatch }
  *   - test      → { kind: "test", packagePath, testNamePattern, expectPass }
+ *   - container-image → { kind: "container-image", registry, repository, reference, mustExist }
+ *   - package-manifest → { kind: "package-manifest", packageJsonPath, dependencyName, section, mustExist }
  *   - none      → { kind: "none", reason }
  */
 export const VERIFIER_TARGET_INSTRUCTIONS = `\
@@ -362,9 +364,15 @@ The shape depends on the \`verifier\` you declare:
 
 - \`verifier: "test"\` → \`verifierTarget: { kind: "test", packagePath: "packages/<name>", testNamePattern: "<bun-test-pattern>", expectPass: <true|false> }\`. The verifier runs \`bun test --testNamePattern <pattern>\` in \`packagePath\`. Set \`expectPass: true\` when your claim is "this test passes / would pass"; \`false\` when "this test fails / would fail".
 
+- \`verifier: "container-image"\` → \`verifierTarget: { kind: "container-image", registry: "ghcr.io", repository: "owner/image", reference: "tag-or-sha256:digest", mustExist: <true|false> }\`. Use this for deployment findings about image tags or digests that should or should not resolve in the registry.
+
+- \`verifier: "package-manifest"\` → \`verifierTarget: { kind: "package-manifest", packageJsonPath: "packages/<name>/package.json", dependencyName: "<package>", section: "dependencies" | "devDependencies" | "optionalDependencies" | "peerDependencies", mustExist: <true|false> }\`. Use this when a runtime dependency must be in \`dependencies\` or must not be satisfied by a non-runtime section.
+
 - \`verifier: "none"\` → \`verifierTarget: { kind: "none", reason: "<why-no-verifier-applies>" }\`. Use this honestly for subjective design calls, architectural concerns, or any finding where no empirical check applies. Findings with \`verifier: "none"\` ride entirely on consensus voting — they survive only if multiple specialists or passes agree.
 
-The \`verifierTarget.kind\` MUST match \`verifier\` exactly. The schema rejects mismatches.`;
+The \`verifierTarget.kind\` MUST match \`verifier\` exactly. The schema rejects mismatches.
+
+When the fix is concrete and local to the changed lines, also include \`suggestion: { replacement, lineStart?, lineEnd?, rationale? }\`. The replacement must be the exact text that should replace the target line/range and must not include markdown fences. Omit \`suggestion\` when the right fix is ambiguous, spans unrelated files, or requires design judgment.`;
 
 /**
  * Output schema factory. Two refinements layered on top of the base

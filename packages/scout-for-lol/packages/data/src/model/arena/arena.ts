@@ -87,7 +87,7 @@ export function getArenaTeamName(teamId: ArenaTeamId): string {
 export type ArenaTeam = z.infer<typeof ArenaTeamSchema>;
 export const ArenaTeamSchema = z.strictObject({
   teamId: ArenaTeamIdSchema,
-  players: z.array(ArenaChampionSchema).length(2),
+  players: z.array(ArenaChampionSchema).min(2).max(3),
   placement: ArenaPlacementSchema,
 });
 
@@ -100,7 +100,32 @@ export const ArenaMatchPlayerSchema = z.strictObject({
   placement: ArenaPlacementSchema,
   champion: ArenaChampionSchema,
   teamId: ArenaTeamIdSchema,
-  teammate: ArenaChampionSchema,
+  teammates: z.array(ArenaChampionSchema).min(1).max(2),
+});
+
+const ArenaTeamsSchema = z.array(ArenaTeamSchema).superRefine((teams, ctx) => {
+  if (teams.length !== 6 && teams.length !== 8) {
+    ctx.addIssue({
+      code: "custom",
+      message: `Arena must have 6 or 8 teams, got ${teams.length.toString()}`,
+    });
+    return;
+  }
+
+  const firstTeam = teams[0];
+  if (firstTeam === undefined) {
+    return;
+  }
+
+  const expectedTeamSize = teams.length === 6 ? 3 : 2;
+  for (const team of teams) {
+    if (team.players.length !== expectedTeamSize) {
+      ctx.addIssue({
+        code: "custom",
+        message: `Arena team ${team.teamId.toString()} must have ${expectedTeamSize.toString()} players for ${teams.length.toString()}-team Arena`,
+      });
+    }
+  }
 });
 
 export type ArenaMatch = z.infer<typeof ArenaMatchSchema>;
@@ -108,7 +133,7 @@ export const ArenaMatchSchema = z.strictObject({
   durationInSeconds: z.number().nonnegative(),
   queueType: z.literal("arena"),
   players: z.array(ArenaMatchPlayerSchema),
-  teams: z.array(ArenaTeamSchema).length(8),
+  teams: ArenaTeamsSchema,
 });
 
 export function formatArenaPlacement(placement: ArenaPlacement) {

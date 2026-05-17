@@ -1,10 +1,10 @@
-import type {
-  CompetitionQueueType,
-  QueueType,
-  RawMatch,
-  RawParticipant,
+import {
+  resolveQueueTypeFromGame,
+  type CompetitionQueueType,
+  type QueueType,
+  type RawMatch,
+  type RawParticipant,
 } from "@scout-for-lol/data";
-import { parseQueueType } from "@scout-for-lol/data";
 import type { PlayerWithAccounts } from "#src/league/competition/processors/types.ts";
 
 /**
@@ -25,7 +25,10 @@ export function matchesQueue(
   match: RawMatch,
   queueFilter: CompetitionQueueType,
 ): boolean {
-  const queueType = parseQueueType(match.info.queueId);
+  const queueType = resolveQueueTypeFromGame(
+    match.info.queueId,
+    match.info.gameMode,
+  );
 
   // Handle special queue filters
   if (queueFilter === "RANKED_ANY") {

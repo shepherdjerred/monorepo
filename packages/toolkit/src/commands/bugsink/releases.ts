@@ -7,7 +7,7 @@ import { formatJson } from "#lib/output/formatter.ts";
 
 export type ReleasesOptions = {
   json?: boolean | undefined;
-  project?: number | undefined;
+  project?: string | undefined;
 };
 
 export type ReleaseOptions = {

@@ -29,9 +29,9 @@ Create custom competitions with configurable criteria:
 
 ### ⚡ Arena Mode Support
 
-Full support for League's Arena mode with detailed reports for all 16 players, including:
+Full support for League's Arena mode with detailed reports for current 18-player matches, plus legacy duo Arena reports, including:
 
-- Complete statistics for all 8 teams with team KDA
+- Complete statistics for all six teams of three with team KDA
 - Augment icons showing selections throughout the match
 - Final placements and performance metrics
 - Optimized report layout for better readability

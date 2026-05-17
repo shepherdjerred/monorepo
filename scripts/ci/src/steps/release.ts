@@ -5,7 +5,11 @@
  * and GitHub releases. Nothing depends on this step — version metadata
  * is extracted separately by extractVersionsStep (in quality.ts).
  */
-import { daggerStep, DRYRUN_FLAG } from "../lib/buildkite.ts";
+import {
+  daggerStep,
+  DRYRUN_FLAG,
+  GITHUB_APP_SECRET_ARGS,
+} from "../lib/buildkite.ts";
 import type { BuildkiteStep } from "../lib/types.ts";
 
 const MAIN_ONLY = "build.branch == pipeline.default_branch";
@@ -14,7 +18,7 @@ export function releasePleaseStep(dependsOn?: string[]): BuildkiteStep {
   const opts: Parameters<typeof daggerStep>[0] = {
     label: ":bookmark: Release Please",
     key: "release-please",
-    daggerCmd: `dagger call release-please --source . --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
+    daggerCmd: `dagger call release-please --source . ${GITHUB_APP_SECRET_ARGS}${DRYRUN_FLAG}`,
     timeoutMinutes: 10,
     condition: MAIN_ONLY,
     priority: 1,

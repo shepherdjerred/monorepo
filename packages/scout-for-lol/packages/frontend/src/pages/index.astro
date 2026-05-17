@@ -71,7 +71,7 @@ import ProcessStep from "../components/ProcessStep.astro";
           <FeatureCard
             icon="heroicons:bolt"
             title="Arena Mode Support"
-            description="Full support for League's Arena mode with detailed reports for all 16 players, augments, and placements."
+            description="Full support for League's Arena mode with detailed reports for 18-player 3v3 matches, augments, and placements, while legacy duo reports still render."
           />
         </FeatureGrid>
       </div>
@@ -151,9 +151,9 @@ import ProcessStep from "../components/ProcessStep.astro";
           <!-- Arena Mode Reports -->
           <FeatureWithImage
             title="Complete Arena Coverage"
-            description="Full support for League's Arena mode with detailed stats for all 16 players, augments tracking, and placement results. Scout automatically detects Arena matches and generates comprehensive reports."
+            description="Full support for League's Arena mode with detailed stats for 18-player 3v3 matches, augments tracking, and placement results. Scout automatically detects Arena matches, including CHERRY games that Riot reports as custom, and still renders legacy duo reports."
             imageSrc="/arena-discord.png"
-            imageAlt="Arena mode match notification in Discord showing detailed stats for all 16 players"
+            imageAlt="Arena mode match notification in Discord showing detailed stats, augments, and placements"
             imagePosition="left"
             badge={{
               text: "Arena Mode",
@@ -161,7 +161,7 @@ import ProcessStep from "../components/ProcessStep.astro";
               color: "purple",
             }}
             checklist={[
-              "Track all 16 players in each Arena match",
+              "Track all 18 players across six teams of three",
               "See augment selections and synergies",
               "Beautiful placement and ranking display",
             ]}

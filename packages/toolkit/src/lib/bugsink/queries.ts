@@ -128,12 +128,15 @@ export async function getStacktrace(eventUuid: string): Promise<string> {
 }
 
 export async function getReleases(
-  projectId?: number,
+  project?: number | string,
 ): Promise<BugsinkReleaseListItem[]> {
   const params: Record<string, string> = {};
 
-  if (projectId != null) {
-    params["project"] = String(projectId);
+  if (project != null) {
+    params["project"] =
+      typeof project === "number"
+        ? String(project)
+        : await resolveProjectSlug(project);
   }
 
   const result = await bugsinkRequest(
@@ -147,6 +150,19 @@ export async function getReleases(
   }
 
   return result.data.results;
+}
+
+async function resolveProjectSlug(project: string): Promise<string> {
+  if (/^\d+$/.test(project)) {
+    return project;
+  }
+
+  const projects = await getProjects();
+  const match = projects.find((candidate) => candidate.slug === project);
+  if (match === undefined) {
+    throw new Error(`Bugsink project slug not found: ${project}`);
+  }
+  return String(match.id);
 }
 
 export async function getRelease(

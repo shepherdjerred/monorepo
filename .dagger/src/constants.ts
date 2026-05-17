@@ -88,6 +88,12 @@ export const ARGOCD_CLI_VERSION = "v3.4.2";
 // renovate: datasource=github-releases depName=vmware-tanzu/velero
 export const VELERO_CLI_VERSION = "v1.18.0";
 
+// renovate: datasource=github-releases depName=buildkite/cli
+export const BUILDKITE_CLI_VERSION = "3.42.0";
+
+// renovate: datasource=github-releases depName=temporalio/cli
+export const TEMPORAL_CLI_VERSION = "1.7.0";
+
 // ---------------------------------------------------------------------------
 // Cache volume names (stable — never include version numbers)
 // ---------------------------------------------------------------------------

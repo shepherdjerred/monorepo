@@ -42,6 +42,8 @@ function makeFakeRunner(per: {
   eslint?: VerificationResult;
   grep?: VerificationResult;
   test?: VerificationResult;
+  containerImage?: VerificationResult;
+  packageManifest?: VerificationResult;
 }): VerifierRunner {
   return {
     typecheck: () =>
@@ -83,6 +85,28 @@ function makeFakeRunner(per: {
           makeVerificationResult({
             status: "unverified",
             verifier: "test",
+            exitCode: 0,
+            output: "",
+            durationMs: 0,
+          }),
+      ),
+    containerImage: () =>
+      Promise.resolve(
+        per.containerImage ??
+          makeVerificationResult({
+            status: "unverified",
+            verifier: "container-image",
+            exitCode: 0,
+            output: "",
+            durationMs: 0,
+          }),
+      ),
+    packageManifest: () =>
+      Promise.resolve(
+        per.packageManifest ??
+          makeVerificationResult({
+            status: "unverified",
+            verifier: "package-manifest",
             exitCode: 0,
             output: "",
             durationMs: 0,
@@ -191,6 +215,60 @@ describe("verifyOneFinding — dispatches to the right verifier", () => {
     );
     expect(result.status).toBe("contradicted");
   });
+
+  it("dispatches container-image verifier", async () => {
+    const runner = makeFakeRunner({
+      containerImage: makeVerificationResult({
+        status: "verified",
+        verifier: "container-image",
+        exitCode: 404,
+        output: "missing",
+        durationMs: 50,
+      }),
+    });
+    const result = await verifyOneFinding(
+      runner,
+      mkFinding({
+        id: "f1",
+        verifier: "container-image",
+        verifierTarget: {
+          kind: "container-image",
+          registry: "ghcr.io",
+          repository: "shepherdjerred/caddy-s3proxy",
+          reference: "2.0.0-9999",
+          mustExist: false,
+        },
+      }),
+    );
+    expect(result.status).toBe("verified");
+  });
+
+  it("dispatches package-manifest verifier", async () => {
+    const runner = makeFakeRunner({
+      packageManifest: makeVerificationResult({
+        status: "verified",
+        verifier: "package-manifest",
+        exitCode: 0,
+        output: "missing from dependencies",
+        durationMs: 50,
+      }),
+    });
+    const result = await verifyOneFinding(
+      runner,
+      mkFinding({
+        id: "f1",
+        verifier: "package-manifest",
+        verifierTarget: {
+          kind: "package-manifest",
+          packageJsonPath: "packages/app/package.json",
+          dependencyName: "react-native-sound",
+          section: "dependencies",
+          mustExist: false,
+        },
+      }),
+    );
+    expect(result.status).toBe("verified");
+  });
 });
 
 describe("verifyOneFinding — runner throws", () => {
@@ -200,6 +278,8 @@ describe("verifyOneFinding — runner throws", () => {
       eslint: () => Promise.reject(new Error("boom")),
       grep: () => Promise.reject(new Error("boom")),
       test: () => Promise.reject(new Error("boom")),
+      containerImage: () => Promise.reject(new Error("boom")),
+      packageManifest: () => Promise.reject(new Error("boom")),
     };
     const result = await verifyOneFinding(
       throwingRunner,
@@ -367,6 +447,26 @@ describe("runVerifyFindings — keep verified + unverified", () => {
             durationMs: 0,
           }),
         ),
+      containerImage: () =>
+        Promise.resolve(
+          makeVerificationResult({
+            status: "unverified",
+            verifier: "container-image",
+            exitCode: 0,
+            output: "",
+            durationMs: 0,
+          }),
+        ),
+      packageManifest: () =>
+        Promise.resolve(
+          makeVerificationResult({
+            status: "unverified",
+            verifier: "package-manifest",
+            exitCode: 0,
+            output: "",
+            durationMs: 0,
+          }),
+        ),
     };
     const kept = await runVerifyFindings(runner, findings);
     const keptIds = kept.map((k) => k.id).toSorted();
@@ -408,6 +508,8 @@ describe("runVerifyFindings — never lets verifier failures hide bugs", () => {
       eslint: () => Promise.reject(new Error("boom")),
       grep: () => Promise.reject(new Error("boom")),
       test: () => Promise.reject(new Error("boom")),
+      containerImage: () => Promise.reject(new Error("boom")),
+      packageManifest: () => Promise.reject(new Error("boom")),
     };
     const kept = await runVerifyFindings(throwingRunner, findings);
     expect(kept).toHaveLength(1);
