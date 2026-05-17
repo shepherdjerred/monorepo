@@ -25,6 +25,12 @@ export function failureReason(error: unknown): string {
   if (message.includes("update-data-dragon")) {
     return "updater-failed";
   }
+  if (message.includes("generate-lane-priors")) {
+    return "lane-prior-generation-failed";
+  }
+  if (message.includes("evaluate-lane-priors")) {
+    return "lane-prior-eval-failed";
+  }
   if (message.includes("bun install")) {
     return "install-failed";
   }

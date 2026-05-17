@@ -21,6 +21,20 @@ type ScheduleDefinition = {
   workflowExecutionTimeout?: Duration;
 };
 
+const SCOUT_LANE_PRIOR_UPDATE_CONFIG = {
+  lanePriors: {
+    bucket: "scout-prod",
+    queueIds: [400, 420, 440, 480, 490],
+    trainingStartDate: "2026-05-06",
+    trainingEndDate: "2026-05-13",
+    holdoutStartDate: "2026-05-14",
+    holdoutEndDate: "2026-05-16",
+    holdoutSampleSize: 100,
+    holdoutSeed: "scout-lane-priors-patch-cadence-v1",
+    threshold: 0.95,
+  },
+};
+
 export const SCHEDULES: ScheduleDefinition[] = [
   {
     id: "fetcher-skill-capped",
@@ -69,7 +83,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
   {
     id: "scout-data-dragon-version-check",
     workflowType: "runScoutDataDragonVersionCheck",
-    args: [],
+    args: [SCOUT_LANE_PRIOR_UPDATE_CONFIG],
     cronExpression: "0 6 * * 0-5",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
@@ -79,7 +93,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
   {
     id: "scout-data-dragon-weekly-refresh",
     workflowType: "runScoutDataDragonWeeklyRefresh",
-    args: [],
+    args: [SCOUT_LANE_PRIOR_UPDATE_CONFIG],
     cronExpression: "0 6 * * 6",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,

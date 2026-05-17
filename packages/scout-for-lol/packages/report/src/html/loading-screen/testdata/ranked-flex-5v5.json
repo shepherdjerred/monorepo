@@ -26,7 +26,9 @@
           "losses": 98
         }
       },
-      "isTrackedPlayer": false
+      "isTrackedPlayer": false,
+      "championId": 84,
+      "lane": "middle"
     },
     {
       "puuid": "n9a3nW9BKtj6vf7kSzmM_uTGu5A9ahTRgDYzz26tNhdH-i9cqf4G3UJCPcd7pXOOy2Q3ZXoTTZlVJA",
@@ -48,7 +50,9 @@
           "losses": 72
         }
       },
-      "isTrackedPlayer": false
+      "isTrackedPlayer": false,
+      "championId": 27,
+      "lane": "top"
     },
     {
       "puuid": "VMkz_anidJk366oY7X5EILE1BkRiTALvRPE4S_kea1WbiQxTVmwWy1op4ZllJ31QQEy5XmlMUOIqgw",
@@ -61,7 +65,9 @@
       "spell2Id": 11,
       "keystoneRuneId": 8010,
       "secondaryTreeId": 8100,
-      "isTrackedPlayer": false
+      "isTrackedPlayer": false,
+      "championId": 234,
+      "lane": "jungle"
     },
     {
       "puuid": "d0BwgxqBVJI5zToYm5isFg-RvA1rsFr-vIRJytEZ9Dy_s4Cpmc3tQuoUWm9uWHGGY_f-VRKRSdYwRg",
@@ -83,7 +89,9 @@
           "losses": 40
         }
       },
-      "isTrackedPlayer": false
+      "isTrackedPlayer": false,
+      "championId": 202,
+      "lane": "adc"
     },
     {
       "puuid": "2L4f8DdtVLFkdN0mCSPofO70tNP0EGsQEQQFs_A1xAT4Ws5gab54ADAYYbIemeUPzma5oahbRFYL-g",
@@ -105,7 +113,9 @@
           "losses": 190
         }
       },
-      "isTrackedPlayer": false
+      "isTrackedPlayer": false,
+      "championId": 143,
+      "lane": "support"
     },
     {
       "puuid": "I78a3uUXZh_DzpKAhvzXaNILtNQqak1gC9gGxUL8fo1WNGDcvlIyABFcry60Kg1sykinHi_xFPBmBw",
@@ -127,7 +137,9 @@
           "losses": 130
         }
       },
-      "isTrackedPlayer": false
+      "isTrackedPlayer": false,
+      "championId": 103,
+      "lane": "middle"
     },
     {
       "puuid": "fBrlXXgc8Lx7PtOfI7TiKBHjZKMcK4dJgDrtiMZVdMkaq3tOuk5DmwIv284H-YFcgNi2n-eGTpp_Cw",
@@ -140,7 +152,9 @@
       "spell2Id": 4,
       "keystoneRuneId": 8008,
       "secondaryTreeId": 8300,
-      "isTrackedPlayer": false
+      "isTrackedPlayer": false,
+      "championId": 22,
+      "lane": "adc"
     },
     {
       "puuid": "3LKY6Joqu_yu97w3qDmUiQOOiWd0i_EPJMfJM6u63LHJ7oS2Svwxq5cLVd8ui8pDt3syEHfHQTAoyA",
@@ -162,7 +176,9 @@
           "losses": 220
         }
       },
-      "isTrackedPlayer": false
+      "isTrackedPlayer": false,
+      "championId": 24,
+      "lane": "jungle"
     },
     {
       "puuid": "AlYREV57O6o49QaM2iZVQ361vKtpc4mTwNYyqiZSLb9EF1EDBABA8xi4hiGwkSs1GIgRzXqjVm-2xg",
@@ -184,7 +200,9 @@
           "losses": 55
         }
       },
-      "isTrackedPlayer": true
+      "isTrackedPlayer": true,
+      "championId": 19,
+      "lane": "top"
     },
     {
       "puuid": null,
@@ -197,19 +215,57 @@
       "spell2Id": 4,
       "keystoneRuneId": 8214,
       "secondaryTreeId": 8400,
-      "isTrackedPlayer": false
+      "isTrackedPlayer": false,
+      "championId": 267,
+      "lane": "support"
     }
   ],
   "bans": [
-    { "championId": 54, "championName": "Malphite", "team": "blue" },
-    { "championId": 901, "championName": "Smolder", "team": "blue" },
-    { "championId": 51, "championName": "Caitlyn", "team": "blue" },
-    { "championId": 233, "championName": "Briar", "team": "blue" },
-    { "championId": 950, "championName": "Naafiri", "team": "blue" },
-    { "championId": 86, "championName": "Garen", "team": "red" },
-    { "championId": 233, "championName": "Briar", "team": "red" },
-    { "championId": 17, "championName": "Teemo", "team": "red" },
-    { "championId": 35, "championName": "Shaco", "team": "red" }
+    {
+      "championId": 54,
+      "championName": "Malphite",
+      "team": "blue"
+    },
+    {
+      "championId": 901,
+      "championName": "Smolder",
+      "team": "blue"
+    },
+    {
+      "championId": 51,
+      "championName": "Caitlyn",
+      "team": "blue"
+    },
+    {
+      "championId": 233,
+      "championName": "Briar",
+      "team": "blue"
+    },
+    {
+      "championId": 950,
+      "championName": "Naafiri",
+      "team": "blue"
+    },
+    {
+      "championId": 86,
+      "championName": "Garen",
+      "team": "red"
+    },
+    {
+      "championId": 233,
+      "championName": "Briar",
+      "team": "red"
+    },
+    {
+      "championId": 17,
+      "championName": "Teemo",
+      "team": "red"
+    },
+    {
+      "championId": 35,
+      "championName": "Shaco",
+      "team": "red"
+    }
   ],
   "gameStartTime": 1775530628878
 }

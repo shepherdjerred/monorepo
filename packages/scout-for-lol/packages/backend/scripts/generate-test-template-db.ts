@@ -20,6 +20,9 @@ if (await templateFile.exists()) {
 
 logger.info("Generating test template database...");
 
+const rustLog = Bun.env["RUST_LOG"] ?? "info";
+Bun.env["RUST_LOG"] = rustLog;
+
 const result = Bun.spawnSync(
   [
     "bunx",
@@ -36,6 +39,7 @@ const result = Bun.spawnSync(
       DATABASE_URL: `file:${templatePath}`,
       PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
       PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+      RUST_LOG: rustLog,
     },
     stdout: "inherit",
     stderr: "inherit",
