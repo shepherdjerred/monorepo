@@ -154,3 +154,29 @@ reviews honest about coverage.
 - PR #826 is already merged/closed, but GitHub still accepted both the status
   comment update and inline review comment. A fresh open PR remains the final
   deployment verification target.
+
+## Session Log — 2026-05-17 PR Publication
+
+### Done
+
+- Created branch `codex/pr-review-commenting-parity`.
+- Committed the PR-review commenting parity implementation as
+  `649e3d61d feat(temporal): post pr review findings inline`.
+- Pushed the branch to `origin/codex/pr-review-commenting-parity`.
+- Opened draft PR #846:
+  <https://github.com/shepherdjerred/monorepo/pull/846>.
+
+### Remaining
+
+- Review CI and address any Buildkite failures or review feedback on PR #846.
+- Deploy the Temporal worker after merge and verify a fresh non-draft PR gets
+  lifecycle comments plus inline findings without manual invocation.
+- Remove or resolve manual proof comments on PR #826 and PR #838 if they should
+  not remain in the PR history.
+
+### Caveats
+
+- The local `gh auth status` token is invalid, so the PR was created with the
+  GitHub connector and the branch was pushed using an explicit HTTPS token.
+- The first HTTPS push attempt used a bearer header and failed; the subsequent
+  GitHub Basic token push succeeded.
