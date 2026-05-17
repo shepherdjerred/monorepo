@@ -25,24 +25,33 @@ export class HomeStatusClient {
     return states;
   }
 
-  async getProblemEntities(batteryThreshold: number): Promise<{
+  async getProblemEntities(
+    batteryThreshold: number,
+    unavailableIgnoredDomains: readonly string[],
+  ): Promise<{
     unavailable: EntitySummary[];
+    unavailableCount: number;
     lowBatteries: EntitySummary[];
+    lowBatteryCount: number;
   }> {
     const states = await this.client.getStates();
+    const unavailable = states
+      .filter((state) => isUnavailableState(state.state))
+      .filter((state) => !unavailableIgnoredDomains.includes(domainOf(state)))
+      .map((state) => toEntitySummary(undefined, state))
+      .toSorted((a, b) => a.label.localeCompare(b.label));
+    const lowBatteries = states
+      .flatMap((state) => {
+        const summary = batterySummary(state, batteryThreshold);
+        return summary == null ? [] : [summary];
+      })
+      .toSorted((a, b) => Number(a.state) - Number(b.state));
+
     return {
-      unavailable: states
-        .filter((state) => isUnavailableState(state.state))
-        .map((state) => toEntitySummary(undefined, state))
-        .toSorted((a, b) => a.label.localeCompare(b.label))
-        .slice(0, 12),
-      lowBatteries: states
-        .flatMap((state) => {
-          const summary = batterySummary(state, batteryThreshold);
-          return summary == null ? [] : [summary];
-        })
-        .toSorted((a, b) => Number(a.state) - Number(b.state))
-        .slice(0, 12),
+      unavailable: unavailable.slice(0, 12),
+      unavailableCount: unavailable.length,
+      lowBatteries: lowBatteries.slice(0, 12),
+      lowBatteryCount: lowBatteries.length,
     };
   }
 }
@@ -88,4 +97,8 @@ function batterySummary(
 function friendlyName(state: EntityState): string {
   const name = state.attributes["friendly_name"];
   return typeof name === "string" && name.length > 0 ? name : state.entity_id;
+}
+
+function domainOf(state: EntityState): string {
+  return state.entity_id.split(".", 1)[0] ?? "";
 }

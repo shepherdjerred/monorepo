@@ -1,15 +1,21 @@
 import type { AppConfig, ConfiguredEntity } from "../config.ts";
 import { HomeStatusClient } from "../clients/home-assistant.ts";
 import { worstStatus } from "../status.ts";
+import { formatDisplayTime } from "../time.ts";
 import type { EntitySummary, HomePayload } from "../types.ts";
 
 export type HomeCollectorClient = {
   getConfiguredEntities: (
     entities: readonly ConfiguredEntity[],
   ) => Promise<EntitySummary[]>;
-  getProblemEntities: (batteryThreshold: number) => Promise<{
+  getProblemEntities: (
+    batteryThreshold: number,
+    unavailableIgnoredDomains: readonly string[],
+  ) => Promise<{
     unavailable: EntitySummary[];
+    unavailableCount: number;
     lowBatteries: EntitySummary[];
+    lowBatteryCount: number;
   }>;
 };
 
@@ -26,6 +32,8 @@ export async function collectHomePayload(
   let climate: EntitySummary[] = [];
   let unavailable: EntitySummary[] = [];
   let lowBatteries: EntitySummary[] = [];
+  let unavailableCount = 0;
+  let lowBatteryCount = 0;
 
   try {
     [presence, security, climate] = await Promise.all([
@@ -40,9 +48,12 @@ export async function collectHomePayload(
   try {
     const problems = await client.getProblemEntities(
       config.homeAssistant.batteryThreshold,
+      config.homeAssistant.unavailableIgnoredDomains,
     );
     unavailable = problems.unavailable;
+    unavailableCount = problems.unavailableCount;
     lowBatteries = problems.lowBatteries;
+    lowBatteryCount = problems.lowBatteryCount;
   } catch (error) {
     errors.push(errorMessage("problem entities", error));
   }
@@ -60,18 +71,20 @@ export async function collectHomePayload(
 
   const summaryParts = [
     `${presence.filter((entity) => entity.state === "home").length.toString()} home`,
-    `${unavailable.length.toString()} unavailable`,
-    `${lowBatteries.length.toString()} low battery`,
+    `${unavailableCount.toString()} unavailable`,
+    `${lowBatteryCount.toString()} low battery`,
   ];
+  const generatedAt = new Date();
 
   return {
     screen: "home",
-    generated_at: new Date().toISOString(),
+    generated_at: generatedAt.toISOString(),
+    generated_time: formatDisplayTime(generatedAt, config.displayTimeZone),
     status,
     summary: summaryParts.join(" · "),
     counts: {
-      unavailable: unavailable.length,
-      low_battery: lowBatteries.length,
+      unavailable: unavailableCount,
+      low_battery: lowBatteryCount,
     },
     presence,
     security,

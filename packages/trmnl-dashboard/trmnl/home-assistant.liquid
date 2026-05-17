@@ -106,9 +106,22 @@
       </table>
     </div>
   </div>
+
+  {% if errors.size > 0 %}
+    <div>
+      <span class="label label--underline">Diagnostics</span>
+      <table class="table table--condensed">
+        <tbody>
+          {% for error in errors limit: 4 %}
+            <tr><td>{{ error }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
 </div>
 
 <div class="title_bar">
   <span class="title">Home Assistant</span>
-  <span class="instance">{{ status | upcase }} · {{ generated_at | date: "%-I:%M %p" }}</span>
+  <span class="instance">{{ status | upcase }} · {{ generated_time }}</span>
 </div>

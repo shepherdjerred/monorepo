@@ -45,7 +45,6 @@ export class BugsinkClient {
   private async countUnresolved(projectId: number): Promise<number> {
     const initialUrl = new URL(`${this.baseUrl}/issues/`);
     initialUrl.searchParams.set("project", String(projectId));
-    initialUrl.searchParams.set("status", "unresolved");
 
     let nextUrl: string | null = initialUrl.toString();
     let total = 0;
