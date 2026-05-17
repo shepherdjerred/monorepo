@@ -1,6 +1,19 @@
 import { Context, metricMeter } from "@temporalio/activity";
 import { simpleGit } from "simple-git";
 import { z } from "zod/v4";
+import { resolvePostalAddresses, sendPostalEmail } from "#shared/postal.ts";
+import {
+  buildImageOnlySkipEmailContent,
+  parseGitStatusLine,
+  shouldCreateDataDragonPr,
+  type GitStatusEntry,
+} from "./data-dragon-diff.ts";
+import { runCommand } from "./data-dragon-shell.ts";
+import {
+  branchName,
+  failureReason,
+  validateVersion,
+} from "./data-dragon-util.ts";
 
 const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
 const REPO_SLUG = "shepherdjerred/monorepo";
@@ -54,7 +67,9 @@ export type DataDragonUpdateResult = DataDragonUpdateInput & {
   commitHash: string | undefined;
   prUrl: string | undefined;
   outcome: "success" | "skipped";
-  reason: "pr-created" | "no-diff";
+  reason: "pr-created" | "no-diff" | "image-only-diff";
+  emailSent?: boolean;
+  emailMessageId?: string;
 };
 
 function jsonLog(
@@ -153,90 +168,6 @@ function recordRun(input: DataDragonRunMetrics): void {
   }
 }
 
-async function runCommand(
-  command: string[],
-  options: {
-    cwd: string;
-    env?: Record<string, string | undefined>;
-    redactOutput?: boolean;
-  },
-): Promise<string> {
-  const clearedEnvKeys = new Set(
-    Object.entries(options.env ?? {})
-      .filter(([, value]) => value === undefined)
-      .map(([key]) => key),
-  );
-  const childEnv: Record<string, string> = {};
-  for (const [key, value] of Object.entries(Bun.env)) {
-    if (value !== undefined && !clearedEnvKeys.has(key)) {
-      childEnv[key] = value;
-    }
-  }
-  for (const [key, value] of Object.entries(options.env ?? {})) {
-    if (value !== undefined) {
-      childEnv[key] = value;
-    }
-  }
-
-  const proc = Bun.spawn(command, {
-    cwd: options.cwd,
-    env: childEnv,
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ]);
-
-  if (exitCode !== 0) {
-    const output =
-      options.redactOutput === true
-        ? "<redacted>"
-        : `${stdout}\n${stderr}`.trim();
-    throw new Error(
-      `Command failed (${command.join(" ")}): exit ${String(exitCode)} ${output}`,
-    );
-  }
-
-  return stdout.trim();
-}
-
-function validateVersion(version: string): void {
-  if (!/^\d+\.\d+\.\d+$/.test(version)) {
-    throw new Error(`Unexpected Data Dragon version format: ${version}`);
-  }
-}
-
-function branchName(version: string, id: string): string {
-  return `chore/scout-data-dragon-${version}-${id.slice(0, 8)}`;
-}
-
-function failureReason(error: unknown): string {
-  const message = error instanceof Error ? error.message : String(error);
-  if (message.includes("GH_TOKEN")) {
-    return "missing-gh-token";
-  }
-  if (message.includes("gh pr create")) {
-    return "pr-create-failed";
-  }
-  if (message.includes("gh pr merge")) {
-    return "pr-merge-failed";
-  }
-  if (message.includes("git push")) {
-    return "git-push-failed";
-  }
-  if (message.includes("update-data-dragon")) {
-    return "updater-failed";
-  }
-  if (message.includes("bun install")) {
-    return "install-failed";
-  }
-  return "exception";
-}
-
 async function writeGitAskpass(tempDir: string): Promise<string> {
   const path = `${tempDir}/git-askpass.sh`;
   await Bun.write(
@@ -254,16 +185,15 @@ async function writeGitAskpass(tempDir: string): Promise<string> {
   return path;
 }
 
-async function changedFiles(repoDir: string): Promise<string[]> {
+async function changedFiles(repoDir: string): Promise<GitStatusEntry[]> {
   const status = await runCommand(
     ["git", "status", "--porcelain", "--", ...GENERATED_PATHS],
     { cwd: repoDir },
   );
   return status
     .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line !== "")
-    .map((line) => line.slice(3));
+    .map((line) => parseGitStatusLine(line))
+    .filter((entry) => entry !== undefined);
 }
 
 export type DataDragonActivities = typeof dataDragonActivities;
@@ -363,7 +293,8 @@ export const dataDragonActivities = {
         },
       );
 
-      const files = await changedFiles(repoDir);
+      const changes = await changedFiles(repoDir);
+      const files = changes.map((change) => change.path);
       const durationSeconds = (Date.now() - start) / 1000;
 
       if (files.length === 0) {
@@ -388,6 +319,46 @@ export const dataDragonActivities = {
           prUrl: undefined,
           outcome: "skipped",
           reason: "no-diff",
+        };
+      }
+
+      if (!shouldCreateDataDragonPr(changes)) {
+        const { recipient, sender } = resolvePostalAddresses();
+        const emailContent = buildImageOnlySkipEmailContent(
+          input,
+          files.length,
+        );
+        const emailResult = await sendPostalEmail({
+          to: recipient,
+          from: sender,
+          ...emailContent,
+        });
+
+        recordRun({
+          mode: input.mode,
+          outcome: "success",
+          reason: "image-only-diff",
+          currentVersion: input.currentVersion,
+          latestVersion: input.latestVersion,
+          changedFiles: files.length,
+          durationSeconds,
+        });
+        jsonLog("info", "Data Dragon update skipped image-only diff", {
+          ...input,
+          changedFiles: files.length,
+          durationSeconds,
+          emailMessageId: emailResult.messageId,
+        });
+        return {
+          ...input,
+          changedFiles: files,
+          branchName: undefined,
+          commitHash: undefined,
+          prUrl: undefined,
+          outcome: "skipped",
+          reason: "image-only-diff",
+          emailSent: true,
+          emailMessageId: emailResult.messageId,
         };
       }
 
