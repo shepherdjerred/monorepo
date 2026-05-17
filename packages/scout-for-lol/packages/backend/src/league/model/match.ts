@@ -4,11 +4,12 @@ import {
   ArenaPlacementSchema,
   type ArenaTeam,
   ArenaTeamIdSchema,
+  type ArenaTeamId,
   type CompletedMatch,
   CompletedMatchSchema,
   getLaneOpponent,
   invertTeam,
-  parseQueueType,
+  resolveQueueTypeFromGame,
   parseTeam,
   type Player,
   type Rank,
@@ -37,7 +38,10 @@ export function toMatch(
   >,
 ): CompletedMatch | undefined {
   const teams = getTeams(rawMatch.info.participants, participantToChampion);
-  const queueType = parseQueueType(rawMatch.info.queueId);
+  const queueType = resolveQueueTypeFromGame(
+    rawMatch.info.queueId,
+    rawMatch.info.gameMode,
+  );
 
   if (queueType === "arena") {
     throw new Error("arena matches are not supported");
@@ -145,23 +149,8 @@ export function toMatch(
   return validated;
 }
 
-// Arena helpers
-// Validate playerSubteamId is a valid arena subteam ID (1-8)
-const ArenaSubteamIdSchema = z.union([
-  z.literal(1),
-  z.literal(2),
-  z.literal(3),
-  z.literal(4),
-  z.literal(5),
-  z.literal(6),
-  z.literal(7),
-  z.literal(8),
-]);
-
-function validateArenaSubteamId(
-  participant: RawParticipant,
-): 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 {
-  return ArenaSubteamIdSchema.parse(participant.playerSubteamId);
+function validateArenaSubteamId(participant: RawParticipant): ArenaTeamId {
+  return ArenaTeamIdSchema.parse(participant.playerSubteamId);
 }
 
 const ArenaParticipantFieldsSchema = z.object({
@@ -170,7 +159,7 @@ const ArenaParticipantFieldsSchema = z.object({
 });
 
 type ArenaParticipantValidatedMin = RawParticipant & {
-  playerSubteamId: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+  playerSubteamId: ArenaTeamId;
 };
 
 export function groupArenaTeams(participants: RawParticipant[]) {
@@ -184,53 +173,70 @@ export function groupArenaTeams(participants: RawParticipant[]) {
     map(([key, entriesForKey]) => [Number(key), entriesForKey] as const),
     sortBy(([subteamId]) => subteamId),
     map(([subteamId, players]) => {
-      if (players.length !== 2) {
+      if (players.length !== 2 && players.length !== 3) {
         throw new Error(
-          `subteam ${subteamId.toString()} must have exactly 2 players`,
+          `subteam ${subteamId.toString()} must have 2 or 3 players`,
         );
       }
       return { subteamId, players };
     }),
   );
-  if (groups.length !== 8) {
-    throw new Error(`expected 8 subteams, got ${groups.length.toString()}`);
+  if (groups.length !== 6 && groups.length !== 8) {
+    throw new Error(
+      `expected 6 or 8 subteams, got ${groups.length.toString()}`,
+    );
+  }
+
+  const expectedTeamSize = groups.length === 6 ? 3 : 2;
+  for (const group of groups) {
+    if (group.players.length !== expectedTeamSize) {
+      throw new Error(
+        `subteam ${group.subteamId.toString()} must have ${expectedTeamSize.toString()} players for ${groups.length.toString()}-team Arena`,
+      );
+    }
   }
   return groups;
 }
 
-export function getArenaTeammate(
+export function getArenaTeammates(
   participant: RawParticipant,
   participants: RawParticipant[],
 ) {
   const sub = validateArenaSubteamId(participant);
+  const teammates: RawParticipant[] = [];
   for (const p of participants) {
     if (p === participant) {
       continue;
     }
     const otherSub = validateArenaSubteamId(p);
     if (otherSub === sub) {
-      return p;
+      teammates.push(p);
     }
   }
-  return;
+  return teammates;
 }
 
 export function toArenaSubteams(participants: RawParticipant[]): ArenaTeam[] {
   const grouped = groupArenaTeams(participants);
   const result: ArenaTeam[] = [];
   for (const { subteamId, players } of grouped) {
-    const placement0 = ArenaParticipantFieldsSchema.parse(players[0]).placement;
-    const placement1 = ArenaParticipantFieldsSchema.parse(players[1]).placement;
-    if (placement0 !== placement1) {
+    const placements = players.map(
+      (player) => ArenaParticipantFieldsSchema.parse(player).placement,
+    );
+    const firstPlacement = placements[0];
+    if (firstPlacement === undefined) {
+      throw new Error(`subteam ${subteamId.toString()} has no players`);
+    }
+    if (placements.some((placement) => placement !== firstPlacement)) {
       throw new Error(
-        `inconsistent placement for subteam ${subteamId.toString()}: ${placement0.toString()} !== ${placement1.toString()}`,
+        `inconsistent placement for subteam ${subteamId.toString()}: ${placements.join(", ")}`,
       );
     }
     const converted = players.map((p) => participantToArenaChampion(p));
     result.push({
       teamId: ArenaTeamIdSchema.parse(subteamId),
       players: converted,
-      placement: ArenaPlacementSchema.parse(placement0),
+      placement: ArenaPlacementSchema.parse(firstPlacement),
     });
   }
   return result;
@@ -295,23 +301,25 @@ export function toArenaMatch(
       const subteamId = validateArenaSubteamId(participant);
       const placement = getArenaPlacement(participant);
       const champion = participantToArenaChampion(participant);
-      const teammateRaw = getArenaTeammate(
+      const teammateRaws = getArenaTeammates(
         participant,
         rawMatch.info.participants,
       );
-      if (!teammateRaw) {
+      if (teammateRaws.length === 0) {
         throw new Error(
-          `arena teammate not found for player ${validatedConfig.alias}`,
+          `arena teammates not found for player ${validatedConfig.alias}`,
         );
       }
-      const arenaTeammate = participantToArenaChampion(teammateRaw);
+      const arenaTeammates = teammateRaws.map((teammateRaw) =>
+        participantToArenaChampion(teammateRaw),
+      );
 
       return {
         playerConfig: validatedConfig,
         placement: ArenaPlacementSchema.parse(placement),
         champion,
         teamId: ArenaTeamIdSchema.parse(subteamId),
-        teammate: arenaTeammate,
+        teammates: arenaTeammates,
       };
     })
     .filter((p) => p !== undefined);

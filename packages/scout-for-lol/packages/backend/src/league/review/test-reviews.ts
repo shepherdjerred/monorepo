@@ -8,7 +8,7 @@ import { generateMatchReview } from "#src/league/review/generator.ts";
 import {
   MatchIdSchema,
   LeaguePuuidSchema,
-  parseQueueType,
+  resolveQueueTypeFromGame,
   RawMatchSchema,
   RawTimelineSchema,
   type ArenaMatch,
@@ -142,7 +142,10 @@ function createMinimalPlayerConfig(
 function convertRawMatchToInternalFormat(
   rawMatch: RawMatch,
 ): CompletedMatch | ArenaMatch {
-  const queueType = parseQueueType(rawMatch.info.queueId);
+  const queueType = resolveQueueTypeFromGame(
+    rawMatch.info.queueId,
+    rawMatch.info.gameMode,
+  );
 
   // Pick the first participant as our "tracked player"
   const firstParticipant = rawMatch.info.participants[0];
@@ -230,7 +233,10 @@ async function getRandomMatchFromS3(
       continue;
     }
 
-    const queueType = parseQueueType(rawMatch.info.queueId);
+    const queueType = resolveQueueTypeFromGame(
+      rawMatch.info.queueId,
+      rawMatch.info.gameMode,
+    );
 
     // Check if this match type matches what we're looking for
     const isMatchingType =

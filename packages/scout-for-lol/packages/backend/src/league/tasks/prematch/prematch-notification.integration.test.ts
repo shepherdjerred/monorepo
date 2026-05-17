@@ -123,7 +123,7 @@ function makeArenaGameInfo() {
     gameMode: "CHERRY",
     mapId: 30,
     gameType: "MATCHED_GAME",
-    gameQueueConfigId: 1700,
+    gameQueueConfigId: 0,
     gameLength: -20,
     platformId: "NA1",
     bannedChampions: [],
@@ -212,15 +212,15 @@ describe.skipIf(!RUN_INTEGRATION_TEST)("sendPrematchNotification", () => {
     expect(captureExceptionMock).toHaveBeenCalledTimes(1);
   });
 
-  test("skips loading-screen render for Arena (CHERRY) games and sends embed-only", async () => {
-    // Arena games have no playerSubteamId in spectator-v5, so the image path is
-    // intentionally skipped. The embed-only fallback must still post.
+  test("renders loading-screen for Arena (CHERRY) games reported as custom", async () => {
     await sendPrematchNotification(makeArenaGameInfo(), [makeTrackedPlayer()]);
 
-    expect(callOrder).not.toContain("buildLoadingScreenData");
+    expect(callOrder).toContain("buildLoadingScreenData");
     expect(sendCalls).toHaveLength(1);
-    expect(Array.isArray(sendCalls[0]?.message["embeds"])).toBe(true);
-    expect(sendCalls[0]?.message["files"]).toBeUndefined();
+    expect(sendCalls[0]?.message["content"]).toBe(
+      "Tracked started an arena game",
+    );
+    expect(sendCalls[0]?.message["files"]).toBeDefined();
     expect(captureExceptionMock).not.toHaveBeenCalled();
   });
 });

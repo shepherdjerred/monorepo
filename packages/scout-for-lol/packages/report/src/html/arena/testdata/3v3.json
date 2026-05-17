@@ -1,0 +1,1006 @@
+{
+  "durationInSeconds": 1320,
+  "players": [
+    {
+      "playerConfig": {
+        "alias": "Player01",
+        "league": {
+          "leagueAccount": {
+            "puuid": "arena3v301xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            "region": "AMERICA_NORTH"
+          }
+        }
+      },
+      "wins": 12,
+      "losses": 5,
+      "placement": 1,
+      "champion": {
+        "riotIdGameName": "Player01",
+        "championName": "Aatrox",
+        "kills": 8,
+        "deaths": 2,
+        "assists": 10,
+        "level": 18,
+        "items": [3006, 3031, 3153, 6672, 3036, 3046],
+        "gold": 14500,
+        "damage": 18000,
+        "augments": [
+          {
+            "id": 100,
+            "type": "id"
+          },
+          {
+            "id": 200,
+            "type": "id"
+          },
+          {
+            "id": 300,
+            "type": "id"
+          },
+          {
+            "id": 400,
+            "type": "id"
+          }
+        ],
+        "arenaMetrics": {
+          "playerScore0": 0,
+          "playerScore1": 0,
+          "playerScore2": 1200,
+          "playerScore3": 0.3,
+          "playerScore4": 5,
+          "playerScore5": 1500,
+          "playerScore6": 5000,
+          "playerScore7": 450,
+          "playerScore8": 35
+        },
+        "teamSupport": {
+          "damageShieldedOnTeammate": 0,
+          "healsOnTeammate": 0,
+          "damageTakenPercentage": 0.12
+        }
+      },
+      "teamId": 1,
+      "teammates": [
+        {
+          "riotIdGameName": "Player02",
+          "championName": "Ahri",
+          "kills": 9,
+          "deaths": 3,
+          "assists": 11,
+          "level": 18,
+          "items": [3006, 3031, 3153, 6672, 3036, 3046],
+          "gold": 14750,
+          "damage": 19400,
+          "augments": [
+            {
+              "id": 101,
+              "type": "id"
+            },
+            {
+              "id": 201,
+              "type": "id"
+            },
+            {
+              "id": 301,
+              "type": "id"
+            },
+            {
+              "id": 401,
+              "type": "id"
+            }
+          ],
+          "arenaMetrics": {
+            "playerScore0": 1,
+            "playerScore1": 1,
+            "playerScore2": 1221,
+            "playerScore3": 0.31,
+            "playerScore4": 5.1,
+            "playerScore5": 1537,
+            "playerScore6": 5111,
+            "playerScore7": 458,
+            "playerScore8": 36
+          },
+          "teamSupport": {
+            "damageShieldedOnTeammate": 12,
+            "healsOnTeammate": 7,
+            "damageTakenPercentage": 0.13
+          }
+        },
+        {
+          "riotIdGameName": "Player03",
+          "championName": "Akali",
+          "kills": 10,
+          "deaths": 4,
+          "assists": 12,
+          "level": 18,
+          "items": [3006, 3031, 3153, 6672, 3036, 3046],
+          "gold": 15000,
+          "damage": 20800,
+          "augments": [
+            {
+              "id": 102,
+              "type": "id"
+            },
+            {
+              "id": 202,
+              "type": "id"
+            },
+            {
+              "id": 302,
+              "type": "id"
+            },
+            {
+              "id": 402,
+              "type": "id"
+            }
+          ],
+          "arenaMetrics": {
+            "playerScore0": 2,
+            "playerScore1": 2,
+            "playerScore2": 1242,
+            "playerScore3": 0.32,
+            "playerScore4": 5.2,
+            "playerScore5": 1574,
+            "playerScore6": 5222,
+            "playerScore7": 466,
+            "playerScore8": 37
+          },
+          "teamSupport": {
+            "damageShieldedOnTeammate": 24,
+            "healsOnTeammate": 14,
+            "damageTakenPercentage": 0.13999999999999999
+          }
+        }
+      ]
+    }
+  ],
+  "teams": [
+    {
+      "teamId": 1,
+      "placement": 1,
+      "players": [
+        {
+          "riotIdGameName": "Player01",
+          "championName": "Aatrox",
+          "kills": 8,
+          "deaths": 2,
+          "assists": 10,
+          "level": 18,
+          "items": [3006, 3031, 3153, 6672, 3036, 3046],
+          "gold": 14500,
+          "damage": 18000,
+          "augments": [
+            {
+              "id": 100,
+              "type": "id"
+            },
+            {
+              "id": 200,
+              "type": "id"
+            },
+            {
+              "id": 300,
+              "type": "id"
+            },
+            {
+              "id": 400,
+              "type": "id"
+            }
+          ],
+          "arenaMetrics": {
+            "playerScore0": 0,
+            "playerScore1": 0,
+            "playerScore2": 1200,
+            "playerScore3": 0.3,
+            "playerScore4": 5,
+            "playerScore5": 1500,
+            "playerScore6": 5000,
+            "playerScore7": 450,
+            "playerScore8": 35
+          },
+          "teamSupport": {
+            "damageShieldedOnTeammate": 0,
+            "healsOnTeammate": 0,
+            "damageTakenPercentage": 0.12
+          }
+        },
+        {
+          "riotIdGameName": "Player02",
+          "championName": "Ahri",
+          "kills": 9,
+          "deaths": 3,
+          "assists": 11,
+          "level": 18,
+          "items": [3006, 3031, 3153, 6672, 3036, 3046],
+          "gold": 14750,
+          "damage": 19400,
+          "augments": [
+            {
+              "id": 101,
+              "type": "id"
+            },
+            {
+              "id": 201,
+              "type": "id"
+            },
+            {
+              "id": 301,
+              "type": "id"
+            },
+            {
+              "id": 401,
+              "type": "id"
+            }
+          ],
+          "arenaMetrics": {
+            "playerScore0": 1,
+            "playerScore1": 1,
+            "playerScore2": 1221,
+            "playerScore3": 0.31,
+            "playerScore4": 5.1,
+            "playerScore5": 1537,
+            "playerScore6": 5111,
+            "playerScore7": 458,
+            "playerScore8": 36
+          },
+          "teamSupport": {
+            "damageShieldedOnTeammate": 12,
+            "healsOnTeammate": 7,
+            "damageTakenPercentage": 0.13
+          }
+        },
+        {
+          "riotIdGameName": "Player03",
+          "championName": "Akali",
+          "kills": 10,
+          "deaths": 4,
+          "assists": 12,
+          "level": 18,
+          "items": [3006, 3031, 3153, 6672, 3036, 3046],
+          "gold": 15000,
+          "damage": 20800,
+          "augments": [
+            {
+              "id": 102,
+              "type": "id"
+            },
+            {
+              "id": 202,
+              "type": "id"
+            },
+            {
+              "id": 302,
+              "type": "id"
+            },
+            {
+              "id": 402,
+              "type": "id"
+            }
+          ],
+          "arenaMetrics": {
+            "playerScore0": 2,
+            "playerScore1": 2,
+            "playerScore2": 1242,
+            "playerScore3": 0.32,
+            "playerScore4": 5.2,
+            "playerScore5": 1574,
+            "playerScore6": 5222,
+            "playerScore7": 466,
+            "playerScore8": 37
+          },
+          "teamSupport": {
+            "damageShieldedOnTeammate": 24,
+            "healsOnTeammate": 14,
+            "damageTakenPercentage": 0.13999999999999999
+          }
+        }
+      ]
+    },
+    {
+      "teamId": 2,
+      "placement": 2,
+      "players": [
+        {
+          "riotIdGameName": "Player04",
+          "championName": "Annie",
+          "kills": 11,
+          "deaths": 5,
+          "assists": 13,
+          "level": 18,
+          "items": [3006, 3031, 3153, 6672, 3036, 3046],
+          "gold": 15250,
+          "damage": 22200,
+          "augments": [
+            {
+              "id": 103,
+              "type": "id"
+            },
+            {
+              "id": 203,
+              "type": "id"
+            },
+            {
+              "id": 303,
+              "type": "id"
+            },
+            {
+              "id": 403,
+              "type": "id"
+            }
+          ],
+          "arenaMetrics": {
+            "playerScore0": 3,
+            "playerScore1": 3,
+            "playerScore2": 1263,
+            "playerScore3": 0.32999999999999996,
+            "playerScore4": 5.3,
+            "playerScore5": 1611,
+            "playerScore6": 5333,
+            "playerScore7": 474,
+            "playerScore8": 38
+          },
+          "teamSupport": {
+            "damageShieldedOnTeammate": 36,
+            "healsOnTeammate": 21,
+            "damageTakenPercentage": 0.15
+          }
+        },
+        {
+          "riotIdGameName": "Player05",
+          "championName": "Ashe",
+          "kills": 12,
+          "deaths": 2,
+          "assists": 14,
+          "level": 18,
+          "items": [3006, 3031, 3153, 6672, 3036, 3046],
+          "gold": 15500,
+          "damage": 23600,
+          "augments": [
+            {
+              "id": 104,
+              "type": "id"
+            },
+            {
+              "id": 204,
+              "type": "id"
+            },
+            {
+              "id": 304,
+              "type": "id"
+            },
+            {
+              "id": 404,
+              "type": "id"
+            }
+          ],
+          "arenaMetrics": {
+            "playerScore0": 4,
+            "playerScore1": 4,
+            "playerScore2": 1284,
+            "playerScore3": 0.33999999999999997,
+            "playerScore4": 5.4,
+            "playerScore5": 1648,
+            "playerScore6": 5444,
+            "playerScore7": 482,
+            "playerScore8": 39
+          },
+          "teamSupport": {
+            "damageShieldedOnTeammate": 48,
+            "healsOnTeammate": 28,
+            "damageTakenPercentage": 0.16
+          }
+        },
+        {
+          "riotIdGameName": "Player06",
+          "championName": "Braum",
+          "kills": 8,
+          "deaths": 3,
+          "assists": 15,
+          "level": 18,
+          "items": [3006, 3031, 3153, 6672, 3036, 3046],
+          "gold": 15750,
+          "damage": 25000,
+          "augments": [
+            {
+              "id": 105,
+              "type": "id"
+            },
+            {
+              "id": 205,
+              "type": "id"
+            },
+            {
+              "id": 305,
+              "type": "id"
+            },
+            {
+              "id": 405,
+              "type": "id"
+            }
+          ],
+          "arenaMetrics": {
+            "playerScore0": 5,
+            "playerScore1": 5,
+            "playerScore2": 1305,
+            "playerScore3": 0.35,
+            "playerScore4": 5.5,
+            "playerScore5": 1685,
+            "playerScore6": 5555,
+            "playerScore7": 490,
+            "playerScore8": 40
+          },
+          "teamSupport": {
+            "damageShieldedOnTeammate": 60,
+            "healsOnTeammate": 35,
+            "damageTakenPercentage": 0.16999999999999998
+          }
+        }
+      ]
+    },
+    {
+      "teamId": 3,
+      "placement": 3,
+      "players": [
+        {
+          "riotIdGameName": "Player07",
+          "championName": "Caitlyn",
+          "kills": 9,
+          "deaths": 4,
+          "assists": 16,
+          "level": 18,
+          "items": [3006, 3031, 3153, 6672, 3036, 3046],
+          "gold": 16000,
+          "damage": 26400,
+          "augments": [
+            {
+              "id": 106,
+              "type": "id"
+            },
+            {
+              "id": 206,
+              "type": "id"
+            },
+            {
+              "id": 306,
+              "type": "id"
+            },
+            {
+              "id": 406,
+              "type": "id"
+            }
+          ],
+          "arenaMetrics": {
+            "playerScore0": 6,
+            "playerScore1": 6,
+            "playerScore2": 1326,
+            "playerScore3": 0.36,
+            "playerScore4": 5.6,
+            "playerScore5": 1722,
+            "playerScore6": 5666,
+            "playerScore7": 498,
+            "playerScore8": 41
+          },
+          "teamSupport": {
+            "damageShieldedOnTeammate": 72,
+            "healsOnTeammate": 42,
+            "damageTakenPercentage": 0.18
+          }
+        },
+        {
+          "riotIdGameName": "Player08",
+          "championName": "Darius",
+          "kills": 10,
+          "deaths": 5,
+          "assists": 17,
+          "level": 18,
+          "items": [3006, 3031, 3153, 6672, 3036, 3046],
+          "gold": 16250,
+          "damage": 27800,
+          "augments": [
+            {
+              "id": 107,
+              "type": "id"
+            },
+            {
+              "id": 207,
+              "type": "id"
+            },
+            {
+              "id": 307,
+              "type": "id"
+            },
+            {
+              "id": 407,
+              "type": "id"
+            }
+          ],
+          "arenaMetrics": {
+            "playerScore0": 0,
+            "playerScore1": 7,
+            "playerScore2": 1347,
+            "playerScore3": 0.37,
+            "playerScore4": 5.7,
+            "playerScore5": 1759,
+            "playerScore6": 5777,
+            "playerScore7": 506,
+            "playerScore8": 42
+          },
+          "teamSupport": {
+            "damageShieldedOnTeammate": 84,
+            "healsOnTeammate": 49,
+            "damageTakenPercentage": 0.19
+          }
+        },
+        {
+          "riotIdGameName": "Player09",
+          "championName": "Ekko",
+          "kills": 11,
+          "deaths": 2,
+          "assists": 10,
+          "level": 18,
+          "items": [3006, 3031, 3153, 6672, 3036, 3046],
+          "gold": 16500,
+          "damage": 29200,
+          "augments": [
+            {
+              "id": 108,
+              "type": "id"
+            },
+            {
+              "id": 208,
+              "type": "id"
+            },
+            {
+              "id": 308,
+              "type": "id"
+            },
+            {
+              "id": 408,
+              "type": "id"
+            }
+          ],
+          "arenaMetrics": {
+            "playerScore0": 1,
+            "playerScore1": 8,
+            "playerScore2": 1368,
+            "playerScore3": 0.38,
+            "playerScore4": 5.8,
+            "playerScore5": 1796,
+            "playerScore6": 5888,
+            "playerScore7": 514,
+            "playerScore8": 43
+          },
+          "teamSupport": {
+            "damageShieldedOnTeammate": 96,
+            "healsOnTeammate": 56,
+            "damageTakenPercentage": 0.2
+          }
+        }
+      ]
+    },
+    {
+      "teamId": 4,
+      "placement": 4,
+      "players": [
+        {
+          "riotIdGameName": "Player10",
+          "championName": "Ezreal",
+          "kills": 12,
+          "deaths": 3,
+          "assists": 11,
+          "level": 18,
+          "items": [3006, 3031, 3153, 6672, 3036, 3046],
+          "gold": 16750,
+          "damage": 30600,
+          "augments": [
+            {
+              "id": 109,
+              "type": "id"
+            },
+            {
+              "id": 209,
+              "type": "id"
+            },
+            {
+              "id": 309,
+              "type": "id"
+            },
+            {
+              "id": 409,
+              "type": "id"
+            }
+          ],
+          "arenaMetrics": {
+            "playerScore0": 2,
+            "playerScore1": 9,
+            "playerScore2": 1389,
+            "playerScore3": 0.39,
+            "playerScore4": 5.9,
+            "playerScore5": 1833,
+            "playerScore6": 5999,
+            "playerScore7": 522,
+            "playerScore8": 44
+          },
+          "teamSupport": {
+            "damageShieldedOnTeammate": 108,
+            "healsOnTeammate": 63,
+            "damageTakenPercentage": 0.21
+          }
+        },
+        {
+          "riotIdGameName": "Player11",
+          "championName": "Garen",
+          "kills": 8,
+          "deaths": 4,
+          "assists": 12,
+          "level": 18,
+          "items": [3006, 3031, 3153, 6672, 3036, 3046],
+          "gold": 17000,
+          "damage": 32000,
+          "augments": [
+            {
+              "id": 110,
+              "type": "id"
+            },
+            {
+              "id": 210,
+              "type": "id"
+            },
+            {
+              "id": 310,
+              "type": "id"
+            },
+            {
+              "id": 410,
+              "type": "id"
+            }
+          ],
+          "arenaMetrics": {
+            "playerScore0": 3,
+            "playerScore1": 10,
+            "playerScore2": 1410,
+            "playerScore3": 0.4,
+            "playerScore4": 6,
+            "playerScore5": 1870,
+            "playerScore6": 6110,
+            "playerScore7": 530,
+            "playerScore8": 45
+          },
+          "teamSupport": {
+            "damageShieldedOnTeammate": 120,
+            "healsOnTeammate": 70,
+            "damageTakenPercentage": 0.22
+          }
+        },
+        {
+          "riotIdGameName": "Player12",
+          "championName": "Jinx",
+          "kills": 9,
+          "deaths": 5,
+          "assists": 13,
+          "level": 18,
+          "items": [3006, 3031, 3153, 6672, 3036, 3046],
+          "gold": 17250,
+          "damage": 33400,
+          "augments": [
+            {
+              "id": 111,
+              "type": "id"
+            },
+            {
+              "id": 211,
+              "type": "id"
+            },
+            {
+              "id": 311,
+              "type": "id"
+            },
+            {
+              "id": 411,
+              "type": "id"
+            }
+          ],
+          "arenaMetrics": {
+            "playerScore0": 4,
+            "playerScore1": 0,
+            "playerScore2": 1431,
+            "playerScore3": 0.41,
+            "playerScore4": 6.1,
+            "playerScore5": 1907,
+            "playerScore6": 6221,
+            "playerScore7": 538,
+            "playerScore8": 46
+          },
+          "teamSupport": {
+            "damageShieldedOnTeammate": 132,
+            "healsOnTeammate": 77,
+            "damageTakenPercentage": 0.22999999999999998
+          }
+        }
+      ]
+    },
+    {
+      "teamId": 5,
+      "placement": 5,
+      "players": [
+        {
+          "riotIdGameName": "Player13",
+          "championName": "Kaisa",
+          "kills": 10,
+          "deaths": 2,
+          "assists": 14,
+          "level": 18,
+          "items": [3006, 3031, 3153, 6672, 3036, 3046],
+          "gold": 17500,
+          "damage": 34800,
+          "augments": [
+            {
+              "id": 112,
+              "type": "id"
+            },
+            {
+              "id": 212,
+              "type": "id"
+            },
+            {
+              "id": 312,
+              "type": "id"
+            },
+            {
+              "id": 412,
+              "type": "id"
+            }
+          ],
+          "arenaMetrics": {
+            "playerScore0": 5,
+            "playerScore1": 1,
+            "playerScore2": 1452,
+            "playerScore3": 0.42,
+            "playerScore4": 6.2,
+            "playerScore5": 1944,
+            "playerScore6": 6332,
+            "playerScore7": 546,
+            "playerScore8": 47
+          },
+          "teamSupport": {
+            "damageShieldedOnTeammate": 144,
+            "healsOnTeammate": 84,
+            "damageTakenPercentage": 0.24
+          }
+        },
+        {
+          "riotIdGameName": "Player14",
+          "championName": "Leona",
+          "kills": 11,
+          "deaths": 3,
+          "assists": 15,
+          "level": 18,
+          "items": [3006, 3031, 3153, 6672, 3036, 3046],
+          "gold": 17750,
+          "damage": 36200,
+          "augments": [
+            {
+              "id": 113,
+              "type": "id"
+            },
+            {
+              "id": 213,
+              "type": "id"
+            },
+            {
+              "id": 313,
+              "type": "id"
+            },
+            {
+              "id": 413,
+              "type": "id"
+            }
+          ],
+          "arenaMetrics": {
+            "playerScore0": 6,
+            "playerScore1": 2,
+            "playerScore2": 1473,
+            "playerScore3": 0.43,
+            "playerScore4": 6.3,
+            "playerScore5": 1981,
+            "playerScore6": 6443,
+            "playerScore7": 554,
+            "playerScore8": 48
+          },
+          "teamSupport": {
+            "damageShieldedOnTeammate": 156,
+            "healsOnTeammate": 91,
+            "damageTakenPercentage": 0.25
+          }
+        },
+        {
+          "riotIdGameName": "Player15",
+          "championName": "Lux",
+          "kills": 12,
+          "deaths": 4,
+          "assists": 16,
+          "level": 18,
+          "items": [3006, 3031, 3153, 6672, 3036, 3046],
+          "gold": 18000,
+          "damage": 37600,
+          "augments": [
+            {
+              "id": 114,
+              "type": "id"
+            },
+            {
+              "id": 214,
+              "type": "id"
+            },
+            {
+              "id": 314,
+              "type": "id"
+            },
+            {
+              "id": 414,
+              "type": "id"
+            }
+          ],
+          "arenaMetrics": {
+            "playerScore0": 0,
+            "playerScore1": 3,
+            "playerScore2": 1494,
+            "playerScore3": 0.44,
+            "playerScore4": 6.4,
+            "playerScore5": 2018,
+            "playerScore6": 6554,
+            "playerScore7": 562,
+            "playerScore8": 49
+          },
+          "teamSupport": {
+            "damageShieldedOnTeammate": 168,
+            "healsOnTeammate": 98,
+            "damageTakenPercentage": 0.26
+          }
+        }
+      ]
+    },
+    {
+      "teamId": 6,
+      "placement": 6,
+      "players": [
+        {
+          "riotIdGameName": "Player16",
+          "championName": "Morgana",
+          "kills": 8,
+          "deaths": 5,
+          "assists": 17,
+          "level": 18,
+          "items": [3006, 3031, 3153, 6672, 3036, 3046],
+          "gold": 18250,
+          "damage": 39000,
+          "augments": [
+            {
+              "id": 115,
+              "type": "id"
+            },
+            {
+              "id": 215,
+              "type": "id"
+            },
+            {
+              "id": 315,
+              "type": "id"
+            },
+            {
+              "id": 415,
+              "type": "id"
+            }
+          ],
+          "arenaMetrics": {
+            "playerScore0": 1,
+            "playerScore1": 4,
+            "playerScore2": 1515,
+            "playerScore3": 0.44999999999999996,
+            "playerScore4": 6.5,
+            "playerScore5": 2055,
+            "playerScore6": 6665,
+            "playerScore7": 570,
+            "playerScore8": 50
+          },
+          "teamSupport": {
+            "damageShieldedOnTeammate": 180,
+            "healsOnTeammate": 105,
+            "damageTakenPercentage": 0.27
+          }
+        },
+        {
+          "riotIdGameName": "Player17",
+          "championName": "Teemo",
+          "kills": 9,
+          "deaths": 2,
+          "assists": 10,
+          "level": 18,
+          "items": [3006, 3031, 3153, 6672, 3036, 3046],
+          "gold": 18500,
+          "damage": 40400,
+          "augments": [
+            {
+              "id": 116,
+              "type": "id"
+            },
+            {
+              "id": 216,
+              "type": "id"
+            },
+            {
+              "id": 316,
+              "type": "id"
+            },
+            {
+              "id": 416,
+              "type": "id"
+            }
+          ],
+          "arenaMetrics": {
+            "playerScore0": 2,
+            "playerScore1": 5,
+            "playerScore2": 1536,
+            "playerScore3": 0.45999999999999996,
+            "playerScore4": 6.6,
+            "playerScore5": 2092,
+            "playerScore6": 6776,
+            "playerScore7": 578,
+            "playerScore8": 51
+          },
+          "teamSupport": {
+            "damageShieldedOnTeammate": 192,
+            "healsOnTeammate": 112,
+            "damageTakenPercentage": 0.28
+          }
+        },
+        {
+          "riotIdGameName": "Player18",
+          "championName": "Yasuo",
+          "kills": 10,
+          "deaths": 3,
+          "assists": 11,
+          "level": 18,
+          "items": [3006, 3031, 3153, 6672, 3036, 3046],
+          "gold": 18750,
+          "damage": 41800,
+          "augments": [
+            {
+              "id": 117,
+              "type": "id"
+            },
+            {
+              "id": 217,
+              "type": "id"
+            },
+            {
+              "id": 317,
+              "type": "id"
+            },
+            {
+              "id": 417,
+              "type": "id"
+            }
+          ],
+          "arenaMetrics": {
+            "playerScore0": 3,
+            "playerScore1": 6,
+            "playerScore2": 1557,
+            "playerScore3": 0.47,
+            "playerScore4": 6.7,
+            "playerScore5": 2129,
+            "playerScore6": 6887,
+            "playerScore7": 586,
+            "playerScore8": 52
+          },
+          "teamSupport": {
+            "damageShieldedOnTeammate": 204,
+            "healsOnTeammate": 119,
+            "damageTakenPercentage": 0.29000000000000004
+          }
+        }
+      ]
+    }
+  ],
+  "queueType": "arena"
+}

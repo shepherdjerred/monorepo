@@ -11,7 +11,7 @@ import { LaneSchema } from "#src/model/lane.ts";
  * Layout mode determines how participants are arranged visually.
  * - "standard": 5v5 with two columns (ranked, draft, quickplay, swiftplay, brawl, URF, custom, clash)
  * - "aram": 5v5 with two columns, no bans (ARAM / ARAM clash)
- * - "arena": 8 teams of 2 in a grid layout
+ * - "arena": Arena prematch focused on followed-player champion cards only
  */
 export type LoadingScreenLayout = z.infer<typeof LoadingScreenLayoutSchema>;
 export const LoadingScreenLayoutSchema = z.enum(["standard", "aram", "arena"]);
@@ -53,14 +53,15 @@ export const LoadingScreenChampionIdSchema = z
 /**
  * Discriminated team assignment:
  * - "blue" or "red" for standard 5v5 / ARAM
- * - { arenaTeam: 1..8 } for Arena mode
+ * - { arenaTeam: 1..8 | null } for Arena mode. Null means Riot did not expose
+ *   Arena subteams in the prematch payload.
  *
  * Reuses ArenaTeamIdSchema from the arena model to avoid duplication.
  */
 export type LoadingScreenTeam = z.infer<typeof LoadingScreenTeamSchema>;
 export const LoadingScreenTeamSchema = z.union([
   TeamSchema,
-  z.strictObject({ arenaTeam: ArenaTeamIdSchema }),
+  z.strictObject({ arenaTeam: ArenaTeamIdSchema.nullable() }),
 ]);
 
 /**
@@ -191,8 +192,14 @@ export type AramLoadingScreenData = z.infer<typeof AramLoadingScreenDataSchema>;
 export const ArenaLoadingScreenDataSchema = BaseLoadingScreenDataSchema.extend({
   /** Layout mode for Arena games */
   layout: z.literal("arena"),
-  /** Arena participants do not carry standard lane assignments */
-  participants: z.array(NonStandardLoadingScreenParticipantSchema).length(16),
+  /** Arena participants do not carry standard lane assignments. */
+  participants: z
+    .array(NonStandardLoadingScreenParticipantSchema)
+    .refine(
+      (participants) =>
+        participants.length === 16 || participants.length === 18,
+      "Arena loading screens must contain either 16 legacy participants or 18 current participants",
+    ),
 });
 
 export type ArenaLoadingScreenData = z.infer<

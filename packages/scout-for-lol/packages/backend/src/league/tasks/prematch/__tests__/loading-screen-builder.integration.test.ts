@@ -4,10 +4,7 @@ import {
   LoadingScreenDataSchema,
   type Lane,
 } from "@scout-for-lol/data/index.ts";
-import {
-  RecoverableLoadingScreenDataError,
-  buildLoadingScreenData,
-} from "#src/league/tasks/prematch/loading-screen-builder.ts";
+import { buildLoadingScreenData } from "#src/league/tasks/prematch/loading-screen-builder.ts";
 
 // Mock the rank fetcher to avoid real API calls in tests
 void mock.module("#src/league/model/rank.ts", () => ({
@@ -28,6 +25,32 @@ async function loadSpectatorPayload(path: string) {
   const file = Bun.file(path);
   const json = (await file.json()) as unknown;
   return RawCurrentGameInfoSchema.parse(json);
+}
+
+function makeArenaParticipants(
+  baseGameInfo: Awaited<ReturnType<typeof loadSpectatorPayload>>,
+  teamCount: number,
+  teamSize: number,
+  includeSubteamId: boolean,
+) {
+  const participantCount = teamCount * teamSize;
+
+  return Array.from({ length: participantCount }).map((_, i) => {
+    const template =
+      baseGameInfo.participants[i % baseGameInfo.participants.length];
+    if (template === undefined) {
+      throw new Error("spectator fixture has no participants");
+    }
+
+    return {
+      ...template,
+      riotId: `Synthetic${(i + 1).toString()}#tag`,
+      teamId: i < participantCount / 2 ? 100 : 200,
+      playerSubteamId: includeSubteamId
+        ? Math.floor(i / teamSize) + 1
+        : undefined,
+    };
+  });
 }
 
 describe("buildLoadingScreenData with real spectator payload", () => {
@@ -189,6 +212,30 @@ describe("buildLoadingScreenData layout variants", () => {
     expect(parsed.layout).toBe("standard");
   });
 
+  test("queue 0 (Custom) with CLASSIC mode stays custom standard layout", async () => {
+    const baseGameInfo = await loadSpectatorPayload(
+      `${currentDir}testdata/spectator-ranked-flex.json`,
+    );
+
+    const gameInfo = RawCurrentGameInfoSchema.parse({
+      ...baseGameInfo,
+      gameQueueConfigId: 0,
+      gameMode: "CLASSIC",
+    });
+
+    const result = await buildLoadingScreenData(
+      gameInfo,
+      new Set(),
+      "AMERICA_NORTH",
+    );
+
+    const parsed = LoadingScreenDataSchema.parse(result);
+    expect(parsed.queueType).toBe("custom");
+    expect(parsed.layout).toBe("standard");
+  });
+});
+
+describe("buildLoadingScreenData with Arena spectator payloads", () => {
   test("queue 1700 (Arena) uses playerSubteamId for arenaTeam, not teamId", async () => {
     // Spectator V5 reports teamId as 100/200 even for Arena games — the real
     // 1-8 subteam comes from playerSubteamId. Ensure the loading screen
@@ -197,19 +244,7 @@ describe("buildLoadingScreenData layout variants", () => {
       `${currentDir}testdata/spectator-ranked-flex.json`,
     );
 
-    // Arena = 16 players in 8 subteams of 2. Take the first 10 from the
-    // base payload and synthesise 6 more so we hit 16 total.
-    const arenaParticipants = [
-      ...baseGameInfo.participants.slice(0, 10),
-      ...Array.from({ length: 6 }).map((_, i) => ({
-        ...baseGameInfo.participants[i % 10]!,
-        riotId: `Synthetic${(i + 1).toString()}#tag`,
-      })),
-    ].map((p, i) => ({
-      ...p,
-      teamId: i < 8 ? 100 : 200, // Spectator V5 still reports 100/200
-      playerSubteamId: Math.floor(i / 2) + 1, // 8 subteams of 2
-    }));
+    const arenaParticipants = makeArenaParticipants(baseGameInfo, 8, 2, true);
 
     const gameInfo = RawCurrentGameInfoSchema.parse({
       ...baseGameInfo,
@@ -242,22 +277,12 @@ describe("buildLoadingScreenData layout variants", () => {
     expect(parsed.participants[2]?.team).toEqual({ arenaTeam: 2 });
   });
 
-  test("queue 1700 (Arena) infers arenaTeam when 16 participants omit playerSubteamId", async () => {
+  test("queue 1700 (Arena) preserves unknown arenaTeam when playerSubteamId is omitted", async () => {
     const baseGameInfo = await loadSpectatorPayload(
       `${currentDir}testdata/spectator-ranked-flex.json`,
     );
 
-    const arenaParticipants = [
-      ...baseGameInfo.participants.slice(0, 10),
-      ...Array.from({ length: 6 }).map((_, i) => ({
-        ...baseGameInfo.participants[i % 10]!,
-        riotId: `Synthetic${(i + 1).toString()}#tag`,
-      })),
-    ].map((p, i) => ({
-      ...p,
-      teamId: i < 8 ? 100 : 200,
-      playerSubteamId: undefined,
-    }));
+    const arenaParticipants = makeArenaParticipants(baseGameInfo, 8, 2, false);
 
     const gameInfo = RawCurrentGameInfoSchema.parse({
       ...baseGameInfo,
@@ -275,13 +300,71 @@ describe("buildLoadingScreenData layout variants", () => {
     );
 
     const parsed = LoadingScreenDataSchema.parse(result);
-    expect(parsed.participants[0]?.team).toEqual({ arenaTeam: 1 });
-    expect(parsed.participants[1]?.team).toEqual({ arenaTeam: 1 });
-    expect(parsed.participants[14]?.team).toEqual({ arenaTeam: 8 });
-    expect(parsed.participants[15]?.team).toEqual({ arenaTeam: 8 });
+    expect(parsed.participants).toHaveLength(16);
+    for (const participant of parsed.participants) {
+      expect(participant.team).toEqual({ arenaTeam: null });
+    }
   });
 
-  test("queue 1700 (Arena) throws recoverable error when playerSubteamId cannot be inferred", async () => {
+  test("CHERRY queue 0 uses arena layout and supports 18 players in six teams of three", async () => {
+    const baseGameInfo = await loadSpectatorPayload(
+      `${currentDir}testdata/spectator-ranked-flex.json`,
+    );
+
+    const gameInfo = RawCurrentGameInfoSchema.parse({
+      ...baseGameInfo,
+      gameQueueConfigId: 0,
+      mapId: 30,
+      gameMode: "CHERRY",
+      bannedChampions: [],
+      participants: makeArenaParticipants(baseGameInfo, 6, 3, true),
+    });
+
+    const result = await buildLoadingScreenData(
+      gameInfo,
+      new Set(),
+      "AMERICA_NORTH",
+    );
+
+    const parsed = LoadingScreenDataSchema.parse(result);
+    expect(parsed.queueType).toBe("arena");
+    expect(parsed.layout).toBe("arena");
+    expect(parsed.participants).toHaveLength(18);
+    expect(parsed.participants[0]?.team).toEqual({ arenaTeam: 1 });
+    expect(parsed.participants[1]?.team).toEqual({ arenaTeam: 1 });
+    expect(parsed.participants[2]?.team).toEqual({ arenaTeam: 1 });
+    expect(parsed.participants[3]?.team).toEqual({ arenaTeam: 2 });
+    expect(parsed.participants[17]?.team).toEqual({ arenaTeam: 6 });
+  });
+
+  test("CHERRY queue 0 preserves unknown arenaTeam when 18 participants omit playerSubteamId", async () => {
+    const baseGameInfo = await loadSpectatorPayload(
+      `${currentDir}testdata/spectator-ranked-flex.json`,
+    );
+
+    const gameInfo = RawCurrentGameInfoSchema.parse({
+      ...baseGameInfo,
+      gameQueueConfigId: 0,
+      mapId: 30,
+      gameMode: "CHERRY",
+      bannedChampions: [],
+      participants: makeArenaParticipants(baseGameInfo, 6, 3, false),
+    });
+
+    const result = await buildLoadingScreenData(
+      gameInfo,
+      new Set(),
+      "AMERICA_NORTH",
+    );
+
+    const parsed = LoadingScreenDataSchema.parse(result);
+    expect(parsed.participants).toHaveLength(18);
+    for (const participant of parsed.participants) {
+      expect(participant.team).toEqual({ arenaTeam: null });
+    }
+  });
+
+  test("queue 1700 (Arena) accepts real-style payloads without playerSubteamId", async () => {
     const baseGameInfo = await loadSpectatorPayload(
       `${currentDir}testdata/spectator-ranked-flex.json`,
     );
@@ -292,12 +375,21 @@ describe("buildLoadingScreenData layout variants", () => {
       mapId: 30,
       gameMode: "CHERRY",
       bannedChampions: [],
-      // No playerSubteamId on participants — simulates the broken state
-      // that produced the ZodError flood in Bugsink.
+      participants: makeArenaParticipants(baseGameInfo, 6, 3, false),
     });
 
-    await expect(
-      buildLoadingScreenData(gameInfo, new Set(), "AMERICA_NORTH"),
-    ).rejects.toThrow(RecoverableLoadingScreenDataError);
+    const result = await buildLoadingScreenData(
+      gameInfo,
+      new Set(),
+      "AMERICA_NORTH",
+    );
+
+    const parsed = LoadingScreenDataSchema.parse(result);
+    expect(parsed.layout).toBe("arena");
+    expect(
+      parsed.participants.every(
+        (p) => typeof p.team !== "string" && p.team.arenaTeam === null,
+      ),
+    ).toBe(true);
   });
 });
