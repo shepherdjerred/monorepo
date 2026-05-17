@@ -14,10 +14,44 @@ import {
 import { getRuneIconUrl } from "#src/dataDragon/runes.ts";
 import { first, keys, pickBy } from "remeda";
 
-const CARD_WIDTH = 280;
-const CARD_HEIGHT = 480;
-const ICON_SIZE = 34;
-const RUNE_SIZE = 38;
+type PlayerCardVariant = "standard" | "compact";
+
+type PlayerCardSizing = {
+  width: number;
+  height: number;
+  iconSize: number;
+  runeSize: number;
+  championFontSize: number;
+  playerFontSize: number;
+  rankFontSize: number;
+  overlayPadding: number;
+  overlayTopPadding: number;
+};
+
+const PLAYER_CARD_SIZING: Record<PlayerCardVariant, PlayerCardSizing> = {
+  standard: {
+    width: 280,
+    height: 480,
+    iconSize: 34,
+    runeSize: 38,
+    championFontSize: 13,
+    playerFontSize: 18,
+    rankFontSize: 12,
+    overlayPadding: 10,
+    overlayTopPadding: 32,
+  },
+  compact: {
+    width: 210,
+    height: 360,
+    iconSize: 26,
+    runeSize: 30,
+    championFontSize: 11,
+    playerFontSize: 15,
+    rankFontSize: 10,
+    overlayPadding: 8,
+    overlayTopPadding: 26,
+  },
+};
 
 function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
@@ -43,9 +77,11 @@ function resolveSpellImage(spellId: number): string | undefined {
 function SummonerSpells({
   spell1Id,
   spell2Id,
+  iconSize,
 }: {
   spell1Id: number;
   spell2Id: number;
+  iconSize: number;
 }) {
   const spell1Img = resolveSpellImage(spell1Id);
   const spell2Img = resolveSpellImage(spell2Id);
@@ -57,8 +93,8 @@ function SummonerSpells({
           src={spell1Img}
           alt=""
           style={{
-            width: `${ICON_SIZE.toString()}px`,
-            height: `${ICON_SIZE.toString()}px`,
+            width: `${iconSize.toString()}px`,
+            height: `${iconSize.toString()}px`,
             borderRadius: "2px",
             border: `1px solid ${palette.gold[5]}`,
           }}
@@ -69,8 +105,8 @@ function SummonerSpells({
           src={spell2Img}
           alt=""
           style={{
-            width: `${ICON_SIZE.toString()}px`,
-            height: `${ICON_SIZE.toString()}px`,
+            width: `${iconSize.toString()}px`,
+            height: `${iconSize.toString()}px`,
             borderRadius: "2px",
             border: `1px solid ${palette.gold[5]}`,
           }}
@@ -83,9 +119,11 @@ function SummonerSpells({
 function RuneIcons({
   keystoneRuneId,
   secondaryTreeId,
+  runeSize,
 }: {
   keystoneRuneId: number | undefined;
   secondaryTreeId: number | undefined;
+  runeSize: number;
 }) {
   const keystoneInfo =
     keystoneRuneId === undefined ? undefined : getRuneInfo(keystoneRuneId);
@@ -101,8 +139,8 @@ function RuneIcons({
           src={getRuneIconUrl(keystoneInfo.icon)}
           alt=""
           style={{
-            width: `${RUNE_SIZE.toString()}px`,
-            height: `${RUNE_SIZE.toString()}px`,
+            width: `${runeSize.toString()}px`,
+            height: `${runeSize.toString()}px`,
             borderRadius: "50%",
             backgroundColor: "rgba(0, 0, 0, 0.5)",
             border: `1px solid ${palette.gold[5]}`,
@@ -114,8 +152,8 @@ function RuneIcons({
           src={getRuneIconUrl(secondaryInfo.icon)}
           alt=""
           style={{
-            width: `${(RUNE_SIZE - 8).toString()}px`,
-            height: `${(RUNE_SIZE - 8).toString()}px`,
+            width: `${(runeSize - 8).toString()}px`,
+            height: `${(runeSize - 8).toString()}px`,
             borderRadius: "50%",
             backgroundColor: "rgba(0, 0, 0, 0.4)",
           }}
@@ -128,10 +166,13 @@ function RuneIcons({
 export function PlayerCard({
   participant,
   teamSide,
+  variant = "standard",
 }: {
   participant: LoadingScreenParticipant;
   teamSide: "blue" | "red" | "neutral";
+  variant?: PlayerCardVariant;
 }) {
+  const sizing = PLAYER_CARD_SIZING[variant];
   const splashArt = getChampionLoadingImage(
     participant.championName,
     participant.skinNum,
@@ -156,8 +197,8 @@ export function PlayerCard({
   return (
     <div
       style={{
-        width: `${CARD_WIDTH.toString()}px`,
-        height: `${CARD_HEIGHT.toString()}px`,
+        width: `${sizing.width.toString()}px`,
+        height: `${sizing.height.toString()}px`,
         display: "flex",
         flexDirection: "column",
         position: "relative",
@@ -204,8 +245,8 @@ export function PlayerCard({
           right: 0,
           display: "flex",
           flexDirection: "column",
-          padding: "10px",
-          paddingTop: "32px",
+          padding: `${sizing.overlayPadding.toString()}px`,
+          paddingTop: `${sizing.overlayTopPadding.toString()}px`,
           background: "linear-gradient(transparent, rgba(0, 0, 0, 0.85) 30%)",
         }}
       >
@@ -221,6 +262,7 @@ export function PlayerCard({
           <RuneIcons
             keystoneRuneId={participant.keystoneRuneId}
             secondaryTreeId={participant.secondaryTreeId}
+            runeSize={sizing.runeSize}
           />
 
           {/* Center: champion name, summoner name, rank */}
@@ -238,7 +280,7 @@ export function PlayerCard({
             {/* Champion name */}
             <span
               style={{
-                fontSize: "13px",
+                fontSize: `${sizing.championFontSize.toString()}px`,
                 fontFamily: font.body,
                 fontWeight: 400,
                 color: palette.grey[1],
@@ -253,7 +295,7 @@ export function PlayerCard({
             {/* Summoner name */}
             <span
               style={{
-                fontSize: "18px",
+                fontSize: `${sizing.playerFontSize.toString()}px`,
                 fontFamily: font.title,
                 fontWeight: 700,
                 color: participant.isTrackedPlayer
@@ -272,7 +314,7 @@ export function PlayerCard({
             {/* Rank tier text */}
             <span
               style={{
-                fontSize: "12px",
+                fontSize: `${sizing.rankFontSize.toString()}px`,
                 fontFamily: font.body,
                 fontWeight: 700,
                 color: palette.gold[3],
@@ -288,6 +330,7 @@ export function PlayerCard({
           <SummonerSpells
             spell1Id={participant.spell1Id}
             spell2Id={participant.spell2Id}
+            iconSize={sizing.iconSize}
           />
         </div>
       </div>

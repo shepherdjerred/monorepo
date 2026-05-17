@@ -1,0 +1,300 @@
+{
+  "gameId": 6600000001,
+  "queueType": "arena",
+  "queueDisplayName": "arena",
+  "isRanked": false,
+  "layout": "arena",
+  "mapName": "Rings of Wrath",
+  "participants": [
+    {
+      "puuid": "arena3v301xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "summonerName": "Player01#NA1",
+      "championName": "Aatrox",
+      "championDisplayName": "Aatrox",
+      "skinNum": 0,
+      "team": {
+        "arenaTeam": 1
+      },
+      "spell1Id": 2201,
+      "spell2Id": 2202,
+      "keystoneRuneId": 8112,
+      "secondaryTreeId": 8000,
+      "isTrackedPlayer": true,
+      "championId": 266
+    },
+    {
+      "puuid": "arena3v302xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "summonerName": "Player02#NA1",
+      "championName": "Ahri",
+      "championDisplayName": "Ahri",
+      "skinNum": 0,
+      "team": {
+        "arenaTeam": 1
+      },
+      "spell1Id": 2201,
+      "spell2Id": 2202,
+      "keystoneRuneId": 8112,
+      "secondaryTreeId": 8000,
+      "isTrackedPlayer": false,
+      "championId": 103
+    },
+    {
+      "puuid": "arena3v303xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "summonerName": "Player03#NA1",
+      "championName": "Akali",
+      "championDisplayName": "Akali",
+      "skinNum": 0,
+      "team": {
+        "arenaTeam": 1
+      },
+      "spell1Id": 2201,
+      "spell2Id": 2202,
+      "keystoneRuneId": 8112,
+      "secondaryTreeId": 8000,
+      "isTrackedPlayer": false,
+      "championId": 84
+    },
+    {
+      "puuid": "arena3v304xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "summonerName": "Player04#NA1",
+      "championName": "Annie",
+      "championDisplayName": "Annie",
+      "skinNum": 0,
+      "team": {
+        "arenaTeam": 2
+      },
+      "spell1Id": 2201,
+      "spell2Id": 2202,
+      "keystoneRuneId": 8112,
+      "secondaryTreeId": 8000,
+      "isTrackedPlayer": false,
+      "championId": 1
+    },
+    {
+      "puuid": "arena3v305xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "summonerName": "Player05#NA1",
+      "championName": "Ashe",
+      "championDisplayName": "Ashe",
+      "skinNum": 0,
+      "team": {
+        "arenaTeam": 2
+      },
+      "spell1Id": 2201,
+      "spell2Id": 2202,
+      "keystoneRuneId": 8112,
+      "secondaryTreeId": 8000,
+      "isTrackedPlayer": false,
+      "championId": 22
+    },
+    {
+      "puuid": "arena3v306xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "summonerName": "Player06#NA1",
+      "championName": "Braum",
+      "championDisplayName": "Braum",
+      "skinNum": 0,
+      "team": {
+        "arenaTeam": 2
+      },
+      "spell1Id": 2201,
+      "spell2Id": 2202,
+      "keystoneRuneId": 8112,
+      "secondaryTreeId": 8000,
+      "isTrackedPlayer": false,
+      "championId": 201
+    },
+    {
+      "puuid": "arena3v307xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "summonerName": "Player07#NA1",
+      "championName": "Caitlyn",
+      "championDisplayName": "Caitlyn",
+      "skinNum": 0,
+      "team": {
+        "arenaTeam": 3
+      },
+      "spell1Id": 2201,
+      "spell2Id": 2202,
+      "keystoneRuneId": 8112,
+      "secondaryTreeId": 8000,
+      "isTrackedPlayer": false,
+      "championId": 51
+    },
+    {
+      "puuid": "arena3v308xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "summonerName": "Player08#NA1",
+      "championName": "Darius",
+      "championDisplayName": "Darius",
+      "skinNum": 0,
+      "team": {
+        "arenaTeam": 3
+      },
+      "spell1Id": 2201,
+      "spell2Id": 2202,
+      "keystoneRuneId": 8112,
+      "secondaryTreeId": 8000,
+      "isTrackedPlayer": false,
+      "championId": 122
+    },
+    {
+      "puuid": "arena3v309xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "summonerName": "Player09#NA1",
+      "championName": "Ekko",
+      "championDisplayName": "Ekko",
+      "skinNum": 0,
+      "team": {
+        "arenaTeam": 3
+      },
+      "spell1Id": 2201,
+      "spell2Id": 2202,
+      "keystoneRuneId": 8112,
+      "secondaryTreeId": 8000,
+      "isTrackedPlayer": false,
+      "championId": 245
+    },
+    {
+      "puuid": "arena3v310xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "summonerName": "Player10#NA1",
+      "championName": "Ezreal",
+      "championDisplayName": "Ezreal",
+      "skinNum": 0,
+      "team": {
+        "arenaTeam": 4
+      },
+      "spell1Id": 2201,
+      "spell2Id": 2202,
+      "keystoneRuneId": 8112,
+      "secondaryTreeId": 8000,
+      "isTrackedPlayer": false,
+      "championId": 81
+    },
+    {
+      "puuid": "arena3v311xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "summonerName": "Player11#NA1",
+      "championName": "Garen",
+      "championDisplayName": "Garen",
+      "skinNum": 0,
+      "team": {
+        "arenaTeam": 4
+      },
+      "spell1Id": 2201,
+      "spell2Id": 2202,
+      "keystoneRuneId": 8112,
+      "secondaryTreeId": 8000,
+      "isTrackedPlayer": false,
+      "championId": 86
+    },
+    {
+      "puuid": "arena3v312xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "summonerName": "Player12#NA1",
+      "championName": "Jinx",
+      "championDisplayName": "Jinx",
+      "skinNum": 0,
+      "team": {
+        "arenaTeam": 4
+      },
+      "spell1Id": 2201,
+      "spell2Id": 2202,
+      "keystoneRuneId": 8112,
+      "secondaryTreeId": 8000,
+      "isTrackedPlayer": false,
+      "championId": 222
+    },
+    {
+      "puuid": "arena3v313xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "summonerName": "Player13#NA1",
+      "championName": "Kaisa",
+      "championDisplayName": "Kaisa",
+      "skinNum": 0,
+      "team": {
+        "arenaTeam": 5
+      },
+      "spell1Id": 2201,
+      "spell2Id": 2202,
+      "keystoneRuneId": 8112,
+      "secondaryTreeId": 8000,
+      "isTrackedPlayer": false,
+      "championId": 145
+    },
+    {
+      "puuid": "arena3v314xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "summonerName": "Player14#NA1",
+      "championName": "Leona",
+      "championDisplayName": "Leona",
+      "skinNum": 0,
+      "team": {
+        "arenaTeam": 5
+      },
+      "spell1Id": 2201,
+      "spell2Id": 2202,
+      "keystoneRuneId": 8112,
+      "secondaryTreeId": 8000,
+      "isTrackedPlayer": false,
+      "championId": 89
+    },
+    {
+      "puuid": "arena3v315xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "summonerName": "Player15#NA1",
+      "championName": "Lux",
+      "championDisplayName": "Lux",
+      "skinNum": 0,
+      "team": {
+        "arenaTeam": 5
+      },
+      "spell1Id": 2201,
+      "spell2Id": 2202,
+      "keystoneRuneId": 8112,
+      "secondaryTreeId": 8000,
+      "isTrackedPlayer": false,
+      "championId": 99
+    },
+    {
+      "puuid": "arena3v316xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "summonerName": "Player16#NA1",
+      "championName": "Morgana",
+      "championDisplayName": "Morgana",
+      "skinNum": 0,
+      "team": {
+        "arenaTeam": 6
+      },
+      "spell1Id": 2201,
+      "spell2Id": 2202,
+      "keystoneRuneId": 8112,
+      "secondaryTreeId": 8000,
+      "isTrackedPlayer": false,
+      "championId": 25
+    },
+    {
+      "puuid": "arena3v317xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "summonerName": "Player17#NA1",
+      "championName": "Teemo",
+      "championDisplayName": "Teemo",
+      "skinNum": 0,
+      "team": {
+        "arenaTeam": 6
+      },
+      "spell1Id": 2201,
+      "spell2Id": 2202,
+      "keystoneRuneId": 8112,
+      "secondaryTreeId": 8000,
+      "isTrackedPlayer": false,
+      "championId": 17
+    },
+    {
+      "puuid": "arena3v318xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "summonerName": "Player18#NA1",
+      "championName": "Yasuo",
+      "championDisplayName": "Yasuo",
+      "skinNum": 0,
+      "team": {
+        "arenaTeam": 6
+      },
+      "spell1Id": 2201,
+      "spell2Id": 2202,
+      "keystoneRuneId": 8112,
+      "secondaryTreeId": 8000,
+      "isTrackedPlayer": false,
+      "championId": 157
+    }
+  ],
+  "bans": [],
+  "gameStartTime": 1760000000000
+}

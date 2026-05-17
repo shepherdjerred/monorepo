@@ -11,9 +11,10 @@ import { svgToPng } from "#src/html/index.tsx";
 // Standard/ARAM: 5 cards per row × 2 rows + header/bans
 const STANDARD_WIDTH = 1600;
 const STANDARD_HEIGHT = 1350;
-// Arena: 4 rows × 2 team pairs
+// Arena prematch only renders tracked player champions; Riot does not expose
+// reliable subteams in current 3v3 spectator payloads.
 const ARENA_WIDTH = 1600;
-const ARENA_HEIGHT = 1400;
+const ARENA_HEIGHT = 900;
 
 /**
  * Optional observability hook fired when a participant's requested skin
@@ -28,8 +29,13 @@ async function preloadLoadingScreenImages(
   data: LoadingScreenData,
   options: LoadingScreenOptions = {},
 ): Promise<void> {
-  // Preload champion loading screen art for all participants
-  const loadingImageEntries = data.participants.map((p) => ({
+  const participantsToRender =
+    data.layout === "arena"
+      ? data.participants.filter((participant) => participant.isTrackedPlayer)
+      : data.participants;
+
+  // Preload champion loading screen art for rendered participants.
+  const loadingImageEntries = participantsToRender.map((p) => ({
     championName: p.championName,
     skinNum: p.skinNum,
   }));
