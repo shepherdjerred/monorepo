@@ -38,7 +38,7 @@ export const TEXLIVE_IMAGE =
   "texlive/texlive:TL2024-historic@sha256:fd576ce8b1cfd03cdabc15ca75682fb050eb10de5c057d81449883c2ad644855";
 // renovate: datasource=docker depName=caddy
 export const CADDY_IMAGE =
-  "caddy:2.11.3-alpine@sha256:bb56e6200ec26a67f04be90255993dc390c9815967f67f24b4ca6466e88de64b";
+  "caddy:2.11.3-alpine@sha256:86deaf5e3d3408a6ccec08fbb79989783dd26e206ae10bcf78a801dc8c9ab794";
 // renovate: datasource=docker depName=caddy
 export const CADDY_BUILDER_IMAGE =
   "caddy:2.11.3-builder-alpine@sha256:7d2315853f99b425d0daa6bcad826e8b0d65b4af1f70fcaeb6b152157d81771d";
