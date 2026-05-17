@@ -85,6 +85,33 @@ describe("version commit-back", () => {
   });
 });
 
+describe("cooklang versions compatibility boundaries", () => {
+  it("does not unconditionally append every release to versions.json", () => {
+    const releaseSource = readFileSync(`${daggerSrc}/release.ts`, "utf-8");
+
+    expect(releaseSource).not.toContain("'. + {($v): $m}'");
+    expect(releaseSource).toContain("latest_min=$(jq -r");
+    expect(releaseSource).toContain(
+      "versions.json compatibility boundary unchanged",
+    );
+  });
+
+  it("documents versions.json as compatibility-boundary metadata", () => {
+    const indexSource = readFileSync(`${daggerSrc}/index.ts`, "utf-8");
+    const cooklangStepsSource = readFileSync(
+      `${repoRoot}/scripts/ci/src/steps/cooklang.ts`,
+      "utf-8",
+    );
+
+    expect(indexSource).toContain("compatibility boundary");
+    expect(cooklangStepsSource).toContain("compatibility boundary");
+    expect(indexSource).not.toContain("update manifest + versions.json");
+    expect(cooklangStepsSource).not.toContain(
+      "updates manifest + versions.json",
+    );
+  });
+});
+
 describe("Birmel smoke coverage", () => {
   it("uses the same Prisma startup command as production images", () => {
     const imageSource = readFileSync(`${daggerSrc}/image.ts`, "utf-8");

@@ -6,7 +6,7 @@
  *
  *   1. Creating a temp directory at /tmp/pr-review-workdir/<workflowId>/.
  *   2. Cloning the PR head into that directory using `git clone --depth 1
- *      --branch <headRef>` with `GIT_ASKPASS` auth (per the CLAUDE.md ban
+ *      --branch <headRef>` with `GIT_ASKPASS` auth (per the AGENTS.md ban
  *      on `x-access-token` URL embedding).
  *   3. Tearing the directory down on workflow completion.
  *

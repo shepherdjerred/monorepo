@@ -14,7 +14,7 @@
  * Auth: the fixtures repo is private. The temporal-worker pod mounts a
  * `GH_TOKEN` env var via 1Password Connect (same field the docs-groom
  * activity uses). Clone authenticates via `GIT_ASKPASS` — never embeds
- * the token in the URL (per CLAUDE.md / data-dragon.ts precedent).
+ * the token in the URL (per AGENTS.md / data-dragon.ts precedent).
  */
 import {
   mkdtemp,

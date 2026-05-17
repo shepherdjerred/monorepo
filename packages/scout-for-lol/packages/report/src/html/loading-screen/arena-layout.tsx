@@ -1,6 +1,6 @@
 import type {
-  LoadingScreenData,
-  LoadingScreenParticipant,
+  ArenaLoadingScreenData,
+  NonStandardLoadingScreenParticipant,
 } from "@scout-for-lol/data";
 import { palette } from "#src/assets/colors.ts";
 import { font } from "#src/assets/index.ts";
@@ -8,13 +8,13 @@ import { PlayerCard } from "#src/html/loading-screen/player-card.tsx";
 
 type ArenaTeam = {
   teamKey: number;
-  players: LoadingScreenParticipant[];
+  players: NonStandardLoadingScreenParticipant[];
 };
 
 function groupIntoArenaTeams(
-  participants: LoadingScreenParticipant[],
+  participants: NonStandardLoadingScreenParticipant[],
 ): ArenaTeam[] {
-  const teamMap = new Map<number, LoadingScreenParticipant[]>();
+  const teamMap = new Map<number, NonStandardLoadingScreenParticipant[]>();
 
   for (const participant of participants) {
     // For arena, team is { arenaTeam: 1..8 }
@@ -69,7 +69,7 @@ function TeamPair({ team, teamIndex }: { team: ArenaTeam; teamIndex: number }) {
   );
 }
 
-export function ArenaLayout({ data }: { data: LoadingScreenData }) {
+export function ArenaLayout({ data }: { data: ArenaLoadingScreenData }) {
   const teams = groupIntoArenaTeams(data.participants);
 
   // Arrange in 4 rows x 2 columns

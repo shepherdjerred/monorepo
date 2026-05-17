@@ -45,12 +45,12 @@ const CONTEXT: PrReviewContext = {
   ],
   claudeMdHierarchy: [
     {
-      path: "CLAUDE.md",
-      content: "# repo CLAUDE\n\nUse bun.",
+      path: "AGENTS.md",
+      content: "# repo AGENTS\n\nUse bun.",
     },
     {
-      path: "packages/temporal/CLAUDE.md",
-      content: "# temporal CLAUDE\n\nUse @sentry/bun, not @sentry/node.",
+      path: "packages/temporal/AGENTS.md",
+      content: "# temporal AGENTS\n\nUse @sentry/bun, not @sentry/node.",
     },
   ],
   retrievedSymbols: [],
@@ -95,12 +95,12 @@ describe("foundation parity: correctness system prompt", () => {
 });
 
 describe("foundation: buildCorrectnessUserText", () => {
-  it("places the PR metadata header above the CLAUDE.md hierarchy and the diff", () => {
+  it("places the PR metadata header above the agent instructions hierarchy and the diff", () => {
     const text = buildCorrectnessUserText(INPUT);
     const headerIdx = text.indexOf(
       "# Pull request shepherdjerred/monorepo#724",
     );
-    const claudeIdx = text.indexOf("CLAUDE.md hierarchy");
+    const claudeIdx = text.indexOf("Agent instructions hierarchy");
     const diffIdx = text.indexOf("## Changed files");
     expect(headerIdx).toBeGreaterThanOrEqual(0);
     expect(claudeIdx).toBeGreaterThan(headerIdx);
@@ -121,9 +121,9 @@ describe("foundation: buildCorrectnessUserText", () => {
     expect(text).toContain("Patch unavailable");
   });
 
-  it("embeds the CLAUDE.md hierarchy in a markdown fence so the model knows the conventions for the package", () => {
+  it("embeds the agent instructions hierarchy in a markdown fence so the model knows the conventions for the package", () => {
     const text = buildCorrectnessUserText(INPUT);
-    expect(text).toContain("`packages/temporal/CLAUDE.md`");
+    expect(text).toContain("`packages/temporal/AGENTS.md`");
     expect(text).toContain("Use @sentry/bun, not @sentry/node");
   });
 

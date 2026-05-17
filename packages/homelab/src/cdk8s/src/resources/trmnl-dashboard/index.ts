@@ -96,6 +96,10 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
           secret,
           key: "HA_TOKEN",
         }),
+        DISPLAY_TIME_ZONE: EnvValue.fromValue("America/Los_Angeles"),
+        BUGSINK_URL: EnvValue.fromValue(
+          "http://bugsink-bugsink-service.bugsink:8000/api/canonical/0",
+        ),
         HA_PRESENCE_ENTITIES: EnvValue.fromSecretValue({
           secret,
           key: "HA_PRESENCE_ENTITIES",

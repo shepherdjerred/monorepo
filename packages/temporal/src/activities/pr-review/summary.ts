@@ -17,6 +17,10 @@ import {
 } from "#lib/pr-summary-comment.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
 import {
+  recordProviderIssue,
+  resolveProviderIssue,
+} from "#activities/pr-review/provider-metrics.ts";
+import {
   SUMMARY_MARKER,
   buildSummarySystemBlocks,
   buildSummaryUserPrompt,
@@ -152,9 +156,22 @@ function workflowFields(): Record<string, unknown> {
   }
 }
 
-function isAnthropicCreditBalanceError(error: unknown): boolean {
+function classifyAnthropicProviderIssue(
+  error: unknown,
+): "credit_balance_low" | "rate_limit" | null {
   const message = error instanceof Error ? error.message : String(error);
-  return message.includes("credit balance is too low");
+  const lowerMessage = message.toLowerCase();
+  if (lowerMessage.includes("credit balance is too low")) {
+    return "credit_balance_low";
+  }
+  if (
+    lowerMessage.includes("rate_limit_error") ||
+    lowerMessage.includes("rate limit") ||
+    lowerMessage.includes("429")
+  ) {
+    return "rate_limit";
+  }
+  return null;
 }
 
 function captureWithContext(
@@ -162,6 +179,23 @@ function captureWithContext(
   pr: PrSummaryInput,
   extra: Record<string, unknown> = {},
 ): void {
+  const providerIssueKind = classifyAnthropicProviderIssue(error);
+  if (providerIssueKind !== null) {
+    recordProviderIssue({
+      app: "temporal",
+      provider: "anthropic",
+      kind: providerIssueKind,
+      source: "pr_summary",
+    });
+    jsonLog("warning", "Anthropic provider issue recorded", {
+      providerIssueKind,
+      owner: pr.owner,
+      repo: pr.repo,
+      prNumber: pr.prNumber,
+    });
+    return;
+  }
+
   Sentry.withScope((scope) => {
     scope.setTag("component", COMPONENT);
     scope.setTag("repo", `${pr.owner}/${pr.repo}`);
@@ -172,10 +206,6 @@ function captureWithContext(
       commitSha: pr.commitSha,
       ...extra,
     });
-    if (isAnthropicCreditBalanceError(error)) {
-      scope.setTag("provider_error", "anthropic_credit_balance_low");
-      scope.setFingerprint(["anthropic-credit-balance-low"]);
-    }
     Sentry.captureException(error);
   });
 }
@@ -316,6 +346,18 @@ export async function runPrSummary(
         systemBlocks,
         userPrompt,
       );
+      resolveProviderIssue({
+        app: "temporal",
+        provider: "anthropic",
+        kind: "credit_balance_low",
+        source: "pr_summary",
+      });
+      resolveProviderIssue({
+        app: "temporal",
+        provider: "anthropic",
+        kind: "rate_limit",
+        source: "pr_summary",
+      });
 
       const costUsd = estimateCostUsd(usage);
 
@@ -396,10 +438,11 @@ export async function runPrSummary(
 }
 
 /**
- * Default CLAUDE.md / AGENTS.md loader. Reads the root CLAUDE.md of the
- * repo via the GitHub contents API at the PR's head commit. Falls back to
- * an empty string if the file isn't present — the prompt is still useful
- * without it, just slightly less repo-aware.
+ * Default AGENTS.md / CLAUDE.md loader. Reads the root AGENTS.md of the
+ * repo via the GitHub contents API at the PR's head commit, with CLAUDE.md as
+ * a compatibility fallback for external repos. Falls back to an empty string
+ * if neither file is present — the prompt is still useful without it, just
+ * slightly less repo-aware.
  *
  * We deliberately do NOT read these files from disk on the worker — the
  * worker's local checkout (if any) is a different repo than the one being
@@ -410,30 +453,37 @@ async function defaultLoadRepoConventionsMarkdown(
   octokit: OctokitForSummary,
   pr: PrSummaryInput,
 ): Promise<string> {
-  try {
-    const response = await octokit.getContent({
-      owner: pr.owner,
-      repo: pr.repo,
-      path: "CLAUDE.md",
-      ref: pr.commitSha,
-    });
-    const parsed = RepoContentFileSchema.safeParse(response.data);
-    if (!parsed.success) {
-      // Not a regular file (could be dir/symlink/submodule) or shape we
-      // don't recognize. Bot still runs without repo context.
-      return "";
+  const candidatePaths = ["AGENTS.md", "CLAUDE.md"];
+  const errors: string[] = [];
+
+  for (const path of candidatePaths) {
+    try {
+      const response = await octokit.getContent({
+        owner: pr.owner,
+        repo: pr.repo,
+        path,
+        ref: pr.commitSha,
+      });
+      const parsed = RepoContentFileSchema.safeParse(response.data);
+      if (!parsed.success) {
+        // Not a regular file (could be dir/symlink/submodule) or shape we
+        // don't recognize. Try the next compatible conventions filename.
+        continue;
+      }
+      // GitHub returns base64 with line wraps. Buffer.from handles both.
+      return Buffer.from(parsed.data.content, "base64").toString("utf8");
+    } catch (error: unknown) {
+      errors.push(
+        `${path}: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
-    // GitHub returns base64 with line wraps. Buffer.from handles both.
-    return Buffer.from(parsed.data.content, "base64").toString("utf8");
-  } catch (error: unknown) {
-    // 404 is expected for repos that don't use CLAUDE.md; anything else is
-    // worth logging but not failing the summary over.
-    jsonLog("warning", "Failed to load CLAUDE.md from PR head", {
-      error: error instanceof Error ? error.message : String(error),
-      prNumber: pr.prNumber,
-    });
-    return "";
   }
+
+  jsonLog("warning", "Failed to load repo instructions from PR head", {
+    errors,
+    prNumber: pr.prNumber,
+  });
+  return "";
 }
 
 /**

@@ -30,8 +30,8 @@ paths = [
   '''patches/satori@.*\.patch$''',
   '''packages/.*/patches/satori@.*\.patch$''',
   # Skill/reference docs — example curl commands and API key placeholders
-  '''packages/dotfiles/dot_claude/skills/tailscale-helper/references/''',
-  '''packages/dotfiles/dot_claude/skills/grafana-helper/SKILL\.md''',
+  '''packages/dotfiles/dot_agents/skills/tailscale-helper/references/''',
+  '''packages/dotfiles/dot_agents/skills/grafana-helper/SKILL\.md''',
   # Cloudflare operator Helm chart URL contains "apikey" substring
   '''packages/homelab/src/cdk8s/src/resources/argo-applications/cloudflare-operator\.ts''',
   # CI step key "smoke-test-discord-plays-pokemon" falsely flagged as discord-client-secret

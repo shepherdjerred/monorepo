@@ -83,7 +83,7 @@ Method: `aws s3 sync --delete`. Code: `.dagger/src/release.ts`, `scripts/ci/src/
 
 ## GitHub Releases & Artifacts
 
-**Cooklang for Obsidian plugin** — pushes `main.js`, `manifest.json`, `styles.css` to `shepherdjerred/cooklang-for-obsidian` repo and creates GitHub releases. Code: `.dagger/src/release.ts` (cooklangPushHelper, cooklangCreateReleaseHelper).
+**Cooklang for Obsidian plugin** — auto-bumps semver patch from the latest plugin-repo release tag, updates `main.js`, `manifest.json`, `versions.json`, `styles.css` on `shepherdjerred/cooklang-for-obsidian` main, cuts a GitHub release tagged with the bare version (Obsidian directory convention), then opens an auto-merge commit-back PR on the monorepo. Code: `.dagger/src/release.ts` (cooklangPublishHelper, cooklangVersionCommitBackHelper).
 
 **Clauderon (Rust CLI)** — multi-arch binaries (x86_64 + arm64). Dev pre-releases `0.0.0-dev.{BUILD_NUMBER}` on `shepherdjerred/monorepo`. Prod releases via release-please. Code: `.dagger/src/release.ts` (clauderonUploadHelper, clauderonCollectBinariesHelper).
 

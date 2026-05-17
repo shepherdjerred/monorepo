@@ -48,7 +48,7 @@ function makeOctokit(opts: {
           await Promise.resolve();
           const content = opts.contents.get(params.path);
           if (content === undefined) {
-            // Mimic GitHub's 404 for missing CLAUDE.md at this level.
+            // Mimic GitHub's 404 for missing instructions at this level.
             // Using a plain Error here (vs the RequestError) means the
             // bootstrap walker rethrows — but the prod path catches
             // RequestError 404 specifically, so use that instance.
@@ -121,7 +121,39 @@ describe("foundation: bootstrap.runBootstrap", () => {
     expect(heartbeats).toContain("listing-files");
   });
 
-  it("walks the CLAUDE.md hierarchy root → leaf and returns the files that exist", async () => {
+  it("walks the AGENTS.md hierarchy root → leaf and returns the files that exist", async () => {
+    const octokit = makeOctokit({
+      files: [
+        {
+          filename: "packages/temporal/src/worker.ts",
+          status: "modified",
+          additions: 1,
+          deletions: 1,
+          patch: "@@ -1 +1 @@\n-a\n+b",
+        },
+      ],
+      contents: new Map([
+        ["AGENTS.md", "# repo AGENTS\n\nUse bun.\n"],
+        [
+          "packages/temporal/AGENTS.md",
+          "# temporal AGENTS\n\nUse @sentry/bun.\n",
+        ],
+        // packages/AGENTS.md and packages/temporal/src/AGENTS.md are intentionally
+        // missing so the walker has to handle 404 along the path.
+      ]),
+    });
+    const result = await runBootstrap(octokit, PIPELINE, () => {
+      // intentionally silent
+    });
+    expect(result.claudeMdHierarchy.length).toBe(2);
+    const paths = result.claudeMdHierarchy.map((m) => m.path);
+    expect(paths).toContain("AGENTS.md");
+    expect(paths).toContain("packages/temporal/AGENTS.md");
+    // Sort is alphabetical so packages/.../AGENTS.md comes after root.
+    expect(paths[0]).toBe("AGENTS.md");
+  });
+
+  it("falls back to CLAUDE.md for repos that have not migrated", async () => {
     const octokit = makeOctokit({
       files: [
         {
@@ -138,19 +170,14 @@ describe("foundation: bootstrap.runBootstrap", () => {
           "packages/temporal/CLAUDE.md",
           "# temporal CLAUDE\n\nUse @sentry/bun.\n",
         ],
-        // packages/CLAUDE.md and packages/temporal/src/CLAUDE.md are intentionally
-        // missing so the walker has to handle 404 along the path.
       ]),
     });
     const result = await runBootstrap(octokit, PIPELINE, () => {
       // intentionally silent
     });
-    expect(result.claudeMdHierarchy.length).toBe(2);
     const paths = result.claudeMdHierarchy.map((m) => m.path);
     expect(paths).toContain("CLAUDE.md");
     expect(paths).toContain("packages/temporal/CLAUDE.md");
-    // Sort is alphabetical so packages/.../CLAUDE.md comes after root.
-    expect(paths[0]).toBe("CLAUDE.md");
   });
 
   it("returns workdir as the empty string until Phase 5 cloning lands", async () => {

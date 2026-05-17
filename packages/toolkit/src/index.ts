@@ -1,12 +1,5 @@
 #!/usr/bin/env bun
 
-import { handlePrCommand } from "./handlers/pr.ts";
-import { handlePagerDutyCommand } from "./handlers/pagerduty.ts";
-import { handleBugsinkCommand } from "./handlers/bugsink.ts";
-import { handleGrafanaCommand } from "./handlers/grafana.ts";
-import { handleFetchCommand } from "./handlers/fetch.ts";
-import { handleRecallCommand } from "./handlers/recall.ts";
-
 const TOOLKIT_VERSION = "0.1.0";
 
 function printUsage(): void {
@@ -112,26 +105,39 @@ async function main(): Promise<void> {
   }
 
   switch (command) {
-    case "fetch":
+    case "fetch": {
+      const { handleFetchCommand } = await import("./handlers/fetch.ts");
       await handleFetchCommand(subcommand, args.slice(1));
       break;
-    case "recall":
+    }
+    case "recall": {
+      const { handleRecallCommand } = await import("./handlers/recall.ts");
       await handleRecallCommand(subcommand, args.slice(2));
       break;
-    case "pr":
+    }
+    case "pr": {
+      const { handlePrCommand } = await import("./handlers/pr.ts");
       await handlePrCommand(subcommand, args.slice(2));
       break;
+    }
     case "pagerduty":
-    case "pd":
+    case "pd": {
+      const { handlePagerDutyCommand } =
+        await import("./handlers/pagerduty.ts");
       await handlePagerDutyCommand(subcommand, args.slice(2));
       break;
-    case "bugsink":
+    }
+    case "bugsink": {
+      const { handleBugsinkCommand } = await import("./handlers/bugsink.ts");
       await handleBugsinkCommand(subcommand, args.slice(2));
       break;
+    }
     case "grafana":
-    case "gf":
+    case "gf": {
+      const { handleGrafanaCommand } = await import("./handlers/grafana.ts");
       await handleGrafanaCommand(subcommand, args.slice(2));
       break;
+    }
     default:
       console.error(`Unknown command: ${command}`);
       printUsage();

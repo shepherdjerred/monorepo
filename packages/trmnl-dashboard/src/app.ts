@@ -1,6 +1,7 @@
 import type { AppConfig } from "./config.ts";
 import { collectHomePayload } from "./collectors/home.ts";
 import { collectHomelabPayload } from "./collectors/homelab.ts";
+import { worstStatus } from "./status.ts";
 import type { HomePayload, HomelabPayload } from "./types.ts";
 
 export type AppDeps = {
@@ -38,6 +39,25 @@ export function createHandler(config: AppConfig, deps: AppDeps = {}) {
 
     if (url.pathname === "/api/homelab") {
       return json(await collectHomelab());
+    }
+
+    if (url.pathname === "/api/diagnostics") {
+      const [home, homelab] = await Promise.all([
+        collectHome(),
+        collectHomelab(),
+      ]);
+      return json({
+        generated_at: new Date().toISOString(),
+        status: worstStatus([home.status, homelab.status]),
+        home: {
+          status: home.status,
+          errors: home.errors,
+        },
+        homelab: {
+          status: homelab.status,
+          errors: homelab.errors,
+        },
+      });
     }
 
     return json({ error: "not found" }, 404);

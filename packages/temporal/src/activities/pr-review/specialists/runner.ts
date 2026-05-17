@@ -28,10 +28,35 @@ import type { PrReviewPipelineInput } from "#shared/schemas.ts";
 import { permuteFiles } from "#lib/diff-slicing.ts";
 import { formatBlockDiff } from "#lib/block-diff.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
+import {
+  recordProviderIssue,
+  resolveProviderIssue,
+} from "#activities/pr-review/provider-metrics.ts";
+import {
+  classifyAnthropicProviderError as classifyAnthropicProviderErrorImpl,
+  resetAnthropicProviderErrorReporterForTests as resetAnthropicProviderErrorReporterForTestsImpl,
+  shouldReportAnthropicProviderError as shouldReportAnthropicProviderErrorImpl,
+  type AnthropicProviderErrorClassification,
+} from "./anthropic-provider-errors.ts";
 
 const COMPONENT = "pr-review-pipeline";
-const PROVIDER_ERROR_REPORT_INTERVAL_MS = 15 * 60 * 1000;
-const lastProviderErrorReportAtByKey = new Map<string, number>();
+
+export function classifyAnthropicProviderError(
+  error: unknown,
+): AnthropicProviderErrorClassification | null {
+  return classifyAnthropicProviderErrorImpl(error);
+}
+
+export function shouldReportAnthropicProviderError(
+  classification: AnthropicProviderErrorClassification,
+  nowMs = Date.now(),
+): boolean {
+  return shouldReportAnthropicProviderErrorImpl(classification, nowMs);
+}
+
+export function resetAnthropicProviderErrorReporterForTests(): void {
+  resetAnthropicProviderErrorReporterForTestsImpl();
+}
 
 /**
  * Effort tier per the `claude-api` skill. Opus 4.7 + adaptive thinking
@@ -163,7 +188,9 @@ export function buildSpecialistUserText(request: SpecialistRequest): string {
   lines.push("");
 
   if (context.claudeMdHierarchy.length > 0) {
-    lines.push("## CLAUDE.md hierarchy (project + package conventions)");
+    lines.push(
+      "## Agent instructions hierarchy (project + package conventions)",
+    );
     lines.push("");
     for (const md of context.claudeMdHierarchy) {
       lines.push(`### \`${md.path}\``);
@@ -263,98 +290,29 @@ function jsonLog(
   );
 }
 
-export type AnthropicProviderErrorKind = "credit_balance_low" | "rate_limit";
-
-export type AnthropicProviderErrorClassification = {
-  kind: AnthropicProviderErrorKind;
-  captureMessage: string;
-  fingerprint: string;
-  providerTag: string;
-  requestId: string | undefined;
-  originalMessage: string;
-};
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
-function readProperty(value: unknown, key: string): unknown {
-  if (value === null || value === undefined) {
-    return undefined;
-  }
-  return Reflect.get(new Object(value), key);
-}
-
-function extractAnthropicRequestId(message: string): string | undefined {
-  const match = /request[_ -]?id["':=\s]+([\w-]+)/i.exec(message);
-  return match?.[1];
-}
-
-export function classifyAnthropicProviderError(
-  error: unknown,
-): AnthropicProviderErrorClassification | null {
-  const message = errorMessage(error);
-  const status = readProperty(error, "status");
-  const nestedError = readProperty(error, "error");
-  const errorType = readProperty(nestedError, "type");
-  const requestId = extractAnthropicRequestId(message);
-
-  if (message.includes("credit balance is too low")) {
-    return {
-      kind: "credit_balance_low",
-      captureMessage: "Anthropic provider error: credit_balance_low",
-      fingerprint: "anthropic-credit-balance-low",
-      providerTag: "anthropic_credit_balance_low",
-      requestId,
-      originalMessage: message,
-    };
-  }
-
-  if (
-    status === 429 ||
-    errorType === "rate_limit_error" ||
-    message.includes("rate_limit_error") ||
-    message.toLowerCase().includes("rate limit")
-  ) {
-    return {
-      kind: "rate_limit",
-      captureMessage: "Anthropic provider error: rate_limit",
-      fingerprint: "anthropic-rate-limit",
-      providerTag: "anthropic_rate_limit",
-      requestId,
-      originalMessage: message,
-    };
-  }
-
-  return null;
-}
-
-export function shouldReportAnthropicProviderError(
-  classification: AnthropicProviderErrorClassification,
-  nowMs = Date.now(),
-): boolean {
-  const key = classification.kind;
-  const lastReportedAt = lastProviderErrorReportAtByKey.get(key);
-  if (
-    lastReportedAt !== undefined &&
-    nowMs - lastReportedAt < PROVIDER_ERROR_REPORT_INTERVAL_MS
-  ) {
-    return false;
-  }
-  lastProviderErrorReportAtByKey.set(key, nowMs);
-  return true;
-}
-
-export function resetAnthropicProviderErrorReporterForTests(): void {
-  lastProviderErrorReportAtByKey.clear();
-}
-
 function captureWithContext(error: unknown, request: SpecialistRequest): void {
   const providerError = classifyAnthropicProviderError(error);
   if (
     providerError !== null &&
     !shouldReportAnthropicProviderError(providerError)
   ) {
+    return;
+  }
+
+  if (providerError !== null) {
+    recordProviderIssue({
+      app: "temporal",
+      provider: "anthropic",
+      kind: providerError.kind,
+      source: "pr_review_specialist",
+    });
+    jsonLog("warning", "Anthropic provider issue recorded", {
+      providerError: providerError.providerTag,
+      requestId: providerError.requestId,
+      specialist: request.config.id,
+      passId: request.passId,
+      prNumber: request.pipeline.prNumber,
+    });
     return;
   }
 
@@ -373,18 +331,7 @@ function captureWithContext(error: unknown, request: SpecialistRequest): void {
       specialist: request.config.id,
       passId: request.passId,
     });
-    if (providerError !== null) {
-      scope.setTag("provider_error", providerError.providerTag);
-      scope.setFingerprint([providerError.fingerprint]);
-      scope.setContext("anthropicProviderError", {
-        kind: providerError.kind,
-        requestId: providerError.requestId,
-        originalMessage: providerError.originalMessage,
-      });
-    }
-    Sentry.captureException(
-      providerError === null ? error : new Error(providerError.captureMessage),
-    );
+    Sentry.captureException(error);
   });
 }
 
@@ -492,6 +439,19 @@ export async function runSpecialistPass(
       },
     ],
     messages: [{ role: "user", content: userText }],
+  });
+
+  resolveProviderIssue({
+    app: "temporal",
+    provider: "anthropic",
+    kind: "credit_balance_low",
+    source: "pr_review_specialist",
+  });
+  resolveProviderIssue({
+    app: "temporal",
+    provider: "anthropic",
+    kind: "rate_limit",
+    source: "pr_review_specialist",
   });
 
   const durationMs = Date.now() - startMs;

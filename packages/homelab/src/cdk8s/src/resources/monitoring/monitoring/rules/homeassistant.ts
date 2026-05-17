@@ -133,7 +133,7 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "HomeAssistantEntitiesUnavailable",
           annotations: {
             description:
-              '{{ "{{" }} $value {{ "}}" }} Home Assistant entities are unavailable or unknown:\n{{ "{{" }} with query "homeassistant_entity_available == 0" {{ "}}" }}{{ "{{" }} range sortByLabel "friendly_name" . {{ "}}" }}\n- {{ "{{" }} .Labels.friendly_name {{ "}}" }} ({{ "{{" }} .Labels.entity {{ "}}" }}){{ "{{" }} end {{ "}}" }}{{ "{{" }} end {{ "}}" }}',
+              '{{ "{{" }} $value {{ "}}" }} Home Assistant entities are unavailable or unknown:\n{{ "{{" }} with query "homeassistant_entity_available{entity!~\\"^(group|automation|scene|script|button|event|number|select|text|update)\\\\\\\\..*\\"} == 0" {{ "}}" }}{{ "{{" }} range sortByLabel "friendly_name" . {{ "}}" }}\n- {{ "{{" }} .Labels.friendly_name {{ "}}" }} ({{ "{{" }} .Labels.entity {{ "}}" }}){{ "{{" }} end {{ "}}" }}{{ "{{" }} end {{ "}}" }}',
             summary: "Home Assistant entities unavailable",
             runbook_url:
               "https://homeassistant.tailnet-1a49.ts.net/history?entity_id=sensor.unavailable_entities_count",

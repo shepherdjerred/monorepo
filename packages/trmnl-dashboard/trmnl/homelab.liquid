@@ -13,21 +13,33 @@
       <div class="meta"></div>
       <div class="content">
         <span class="title">PagerDuty</span>
-        <span class="value">{{ pagerduty.triggered }}</span>
+        <span class="value">
+          {% if pagerduty.status == "unknown" %}
+            ERR
+          {% else %}
+            {{ pagerduty.triggered }}
+          {% endif %}
+        </span>
       </div>
     </div>
     <div class="item">
       <div class="meta"></div>
       <div class="content">
         <span class="title">Bugsink</span>
-        <span class="value">{{ bugsink.unresolved }}</span>
+        <span class="value">
+          {% if bugsink.status == "unknown" %}
+            ERR
+          {% else %}
+            {{ bugsink.unresolved }}
+          {% endif %}
+        </span>
       </div>
     </div>
     <div class="item">
       <div class="meta"></div>
       <div class="content">
         <span class="title">Alerts</span>
-        <span class="value">{{ alerts.critical }}</span>
+        <span class="value value--small">{{ alerts.critical }} crit · {{ alerts.warning }} warn</span>
       </div>
     </div>
   </div>
@@ -119,9 +131,22 @@
       </table>
     </div>
   </div>
+
+  {% if errors.size > 0 %}
+    <div>
+      <span class="label label--underline">Diagnostics</span>
+      <table class="table table--condensed">
+        <tbody>
+          {% for error in errors limit: 4 %}
+            <tr><td>{{ error }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
 </div>
 
 <div class="title_bar">
   <span class="title">Homelab</span>
-  <span class="instance">{{ status | upcase }} · {{ generated_at | date: "%-I:%M %p" }}</span>
+  <span class="instance">{{ status | upcase }} · {{ generated_time }}</span>
 </div>

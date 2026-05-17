@@ -5,56 +5,54 @@
  */
 
 import { createLogger } from "#src/logger.ts";
+import { Database } from "bun:sqlite";
+import { existsSync, readdirSync, readFileSync, unlinkSync } from "node:fs";
+import { join } from "node:path";
 
 const logger = createLogger("generate-test-template-db");
 
 const templatePath = `${import.meta.dirname}/../src/testing/template.db`;
-const schemaPath = `${import.meta.dirname}/../prisma/schema.prisma`;
+const migrationsPath = `${import.meta.dirname}/../prisma/migrations`;
 
-// Remove existing template if it exists
-const templateFile = Bun.file(templatePath);
-if (await templateFile.exists()) {
-  const { unlinkSync } = await import("node:fs");
+if (existsSync(templatePath)) {
   unlinkSync(templatePath);
 }
 
 logger.info("Generating test template database...");
 
-const result = Bun.spawnSync(
-  [
-    "bunx",
-    "prisma",
-    "db",
-    "push",
-    `--schema=${schemaPath}`,
-    "--accept-data-loss",
-  ],
-  {
-    cwd: `${import.meta.dirname}/..`,
-    env: {
-      ...Bun.env,
-      DATABASE_URL: `file:${templatePath}`,
-      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-    },
-    stdout: "inherit",
-    stderr: "inherit",
-  },
-);
+const templateDb = new Database(templatePath);
+try {
+  const migrationDirs = readdirSync(migrationsPath, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
 
-if (result.exitCode !== 0) {
-  logger.error("Failed to generate test template database");
-  process.exit(1);
+  for (const migrationDir of migrationDirs) {
+    const migrationPath = join(migrationsPath, migrationDir, "migration.sql");
+    if (!existsSync(migrationPath)) {
+      throw new Error(`Missing migration SQL at ${migrationPath}`);
+    }
+
+    logger.info(`Applying migration ${migrationDir}...`);
+    templateDb.exec(readFileSync(migrationPath, "utf8"));
+  }
+} finally {
+  templateDb.close();
 }
 
-// `prisma db push` creates the schema but doesn't run migration data steps,
-// so the Season table is empty. Seed it so tests that create season-based
-// competitions don't trip the FK constraint.
+// Seed Season rows so tests that create season-based competitions don't trip
+// the FK constraint.
 const { PrismaClient } = await import("#generated/prisma/client/index.js");
 const { PrismaLibSql } = await import("@prisma/adapter-libsql");
 const { SEASONS } = await import("@scout-for-lol/data");
 const seedPrisma = new PrismaClient({
-  adapter: new PrismaLibSql({ url: `file:${templatePath}` }),
+  // Must match src/database/index.ts so seeded Season rows have INTEGER ms
+  // datetimes; otherwise they would compare incorrectly against the prod
+  // adapter's unixepoch-ms bindings.
+  adapter: new PrismaLibSql(
+    { url: `file:${templatePath}` },
+    { timestampFormat: "unixepoch-ms" },
+  ),
 });
 for (const season of Object.values(SEASONS)) {
   await seedPrisma.season.upsert({

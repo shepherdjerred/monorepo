@@ -76,6 +76,20 @@ export const prSummaryCommentsTotal = new Counter({
   registers: [register],
 });
 
+export const aiProviderErrorsTotal = new Counter({
+  name: "ai_provider_errors_total",
+  help: "AI provider-side operational errors by app, provider, kind, and source",
+  labelNames: ["app", "provider", "kind", "source"] as const,
+  registers: [register],
+});
+
+export const aiProviderIssueActive = new Gauge({
+  name: "ai_provider_issue_active",
+  help: "Whether an AI provider operational issue is currently active for this app/source",
+  labelNames: ["app", "provider", "kind", "source"] as const,
+  registers: [register],
+});
+
 // ---------------------------------------------------------------------------
 // homelab-audit workflow metrics
 // ---------------------------------------------------------------------------

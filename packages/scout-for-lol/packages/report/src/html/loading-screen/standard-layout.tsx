@@ -1,4 +1,8 @@
-import type { LoadingScreenData } from "@scout-for-lol/data";
+import {
+  LANE_ORDER,
+  type AramLoadingScreenData,
+  type StandardLoadingScreenData,
+} from "@scout-for-lol/data";
 import { palette } from "#src/assets/colors.ts";
 import { font } from "#src/assets/index.ts";
 import { PlayerCard } from "#src/html/loading-screen/player-card.tsx";
@@ -8,7 +12,9 @@ function TeamRow({
   teamSide,
   label,
 }: {
-  participants: LoadingScreenData["participants"];
+  participants:
+    | StandardLoadingScreenData["participants"]
+    | AramLoadingScreenData["participants"];
   teamSide: "blue" | "red";
   label: string;
 }) {
@@ -49,9 +55,31 @@ function TeamRow({
   );
 }
 
-export function StandardLayout({ data }: { data: LoadingScreenData }) {
-  const blueTeam = data.participants.filter((p) => p.team === "blue");
-  const redTeam = data.participants.filter((p) => p.team === "red");
+function roleOrderedParticipants(
+  data: StandardLoadingScreenData,
+  teamSide: "blue" | "red",
+): StandardLoadingScreenData["participants"] {
+  return data.participants
+    .filter((participant) => participant.team === teamSide)
+    .toSorted(
+      (left, right) =>
+        LANE_ORDER.indexOf(left.lane) - LANE_ORDER.indexOf(right.lane),
+    );
+}
+
+export function StandardLayout({
+  data,
+}: {
+  data: StandardLoadingScreenData | AramLoadingScreenData;
+}) {
+  const blueTeam =
+    data.layout === "standard"
+      ? roleOrderedParticipants(data, "blue")
+      : data.participants.filter((p) => p.team === "blue");
+  const redTeam =
+    data.layout === "standard"
+      ? roleOrderedParticipants(data, "red")
+      : data.participants.filter((p) => p.team === "red");
 
   return (
     <div

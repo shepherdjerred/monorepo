@@ -2,6 +2,7 @@ import { describe, expect, test, mock } from "bun:test";
 import {
   RawCurrentGameInfoSchema,
   LoadingScreenDataSchema,
+  type Lane,
 } from "@scout-for-lol/data/index.ts";
 import {
   RecoverableLoadingScreenDataError,
@@ -54,6 +55,9 @@ describe("buildLoadingScreenData with real spectator payload", () => {
     expect(parsed.isRanked).toBe(true);
     expect(parsed.layout).toBe("standard");
     expect(parsed.mapName).toBe("Summoner's Rift");
+    if (parsed.layout !== "standard") {
+      throw new Error("Expected standard loading screen data");
+    }
 
     // Check participants
     expect(parsed.participants).toHaveLength(10);
@@ -63,6 +67,13 @@ describe("buildLoadingScreenData with real spectator payload", () => {
     const redTeam = parsed.participants.filter((p) => p.team === "red");
     expect(blueTeam).toHaveLength(5);
     expect(redTeam).toHaveLength(5);
+    const expectedLanes: Lane[] = ["adc", "jungle", "middle", "support", "top"];
+    expect(blueTeam.map((p) => p.lane).toSorted()).toEqual(
+      expectedLanes.toSorted(),
+    );
+    expect(redTeam.map((p) => p.lane).toSorted()).toEqual(
+      expectedLanes.toSorted(),
+    );
 
     // Check tracked player is flagged
     const trackedPlayer = parsed.participants.find(
@@ -88,7 +99,9 @@ describe("buildLoadingScreenData with real spectator payload", () => {
     // Snapshot the full structure
     expect(parsed).toMatchSnapshot();
   });
+});
 
+describe("buildLoadingScreenData layout variants", () => {
   test("queue 2400 (ARAM: Mayhem) with Rek'Sai resolves without throwing", async () => {
     // Start from the ranked-flex payload and mutate just enough to simulate
     // an ARAM Mayhem game with Rek'Sai in it — the two previously-failing

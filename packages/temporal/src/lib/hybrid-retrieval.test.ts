@@ -161,7 +161,7 @@ const outOfRepoRecall: RecallSearchFn = () =>
     },
     // in repo but file not indexed — discarded
     {
-      path: "/repo/packages/zeta/CLAUDE.md",
+      path: "/repo/packages/zeta/AGENTS.md",
       title: "x",
       chunk: "x",
       score: 1,

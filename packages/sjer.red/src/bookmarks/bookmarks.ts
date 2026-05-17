@@ -170,4 +170,4 @@ export const bookmarks: Bookmarks = BookmarksSchema.parse(
   ),
 );
 
-await writeFile(file, JSON.stringify(bookmarks, null, 2));
+await writeFile(file, `${JSON.stringify(bookmarks, null, 2)}\n`);

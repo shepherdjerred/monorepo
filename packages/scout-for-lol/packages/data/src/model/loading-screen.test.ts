@@ -80,6 +80,7 @@ describe("LoadingScreenParticipantSchema", () => {
   const validParticipant = {
     puuid: LeaguePuuidSchema.parse(samplePuuid),
     summonerName: "TestPlayer",
+    championId: LoadingScreenChampionIdSchema.parse(266),
     championName: "Aatrox",
     championDisplayName: "Aatrox",
     skinNum: 0,
@@ -210,10 +211,11 @@ function makePuuid(suffix: string) {
   return LeaguePuuidSchema.parse(`${samplePuuid}${suffix}`.slice(0, 78));
 }
 
-function makeParticipant(puuid: string, team: "blue" | "red") {
+function makeNonStandardParticipant(puuid: string, team: "blue" | "red") {
   return {
     puuid: LeaguePuuidSchema.parse(puuid),
     summonerName: `Player-${puuid.slice(0, 4)}`,
+    championId: LoadingScreenChampionIdSchema.parse(266),
     championName: "Aatrox",
     championDisplayName: "Aatrox",
     skinNum: 0,
@@ -221,6 +223,17 @@ function makeParticipant(puuid: string, team: "blue" | "red") {
     spell1Id: SummonerSpellIdSchema.parse(4),
     spell2Id: SummonerSpellIdSchema.parse(14),
     isTrackedPlayer: false,
+  };
+}
+
+function makeParticipant(
+  puuid: string,
+  team: "blue" | "red",
+  lane: "top" | "jungle" | "middle" | "adc" | "support",
+) {
+  return {
+    ...makeNonStandardParticipant(puuid, team),
+    lane,
   };
 }
 
@@ -233,16 +246,16 @@ describe("LoadingScreenDataSchema", () => {
     layout: "standard",
     mapName: "Summoner's Rift",
     participants: [
-      makeParticipant(makePuuid("01"), "blue"),
-      makeParticipant(makePuuid("02"), "blue"),
-      makeParticipant(makePuuid("03"), "blue"),
-      makeParticipant(makePuuid("04"), "blue"),
-      makeParticipant(makePuuid("05"), "blue"),
-      makeParticipant(makePuuid("06"), "red"),
-      makeParticipant(makePuuid("07"), "red"),
-      makeParticipant(makePuuid("08"), "red"),
-      makeParticipant(makePuuid("09"), "red"),
-      makeParticipant(makePuuid("10"), "red"),
+      makeParticipant(makePuuid("01"), "blue", "top"),
+      makeParticipant(makePuuid("02"), "blue", "jungle"),
+      makeParticipant(makePuuid("03"), "blue", "middle"),
+      makeParticipant(makePuuid("04"), "blue", "adc"),
+      makeParticipant(makePuuid("05"), "blue", "support"),
+      makeParticipant(makePuuid("06"), "red", "top"),
+      makeParticipant(makePuuid("07"), "red", "jungle"),
+      makeParticipant(makePuuid("08"), "red", "middle"),
+      makeParticipant(makePuuid("09"), "red", "adc"),
+      makeParticipant(makePuuid("10"), "red", "support"),
     ],
     bans: [
       {
@@ -267,6 +280,18 @@ describe("LoadingScreenDataSchema", () => {
     expect(result.bans).toHaveLength(2);
   });
 
+  test("rejects standard game participants without lanes", () => {
+    const participantsWithoutLane = validData.participants.map(
+      ({ lane: _lane, ...participant }) => participant,
+    );
+    expect(() =>
+      LoadingScreenDataSchema.parse({
+        ...validData,
+        participants: participantsWithoutLane,
+      }),
+    ).toThrow();
+  });
+
   test("accepts ARAM game with no bans", () => {
     const aramData = {
       ...validData,
@@ -275,6 +300,18 @@ describe("LoadingScreenDataSchema", () => {
       isRanked: false,
       layout: "aram",
       mapName: "Howling Abyss",
+      participants: [
+        makeNonStandardParticipant(makePuuid("01"), "blue"),
+        makeNonStandardParticipant(makePuuid("02"), "blue"),
+        makeNonStandardParticipant(makePuuid("03"), "blue"),
+        makeNonStandardParticipant(makePuuid("04"), "blue"),
+        makeNonStandardParticipant(makePuuid("05"), "blue"),
+        makeNonStandardParticipant(makePuuid("06"), "red"),
+        makeNonStandardParticipant(makePuuid("07"), "red"),
+        makeNonStandardParticipant(makePuuid("08"), "red"),
+        makeNonStandardParticipant(makePuuid("09"), "red"),
+        makeNonStandardParticipant(makePuuid("10"), "red"),
+      ],
       bans: [],
     };
     const result = LoadingScreenDataSchema.parse(aramData);
@@ -286,6 +323,7 @@ describe("LoadingScreenDataSchema", () => {
     const arenaParticipants = Array.from({ length: 16 }, (_, i) => ({
       puuid: makePuuid(`a${i.toString().padStart(2, "0")}`),
       summonerName: `ArenaPlayer${i.toString()}`,
+      championId: LoadingScreenChampionIdSchema.parse(266),
       championName: "Aatrox",
       championDisplayName: "Aatrox",
       skinNum: 0,

@@ -193,7 +193,7 @@ export function createBugsinkDeployment(chart: Chart) {
         }),
         DEBUG: EnvValue.fromValue("False"),
         ALLOWED_HOSTS: EnvValue.fromValue(
-          "bugsink.shepherdjerred.com,bugsink.sjer.red,bugsink.tailnet-1a49.ts.net,localhost,127.0.0.1",
+          "bugsink.shepherdjerred.com,bugsink.sjer.red,bugsink.tailnet-1a49.ts.net,bugsink-bugsink-service.bugsink,bugsink-bugsink-service.bugsink.svc.cluster.local,localhost,127.0.0.1",
         ),
 
         // URL configuration

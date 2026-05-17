@@ -1,5 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import type { Duration } from "@temporalio/common";
+import { DataDragonWorkflowInputSchema } from "#activities/data-dragon.ts";
 import { SCHEDULES } from "./register-schedules.ts";
 
 // ---------------------------------------------------------------------------
@@ -103,5 +104,29 @@ describe("durationToMs parser", () => {
 
   test("treats numbers as milliseconds", () => {
     expect(durationToMs(60_000)).toBe(60_000);
+  });
+});
+
+describe("Scout Data Dragon lane-prior schedule config", () => {
+  test.each([
+    "scout-data-dragon-version-check",
+    "scout-data-dragon-weekly-refresh",
+  ])("%s passes explicit lane-prior eval inputs", (scheduleId) => {
+    const schedule = SCHEDULES.find((candidate) => candidate.id === scheduleId);
+    if (schedule === undefined) {
+      throw new Error(`Missing schedule ${scheduleId}`);
+    }
+    const input = DataDragonWorkflowInputSchema.parse(schedule.args[0]);
+    expect(input.lanePriors).toMatchObject({
+      bucket: "scout-prod",
+      queueIds: [400, 420, 440, 480, 490],
+      trainingStartDate: "2026-05-06",
+      trainingEndDate: "2026-05-13",
+      holdoutStartDate: "2026-05-14",
+      holdoutEndDate: "2026-05-16",
+      holdoutSampleSize: 100,
+      holdoutSeed: "scout-lane-priors-patch-cadence-v1",
+      threshold: 0.95,
+    });
   });
 });
