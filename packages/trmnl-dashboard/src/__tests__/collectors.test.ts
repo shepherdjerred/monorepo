@@ -9,10 +9,23 @@ import {
 const config: AppConfig = {
   port: 3000,
   trmnlApiKey: "secret",
+  displayTimeZone: "America/Los_Angeles",
   homeAssistant: {
     url: "http://homeassistant.local:8123",
     token: "ha-token",
     batteryThreshold: 20,
+    unavailableIgnoredDomains: [
+      "group",
+      "automation",
+      "scene",
+      "script",
+      "button",
+      "event",
+      "number",
+      "select",
+      "text",
+      "update",
+    ],
     presence: [{ entityId: "person.jerred", label: "Jerred" }],
     security: [{ entityId: "lock.front_door", label: "Front Door" }],
     climate: [{ entityId: "climate.downstairs", label: "Downstairs" }],
@@ -48,14 +61,18 @@ describe("collectHomePayload", () => {
               status: "warning",
             },
           ],
+          unavailableCount: 2,
           lowBatteries: [],
+          lowBatteryCount: 0,
         };
       },
     });
 
     expect(payload.status).toBe("warning");
-    expect(payload.counts.unavailable).toBe(1);
-    expect(payload.summary).toBe("1 home · 1 unavailable · 0 low battery");
+    expect(payload.counts.unavailable).toBe(2);
+    expect(payload.unavailable).toHaveLength(1);
+    expect(payload.summary).toBe("1 home · 2 unavailable · 0 low battery");
+    expect(payload.generated_time).toMatch(/^\d{1,2}:\d{2} [AP]M$/);
   });
 });
 
@@ -100,5 +117,81 @@ describe("collectHomelabPayload", () => {
     expect(payload.bugsink.unresolved).toBe(2);
     expect(payload.storage.max_disk_used_percent).toBe(71.2);
     expect(payload.alerts.warning).toBe(1);
+  });
+
+  it("surfaces Bugsink and PagerDuty failures instead of treating them as zero", async () => {
+    const clients: HomelabClients = {
+      prometheus: {
+        async query() {
+          return [];
+        },
+        async scalar() {
+          return 10;
+        },
+      },
+      alertmanager: {
+        async getActiveAlerts() {
+          return [];
+        },
+      },
+      kubernetes: {
+        async getSummary() {
+          return { readyNodes: 1, totalNodes: 1, unhealthyPods: 0 };
+        },
+      },
+      bugsink: {
+        async getProjectSummaries() {
+          throw new Error("Bugsink request failed: 400");
+        },
+      },
+      pagerDuty: {
+        async getSummary() {
+          throw new Error("PagerDuty request failed: 401");
+        },
+      },
+    };
+
+    const payload = await collectHomelabPayload(config, clients);
+
+    expect(payload.status).toBe("unknown");
+    expect(payload.bugsink.status).toBe("unknown");
+    expect(payload.pagerduty.status).toBe("unknown");
+    expect(payload.errors).toEqual([
+      "Bugsink: Bugsink request failed: 400",
+      "PagerDuty: PagerDuty request failed: 401",
+    ]);
+  });
+
+  it("filters noisy storage mount artifacts", async () => {
+    const clients: HomelabClients = {
+      prometheus: {
+        async query() {
+          return [
+            { metric: { mountpoint: "/var" }, value: 38.8 },
+            { metric: { mountpoint: "/etc/extensions.yaml" }, value: 99 },
+            { metric: { mountpoint: "/usr/lib/firmware" }, value: 98 },
+          ];
+        },
+        async scalar() {
+          return 10;
+        },
+      },
+      alertmanager: {
+        async getActiveAlerts() {
+          return [];
+        },
+      },
+      kubernetes: {
+        async getSummary() {
+          return { readyNodes: 1, totalNodes: 1, unhealthyPods: 0 };
+        },
+      },
+    };
+
+    const payload = await collectHomelabPayload(config, clients);
+
+    expect(payload.storage.volumes).toEqual([
+      { name: "/var", used_percent: 38.8 },
+    ]);
   });
 });
