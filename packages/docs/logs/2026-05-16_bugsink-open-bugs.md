@@ -88,3 +88,43 @@ Complete
 
 - Temporal package-level `typecheck` still reports an existing `src/event-bridge/triggers.ts` index-signature access after dependency setup; targeted tests and changed-file lint passed.
 - The skipped Scout match should still count for S3-backed competition metrics because raw match data is saved before rank lookup; rank-history-only metrics may miss a transition for that match.
+
+## Session Log - 2026-05-17 - CI Fix
+
+### Done
+
+- Investigated Buildkite build `2513` for PR `#840`; failing job was `lint-scout-for-lol`.
+- Root-caused the failure to `packages/scout-for-lol/packages/backend/scripts/generate-test-template-db.ts` shelling out to `sqlite3`, which is not installed in the Dagger Bun image.
+- Replaced the shell-out with Bun's built-in `bun:sqlite` API and regenerated `packages/scout-for-lol/packages/backend/src/testing/template.db`.
+- Verified:
+  - `bun run generate:test-template` in `packages/scout-for-lol/packages/backend`
+  - `dagger call generate-and-lint --pkg-dir ./packages/scout-for-lol --pkg scout-for-lol --dep-names eslint-config --dep-dirs ./packages/eslint-config --tsconfig ./tsconfig.base.json`
+
+### Remaining
+
+- Watch the replacement Buildkite run for PR `#840` after the CI-fix commit is pushed.
+
+### Caveats
+
+- Local Dagger required Docker socket access, so the exact CI reproduction was run with escalated permissions.
+
+## Session Log - 2026-05-17 - Conflict Resolution
+
+### Done
+
+- Rebasing PR `#840` onto `origin/main` resolved the GitHub merge conflict in `packages/scout-for-lol/packages/backend/scripts/generate-test-template-db.ts`.
+- Preserved the direct `bun:sqlite` migration application path instead of returning to `prisma db push`, because the external process path was the source of the Buildkite failure.
+- Force-pushed the rebased branch and marked PR `#840` ready for review.
+- Verified:
+  - `bun run generate:test-template` in `packages/scout-for-lol/packages/backend`
+  - `bun run typecheck` in `packages/scout-for-lol/packages/backend`
+  - `dagger call generate-and-lint --pkg-dir ./packages/scout-for-lol --pkg scout-for-lol --dep-names eslint-config --dep-dirs ./packages/eslint-config --tsconfig ./tsconfig.base.json`
+
+### Remaining
+
+- Wait for the replacement Buildkite run for the rebased head commit.
+
+### Caveats
+
+- The initial `git rebase --continue` opened `nvim`; it was terminated after a non-interactive continuation completed the rebase.
+- Local Scout workspace dependencies had to be refreshed with `bun install --frozen-lockfile` before direct backend typecheck saw the current `@scout-for-lol/data` exports from `main`.
