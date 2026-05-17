@@ -27,6 +27,11 @@ import {
   savePipelineDebugToS3,
 } from "#src/storage/pipeline-s3.ts";
 import { createLogger } from "#src/logger.ts";
+import {
+  classifyOpenAIProviderIssue,
+  recordProviderIssue,
+  resolveProviderIssue,
+} from "#src/alerts/provider-metrics.ts";
 
 const logger = createLogger("generator");
 
@@ -50,6 +55,27 @@ function selectPlayerIndex(match: CompletedMatch | ArenaMatch): number {
   return jerredIndex === -1
     ? Math.floor(Math.random() * match.players.length)
     : jerredIndex;
+}
+
+function reportOpenAIProviderIssue(
+  error: unknown,
+  context: {
+    matchId: MatchId;
+  },
+): boolean {
+  const providerIssueKind = classifyOpenAIProviderIssue(error);
+  if (providerIssueKind === null) return false;
+
+  recordProviderIssue({
+    app: "scout-for-lol",
+    provider: "openai",
+    kind: providerIssueKind,
+    source: "match_review",
+  });
+  logger.warn(
+    `OpenAI provider issue while generating AI review for ${context.matchId}: ${providerIssueKind}`,
+  );
+  return true;
 }
 
 /**
@@ -172,6 +198,14 @@ export async function generateMatchReview(
       stages,
     });
   } catch (error) {
+    if (
+      reportOpenAIProviderIssue(error, {
+        matchId,
+      })
+    ) {
+      return undefined;
+    }
+
     logger.error("Pipeline failed:", error);
     Sentry.captureException(error, {
       tags: {
@@ -181,6 +215,19 @@ export async function generateMatchReview(
     });
     return undefined;
   }
+
+  resolveProviderIssue({
+    app: "scout-for-lol",
+    provider: "openai",
+    kind: "quota",
+    source: "match_review",
+  });
+  resolveProviderIssue({
+    app: "scout-for-lol",
+    provider: "openai",
+    kind: "rate_limit",
+    source: "match_review",
+  });
 
   // Save traces to S3 (fire and forget, don't block return)
   void (async () => {

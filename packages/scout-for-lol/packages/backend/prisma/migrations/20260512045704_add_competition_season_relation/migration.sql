@@ -18,15 +18,23 @@ CREATE TABLE "new_Competition" (
     "seasonId" TEXT,
     "startProcessedAt" DATETIME,
     "endProcessedAt" DATETIME,
+    "startNotifiedAt" DATETIME,
+    "endNotifiedAt" DATETIME,
+    "startNotificationMessageId" TEXT,
+    "endNotificationMessageId" TEXT,
+    "updateCronExpression" TEXT,
+    "nextScheduledUpdateAt" DATETIME,
+    "lastScheduledUpdateAt" DATETIME,
     "creatorDiscordId" TEXT NOT NULL,
     "createdTime" DATETIME NOT NULL,
     "updatedTime" DATETIME NOT NULL,
     CONSTRAINT "Competition_seasonId_fkey" FOREIGN KEY ("seasonId") REFERENCES "Season" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
-INSERT INTO "new_Competition" ("channelId", "createdTime", "creatorDiscordId", "criteriaConfig", "criteriaType", "description", "endDate", "endProcessedAt", "id", "isCancelled", "maxParticipants", "ownerId", "seasonId", "serverId", "startDate", "startProcessedAt", "title", "updatedTime", "visibility") SELECT "channelId", "createdTime", "creatorDiscordId", "criteriaConfig", "criteriaType", "description", "endDate", "endProcessedAt", "id", "isCancelled", "maxParticipants", "ownerId", "seasonId", "serverId", "startDate", "startProcessedAt", "title", "updatedTime", "visibility" FROM "Competition";
+INSERT INTO "new_Competition" ("channelId", "createdTime", "creatorDiscordId", "criteriaConfig", "criteriaType", "description", "endDate", "endNotificationMessageId", "endNotifiedAt", "endProcessedAt", "id", "isCancelled", "lastScheduledUpdateAt", "maxParticipants", "nextScheduledUpdateAt", "ownerId", "seasonId", "serverId", "startDate", "startNotificationMessageId", "startNotifiedAt", "startProcessedAt", "title", "updateCronExpression", "updatedTime", "visibility") SELECT "channelId", "createdTime", "creatorDiscordId", "criteriaConfig", "criteriaType", "description", "endDate", "endNotificationMessageId", "endNotifiedAt", "endProcessedAt", "id", "isCancelled", "lastScheduledUpdateAt", "maxParticipants", "nextScheduledUpdateAt", "ownerId", "seasonId", "serverId", "startDate", "startNotificationMessageId", "startNotifiedAt", "startProcessedAt", "title", "updateCronExpression", "updatedTime", "visibility" FROM "Competition";
 DROP TABLE "Competition";
 ALTER TABLE "new_Competition" RENAME TO "Competition";
 CREATE INDEX "Competition_serverId_isCancelled_idx" ON "Competition"("serverId", "isCancelled");
 CREATE INDEX "Competition_serverId_ownerId_isCancelled_idx" ON "Competition"("serverId", "ownerId", "isCancelled");
+CREATE INDEX "Competition_nextScheduledUpdateAt_idx" ON "Competition"("nextScheduledUpdateAt");
 PRAGMA foreign_keys=ON;
 PRAGMA defer_foreign_keys=OFF;

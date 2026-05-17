@@ -228,6 +228,24 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
       name: "pr-bot",
       rules: [
         {
+          alert: "TemporalAiProviderIssueActive",
+          annotations: {
+            summary: escapePrometheusTemplate(
+              "Temporal AI provider {{ $labels.provider }} {{ $labels.kind }} issue active",
+            ),
+            description: escapePrometheusTemplate(
+              "Temporal has an active AI provider issue from {{ $labels.source }} (provider={{ $labels.provider }}, kind={{ $labels.kind }}). Check provider billing/rate limits and PR review worker logs.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'max by (app, provider, kind, source) (ai_provider_issue_active{app="temporal"}) == 1',
+          ),
+          for: "10m",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
           alert: "PrWebhookSignatureFailures",
           annotations: {
             summary: "GitHub PR webhook is rejecting signatures",

@@ -9,6 +9,10 @@ import { FindingSchema, type Finding } from "#shared/pr-review/finding.ts";
 import type { PrReviewContext } from "#shared/pr-review/context.ts";
 import type { PrReviewPipelineInput } from "#shared/schemas.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
+import {
+  recordProviderIssue,
+  resolveProviderIssue,
+} from "#activities/pr-review/provider-metrics.ts";
 
 const COMPONENT = "pr-review-pipeline";
 
@@ -116,9 +120,22 @@ function jsonLog(
   );
 }
 
-function isAnthropicCreditBalanceError(error: unknown): boolean {
+function classifyAnthropicProviderIssue(
+  error: unknown,
+): "credit_balance_low" | "rate_limit" | null {
   const message = error instanceof Error ? error.message : String(error);
-  return message.includes("credit balance is too low");
+  const lowerMessage = message.toLowerCase();
+  if (lowerMessage.includes("credit balance is too low")) {
+    return "credit_balance_low";
+  }
+  if (
+    lowerMessage.includes("rate_limit_error") ||
+    lowerMessage.includes("rate limit") ||
+    lowerMessage.includes("429")
+  ) {
+    return "rate_limit";
+  }
+  return null;
 }
 
 function captureWithContext(
@@ -126,6 +143,23 @@ function captureWithContext(
   input: CorrectnessReviewInput,
   extra: Record<string, unknown> = {},
 ): void {
+  const providerIssueKind = classifyAnthropicProviderIssue(error);
+  if (providerIssueKind !== null) {
+    recordProviderIssue({
+      app: "temporal",
+      provider: "anthropic",
+      kind: providerIssueKind,
+      source: "pr_review_correctness",
+    });
+    jsonLog("warning", "Anthropic provider issue recorded", {
+      providerIssueKind,
+      owner: input.pipeline.owner,
+      repo: input.pipeline.repo,
+      prNumber: input.pipeline.prNumber,
+    });
+    return;
+  }
+
   Sentry.withScope((scope) => {
     const info = Context.current().info;
     scope.setTag("workflow", info.workflowType);
@@ -139,10 +173,6 @@ function captureWithContext(
       prNumber: input.pipeline.prNumber,
       ...extra,
     });
-    if (isAnthropicCreditBalanceError(error)) {
-      scope.setTag("provider_error", "anthropic_credit_balance_low");
-      scope.setFingerprint(["anthropic-credit-balance-low"]);
-    }
     Sentry.captureException(error);
   });
 }
@@ -281,6 +311,19 @@ export async function runCorrectnessReviewer(
       },
     ],
     messages: [{ role: "user", content: userText }],
+  });
+
+  resolveProviderIssue({
+    app: "temporal",
+    provider: "anthropic",
+    kind: "credit_balance_low",
+    source: "pr_review_correctness",
+  });
+  resolveProviderIssue({
+    app: "temporal",
+    provider: "anthropic",
+    kind: "rate_limit",
+    source: "pr_review_correctness",
   });
 
   const durationMs = Date.now() - startMs;

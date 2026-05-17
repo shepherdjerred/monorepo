@@ -1,5 +1,6 @@
 import type { Chart } from "cdk8s";
 import { ConfigMap } from "cdk8s-plus-31";
+import { exportAiProviderDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/ai-provider-dashboard.ts";
 import { exportGitckupDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/gitckup-dashboard.ts";
 import { exportHaWorkflowDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/ha-workflow-dashboard.ts";
 import { exportScoutDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/scout-dashboard.ts";
@@ -57,6 +58,13 @@ const GITCKUP_DASHBOARD: DashboardConfig = {
   name: "gitckup-dashboard",
   jsonFilename: "gitckup.json",
   exportFn: exportGitckupDashboardJson,
+};
+
+const AI_PROVIDER_DASHBOARD: DashboardConfig = {
+  id: "ai-provider-dashboard-configmap",
+  name: "ai-provider-dashboard",
+  jsonFilename: "ai-provider.json",
+  exportFn: exportAiProviderDashboardJson,
 };
 
 const HA_WORKFLOW_DASHBOARD: DashboardConfig = {
@@ -123,6 +131,7 @@ const PR_REVIEW_BOT_DASHBOARD: DashboardConfig = {
 };
 
 const ALL_DASHBOARDS: DashboardConfig[] = [
+  AI_PROVIDER_DASHBOARD,
   BUILDKITE_DASHBOARD,
   GITCKUP_DASHBOARD,
   HA_WORKFLOW_DASHBOARD,
