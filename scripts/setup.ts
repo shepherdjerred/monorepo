@@ -137,14 +137,23 @@ async function findMiseConfigs(): Promise<string[]> {
   return configs.sort();
 }
 
+async function trustMiseConfigs(configs: string[]): Promise<void> {
+  for (const cfg of configs) {
+    await exec("Tools", `mise trust ${relative(ROOT, cfg)}`, [
+      "mise",
+      "trust",
+      "-y",
+      cfg,
+    ]);
+  }
+}
+
 // ── Phase 1: Tools ─────────────────────────────────────────────────────
 
 async function ensureTools(): Promise<void> {
   const miseConfigs = await findMiseConfigs();
   log("Tools", `Found ${String(miseConfigs.length)} mise config files`);
-  await Promise.all(
-    miseConfigs.map((cfg) => $`mise trust -y ${cfg}`.quiet().catch(() => {})),
-  );
+  await trustMiseConfigs(miseConfigs);
   log("Tools", "Trusted all mise configs");
 
   await exec("Tools", "mise install", ["mise", "install"]);
