@@ -41,7 +41,7 @@ export const CADDY_IMAGE =
   "caddy:2.11.3-alpine@sha256:bb56e6200ec26a67f04be90255993dc390c9815967f67f24b4ca6466e88de64b";
 // renovate: datasource=docker depName=caddy
 export const CADDY_BUILDER_IMAGE =
-  "caddy:2.11.3-builder-alpine@sha256:7d2315853f99b425d0daa6bcad826e8b0d65b4af1f70fcaeb6b152157d81771d";
+  "caddy:2.11.3-builder-alpine@sha256:52575959b1eeee9900869325a953d71e4c521ab9102dd5cce07d429ea8246b85";
 // renovate: datasource=docker depName=python
 export const PYTHON_IMAGE =
   "python:3.14-slim@sha256:33ef7446e8c14b21cb247e23afbcdc90e98853b70812ca46b2265e769a7dfb8b";
