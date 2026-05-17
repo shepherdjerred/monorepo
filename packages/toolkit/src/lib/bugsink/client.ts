@@ -17,7 +17,7 @@ function getBaseUrl(): string {
   if (baseUrl == null || baseUrl.length === 0) {
     throw new Error("BUGSINK_URL environment variable is not set");
   }
-  return baseUrl.replace(/\/$/, "");
+  return baseUrl.replace(/\/$/, "").replace(/\/api\/canonical\/0$/, "");
 }
 
 function getAuthToken(): string {
@@ -36,7 +36,7 @@ export async function bugsinkRequest<T>(
   try {
     const baseUrl = getBaseUrl();
     const authToken = getAuthToken();
-    const url = new URL(`${baseUrl}/api/canonical/0${endpoint}`);
+    const url = buildBugsinkApiUrl(baseUrl, endpoint);
 
     if (params != null) {
       for (const [key, value] of Object.entries(params)) {
@@ -77,7 +77,7 @@ export async function bugsinkRequestRaw(
   try {
     const baseUrl = getBaseUrl();
     const authToken = getAuthToken();
-    const url = new URL(`${baseUrl}/api/canonical/0${endpoint}`);
+    const url = buildBugsinkApiUrl(baseUrl, endpoint);
 
     if (params != null) {
       for (const [key, value] of Object.entries(params)) {
@@ -107,4 +107,11 @@ export async function bugsinkRequestRaw(
       error instanceof Error ? error.message : "Unknown error occurred";
     return { success: false, error: message };
   }
+}
+
+export function buildBugsinkApiUrl(baseUrl: string, endpoint: string): URL {
+  const normalizedBase = baseUrl
+    .replace(/\/$/, "")
+    .replace(/\/api\/canonical\/0$/, "");
+  return new URL(`${normalizedBase}/api/canonical/0${endpoint}`);
 }

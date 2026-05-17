@@ -20,6 +20,8 @@ export type BuildAuditPromptInput = {
   runbook: string;
   /** Numeric section IDs to keep, or `"all"` for the full runbook. */
   sections: SectionsFilter;
+  /** Tooling preflight result to carry into the report agent. */
+  toolingPreflightMarkdown?: string | undefined;
 };
 
 export async function loadRunbook(): Promise<string> {
@@ -112,12 +114,15 @@ Available tools (already authenticated in this environment — do not attempt to
 - \`talosctl\` — context \`torvalds\` (\`TALOSCONFIG=/etc/talos/config\` projected from the worker pod's secret). If talosctl errors with "Forbidden" or "no such file", note it in the audit and fall back to kubectl-derived signal for §1.
 - \`argocd\` — \`ARGOCD_SERVER\` + \`ARGOCD_AUTH_TOKEN\` are set; pass \`--grpc-web\` if the transport demands it.
 - \`velero\` — uses in-cluster auth.
-- \`tofu\` — for state inspection only. Run \`tofu -chdir=packages/homelab/src/cdk8s/src/tofu/cloudflare plan -detailed-exitcode\` to detect drift; exit code 2 from this command means "drift detected" (NOT a failure) — report the drift in the audit body and continue. Never run \`tofu apply\`.
+- \`tofu\` — for state inspection only. First confirm \`packages/homelab/src/cdk8s/src/tofu/cloudflare\` exists in the worker checkout, then run \`tofu -chdir=packages/homelab/src/cdk8s/src/tofu/cloudflare plan -detailed-exitcode\` to detect drift; exit code 2 from this command means "drift detected" (NOT a failure) — report the drift in the audit body and continue. Never run \`tofu apply\`.
 - \`gh\` — for the open-PR survey (§12).
+- \`bk\` — Buildkite CLI. \`BUILDKITE_API_TOKEN\`, \`BUILDKITE_ORGANIZATION_SLUG=sjerred\`, and \`BUILDKITE_PIPELINE_SLUG=monorepo\` are set; Buildkite is the source of truth for CI.
+- \`temporal\` — Temporal CLI. \`TEMPORAL_ADDRESS\` points at the in-cluster frontend service; do not use \`kubectl exec\` or \`kubectl port-forward\` for routine audit checks.
 - \`toolkit\` — local binary at /usr/local/bin/toolkit. Subcommands the runbook calls for:
   - \`toolkit pd incidents [--json]\` — open PagerDuty incidents (§6).
   - \`toolkit bugsink issues [--json]\` — open Bugsink issues (§9). \`toolkit bugsink issue <ID>\` for details.
-  - \`toolkit gf alerts\` / \`toolkit gf query '<promql>'\` / \`toolkit gf logs '<logql>' --since 24h --limit 50\` (§6, §10).
+  - \`toolkit gf query 'ALERTS{alertstate="firing"}'\` is the primary alert truth. \`toolkit gf alerts\` lists Grafana-managed rules only and may correctly return "No alert rules found" when PrometheusRule/Alertmanager owns alerting.
+  - \`toolkit gf query '<promql>'\` / \`toolkit gf logs '<logql>' --since 24h --limit 50\` (§6, §10).
   All required env vars (\`PAGERDUTY_TOKEN\`, \`BUGSINK_URL\`, \`BUGSINK_TOKEN\`, \`GRAFANA_URL\`, \`GRAFANA_API_KEY\`) are already injected.
 `.trim();
 
@@ -133,6 +138,9 @@ export function buildAuditPrompt(input: BuildAuditPromptInput): string {
     "<<< RUNBOOK END >>>",
     "",
     TOOL_INVENTORY,
+    "",
+    input.toolingPreflightMarkdown?.trim() ??
+      "Audit tooling preflight: all required local tooling was present; no remote warnings were recorded before agent start.",
     "",
     OUTPUT_REQUIREMENTS,
     "",

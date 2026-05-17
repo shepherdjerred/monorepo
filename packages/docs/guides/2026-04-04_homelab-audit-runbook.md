@@ -6,16 +6,16 @@ Repeatable procedure for a comprehensive health audit of the `torvalds` cluster.
 
 All tools must be authenticated before starting:
 
-| Tool       | Context                                                                   | Check                                         |
-| ---------- | ------------------------------------------------------------------------- | --------------------------------------------- |
-| `kubectl`  | `admin@torvalds`                                                          | `kubectl get nodes`                           |
-| `talosctl` | `torvalds`                                                                | `talosctl version`                            |
-| `argocd`   | `admin`                                                                   | `argocd app list`                             |
-| `velero`   | —                                                                         | `velero backup get`                           |
-| `toolkit`  | Grafana + PagerDuty + Bugsink env vars                                    | `toolkit gf alerts`                           |
-| `temporal` | `TEMPORAL_ADDRESS=localhost:7233` (after `kubectl port-forward`)          | `temporal operator cluster health`            |
-| `bk`       | `sjerred` org selected (`bk use sjerred`), token in `BUILDKITE_API_TOKEN` | `bk build list --pipeline monorepo --limit 1` |
-| `gh`       | GitHub auth (`gh auth status`)                                            | `gh pr list --limit 1`                        |
+| Tool       | Context                                                      | Check                                            |
+| ---------- | ------------------------------------------------------------ | ------------------------------------------------ |
+| `kubectl`  | `admin@torvalds`                                             | `kubectl get nodes`                              |
+| `talosctl` | `torvalds`                                                   | `talosctl version`                               |
+| `argocd`   | `admin`                                                      | `argocd app list`                                |
+| `velero`   | —                                                            | `velero backup get`                              |
+| `toolkit`  | Grafana + PagerDuty + Bugsink env vars                       | `toolkit gf query 'ALERTS{alertstate="firing"}'` |
+| `temporal` | `TEMPORAL_ADDRESS` points at the Temporal frontend service   | `temporal operator cluster health`               |
+| `bk`       | `BUILDKITE_API_TOKEN`, `BUILDKITE_ORGANIZATION_SLUG=sjerred` | `bk build list --pipeline monorepo --limit 1`    |
+| `gh`       | GitHub auth (`gh auth status`)                               | `gh pr list --limit 1`                           |
 
 ## Execution Strategy
 
@@ -128,9 +128,14 @@ toolkit gf query 'kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacit
 ### Firing Alerts
 
 ```bash
-toolkit gf alerts                                          # Grafana alert rules
-toolkit gf query 'ALERTS{alertstate="firing"}'             # All firing Prometheus alerts
+toolkit gf query 'ALERTS{alertstate="firing"}'             # Primary source: all firing Prometheus alerts
+toolkit gf alerts                                          # Grafana-managed alert rules only
 ```
+
+Note: `toolkit gf alerts` can legitimately return "No alert rules found" when
+alerting is implemented with PrometheusRule resources and Alertmanager routing.
+Do not mark that as a Grafana outage unless Prometheus firing-alert queries or
+scrape health also fail.
 
 ### PagerDuty Incidents
 
@@ -231,21 +236,10 @@ Flag: projects with no recent releases (SDK may not be reporting), large gap bet
 
 Temporal runs in the `temporal` namespace (server + UI + worker + PostgreSQL). The UI is at `https://temporal-ui.tailnet-1a49.ts.net`. Workflow source is in `packages/temporal/` (`good-night`, `good-morning`, `golink-sync`, `fetcher`, `dns-audit`, `deps-summary`).
 
-`TailscaleIngress` only proxies HTTP, so the gRPC frontend (port 7233) is not exposed through Tailscale. Use one of the following to talk to it:
-
-```bash
-# Option A — kubectl exec (runs temporal CLI inside the server pod; no network setup needed)
-kubectl exec -n temporal deploy/temporal-temporal-server -- \
-  temporal --address temporal-temporal-server-service:7233 operator cluster health
-
-# Option B — kubectl port-forward
-kubectl port-forward -n temporal svc/temporal-temporal-server-service 7233:7233 &
-export TEMPORAL_ADDRESS=localhost:7233
-# ... run temporal commands ...
-# kill %1   # stop port-forward when done
-```
-
-The examples below assume `TEMPORAL_ADDRESS` is set (Option B) or are prefixed with `kubectl exec ...` (Option A).
+The scheduled audit worker has the Temporal CLI installed and `TEMPORAL_ADDRESS`
+points at `temporal-temporal-server-service:7233`, so run Temporal commands
+directly. Do not use `kubectl exec` for the audit workflow; its service account
+is intentionally read-only and does not have `pods/exec`.
 
 ### Cluster & pod health
 
@@ -311,7 +305,7 @@ Flag: non-zero failure rate, scrape target down.
 
 ## Section 11: CI on `main`
 
-Buildkite is the source of truth for CI (pipeline `sjerred/monorepo`). **Do not use `gh run`** — this repo does not use GitHub Actions. Requires `BUILDKITE_API_TOKEN` in env; the `sjerred` org must be configured (`bk configure --org sjerred --token $BUILDKITE_API_TOKEN`) and selected (`bk use sjerred`).
+Buildkite is the source of truth for CI (pipeline `sjerred/monorepo`). **Do not use `gh run`** — this repo does not use GitHub Actions. Requires `BUILDKITE_API_TOKEN` in env; the scheduled audit worker also sets `BUILDKITE_ORGANIZATION_SLUG=sjerred` and `BUILDKITE_PIPELINE_SLUG=monorepo`.
 
 ### Is `main` green?
 
