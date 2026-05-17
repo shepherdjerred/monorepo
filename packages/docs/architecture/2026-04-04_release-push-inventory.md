@@ -15,7 +15,7 @@ All targets are orchestrated via **Buildkite CI** using **Dagger** as the build 
 | npm packages         | 3     | npm registry                             | NPM_TOKEN    |
 | Static sites (S3)    | 8     | SeaweedFS + Cloudflare R2                | AWS creds    |
 | GitHub releases      | 2     | GitHub API                               | GH_TOKEN     |
-| Git push (automated) | 2     | origin (version commits, release-please) | GH_TOKEN     |
+| Git push (automated) | 2     | origin (version commits, release-please) | GitHub App   |
 | OpenTofu apply       | 3     | Cloudflare, GitHub, SeaweedFS            | Multiple     |
 | ArgoCD sync          | 1     | K8s cluster via `argocd.sjer.red`        | ArgoCD token |
 
@@ -89,9 +89,9 @@ Method: `aws s3 sync --delete`. Code: `.dagger/src/release.ts`, `scripts/ci/src/
 
 ## Automated Git Pushes
 
-**Version commit-back** — updates `packages/homelab/src/cdk8s/src/versions.ts` with image digests, commits and pushes. Code: `.dagger/src/release.ts` (versionCommitBackHelper), `scripts/ci/src/steps/version.ts`.
+**Version commit-back** — updates `packages/homelab/src/cdk8s/src/versions.ts` with image digests, commits and pushes using a short-lived GitHub App installation token. Code: `.dagger/src/release.ts` (versionCommitBackHelper), `scripts/ci/src/steps/version.ts`.
 
-**Release-please** — creates/updates version bump PRs, auto-generates GitHub releases with changelogs. Config: `release-please-config.json`, `.release-please-manifest.json`. Code: `.dagger/src/release.ts` (releasePleaseHelper).
+**Release-please** — creates/updates version bump PRs, auto-generates GitHub releases with changelogs, and authenticates with a short-lived GitHub App installation token. Config: `release-please-config.json`, `.release-please-manifest.json`. Code: `.dagger/src/release.ts` (releasePleaseHelper).
 
 ## OpenTofu Infrastructure Apply
 

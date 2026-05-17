@@ -10,6 +10,13 @@ export function branchName(version: string, id: string): string {
 
 export function failureReason(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
+  if (
+    message.includes("GITHUB_APP_ID") ||
+    message.includes("GITHUB_APP_INSTALLATION_ID") ||
+    message.includes("GITHUB_APP_PRIVATE_KEY")
+  ) {
+    return "missing-github-app-credentials";
+  }
   if (message.includes("GH_TOKEN")) {
     return "missing-gh-token";
   }

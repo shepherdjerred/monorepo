@@ -37,6 +37,12 @@ function isPullRequestBranch(): boolean {
 export const DRYRUN_FLAG =
   process.env["DRYRUN"] === "true" || isPullRequestBranch() ? " --dryrun" : "";
 
+export const GITHUB_APP_SECRET_ARGS = [
+  "--github-app-id env:GITHUB_APP_ID",
+  "--github-app-installation-id env:GITHUB_APP_INSTALLATION_ID",
+  "--github-app-private-key env:GITHUB_APP_PRIVATE_KEY",
+].join(" ");
+
 /** Dagger environment variables for CI steps. */
 export const DAGGER_ENV: Record<string, string> = {
   DAGGER_NO_NAG: "1",

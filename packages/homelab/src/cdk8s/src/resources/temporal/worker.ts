@@ -364,6 +364,18 @@ export function createTemporalWorkerDeployment(
           secret,
           key: "GH_TOKEN",
         }),
+        GITHUB_APP_ID: EnvValue.fromSecretValue({
+          secret,
+          key: "GITHUB_APP_ID",
+        }),
+        GITHUB_APP_INSTALLATION_ID: EnvValue.fromSecretValue({
+          secret,
+          key: "GITHUB_APP_INSTALLATION_ID",
+        }),
+        GITHUB_APP_PRIVATE_KEY: EnvValue.fromSecretValue({
+          secret,
+          key: "GITHUB_APP_PRIVATE_KEY",
+        }),
         // GitHub webhook ingest (pr-review / pr-summary). The pr-agent activity
         // shells out to `claude -p` with the GitHub MCP server; the MCP server
         // reads GITHUB_PERSONAL_ACCESS_TOKEN from its env. CLAUDE_CODE_OAUTH_TOKEN

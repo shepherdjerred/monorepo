@@ -146,6 +146,7 @@ function auditSecretTokens(): readonly (string | undefined)[] {
     Bun.env["CLOUDFLARE_API_TOKEN"],
     Bun.env["GH_TOKEN"],
     Bun.env["GITHUB_PERSONAL_ACCESS_TOKEN"],
+    Bun.env["GITHUB_APP_PRIVATE_KEY"],
     Bun.env["POSTAL_API_KEY"],
   ];
 }

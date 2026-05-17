@@ -94,6 +94,7 @@ function secretTokens(): readonly (string | undefined)[] {
     Bun.env["ANTHROPIC_API_KEY"],
     Bun.env["GH_TOKEN"],
     Bun.env["GITHUB_PERSONAL_ACCESS_TOKEN"],
+    Bun.env["GITHUB_APP_PRIVATE_KEY"],
   ];
 }
 

@@ -11,7 +11,8 @@
  * with `--owner` and `--repo`.
  *
  * Requires:
- *   - GH_TOKEN                 - read access to the target repo
+ *   - GITHUB_APP_ID / GITHUB_APP_INSTALLATION_ID / GITHUB_APP_PRIVATE_KEY
+ *                              - read access to the target repo
  *   - CLAUDE_CODE_OAUTH_TOKEN  - full replay with specialist LLM calls
  *   - ANTHROPIC_API_KEY        - legacy `--baseline` mode only
  */
@@ -55,6 +56,7 @@ import {
 import { dedupeActivities } from "#activities/pr-review/dedupe.ts";
 import type { BootstrapResult } from "#activities/pr-review/bootstrap.ts";
 import type { Finding } from "#shared/pr-review/finding.ts";
+import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import type { PrReviewPipelineInput } from "#shared/schemas.ts";
 import { PASSES_PER_SPECIALIST } from "#lib/diff-slicing.ts";
 import { runToolkitRecallSearch } from "#lib/hybrid-retrieval.ts";
@@ -430,7 +432,8 @@ async function runCurrentPipeline(
 
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
-  const ghToken = requireEnv("GH_TOKEN");
+  const tokenResult = await createGitHubAppInstallationToken();
+  const ghToken = tokenResult.token;
   const octokit = new Octokit({ auth: ghToken });
 
   const body = args.baseline
