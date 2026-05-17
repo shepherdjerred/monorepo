@@ -44,14 +44,19 @@ error: cannot open '/buildkite/git-mirrors/https---github-com-shepherdjerred-mon
 - Installed missing local workspace dependencies needed for verification in this fresh worktree.
 - Verified the cdk8s synth output contains `storage: 20Gi` for `buildkite-git-mirrors`; generated `dist/` output remains ignored by repo policy.
 - Ran `bun run build`, `bun run typecheck`, and `bun run lint` in `packages/homelab/src/cdk8s`.
+- Updated `scripts/setup.ts` so setup explicitly runs `mise trust -y` for every repo mise config and fails visibly if trust cannot be written.
+- Updated `AGENTS.md` to make `bun run scripts/setup.ts` the first-run setup path and clarify that `mise run dev` is equivalent only after the repo is trusted.
+- Verified the setup script edit with `bun build scripts/setup.ts --outdir /private/tmp/setup-check`, `bunx prettier --check scripts/setup.ts AGENTS.md`, and `bunx markdownlint-cli2 AGENTS.md`.
 
 ### Remaining
 
 - Sync the Buildkite ArgoCD application so the cluster PVC request is expanded, then rerun main CI.
 - The `zfs-ssd` storage class has `allowVolumeExpansion: true`, so increasing the PVC request should be viable from the storage-class side.
+- Fresh clones still need a working `bun` binary to run `bun run scripts/setup.ts`; the setup script can remove the separate manual `mise trust` step, but it cannot bootstrap Bun before any Bun exists.
 
 ### Caveats
 
 - I did not mutate the cluster or rerun CI.
 - Live exec into a job pod was not reliable because the candidate pods completed before `kubectl exec` could attach.
 - Initial verification was blocked by untrusted mise shims and missing workspace dependencies; rerunning with the direct Bun binary and installed lockfile dependencies passed.
+- A sandboxed dry run of `bun --check scripts/setup.ts` executed the script and confirmed the new trust path fails clearly when the sandbox cannot write mise state under `~/.local/state/mise`.
