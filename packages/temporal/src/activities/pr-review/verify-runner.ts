@@ -19,6 +19,10 @@ import type {
   VerificationStatus,
   VerifierTarget,
 } from "#shared/pr-review/finding.ts";
+import {
+  checkContainerManifest,
+  sectionHasDependency,
+} from "./verify-target-helpers.ts";
 
 /**
  * Maximum wall-clock duration for a single verifier subprocess. Findings
@@ -61,6 +65,12 @@ export type VerifierRunner = {
   ) => Promise<VerificationResult>;
   test: (
     target: Extract<VerifierTarget, { kind: "test" }>,
+  ) => Promise<VerificationResult>;
+  containerImage: (
+    target: Extract<VerifierTarget, { kind: "container-image" }>,
+  ) => Promise<VerificationResult>;
+  packageManifest: (
+    target: Extract<VerifierTarget, { kind: "package-manifest" }>,
   ) => Promise<VerificationResult>;
 };
 
@@ -438,6 +448,89 @@ export function makeBunSpawnVerifierRunner(workdir: string): VerifierRunner {
             }),
       });
     },
+
+    containerImage: async (target) => {
+      const startMs = Date.now();
+      try {
+        const result = await checkContainerManifest({
+          registry: target.registry,
+          repository: target.repository,
+          reference: target.reference,
+        });
+        if (result.status === -1) {
+          return makeVerificationResult({
+            status: "unverified",
+            verifier: "container-image",
+            exitCode: -1,
+            output: result.statusText,
+            durationMs: Date.now() - startMs,
+            note: result.statusText,
+          });
+        }
+        const claimSupported = result.ok === target.mustExist;
+        return makeVerificationResult({
+          status: claimSupported ? "verified" : "contradicted",
+          verifier: "container-image",
+          exitCode: result.status,
+          output: `${target.registry}/${target.repository}:${target.reference} -> HTTP ${String(result.status)} ${result.statusText}`,
+          durationMs: Date.now() - startMs,
+          ...(claimSupported
+            ? {}
+            : {
+                note: target.mustExist
+                  ? "manifest not found"
+                  : "manifest unexpectedly exists",
+              }),
+        });
+      } catch (error: unknown) {
+        return makeVerificationResult({
+          status: "unverified",
+          verifier: "container-image",
+          exitCode: -1,
+          output: error instanceof Error ? error.message : String(error),
+          durationMs: Date.now() - startMs,
+          note: "container manifest check failed",
+        });
+      }
+    },
+
+    packageManifest: async (target) => {
+      const startMs = Date.now();
+      try {
+        const raw: unknown = JSON.parse(
+          await Bun.file(`${workdir}/${target.packageJsonPath}`).text(),
+        );
+        const exists = sectionHasDependency({
+          raw,
+          section: target.section,
+          dependencyName: target.dependencyName,
+        });
+        const claimSupported = exists === target.mustExist;
+        return makeVerificationResult({
+          status: claimSupported ? "verified" : "contradicted",
+          verifier: "package-manifest",
+          exitCode: 0,
+          output: `${target.packageJsonPath} ${target.section}.${target.dependencyName} exists=${String(exists)}`,
+          durationMs: Date.now() - startMs,
+          ...(claimSupported
+            ? {}
+            : {
+                note: target.mustExist
+                  ? "dependency missing from expected section"
+                  : "dependency unexpectedly present in section",
+              }),
+        });
+      } catch (error: unknown) {
+        return makeVerificationResult({
+          status: "unverified",
+          verifier: "package-manifest",
+          exitCode: -1,
+          output: error instanceof Error ? error.message : String(error),
+          durationMs: Date.now() - startMs,
+          note: "package manifest check failed",
+        });
+      }
+    },
   };
 }
 
@@ -456,5 +549,7 @@ function makeUnavailableRunner(reason: string): VerifierRunner {
     eslint: () => Promise.resolve(result("eslint")),
     grep: () => Promise.resolve(result("grep")),
     test: () => Promise.resolve(result("test")),
+    containerImage: () => Promise.resolve(result("container-image")),
+    packageManifest: () => Promise.resolve(result("package-manifest")),
   };
 }

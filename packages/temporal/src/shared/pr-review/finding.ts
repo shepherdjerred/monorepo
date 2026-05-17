@@ -28,6 +28,8 @@ export const FindingVerifierSchema = z.enum([
   "eslint",
   "grep",
   "test",
+  "container-image",
+  "package-manifest",
   "none",
 ]);
 
@@ -74,6 +76,33 @@ export const VerifierTargetSchema = z.discriminatedUnion("kind", [
     testNamePattern: z.string().min(1),
     /** `true`: the claim asserts the test should PASS; `false`: it should FAIL. */
     expectPass: z.boolean(),
+  }),
+  z.object({
+    kind: z.literal("container-image"),
+    /** Registry host, for example `ghcr.io` or `docker.io`. */
+    registry: z.string().min(1),
+    /** Repository path inside the registry, for example `shepherdjerred/caddy-s3proxy`. */
+    repository: z.string().min(1),
+    /** Manifest reference to check: tag or `sha256:<digest>`. */
+    reference: z.string().min(1),
+    /** `true`: the claim asserts the manifest exists; `false`: it asserts the manifest is missing. */
+    mustExist: z.boolean(),
+  }),
+  z.object({
+    kind: z.literal("package-manifest"),
+    /** Repo-relative package.json path. */
+    packageJsonPath: z.string().min(1),
+    /** Dependency key to inspect. */
+    dependencyName: z.string().min(1),
+    /** Dependency section to inspect. */
+    section: z.enum([
+      "dependencies",
+      "devDependencies",
+      "optionalDependencies",
+      "peerDependencies",
+    ]),
+    /** `true`: the claim asserts the dep is present in the section; `false`: absent. */
+    mustExist: z.boolean(),
   }),
   z.object({
     kind: z.literal("none"),
@@ -142,6 +171,34 @@ export const FindingVotesSchema = z.object({
 });
 
 /**
+ * Optional concrete replacement for GitHub's suggested-change UI. Specialists
+ * should populate this only when the edit is obvious and local to the finding's
+ * diff range. Posting code validates the target against the PR patch before
+ * emitting a suggestion block; unsafe or unanchored suggestions degrade to a
+ * normal prose comment.
+ */
+export const FindingSuggestionSchema = z
+  .object({
+    /** Replacement text for the target range. Do not include markdown fences. */
+    replacement: z.string().min(1),
+    /** Optional override for the suggested replacement range; defaults to finding lineStart. */
+    lineStart: z.number().int().positive().optional(),
+    /** Optional override for the suggested replacement range; defaults to finding lineEnd. */
+    lineEnd: z.number().int().positive().optional(),
+    /** Short explanation of why this replacement is safe. */
+    rationale: z.string().min(1).optional(),
+  })
+  .refine(
+    (suggestion) =>
+      suggestion.lineStart === undefined ||
+      suggestion.lineEnd === undefined ||
+      suggestion.lineEnd >= suggestion.lineStart,
+    {
+      message: "suggestion.lineEnd must be >= suggestion.lineStart",
+    },
+  );
+
+/**
  * A single review comment as produced by a specialist. Every field is
  * required so the schema doubles as a contract for prompt outputs.
  */
@@ -185,6 +242,12 @@ export const FindingSchema = z.object({
   /** Self-reported confidence 0..1 from the producing specialist. */
   confidence: z.number().min(0).max(1),
   /**
+   * Optional GitHub suggested-change replacement. Suggestions are best-effort:
+   * callers may omit this for ambiguous fixes, and the post activity validates
+   * anchors before showing it inline.
+   */
+  suggestion: FindingSuggestionSchema.optional(),
+  /**
    * Populated by the consensus activity. Undefined until then; required to
    * be present in postReview input.
    */
@@ -202,5 +265,6 @@ export type FindingSeverity = z.infer<typeof FindingSeveritySchema>;
 export type FindingKind = z.infer<typeof FindingKindSchema>;
 export type FindingVerifier = z.infer<typeof FindingVerifierSchema>;
 export type FindingVotes = z.infer<typeof FindingVotesSchema>;
+export type FindingSuggestion = z.infer<typeof FindingSuggestionSchema>;
 
 export const FindingArraySchema = z.array(FindingSchema);

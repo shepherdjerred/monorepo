@@ -93,6 +93,20 @@ export const prReviewCountTotal = new Counter({
   registers: [register],
 });
 
+export const prReviewStatusCommentsTotal = new Counter({
+  name: "pr_review_status_comments_total",
+  help: "pr-review status comments created or updated, by repo",
+  labelNames: ["repo", "state"] as const,
+  registers: [register],
+});
+
+export const prReviewInlineCommentsTotal = new Counter({
+  name: "pr_review_inline_comments_total",
+  help: "pr-review inline comments by posting outcome",
+  labelNames: ["repo", "outcome"] as const,
+  registers: [register],
+});
+
 // ---------------------------------------------------------------------------
 // Phase 9 — dismissed-comments learning loop
 // ---------------------------------------------------------------------------
