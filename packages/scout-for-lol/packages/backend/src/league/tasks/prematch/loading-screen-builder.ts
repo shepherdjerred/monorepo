@@ -3,11 +3,13 @@ import type {
   RawCurrentGameParticipant,
   LoadingScreenData,
   LoadingScreenParticipant,
+  NonStandardLoadingScreenParticipant,
   LoadingScreenBan,
   LoadingScreenLayout,
   LoadingScreenTeam,
   Region,
   Ranks,
+  StandardLoadingScreenParticipant,
 } from "@scout-for-lol/data/index.ts";
 import {
   parseQueueType,
@@ -21,6 +23,7 @@ import {
   LoadingScreenChampionIdSchema,
   ArenaTeamIdSchema,
   GameIdSchema,
+  inferStandardLanesWithCurrentPriors,
 } from "@scout-for-lol/data/index.ts";
 import {
   getChampionDisplayName,
@@ -50,6 +53,9 @@ type BuildParticipantContext = {
   participantIndex: number;
   participantCount: number;
 };
+
+type BaseBuiltParticipant = Omit<NonStandardLoadingScreenParticipant, "ranks">;
+type RankedBuiltParticipant = BaseBuiltParticipant & { ranks?: Ranks };
 
 /**
  * Determine the layout mode based on queue config ID.
@@ -130,7 +136,7 @@ function resolveTeam(
 async function buildParticipant(
   participant: RawCurrentGameParticipant,
   context: BuildParticipantContext,
-): Promise<Omit<LoadingScreenParticipant, "ranks">> {
+): Promise<BaseBuiltParticipant> {
   const championName = resolveChampionKey(participant.championId);
   const championDisplayName = getChampionDisplayName(participant.championId);
   const skinNum = await resolveSkinNum(participant, championName);
@@ -143,6 +149,7 @@ async function buildParticipant(
   return {
     puuid,
     summonerName: participant.riotId,
+    championId: LoadingScreenChampionIdSchema.parse(participant.championId),
     championName,
     championDisplayName,
     skinNum,
@@ -164,6 +171,84 @@ async function buildParticipant(
         : RuneIdSchema.parse(participant.perks.perkSubStyle),
     isTrackedPlayer: puuid !== null && context.trackedPuuids.has(puuid),
   };
+}
+
+function laneInferenceKey(index: number): string {
+  return `participant:${index.toString()}`;
+}
+
+function buildStandardParticipant(
+  participant: RankedBuiltParticipant,
+  lane: StandardLoadingScreenParticipant["lane"],
+): StandardLoadingScreenParticipant {
+  if (participant.team !== "blue" && participant.team !== "red") {
+    throw new Error(
+      "Standard loading-screen participant has non-standard team",
+    );
+  }
+  return {
+    ...participant,
+    team: participant.team,
+    lane,
+  };
+}
+
+function inferStandardParticipants(
+  participants: readonly RankedBuiltParticipant[],
+): StandardLoadingScreenParticipant[] {
+  if (participants.length !== 10) {
+    throw new Error(
+      `Standard loading screen requires exactly 10 participants; received ${participants.length.toString()}`,
+    );
+  }
+
+  const result = new Map<number, StandardLoadingScreenParticipant>();
+
+  for (const team of ["blue", "red"]) {
+    const indexedTeam = participants
+      .map((participant, index) => ({ participant, index }))
+      .filter((entry) => entry.participant.team === team);
+    if (indexedTeam.length !== 5) {
+      throw new Error(
+        `Standard loading screen requires exactly 5 ${team} participants; received ${indexedTeam.length.toString()}`,
+      );
+    }
+
+    const inference = inferStandardLanesWithCurrentPriors(
+      indexedTeam.map((entry) => ({
+        participantKey: laneInferenceKey(entry.index),
+        championId: entry.participant.championId,
+        spell1Id: entry.participant.spell1Id,
+        spell2Id: entry.participant.spell2Id,
+      })),
+    );
+
+    for (const assignment of inference.assignments) {
+      const parsedIndex = Number(
+        assignment.participantKey.replace("participant:", ""),
+      );
+      const participant = participants[parsedIndex];
+      if (participant === undefined) {
+        throw new Error(`Missing participant for ${assignment.participantKey}`);
+      }
+      result.set(
+        parsedIndex,
+        buildStandardParticipant(participant, assignment.lane),
+      );
+    }
+  }
+
+  const inferred = participants.map((_, index) => {
+    const participant = result.get(index);
+    if (participant === undefined) {
+      throw new Error(
+        `Lane inference did not produce participant at index ${index.toString()}`,
+      );
+    }
+    return participant;
+  });
+
+  return inferred;
 }
 
 /**
@@ -251,14 +336,18 @@ export async function buildLoadingScreenData(
   );
 
   // Combine base participants with rank results
-  const participants: LoadingScreenParticipant[] = baseParticipants.map(
+  const rankedParticipants: RankedBuiltParticipant[] = baseParticipants.map(
     (base, idx) => {
       const rankResult = rankResults[idx];
       const ranks: Ranks | undefined =
         rankResult?.status === "fulfilled" ? rankResult.value : undefined;
-      return { ...base, ranks };
+      return ranks === undefined ? base : { ...base, ranks };
     },
   );
+  const participants: LoadingScreenParticipant[] =
+    layout === "standard"
+      ? inferStandardParticipants(rankedParticipants)
+      : rankedParticipants;
 
   // Build bans (skip for ARAM/Arena which don't have bans)
   const bans = layout === "standard" ? buildBans(gameInfo) : [];

@@ -5,6 +5,7 @@ import { TeamSchema } from "#src/model/team.ts";
 import { LeaguePuuidSchema } from "#src/model/league-account.ts";
 import { MapNameSchema } from "#src/model/map.ts";
 import { ArenaTeamIdSchema } from "#src/model/arena/arena.ts";
+import { LaneSchema } from "#src/model/lane.ts";
 
 /**
  * Layout mode determines how participants are arranged visually.
@@ -72,18 +73,13 @@ export const QueueDisplayNameSchema = z
   .min(1)
   .brand<"QueueDisplayName">();
 
-/**
- * A single participant on the loading screen.
- * Contains all info needed to render one player card.
- */
-export type LoadingScreenParticipant = z.infer<
-  typeof LoadingScreenParticipantSchema
->;
-export const LoadingScreenParticipantSchema = z.strictObject({
+export const BaseLoadingScreenParticipantSchema = z.strictObject({
   /** Riot PUUID — null for participants we cannot identify (rare, e.g., bots) */
   puuid: LeaguePuuidSchema.nullable(),
   /** In-game Riot ID (e.g., "Cain#3276") */
   summonerName: z.string().min(1),
+  /** Riot champion ID from Spectator / Match-V5 */
+  championId: LoadingScreenChampionIdSchema,
   /** Champion key for image lookup (e.g., "Aatrox", "LeeSin") */
   championName: z.string().min(1),
   /** Human-readable champion name (e.g., "Lee Sin") */
@@ -106,6 +102,41 @@ export const LoadingScreenParticipantSchema = z.strictObject({
   isTrackedPlayer: z.boolean(),
 });
 
+export const StandardLoadingScreenParticipantSchema =
+  BaseLoadingScreenParticipantSchema.extend({
+    /** Standard 5v5 side assignment */
+    team: TeamSchema,
+    /** Inferred standard 5v5 lane. Required for standard loading screens. */
+    lane: LaneSchema,
+  });
+
+export type StandardLoadingScreenParticipant = z.infer<
+  typeof StandardLoadingScreenParticipantSchema
+>;
+
+export const NonStandardLoadingScreenParticipantSchema =
+  BaseLoadingScreenParticipantSchema.extend({
+    /** Team assignment for ARAM or Arena */
+    team: LoadingScreenTeamSchema,
+  });
+
+export type NonStandardLoadingScreenParticipant = z.infer<
+  typeof NonStandardLoadingScreenParticipantSchema
+>;
+
+export const LoadingScreenParticipantSchema = z.union([
+  StandardLoadingScreenParticipantSchema,
+  NonStandardLoadingScreenParticipantSchema,
+]);
+
+/**
+ * A single participant on the loading screen.
+ * Contains all info needed to render one player card.
+ */
+export type LoadingScreenParticipant = z.infer<
+  typeof LoadingScreenParticipantSchema
+>;
+
 /**
  * A banned champion shown in the loading screen header.
  */
@@ -119,12 +150,7 @@ export const LoadingScreenBanSchema = z.strictObject({
   team: TeamSchema,
 });
 
-/**
- * Complete data needed to render a loading screen image.
- * Fully resolved — no external lookups needed during rendering.
- */
-export type LoadingScreenData = z.infer<typeof LoadingScreenDataSchema>;
-export const LoadingScreenDataSchema = z.strictObject({
+const BaseLoadingScreenDataSchema = z.strictObject({
   /** Riot game ID from spectator API */
   gameId: GameIdSchema,
   /** Parsed queue type */
@@ -133,17 +159,57 @@ export const LoadingScreenDataSchema = z.strictObject({
   queueDisplayName: QueueDisplayNameSchema,
   /** Whether the game is ranked (solo or flex) */
   isRanked: z.boolean(),
-  /** Layout mode for rendering */
-  layout: LoadingScreenLayoutSchema,
   /** Map name */
   mapName: MapNameSchema,
-  /** All participants in the game */
-  participants: z.array(LoadingScreenParticipantSchema),
   /** Banned champions (empty for ARAM/Arena) */
   bans: z.array(LoadingScreenBanSchema),
   /** Game start timestamp in milliseconds */
   gameStartTime: z.number().int().nonnegative(),
 });
+
+export const StandardLoadingScreenDataSchema =
+  BaseLoadingScreenDataSchema.extend({
+    /** Layout mode for standard 5v5 games */
+    layout: z.literal("standard"),
+    /** Standard games must have inferred lanes for every participant */
+    participants: z.array(StandardLoadingScreenParticipantSchema).length(10),
+  });
+
+export type StandardLoadingScreenData = z.infer<
+  typeof StandardLoadingScreenDataSchema
+>;
+
+export const AramLoadingScreenDataSchema = BaseLoadingScreenDataSchema.extend({
+  /** Layout mode for ARAM games */
+  layout: z.literal("aram"),
+  /** ARAM participants do not carry standard lane assignments */
+  participants: z.array(NonStandardLoadingScreenParticipantSchema).length(10),
+});
+
+export type AramLoadingScreenData = z.infer<typeof AramLoadingScreenDataSchema>;
+
+export const ArenaLoadingScreenDataSchema = BaseLoadingScreenDataSchema.extend({
+  /** Layout mode for Arena games */
+  layout: z.literal("arena"),
+  /** Arena participants do not carry standard lane assignments */
+  participants: z.array(NonStandardLoadingScreenParticipantSchema).length(16),
+});
+
+export type ArenaLoadingScreenData = z.infer<
+  typeof ArenaLoadingScreenDataSchema
+>;
+
+export const LoadingScreenDataSchema = z.discriminatedUnion("layout", [
+  StandardLoadingScreenDataSchema,
+  AramLoadingScreenDataSchema,
+  ArenaLoadingScreenDataSchema,
+]);
+
+/**
+ * Complete data needed to render a loading screen image.
+ * Fully resolved — no external lookups needed during rendering.
+ */
+export type LoadingScreenData = z.infer<typeof LoadingScreenDataSchema>;
 
 /**
  * Build a QueueDisplayName from a QueueType, ensuring we never have

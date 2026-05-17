@@ -3,6 +3,13 @@ import { z } from "zod";
 
 export type Lane = z.infer<typeof LaneSchema>;
 export const LaneSchema = z.enum(["top", "jungle", "middle", "adc", "support"]);
+export const LANE_ORDER: readonly Lane[] = [
+  "top",
+  "jungle",
+  "middle",
+  "adc",
+  "support",
+];
 
 export function parseLane(input: string): Lane | undefined {
   const normalized = input.toLowerCase();

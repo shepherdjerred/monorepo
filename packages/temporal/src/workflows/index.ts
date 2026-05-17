@@ -18,7 +18,10 @@ import { runZfsMaintenanceWorkflow as _runZfsMaintenanceWorkflow } from "./zfs-m
 import { runBugsinkHousekeepingWorkflow as _runBugsinkHousekeepingWorkflow } from "./bugsink.ts";
 import { runVeleroOrphanAuditWorkflow as _runVeleroOrphanAuditWorkflow } from "./velero-orphan-audit.ts";
 import { runScoutDataDragonUpdate as _runScoutDataDragonUpdate } from "./data-dragon.ts";
-import type { DataDragonUpdateResult } from "#activities/data-dragon.ts";
+import type {
+  DataDragonUpdateResult,
+  DataDragonWorkflowInput,
+} from "#activities/data-dragon.ts";
 import { runScoutSeasonRefreshWorkflow as _runScoutSeasonRefreshWorkflow } from "./scout-season-refresh.ts";
 import type {
   ScoutSeasonRefreshInput,
@@ -102,16 +105,16 @@ export async function runVeleroOrphanAuditWorkflow(): Promise<void> {
   return _runVeleroOrphanAuditWorkflow();
 }
 
-export async function runScoutDataDragonVersionCheck(): Promise<
-  DataDragonUpdateResult | undefined
-> {
-  return _runScoutDataDragonUpdate("version-check");
+export async function runScoutDataDragonVersionCheck(
+  input: DataDragonWorkflowInput,
+): Promise<DataDragonUpdateResult | undefined> {
+  return _runScoutDataDragonUpdate("version-check", input);
 }
 
-export async function runScoutDataDragonWeeklyRefresh(): Promise<
-  DataDragonUpdateResult | undefined
-> {
-  return _runScoutDataDragonUpdate("weekly-refresh");
+export async function runScoutDataDragonWeeklyRefresh(
+  input: DataDragonWorkflowInput,
+): Promise<DataDragonUpdateResult | undefined> {
+  return _runScoutDataDragonUpdate("weekly-refresh", input);
 }
 
 export async function runScoutSeasonRefreshWorkflow(

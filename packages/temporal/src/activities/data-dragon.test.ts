@@ -29,6 +29,17 @@ const DATA_JSON_PATH =
   "packages/scout-for-lol/packages/data/src/data-dragon/assets/champion/Fiddlesticks.json";
 const GENERATED_TS_PATH =
   "packages/scout-for-lol/packages/data/src/data-dragon/champion-name-overrides.generated.ts";
+const TEST_LANE_PRIORS_CONFIG: DataDragonUpdateInput["lanePriors"] = {
+  bucket: "scout-test-bucket",
+  queueIds: [400, 420, 440, 480, 490],
+  trainingStartDate: "2026-05-06",
+  trainingEndDate: "2026-05-13",
+  holdoutStartDate: "2026-05-14",
+  holdoutEndDate: "2026-05-16",
+  holdoutSampleSize: 100,
+  holdoutSeed: "test-seed",
+  threshold: 0.95,
+};
 
 describe("parseGitStatusLine", () => {
   test("preserves paths for unstaged modifications", () => {
@@ -129,6 +140,7 @@ describe("buildImageOnlySkipEmailContent", () => {
       currentVersion: "16.10.1",
       latestVersion: "16.10.1",
       updateRequired: false,
+      lanePriors: TEST_LANE_PRIORS_CONFIG,
     };
 
     const content = buildImageOnlySkipEmailContent(input, 214);

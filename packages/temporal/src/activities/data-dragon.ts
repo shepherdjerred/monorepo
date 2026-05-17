@@ -1,4 +1,4 @@
-import { Context, metricMeter } from "@temporalio/activity";
+import { Context } from "@temporalio/activity";
 import { simpleGit } from "simple-git";
 import { z } from "zod/v4";
 import { resolvePostalAddresses, sendPostalEmail } from "#shared/postal.ts";
@@ -8,6 +8,15 @@ import {
   shouldCreateDataDragonPr,
   type GitStatusEntry,
 } from "./data-dragon-diff.ts";
+import {
+  LANE_PRIOR_ARTIFACT_PATH,
+  LANE_PRIOR_EVAL_REPORT_PATH,
+  LanePriorUpdateConfigSchema,
+  lanePriorPrBodyLines,
+  updateLanePriors,
+  type LanePriorUpdateConfig,
+} from "./data-dragon-lane-priors.ts";
+import { recordRun } from "./data-dragon-metrics.ts";
 import { runCommand } from "./data-dragon-shell.ts";
 import {
   branchName,
@@ -30,6 +39,8 @@ const GENERATED_PATHS = [
   `${SCOUT_ROOT}/packages/backend/src/league/model/__tests__/__snapshots__`,
   `${SCOUT_ROOT}/packages/report/src/dataDragon/__snapshots__`,
   `${SCOUT_ROOT}/packages/report/src/html/arena/__snapshots__`,
+  LANE_PRIOR_ARTIFACT_PATH,
+  LANE_PRIOR_EVAL_REPORT_PATH,
 ];
 
 const VersionFile = z.object({
@@ -40,25 +51,23 @@ const VersionsResponse = z.array(z.string().min(1)).min(1);
 
 export type DataDragonUpdateMode = "version-check" | "weekly-refresh";
 
+export const DataDragonWorkflowInputSchema = z.strictObject({
+  lanePriors: LanePriorUpdateConfigSchema,
+});
+
+export type DataDragonWorkflowInput = z.infer<
+  typeof DataDragonWorkflowInputSchema
+>;
+
 export type DataDragonVersionState = {
   currentVersion: string;
   latestVersion: string;
   updateRequired: boolean;
 };
 
-export type DataDragonRunMetrics = {
-  mode: DataDragonUpdateMode;
-  outcome: "success" | "skipped" | "failed";
-  reason: string;
-  currentVersion: string;
-  latestVersion: string;
-  changedFiles?: number;
-  durationSeconds?: number;
-  prCreated?: boolean;
-};
-
 export type DataDragonUpdateInput = DataDragonVersionState & {
   mode: DataDragonUpdateMode;
+  lanePriors: LanePriorUpdateConfig;
 };
 
 export type DataDragonUpdateResult = DataDragonUpdateInput & {
@@ -100,72 +109,6 @@ async function fetchJson(url: string): Promise<unknown> {
     );
   }
   return await response.json();
-}
-
-function metrics(): {
-  runs: ReturnType<typeof metricMeter.createCounter>;
-  prs: ReturnType<typeof metricMeter.createCounter>;
-  duration: ReturnType<typeof metricMeter.createHistogram>;
-  changedFiles: ReturnType<typeof metricMeter.createGauge>;
-  versionInfo: ReturnType<typeof metricMeter.createGauge>;
-} {
-  return {
-    runs: metricMeter.createCounter(
-      "scout_data_dragon_runs",
-      "1",
-      "Scout Data Dragon updater runs",
-    ),
-    prs: metricMeter.createCounter(
-      "scout_data_dragon_prs",
-      "1",
-      "Scout Data Dragon updater PRs opened",
-    ),
-    duration: metricMeter.createHistogram(
-      "scout_data_dragon_duration",
-      "float",
-      "s",
-      "Scout Data Dragon updater duration",
-    ),
-    changedFiles: metricMeter.createGauge(
-      "scout_data_dragon_changed_files",
-      "int",
-      "1",
-      "Scout Data Dragon updater changed files",
-    ),
-    versionInfo: metricMeter.createGauge(
-      "scout_data_dragon_version_info",
-      "int",
-      "1",
-      "Scout Data Dragon latest version info",
-    ),
-  };
-}
-
-function recordRun(input: DataDragonRunMetrics): void {
-  const meter = metrics();
-  const baseTags = {
-    mode: input.mode,
-    outcome: input.outcome,
-    reason: input.reason,
-  };
-  meter.runs.add(1, baseTags);
-  meter.changedFiles.set(input.changedFiles ?? 0, {
-    mode: input.mode,
-    outcome: input.outcome,
-  });
-  meter.versionInfo.set(1, {
-    current_version: input.currentVersion,
-    latest_version: input.latestVersion,
-  });
-  if (input.durationSeconds !== undefined) {
-    meter.duration.record(input.durationSeconds, {
-      mode: input.mode,
-      outcome: input.outcome,
-    });
-  }
-  if (input.prCreated === true) {
-    meter.prs.add(1, { mode: input.mode });
-  }
 }
 
 async function writeGitAskpass(tempDir: string): Promise<string> {
@@ -292,6 +235,11 @@ export const dataDragonActivities = {
           env: { ENVIRONMENT: undefined },
         },
       );
+      await updateLanePriors({
+        repoDir,
+        rawConfig: input.lanePriors,
+        runCommand,
+      });
 
       const changes = await changedFiles(repoDir);
       const files = changes.map((change) => change.path);
@@ -371,6 +319,8 @@ export const dataDragonActivities = {
         `Latest version: ${input.latestVersion}`,
         `Mode: ${input.mode}`,
         `Changed files: ${String(files.length)}`,
+        "",
+        ...lanePriorPrBodyLines(input.lanePriors),
       ].join("\n");
 
       await runCommand(["git", "config", "user.email", "ci@sjer.red"], {

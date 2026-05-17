@@ -57,9 +57,11 @@ exports[`buildLoadingScreenData with real spectator payload transforms ranked fl
   "participants": [
     {
       "championDisplayName": "Akali",
+      "championId": 84,
       "championName": "Akali",
       "isTrackedPlayer": false,
       "keystoneRuneId": 8112,
+      "lane": "middle",
       "puuid": "s8vaqnDz4Oq-QC9rE52ygAk8iRqt-EWMoSz4bQlsg8uFvbeUVy8jrTVN4oLlVxJDDcFTJ9Jn0yGalQ",
       "ranks": {
         "solo": {
@@ -79,9 +81,11 @@ exports[`buildLoadingScreenData with real spectator payload transforms ranked fl
     },
     {
       "championDisplayName": "Singed",
+      "championId": 27,
       "championName": "Singed",
       "isTrackedPlayer": false,
       "keystoneRuneId": 8010,
+      "lane": "top",
       "puuid": "n9a3nW9BKtj6vf7kSzmM_uTGu5A9ahTRgDYzz26tNhdH-i9cqf4G3UJCPcd7pXOOy2Q3ZXoTTZlVJA",
       "ranks": {
         "solo": {
@@ -101,9 +105,11 @@ exports[`buildLoadingScreenData with real spectator payload transforms ranked fl
     },
     {
       "championDisplayName": "Viego",
+      "championId": 234,
       "championName": "Viego",
       "isTrackedPlayer": false,
       "keystoneRuneId": 8010,
+      "lane": "jungle",
       "puuid": "VMkz_anidJk366oY7X5EILE1BkRiTALvRPE4S_kea1WbiQxTVmwWy1op4ZllJ31QQEy5XmlMUOIqgw",
       "ranks": {
         "solo": {
@@ -123,9 +129,11 @@ exports[`buildLoadingScreenData with real spectator payload transforms ranked fl
     },
     {
       "championDisplayName": "Jhin",
+      "championId": 202,
       "championName": "Jhin",
       "isTrackedPlayer": false,
       "keystoneRuneId": 8021,
+      "lane": "adc",
       "puuid": "d0BwgxqBVJI5zToYm5isFg-RvA1rsFr-vIRJytEZ9Dy_s4Cpmc3tQuoUWm9uWHGGY_f-VRKRSdYwRg",
       "ranks": {
         "solo": {
@@ -145,9 +153,11 @@ exports[`buildLoadingScreenData with real spectator payload transforms ranked fl
     },
     {
       "championDisplayName": "Zyra",
+      "championId": 143,
       "championName": "Zyra",
       "isTrackedPlayer": false,
       "keystoneRuneId": 8229,
+      "lane": "support",
       "puuid": "2L4f8DdtVLFkdN0mCSPofO70tNP0EGsQEQQFs_A1xAT4Ws5gab54ADAYYbIemeUPzma5oahbRFYL-g",
       "ranks": {
         "solo": {
@@ -167,9 +177,11 @@ exports[`buildLoadingScreenData with real spectator payload transforms ranked fl
     },
     {
       "championDisplayName": "Ahri",
+      "championId": 103,
       "championName": "Ahri",
       "isTrackedPlayer": false,
       "keystoneRuneId": 8112,
+      "lane": "middle",
       "puuid": "I78a3uUXZh_DzpKAhvzXaNILtNQqak1gC9gGxUL8fo1WNGDcvlIyABFcry60Kg1sykinHi_xFPBmBw",
       "ranks": {
         "solo": {
@@ -189,9 +201,11 @@ exports[`buildLoadingScreenData with real spectator payload transforms ranked fl
     },
     {
       "championDisplayName": "Ashe",
+      "championId": 22,
       "championName": "Ashe",
       "isTrackedPlayer": false,
       "keystoneRuneId": 8008,
+      "lane": "adc",
       "puuid": "fBrlXXgc8Lx7PtOfI7TiKBHjZKMcK4dJgDrtiMZVdMkaq3tOuk5DmwIv284H-YFcgNi2n-eGTpp_Cw",
       "ranks": {
         "solo": {
@@ -211,9 +225,11 @@ exports[`buildLoadingScreenData with real spectator payload transforms ranked fl
     },
     {
       "championDisplayName": "Jax",
+      "championId": 24,
       "championName": "Jax",
       "isTrackedPlayer": false,
       "keystoneRuneId": 8008,
+      "lane": "jungle",
       "puuid": "3LKY6Joqu_yu97w3qDmUiQOOiWd0i_EPJMfJM6u63LHJ7oS2Svwxq5cLVd8ui8pDt3syEHfHQTAoyA",
       "ranks": {
         "solo": {
@@ -233,9 +249,11 @@ exports[`buildLoadingScreenData with real spectator payload transforms ranked fl
     },
     {
       "championDisplayName": "Warwick",
+      "championId": 19,
       "championName": "Warwick",
       "isTrackedPlayer": true,
       "keystoneRuneId": 8005,
+      "lane": "top",
       "puuid": "AlYREV57O6o49QaM2iZVQ361vKtpc4mTwNYyqiZSLb9EF1EDBABA8xi4hiGwkSs1GIgRzXqjVm-2xg",
       "ranks": {
         "solo": {
@@ -255,11 +273,12 @@ exports[`buildLoadingScreenData with real spectator payload transforms ranked fl
     },
     {
       "championDisplayName": "Nami",
+      "championId": 267,
       "championName": "Nami",
       "isTrackedPlayer": false,
       "keystoneRuneId": 8214,
+      "lane": "support",
       "puuid": null,
-      "ranks": undefined,
       "secondaryTreeId": 8400,
       "skinNum": 51,
       "spell1Id": 7,
