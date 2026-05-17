@@ -7,9 +7,9 @@ import ProcessStep from "../components/ProcessStep.astro"; // Changed from StepC
 import InfoBox from "../components/InfoBox.astro";
 import CommandBox from "../components/CommandBox.astro";
 import GalleryItem from "../components/GalleryItem.astro";
-import { Image } from "astro:assets";
-import soloDiscordImg from "../assets/images/solo-discord.png";
-import leaderboardLpImg from "../assets/images/leaderboard-lp.png";
+
+const soloDiscordImg = "/solo-discord.png";
+const leaderboardLpImg = "/leaderboard-lp.png";
 ---
 
 <Layout>
@@ -230,7 +230,7 @@ import leaderboardLpImg from "../assets/images/leaderboard-lp.png";
                 > command.
               </p>
               <div class="mt-4 mb-4">
-                <Image
+                <img
                   src={leaderboardLpImg}
                   alt="Example of a Scout competition leaderboard showing LP rankings"
                   class="w-full h-auto rounded-lg shadow-md ring-1 ring-gray-400/10 dark:ring-gray-600"

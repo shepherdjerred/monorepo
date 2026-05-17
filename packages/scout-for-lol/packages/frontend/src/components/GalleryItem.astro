@@ -3,7 +3,7 @@ import { Image } from "astro:assets";
 import type { ImageMetadata } from "astro";
 
 interface Props {
-  imageSrc: ImageMetadata;
+  imageSrc: ImageMetadata | string;
   imageAlt: string;
   caption?: string;
   fullWidth?: boolean;
@@ -14,12 +14,23 @@ const { imageSrc, imageAlt, caption, fullWidth = false } = Astro.props;
 
 <div class={fullWidth ? "w-full" : "mx-auto max-w-5xl"}>
   <div class="relative">
-    <Image
-      src={imageSrc}
-      alt={imageAlt}
-      class="w-full h-auto rounded-xl shadow-xl ring-1 ring-gray-400/10 dark:ring-gray-600"
-      loading="lazy"
-    />
+    {
+      typeof imageSrc === "string" ? (
+        <img
+          src={imageSrc}
+          alt={imageAlt}
+          class="w-full h-auto rounded-xl shadow-xl ring-1 ring-gray-400/10 dark:ring-gray-600"
+          loading="lazy"
+        />
+      ) : (
+        <Image
+          src={imageSrc}
+          alt={imageAlt}
+          class="w-full h-auto rounded-xl shadow-xl ring-1 ring-gray-400/10 dark:ring-gray-600"
+          loading="lazy"
+        />
+      )
+    }
     <div
       class="absolute inset-0 rounded-xl ring-1 ring-inset ring-gray-900/10 dark:ring-gray-100/10"
     >
