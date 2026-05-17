@@ -351,6 +351,14 @@ export function createTemporalWorkerDeployment(
         S3_KEY: EnvValue.fromValue("data/manifest.json"),
         S3_REGION: EnvValue.fromValue("us-east-1"),
         S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
+        HOMELAB_AUDIT_ARCHIVE_BUCKET: EnvValue.fromSecretValue(
+          {
+            secret,
+            key: "HOMELAB_AUDIT_ARCHIVE_BUCKET",
+          },
+          { optional: true },
+        ),
+        HOMELAB_AUDIT_ARCHIVE_PREFIX: EnvValue.fromValue("homelab-audits"),
         AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
           secret,
           key: "AWS_ACCESS_KEY_ID",
@@ -492,20 +500,27 @@ export function createTemporalWorkerDeployment(
         // fails fast in the agent loop with a clear "API X returned 401"
         // when a token is missing, while every other workflow keeps running.
         // Add these fields to 1P item `temporal-temporal-worker-1p`:
-        //   PAGERDUTY_TOKEN, BUGSINK_URL, BUGSINK_TOKEN,
+        //   PAGERDUTY_TOKEN, BUGSINK_TOKEN,
         //   GRAFANA_URL, GRAFANA_API_KEY,
         //   ARGOCD_SERVER, ARGOCD_AUTH_TOKEN,
-        //   CLOUDFLARE_API_TOKEN  (for `tofu plan` against the cloudflare module)
+        //   CLOUDFLARE_API_TOKEN, BUILDKITE_API_TOKEN,
+        //   HOMELAB_AUDIT_ARCHIVE_BUCKET
+        // `BUGSINK_URL` intentionally points at the public canonical base URL;
+        // in-cluster service DNS remains allowed on the Bugsink deployment as a
+        // fallback but the audit should avoid ALLOWED_HOSTS drift by default.
         // ---------------------------------------------------------------
+        BUGSINK_URL: EnvValue.fromValue("https://bugsink.sjer.red"),
+        BUILDKITE_ORGANIZATION_SLUG: EnvValue.fromValue("sjerred"),
+        BUILDKITE_PIPELINE_SLUG: EnvValue.fromValue("monorepo"),
         ...optionalSecretEnv(secret, [
           "PAGERDUTY_TOKEN",
-          "BUGSINK_URL",
           "BUGSINK_TOKEN",
           "GRAFANA_URL",
           "GRAFANA_API_KEY",
           "ARGOCD_SERVER",
           "ARGOCD_AUTH_TOKEN",
           "CLOUDFLARE_API_TOKEN",
+          "BUILDKITE_API_TOKEN",
         ]),
         // talosctl reads its config from $TALOSCONFIG; the file is projected
         // from 1P field TALOSCONFIG_YAML via the volume mount above. The

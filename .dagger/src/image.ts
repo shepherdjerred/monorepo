@@ -9,6 +9,7 @@ import {
   ARGOCD_CLI_VERSION,
   BUN_IMAGE,
   BUN_CACHE,
+  BUILDKITE_CLI_VERSION,
   CADDY_BUILDER_IMAGE,
   CADDY_IMAGE,
   CLAUDE_CODE_VERSION,
@@ -17,6 +18,7 @@ import {
   KUBECTL_VERSION,
   OBSIDIAN_HEADLESS_BASE_IMAGE,
   TALOSCTL_VERSION,
+  TEMPORAL_CLI_VERSION,
   TOFU_VERSION,
   VELERO_CLI_VERSION,
 } from "./constants";
@@ -260,12 +262,73 @@ function withVeleroCli(container: Container): Container {
 }
 
 /**
- * Bundle the four homelab-audit CLIs (talosctl, tofu, argocd, velero) into a
+ * Install the Buildkite CLI for §11 of the homelab daily audit. Buildkite is
+ * the source of truth for this monorepo's CI; GitHub status rollups are only a
+ * fallback summary.
+ */
+function withBuildkiteCli(container: Container): Container {
+  const tag = `v${BUILDKITE_CLI_VERSION}`;
+  const baseUrl = `https://github.com/buildkite/cli/releases/download/${tag}`;
+  const tarballName = `bk_${BUILDKITE_CLI_VERSION}_linux_amd64.tar.gz`;
+  const checksumsName = `bk_${BUILDKITE_CLI_VERSION}_checksums.txt`;
+  return container
+    .withExec([
+      "sh",
+      "-c",
+      [
+        `curl -fsSL ${baseUrl}/${tarballName} -o /tmp/bk.tar.gz`,
+        `curl -fsSL ${baseUrl}/${checksumsName} -o /tmp/bk.checksums.txt`,
+        `expected=$(grep " ${tarballName}$" /tmp/bk.checksums.txt | awk '{print $1}')`,
+        `[ -n "$expected" ] || (echo "no checksum entry for ${tarballName}" && exit 1)`,
+        `actual=$(sha256sum /tmp/bk.tar.gz | awk '{print $1}')`,
+        `[ "$expected" = "$actual" ] || (echo "bk checksum mismatch (expected $expected, got $actual)" && exit 1)`,
+        `tar -xzf /tmp/bk.tar.gz -C /usr/local/bin --strip-components=1 bk_${BUILDKITE_CLI_VERSION}_linux_amd64/bk`,
+        `chmod +x /usr/local/bin/bk`,
+        `rm /tmp/bk.tar.gz /tmp/bk.checksums.txt`,
+      ].join(" && "),
+    ])
+    .withExec(["bk", "--version"]);
+}
+
+/**
+ * Install the Temporal CLI so the audit can query schedules and frontend
+ * health directly through TEMPORAL_ADDRESS without `kubectl exec`.
+ */
+function withTemporalCli(container: Container): Container {
+  const tag = `v${TEMPORAL_CLI_VERSION}`;
+  const baseUrl = `https://github.com/temporalio/cli/releases/download/${tag}`;
+  const tarballName = `temporal_cli_${TEMPORAL_CLI_VERSION}_linux_amd64.tar.gz`;
+  const checksumsName = "checksums.txt";
+  return container
+    .withExec([
+      "sh",
+      "-c",
+      [
+        `curl -fsSL ${baseUrl}/${tarballName} -o /tmp/temporal.tar.gz`,
+        `curl -fsSL ${baseUrl}/${checksumsName} -o /tmp/temporal.checksums.txt`,
+        `expected=$(grep " ${tarballName}$" /tmp/temporal.checksums.txt | awk '{print $1}')`,
+        `[ -n "$expected" ] || (echo "no checksum entry for ${tarballName}" && exit 1)`,
+        `actual=$(sha256sum /tmp/temporal.tar.gz | awk '{print $1}')`,
+        `[ "$expected" = "$actual" ] || (echo "temporal checksum mismatch (expected $expected, got $actual)" && exit 1)`,
+        `tar -xzf /tmp/temporal.tar.gz -C /usr/local/bin temporal`,
+        `chmod +x /usr/local/bin/temporal`,
+        `rm /tmp/temporal.tar.gz /tmp/temporal.checksums.txt`,
+      ].join(" && "),
+    ])
+    .withExec(["temporal", "--version"]);
+}
+
+/**
+ * Bundle the homelab-audit CLIs into a
  * container. Used only by the temporal-worker image — pr-agent and the other
  * Bun services don't need them.
  */
 function withHomelabAuditClis(container: Container): Container {
-  return withVeleroCli(withArgoCdCli(withTofu(withTalosctl(container))));
+  return withTemporalCli(
+    withBuildkiteCli(
+      withVeleroCli(withArgoCdCli(withTofu(withTalosctl(container)))),
+    ),
+  );
 }
 
 /**

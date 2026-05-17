@@ -4,6 +4,7 @@ import {
   BugsinkPaginatedResponseSchema,
 } from "./schemas.ts";
 import type { BugsinkIssue } from "./types.ts";
+import { getProjects } from "./queries.ts";
 
 export type GetIssuesOptions = {
   project?: string | undefined;
@@ -16,7 +17,7 @@ export async function getIssues(
   const params: Record<string, string> = {};
 
   if (options.project != null && options.project.length > 0) {
-    params["project"] = options.project;
+    params["project"] = await resolveProjectFilter(options.project);
   }
 
   if (options.limit != null) {
@@ -34,6 +35,19 @@ export async function getIssues(
   }
 
   return result.data.results;
+}
+
+async function resolveProjectFilter(project: string): Promise<string> {
+  if (/^\d+$/.test(project)) {
+    return project;
+  }
+
+  const projects = await getProjects();
+  const match = projects.find((candidate) => candidate.slug === project);
+  if (match === undefined) {
+    throw new Error(`Bugsink project slug not found: ${project}`);
+  }
+  return String(match.id);
 }
 
 export async function getIssue(issueId: string): Promise<BugsinkIssue | null> {

@@ -86,6 +86,23 @@ describe("buildAuditPrompt", () => {
     expect(prompt).toContain("Open PagerDuty incidents:");
   });
 
+  it("documents the complete audit tool inventory and alert source priority", () => {
+    const prompt = buildAuditPrompt({
+      date: "2026-05-09",
+      runbook: SAMPLE_RUNBOOK,
+      sections: "all",
+      toolingPreflightMarkdown:
+        "Audit tooling preflight:\n\n- Remote checks: passed.",
+    });
+
+    expect(prompt).toContain("`bk` — Buildkite CLI");
+    expect(prompt).toContain("`temporal` — Temporal CLI");
+    expect(prompt).toContain("TEMPORAL_ADDRESS");
+    expect(prompt).toContain('ALERTS{alertstate="firing"}');
+    expect(prompt).toContain("Grafana-managed rules only");
+    expect(prompt).toContain("Audit tooling preflight:");
+  });
+
   it("filters down to the requested sections only", () => {
     const prompt = buildAuditPrompt({
       date: "2026-05-09",

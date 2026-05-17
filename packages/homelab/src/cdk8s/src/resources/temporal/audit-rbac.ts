@@ -79,6 +79,11 @@ export function createTemporalWorkerAuditRbac(
         resources: ["servicemonitors", "prometheusrules"],
         verbs: ["get", "list", "watch"],
       },
+      {
+        apiGroups: ["tailscale.com"],
+        resources: ["connectors", "proxygroups", "proxyclasses"],
+        verbs: ["get", "list", "watch"],
+      },
     ],
   });
 

@@ -24,15 +24,31 @@ function makeActivities(opts: {
   /** When set, the agent activity throws this many times before returning. */
   agentFailures?: number;
 }) {
-  const calls: { agent: AgentCall[]; email: { input: unknown }[] } = {
+  const calls: {
+    preflight: number;
+    agent: AgentCall[];
+    archiveBody: { input: unknown }[];
+    email: { input: unknown }[];
+    archiveMetadata: { input: unknown }[];
+  } = {
+    preflight: 0,
     agent: [],
+    archiveBody: [],
     email: [],
+    archiveMetadata: [],
   };
   let agentFailuresLeft = opts.agentFailures ?? 0;
 
   return {
     calls,
     activities: {
+      runHomelabAuditPreflight: async () => {
+        calls.preflight += 1;
+        return {
+          markdown: "Audit tooling preflight:\n\n- Remote checks: passed.",
+          warnings: [],
+        };
+      },
       runHomelabAuditAgent: async (input: unknown) => {
         if (agentFailuresLeft > 0) {
           agentFailuresLeft -= 1;
@@ -48,12 +64,27 @@ function makeActivities(opts: {
           model: "claude-opus-4-7",
         };
       },
+      archiveHomelabAuditBody: async (input: unknown) => {
+        calls.archiveBody.push({ input });
+        return {
+          markdownKey: "homelab-audits/2026/05/09/audit.md",
+          htmlKey: "homelab-audits/2026/05/09/audit.html",
+          uploadedAt: "2026-05-09T13:30:00.000Z",
+        };
+      },
       sendHomelabAuditEmail: async (input: unknown) => {
         calls.email.push({ input });
         return {
           subject: "Homelab Audit 2026-05-09",
           messageId: "msg-1",
           recipientId: 7 as const,
+        };
+      },
+      archiveHomelabAuditMetadata: async (input: unknown) => {
+        calls.archiveMetadata.push({ input });
+        return {
+          metadataKey: "homelab-audits/2026/05/09/metadata.json",
+          uploadedAt: "2026-05-09T13:31:00.000Z",
         };
       },
     },
@@ -84,9 +115,41 @@ describe("runHomelabAuditWorkflow", () => {
     );
     expect(result).toBeUndefined();
 
+    expect(fixture.calls.preflight).toBe(1);
     expect(fixture.calls.agent).toHaveLength(1);
+    expect(fixture.calls.archiveBody).toHaveLength(1);
     expect(fixture.calls.email).toHaveLength(1);
+    expect(fixture.calls.archiveMetadata).toHaveLength(1);
     expect(fixture.calls.agent[0]?.resolved).toBeLessThanOrEqual(Date.now());
+
+    const agentInput = fixture.calls.agent[0]?.input;
+    if (
+      agentInput === undefined ||
+      typeof agentInput !== "object" ||
+      agentInput === null
+    ) {
+      throw new TypeError("expected agent input object");
+    }
+    const agentRecord: Record<string, unknown> = { ...agentInput };
+    expect(agentRecord["toolingPreflightMarkdown"]).toContain(
+      "Audit tooling preflight",
+    );
+
+    const archiveBodyInput = fixture.calls.archiveBody[0]?.input;
+    if (
+      archiveBodyInput === undefined ||
+      typeof archiveBodyInput !== "object" ||
+      archiveBodyInput === null
+    ) {
+      throw new TypeError("expected archive body input object");
+    }
+    const archiveBodyRecord: Record<string, unknown> = {
+      ...archiveBodyInput,
+    };
+    expect(archiveBodyRecord["date"]).toBe("2026-05-09");
+    expect(archiveBodyRecord["markdown"]).toBe(
+      "# Homelab Health Audit — 2026-05-09\n\nbody",
+    );
 
     const emailInput = fixture.calls.email[0]?.input;
     if (
@@ -101,6 +164,22 @@ describe("runHomelabAuditWorkflow", () => {
     expect(record["markdown"]).toBe(
       "# Homelab Health Audit — 2026-05-09\n\nbody",
     );
+
+    const metadataInput = fixture.calls.archiveMetadata[0]?.input;
+    if (
+      metadataInput === undefined ||
+      typeof metadataInput !== "object" ||
+      metadataInput === null
+    ) {
+      throw new TypeError("expected metadata input object");
+    }
+    const metadataRecord: Record<string, unknown> = { ...metadataInput };
+    expect(metadataRecord["date"]).toBe("2026-05-09");
+    expect(metadataRecord["bodyArchive"]).toEqual({
+      markdownKey: "homelab-audits/2026/05/09/audit.md",
+      htmlKey: "homelab-audits/2026/05/09/audit.html",
+      uploadedAt: "2026-05-09T13:30:00.000Z",
+    });
   }, 30_000);
 
   it("retries the agent activity on transient failure", async () => {
@@ -126,7 +205,10 @@ describe("runHomelabAuditWorkflow", () => {
 
     // Two failures absorbed by the activity retry policy, then a successful
     // run that progresses to the email activity.
+    expect(fixture.calls.preflight).toBe(1);
     expect(fixture.calls.agent).toHaveLength(1);
+    expect(fixture.calls.archiveBody).toHaveLength(1);
     expect(fixture.calls.email).toHaveLength(1);
+    expect(fixture.calls.archiveMetadata).toHaveLength(1);
   }, 60_000);
 });

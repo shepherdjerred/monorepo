@@ -16,16 +16,29 @@ const RETRY = {
 // generous for the full run (hand-run audits land in ~25 min); the workflow
 // schedule sets 60 min as the workflow execution timeout to leave slack for
 // retries.
+const { runHomelabAuditPreflight } = proxyActivities<HomelabAuditActivities>({
+  startToCloseTimeout: "2 minutes",
+  retry: RETRY,
+});
+
 const { runHomelabAuditAgent } = proxyActivities<HomelabAuditActivities>({
   startToCloseTimeout: "45 minutes",
   heartbeatTimeout: "60 seconds",
   retry: RETRY,
 });
 
-const { sendHomelabAuditEmail } = proxyActivities<HomelabAuditActivities>({
-  startToCloseTimeout: "1 minute",
-  retry: RETRY,
-});
+const { archiveHomelabAuditBody, sendHomelabAuditEmail } =
+  proxyActivities<HomelabAuditActivities>({
+    startToCloseTimeout: "1 minute",
+    retry: RETRY,
+  });
+
+const { archiveHomelabAuditMetadata } = proxyActivities<HomelabAuditActivities>(
+  {
+    startToCloseTimeout: "1 minute",
+    retry: RETRY,
+  },
+);
 
 export type RunHomelabAuditWorkflowInput = {
   /** ISO date for the audit. Defaults to the workflow start time when undefined. */
@@ -39,9 +52,22 @@ export async function runHomelabAuditWorkflow(
   if (input.date !== undefined) {
     agentInput.date = input.date;
   }
+  const preflight = await runHomelabAuditPreflight();
+  agentInput.toolingPreflightMarkdown = preflight.markdown;
   const agent = await runHomelabAuditAgent(agentInput);
-  await sendHomelabAuditEmail({
-    date: input.date ?? new Date().toISOString().slice(0, 10),
+  const date = input.date ?? new Date().toISOString().slice(0, 10);
+  const bodyArchive = await archiveHomelabAuditBody({
+    date,
     markdown: agent.markdown,
+  });
+  const email = await sendHomelabAuditEmail({
+    date,
+    markdown: agent.markdown,
+  });
+  await archiveHomelabAuditMetadata({
+    date,
+    bodyArchive,
+    email,
+    agent,
   });
 }
