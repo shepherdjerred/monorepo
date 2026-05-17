@@ -3,8 +3,9 @@
  *
  * One Dagger call (`cooklang-build-and-publish`) does the whole thing:
  * build → publish to shepherdjerred/cooklang-for-obsidian (computes next
- * patch version, updates manifest + versions.json, commits, creates the
- * GitHub release) → open auto-merge commit-back PR on the monorepo.
+ * patch version, updates manifest, updates versions.json only for
+ * compatibility boundary changes, commits, creates the GitHub release) →
+ * open auto-merge commit-back PR on the monorepo.
  */
 import { RETRY, DAGGER_ENV, DRYRUN_FLAG } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
