@@ -17,6 +17,10 @@ import {
 } from "#lib/pr-summary-comment.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
 import {
+  recordProviderIssue,
+  resolveProviderIssue,
+} from "#activities/pr-review/provider-metrics.ts";
+import {
   SUMMARY_MARKER,
   buildSummarySystemBlocks,
   buildSummaryUserPrompt,
@@ -152,9 +156,22 @@ function workflowFields(): Record<string, unknown> {
   }
 }
 
-function isAnthropicCreditBalanceError(error: unknown): boolean {
+function classifyAnthropicProviderIssue(
+  error: unknown,
+): "credit_balance_low" | "rate_limit" | null {
   const message = error instanceof Error ? error.message : String(error);
-  return message.includes("credit balance is too low");
+  const lowerMessage = message.toLowerCase();
+  if (lowerMessage.includes("credit balance is too low")) {
+    return "credit_balance_low";
+  }
+  if (
+    lowerMessage.includes("rate_limit_error") ||
+    lowerMessage.includes("rate limit") ||
+    lowerMessage.includes("429")
+  ) {
+    return "rate_limit";
+  }
+  return null;
 }
 
 function captureWithContext(
@@ -162,6 +179,23 @@ function captureWithContext(
   pr: PrSummaryInput,
   extra: Record<string, unknown> = {},
 ): void {
+  const providerIssueKind = classifyAnthropicProviderIssue(error);
+  if (providerIssueKind !== null) {
+    recordProviderIssue({
+      app: "temporal",
+      provider: "anthropic",
+      kind: providerIssueKind,
+      source: "pr_summary",
+    });
+    jsonLog("warning", "Anthropic provider issue recorded", {
+      providerIssueKind,
+      owner: pr.owner,
+      repo: pr.repo,
+      prNumber: pr.prNumber,
+    });
+    return;
+  }
+
   Sentry.withScope((scope) => {
     scope.setTag("component", COMPONENT);
     scope.setTag("repo", `${pr.owner}/${pr.repo}`);
@@ -172,10 +206,6 @@ function captureWithContext(
       commitSha: pr.commitSha,
       ...extra,
     });
-    if (isAnthropicCreditBalanceError(error)) {
-      scope.setTag("provider_error", "anthropic_credit_balance_low");
-      scope.setFingerprint(["anthropic-credit-balance-low"]);
-    }
     Sentry.captureException(error);
   });
 }
@@ -316,6 +346,18 @@ export async function runPrSummary(
         systemBlocks,
         userPrompt,
       );
+      resolveProviderIssue({
+        app: "temporal",
+        provider: "anthropic",
+        kind: "credit_balance_low",
+        source: "pr_summary",
+      });
+      resolveProviderIssue({
+        app: "temporal",
+        provider: "anthropic",
+        kind: "rate_limit",
+        source: "pr_summary",
+      });
 
       const costUsd = estimateCostUsd(usage);
 

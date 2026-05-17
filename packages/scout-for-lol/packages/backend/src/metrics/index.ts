@@ -577,6 +577,30 @@ export const scoutOpenaiBudgetExceededTotal = new Counter({
   registers: [registry],
 });
 
+/**
+ * Provider-side AI API failures that should be handled operationally by
+ * Prometheus/Alertmanager instead of Bugsink. `source` is a low-cardinality
+ * callsite such as `match_review`; `kind` is `quota` or `rate_limit`.
+ */
+export const aiProviderErrorsTotal = new Counter({
+  name: "ai_provider_errors_total",
+  help: "AI provider-side operational errors by provider, kind, and source",
+  labelNames: ["app", "provider", "kind", "source"] as const,
+  registers: [registry],
+});
+
+/**
+ * In-process active provider issue flag. Set to 1 when a provider quota/rate
+ * failure is observed and reset to 0 on the next successful provider-backed
+ * call from the same source.
+ */
+export const aiProviderIssueActive = new Gauge({
+  name: "ai_provider_issue_active",
+  help: "Whether an AI provider operational issue is currently active for this app/source",
+  labelNames: ["app", "provider", "kind", "source"] as const,
+  registers: [registry],
+});
+
 // =======================
 // Competition Leaderboard Chart Metrics
 // =======================
