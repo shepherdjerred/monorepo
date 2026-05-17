@@ -12,7 +12,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"https://github.com/shepherdjerred/monorepo/tree/main/packages/terraform-provider-asuswrt/internal/client"
+	"github.com/shepherdjerred/monorepo/packages/terraform-provider-asuswrt/internal/client"
 )
 
 func newTestServer(t *testing.T) *httptest.Server {

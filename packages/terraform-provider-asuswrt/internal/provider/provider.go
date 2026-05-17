@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"https://github.com/shepherdjerred/monorepo/tree/main/packages/terraform-provider-asuswrt/internal/client"
+	"github.com/shepherdjerred/monorepo/packages/terraform-provider-asuswrt/internal/client"
 )
 
 var _ provider.Provider = &asuswrtProvider{}

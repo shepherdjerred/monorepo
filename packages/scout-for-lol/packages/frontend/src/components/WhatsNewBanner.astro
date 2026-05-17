@@ -23,7 +23,10 @@ const latestEntry = changelog[0];
               <strong class="font-semibold">
                 What's New - {formatChangelogDate(latestEntry)}:
               </strong>{" "}
-              {renderChangelogToHtml(latestEntry.banner).replace(/<[^>]*>?/gm, '')}
+              {renderChangelogToHtml(latestEntry.banner).replaceAll(
+                /<[^>]*>?/g,
+                "",
+              )}
             </p>
           </div>
           <a
