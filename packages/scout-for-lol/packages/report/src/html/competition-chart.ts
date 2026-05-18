@@ -48,6 +48,10 @@ const SERIES_PALETTE = generateSeriesPalette(PALETTE_SIZE);
  * trivially distinguishable from the leaders even before reading the legend.
  * Markers/dots are intentionally disabled on the line series for a cleaner
  * look; see `showSymbol: false` in `buildLineOption`.
+ *
+ * Mid-series null gaps are bridged via `connectNulls: true` rather than left
+ * as visible breaks — a player briefly missing from a snapshot still reads
+ * as one continuous line. Leading/trailing nulls are not backfilled.
  */
 const SOLID_LINE_THRESHOLD = 5;
 
@@ -238,7 +242,7 @@ function buildLineOption(
         name: s.playerName,
         type: "line",
         showSymbol: false,
-        connectNulls: false,
+        connectNulls: true,
         smooth: false,
         lineStyle: {
           color: seriesColor,

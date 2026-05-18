@@ -250,9 +250,15 @@ test("06-line-sparse-late-joiner — null gaps, partial data", async () => {
   const rng = mulberry32(6);
   const series = NAMES.map((playerName, idx) => {
     const lateJoiner = idx >= 7;
+    // Two of the established (non-late-joiner) series drop out of the top-N
+    // for a mid-range stretch — exercises connectNulls bridging behavior.
+    const midGap = idx === 2 || idx === 4;
     let lp = 1500 + Math.floor(rng() * 500);
     const points = days.map((date, dayIdx) => {
       if (lateJoiner && dayIdx < 23) {
+        return { date, value: null };
+      }
+      if (midGap && dayIdx >= 10 && dayIdx <= 16) {
         return { date, value: null };
       }
       lp += Math.round((rng() - 0.4) * 40);
@@ -263,7 +269,7 @@ test("06-line-sparse-late-joiner — null gaps, partial data", async () => {
   await renderFixture("06-line-sparse-late-joiner.png", {
     chartType: "line",
     title: "Highest Solo Q",
-    subtitle: "Highest rank in Solo Queue — with late joiners",
+    subtitle: "Highest rank in Solo Queue — with late joiners and mid-gaps",
     yAxisLabel: "Ladder points",
     startDate: days[0]!,
     endDate: days.at(-1)!,
@@ -288,6 +294,33 @@ test("07-line-short-range-3-snapshots — minimum viable graph", async () => {
     title: "Solo Q Climb",
     subtitle: "Most rank climb in Solo Queue — day 3",
     yAxisLabel: "LP gained",
+    startDate: days[0]!,
+    endDate: days.at(-1)!,
+    series,
+  });
+});
+
+// Simulates the chart-builder.ts cropping path: the underlying competition
+// nominally started 30 days before any snapshot was collected, so the
+// builder narrows the chart's display window to the snapshot range. The
+// fixture renders the post-crop props and confirms the x-axis fills the
+// frame instead of leaving a 30-day empty gutter on the left.
+test("12-line-snapshots-start-after-competition — cropped window", async () => {
+  const days = daysFrom(SEASON_START, 30);
+  const rng = mulberry32(12);
+  const series = NAMES.map((playerName) => {
+    let lp = 1500 + Math.floor(rng() * 500);
+    const points = days.map((date) => {
+      lp += Math.round((rng() - 0.4) * 40);
+      return { date, value: lp };
+    });
+    return { playerName, points };
+  });
+  await renderFixture("12-line-snapshots-start-after-competition.png", {
+    chartType: "line",
+    title: "Highest Solo Q",
+    subtitle: "Cropped to snapshot range (competition started 30d earlier)",
+    yAxisLabel: "Ladder points",
     startDate: days[0]!,
     endDate: days.at(-1)!,
     series,
