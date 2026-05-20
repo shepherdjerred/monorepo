@@ -6,10 +6,10 @@ import {
 } from "@opentelemetry/sdk-trace-base";
 import { resourceFromAttributes } from "@opentelemetry/resources";
 import { trace } from "@opentelemetry/api";
-import { traceAnthropic } from "../../src/anthropic-wrapper.ts";
-import { traceOpenAi } from "../../src/openai-wrapper.ts";
-import { traceGemini } from "../../src/gemini-wrapper.ts";
-import { traceClaudeAgent } from "../../src/claude-agent-wrapper.ts";
+import { traceAnthropic } from "#src/anthropic-wrapper.ts";
+import { traceOpenAi } from "#src/openai-wrapper.ts";
+import { traceGemini } from "#src/gemini-wrapper.ts";
+import { traceClaudeAgent } from "#src/claude-agent-wrapper.ts";
 
 const exporter = new InMemorySpanExporter();
 const provider = new BasicTracerProvider({
@@ -38,19 +38,18 @@ test("traceAnthropic emits gen_ai.* attributes with usage", async () => {
         system: "you are a helpful assistant",
       },
     },
-    async () =>
-      Promise.resolve({
-        id: "msg_test123",
-        model: "claude-haiku-4-5-20251001",
-        stop_reason: "end_turn",
-        content: [{ type: "text", text: "ok" }],
-        usage: {
-          input_tokens: 100,
-          output_tokens: 25,
-          cache_read_input_tokens: 10,
-          cache_creation_input_tokens: 5,
-        },
-      }),
+    async () => ({
+      id: "msg_test123",
+      model: "claude-haiku-4-5-20251001",
+      stop_reason: "end_turn",
+      content: [{ type: "text", text: "ok" }],
+      usage: {
+        input_tokens: 100,
+        output_tokens: 25,
+        cache_read_input_tokens: 10,
+        cache_creation_input_tokens: 5,
+      },
+    }),
   );
   expect(response.id).toBe("msg_test123");
 
@@ -90,24 +89,23 @@ test("traceOpenAi extracts prompt/completion tokens from chat.completions.create
         temperature: 0.7,
       },
     },
-    async () =>
-      Promise.resolve({
-        id: "chatcmpl-abc",
-        model: "gpt-4o-mini-2024-07-18",
-        choices: [
-          {
-            index: 0,
-            message: { role: "assistant", content: "ok" },
-            finish_reason: "stop",
-          },
-        ],
-        usage: {
-          prompt_tokens: 42,
-          completion_tokens: 5,
-          total_tokens: 47,
-          prompt_tokens_details: { cached_tokens: 7 },
+    async () => ({
+      id: "chatcmpl-abc",
+      model: "gpt-4o-mini-2024-07-18",
+      choices: [
+        {
+          index: 0,
+          message: { role: "assistant", content: "ok" },
+          finish_reason: "stop",
         },
-      }),
+      ],
+      usage: {
+        prompt_tokens: 42,
+        completion_tokens: 5,
+        total_tokens: 47,
+        prompt_tokens_details: { cached_tokens: 7 },
+      },
+    }),
   );
 
   const span = exporter.getFinishedSpans()[0]!;
@@ -131,26 +129,25 @@ test("traceGemini extracts usage from usageMetadata", async () => {
         contents: [{ role: "user", parts: [{ text: "summarize" }] }],
       },
     },
-    async () =>
-      Promise.resolve({
-        response: {
-          candidates: [
-            {
-              content: { role: "model", parts: [{ text: "ok" }] },
-              finishReason: "STOP",
-              index: 0,
-            },
-          ],
-          usageMetadata: {
-            promptTokenCount: 12,
-            candidatesTokenCount: 3,
-            totalTokenCount: 15,
-            cachedContentTokenCount: 0,
+    async () => ({
+      response: {
+        candidates: [
+          {
+            content: { role: "model", parts: [{ text: "ok" }] },
+            finishReason: "STOP",
+            index: 0,
           },
-          modelVersion: "gemini-2.0-flash-001",
-          responseId: "resp-1",
+        ],
+        usageMetadata: {
+          promptTokenCount: 12,
+          candidatesTokenCount: 3,
+          totalTokenCount: 15,
+          cachedContentTokenCount: 0,
         },
-      }),
+        modelVersion: "gemini-2.0-flash-001",
+        responseId: "resp-1",
+      },
+    }),
   );
   const span = exporter.getFinishedSpans()[0]!;
   expect(span.attributes["gen_ai.system"]).toBe("gemini");
@@ -161,44 +158,44 @@ test("traceGemini extracts usage from usageMetadata", async () => {
   expect(span.attributes["gen_ai.response.finish_reasons"]).toEqual(["STOP"]);
 });
 
+async function* fakeQuery(): AsyncGenerator {
+  yield {
+    type: "system",
+    subtype: "init",
+    model: "claude-sonnet-4-6",
+    session_id: "sess-1",
+  };
+  yield {
+    type: "assistant",
+    message: { content: [{ type: "text", text: "thinking" }] },
+    session_id: "sess-1",
+  };
+  yield {
+    type: "assistant",
+    message: { content: [{ type: "text", text: "done" }] },
+    session_id: "sess-1",
+  };
+  yield {
+    type: "result",
+    subtype: "success",
+    result: "done",
+    stop_reason: "end_turn",
+    is_error: false,
+    num_turns: 2,
+    total_cost_usd: 0.0012,
+    session_id: "sess-1",
+    usage: {
+      input_tokens: 200,
+      output_tokens: 30,
+      cache_read_input_tokens: 50,
+      cache_creation_input_tokens: 15,
+    },
+  };
+}
+
 test("traceClaudeAgent accumulates assistant messages and result usage", async () => {
   exporter.reset();
   const yielded: unknown[] = [];
-
-  async function* fakeQuery(): AsyncGenerator<unknown> {
-    yield {
-      type: "system",
-      subtype: "init",
-      model: "claude-sonnet-4-6",
-      session_id: "sess-1",
-    };
-    yield {
-      type: "assistant",
-      message: { content: [{ type: "text", text: "thinking" }] },
-      session_id: "sess-1",
-    };
-    yield {
-      type: "assistant",
-      message: { content: [{ type: "text", text: "done" }] },
-      session_id: "sess-1",
-    };
-    yield {
-      type: "result",
-      subtype: "success",
-      result: "done",
-      stop_reason: "end_turn",
-      is_error: false,
-      num_turns: 2,
-      total_cost_usd: 0.0012,
-      session_id: "sess-1",
-      usage: {
-        input_tokens: 200,
-        output_tokens: 30,
-        cache_read_input_tokens: 50,
-        cache_creation_input_tokens: 15,
-      },
-    };
-  }
 
   for await (const msg of traceClaudeAgent(
     {

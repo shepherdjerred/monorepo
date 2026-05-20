@@ -67,7 +67,7 @@ export async function traceTextStream(
         model: metadata.model,
         id: undefined,
         finishReasons:
-          final.finishReason !== undefined ? [final.finishReason] : undefined,
+          final.finishReason === undefined ? undefined : [final.finishReason],
         inputTokens: final.inputTokens,
         outputTokens: final.outputTokens,
         cacheReadInputTokens: undefined,

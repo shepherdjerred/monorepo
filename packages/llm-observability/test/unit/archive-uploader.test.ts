@@ -1,8 +1,5 @@
 import { test, expect } from "bun:test";
-import {
-  buildArchiveKey,
-  type ArchiveConfig,
-} from "../../src/archive-uploader.ts";
+import { buildArchiveKey, type ArchiveConfig } from "#src/archive-uploader.ts";
 
 const config: ArchiveConfig = {
   bucket: "llm-archive",

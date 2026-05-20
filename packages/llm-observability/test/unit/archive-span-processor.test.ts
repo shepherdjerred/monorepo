@@ -10,17 +10,25 @@ import { trace, type Context, type Span } from "@opentelemetry/api";
 import {
   LlmArchiveSpanProcessor,
   type ArchiveUploader,
-} from "../../src/archive-span-processor.ts";
-import type { ArchiveConfig, ArchiveRef } from "../../src/archive-uploader.ts";
+} from "#src/archive-span-processor.ts";
+import type { ArchiveConfig } from "#src/archive-uploader.ts";
 
 class CollectingProcessor implements SpanProcessor {
   readonly spans: ReadableSpan[] = [];
-  onStart(_span: Span, _ctx: Context): void {}
+  onStart(_span: Span, _ctx: Context): void {
+    // no-op: collector only watches onEnd
+  }
   onEnd(span: ReadableSpan): void {
     this.spans.push(span);
   }
-  async shutdown(): Promise<void> {}
-  async forceFlush(): Promise<void> {}
+  async shutdown(): Promise<void> {
+    // no-op: collector holds no async resources
+    await Promise.resolve();
+  }
+  async forceFlush(): Promise<void> {
+    // no-op: collector has no buffered work to flush
+    await Promise.resolve();
+  }
 }
 
 const archiveConfig: ArchiveConfig = {
@@ -36,13 +44,13 @@ const archiveConfig: ArchiveConfig = {
 
 function buildSuccessUploader(): {
   uploader: ArchiveUploader;
-  uploads: Array<{ key: string; payload: string }>;
+  uploads: { key: string; payload: string }[];
 } {
-  const uploads: Array<{ key: string; payload: string }> = [];
+  const uploads: { key: string; payload: string }[] = [];
   const uploader: ArchiveUploader = async (config, key, payload) => {
     uploads.push({ key, payload });
     const sizes = Buffer.byteLength(payload, "utf8");
-    return Promise.resolve<ArchiveRef>({
+    return {
       bucket: config.bucket,
       key,
       sha256: "abcd",
@@ -50,7 +58,7 @@ function buildSuccessUploader(): {
       bytesUncompressed: sizes,
       status: "ok",
       error: undefined,
-    });
+    };
   };
   return { uploader, uploads };
 }
@@ -70,6 +78,30 @@ function buildProvider(options: {
     spanProcessors: [options.processor],
   });
 }
+
+const failedUploader: ArchiveUploader = async () => ({
+  bucket: "llm-archive",
+  key: "llm/x/y/z.json.gz",
+  sha256: "",
+  bytesCompressed: 0,
+  bytesUncompressed: 0,
+  status: "failed",
+  error: "connection refused",
+});
+
+const refusingUploader: ArchiveUploader = async () => {
+  throw new Error("uploader should not be called");
+};
+
+const compatUploader: ArchiveUploader = async (config, key) => ({
+  bucket: config.bucket,
+  key,
+  sha256: "",
+  bytesCompressed: 0,
+  bytesUncompressed: 0,
+  status: "ok",
+  error: undefined,
+});
 
 test("archives a span with gen_ai.* body attributes and forwards a slim span", async () => {
   const collector = new CollectingProcessor();
@@ -159,22 +191,16 @@ test("passes non-LLM spans through unchanged", async () => {
 
 test("marks span as failed when uploader throws", async () => {
   const collector = new CollectingProcessor();
-  const uploader: ArchiveUploader = async () =>
-    Promise.resolve<ArchiveRef>({
-      bucket: "llm-archive",
-      key: "llm/x/y/z.json.gz",
-      sha256: "",
-      bytesCompressed: 0,
-      bytesUncompressed: 0,
-      status: "failed",
-      error: "connection refused",
-    });
   const warnings: string[] = [];
   const processor = new LlmArchiveSpanProcessor({
     inner: collector,
     archive: archiveConfig,
-    uploader,
-    logger: { warn: (message) => warnings.push(message) },
+    uploader: failedUploader,
+    logger: {
+      warn: (message) => {
+        warnings.push(message);
+      },
+    },
   });
   const provider = buildProvider({ serviceName: "temporal", processor });
   const tracer = provider.getTracer("test");
@@ -200,13 +226,10 @@ test("marks span as failed when uploader throws", async () => {
 
 test("marks sampled-out spans with status=sampled_out", async () => {
   const collector = new CollectingProcessor();
-  const uploader: ArchiveUploader = async () => {
-    throw new Error("uploader should not be called");
-  };
   const processor = new LlmArchiveSpanProcessor({
     inner: collector,
     archive: archiveConfig,
-    uploader,
+    uploader: refusingUploader,
     sampleRate: 0,
     random: () => 0.5,
   });
@@ -236,34 +259,42 @@ test("marks sampled-out spans with status=sampled_out", async () => {
 
 test("registers as SimpleSpanProcessor compat (does not throw)", () => {
   const exporter: SpanProcessor = {
-    onStart(): void {},
-    onEnd(): void {},
-    async shutdown() {},
-    async forceFlush() {},
+    onStart(): void {
+      // no-op: smoke-test stub
+    },
+    onEnd(): void {
+      // no-op: smoke-test stub
+    },
+    async shutdown() {
+      // no-op: smoke-test stub
+      await Promise.resolve();
+    },
+    async forceFlush() {
+      // no-op: smoke-test stub
+      await Promise.resolve();
+    },
   };
   const simple = new SimpleSpanProcessor({
     export(_spans, cb) {
       cb({ code: 0 });
     },
-    async shutdown() {},
-    async forceFlush() {},
+    async shutdown() {
+      // no-op: smoke-test stub
+      await Promise.resolve();
+    },
+    async forceFlush() {
+      // no-op: smoke-test stub
+      await Promise.resolve();
+    },
   });
   // tracer.getTracer used via export to silence unused
   trace.getTracer("compat-noop");
   const processor = new LlmArchiveSpanProcessor({
     inner: simple,
     archive: archiveConfig,
-    uploader: async (config, key) =>
-      Promise.resolve<ArchiveRef>({
-        bucket: config.bucket,
-        key,
-        sha256: "",
-        bytesCompressed: 0,
-        bytesUncompressed: 0,
-        status: "ok",
-        error: undefined,
-      }),
+    uploader: compatUploader,
   });
   expect(processor).toBeDefined();
-  expect(exporter.onStart).toBeDefined();
+  const onStart = exporter.onStart.bind(exporter);
+  expect(onStart).toBeDefined();
 });

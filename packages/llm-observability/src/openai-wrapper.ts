@@ -79,9 +79,9 @@ export async function traceOpenAi<T extends OpenAIChatResponse>(
 
       const response = await run();
 
-      const finishReasons = (response.choices ?? [])
-        .map((choice) => choice.finish_reason)
-        .filter((value): value is string => typeof value === "string");
+      const finishReasons = (response.choices ?? []).flatMap((choice) =>
+        typeof choice.finish_reason === "string" ? [choice.finish_reason] : [],
+      );
 
       setLlmResponseAttributes(span, {
         model: response.model,

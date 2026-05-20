@@ -84,9 +84,11 @@ export async function traceGemini<T extends GeminiGenerateContentResult>(
       const result = await run();
       const response = result.response;
 
-      const finishReasons = (response.candidates ?? [])
-        .map((candidate) => candidate.finishReason)
-        .filter((value): value is string => typeof value === "string");
+      const finishReasons = (response.candidates ?? []).flatMap((candidate) =>
+        typeof candidate.finishReason === "string"
+          ? [candidate.finishReason]
+          : [],
+      );
 
       setLlmResponseAttributes(span, {
         model: response.modelVersion ?? metadata.request.model,

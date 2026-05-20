@@ -1,4 +1,9 @@
-import { SpanStatusCode, type AttributeValue } from "@opentelemetry/api";
+import {
+  SpanStatusCode,
+  type AttributeValue,
+  type Span,
+} from "@opentelemetry/api";
+import { z } from "zod";
 import {
   getLlmTracer,
   serializeBodyAttribute,
@@ -16,6 +21,57 @@ export type TraceClaudeAgentMetadata = Omit<LlmCallMetadata, "system"> & {
   };
 };
 
+type Accumulator = {
+  assistantMessages: unknown[];
+  initModel: string | undefined;
+  sessionId: string | undefined;
+  resultStopReason: string | undefined;
+  resultSubtype: string | undefined;
+  isError: boolean;
+  totalCostUsd: number | undefined;
+  numTurns: number | undefined;
+  inputTokens: number | undefined;
+  outputTokens: number | undefined;
+  cacheReadInputTokens: number | undefined;
+  cacheCreationInputTokens: number | undefined;
+  sawResult: boolean;
+};
+
+const InitMessageSchema = z.object({
+  type: z.literal("system"),
+  subtype: z.literal("init"),
+  model: z.string().optional(),
+  session_id: z.string().optional(),
+});
+
+const AssistantMessageSchema = z.object({
+  type: z.literal("assistant"),
+  message: z
+    .object({
+      content: z.unknown(),
+    })
+    .optional(),
+  session_id: z.string().optional(),
+});
+
+const ResultUsageSchema = z.object({
+  input_tokens: z.number().optional(),
+  output_tokens: z.number().optional(),
+  cache_read_input_tokens: z.number().optional(),
+  cache_creation_input_tokens: z.number().optional(),
+});
+
+const ResultMessageSchema = z.object({
+  type: z.literal("result"),
+  subtype: z.string().optional(),
+  stop_reason: z.string().optional(),
+  is_error: z.boolean().optional(),
+  total_cost_usd: z.number().optional(),
+  num_turns: z.number().optional(),
+  session_id: z.string().optional(),
+  usage: ResultUsageSchema.optional(),
+});
+
 /**
  * Wrap a Claude Agent SDK `query({...})` call. Returns an async generator that
  * yields every message from the underlying iterable to the caller while
@@ -31,8 +87,8 @@ export type TraceClaudeAgentMetadata = Omit<LlmCallMetadata, "system"> & {
  * serialized as JSON span attributes for `LlmArchiveSpanProcessor` to upload.
  *
  * The wrapper is type-agnostic: the inner iterable's message type is preserved
- * (via generic `TMessage`) but its fields are read structurally with `unknown`
- * narrowing — no dependency on a specific SDK version's exported types.
+ * (via generic `TMessage`) but its fields are read structurally with Zod
+ * schemas — no dependency on a specific SDK version's exported types.
  */
 export async function* traceClaudeAgent<TMessage>(
   metadata: TraceClaudeAgentMetadata,
@@ -41,6 +97,51 @@ export async function* traceClaudeAgent<TMessage>(
   const tracer = getLlmTracer();
   const span = tracer.startSpan("gen_ai.chat");
 
+  span.setAttributes(buildInitialAttrs(metadata));
+
+  const accumulator: Accumulator = newAccumulator();
+
+  try {
+    for await (const message of run()) {
+      observe(message, accumulator);
+      yield message;
+    }
+
+    span.setAttributes(buildResponseAttrs(metadata, accumulator));
+    applyResultStatus(span, accumulator);
+  } catch (error: unknown) {
+    span.setStatus({
+      code: SpanStatusCode.ERROR,
+      message: error instanceof Error ? error.message : String(error),
+    });
+    if (error instanceof Error) span.recordException(error);
+    throw error;
+  } finally {
+    span.end();
+  }
+}
+
+function newAccumulator(): Accumulator {
+  return {
+    assistantMessages: [],
+    initModel: undefined,
+    sessionId: undefined,
+    resultStopReason: undefined,
+    resultSubtype: undefined,
+    isError: false,
+    totalCostUsd: undefined,
+    numTurns: undefined,
+    inputTokens: undefined,
+    outputTokens: undefined,
+    cacheReadInputTokens: undefined,
+    cacheCreationInputTokens: undefined,
+    sawResult: false,
+  };
+}
+
+function buildInitialAttrs(
+  metadata: TraceClaudeAgentMetadata,
+): Record<string, AttributeValue> {
   const initialAttrs: Record<string, AttributeValue> = {
     "gen_ai.system": "claude_code_sdk",
     "gen_ai.operation.name": "chat",
@@ -58,194 +159,138 @@ export async function* traceClaudeAgent<TMessage>(
       metadata.request.options,
     );
   }
-  span.setAttributes(initialAttrs);
+  return initialAttrs;
+}
 
-  const accumulator: Accumulator = {
-    assistantMessages: [],
-    initModel: undefined,
-    sessionId: undefined,
-    resultStopReason: undefined,
-    resultSubtype: undefined,
-    isError: false,
-    totalCostUsd: undefined,
-    numTurns: undefined,
-    inputTokens: undefined,
-    outputTokens: undefined,
-    cacheReadInputTokens: undefined,
-    cacheCreationInputTokens: undefined,
-    sawResult: false,
+function buildResponseAttrs(
+  metadata: TraceClaudeAgentMetadata,
+  acc: Accumulator,
+): Record<string, AttributeValue> {
+  const responseAttrs: Record<string, AttributeValue> = {
+    "gen_ai.output.messages": serializeBodyAttribute(acc.assistantMessages),
   };
 
-  try {
-    for await (const message of run()) {
-      observe(message, accumulator);
-      yield message;
-    }
+  applyModelAttrs(responseAttrs, metadata, acc);
+  applySessionAttrs(responseAttrs, acc);
+  if (acc.sawResult) {
+    applyResultUsageAttrs(responseAttrs, acc);
+    applyResultMetaAttrs(responseAttrs, acc);
+  }
+  return responseAttrs;
+}
 
-    const responseAttrs: Record<string, AttributeValue> = {
-      "gen_ai.output.messages": serializeBodyAttribute(
-        accumulator.assistantMessages,
-      ),
-    };
-    const effectiveModel = metadata.request.model ?? accumulator.initModel;
-    if (effectiveModel !== undefined) {
-      responseAttrs["gen_ai.response.model"] = effectiveModel;
-      if (metadata.request.model === undefined) {
-        responseAttrs["gen_ai.request.model"] = effectiveModel;
-      }
-    }
-    if (accumulator.sessionId !== undefined) {
-      responseAttrs["gen_ai.response.id"] = accumulator.sessionId;
-      responseAttrs["llm.claude_code.session_id"] = accumulator.sessionId;
-    }
-    if (accumulator.sawResult) {
-      if (accumulator.inputTokens !== undefined) {
-        responseAttrs["gen_ai.usage.input_tokens"] = accumulator.inputTokens;
-      }
-      if (accumulator.outputTokens !== undefined) {
-        responseAttrs["gen_ai.usage.output_tokens"] = accumulator.outputTokens;
-      }
-      if (accumulator.cacheReadInputTokens !== undefined) {
-        responseAttrs["gen_ai.usage.cache_read_input_tokens"] =
-          accumulator.cacheReadInputTokens;
-      }
-      if (accumulator.cacheCreationInputTokens !== undefined) {
-        responseAttrs["gen_ai.usage.cache_creation_input_tokens"] =
-          accumulator.cacheCreationInputTokens;
-      }
-      if (accumulator.resultStopReason !== undefined) {
-        responseAttrs["gen_ai.response.finish_reasons"] = [
-          accumulator.resultStopReason,
-        ];
-      } else if (accumulator.resultSubtype !== undefined) {
-        responseAttrs["gen_ai.response.finish_reasons"] = [
-          accumulator.resultSubtype,
-        ];
-      }
-      if (accumulator.totalCostUsd !== undefined) {
-        responseAttrs["llm.cost_usd"] = accumulator.totalCostUsd;
-      }
-      if (accumulator.numTurns !== undefined) {
-        responseAttrs["llm.claude_code.num_turns"] = accumulator.numTurns;
-      }
-      if (accumulator.isError) {
-        span.setStatus({
-          code: SpanStatusCode.ERROR,
-          message: accumulator.resultSubtype ?? "claude_code_error",
-        });
-      }
-    }
-    span.setAttributes(responseAttrs);
-    if (!accumulator.isError) {
-      span.setStatus({ code: SpanStatusCode.OK });
-    }
-  } catch (error: unknown) {
+function applyModelAttrs(
+  attrs: Record<string, AttributeValue>,
+  metadata: TraceClaudeAgentMetadata,
+  acc: Accumulator,
+): void {
+  const effectiveModel = metadata.request.model ?? acc.initModel;
+  if (effectiveModel === undefined) return;
+  attrs["gen_ai.response.model"] = effectiveModel;
+  if (metadata.request.model === undefined) {
+    attrs["gen_ai.request.model"] = effectiveModel;
+  }
+}
+
+function applySessionAttrs(
+  attrs: Record<string, AttributeValue>,
+  acc: Accumulator,
+): void {
+  if (acc.sessionId === undefined) return;
+  attrs["gen_ai.response.id"] = acc.sessionId;
+  attrs["llm.claude_code.session_id"] = acc.sessionId;
+}
+
+function applyResultUsageAttrs(
+  attrs: Record<string, AttributeValue>,
+  acc: Accumulator,
+): void {
+  if (acc.inputTokens !== undefined) {
+    attrs["gen_ai.usage.input_tokens"] = acc.inputTokens;
+  }
+  if (acc.outputTokens !== undefined) {
+    attrs["gen_ai.usage.output_tokens"] = acc.outputTokens;
+  }
+  if (acc.cacheReadInputTokens !== undefined) {
+    attrs["gen_ai.usage.cache_read_input_tokens"] = acc.cacheReadInputTokens;
+  }
+  if (acc.cacheCreationInputTokens !== undefined) {
+    attrs["gen_ai.usage.cache_creation_input_tokens"] =
+      acc.cacheCreationInputTokens;
+  }
+}
+
+function applyResultMetaAttrs(
+  attrs: Record<string, AttributeValue>,
+  acc: Accumulator,
+): void {
+  const finishReason = acc.resultStopReason ?? acc.resultSubtype;
+  if (finishReason !== undefined) {
+    attrs["gen_ai.response.finish_reasons"] = [finishReason];
+  }
+  if (acc.totalCostUsd !== undefined) {
+    attrs["llm.cost_usd"] = acc.totalCostUsd;
+  }
+  if (acc.numTurns !== undefined) {
+    attrs["llm.claude_code.num_turns"] = acc.numTurns;
+  }
+}
+
+function applyResultStatus(span: Span, acc: Accumulator): void {
+  if (acc.sawResult && acc.isError) {
     span.setStatus({
       code: SpanStatusCode.ERROR,
-      message: error instanceof Error ? error.message : String(error),
+      message: acc.resultSubtype ?? "claude_code_error",
     });
-    if (error instanceof Error) span.recordException(error);
-    throw error;
-  } finally {
-    span.end();
+    return;
   }
+  span.setStatus({ code: SpanStatusCode.OK });
 }
-
-type Accumulator = {
-  assistantMessages: unknown[];
-  initModel: string | undefined;
-  sessionId: string | undefined;
-  resultStopReason: string | undefined;
-  resultSubtype: string | undefined;
-  isError: boolean;
-  totalCostUsd: number | undefined;
-  numTurns: number | undefined;
-  inputTokens: number | undefined;
-  outputTokens: number | undefined;
-  cacheReadInputTokens: number | undefined;
-  cacheCreationInputTokens: number | undefined;
-  sawResult: boolean;
-};
 
 function observe(message: unknown, acc: Accumulator): void {
-  if (!isRecord(message)) return;
-  const type = readString(message, "type");
-
-  if (type === "system" && readString(message, "subtype") === "init") {
-    acc.initModel = readString(message, "model") ?? acc.initModel;
-    acc.sessionId = readString(message, "session_id") ?? acc.sessionId;
+  const init = InitMessageSchema.safeParse(message);
+  if (init.success) {
+    acc.initModel = init.data.model ?? acc.initModel;
+    acc.sessionId = init.data.session_id ?? acc.sessionId;
     return;
   }
 
-  if (type === "assistant") {
-    const inner = readRecord(message, "message");
-    if (inner !== undefined && "content" in inner) {
+  const assistant = AssistantMessageSchema.safeParse(message);
+  if (assistant.success) {
+    if (assistant.data.message !== undefined) {
       acc.assistantMessages.push({
         role: "assistant",
-        content: inner["content"],
+        content: assistant.data.message.content,
       });
     }
-    acc.sessionId = readString(message, "session_id") ?? acc.sessionId;
+    acc.sessionId = assistant.data.session_id ?? acc.sessionId;
     return;
   }
 
-  if (type === "result") {
-    acc.sawResult = true;
-    acc.resultSubtype = readString(message, "subtype") ?? acc.resultSubtype;
-    acc.resultStopReason =
-      readString(message, "stop_reason") ?? acc.resultStopReason;
-    acc.isError = readBoolean(message, "is_error") ?? acc.isError;
-    acc.totalCostUsd =
-      readNumber(message, "total_cost_usd") ?? acc.totalCostUsd;
-    acc.numTurns = readNumber(message, "num_turns") ?? acc.numTurns;
-    acc.sessionId = readString(message, "session_id") ?? acc.sessionId;
-
-    const usage = readRecord(message, "usage");
-    if (usage !== undefined) {
-      acc.inputTokens = readNumber(usage, "input_tokens") ?? acc.inputTokens;
-      acc.outputTokens = readNumber(usage, "output_tokens") ?? acc.outputTokens;
-      acc.cacheReadInputTokens =
-        readNumber(usage, "cache_read_input_tokens") ??
-        acc.cacheReadInputTokens;
-      acc.cacheCreationInputTokens =
-        readNumber(usage, "cache_creation_input_tokens") ??
-        acc.cacheCreationInputTokens;
-    }
+  const result = ResultMessageSchema.safeParse(message);
+  if (result.success) {
+    applyResultToAccumulator(result.data, acc);
   }
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
+function applyResultToAccumulator(
+  data: z.infer<typeof ResultMessageSchema>,
+  acc: Accumulator,
+): void {
+  acc.sawResult = true;
+  acc.resultSubtype = data.subtype ?? acc.resultSubtype;
+  acc.resultStopReason = data.stop_reason ?? acc.resultStopReason;
+  acc.isError = data.is_error ?? acc.isError;
+  acc.totalCostUsd = data.total_cost_usd ?? acc.totalCostUsd;
+  acc.numTurns = data.num_turns ?? acc.numTurns;
+  acc.sessionId = data.session_id ?? acc.sessionId;
 
-function readString(
-  record: Record<string, unknown>,
-  key: string,
-): string | undefined {
-  const value = record[key];
-  return typeof value === "string" ? value : undefined;
-}
-
-function readNumber(
-  record: Record<string, unknown>,
-  key: string,
-): number | undefined {
-  const value = record[key];
-  return typeof value === "number" ? value : undefined;
-}
-
-function readBoolean(
-  record: Record<string, unknown>,
-  key: string,
-): boolean | undefined {
-  const value = record[key];
-  return typeof value === "boolean" ? value : undefined;
-}
-
-function readRecord(
-  record: Record<string, unknown>,
-  key: string,
-): Record<string, unknown> | undefined {
-  const value = record[key];
-  return isRecord(value) ? value : undefined;
+  if (data.usage !== undefined) {
+    acc.inputTokens = data.usage.input_tokens ?? acc.inputTokens;
+    acc.outputTokens = data.usage.output_tokens ?? acc.outputTokens;
+    acc.cacheReadInputTokens =
+      data.usage.cache_read_input_tokens ?? acc.cacheReadInputTokens;
+    acc.cacheCreationInputTokens =
+      data.usage.cache_creation_input_tokens ?? acc.cacheCreationInputTokens;
+  }
 }

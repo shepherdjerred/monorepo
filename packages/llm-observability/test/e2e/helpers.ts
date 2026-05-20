@@ -1,4 +1,5 @@
 import { gunzipSync } from "node:zlib";
+import { z } from "zod";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import {
   BasicTracerProvider,
@@ -8,8 +9,8 @@ import {
 import { resourceFromAttributes } from "@opentelemetry/resources";
 import { trace, context } from "@opentelemetry/api";
 import { AsyncLocalStorageContextManager } from "@opentelemetry/context-async-hooks";
-import { LlmArchiveSpanProcessor } from "../../src/archive-span-processor.ts";
-import { type ArchiveConfig } from "../../src/archive-uploader.ts";
+import { LlmArchiveSpanProcessor } from "#src/archive-span-processor.ts";
+import { type ArchiveConfig } from "#src/archive-uploader.ts";
 
 export const TEMPO_QUERY_URL = "http://localhost:3200";
 export const TEMPO_OTLP_URL = "http://localhost:4318";
@@ -129,104 +130,129 @@ export type TempoTraceResult = {
   spans: TempoTraceSpan[];
 };
 
-function parseTempoTrace(body: unknown): TempoTraceResult {
-  const spans: TempoTraceSpan[] = [];
-  if (typeof body !== "object" || body === null) return { raw: body, spans };
-  const trace = (body as Record<string, unknown>)["trace"];
-  if (typeof trace !== "object" || trace === null) {
-    return { raw: body, spans };
-  }
-  const resourceSpansRaw = (trace as Record<string, unknown>)["resourceSpans"];
-  if (!Array.isArray(resourceSpansRaw)) return { raw: body, spans };
+// Tempo's OTLP-encoded attribute value variants. Each entry is exactly one of:
+// stringValue / intValue (string or number) / doubleValue / boolValue /
+// arrayValue.values (array of the above scalar variants).
+const ScalarAttributeValueSchema = z.object({
+  stringValue: z.string().optional(),
+  intValue: z.union([z.string(), z.number()]).optional(),
+  doubleValue: z.number().optional(),
+  boolValue: z.boolean().optional(),
+});
 
-  for (const rs of resourceSpansRaw) {
-    if (typeof rs !== "object" || rs === null) continue;
-    const scopeSpansRaw = (rs as Record<string, unknown>)["scopeSpans"];
-    if (!Array.isArray(scopeSpansRaw)) continue;
-    for (const ss of scopeSpansRaw) {
-      if (typeof ss !== "object" || ss === null) continue;
-      const spanList = (ss as Record<string, unknown>)["spans"];
-      if (!Array.isArray(spanList)) continue;
-      for (const s of spanList) {
-        if (typeof s !== "object" || s === null) continue;
-        const rec = s as Record<string, unknown>;
-        const name = typeof rec["name"] === "string" ? rec["name"] : "";
-        const attrs = parseAttributes(rec["attributes"]);
-        spans.push({ name, attributes: attrs });
+const AttributeValueSchema = ScalarAttributeValueSchema.extend({
+  arrayValue: z
+    .object({
+      values: z.array(ScalarAttributeValueSchema),
+    })
+    .optional(),
+});
+
+const AttributeEntrySchema = z.object({
+  key: z.string(),
+  value: AttributeValueSchema,
+});
+
+const TempoSpanSchema = z.object({
+  name: z.string().optional(),
+  attributes: z.array(z.unknown()).optional(),
+});
+
+const TempoTraceBodySchema = z.object({
+  trace: z.object({
+    resourceSpans: z.array(
+      z.object({
+        scopeSpans: z
+          .array(
+            z.object({
+              spans: z.array(z.unknown()).optional(),
+            }),
+          )
+          .optional(),
+      }),
+    ),
+  }),
+});
+
+function parseTempoTrace(body: unknown): TempoTraceResult {
+  const parsed = TempoTraceBodySchema.safeParse(body);
+  if (!parsed.success) return { raw: body, spans: [] };
+
+  const spans: TempoTraceSpan[] = [];
+  for (const rs of parsed.data.trace.resourceSpans) {
+    for (const ss of rs.scopeSpans ?? []) {
+      for (const rawSpan of ss.spans ?? []) {
+        const spanParse = TempoSpanSchema.safeParse(rawSpan);
+        if (!spanParse.success) continue;
+        spans.push({
+          name: spanParse.data.name ?? "",
+          attributes: parseAttributes(spanParse.data.attributes ?? []),
+        });
       }
     }
   }
   return { raw: body, spans };
 }
 
-function parseAttributes(value: unknown): TempoSpanAttributes {
+function parseAttributes(rawEntries: unknown[]): TempoSpanAttributes {
   const result: TempoSpanAttributes = {};
-  if (!Array.isArray(value)) return result;
-  for (const entry of value) {
-    if (typeof entry !== "object" || entry === null) continue;
-    const rec = entry as Record<string, unknown>;
-    const key = rec["key"];
-    if (typeof key !== "string") continue;
-    const v = rec["value"];
-    if (typeof v !== "object" || v === null) continue;
-    const variant = v as Record<string, unknown>;
-    if (typeof variant["stringValue"] === "string") {
-      result[key] = variant["stringValue"];
+  for (const entry of rawEntries) {
+    const parsed = AttributeEntrySchema.safeParse(entry);
+    if (!parsed.success) continue;
+    const scalar = scalarFromVariant(parsed.data.value);
+    if (scalar !== undefined) {
+      result[parsed.data.key] = scalar;
       continue;
     }
-    if (typeof variant["intValue"] === "string") {
-      result[key] = Number.parseInt(variant["intValue"], 10);
-      continue;
-    }
-    if (typeof variant["intValue"] === "number") {
-      result[key] = variant["intValue"];
-      continue;
-    }
-    if (typeof variant["doubleValue"] === "number") {
-      result[key] = variant["doubleValue"];
-      continue;
-    }
-    if (typeof variant["boolValue"] === "boolean") {
-      result[key] = variant["boolValue"];
-      continue;
-    }
-    const arrayValue = variant["arrayValue"];
-    if (typeof arrayValue === "object" && arrayValue !== null) {
-      const values = (arrayValue as Record<string, unknown>)["values"];
-      if (Array.isArray(values)) {
-        const parsed = parseArrayValues(values);
-        if (parsed !== undefined) result[key] = parsed;
-      }
+    const arrayValue = parsed.data.value.arrayValue;
+    if (arrayValue !== undefined) {
+      const arr = parseArrayValues(arrayValue.values);
+      if (arr !== undefined) result[parsed.data.key] = arr;
     }
   }
   return result;
 }
 
-function parseArrayValues(values: unknown[]): TempoAttributeValue | undefined {
+function scalarFromVariant(
+  variant: z.infer<typeof ScalarAttributeValueSchema>,
+): string | number | boolean | undefined {
+  if (variant.stringValue !== undefined) return variant.stringValue;
+  const intNumber = coerceIntValue(variant.intValue);
+  if (intNumber !== undefined) return intNumber;
+  if (variant.doubleValue !== undefined) return variant.doubleValue;
+  if (variant.boolValue !== undefined) return variant.boolValue;
+  return undefined;
+}
+
+function coerceIntValue(
+  value: string | number | undefined,
+): number | undefined {
+  if (value === undefined) return undefined;
+  return typeof value === "string" ? Number.parseInt(value, 10) : value;
+}
+
+function parseArrayValues(
+  values: z.infer<typeof ScalarAttributeValueSchema>[],
+): TempoAttributeValue | undefined {
   const strings: string[] = [];
   const numbers: number[] = [];
   const bools: boolean[] = [];
-  for (const entry of values) {
-    if (typeof entry !== "object" || entry === null) continue;
-    const rec = entry as Record<string, unknown>;
-    if (typeof rec["stringValue"] === "string") {
-      strings.push(rec["stringValue"]);
+  for (const variant of values) {
+    if (variant.stringValue !== undefined) {
+      strings.push(variant.stringValue);
       continue;
     }
-    if (typeof rec["intValue"] === "string") {
-      numbers.push(Number.parseInt(rec["intValue"], 10));
+    const intNumber = coerceIntValue(variant.intValue);
+    if (intNumber !== undefined) {
+      numbers.push(intNumber);
       continue;
     }
-    if (typeof rec["intValue"] === "number") {
-      numbers.push(rec["intValue"]);
+    if (variant.doubleValue !== undefined) {
+      numbers.push(variant.doubleValue);
       continue;
     }
-    if (typeof rec["doubleValue"] === "number") {
-      numbers.push(rec["doubleValue"]);
-      continue;
-    }
-    if (typeof rec["boolValue"] === "boolean") {
-      bools.push(rec["boolValue"]);
+    if (variant.boolValue !== undefined) {
+      bools.push(variant.boolValue);
       continue;
     }
   }

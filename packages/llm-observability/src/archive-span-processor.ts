@@ -34,8 +34,8 @@ const BODY_ATTR_KEYS = [
 const BODY_ATTR_SET: ReadonlySet<string> = new Set(BODY_ATTR_KEYS);
 
 export type ArchiveLogger = {
-  warn(message: string, fields?: Record<string, unknown>): void;
-  info?(message: string, fields?: Record<string, unknown>): void;
+  warn: (message: string, fields?: Record<string, unknown>) => void;
+  info?: (message: string, fields?: Record<string, unknown>) => void;
 };
 
 const noopLogger: ArchiveLogger = {
@@ -117,18 +117,33 @@ export class LlmArchiveSpanProcessor implements SpanProcessor {
     }
 
     const sampled = this.random() < this.sampleRate;
-    const promise = this.processLlmSpan(span, sampled).catch(
-      (error: unknown) => {
+    const tracker: { promise?: Promise<void> } = {};
+    const promise = this.runAndTrack(span, sampled, tracker);
+    tracker.promise = promise;
+    this.inFlight.add(promise);
+  }
+
+  private async runAndTrack(
+    span: ReadableSpan,
+    sampled: boolean,
+    tracker: { promise?: Promise<void> },
+  ): Promise<void> {
+    try {
+      try {
+        await this.processLlmSpan(span, sampled);
+      } catch (error: unknown) {
         // Defensive: the processLlmSpan path catches its own upload errors;
         // this branch should only fire for bugs.
         this.logger.warn("llm-observability: span processing crashed", {
           error: error instanceof Error ? error.message : String(error),
         });
         this.inner.onEnd(span);
-      },
-    );
-    this.inFlight.add(promise);
-    promise.finally(() => this.inFlight.delete(promise));
+      }
+    } finally {
+      if (tracker.promise !== undefined) {
+        this.inFlight.delete(tracker.promise);
+      }
+    }
   }
 
   async shutdown(): Promise<void> {
@@ -143,7 +158,7 @@ export class LlmArchiveSpanProcessor implements SpanProcessor {
 
   private async flushInFlight(): Promise<void> {
     if (this.inFlight.size === 0) return;
-    await Promise.allSettled([...this.inFlight]);
+    await Promise.allSettled(this.inFlight);
   }
 
   private async processLlmSpan(
