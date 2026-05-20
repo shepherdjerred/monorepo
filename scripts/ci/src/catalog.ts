@@ -300,6 +300,7 @@ export const ALL_PACKAGES: string[] = [
   "home-assistant",
   "homelab",
   "leetcode",
+  "llm-observability",
   "macos-cross-compiler",
   "monarch",
   "resume",
