@@ -8,7 +8,7 @@ import { getRuneIconUrl } from "#src/dataDragon/runes.ts";
 
 const keystoneSize = "3.75rem";
 
-// TODO(https://github.com/shepherdjerred/scout-for-lol/issues/184): Consider displaying all primary/secondary runes or stat shards for more detail
+// TODO(https://github.com/shepherdjerred/monorepo/issues/184): Consider displaying all primary/secondary runes or stat shards for more detail
 export function Runes({ runes }: { runes: Rune[] }) {
   if (runes.length === 0) {
     return null;

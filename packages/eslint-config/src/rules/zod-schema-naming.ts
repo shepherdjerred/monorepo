@@ -3,7 +3,7 @@ import { ESLintUtils, AST_NODE_TYPES } from "@typescript-eslint/utils";
 
 const createRule = ESLintUtils.RuleCreator(
   (name) =>
-    `https://github.com/shepherdjerred/share/tree/main/packages/eslint-config/src/rules/${name}.ts`,
+    `https://github.com/shepherdjerred/monorepo/tree/main/packages/eslint-config/src/rules/${name}.ts`,
 );
 
 export const zodSchemaNaming = createRule({

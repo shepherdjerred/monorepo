@@ -1,8 +1,8 @@
 # rust-os
 
-[![License](https://img.shields.io/github/license/shepherdjerred/rust-os)](LICENSE)
-[![Build Status](https://travis-ci.com/shepherdjerred/rust-os.svg?branch=master)](https://travis-ci.com/shepherdjerred/rust-os)
-[![Latest Release](https://img.shields.io/github/v/release/shepherdjerred/rust-os?include_prereleases)](https://github.com/shepherdjerred/rust-os/releases)
+[![License](https://img.shields.io/github/license/shepherdjerred/monorepo)](LICENSE)
+[![Build Status](https://travis-ci.com/shepherdjerred/monorepo?branch=master)](https://travis-ci.com/shepherdjerred/monorepo)
+[![Latest Release](https://img.shields.io/github/v/release/shepherdjerred/monorepo?include_prereleases)](https://github.com/shepherdjerred/monorepo/releases)
 
 An operating system written in Rust
 
@@ -10,7 +10,7 @@ Following the guide from [Philipp Opperman](https://os.phil-opp.com/)
 
 # Running
 
-1. Download the [latest release](https://github.com/shepherdjerred/rust-os/releases) from GitHub.
+1. Download the [latest release](https://github.com/shepherdjerred/monorepo/releases) from GitHub.
 2. Do either of the following:
 
 - Run with [Qemu](https://www.qemu.org/): `qemu-system-x86_64 -drive format=raw,file=bootimage-rust_os.bin`

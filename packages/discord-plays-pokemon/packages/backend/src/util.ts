@@ -8,7 +8,7 @@ export function wait(milliseconds: number): Promise<void> {
 }
 
 export function addErrorLinks(s: string) {
-  return `${s}\n\nFor more information, read the setup guide (https://docs.discord-plays-pokemon.com/user/)\nIf you are unable to resolve this error, please open an issue (https://github.com/shepherdjerred/discord-plays-pokemon/issues)\n`;
+  return `${s}\n\nFor more information, read the setup guide (https://docs.discord-plays-pokemon.com/user/)\nIf you are unable to resolve this error, please open an issue (https://github.com/shepherdjerred/monorepo/issues)\n`;
 }
 
 export function assertPathExists(s: string, pathName: string) {

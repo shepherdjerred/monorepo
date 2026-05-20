@@ -1,6 +1,6 @@
 # Discord
 
-[![CI](https://github.com/shepherdjerred/discord/actions/workflows/ci.yml/badge.svg)](https://github.com/shepherdjerred/discord/actions/workflows/ci.yml)
+[![CI](https://github.com/shepherdjerred/monorepo/actions/workflows/ci.yml/badge.svg)](https://github.com/shepherdjerred/monorepo/actions/workflows/ci.yml)
 
 This repository contains projects related to a Discord server that I share with
 my friends.

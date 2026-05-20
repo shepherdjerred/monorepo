@@ -9,7 +9,7 @@ In Progress
 Phase 10 Part 1 (#743, merged) landed the scaffolding: `eval-fixture.ts`
 Zod schema + grader, hand-rolled Bun.SQL migrator, Postgres `pr_review_eval`
 database + user, three migration files. Three real-bug fixtures fully
-authored in the sibling `monorepo-pr-review-fixtures` repo. Four total
+authored in the sibling private PR-review fixture corpus. Four total
 authored after this session (good-morning-headroom landed pre-merge).
 
 Part 2 wires the runtime: the nightly Temporal scheduled workflow that
@@ -38,7 +38,7 @@ Five new series, sibling to `pr-review-metrics.ts`:
 Five activities:
 
 - `load.ts` — `loadFixtureCorpus({pin})`: shallow-clone
-  `shepherdjerred/monorepo-pr-review-fixtures` at the pinned merge SHA
+  the private PR-review fixture corpus at the pinned merge SHA
   into a scratch dir, parse every `fixtures/<id>/fixture.json` against
   `FixtureSchema`, return `Fixture[]`.
 - `replay.ts` — `replayBotAgainstFixture({fixture})`: simulate the

@@ -1,6 +1,6 @@
 # Learn You a Haskell Exercises
 
-[![Haskell CI](https://github.com/shepherdjerred/monorepo/tree/main/practice/learn-you-a-haskell-exercises/workflows/Haskell%20CI/badge.svg)](https://github.com/shepherdjerred/learn-you-a-haskell-exercises/actions)
+[![Haskell CI](https://github.com/shepherdjerred/monorepo/tree/main/practice/learn-you-a-haskell-exercises/workflows/Haskell%20CI/badge.svg)](https://github.com/shepherdjerred/monorepo/actions)
 
 Some exercises as a companion for the book Learn You a Haskell For Great Good!
 

@@ -1,6 +1,6 @@
 /**
- * Load the held-out fixture corpus from the sibling repo
- * `shepherdjerred/monorepo-pr-review-fixtures` at a pinned merge SHA.
+ * Load the held-out fixture corpus from a configured private repository at a
+ * pinned merge SHA.
  *
  * The pin lives in `#shared/pr-review/eval-fixture.ts` (`EVAL_FIXTURES_PIN`)
  * and is bumped via PR when the corpus is updated — bumping the pin is
@@ -11,10 +11,10 @@
  * plus the resolved commit SHA (we persist the resolved SHA in
  * `eval_runs.fixture_commit_sha`).
  *
- * Auth: the fixtures repo is private. The temporal-worker pod mounts a
- * `GH_TOKEN` env var via 1Password Connect (same field the docs-groom
- * activity uses). Clone authenticates via `GIT_ASKPASS` — never embeds
- * the token in the URL (per AGENTS.md / data-dragon.ts precedent).
+ * Auth: the fixtures repo is private. The temporal-worker pod mounts
+ * `PR_REVIEW_FIXTURES_REPO_URL` and `GH_TOKEN` via 1Password Connect. Clone
+ * authenticates via `GIT_ASKPASS` — never embeds the token in the URL (per
+ * AGENTS.md / data-dragon.ts precedent).
  */
 import {
   mkdtemp,
@@ -31,8 +31,7 @@ import { simpleGit } from "simple-git";
 import { withSpan } from "#observability/tracing.ts";
 import { FixtureSchema, type Fixture } from "#shared/pr-review/eval-fixture.ts";
 
-const FIXTURES_REPO_URL =
-  "https://github.com/shepherdjerred/monorepo-pr-review-fixtures.git";
+const FIXTURES_REPO_URL_ENV = "PR_REVIEW_FIXTURES_REPO_URL";
 const COMPONENT = "pr-review-eval";
 
 function jsonLog(
@@ -76,8 +75,8 @@ async function writeGitAskpass(dir: string): Promise<string> {
 
 export type LoadFixtureCorpusInput = {
   /**
-   * Merge commit SHA (or ref) in `monorepo-pr-review-fixtures` to load.
-   * The nightly cron passes `EVAL_FIXTURES_PIN`.
+   * Merge commit SHA (or ref) in the fixture corpus repository to load. The
+   * nightly cron passes `EVAL_FIXTURES_PIN`.
    */
   pin: string;
 };
@@ -108,6 +107,12 @@ async function loadFixtureCorpusImpl(
           "GH_TOKEN missing — required to clone the private fixtures repo",
         );
       }
+      const fixturesRepoUrl = Bun.env[FIXTURES_REPO_URL_ENV]?.trim();
+      if (fixturesRepoUrl === undefined || fixturesRepoUrl === "") {
+        throw new Error(
+          `${FIXTURES_REPO_URL_ENV} missing — required to clone the private fixtures repo`,
+        );
+      }
 
       const scratch = await mkdtemp(
         path.join(tmpdir(), "pr-review-eval-fixtures-"),
@@ -123,7 +128,7 @@ async function loadFixtureCorpusImpl(
       jsonLog("info", "Cloning fixtures repo", { scratch, pin: input.pin });
       const repoDir = path.join(scratch, "repo");
       const git = simpleGit().env(gitEnv);
-      await git.clone(FIXTURES_REPO_URL, repoDir, [
+      await git.clone(fixturesRepoUrl, repoDir, [
         "--depth",
         "1",
         "--single-branch",

@@ -6,7 +6,7 @@ This guide will try to help you set up the bot for your own server.
 
 !!! note
 
-    If you run into any problems following this guide, please [open an issue](https://github.com/shepherdjerred/discord-plays-pokemon/issues). I'll gladly help you out!
+    If you run into any problems following this guide, please [open an issue](https://github.com/shepherdjerred/monorepo/issues). I'll gladly help you out!
 
 ## Requirements
 

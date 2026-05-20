@@ -293,7 +293,7 @@ async def crawl_hig(
         )
 
         context = await browser.new_context(
-            user_agent="Mozilla/5.0 (compatible; HIGScraper/1.0; +https://github.com/shepherdjerred/glern)"
+            user_agent="Mozilla/5.0 (compatible; HIGScraper/1.0; +https://github.com/shepherdjerred/monorepo)"
         )
 
         page = await context.new_page()

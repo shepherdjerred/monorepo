@@ -11,14 +11,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ShepherdJerred/docblocs-test.git"
+    "url": "git+https://github.com/shepherdjerred/monorepo.git"
   },
   "author": "Jerred Shepherd",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/ShepherdJerred/docblocs-test/issues"
+    "url": "https://github.com/shepherdjerred/monorepo/issues"
   },
-  "homepage": "https://github.com/ShepherdJerred/docblocs-test#readme",
+  "homepage": "https://github.com/shepherdjerred/monorepo#readme",
   "dependencies": {
     "eslint": "^4.19.1",
     "express": "^4.16.3",

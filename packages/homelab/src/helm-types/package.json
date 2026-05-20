@@ -47,7 +47,7 @@
     "directory": "src/helm-types"
   },
   "bugs": {
-    "url": "https://github.com/shepherdjerred/homelab/issues"
+    "url": "https://github.com/shepherdjerred/monorepo/issues"
   },
   "homepage": "https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab/src/helm-types#readme",
   "publishConfig": {

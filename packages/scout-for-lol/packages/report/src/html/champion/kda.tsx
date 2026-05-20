@@ -1,7 +1,7 @@
 import { round } from "remeda";
 import { Stat } from "#src/html/champion/shared/stat.tsx";
 
-// TODO(https://github.com/shepherdjerred/scout-for-lol/issues/183): Add K/D/A icon for better visual hierarchy
+// TODO(https://github.com/shepherdjerred/monorepo/issues/183): Add K/D/A icon for better visual hierarchy
 export function Kda({
   kills,
   deaths,

@@ -379,6 +379,13 @@ export function createTemporalWorkerDeployment(
           secret,
           key: "GH_TOKEN",
         }),
+        PR_REVIEW_FIXTURES_REPO_URL: EnvValue.fromSecretValue(
+          {
+            secret,
+            key: "PR_REVIEW_FIXTURES_REPO_URL",
+          },
+          { optional: true },
+        ),
         GITHUB_APP_ID: EnvValue.fromSecretValue({
           secret,
           key: "GITHUB_APP_ID",

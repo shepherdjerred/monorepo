@@ -24,7 +24,7 @@ An [Obsidian](https://obsidian.md) plugin for previewing [Cooklang](https://cook
 
 ### Manual Installation
 
-1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/shepherdjerred/cooklang-for-obsidian/releases/latest)
+1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/shepherdjerred/monorepo/releases/latest)
 2. Create a folder `cooklang-rich-preview` in your vault's `.obsidian/plugins/` directory
 3. Copy the downloaded files into that folder
 4. Restart Obsidian and enable the plugin in Settings > Community plugins

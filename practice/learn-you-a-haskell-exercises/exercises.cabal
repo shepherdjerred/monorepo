@@ -8,7 +8,7 @@ name:           exercises
 version:        0.1.0.0
 description:    Please see the README on GitHub at <https://github.com/shepherdjerred/monorepo/tree/main/practice/learn-you-a-haskell-exercises#readme>
 homepage:       https://github.com/shepherdjerred/monorepo/tree/main/practice/learn-you-a-haskell-exercises#readme
-bug-reports:    https://github.com/shepherdjerred/learn-you-a-haskell-exercises/issues
+bug-reports:    https://github.com/shepherdjerred/monorepo/issues
 author:         Noel Markham, modified by Jerred Shepherd
 maintainer:     shepherdjerred@gmail.com
 copyright:      Noel Markham 2012-2017

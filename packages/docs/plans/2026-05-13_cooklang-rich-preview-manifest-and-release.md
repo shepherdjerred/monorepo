@@ -10,7 +10,7 @@ end-to-end.
 ## Context
 
 The latest published v1.0.0 of the Obsidian plugin **Cooklang Rich Preview**
-(external repo `shepherdjerred/cooklang-for-obsidian`, commit `21bc2e2`,
+(external plugin repo commit `21bc2e2`,
 Mar 4 2026) failed the directory's automated review with five manifest
 checks. Investigation revealed the deeper problem: the release process is
 fundamentally broken in a way that prevents shipping any fix.
@@ -50,7 +50,7 @@ End-state release flow on main-branch merges that touch the package:
 
 1. Build `main.js`, `manifest.json`, `styles.css` (unchanged from today).
 2. Determine **next version**: read the latest tag on
-   `shepherdjerred/cooklang-for-obsidian` (semver tags only, e.g. `1.0.0`).
+   the configured plugin repo (semver tags only, e.g. `1.0.0`).
    If none, fall back to `manifest.json#version` in the built artifacts.
    Patch-bump the result (`1.0.0` → `1.0.1`). Major/minor stay manual via
    source edits.
@@ -102,7 +102,7 @@ released and avoids two concurrent CI runs producing the same version
 
     ```sh
     clone https://github.com/shepherdjerred/monorepo/tree/main/packages/cooklang-for-obsidian into /repo
-    latest=$(gh release list --repo shepherdjerred/cooklang-for-obsidian \
+    latest=$(gh release list --repo shepherdjerred/monorepo \
               --json tagName -q '.[].tagName' | head -1)
     base=${latest:-$(jq -r .version /artifacts/manifest.json)}
     new=$(bump_patch "$base")
@@ -112,7 +112,7 @@ released and avoids two concurrent CI runs producing the same version
     jq --arg v "$new" --arg m "$min" '. + {($v): $m}' /repo/versions.json > tmp && mv tmp /repo/versions.json
     git -C /repo commit -am "release: v$new" && git push
     gh release create "$new" /repo/main.js /repo/manifest.json /repo/styles.css \
-      --repo shepherdjerred/cooklang-for-obsidian --title "v$new" --generate-notes
+      --repo shepherdjerred/monorepo --title "v$new" --generate-notes
     echo "$new" > /version.out   # stdout for caller
     ```
 
@@ -182,7 +182,7 @@ tsconfig, dryrun)`: builds, then calls `cooklangPublishHelper`,
    should print the computed next version and the actions it would take,
    without touching either repo.
 5. First real run after merge produces release `1.0.1` on
-   `shepherdjerred/cooklang-for-obsidian` with the corrected manifest and
+   the configured plugin repo with the corrected manifest and
    a `versions.json` containing `{"1.0.0":"1.0.0","1.0.1":"1.0.0"}`,
    plus an auto-merge PR on the monorepo bumping
    `packages/cooklang-for-obsidian/manifest.json` to 1.0.1.
@@ -222,7 +222,7 @@ tsconfig, dryrun)`: builds, then calls `cooklangPublishHelper`,
 - `.dagger/src/release.ts`:
   - Deleted `cooklangCreateReleaseHelper` (wrong repo, wrong tag scheme).
   - Replaced `cooklangPushHelper` with `cooklangPublishHelper`: clones
-    the plugin repo, computes next semver patch from the latest semver
+    the configured plugin repo, computes next semver patch from the latest semver
     tag (fallback to artifacts manifest), rewrites artifact manifest
     version, copies artifacts + updates `versions.json` in the plugin
     repo, commits to main, and cuts a bare-version-tagged GitHub
@@ -253,7 +253,7 @@ tsc --noEmit` clean; cooklang `manifest.json` + `versions.json`
 
 - Push branch `claude/fix-cooklang-manifest-nEUQg`, open draft PR.
 - After merge: watch the first main-branch CI run. Confirm v1.0.1
-  release on `shepherdjerred/cooklang-for-obsidian` with the corrected
+  release on the configured plugin repo with the corrected
   manifest + a `versions.json` entry for 1.0.1, and the auto-merge
   commit-back PR on the monorepo.
 - Once v1.0.1 is live, resubmit to the Obsidian plugin directory.

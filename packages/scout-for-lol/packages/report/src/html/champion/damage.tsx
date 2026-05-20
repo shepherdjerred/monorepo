@@ -1,7 +1,7 @@
 import { palette } from "#src/assets/colors.ts";
 import { Damage as BaseDamage } from "#src/html/shared/damage.tsx";
 
-// TODO(https://github.com/shepherdjerred/scout-for-lol/issues/183): Add damage icon for better visual hierarchy
+// TODO(https://github.com/shepherdjerred/monorepo/issues/183): Add damage icon for better visual hierarchy
 export function Damage(props: {
   value: number;
   percent: number;

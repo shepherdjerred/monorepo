@@ -569,7 +569,14 @@ export function cooklangBuildHelper(
     .withExec(["bun", "run", "build"]);
 }
 
-const COOKLANG_PLUGIN_REPO = "shepherdjerred/cooklang-for-obsidian";
+const GITHUB_REPO_SLUG_PATTERN = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
+
+function validateGitHubRepoSlug(repo: string, label: string): string {
+  if (!GITHUB_REPO_SLUG_PATTERN.test(repo)) {
+    throw new Error(`${label} must be a GitHub owner/repo slug`);
+  }
+  return repo;
+}
 
 /**
  * Publish cooklang plugin artifacts to the external plugin repository.
@@ -587,8 +594,10 @@ const COOKLANG_PLUGIN_REPO = "shepherdjerred/cooklang-for-obsidian";
 export function cooklangPublishHelper(
   source: Directory,
   ghToken: Secret,
+  pluginRepo: string,
   dryrun = false,
 ): Container {
+  const cooklangPluginRepo = validateGitHubRepoSlug(pluginRepo, "pluginRepo");
   const container = dag
     .container()
     .from(ALPINE_IMAGE)
@@ -607,13 +616,13 @@ export function cooklangPublishHelper(
       "-c",
       [
         `set -eu`,
-        `latest=$(gh release list --repo ${COOKLANG_PLUGIN_REPO} --limit 50 --json tagName --jq '.[].tagName' | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+$' | head -1)`,
+        `latest=$(gh release list --repo ${cooklangPluginRepo} --limit 50 --json tagName --jq '.[].tagName' | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+$' | head -1)`,
         `base="\${latest:-$(jq -r .version /artifacts/manifest.json)}"`,
         `major=$(echo "$base" | cut -d. -f1)`,
         `minor=$(echo "$base" | cut -d. -f2)`,
         `patch=$(echo "$base" | cut -d. -f3)`,
         `new="$major.$minor.$((patch + 1))"`,
-        `echo "DRYRUN: cooklang plugin $base -> $new (would commit + release on ${COOKLANG_PLUGIN_REPO})"`,
+        `echo "DRYRUN: cooklang plugin $base -> $new (would commit + release on ${cooklangPluginRepo})"`,
         `echo "$new"`,
       ].join(" && "),
     ]);
@@ -632,12 +641,12 @@ export function cooklangPublishHelper(
       [
         `set -eu`,
         // Clone plugin repo
-        `git clone https://github.com/${COOKLANG_PLUGIN_REPO}.git /repo`,
+        `git clone https://github.com/${cooklangPluginRepo}.git /repo`,
         `cd /repo`,
         `git config user.email "ci@sjer.red"`,
         `git config user.name "CI Bot"`,
         // Compute next version: latest semver release tag + 1 patch, fallback to artifacts manifest
-        `latest=$(gh release list --repo ${COOKLANG_PLUGIN_REPO} --limit 50 --json tagName --jq '.[].tagName' | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+$' | head -1)`,
+        `latest=$(gh release list --repo ${cooklangPluginRepo} --limit 50 --json tagName --jq '.[].tagName' | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+$' | head -1)`,
         `base="\${latest:-$(jq -r .version /artifacts/manifest.json)}"`,
         `major=$(echo "$base" | cut -d. -f1)`,
         `minor=$(echo "$base" | cut -d. -f2)`,
@@ -657,7 +666,7 @@ export function cooklangPublishHelper(
         `git -C /repo add main.js manifest.json styles.css`,
         `if git -C /repo diff --cached --quiet; then echo "No artifact changes to commit"; else git -C /repo commit -m "release: v$new" -m "Auto-Generated: ci-bot"; git -C /repo push origin HEAD:main; fi`,
         // Create the GitHub release on the plugin repo (idempotent: skip if tag already exists)
-        `if gh release view "$new" --repo ${COOKLANG_PLUGIN_REPO} >/dev/null 2>&1; then echo "Release $new already exists on ${COOKLANG_PLUGIN_REPO}, skipping"; else gh release create "$new" /artifacts/main.js /artifacts/manifest.json /artifacts/styles.css --repo ${COOKLANG_PLUGIN_REPO} --title "v$new" --generate-notes; fi`,
+        `if gh release view "$new" --repo ${cooklangPluginRepo} >/dev/null 2>&1; then echo "Release $new already exists on ${cooklangPluginRepo}, skipping"; else gh release create "$new" /artifacts/main.js /artifacts/manifest.json /artifacts/styles.css --repo ${cooklangPluginRepo} --title "v$new" --generate-notes; fi`,
         // Last line of stdout = new version, for callers
         `printf '%s\\n' "$new"`,
       ].join(" && "),

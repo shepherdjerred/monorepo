@@ -1,6 +1,6 @@
 # Funsheet
 
-[![Build Status](https://travis-ci.org/ShepherdJerred/funsheet.svg?branch=master)](https://travis-ci.org/ShepherdJerred/funsheet)
+[![Build Status](https://travis-ci.org/shepherdjerred/monorepo?branch=master)](https://travis-ci.org/shepherdjerred/monorepo)
 
 ## About
 
