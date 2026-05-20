@@ -16,7 +16,7 @@
     "./wrappers/text-stream": "./src/text-stream-wrapper.ts"
   },
   "scripts": {
-    "build": "bunx tsc --noEmit",
+    "build": "true",
     "typecheck": "bunx tsc --noEmit",
     "lint": "bunx eslint --cache .",
     "test": "bun test test/unit",
