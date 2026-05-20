@@ -23,7 +23,7 @@ const EDITOR_TOOL_GUIDANCE = `- Always start with \`list-repos\` if you don't al
 - Use \`get-session\` to fetch the user's existing GitHub OAuth session before edits; if missing, call \`connect-github\` to surface the OAuth URL.
 - \`edit-repo\` makes the change but does NOT push — it stages the diff for approval. Tell the user what you changed and ask them to approve.
 - \`approve-changes\` finalizes the diff and opens a PR.
-- Reply tools are also available so you can format the diff/PR link nicely for the user after the work is done.`;
+- Format the diff/PR link in your final text output — it is automatically sent as the reply. Do NOT also call \`manage-message\` to post into the same channel.`;
 
 export function createEditorAgent(persona: PersonaContext | null): Agent {
   const config = getConfig();

@@ -25,7 +25,7 @@ const logger = loggers.tools.child("discord.channels");
 export const manageChannelTool = createTool({
   id: "manage-channel",
   description:
-    "Manage Discord channels: list, get, create, modify, delete, reorder, or set permissions",
+    "Manage Discord channel *definitions* (create channels, edit a channel's name/topic/category, delete, reorder, edit permission overwrites). Does NOT send or read messages — for that use manage-message.",
   inputSchema: z.object({
     action: z
       .enum([
@@ -37,7 +37,9 @@ export const manageChannelTool = createTool({
         "reorder",
         "set-permissions",
       ])
-      .describe("The action to perform"),
+      .describe(
+        "The action to perform. 'modify' edits a channel's name/topic/category/position — it does NOT change permission overwrites; use 'set-permissions' for that.",
+      ),
     guildId: z
       .string()
       .optional()

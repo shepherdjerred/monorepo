@@ -1,8 +1,15 @@
-import type { Client, Guild } from "discord.js";
+import type { Client, Guild, GuildMember } from "discord.js";
 
 type MemberResult = {
   success: boolean;
   message: string;
+  /**
+   * Set on destructive writes (add-role, remove-role, modify-nickname) to
+   * indicate that the handler re-fetched member state after the write and
+   * confirmed the intended change. False = the API call returned 2xx but the
+   * post-write state does not match what was requested.
+   */
+  verified?: boolean;
   data?:
     | {
         id: string;
@@ -20,6 +27,17 @@ type MemberResult = {
       }[];
 };
 
+function memberInfo(member: GuildMember, guild: Guild) {
+  return {
+    id: member.id,
+    username: member.user.username,
+    displayName: member.displayName,
+    joinedAt: member.joinedAt?.toISOString() ?? null,
+    roles: member.roles.cache.map((r) => r.name),
+    isOwner: guild.ownerId === member.id,
+  };
+}
+
 export async function handleGetMember(
   guild: Guild,
   memberId: string | undefined,
@@ -31,14 +49,7 @@ export async function handleGetMember(
   return {
     success: true,
     message: `Found member ${member.user.username}`,
-    data: {
-      id: member.id,
-      username: member.user.username,
-      displayName: member.displayName,
-      joinedAt: member.joinedAt?.toISOString() ?? null,
-      roles: member.roles.cache.map((r) => r.name),
-      isOwner: guild.ownerId === member.id,
-    },
+    data: memberInfo(member, guild),
   };
 }
 
@@ -105,12 +116,20 @@ export async function handleModifyMember(
   }
   const member = await guild.members.fetch(memberId);
   await member.setNickname(nickname);
+  // Read-back: re-fetch from API to confirm Discord actually applied the change.
+  const fresh = await guild.members.fetch({ user: memberId, force: true });
+  const expected =
+    nickname != null && nickname.length > 0 ? nickname : fresh.user.username;
+  const verified = fresh.displayName === expected;
   return {
     success: true,
-    message:
-      nickname != null && nickname.length > 0
+    verified,
+    message: verified
+      ? nickname != null && nickname.length > 0
         ? `Set nickname to "${nickname}"`
-        : "Reset nickname",
+        : "Reset nickname"
+      : `Discord accepted the write but the displayName is still "${fresh.displayName}" instead of "${expected}"`,
+    data: memberInfo(fresh, guild),
   };
 }
 
@@ -137,9 +156,16 @@ export async function handleAddRole(
     return { success: false, message: "Role not found" };
   }
   await member.roles.add(role, reason);
+  // Read-back: re-fetch from API and confirm the role id is now on the member.
+  const fresh = await guild.members.fetch({ user: memberId, force: true });
+  const verified = fresh.roles.cache.has(role.id);
   return {
     success: true,
-    message: `Added role @${role.name} to ${member.user.username}`,
+    verified,
+    message: verified
+      ? `Added role @${role.name} to ${member.user.username}`
+      : `Discord accepted the add-role call but @${role.name} is not on ${member.user.username} after re-fetch (likely a role-hierarchy / permissions issue)`,
+    data: memberInfo(fresh, guild),
   };
 }
 
@@ -166,8 +192,15 @@ export async function handleRemoveRole(
     return { success: false, message: "Role not found" };
   }
   await member.roles.remove(role, reason);
+  // Read-back: re-fetch from API and confirm the role id is gone.
+  const fresh = await guild.members.fetch({ user: memberId, force: true });
+  const verified = !fresh.roles.cache.has(role.id);
   return {
     success: true,
-    message: `Removed role @${role.name} from ${member.user.username}`,
+    verified,
+    message: verified
+      ? `Removed role @${role.name} from ${member.user.username}`
+      : `Discord accepted the remove-role call but @${role.name} is still on ${member.user.username} after re-fetch (likely a role-hierarchy / permissions issue)`,
+    data: memberInfo(fresh, guild),
   };
 }
