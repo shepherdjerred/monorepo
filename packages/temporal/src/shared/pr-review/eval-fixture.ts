@@ -4,18 +4,15 @@
  *
  * Pin: bump `EVAL_FIXTURES_PIN` below when a corpus update should
  * roll into the nightly cron. The nightly workflow clones the
- * fixtures repo at exactly this SHA, so updating the corpus is a
- * two-PR motion: (a) PR in `monorepo-pr-review-fixtures`, (b) PR
- * here that bumps the pin to the new merge SHA. This decoupling
- * keeps fixture changes from immediately changing the bot's
- * performance numbers — the team explicitly chooses when to pick up
- * a corpus update.
+ * configured fixture corpus repository at exactly this SHA, so updating the
+ * corpus is a two-PR motion: (a) corpus PR, (b) PR here that bumps the pin to
+ * the new merge SHA. This decoupling keeps fixture changes from immediately
+ * changing the bot's performance numbers — the team explicitly chooses when
+ * to pick up a corpus update.
  *
- * Fixture metadata is stored in the sibling
- * `shepherdjerred/monorepo-pr-review-fixtures` repo (private). This module
- * defines the on-the-wire Zod schema for one fixture, plus a `grade()`
- * function that produces precision/recall against a set of bot-posted
- * findings.
+ * Fixture metadata is stored in the private fixture corpus repository. This
+ * module defines the on-the-wire Zod schema for one fixture, plus a `grade()`
+ * function that produces precision/recall against a set of bot-posted findings.
  *
  * # Cluster-key contract
  *
@@ -54,10 +51,10 @@ import { FindingSchema, type Finding } from "./finding.ts";
 import { clusterKey, clusterFindings } from "./cluster-key.ts";
 
 /**
- * Pinned merge commit SHA in `shepherdjerred/monorepo-pr-review-fixtures`
- * that the nightly `prReviewEvalWorkflow` clones. Bump this in a
- * dedicated PR when the corpus is updated and the change is ready to
- * affect nightly precision/recall numbers.
+ * Pinned merge commit SHA in the private fixture corpus repository that the
+ * nightly `prReviewEvalWorkflow` clones. Bump this in a dedicated PR when the
+ * corpus is updated and the change is ready to affect nightly precision/recall
+ * numbers.
  *
  * See the module docstring above for rationale on the two-PR motion.
  */

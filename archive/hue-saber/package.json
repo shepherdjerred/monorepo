@@ -11,14 +11,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ShepherdJerred/huesaber.git"
+    "url": "git+https://github.com/shepherdjerred/monorepo.git"
   },
   "author": "Jerred Shepherd <shepherdjerred@gmail.com> (https://github.com/shepherdjerred)",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/ShepherdJerred/huesaber/issues"
+    "url": "https://github.com/shepherdjerred/monorepo/issues"
   },
-  "homepage": "https://github.com/ShepherdJerred/huesaber#readme",
+  "homepage": "https://github.com/shepherdjerred/monorepo#readme",
   "devDependencies": {
     "@babel/cli": "^7.1.5",
     "@babel/core": "^7.1.6",

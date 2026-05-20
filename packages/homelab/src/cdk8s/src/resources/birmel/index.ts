@@ -187,7 +187,7 @@ export function createBirmelDeployment(chart: Chart) {
           JSON.stringify([
             {
               name: "scout-for-lol",
-              repo: "shepherdjerred/scout-for-lol",
+              repo: "shepherdjerred/monorepo",
               branch: "main",
             },
             {

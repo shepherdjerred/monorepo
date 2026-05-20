@@ -120,7 +120,7 @@ that the cost histogram is labeled by model.
 - `packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/prometheus.ts` — register new PrometheusRule
 - `packages/homelab/src/cdk8s/grafana/pr-review-bot-dashboard.ts` — 12-panel Grafana dashboard across 7 rows
 - `packages/homelab/src/cdk8s/src/resources/grafana/index.ts` — register new ConfigMap
-- Sibling repo `shepherdjerred/monorepo-pr-review-fixtures` bootstrapped (Task 10 prep, pushed earlier)
+- Private PR-review fixture corpus bootstrapped (Task 10 prep, pushed earlier)
 
 ### Remaining
 

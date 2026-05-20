@@ -9,7 +9,7 @@ export function Footer(): React.ReactElement {
           <a href="https://shepherdjerred.com/">Jerred Shepherd</a>.
           <br />
           Have a problem? Open an issue on{" "}
-          <a href="https://github.com/shepherdjerred/better-skill-capped/issues/new">
+          <a href="https://github.com/shepherdjerred/monorepo/issues/new">
             GitHub
           </a>
           <br />

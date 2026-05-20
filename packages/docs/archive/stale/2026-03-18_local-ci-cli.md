@@ -246,7 +246,7 @@ Dry-run is implemented at the library level via `ci.lib.runner`, so the output s
 
 - **Auto-commit does not push.** `--auto-commit` runs `git add` + `git commit` on the current branch. You must `git push` manually.
 - **clauderon cross-compile requires `cross`.** Default builds only the native target (e.g. `aarch64-apple-darwin` on Apple Silicon). `--all-targets` needs [cross-rs](https://github.com/cross-rs/cross) installed.
-- **cooklang-release pushes to an external repo.** It commits directly to `main` of `shepherdjerred/cooklang-for-obsidian`. Use `--dry-run` first, then `--confirm` for real runs.
+- **cooklang-release pushes to an external repo.** It commits directly to `main` of the configured plugin repo. Use `--dry-run` first, then `--confirm` for real runs.
 - **cdk8s synthesis is always full-app.** Even targeted deploys synthesize all charts. Only the chart push and ArgoCD sync are scoped to the selected targets.
 - **`--skip-images` also skips versions.ts update.** No fresh digests means nothing to write.
 - **Staging directory is ephemeral.** Metadata and artifacts for a run are stored in a temp directory (`MONOREPO_CI_RUN_DIR`). They are not persisted across runs.

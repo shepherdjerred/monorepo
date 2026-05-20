@@ -36,7 +36,7 @@ export const ArenaChampionSchema = ChampionSchema.omit({
   runes: true,
 }).extend({
   augments: z.array(AugmentSchema).max(6),
-  // TODO(https://github.com/shepherdjerred/scout-for-lol/issues/188): perhaps these are in normal games, too
+  // TODO(https://github.com/shepherdjerred/monorepo/issues/188): perhaps these are in normal games, too
   arenaMetrics: PlayerMetricsSchema,
   teamSupport: TeamSupportMetricsSchema,
 });

@@ -1,6 +1,6 @@
 name: exercises
 version: 0.1.0.0
-github: "shepherdjerred/learn-you-a-haskell-exercises"
+github: "shepherdjerred/monorepo"
 license: GPL-3.0
 author: "Noel Markham, modified by Jerred Shepherd"
 maintainer: "shepherdjerred@gmail.com"

@@ -9,7 +9,7 @@
 
 Generate Open Graph images for your Astro site.
 
-This project is actively maintained. If you have a feature request or need help, please [create an issue](https://github.com/shepherdjerred/astro-opengraph-images/issues/new).
+This project is actively maintained. If you have a feature request or need help, please [create an issue](https://github.com/shepherdjerred/monorepo/issues/new).
 
 </div>
 
@@ -209,9 +209,9 @@ There are example sites using this integration under [`examples/`](https://githu
 
 ### Sites Using This
 
-If you're using this project, [open a PR](https://github.com/shepherdjerred/astro-opengraph-images/compare) to add your site to this list.
+If you're using this project, [open a PR](https://github.com/shepherdjerred/monorepo/compare) to add your site to this list.
 
-- [sjer.red](https://sjer.red) ([source](https://github.com/shepherdjerred/sjer.red))
+- [sjer.red](https://sjer.red) ([source](https://github.com/shepherdjerred/monorepo))
 
 ## Filtering Pages
 
@@ -369,7 +369,7 @@ The `loadAdditionalAsset` callback is called by [Satori](https://github.com/verc
 
 ## Presets
 
-Presets are located in [`src/presets/`](https://github.com/shepherdjerred/monorepo/tree/main/packages/astro-opengraph-images/src/presets). [Open a pull request](https://github.com/shepherdjerred/astro-opengraph-images/compare) to contribute a preset you've created.
+Presets are located in [`src/presets/`](https://github.com/shepherdjerred/monorepo/tree/main/packages/astro-opengraph-images/src/presets). [Open a pull request](https://github.com/shepherdjerred/monorepo/compare) to contribute a preset you've created.
 
 Note: some presets use the [`tw-to-css`](https://github.com/vinicoder/tw-to-css) library. You'll need to install this dependency separately when using one of these presets. You'll see an error if the library is not already installed.
 

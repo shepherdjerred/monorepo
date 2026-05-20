@@ -10,14 +10,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ShepherdJerred/thebutton.git"
+    "url": "git+https://github.com/shepherdjerred/monorepo.git"
   },
   "author": "Jerred Shepherd",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/ShepherdJerred/thebutton/issues"
+    "url": "https://github.com/shepherdjerred/monorepo/issues"
   },
-  "homepage": "https://github.com/ShepherdJerred/thebutton",
+  "homepage": "https://github.com/shepherdjerred/monorepo",
   "dependencies": {
     "loglevel": "^1.6.1",
     "mysql2": "^1.5.2",

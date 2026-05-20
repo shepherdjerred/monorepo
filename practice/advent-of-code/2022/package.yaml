@@ -1,6 +1,6 @@
 name: AdventOfCode2022
 version: 0.1.0.0
-github: "shepherdjerred/advent-of-code-2022"
+github: "shepherdjerred/monorepo"
 license: "GPL-3.0"
 author: "Jerred Shepherd"
 maintainer: "github@sjer.red"

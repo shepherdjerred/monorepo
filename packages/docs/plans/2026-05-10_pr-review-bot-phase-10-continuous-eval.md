@@ -24,7 +24,7 @@ nightly Temporal cron @ 03:00 PT
 prReviewEvalWorkflow
   │
   ├─ activity: loadFixtureCorpus
-  │     • git pull shepherdjerred/monorepo-pr-review-fixtures @ evalFixturesPin
+  │     • git pull private PR-review fixture corpus @ evalFixturesPin
   │     • parse fixtures/*/fixture.json → Fixture[]
   │
   ├─ activity: replayBotAgainstFixtures  [parallel, capped at 4 concurrent]
@@ -71,7 +71,7 @@ prReviewEvalWorkflow
 
 ### 3. Fixture corpus materialization
 
-- 50 fixtures in `shepherdjerred/monorepo-pr-review-fixtures`, 10 per
+- 50 fixtures in the private PR-review fixture corpus, 10 per
   category. **PR-shape contract for `real-bug` fixtures TBD with team-lead**:
   - **Option A**: inverted-fix diff — PR head = parent of fix commit;
     PR base = fix commit. Bot reviews "this PR removes X" and is expected

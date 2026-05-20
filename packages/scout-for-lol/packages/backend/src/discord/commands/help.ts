@@ -90,7 +90,7 @@ export async function executeHelp(
       {
         name: "🆘 Need Support?",
         value:
-          "• GitHub Issues: https://github.com/shepherdjerred/scout-for-lol/issues\n" +
+          "• GitHub Issues: https://github.com/shepherdjerred/monorepo/issues\n" +
           "• Discord Server: https://discord.gg/qmRewyHXFE",
         inline: false,
       },

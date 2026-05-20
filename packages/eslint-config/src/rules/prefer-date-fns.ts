@@ -14,7 +14,7 @@ import { ESLintUtils } from "@typescript-eslint/utils";
 
 const createRule = ESLintUtils.RuleCreator(
   (name) =>
-    `https://github.com/shepherdjerred/share/tree/main/packages/eslint-config/src/rules/${name}.ts`,
+    `https://github.com/shepherdjerred/monorepo/tree/main/packages/eslint-config/src/rules/${name}.ts`,
 );
 
 export const preferDateFns = createRule({
@@ -164,7 +164,7 @@ export const preferDateFns = createRule({
       WhileStatement(node: TSESTree.WhileStatement) {
         // Check if condition involves date comparison
         if (node.test.type === "BinaryExpression") {
-          const test = node.test as TSESTree.BinaryExpression;
+          const test = node.test;
           if (
             (test.operator === "<=" ||
               test.operator === "<" ||
@@ -300,7 +300,7 @@ function containsManualDateMath(
 
     // Check for getTime() arithmetic patterns
     if (node.type === "BinaryExpression") {
-      const binExpr = node as TSESTree.BinaryExpression;
+      const binExpr = node;
       if (
         binExpr.operator === "/" &&
         binExpr.right.type === "BinaryExpression"

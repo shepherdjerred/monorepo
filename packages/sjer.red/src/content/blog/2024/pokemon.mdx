@@ -56,8 +56,8 @@ I was able to get audio working, but not video.
 
 I really wanted to get the webcam approach working because it felt relatively elegant, but I knew I could get it done quicker if I compromised. I used a real desktop environment with xvfb and no webcam. I used Discord's screen share functionality instead.
 
-- https://github.com/shepherdjerred/discord-plays-pokemon/commit/f54df7233a15f16001428b6180ebbee9f15096a9
-- https://github.com/shepherdjerred/discord-plays-pokemon/commit/fe5c4ed5e110a253ff214676513469a2342497bb
+- https://github.com/shepherdjerred/monorepo/commit/f54df7233a15f16001428b6180ebbee9f15096a9
+- https://github.com/shepherdjerred/monorepo/commit/fe5c4ed5e110a253ff214676513469a2342497bb
 
 After about two hours of effort, this yielded a working albeit slow proof-of-concept. xvfb is not hardware accelerated, so everything is happenning in software. This is a problem when you are encoding video. The application worked, but it was unacceptable slow. Even the audio was significantly delayed. I tried downsizing the resolution from 1280x720 to 640x576, but it was still too slow.
 
@@ -67,8 +67,8 @@ Next, I needed to make the application fast.
 
 Attempting GPU acceleration with Nvidia and Chrome
 
-- https://github.com/shepherdjerred/discord-plays-pokemon/commit/301cf153dd49f53d942e41a78eee6f4707476588
-- https://github.com/shepherdjerred/discord-plays-pokemon/commit/4c4843ece8777e27eb22de99df74de66700e6306
+- https://github.com/shepherdjerred/monorepo/commit/301cf153dd49f53d942e41a78eee6f4707476588
+- https://github.com/shepherdjerred/monorepo/commit/4c4843ece8777e27eb22de99df74de66700e6306
 
 ```bash
       "--disable-software-rasterizer",
@@ -92,15 +92,15 @@ Attempting GPU acceleration with Nvidia and Chrome
       "--use-gl=desktop"
 ```
 
-Selkies: https://github.com/shepherdjerred/discord-plays-pokemon/commit/f510a9f000ea2f143a1a83ec1590d8f84f4a9db5
+Selkies: https://github.com/shepherdjerred/monorepo/commit/f510a9f000ea2f143a1a83ec1590d8f84f4a9db5
 
 Chrome didn't support Web RTC hardware acceleration on Linux, but Firefox did
 
-- https://github.com/shepherdjerred/discord-plays-pokemon/commit/082fa39ce9dfc7fb0e1df7817fe7dc5e958cb62e
+- https://github.com/shepherdjerred/monorepo/commit/082fa39ce9dfc7fb0e1df7817fe7dc5e958cb62e
 
 Switch to Selenium due to Puppeteer limitations:
 
-- https://github.com/shepherdjerred/discord-plays-pokemon/commit/7696cbe9a92641e33470ddd8411fea408b189076
+- https://github.com/shepherdjerred/monorepo/commit/7696cbe9a92641e33470ddd8411fea408b189076
 
 ## Polish
 

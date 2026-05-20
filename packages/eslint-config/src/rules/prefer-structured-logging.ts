@@ -2,7 +2,7 @@ import { AST_NODE_TYPES, ESLintUtils } from "@typescript-eslint/utils";
 
 const createRule = ESLintUtils.RuleCreator(
   (name) =>
-    `https://github.com/shepherdjerred/share/blob/main/packages/eslint-config/src/rules/${name}.ts`,
+    `https://github.com/shepherdjerred/monorepo/blob/main/packages/eslint-config/src/rules/${name}.ts`,
 );
 
 const CONSOLE_METHODS = new Set([

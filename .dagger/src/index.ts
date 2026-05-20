@@ -1028,9 +1028,10 @@ export class Monorepo {
   async cooklangPublish(
     source: Directory,
     ghToken: Secret,
+    pluginRepo: string,
     dryrun = false,
   ): Promise<string> {
-    return cooklangPublishHelper(source, ghToken, dryrun).stdout();
+    return cooklangPublishHelper(source, ghToken, pluginRepo, dryrun).stdout();
   }
 
   /**
@@ -1042,6 +1043,7 @@ export class Monorepo {
     source: Directory,
     pkgDir: Directory,
     ghToken: Secret,
+    pluginRepo: string,
     githubAppId: Secret,
     githubAppInstallationId: Secret,
     githubAppPrivateKey: Secret,
@@ -1054,6 +1056,7 @@ export class Monorepo {
     const publishOutput = await cooklangPublishHelper(
       dist,
       ghToken,
+      pluginRepo,
       dryrun,
     ).stdout();
     const lines = publishOutput.trim().split("\n");

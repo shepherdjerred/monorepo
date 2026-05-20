@@ -43,7 +43,7 @@ model Player {
 model Account {
   id       Int    @id @default(autoincrement())
   alias    String
-  // TODO(https://github.com/shepherdjerred/scout-for-lol/issues/186): store riot ID for the sake of easier understanding
+  // TODO(https://github.com/shepherdjerred/monorepo/issues/186): store riot ID for the sake of easier understanding
   puuid    String
   region   String
   playerId Int

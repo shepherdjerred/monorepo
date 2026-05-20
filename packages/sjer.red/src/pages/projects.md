@@ -8,7 +8,7 @@ This page documents some of the things I've worked on over the years.
 
 ## Timeless
 
-### [sjer.red](https://github.com/shepherdjerred/sjer.red)
+### [sjer.red](https://github.com/shepherdjerred/monorepo)
 
 My personal website. You can see my site (and taste) evolve over the years on the [Wayback Machine](https://web.archive.org/web/20240000000000*/shepherdjerred.com)
 

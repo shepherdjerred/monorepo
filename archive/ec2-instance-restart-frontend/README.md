@@ -1,6 +1,6 @@
 # EC2 Instance Restart Frontend
 
-[![CI/CD](https://github.com/shepherdjerred/ec2-instance-restart-frontend/actions/workflows/CICD.yml/badge.svg)](https://github.com/shepherdjerred/ec2-instance-restart-frontend/actions/workflows/CICD.yml)
+[![CI/CD](https://github.com/shepherdjerred/monorepo/actions/workflows/CICD.yml/badge.svg)](https://github.com/shepherdjerred/monorepo/actions/workflows/CICD.yml)
 
 A simple React UI for an [EC2 instance restart endpoint](https://github.com/shepherdjerred/monorepo/tree/main/archive/ec2-instance-restart).
 

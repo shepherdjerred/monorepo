@@ -7,14 +7,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ShepherdJerred/list-easel.git"
+    "url": "git+https://github.com/shepherdjerred/monorepo.git"
   },
   "author": "Jerred Shepherd <shepherdjerred@gmail.com> (https://github.com/shepherdjerred)",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/ShepherdJerred/list-easel/issues"
+    "url": "https://github.com/shepherdjerred/monorepo/issues"
   },
-  "homepage": "https://github.com/ShepherdJerred/list-easel/#readme",
+  "homepage": "https://github.com/shepherdjerred/monorepo/tree/main/archive/list-easel#readme",
   "dependencies": {
     "dotenv": "^6.1.0",
     "jsdom": "^13.0.0",
