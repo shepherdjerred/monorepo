@@ -3,6 +3,7 @@ import { Octokit } from "@octokit/rest";
 import { Context } from "@temporalio/activity";
 import * as Sentry from "@sentry/bun";
 import { z } from "zod/v4";
+import { traceAnthropic } from "@shepherdjerred/llm-observability";
 import {
   prSummaryCommentsTotal,
   prSummaryCostUsd,
@@ -273,16 +274,30 @@ async function callHaiku(
   systemBlocks: Anthropic.TextBlockParam[],
   userPrompt: string,
 ): Promise<{ text: string; usage: Anthropic.Usage }> {
+  const messages = [{ role: "user", content: userPrompt }] as const;
   // Stream so we don't bump the SDK HTTP timeout if the model is slow.
   // We don't need per-token UX — `finalMessage()` collects the whole thing.
-  const stream = anthropic.messages.stream({
-    model: SUMMARY_MODEL,
-    max_tokens: MAX_OUTPUT_TOKENS,
-    system: systemBlocks,
-    messages: [{ role: "user", content: userPrompt }],
-  });
-
-  const final = await stream.finalMessage();
+  const final = await traceAnthropic(
+    {
+      service: "temporal",
+      callSite: "pr-summary",
+      request: {
+        model: SUMMARY_MODEL,
+        max_tokens: MAX_OUTPUT_TOKENS,
+        system: systemBlocks,
+        messages: [...messages],
+      },
+    },
+    async () =>
+      anthropic.messages
+        .stream({
+          model: SUMMARY_MODEL,
+          max_tokens: MAX_OUTPUT_TOKENS,
+          system: systemBlocks,
+          messages: [...messages],
+        })
+        .finalMessage(),
+  );
 
   let text = "";
   for (const block of final.content) {

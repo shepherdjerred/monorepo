@@ -9,12 +9,11 @@ import {
   diag,
   DiagLogLevel,
   trace,
-  SpanStatusCode,
-  type Attributes,
+  context,
   type DiagLogger,
-  type Span,
   type Tracer,
 } from "@opentelemetry/api";
+import { AsyncLocalStorageContextManager } from "@opentelemetry/context-async-hooks";
 import {
   BatchSpanProcessor,
   type ReadableSpan,
@@ -23,9 +22,12 @@ import {
 } from "@opentelemetry/sdk-trace-base";
 import { ExportResultCode, type ExportResult } from "@opentelemetry/core";
 import { buildArchiveSpanProcessor } from "@shepherdjerred/llm-observability";
+import { createLogger } from "#src/logger.ts";
+
+const log = createLogger("observability.tracing");
 
 const DEFAULT_OTLP_ENDPOINT = "http://tempo.tempo.svc.cluster.local:4318";
-const DEFAULT_SERVICE_NAME = "temporal-worker";
+const DEFAULT_SERVICE_NAME = "scout-backend";
 
 let sdk: NodeSDK | undefined;
 let tracer: Tracer | undefined;
@@ -36,24 +38,17 @@ function jsonLog(
   message: string,
   fields: Record<string, unknown> = {},
 ): void {
-  console.warn(
-    JSON.stringify({
-      level,
-      msg: message,
-      component: "temporal-worker",
-      module: "observability.tracing",
-      ...fields,
-    }),
-  );
+  if (level === "info") log.info(message, fields);
+  else if (level === "warning") log.warn(message, fields);
+  else log.error(message, fields);
 }
 
 const diagLogger: DiagLogger = {
-  // verbose / debug are intentionally silenced — too noisy for production logs
   verbose: () => {
-    /* silenced */
+    // OTel diag verbose is too chatty for production logs.
   },
   debug: () => {
-    /* silenced */
+    // OTel diag debug is too chatty for production logs.
   },
   info: (message, ...args) => {
     jsonLog("info", message, { args });
@@ -62,6 +57,12 @@ const diagLogger: DiagLogger = {
     jsonLog("warning", message, { args });
   },
   error: (message, ...args) => {
+    // ECONNREFUSED is intermittent (Tempo is single-replica); demote to warn.
+    const text = typeof message === "string" ? message : String(message);
+    if (text.includes("ECONNREFUSED")) {
+      jsonLog("warning", message, { args });
+      return;
+    }
     jsonLog("error", message, { args });
   },
 };
@@ -121,14 +122,18 @@ export function initializeTracing(): void {
   const serviceName = Bun.env["TELEMETRY_SERVICE_NAME"] ?? DEFAULT_SERVICE_NAME;
   const serviceVersion = Bun.env["VERSION"] ?? "dev";
 
+  // AsyncLocalStorage-backed context manager so OTel active span propagates
+  // across awaits — required for the LLM wrappers to see the current span.
+  const contextManager = new AsyncLocalStorageContextManager();
+  contextManager.enable();
+  context.setGlobalContextManager(contextManager);
+
   const exporter = new LoggingSpanExporter(
     new OTLPTraceExporter({
       url: `${otlpEndpoint}/v1/traces`,
     }),
   );
 
-  // Explicit BatchSpanProcessor so we have a handle to forceFlush() before
-  // shutdown — without it any in-flight batch is lost when the pod stops.
   batchProcessor = new BatchSpanProcessor(exporter, {
     scheduledDelayMillis: 2000,
     maxExportBatchSize: 512,
@@ -136,11 +141,9 @@ export function initializeTracing(): void {
     exportTimeoutMillis: 30_000,
   });
 
-  // Wrap with the LLM archive processor — for any span carrying gen_ai.*
-  // body attributes, it gzips the bodies to SeaweedFS and replaces them with
-  // a ref before forwarding the slim span to the OTLP exporter. Spans without
-  // those attributes pass through unchanged. The wrapper is a no-op when
-  // LLM_OBSERVABILITY_ENABLED=false.
+  // LLM archive layer — wraps the batch processor. No-op when
+  // LLM_OBSERVABILITY_ENABLED=false, otherwise intercepts any span carrying
+  // gen_ai.* body attributes and offloads them to SeaweedFS S3.
   const rootProcessor: SpanProcessor = buildArchiveSpanProcessor({
     inner: batchProcessor,
   });
@@ -170,8 +173,6 @@ export function getTracer(): Tracer | undefined {
 export async function shutdownTracing(): Promise<void> {
   if (batchProcessor !== undefined) {
     try {
-      // Flush before shutdown — otherwise the in-flight batch (up to
-      // scheduledDelayMillis old) is lost when the pod stops.
       await batchProcessor.forceFlush();
     } catch (error) {
       jsonLog("warning", "OTLP forceFlush failed during shutdown", {
@@ -182,54 +183,4 @@ export async function shutdownTracing(): Promise<void> {
   if (sdk !== undefined) {
     await sdk.shutdown();
   }
-}
-
-/**
- * Get the current trace context for log correlation. Empty object if no
- * active span — safe to spread into a log entry unconditionally.
- */
-export function getTraceContext(): { traceId?: string; spanId?: string } {
-  const span = trace.getActiveSpan();
-  if (span === undefined) {
-    return {};
-  }
-
-  const spanContext = span.spanContext();
-  return {
-    traceId: spanContext.traceId,
-    spanId: spanContext.spanId,
-  };
-}
-
-/**
- * Wrap an async function in an OTel span. Sets attributes, records exceptions,
- * and ends the span automatically. When tracing is disabled this transparently
- * runs the function without instrumentation.
- */
-export async function withSpan<T>(
-  name: string,
-  attributes: Attributes,
-  fn: (span: Span) => Promise<T>,
-): Promise<T> {
-  const activeTracer = tracer ?? trace.getTracer("noop");
-
-  return activeTracer.startActiveSpan(name, async (span) => {
-    try {
-      span.setAttributes(attributes);
-      const result = await fn(span);
-      span.setStatus({ code: SpanStatusCode.OK });
-      return result;
-    } catch (error: unknown) {
-      span.setStatus({
-        code: SpanStatusCode.ERROR,
-        message: error instanceof Error ? error.message : String(error),
-      });
-      if (error instanceof Error) {
-        span.recordException(error);
-      }
-      throw error;
-    } finally {
-      span.end();
-    }
-  });
 }

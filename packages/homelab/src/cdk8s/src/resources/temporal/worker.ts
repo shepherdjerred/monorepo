@@ -25,6 +25,7 @@ import {
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
+import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createTemporalWorkerAuditRbac } from "./audit-rbac.ts";
 
@@ -358,6 +359,7 @@ export function createTemporalWorkerDeployment(
         S3_KEY: EnvValue.fromValue("data/manifest.json"),
         S3_REGION: EnvValue.fromValue("us-east-1"),
         S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
+        ...llmArchiveEnvVars(),
         HOMELAB_AUDIT_ARCHIVE_BUCKET: EnvValue.fromSecretValue(
           {
             secret,

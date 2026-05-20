@@ -33,6 +33,7 @@
     "@opentelemetry/semantic-conventions": "^1.40.0",
     "@sentry/bun": "^10.49.0",
     "@shepherdjerred/home-assistant": "file:../home-assistant",
+    "@shepherdjerred/llm-observability": "file:../llm-observability",
     "@temporalio/activity": "1.17.1",
     "@temporalio/client": "1.17.1",
     "@temporalio/common": "1.17.1",
