@@ -1,47 +1,86 @@
 import { type Augment } from "@scout-for-lol/data";
+import { palette } from "#src/assets/colors.ts";
+import { font } from "#src/assets/index.ts";
 import { getAugmentIcon } from "#src/dataDragon/image-cache.ts";
 
-const augmentIconSize = "2rem";
+const ICON_SIZE = 22;
 
-export function renderAugment(augment: Augment) {
+export function AugmentRow({ augment }: { augment: Augment }) {
   if (augment.type === "full") {
-    // Use iconLarge from augment data (iconSmall exists but we use iconLarge for better quality)
     const iconUrl = augment.iconLarge
       ? getAugmentIcon(augment.iconLarge)
       : null;
 
-    if (iconUrl !== null && iconUrl.length > 0) {
-      return (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-          }}
-        >
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          fontFamily: font.body,
+          fontSize: 12,
+          color: palette.gold[1],
+        }}
+      >
+        {iconUrl !== null && iconUrl.length > 0 ? (
           <img
             src={iconUrl}
             alt=""
+            width={ICON_SIZE}
+            height={ICON_SIZE}
             style={{
-              width: augmentIconSize,
-              height: augmentIconSize,
+              width: ICON_SIZE,
+              height: ICON_SIZE,
+              border: `1px solid rgba(155, 90, 200, 0.55)`,
               flexShrink: 0,
-              // filter: `drop-shadow(0 0 16px ${rarityColor}) drop-shadow(0 0 8px ${rarityColor})`,
             }}
-            width={augmentIconSize}
-            height={augmentIconSize}
           />
-          <div style={{ display: "contents" }}>{augment.name}</div>
-        </div>
-      );
-    }
-
-    return <div style={{ display: "contents" }}>{augment.name}</div>;
+        ) : (
+          <div
+            style={{
+              width: ICON_SIZE,
+              height: ICON_SIZE,
+              border: `1px solid ${palette.grey[3]}`,
+              display: "flex",
+              flexShrink: 0,
+            }}
+          />
+        )}
+        <span
+          style={{
+            display: "flex",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {augment.name}
+        </span>
+      </div>
+    );
   }
-  // For minimal augments (type === "id"), return text as JSX
+
   return (
     <div
-      style={{ display: "contents" }}
-    >{`Augment ${augment.id.toString()}`}</div>
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        fontFamily: font.body,
+        fontSize: 12,
+        color: palette.grey[1],
+      }}
+    >
+      <div
+        style={{
+          width: ICON_SIZE,
+          height: ICON_SIZE,
+          border: `1px solid ${palette.grey[3]}`,
+          display: "flex",
+          flexShrink: 0,
+        }}
+      />
+      <span style={{ display: "flex" }}>Augment {augment.id.toString()}</span>
+    </div>
   );
 }

@@ -30,8 +30,6 @@ function getMainPlayer() {
       },
       discordAccount: null,
     },
-    wins: 5,
-    losses: 2,
     placement: 2 as const,
     teamId: 1 as const,
     champion: createAatroxChampion([createMasterOfDualityAugment()]),

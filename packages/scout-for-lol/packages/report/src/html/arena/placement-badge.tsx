@@ -1,41 +1,45 @@
-import { type ArenaPlacement, formatArenaPlacement } from "@scout-for-lol/data";
+import { type ArenaPlacement } from "@scout-for-lol/data";
+import { palette } from "#src/assets/colors.ts";
+import { font } from "#src/assets/index.ts";
 
-function getPlacementBackground(placement: ArenaPlacement): string {
-  if (placement === 1) {
-    return "linear-gradient(135deg, #ffd700 0%, #ffed4e 100%)";
-  }
-  if (placement === 2) {
-    return "linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%)";
-  }
-  if (placement === 3) {
-    return "linear-gradient(135deg, #cd7f32 0%, #deb887 100%)";
-  }
-  return "#6b7280";
-}
+const SIZE = 90;
 
 export function PlacementBadge({ placement }: { placement: ArenaPlacement }) {
   return (
     <div
       style={{
-        background: getPlacementBackground(placement),
-        color: placement <= 3 ? "#000" : "#fff",
-        borderRadius: "50%",
-        width: 52,
-        height: 52,
+        width: SIZE,
+        height: SIZE,
         display: "flex",
+        position: "relative",
         alignItems: "center",
         justifyContent: "center",
-        fontSize: 24,
-        fontWeight: 800,
-        border: placement <= 3 ? "2px solid rgba(255, 255, 255, 0.2)" : "none",
-        boxShadow:
-          placement <= 3
-            ? "0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3)"
-            : "0 2px 4px rgba(0, 0, 0, 0.2)",
-        textShadow: placement <= 3 ? "0 1px 1px rgba(0, 0, 0, 0.3)" : "none",
       }}
     >
-      {formatArenaPlacement(placement)}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: SIZE,
+          height: SIZE,
+          display: "flex",
+          transform: "rotate(45deg)",
+          background: `linear-gradient(135deg, ${palette.gold.gradient.end} 0%, ${palette.gold.gradient.start} 100%)`,
+          border: `2px solid ${palette.gold[4]}`,
+        }}
+      />
+      <span
+        style={{
+          position: "relative",
+          fontSize: 40,
+          fontWeight: 700,
+          fontFamily: font.title,
+          color: palette.blue[7],
+        }}
+      >
+        {placement.toString()}
+      </span>
     </div>
   );
 }

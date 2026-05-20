@@ -1,5 +1,7 @@
 import { type ArenaMatch } from "@scout-for-lol/data";
-import { MatchHeader } from "#src/html/arena/match-header.tsx";
+import { palette } from "#src/assets/colors.ts";
+import { font } from "#src/assets/index.ts";
+import { PageHeader } from "#src/html/arena/page-header.tsx";
 import { TeamCard } from "#src/html/arena/team-card.tsx";
 
 export function ArenaReport(props: { match: ArenaMatch }) {
@@ -15,17 +17,26 @@ export function ArenaReport(props: { match: ArenaMatch }) {
   return (
     <div
       style={{
+        width: "100%",
+        height: "100%",
         display: "flex",
         flexDirection: "column",
         padding: 48,
-        gap: 24,
-        fontFamily: "Inter",
-        color: "#e5e7eb",
-        background: "#0b1220",
+        gap: 32,
+        background: palette.blue.gradient.dark.start,
+        color: palette.grey[1],
+        fontFamily: font.body,
       }}
     >
-      <MatchHeader match={match} highlightNames={highlightNames} />
-      <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <PageHeader match={match} />
+      <div
+        style={{
+          display: "flex",
+          gap: 32,
+          flex: 1,
+          alignItems: "stretch",
+        }}
+      >
         {sortedTeams.map((team) => (
           <TeamCard
             key={team.teamId}
