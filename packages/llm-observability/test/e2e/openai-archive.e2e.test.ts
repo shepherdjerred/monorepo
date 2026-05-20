@@ -1,6 +1,7 @@
 import { test, expect, beforeAll, afterAll, beforeEach } from "bun:test";
 import { setupServer, type SetupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
+import { z } from "zod";
 import { trace, context } from "@opentelemetry/api";
 import {
   buildE2eHarness,
@@ -9,7 +10,13 @@ import {
   gunzipJson,
   type E2eHarness,
 } from "./helpers.ts";
-import { traceOpenAi } from "../../src/openai-wrapper.ts";
+import { traceOpenAi } from "#src/openai-wrapper.ts";
+
+const InputMessagesEnvelopeSchema = z.object({
+  "gen_ai.input.messages": z.array(
+    z.object({ role: z.string(), content: z.string() }),
+  ),
+});
 
 let server: SetupServer;
 let harness: E2eHarness;
@@ -20,7 +27,7 @@ beforeAll(() => {
       HttpResponse.json({
         id: "chatcmpl-e2e-1",
         object: "chat.completion",
-        created: 1715800000,
+        created: 1_715_800_000,
         model: "gpt-4o-mini-2024-07-18",
         choices: [
           {
@@ -43,7 +50,7 @@ beforeEach(() => {
       HttpResponse.json({
         id: "chatcmpl-e2e-1",
         object: "chat.completion",
-        created: 1715800000,
+        created: 1_715_800_000,
         model: "gpt-4o-mini-2024-07-18",
         choices: [
           {
@@ -132,10 +139,8 @@ test("end-to-end: OpenAI call -> Tempo span + MinIO archive", async () => {
     provider: "openai",
     callSite: "scout-review",
   });
-  const inputMessages = (envelope as { "gen_ai.input.messages": unknown })[
-    "gen_ai.input.messages"
-  ];
-  expect(inputMessages).toEqual([
+  const parsedEnvelope = InputMessagesEnvelopeSchema.parse(envelope);
+  expect(parsedEnvelope["gen_ai.input.messages"]).toEqual([
     { role: "system", content: "be brief" },
     { role: "user", content: "say hi" },
   ]);
