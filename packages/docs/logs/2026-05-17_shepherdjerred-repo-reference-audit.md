@@ -33,3 +33,28 @@ The Cooklang plugin release flow no longer hardcodes its external plugin reposit
 - The initial sandboxed Temporal test run failed because the sandbox blocked the Temporal ephemeral server and a local port bind. The same suite passed outside the sandbox.
 - The audit targets GitHub repository references. It intentionally leaves non-repository coordinates such as GHCR image names, workspace package scopes, Java package names, and TypeScript import aliases intact.
 - Direct `.dagger` `tsc` is not currently runnable from this checkout without generated `.dagger/sdk` files and Node test types; the CI pipeline generator typecheck/test suite did pass after the Cooklang Dagger command change.
+
+## Session Log — 2026-05-19
+
+### Done
+
+- Recovered the staged audit work and committed it as `a143845d0 chore(root): remove stale shepherdjerred repo references`.
+- Pushed `a143845d0` to `fix/github-links`, then confirmed PR #816 was blocked by being behind `origin/main`.
+- Merged `origin/main` into the branch and resolved conflicts in `.dagger/src/index.ts`, `packages/homelab/src/cdk8s/src/resources/temporal/worker.ts`, and `scripts/ci/src/steps/cooklang.ts`.
+- Preserved the `COOKLANG_PLUGIN_REPO` Dagger/Buildkite wiring alongside the current GitHub App secret arguments from `main`.
+- Preserved `PR_REVIEW_FIXTURES_REPO_URL` in the Temporal worker environment alongside the current GitHub App secret fields from `main`.
+- Re-ran the non-`monorepo` `shepherdjerred` repository reference audit after the merge; no matches remain.
+- Verified the merge resolution with `git diff --check`, conflict-marker scans for the resolved files, `bun run --filter='./scripts/ci' test`, `bun run --filter='./packages/temporal' typecheck`, and `bun run --filter='./packages/homelab' typecheck`.
+- Pushed merge commit `1b4750e9d`; Buildkite build #2597 then failed on Homelab lint because `createTemporalWorkerDeployment` exceeded `max-lines-per-function`.
+- Split the Temporal worker homelab audit env and service-account/RBAC setup into helpers, keeping the rendered deployment behavior unchanged while bringing `packages/homelab/src/cdk8s/src/resources/temporal/worker.ts` back under the lint limit.
+- Re-ran `cd packages/homelab && bun run lint` and `bun run --filter='./packages/homelab' typecheck`; both pass after the split.
+
+### Remaining
+
+- Push the Homelab lint fix to `fix/github-links` and watch the replacement Buildkite run for PR #816.
+
+### Caveats
+
+- The lefthook-wrapped `quality-ratchet` check hung after visible pre-commit checks had passed; running `bun scripts/quality-ratchet.ts` directly passed, so the recovered audit commit was created with `--no-verify`.
+- The branch merge pulled current `origin/main` changes into the PR to clear the dirty merge state; those files are expected to appear in the merge commit.
+- Buildkite #2597 also reported Knip and Trivy as soft-failed warning jobs; the blocking failure was the Homelab lint job.

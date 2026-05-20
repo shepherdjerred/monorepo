@@ -50,6 +50,65 @@ function optionalSecretEnv(
   return env;
 }
 
+function homelabAuditEnv(secret: ISecret): Record<string, EnvValue> {
+  return {
+    // homelab-audit-daily workflow credentials. All secret fields are optional
+    // so the pod starts if 1P is incomplete; the audit activity then fails fast
+    // in its agent loop with a clear API-specific auth error.
+    BUGSINK_URL: EnvValue.fromValue("https://bugsink.sjer.red"),
+    BUILDKITE_ORGANIZATION_SLUG: EnvValue.fromValue("sjerred"),
+    BUILDKITE_PIPELINE_SLUG: EnvValue.fromValue("monorepo"),
+    ...optionalSecretEnv(secret, [
+      "PAGERDUTY_TOKEN",
+      "BUGSINK_TOKEN",
+      "GRAFANA_URL",
+      "GRAFANA_API_KEY",
+      "ARGOCD_SERVER",
+      "ARGOCD_AUTH_TOKEN",
+      "CLOUDFLARE_API_TOKEN",
+      "BUILDKITE_API_TOKEN",
+    ]),
+    // talosctl reads its config from $TALOSCONFIG; the optional secret volume
+    // below projects 1P field TALOSCONFIG_YAML to this path.
+    TALOSCONFIG: EnvValue.fromValue("/etc/talos/config"),
+  };
+}
+
+function createTemporalWorkerServiceAccount(chart: Chart): ServiceAccount {
+  const serviceAccount = new ServiceAccount(chart, "temporal-worker-sa", {
+    metadata: { name: "temporal-worker" },
+  });
+
+  new KubeClusterRole(chart, "temporal-worker-ingress-reader", {
+    metadata: { name: "temporal-worker-ingress-reader" },
+    rules: [
+      {
+        apiGroups: ["networking.k8s.io"],
+        resources: ["ingresses"],
+        verbs: ["get", "list", "watch"],
+      },
+    ],
+  });
+
+  new KubeClusterRoleBinding(chart, "temporal-worker-ingress-reader-binding", {
+    metadata: { name: "temporal-worker-ingress-reader" },
+    roleRef: {
+      apiGroup: "rbac.authorization.k8s.io",
+      kind: "ClusterRole",
+      name: "temporal-worker-ingress-reader",
+    },
+    subjects: [
+      {
+        kind: "ServiceAccount",
+        name: serviceAccount.name,
+        namespace: chart.namespace ?? "temporal",
+      },
+    ],
+  });
+
+  return serviceAccount;
+}
+
 function createTemporalWorkerMaintenanceRbac(
   chart: Chart,
   serviceAccount: ServiceAccount,
@@ -217,38 +276,7 @@ export function createTemporalWorkerDeployment(
     onePasswordItem.name,
   );
 
-  // ServiceAccount + RBAC for the golink-sync workflow, which lists Tailscale
-  // Ingresses cluster-wide via @kubernetes/client-node's in-cluster config.
-  const serviceAccount = new ServiceAccount(chart, "temporal-worker-sa", {
-    metadata: { name: "temporal-worker" },
-  });
-
-  new KubeClusterRole(chart, "temporal-worker-ingress-reader", {
-    metadata: { name: "temporal-worker-ingress-reader" },
-    rules: [
-      {
-        apiGroups: ["networking.k8s.io"],
-        resources: ["ingresses"],
-        verbs: ["get", "list", "watch"],
-      },
-    ],
-  });
-
-  new KubeClusterRoleBinding(chart, "temporal-worker-ingress-reader-binding", {
-    metadata: { name: "temporal-worker-ingress-reader" },
-    roleRef: {
-      apiGroup: "rbac.authorization.k8s.io",
-      kind: "ClusterRole",
-      name: "temporal-worker-ingress-reader",
-    },
-    subjects: [
-      {
-        kind: "ServiceAccount",
-        name: serviceAccount.name,
-        namespace: chart.namespace ?? "temporal",
-      },
-    ],
-  });
+  const serviceAccount = createTemporalWorkerServiceAccount(chart);
 
   createTemporalWorkerMaintenanceRbac(chart, serviceAccount);
 
@@ -508,40 +536,7 @@ export function createTemporalWorkerDeployment(
           },
           { optional: true },
         ),
-        // ---------------------------------------------------------------
-        // homelab-audit-daily workflow credentials. All marked optional so
-        // the pod still starts if a 1P field is unset — the audit activity
-        // fails fast in the agent loop with a clear "API X returned 401"
-        // when a token is missing, while every other workflow keeps running.
-        // Add these fields to 1P item `temporal-temporal-worker-1p`:
-        //   PAGERDUTY_TOKEN, BUGSINK_TOKEN,
-        //   GRAFANA_URL, GRAFANA_API_KEY,
-        //   ARGOCD_SERVER, ARGOCD_AUTH_TOKEN,
-        //   CLOUDFLARE_API_TOKEN, BUILDKITE_API_TOKEN,
-        //   HOMELAB_AUDIT_ARCHIVE_BUCKET
-        // `BUGSINK_URL` intentionally points at the public canonical base URL;
-        // in-cluster service DNS remains allowed on the Bugsink deployment as a
-        // fallback but the audit should avoid ALLOWED_HOSTS drift by default.
-        // ---------------------------------------------------------------
-        BUGSINK_URL: EnvValue.fromValue("https://bugsink.sjer.red"),
-        BUILDKITE_ORGANIZATION_SLUG: EnvValue.fromValue("sjerred"),
-        BUILDKITE_PIPELINE_SLUG: EnvValue.fromValue("monorepo"),
-        ...optionalSecretEnv(secret, [
-          "PAGERDUTY_TOKEN",
-          "BUGSINK_TOKEN",
-          "GRAFANA_URL",
-          "GRAFANA_API_KEY",
-          "ARGOCD_SERVER",
-          "ARGOCD_AUTH_TOKEN",
-          "CLOUDFLARE_API_TOKEN",
-          "BUILDKITE_API_TOKEN",
-        ]),
-        // talosctl reads its config from $TALOSCONFIG; the file is projected
-        // from 1P field TALOSCONFIG_YAML via the volume mount above. The
-        // volume is `optional: true` so the pod still starts when the 1P
-        // field is unset — talosctl commands then fail fast with a clear
-        // error inside the audit run.
-        TALOSCONFIG: EnvValue.fromValue("/etc/talos/config"),
+        ...homelabAuditEnv(secret),
       },
     }),
   );
