@@ -50,57 +50,10 @@ function optionalSecretEnv(
   return env;
 }
 
-export function createTemporalWorkerDeployment(
+function createTemporalWorkerMaintenanceRbac(
   chart: Chart,
-  props: CreateTemporalWorkerDeploymentProps,
+  serviceAccount: ServiceAccount,
 ) {
-  const UID = 1000;
-  const GID = 1000;
-
-  const onePasswordItem = new OnePasswordItem(chart, "temporal-worker-1p", {
-    spec: {
-      itemPath: vaultItemPath("mjgnqqh37jxyzseqrddde2jgaq"),
-    },
-  });
-  const secret = Secret.fromSecretName(
-    chart,
-    "temporal-worker-secret",
-    onePasswordItem.name,
-  );
-
-  // ServiceAccount + RBAC for the golink-sync workflow, which lists Tailscale
-  // Ingresses cluster-wide via @kubernetes/client-node's in-cluster config.
-  const serviceAccount = new ServiceAccount(chart, "temporal-worker-sa", {
-    metadata: { name: "temporal-worker" },
-  });
-
-  new KubeClusterRole(chart, "temporal-worker-ingress-reader", {
-    metadata: { name: "temporal-worker-ingress-reader" },
-    rules: [
-      {
-        apiGroups: ["networking.k8s.io"],
-        resources: ["ingresses"],
-        verbs: ["get", "list", "watch"],
-      },
-    ],
-  });
-
-  new KubeClusterRoleBinding(chart, "temporal-worker-ingress-reader-binding", {
-    metadata: { name: "temporal-worker-ingress-reader" },
-    roleRef: {
-      apiGroup: "rbac.authorization.k8s.io",
-      kind: "ClusterRole",
-      name: "temporal-worker-ingress-reader",
-    },
-    subjects: [
-      {
-        kind: "ServiceAccount",
-        name: serviceAccount.name,
-        namespace: chart.namespace ?? "temporal",
-      },
-    ],
-  });
-
   // Namespace-scoped RBAC for the ZFS maintenance workflow, which execs into
   // the zfs-zpool-collector DaemonSet pod in the prometheus namespace.
   // `kubectl exec daemonset/<name>` resolves the daemonset → pod via a
@@ -244,6 +197,60 @@ export function createTemporalWorkerDeployment(
       },
     ],
   });
+}
+
+export function createTemporalWorkerDeployment(
+  chart: Chart,
+  props: CreateTemporalWorkerDeploymentProps,
+) {
+  const UID = 1000;
+  const GID = 1000;
+
+  const onePasswordItem = new OnePasswordItem(chart, "temporal-worker-1p", {
+    spec: {
+      itemPath: vaultItemPath("mjgnqqh37jxyzseqrddde2jgaq"),
+    },
+  });
+  const secret = Secret.fromSecretName(
+    chart,
+    "temporal-worker-secret",
+    onePasswordItem.name,
+  );
+
+  // ServiceAccount + RBAC for the golink-sync workflow, which lists Tailscale
+  // Ingresses cluster-wide via @kubernetes/client-node's in-cluster config.
+  const serviceAccount = new ServiceAccount(chart, "temporal-worker-sa", {
+    metadata: { name: "temporal-worker" },
+  });
+
+  new KubeClusterRole(chart, "temporal-worker-ingress-reader", {
+    metadata: { name: "temporal-worker-ingress-reader" },
+    rules: [
+      {
+        apiGroups: ["networking.k8s.io"],
+        resources: ["ingresses"],
+        verbs: ["get", "list", "watch"],
+      },
+    ],
+  });
+
+  new KubeClusterRoleBinding(chart, "temporal-worker-ingress-reader-binding", {
+    metadata: { name: "temporal-worker-ingress-reader" },
+    roleRef: {
+      apiGroup: "rbac.authorization.k8s.io",
+      kind: "ClusterRole",
+      name: "temporal-worker-ingress-reader",
+    },
+    subjects: [
+      {
+        kind: "ServiceAccount",
+        name: serviceAccount.name,
+        namespace: chart.namespace ?? "temporal",
+      },
+    ],
+  });
+
+  createTemporalWorkerMaintenanceRbac(chart, serviceAccount);
 
   // Cluster-wide read-only RBAC for the homelab-audit-daily workflow. See
   // ./audit-rbac.ts for the full rule set.
