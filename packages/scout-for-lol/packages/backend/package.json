@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",
-    "build": "bun build src/index.ts --outdir dist --target bun",
+    "build": "bun build src/index.ts --outdir dist --target bun --external=ffmpeg-static",
     "test": "DATABASE_URL=${DATABASE_URL:-file:./test.db} bun test",
     "test:watch": "bun test --watch",
     "test:coverage": "bun test --coverage",
@@ -30,6 +30,7 @@
     "db:push": "bunx prisma db push",
     "db:migrate": "bunx prisma migrate dev",
     "db:studio": "bunx prisma studio",
+    "import:report-store:s3": "bun run scripts/import-report-store-from-s3.ts",
     "test:review": "bun run src/league/review/test-reviews.ts"
   },
   "dependencies": {

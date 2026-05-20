@@ -4,6 +4,7 @@ import * as Sentry from "@sentry/bun";
 import configuration from "#src/configuration.ts";
 import { debugCommand } from "#src/discord/commands/debug.ts";
 import { competitionCommand } from "#src/discord/commands/competition/index.ts";
+import { reportCommand } from "#src/discord/commands/report/index.ts";
 import { adminCommand } from "#src/discord/commands/admin/index.ts";
 import { subscriptionCommand } from "#src/discord/commands/subscription/index.ts";
 import { helpCommand } from "#src/discord/commands/help.ts";
@@ -18,6 +19,7 @@ const commands = [
   subscriptionCommand.toJSON(),
   debugCommand.toJSON(),
   competitionCommand.toJSON(),
+  reportCommand.toJSON(),
   adminCommand.toJSON(),
   helpCommand.toJSON(),
   meCommand.toJSON(),

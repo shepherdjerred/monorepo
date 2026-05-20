@@ -20,30 +20,82 @@ if (await templateFile.exists()) {
 
 logger.info("Generating test template database...");
 
-const result = Bun.spawnSync(
-  [
-    "bunx",
-    "prisma",
-    "db",
-    "push",
-    `--schema=${schemaPath}`,
-    "--accept-data-loss",
-  ],
-  {
-    cwd: `${import.meta.dirname}/..`,
-    env: {
-      ...Bun.env,
-      DATABASE_URL: `file:${templatePath}`,
-      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+function runPrismaDbPush(): number {
+  const result = Bun.spawnSync(
+    [
+      "bunx",
+      "prisma",
+      "db",
+      "push",
+      `--schema=${schemaPath}`,
+      "--accept-data-loss",
+    ],
+    {
+      cwd: `${import.meta.dirname}/..`,
+      env: {
+        ...Bun.env,
+        DATABASE_URL: `file:${templatePath}`,
+        PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+        PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+      },
+      stdout: "inherit",
+      stderr: "inherit",
     },
-    stdout: "inherit",
-    stderr: "inherit",
-  },
-);
+  );
 
-if (result.exitCode !== 0) {
-  logger.error("Failed to generate test template database");
+  return result.exitCode ?? 1;
+}
+
+async function applySchemaWithMigrateDiff(): Promise<void> {
+  logger.warn(
+    "prisma db push failed; falling back to migrate diff SQL for test template generation",
+  );
+
+  const diff = Bun.spawnSync(
+    [
+      "bunx",
+      "prisma",
+      "migrate",
+      "diff",
+      "--from-empty",
+      "--to-schema",
+      schemaPath,
+      "--script",
+    ],
+    {
+      cwd: `${import.meta.dirname}/..`,
+      env: {
+        ...Bun.env,
+        PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+        PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+      },
+      stderr: "inherit",
+    },
+  );
+
+  if (diff.exitCode !== 0) {
+    throw new Error("Failed to render schema SQL with prisma migrate diff");
+  }
+
+  const sql = new TextDecoder().decode(diff.stdout);
+  const { Database } = await import("bun:sqlite");
+  const db = new Database(templatePath, { create: true });
+  try {
+    db.exec("PRAGMA foreign_keys = OFF;");
+    db.exec(sql);
+    db.exec("PRAGMA foreign_keys = ON;");
+  } finally {
+    db.close();
+  }
+}
+
+try {
+  const pushExitCode = runPrismaDbPush();
+  if (pushExitCode !== 0) {
+    await applySchemaWithMigrateDiff();
+  }
+} catch (error) {
+  logger.error("Failed to generate test template database", error);
   process.exit(1);
 }
 

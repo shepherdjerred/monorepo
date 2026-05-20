@@ -10,6 +10,7 @@ import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("utils-discord-link-helpers");
 import {
+  buildDatabaseError,
   buildDiscordAlreadyLinkedError,
   buildDiscordIdInUseError,
   buildPlayerNotLinkedError,
@@ -134,8 +135,6 @@ export async function executeDiscordLinkOperation(
     await operation();
   } catch (error) {
     logger.error(`❌ Database error during Discord ${operationName}:`, error);
-    const { buildDatabaseError } =
-      await import("@scout-for-lol/backend/discord/commands/admin/utils/responses.js");
     await interaction.reply(
       buildDatabaseError(`${operationName} Discord ID`, error),
     );

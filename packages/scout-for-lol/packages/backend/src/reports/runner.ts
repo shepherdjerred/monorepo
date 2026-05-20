@@ -1,0 +1,208 @@
+import {
+  ReportOutputFormatSchema,
+  ReportRunTriggerSchema,
+  type Report,
+  type ReportRunTrigger,
+} from "@scout-for-lol/data";
+import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import {
+  scheduledReportRowsTotal,
+  scheduledReportRunDurationSeconds,
+  scheduledReportsDurationMs,
+  scheduledReportsFailedTotal,
+  scheduledReportsRowsReturnedTotal,
+  scheduledReportsRowsScannedTotal,
+  scheduledReportsRunTotal,
+  scheduledReportRunsTotal,
+  scheduledReportRowsReturnedTotal,
+  scheduledReportRowsScannedTotal,
+} from "#src/metrics/report-runs.ts";
+import { executeReportQuery } from "#src/reports/query-engine.ts";
+import {
+  renderReportOutput,
+  type RenderedReportOutput,
+} from "#src/reports/output.ts";
+
+export type ReportRunResult = {
+  output: RenderedReportOutput;
+  rowsReturned: number;
+  rowsScanned: number;
+};
+
+type RunReportParams = {
+  prisma: ExtendedPrismaClient;
+  report: Report;
+  trigger: ReportRunTrigger;
+  now?: Date;
+};
+
+export async function runReport(
+  params: RunReportParams,
+): Promise<ReportRunResult> {
+  const trigger = ReportRunTriggerSchema.parse(params.trigger);
+  const outputFormat = ReportOutputFormatSchema.parse(
+    params.report.outputFormat,
+  );
+  const startedAt = params.now ?? new Date();
+  const run = await params.prisma.reportRun.create({
+    data: {
+      reportId: params.report.id,
+      serverId: params.report.serverId,
+      trigger,
+      status: "RUNNING",
+      outputFormat,
+      startedAt,
+    },
+  });
+
+  try {
+    const result = await executeReportQuery({
+      prisma: params.prisma,
+      serverId: params.report.serverId,
+      queryText: params.report.queryText,
+      lookbackDays: params.report.lookbackDays,
+      maxRows: params.report.maxRows,
+      sourceCompetitionId: params.report.sourceCompetitionId,
+      now: startedAt,
+    });
+    const output = await renderReportOutput({
+      title: params.report.title,
+      outputFormat,
+      result,
+      startedAt,
+    });
+    const completedAt = new Date();
+    const durationMs = completedAt.getTime() - startedAt.getTime();
+
+    await params.prisma.reportRun.update({
+      where: { id: run.id },
+      data: {
+        status: "SUCCESS",
+        completedAt,
+        durationMs,
+        rowsReturned: result.rows.length,
+        rowsScanned: result.rowsScanned,
+      },
+    });
+    await params.prisma.report.update({
+      where: { id: params.report.id },
+      data: {
+        lastRunStatus: "SUCCESS",
+        lastRunError: null,
+        ...(trigger === "SCHEDULED" ? { lastScheduledRunAt: startedAt } : {}),
+        updatedTime: completedAt,
+      },
+    });
+    recordReportMetrics({
+      report: params.report,
+      trigger,
+      status: "SUCCESS",
+      durationMs,
+      rowsReturned: result.rows.length,
+      rowsScanned: result.rowsScanned,
+    });
+
+    return {
+      output,
+      rowsReturned: result.rows.length,
+      rowsScanned: result.rowsScanned,
+    };
+  } catch (error) {
+    const completedAt = new Date();
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    await params.prisma.reportRun.update({
+      where: { id: run.id },
+      data: {
+        status: "FAILED",
+        completedAt,
+        durationMs: completedAt.getTime() - startedAt.getTime(),
+        errorMessage,
+      },
+    });
+    await params.prisma.report.update({
+      where: { id: params.report.id },
+      data: {
+        lastRunStatus: "FAILED",
+        lastRunError: errorMessage,
+        ...(trigger === "SCHEDULED" ? { lastScheduledRunAt: startedAt } : {}),
+        updatedTime: completedAt,
+      },
+    });
+    recordReportMetrics({
+      report: params.report,
+      trigger,
+      status: "FAILED",
+      durationMs: completedAt.getTime() - startedAt.getTime(),
+      rowsReturned: 0,
+      rowsScanned: 0,
+    });
+    throw error;
+  }
+}
+
+function recordReportMetrics(params: {
+  report: Report;
+  trigger: ReportRunTrigger;
+  status: "SUCCESS" | "FAILED";
+  durationMs: number;
+  rowsReturned: number;
+  rowsScanned: number;
+}): void {
+  const labels = {
+    status: params.status,
+    trigger: params.trigger,
+    output_format: params.report.outputFormat,
+    system_source: params.report.systemSource ?? "USER",
+  };
+  scheduledReportRunsTotal.inc(labels);
+  scheduledReportsRunTotal.inc(labels);
+  scheduledReportRunDurationSeconds.observe(labels, params.durationMs / 1000);
+  scheduledReportsDurationMs.observe(labels, params.durationMs);
+  if (params.status === "FAILED") {
+    scheduledReportsFailedTotal.inc({
+      trigger: params.trigger,
+      output_format: params.report.outputFormat,
+      system_source: params.report.systemSource ?? "USER",
+    });
+  }
+  scheduledReportRowsReturnedTotal.inc(
+    {
+      trigger: params.trigger,
+      output_format: params.report.outputFormat,
+      system_source: params.report.systemSource ?? "USER",
+    },
+    params.rowsReturned,
+  );
+  scheduledReportsRowsReturnedTotal.inc(
+    {
+      trigger: params.trigger,
+      output_format: params.report.outputFormat,
+      system_source: params.report.systemSource ?? "USER",
+    },
+    params.rowsReturned,
+  );
+  scheduledReportRowsTotal.inc(
+    {
+      trigger: params.trigger,
+      output_format: params.report.outputFormat,
+      system_source: params.report.systemSource ?? "USER",
+    },
+    params.rowsReturned,
+  );
+  scheduledReportRowsScannedTotal.inc(
+    {
+      trigger: params.trigger,
+      output_format: params.report.outputFormat,
+      system_source: params.report.systemSource ?? "USER",
+    },
+    params.rowsScanned,
+  );
+  scheduledReportsRowsScannedTotal.inc(
+    {
+      trigger: params.trigger,
+      output_format: params.report.outputFormat,
+      system_source: params.report.systemSource ?? "USER",
+    },
+    params.rowsScanned,
+  );
+}

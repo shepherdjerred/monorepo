@@ -172,6 +172,11 @@ describe("PermissionType enum", () => {
     expect(result.success).toBe(true);
   });
 
+  test("accepts CREATE_REPORT", () => {
+    const result = PermissionTypeSchema.safeParse("CREATE_REPORT");
+    expect(result.success).toBe(true);
+  });
+
   test("rejects invalid values", () => {
     const result = PermissionTypeSchema.safeParse("DELETE_COMPETITION");
     expect(result.success).toBe(false);

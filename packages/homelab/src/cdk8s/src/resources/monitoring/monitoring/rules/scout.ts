@@ -89,5 +89,58 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
         },
       ],
     },
+    {
+      name: "scout-scheduled-reports",
+      rules: [
+        {
+          alert: "ScoutScheduledReportFailuresHigh",
+          annotations: {
+            summary: "Scout scheduled reports are failing",
+            message: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} saw {{ $value | humanize }} scheduled report failure(s) in the last 30m from {{ $labels.system_source }} reports. Check Bugsink and the report run history before enabling more schedules.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "sum by (environment, system_source) (increase(scheduled_reports_failed_total[30m])) > 0",
+          ),
+          for: "10m",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
+          alert: "ScoutScheduledReportBudgetExceeded",
+          annotations: {
+            summary: "Scout scheduled report budget was exceeded",
+            message: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} rejected {{ $value | humanize }} scheduled report run(s) in the last 30m for budget {{ $labels.budget }}. Tighten the query or increase the configured budget intentionally.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "sum by (environment, budget) (increase(scheduled_report_budget_exceeded_total[30m])) > 0",
+          ),
+          for: "10m",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
+          alert: "ScoutScheduledReportRuntimeHigh",
+          annotations: {
+            summary: "Scout scheduled reports are slow",
+            message: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} scheduled report p95 runtime is {{ $value | humanize }}ms for {{ $labels.system_source }} reports. Check report row-scan metrics and SQLite import lag.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "histogram_quantile(0.95, sum by (environment, system_source, le) (rate(scheduled_reports_duration_ms_bucket[30m]))) > 30000",
+          ),
+          for: "30m",
+          labels: {
+            severity: "warning",
+          },
+        },
+      ],
+    },
   ];
 }

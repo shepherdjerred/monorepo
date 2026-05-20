@@ -171,3 +171,30 @@ export async function canCreateCompetition(
 
   return { allowed: true };
 }
+
+export async function canCreateReport(
+  prisma: ExtendedPrismaClient,
+  serverId: DiscordGuildId,
+  userId: DiscordAccountId,
+  memberPermissions: Readonly<PermissionsBitField>,
+): Promise<PermissionCheckResult> {
+  if (memberPermissions.has(PermissionFlagsBits.Administrator)) {
+    return { allowed: true };
+  }
+
+  const hasGrant = await hasPermission(
+    prisma,
+    serverId,
+    userId,
+    "CREATE_REPORT",
+  );
+  if (!hasGrant) {
+    return {
+      allowed: false,
+      reason:
+        "Missing CREATE_REPORT permission. Ask a server admin to grant you permission.",
+    };
+  }
+
+  return { allowed: true };
+}

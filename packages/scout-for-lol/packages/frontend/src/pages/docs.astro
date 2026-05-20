@@ -383,6 +383,70 @@ const maxTier = POLLING_TIERS[POLLING_TIERS.length - 1]!;
               </div>
             </div>
 
+            <!-- Report Commands -->
+            <div
+              class="border border-sky-300 dark:border-sky-700 rounded-lg p-6 bg-sky-50 dark:bg-sky-900/30"
+            >
+              <h3
+                class="text-xl font-semibold text-gray-900 dark:text-white mb-3"
+              >
+                /report
+              </h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">
+                Create recurring SQL-style reports that post lists, tables, or
+                charts to a Discord channel.
+              </p>
+
+              <div class="space-y-4">
+                <div>
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                    /report create
+                  </h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    Schedule a report from stored match facts. Choose a channel,
+                    CRON schedule, row limit, lookback window, and output
+                    format.
+                  </p>
+                  <CommandBox
+                    command='/report create title:"Weekly Surrenders" query:"SELECT player, games, surrenders, surrender_rate FROM match_participants WHERE queue IN (&apos;solo&apos;, &apos;flex&apos;) AND games >= 10 GROUP BY player ORDER BY surrender_rate DESC LIMIT 10" cron:"0 18 * * 0" channel:#reports output-format:BAR_CHART'
+                    variant="light"
+                  />
+                  <p
+                    class="text-xs text-gray-500 dark:text-gray-400 italic mt-2"
+                  >
+                    Sources include match_participants, prematch_participants,
+                    and player_pairs. Output formats include list, table,
+                    leaderboard, bar chart, and line chart.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                    /report run
+                  </h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    Run a configured report immediately and post it to its
+                    configured channel.
+                  </p>
+                  <CommandBox
+                    command="/report run report-id:[id]"
+                    variant="light"
+                  />
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                    /report list
+                  </h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    List report schedules for the current server, including
+                    system-managed competition and Common Denominator reports.
+                  </p>
+                  <CommandBox command="/report list" variant="light" />
+                </div>
+              </div>
+            </div>
+
             <!-- Admin Commands -->
             <div
               class="border border-red-300 dark:border-red-700 rounded-lg p-6 bg-red-50 dark:bg-red-900/20"

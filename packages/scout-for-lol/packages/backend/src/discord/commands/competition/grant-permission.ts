@@ -9,6 +9,7 @@ import { getErrorMessage } from "#src/utils/errors.ts";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
+  PermissionTypeSchema,
 } from "@scout-for-lol/data";
 import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
 import { createLogger } from "#src/logger.ts";
@@ -78,6 +79,9 @@ export async function executeGrantPermission(
   }
 
   const adminId = interaction.user.id;
+  const permission = PermissionTypeSchema.parse(
+    interaction.options.getString("permission") ?? "CREATE_COMPETITION",
+  );
 
   // ============================================================================
   // Step 3: Grant permission in database
@@ -87,12 +91,12 @@ export async function executeGrantPermission(
     await grantPermission(prisma, {
       serverId,
       userId: DiscordAccountIdSchema.parse(targetUser.id),
-      permission: "CREATE_COMPETITION",
+      permission,
       grantedBy: DiscordAccountIdSchema.parse(adminId),
     });
 
     logger.info(
-      `[Grant Permission] ${adminId} granted CREATE_COMPETITION to ${targetUser.id} on server ${serverId}`,
+      `[Grant Permission] ${adminId} granted ${permission} to ${targetUser.id} on server ${serverId}`,
     );
   } catch (error) {
     logger.error(
@@ -114,7 +118,7 @@ export async function executeGrantPermission(
 
   await interaction.reply({
     content: truncateDiscordMessage(
-      `✅ Granted **CREATE_COMPETITION** permission to ${targetUser.username}.\n\nThey can now create competitions on this server.`,
+      `✅ Granted **${permission}** permission to ${targetUser.username}.`,
     ),
     ephemeral: true,
   });

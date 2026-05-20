@@ -57,7 +57,9 @@ export type LimitName =
   | "player_subscriptions"
   | "accounts"
   | "competitions_per_owner"
-  | "competitions_per_server";
+  | "competitions_per_server"
+  | "reports_per_owner_per_server"
+  | "reports_per_server";
 
 const ME = DiscordAccountIdSchema.parse("160509172704739328");
 export const MY_SERVER = DiscordGuildIdSchema.parse("1337623164146155593");
@@ -85,6 +87,24 @@ const LIMIT_REGISTRY: Record<LimitName, LimitConfig> = {
   },
   competitions_per_server: {
     default: 2,
+    overrides: [
+      {
+        value: "unlimited",
+        attributes: { user: ME },
+      },
+    ],
+  },
+  reports_per_owner_per_server: {
+    default: 2,
+    overrides: [
+      {
+        value: "unlimited",
+        attributes: { user: ME },
+      },
+    ],
+  },
+  reports_per_server: {
+    default: 3,
     overrides: [
       {
         value: "unlimited",

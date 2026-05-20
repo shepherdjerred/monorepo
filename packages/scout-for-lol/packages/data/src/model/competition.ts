@@ -119,7 +119,10 @@ export type SnapshotType = z.infer<typeof SnapshotTypeSchema>;
 export const SnapshotTypeSchema = z.enum(["START", "END"]);
 
 export type PermissionType = z.infer<typeof PermissionTypeSchema>;
-export const PermissionTypeSchema = z.enum(["CREATE_COMPETITION"]);
+export const PermissionTypeSchema = z.enum([
+  "CREATE_COMPETITION",
+  "CREATE_REPORT",
+]);
 
 export type CompetitionQueueType = z.infer<typeof CompetitionQueueTypeSchema>;
 export const CompetitionQueueTypeSchema = z.enum([

@@ -10,7 +10,7 @@ logger.info("📊 Initializing Prometheus metrics");
  * Custom Prometheus registry for Scout for LoL metrics
  * Internal - accessed via getMetrics() function
  */
-const registry = new Registry();
+export const registry = new Registry();
 
 /**
  * Add default labels to all metrics
