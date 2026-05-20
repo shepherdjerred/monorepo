@@ -20,6 +20,7 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
 import { match } from "ts-pattern";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
+import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 
 export function createScoutDeployment(chart: Chart, stage: Stage) {
   const deployment = new Deployment(chart, "scout-backend", {
@@ -85,7 +86,21 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     AWS_ENDPOINT_URL: EnvValue.fromValue(
       "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
     ),
+    // S3_ENDPOINT mirrors AWS_ENDPOINT_URL for llm-observability + any other
+    // tool that reads the SDK-style env var rather than the AWS-CLI one.
+    S3_ENDPOINT: EnvValue.fromValue(
+      "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+    ),
+    S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
     AWS_REGION: EnvValue.fromValue("us-east-1"),
+    // OpenTelemetry → Tempo. The scout-backend tracing.ts bootstrap gates on
+    // TELEMETRY_ENABLED.
+    TELEMETRY_ENABLED: EnvValue.fromValue("true"),
+    TELEMETRY_SERVICE_NAME: EnvValue.fromValue("scout-backend"),
+    OTLP_ENDPOINT: EnvValue.fromValue(
+      "http://tempo.tempo.svc.cluster.local:4318",
+    ),
+    ...llmArchiveEnvVars(),
     DISCORD_TOKEN: EnvValue.fromSecretValue({
       secret: Secret.fromSecretName(
         chart,

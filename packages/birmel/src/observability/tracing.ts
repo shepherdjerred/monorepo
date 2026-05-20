@@ -15,6 +15,7 @@ import {
 } from "@opentelemetry/sdk-trace-base";
 import { ExportResultCode, type ExportResult } from "@opentelemetry/core";
 import { AgentRegistry, VoltAgentObservability } from "@voltagent/core";
+import { buildArchiveSpanProcessor } from "@shepherdjerred/llm-observability";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 
@@ -166,7 +167,13 @@ export function initializeTracing(): void {
     exportTimeoutMillis: 30_000,
   });
 
-  // Hand the OTLP processor to VoltAgent's observability, which registers a
+  // Wrap the batch processor with the LLM archive layer. Spans carrying
+  // gen_ai.* body attributes get their bodies gzipped to SeaweedFS and
+  // replaced with a ref before the slim span reaches the OTLP exporter.
+  // No-op when LLM_OBSERVABILITY_ENABLED=false.
+  const rootProcessor = buildArchiveSpanProcessor({ inner: batchProcessor });
+
+  // Hand the wrapped processor to VoltAgent's observability, which registers a
   // single NodeTracerProvider globally and runs all spans (ours + voltagent's
   // own) through this processor list. VoltAgent owns provider.register(); we
   // own the OTLP exporter shipped to Tempo.
@@ -181,7 +188,7 @@ export function initializeTracing(): void {
   voltAgentObservability = new VoltAgentObservability({
     serviceName: config.telemetry.serviceName,
     serviceVersion: "0.0.1",
-    spanProcessors: [batchProcessor],
+    spanProcessors: [rootProcessor],
     spanFilters: { enabled: false },
   });
 

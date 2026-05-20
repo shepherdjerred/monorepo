@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.63",
+    "@anthropic-ai/claude-agent-sdk": "^0.3.145",
     "@libsql/client": "0.17.3",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/core": "^2.7.1",
@@ -32,6 +33,7 @@
     "@prisma/adapter-libsql": "7.8.0",
     "@prisma/client": "^7.8.0",
     "@sentry/bun": "^10.49.0",
+    "@shepherdjerred/llm-observability": "file:../llm-observability",
     "@voltagent/core": "^2.7.4",
     "@voltagent/libsql": "^2.1.2",
     "ai": "^6.0.180",

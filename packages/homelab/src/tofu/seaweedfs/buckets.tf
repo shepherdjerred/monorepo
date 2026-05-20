@@ -102,6 +102,38 @@ resource "terraform_data" "bazel_cache_lifecycle" {
   }
 }
 
+# LLM request/response archive — gzipped JSON envelopes per LLM call.
+# Written by packages/llm-observability's LlmArchiveSpanProcessor; one file per
+# call, key prefix `llm/<service>/<provider>/YYYY/MM/DD/<traceId>-<spanId>.json.gz`.
+# 1-year retention to support cost analysis and prompt regression debugging.
+resource "aws_s3_bucket" "llm_archive" {
+  bucket = "llm-archive"
+}
+
+resource "terraform_data" "llm_archive_lifecycle" {
+  input = {
+    bucket       = aws_s3_bucket.llm_archive.id
+    expire_days  = 365
+    endpoint_url = "https://seaweedfs-s3.tailnet-1a49.ts.net"
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      aws s3api put-bucket-lifecycle-configuration \
+        --bucket "${self.input.bucket}" \
+        --endpoint-url "${self.input.endpoint_url}" \
+        --lifecycle-configuration '{
+          "Rules": [{
+            "ID": "expire-llm-archives",
+            "Status": "Enabled",
+            "Filter": {"Prefix": ""},
+            "Expiration": {"Days": ${self.input.expire_days}}
+          }]
+        }'
+    EOT
+  }
+}
+
 # OpenTofu state backend for all modules
 resource "aws_s3_bucket" "homelab_tofu_state" {
   bucket = "homelab-tofu-state"
