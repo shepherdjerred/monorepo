@@ -17,12 +17,14 @@ import {
 export const manageRoleTool = createTool({
   id: "manage-role",
   description:
-    "Manage roles in the server: list all, get details, create, modify, delete, or reorder",
+    "Manage role *definitions* (create, rename/recolor/edit via modify, delete, reorder). Does NOT assign or revoke roles to/from members — for that use the manage-member tool with action 'add-role' or 'remove-role'.",
   inputSchema: z.object({
     guildId: z.string().describe("The ID of the guild"),
     action: z
       .enum(["list", "get", "create", "modify", "delete", "reorder"])
-      .describe("The action to perform"),
+      .describe(
+        "The action to perform. 'modify' edits the role's own properties (name, color, hoist, mentionable) — it does NOT add the role to a member.",
+      ),
     roleId: z
       .string()
       .optional()
@@ -56,6 +58,12 @@ export const manageRoleTool = createTool({
   outputSchema: z.object({
     success: z.boolean(),
     message: z.string(),
+    verified: z
+      .boolean()
+      .optional()
+      .describe(
+        "Set on destructive writes (modify). False means the API accepted the call but the role's post-write state does NOT match the request — surface this honestly to the user instead of claiming success.",
+      ),
     data: z
       .union([
         z.array(

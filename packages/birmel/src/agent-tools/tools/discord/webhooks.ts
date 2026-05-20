@@ -19,7 +19,9 @@ export const manageWebhookTool = createTool({
   inputSchema: z.object({
     action: z
       .enum(["list", "create", "modify", "delete", "execute"])
-      .describe("The action to perform"),
+      .describe(
+        "The action to perform. 'modify' edits a webhook's name/avatar/channelId — use 'execute' to actually send a message via the webhook.",
+      ),
     guildId: z
       .string()
       .optional()

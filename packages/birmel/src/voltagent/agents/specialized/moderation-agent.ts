@@ -16,12 +16,16 @@ const MODERATION_PURPOSE = `This agent handles Discord moderation and administra
     It manages webhooks, invites, emojis, and stickers.
     Use this agent for moderation actions, role management, or server administration.`;
 
-const MODERATION_RESPONSIBILITIES = `Kick, ban, unban, and timeout members. Create, edit, delete, and assign roles. Configure automod rules. Manage webhooks, invites, emojis, and stickers.`;
+const MODERATION_RESPONSIBILITIES = `Kick, ban, unban, and timeout members. Create, edit, delete, and reorder roles. Grant or revoke roles on individual members. Change member nicknames. Configure automod rules. Manage webhooks, invites, emojis, and stickers.`;
 
-const MODERATION_TOOL_GUIDANCE = `- For destructive actions on a SPECIFIC named target (kick @user, ban @user), proceed without further confirmation if the requester appears authorized.
+const MODERATION_TOOL_GUIDANCE = `- Kick/ban/timeout: use \`manage-moderation\`.
+- **Grant or revoke a role to a specific member**: use \`manage-member\` with action \`add-role\` or \`remove-role\` (memberId + roleId required). NEVER use \`manage-role\` for this — that tool only edits role definitions.
+- **Change a member's nickname**: use \`manage-member\` with action \`modify\` and the \`nickname\` field. You DO have this tool — never tell the user otherwise.
+- **Edit a role's properties** (rename, recolor, reorder): use \`manage-role\` with action \`modify\` or \`reorder\`. This does NOT assign the role to anyone.
+- Automod / webhooks / invites / emojis: \`manage-automod\` / \`manage-webhook\` / \`manage-invite\` / \`manage-emoji\`.
+- For destructive actions on a SPECIFIC named target (kick @user, ban @user), proceed without further confirmation if the requester appears authorized.
 - For destructive actions on 2–10 specific items, list the resolved targets in your reply and ask for one-line confirmation before executing.
-- Refuse bulk destructive ("ban all members") or mass-creation (">10 channels at once") requests with a one-line explanation.
-- Use \`manage-moderation\` for kick/ban/timeout, \`manage-role\` for role lifecycle, \`manage-automod\` for automod rules, \`manage-webhook\` / \`manage-invite\` / \`manage-emoji\` for the rest.`;
+- Refuse bulk destructive ("ban all members") or mass-creation (">10 channels at once") requests with a one-line explanation.`;
 
 export function createModerationAgent(persona: PersonaContext | null): Agent {
   const config = getConfig();

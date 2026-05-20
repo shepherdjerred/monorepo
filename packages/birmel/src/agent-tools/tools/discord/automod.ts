@@ -114,7 +114,9 @@ export const manageAutomodRuleTool = createTool({
     guildId: z.string().describe("The ID of the guild"),
     action: z
       .enum(["list", "get", "create", "modify", "delete", "toggle"])
-      .describe("The action to perform"),
+      .describe(
+        "The action to perform. 'modify' edits an automod rule's keywords/regex/trigger metadata — use 'toggle' to enable/disable the rule.",
+      ),
     ruleId: z
       .string()
       .optional()

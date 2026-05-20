@@ -22,7 +22,7 @@ const logger = loggers.tools.child("discord.threads");
 export const manageThreadTool = createTool({
   id: "manage-thread",
   description:
-    "Manage threads: create from message, create standalone, modify settings, add member, or get messages",
+    "Manage threads: create from an existing message, create standalone, edit thread settings via 'modify', add a member to a thread, or fetch a thread's messages. Does NOT send messages to a thread — use manage-message with the thread's channelId for that.",
   inputSchema: z.object({
     action: z
       .enum([
@@ -32,7 +32,9 @@ export const manageThreadTool = createTool({
         "add-member",
         "get-messages",
       ])
-      .describe("The action to perform"),
+      .describe(
+        "The action to perform. 'modify' edits a thread's name and archived/locked state — use 'add-member' to add a user, and manage-message to post into a thread.",
+      ),
     channelId: z
       .string()
       .optional()

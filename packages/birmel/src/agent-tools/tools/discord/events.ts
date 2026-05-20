@@ -73,7 +73,9 @@ export const manageScheduledEventTool = createTool({
     guildId: z.string().describe("The ID of the guild"),
     action: z
       .enum(["list", "create", "modify", "delete", "get-users"])
-      .describe("The action to perform"),
+      .describe(
+        "The action to perform. 'modify' edits a scheduled event's metadata (name, time, description, location) — use 'get-users' to list interested attendees.",
+      ),
     eventId: z
       .string()
       .optional()
