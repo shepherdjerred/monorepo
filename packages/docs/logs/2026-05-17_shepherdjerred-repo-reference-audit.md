@@ -58,3 +58,26 @@ The Cooklang plugin release flow no longer hardcodes its external plugin reposit
 - The lefthook-wrapped `quality-ratchet` check hung after visible pre-commit checks had passed; running `bun scripts/quality-ratchet.ts` directly passed, so the recovered audit commit was created with `--no-verify`.
 - The branch merge pulled current `origin/main` changes into the PR to clear the dirty merge state; those files are expected to appear in the merge commit.
 - Buildkite #2597 also reported Knip and Trivy as soft-failed warning jobs; the blocking failure was the Homelab lint job.
+
+## Session Log — 2026-05-20
+
+### Done
+
+- Audited the changed non-Markdown files for URL contexts that are consumed by tools rather than humans.
+- Fixed remaining browser-path URLs in clone/source/SCM contexts: Ansible dotfiles clone, DevPod prebuild target, Maven SCM entries, MkDocs repo/edit links, chezmoi install scripts, Helm Types package metadata, the ArgoCD blog example, Temporal deps-summary clone path, and Cabal source repository metadata.
+- Re-ran the strict non-`monorepo` `shepherdjerred` repository reference audit; no matches remain.
+- Re-ran the invalid clone/source URL scan for `monorepo/tree/main` in programmatic contexts; only unrelated `repoUrl:` multiline false positives remain.
+- Verified with `git -c core.fsmonitor=false diff --check`, Prettier check for supported edited files, ShellCheck for the dotfiles install scripts, `bun run --filter='./packages/temporal' typecheck`, `bun run --filter='./packages/homelab' typecheck`, `bun run --filter='./packages/sjer.red' typecheck`, `bun run --filter='./packages/homelab/src/helm-types' typecheck`, `bun run --filter='./packages/temporal' test` outside the sandbox, and `bun run --filter='./packages/sjer.red' build` outside the sandbox.
+- Rebased the PR branch onto current `origin/main`, preserving `main`'s Temporal worker maintenance RBAC additions alongside the PR's fixture URL wiring.
+- Re-ran `cd packages/homelab && bun run lint` after the rebase and trimmed `packages/homelab/src/cdk8s/src/resources/temporal/worker.ts` back under the file length limit without changing rendered environment values.
+
+### Remaining
+
+- Watch the replacement Buildkite run after the rebased branch is pushed.
+
+### Caveats
+
+- The first sandboxed `packages/temporal` test run failed because the sandbox blocked Temporal's ephemeral server and a local listener; the same suite passed outside the sandbox.
+- The first sandboxed `packages/sjer.red` build failed because the sandbox blocked Chromium's Mach port registration during MDX processing; the same build passed outside the sandbox.
+- Browser links, package homepages, rule documentation URLs, Cargo `repository`, and generated RSS/notebook links intentionally remain as GitHub web URLs because those contexts are not Git clone/source endpoints.
+- A range-wide `git diff --check origin/main...HEAD` still reports whitespace churn already present in older archived/generated files in this PR; `git -c core.fsmonitor=false diff --check` is clean for the current working tree.

@@ -5,9 +5,8 @@ import { z } from "zod/v4";
 import { traceOpenAi } from "@shepherdjerred/llm-observability";
 import { sendPostalEmail, resolvePostalAddresses } from "#shared/postal.ts";
 
-const VERSIONS_FILE_PATH = "src/cdk8s/src/versions.ts";
-const REPO_URL =
-  "https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab.git";
+const VERSIONS_FILE_PATH = "packages/homelab/src/cdk8s/src/versions.ts";
+const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
 
 const VERSION_LINE_REGEX = /"([^"]+)":\s*"([^"]+)"/;
 export const DEPS_SUMMARY_CLONE_ARGS = [

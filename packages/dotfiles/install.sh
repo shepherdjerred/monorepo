@@ -190,10 +190,20 @@ fi
 # Use local dotfiles if DOTFILES_LOCAL_PATH is set, otherwise clone from GitHub
 if [ -n "${DOTFILES_LOCAL_PATH:-}" ] && [ -d "${DOTFILES_LOCAL_PATH}" ]; then
     log_info "Using local dotfiles from: ${DOTFILES_LOCAL_PATH}"
-    chezmoi init --source "${DOTFILES_LOCAL_PATH}" --apply --keep-going || true
+    if ! chezmoi init --source "${DOTFILES_LOCAL_PATH}" --apply --keep-going; then
+        log_warn "chezmoi apply encountered errors; continuing because secrets may be unavailable"
+    fi
 else
     log_info "Cloning dotfiles from GitHub"
-    chezmoi init --apply https://github.com/shepherdjerred/monorepo/tree/main/packages/dotfiles --keep-going || true
+    mkdir -p "${HOME}/git"
+    if [ -d "${HOME}/git/monorepo/.git" ]; then
+        retry 3 5 git -C "${HOME}/git/monorepo" pull --ff-only
+    else
+        retry 3 5 git clone --depth 1 https://github.com/shepherdjerred/monorepo.git "${HOME}/git/monorepo"
+    fi
+    if ! chezmoi init --source "${HOME}/git/monorepo/packages/dotfiles" --apply --keep-going; then
+        log_warn "chezmoi apply encountered errors; continuing because secrets may be unavailable"
+    fi
 fi
 
 # install Brewfile
