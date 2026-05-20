@@ -8,13 +8,13 @@
     state: directory
 - name: clone dotfiles repository
   git:
-    repo: https://github.com/shepherdjerred/monorepo/tree/main/packages/dotfiles
-    dest: "/home/{{ target_user }}/.local/share/chezmoi"
+    repo: https://github.com/shepherdjerred/monorepo.git
+    dest: "/home/{{ target_user }}/git/monorepo"
     update: true
     force: true
 - name: symlink dotfiles to chezmoi
   file:
-    src: "/home/{{ target_user }}/.local/share/chezmoi"
+    src: "/home/{{ target_user }}/git/monorepo/packages/dotfiles"
     dest: "/home/{{ target_user }}/git/dotfiles"
     state: link
 - name: install chezmoi

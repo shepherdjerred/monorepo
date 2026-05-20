@@ -366,23 +366,14 @@ export function createTemporalWorkerDeployment(
           "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
         ),
         // Home Assistant
-        HA_URL: EnvValue.fromSecretValue({
-          secret,
-          key: "HA_URL",
-        }),
-        HA_TOKEN: EnvValue.fromSecretValue({
-          secret,
-          key: "HA_TOKEN",
-        }),
+        HA_URL: EnvValue.fromSecretValue({ secret, key: "HA_URL" }),
+        HA_TOKEN: EnvValue.fromSecretValue({ secret, key: "HA_TOKEN" }),
         // S3 / SeaweedFS (for fetcher)
         S3_BUCKET_NAME: EnvValue.fromSecretValue({
           secret,
           key: "S3_BUCKET_NAME",
         }),
-        S3_ENDPOINT: EnvValue.fromSecretValue({
-          secret,
-          key: "S3_ENDPOINT",
-        }),
+        S3_ENDPOINT: EnvValue.fromSecretValue({ secret, key: "S3_ENDPOINT" }),
         S3_KEY: EnvValue.fromValue("data/manifest.json"),
         S3_REGION: EnvValue.fromValue("us-east-1"),
         S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
@@ -403,10 +394,7 @@ export function createTemporalWorkerDeployment(
           key: "AWS_SECRET_ACCESS_KEY",
         }),
         // GitHub
-        GH_TOKEN: EnvValue.fromSecretValue({
-          secret,
-          key: "GH_TOKEN",
-        }),
+        GH_TOKEN: EnvValue.fromSecretValue({ secret, key: "GH_TOKEN" }),
         PR_REVIEW_FIXTURES_REPO_URL: EnvValue.fromSecretValue(
           {
             secret,
@@ -505,10 +493,7 @@ export function createTemporalWorkerDeployment(
           key: "OPENAI_API_KEY",
         }),
         // Postal email
-        POSTAL_HOST: EnvValue.fromSecretValue({
-          secret,
-          key: "POSTAL_HOST",
-        }),
+        POSTAL_HOST: EnvValue.fromSecretValue({ secret, key: "POSTAL_HOST" }),
         POSTAL_HOST_HEADER: EnvValue.fromSecretValue({
           secret,
           key: "POSTAL_HOST_HEADER",

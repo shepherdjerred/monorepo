@@ -43,8 +43,8 @@
   "license": "GPL-3.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab.git",
-    "directory": "src/helm-types"
+    "url": "git+https://github.com/shepherdjerred/monorepo.git",
+    "directory": "packages/homelab/src/helm-types"
   },
   "bugs": {
     "url": "https://github.com/shepherdjerred/monorepo/issues"
