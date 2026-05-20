@@ -73,7 +73,7 @@ async function validateEditPreflight(
   if (!isEditorEnabled()) {
     return { success: false, message: "File editing feature is not enabled." };
   }
-  const claudeCheck = await checkClaudePrerequisites();
+  const claudeCheck = checkClaudePrerequisites();
   if (!claudeCheck.installed) {
     return {
       success: false,
