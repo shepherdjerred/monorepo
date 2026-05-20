@@ -20,7 +20,8 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   "cooklang-for-obsidian": ["eslint-config"],
   "cooklang-rich-preview": ["eslint-config"],
   "better-skill-capped": ["eslint-config"],
-  birmel: ["eslint-config"],
+  birmel: ["eslint-config", "llm-observability"],
+  "llm-observability": ["eslint-config"],
   "starlight-karma-bot": ["eslint-config"],
   "tasknotes-types": ["eslint-config"],
   "home-assistant": ["eslint-config"],
@@ -29,7 +30,7 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   // mounted so the worker-image build can compile the toolkit CLI into a
   // single static binary at /usr/local/bin/toolkit. Required by the
   // homelab-audit-daily workflow (runbook §5/§6/§9 use `toolkit gf|pd|bugsink`).
-  temporal: ["eslint-config", "home-assistant", "toolkit"],
+  temporal: ["eslint-config", "home-assistant", "toolkit", "llm-observability"],
 
   // Multi-dep packages
   "tasknotes-server": ["eslint-config", "tasknotes-types"],
@@ -54,7 +55,7 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
 
   // Nested workspace packages (sub-packages are inside parent dir)
   "discord-plays-pokemon": ["eslint-config"],
-  "scout-for-lol": ["eslint-config"],
+  "scout-for-lol": ["eslint-config", "llm-observability"],
   "scout-for-lol/packages/frontend": [
     "eslint-config",
     "scout-for-lol/packages/backend",
