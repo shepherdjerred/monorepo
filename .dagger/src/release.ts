@@ -372,14 +372,25 @@ export function deploySiteHelper(
   container = container.withExec(["bun", "install", "--frozen-lockfile"]);
 
   // Build workspace deps that need compilation (e.g. astro-opengraph-images).
-  // Skip eslint-config (lint-only dep, no dist/ needed for site build).
-  const buildDeps = depNames.filter((d) => d !== "eslint-config");
+  // Skip source-only library deps that consumers resolve via package exports
+  // directly — they don't ship a dist/.
+  const SKIP_BUILD_DEPS: ReadonlySet<string> = new Set([
+    "eslint-config",
+    "llm-observability",
+  ]);
+  const buildDeps = depNames.filter((d) => !SKIP_BUILD_DEPS.has(d));
   for (const dep of buildDeps) {
     container = container
       .withWorkdir(`/workspace/packages/${dep}`)
       .withExec(["bun", "install", "--frozen-lockfile"])
       .withExec(["bun", "run", "build"]);
   }
+
+  // Reset workdir to the package being deployed after the build-deps loop
+  // potentially left us inside the last built dep's directory. Without this,
+  // a consumer's `bun run --filter='./packages/foo' build` resolves the
+  // filter against the wrong cwd and fails with "No packages matched".
+  container = container.withWorkdir(`/workspace/packages/${pkg}`);
 
   // Install Playwright only when the site needs it (e.g. sjer.red for OG image generation)
   if (needsPlaywright) {
