@@ -95,8 +95,6 @@ export const ArenaTeamSchema = z.strictObject({
 export type ArenaMatchPlayer = z.infer<typeof ArenaMatchPlayerSchema>;
 export const ArenaMatchPlayerSchema = z.strictObject({
   playerConfig: PlayerConfigEntrySchema,
-  wins: z.number().nonnegative().optional(),
-  losses: z.number().nonnegative().optional(),
   placement: ArenaPlacementSchema,
   champion: ArenaChampionSchema,
   teamId: ArenaTeamIdSchema,
