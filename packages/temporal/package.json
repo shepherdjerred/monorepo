@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "imports": {
+    "#client": "./src/client.ts",
     "#shared/*": "./src/shared/*",
     "#activities/*": "./src/activities/*",
     "#workflows/*": "./src/workflows/*",

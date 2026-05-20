@@ -45,9 +45,11 @@ import {
 } from "./pr-reaction-listener/index.ts";
 import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab-audit.ts";
 import type { RunHomelabAuditWorkflowInput } from "./homelab-audit.ts";
+import { agentTaskWorkflow as _agentTaskWorkflow } from "./agent-task.ts";
 import type { PrReviewPipelineInput, PrSummaryInput } from "#shared/schemas.ts";
 import type { PrReviewPipelineResult } from "./pr-review/index.ts";
 import type { RunSummaryResult } from "#activities/pr-review/summary.ts";
+import type { AgentTaskInput } from "#shared/agent-task.ts";
 
 export async function fetchSkillCappedManifest(): Promise<void> {
   return _fetchSkillCappedManifest();
@@ -139,6 +141,10 @@ export async function runHomelabAuditWorkflow(
   input: RunHomelabAuditWorkflowInput = {},
 ): Promise<void> {
   return _runHomelabAuditWorkflow(input);
+}
+
+export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
+  return _agentTaskWorkflow(input);
 }
 
 export async function prReviewEvalWorkflow(

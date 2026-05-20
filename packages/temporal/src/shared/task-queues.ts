@@ -15,4 +15,9 @@ export const TASK_QUEUES = {
    * this PR?" even when the deep review is degraded.
    */
   PR_SUMMARY: "pr-summary",
+  /**
+   * Delayed and recurring report-only agent tasks. Kept off DEFAULT so
+   * long-running Claude/Codex subprocesses do not block HA/event cron work.
+   */
+  AGENT_TASK: "agent-task",
 } as const;

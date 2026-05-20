@@ -53,6 +53,19 @@ docs/
 - Plans must be raw Markdown — do not generate PDF or Typst renderings alongside `.md` files
 - TODO docs must be active-only and match exactly one source marker; `bun scripts/check-todos.ts` enforces this
 
+## Scheduling Follow-ups
+
+When a plan, log, or guide needs a later check-in, add one explicit `temporal-agent-task` HTML comment block near the follow-up and schedule it from `packages/temporal` locally as an operator:
+
+```bash
+cd packages/temporal
+TEMPORAL_ADDRESS=localhost:7233 bun run scripts/schedule-agent-task.ts --from-doc ../../packages/docs/<path>.md
+```
+
+Do not expose direct Temporal scheduling as a public ingress path. Public creation must go through the authenticated `/agent-tasks` HTTP API with `Authorization: Bearer $AGENT_TASK_API_TOKEN`.
+
+Use `"mode": "report-only"` unless the user explicitly asks for a mutating automation. Use `runAt` for one-off checks or `cron` + stable `scheduleId` for recurring checks. Scheduled agents email their report and may request one follow-up or pause their own cron only when the original task allows it.
+
 ## Keeping Things Tidy
 
 - **Archive, don't delete.** Move outdated docs to `archive/` with an appropriate subdirectory. Create new archive subdirectories as needed (e.g., `archive/bazel/`, `archive/superseded/`).

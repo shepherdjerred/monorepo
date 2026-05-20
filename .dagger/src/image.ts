@@ -13,6 +13,7 @@ import {
   CADDY_BUILDER_IMAGE,
   CADDY_IMAGE,
   CLAUDE_CODE_VERSION,
+  CODEX_CLI_VERSION,
   GH_CLI_VERSION,
   GITHUB_MCP_SERVER_VERSION,
   KUBECTL_VERSION,
@@ -49,7 +50,7 @@ function withGitHubCli(container: Container): Container {
 }
 
 /**
- * Install the GitHub CLI and Claude Code CLI into a Bun-based container.
+ * Install the GitHub CLI, Claude Code CLI, and Codex CLI into a Bun-based container.
  *
  * The birmel Discord bot's editor sub-agent shells out to both:
  * - `gh` — opens pull requests on the user's behalf after an editor session
@@ -72,7 +73,9 @@ function withEditorClis(container: Container): Container {
       "-g",
       `@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}`,
     ])
-    .withExec(["claude", "--version"]);
+    .withExec(["claude", "--version"])
+    .withExec(["bun", "add", "-g", `@openai/codex@${CODEX_CLI_VERSION}`])
+    .withExec(["codex", "--version"]);
 }
 
 /**
