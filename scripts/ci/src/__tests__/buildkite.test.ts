@@ -60,12 +60,20 @@ describe("daggerStep — OTel env shape", () => {
 });
 
 describe("DAGGER_ENV", () => {
-  it("does not set logs/metrics endpoints (Tempo only handles traces)", () => {
-    // If someone copies generic OTLP_ENDPOINT into the logs/metrics fields by
-    // mistake, Dagger will try to POST to Tempo and get 404s. Guard against
-    // that. Logs go to Loki, metrics to Prometheus — wired separately when
-    // those follow-ups land.
-    expect(DAGGER_ENV["OTEL_EXPORTER_OTLP_LOGS_ENDPOINT"]).toBeUndefined();
+  it("ships logs to the Loki OTLP gateway", () => {
+    // Dagger's OTel client deliberately does not fan the base OTLP endpoint
+    // to logs (per dagger/otel-go init.go) — without a signal-specific
+    // endpoint, per-exec stdout/stderr is dropped on the floor. Guard the
+    // shape so "Logs for this span" stays wired up.
+    expect(DAGGER_ENV["OTEL_EXPORTER_OTLP_LOGS_ENDPOINT"]).toBe(
+      "http://loki-gateway.loki/otlp/v1/logs",
+    );
+  });
+
+  it("does not set the metrics endpoint (Prometheus needs an opt-in feature flag)", () => {
+    // Prometheus's OTLP receiver requires --enable-feature=otlp-write-receiver,
+    // which is not currently set on the in-cluster Prometheus. Leaving the env
+    // unset means Dagger drops metrics rather than POSTing to a 404 endpoint.
     expect(DAGGER_ENV["OTEL_EXPORTER_OTLP_METRICS_ENDPOINT"]).toBeUndefined();
   });
 });

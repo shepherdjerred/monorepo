@@ -1,4 +1,5 @@
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-http";
 import {
   trace,
   diag,
@@ -8,11 +9,21 @@ import {
   type Span,
   type Tracer,
 } from "@opentelemetry/api";
+import { logs as logsAPI } from "@opentelemetry/api-logs";
 import {
   BatchSpanProcessor,
   type SpanExporter,
   type ReadableSpan,
 } from "@opentelemetry/sdk-trace-base";
+import {
+  BatchLogRecordProcessor,
+  LoggerProvider,
+} from "@opentelemetry/sdk-logs";
+import { resourceFromAttributes } from "@opentelemetry/resources";
+import {
+  ATTR_SERVICE_NAME,
+  ATTR_SERVICE_VERSION,
+} from "@opentelemetry/semantic-conventions";
 import { ExportResultCode, type ExportResult } from "@opentelemetry/core";
 import { AgentRegistry, VoltAgentObservability } from "@voltagent/core";
 import { buildArchiveSpanProcessor } from "@shepherdjerred/llm-observability";
@@ -29,7 +40,17 @@ import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 let voltAgentObservability: VoltAgentObservability | null = null;
 let tracer: Tracer | null = null;
 let batchProcessor: BatchSpanProcessor | null = null;
+let loggerProvider: LoggerProvider | null = null;
+let logRecordProcessor: BatchLogRecordProcessor | null = null;
 let initialized = false;
+
+// The OTLP base endpoint points at Tempo (traces only). Loki accepts OTLP
+// logs at a different host; this is the in-cluster gateway. Override locally
+// via LOKI_OTLP_ENDPOINT (used by integration tests and the local validation
+// stack) — fall back to the production gateway when unset. Read inside
+// initializeTracing rather than at module load so tests can set env vars in
+// beforeAll() before the value is captured.
+const DEFAULT_LOKI_OTLP_LOGS_ENDPOINT = "http://loki-gateway.loki/otlp/v1/logs";
 
 /**
  * DiagLogger that pipes OpenTelemetry's internal diagnostics into our
@@ -173,6 +194,52 @@ export function initializeTracing(): void {
   // No-op when LLM_OBSERVABILITY_ENABLED=false.
   const rootProcessor = buildArchiveSpanProcessor({ inner: batchProcessor });
 
+  // OTLP logs path. Sibling LoggerProvider shipping LogRecords to Loki via
+  // OTLP HTTP. We build the Resource directly (rather than reading off
+  // VoltAgent's TracerProvider) so we don't depend on @voltagent internals
+  // — but we mirror the same serviceName/serviceVersion so spans and logs
+  // join on `service.name` in Loki's OTLP receiver.
+  //
+  // Loki auto-promotes `service.name` to the `service_name` stream label and
+  // stores trace_id/span_id as structured metadata (Loki has
+  // allow_structured_metadata: true). The Tempo→Loki `tracesToLogsV2` mapping
+  // in homelab/argo-applications/prometheus.ts uses that label + filter, so
+  // each span's log records are findable via "Logs for this span".
+  //
+  // logsAPI.getLogger().emit() automatically attaches the active span's
+  // trace_id/span_id to every LogRecord, which is the whole point.
+  //
+  // IMPORTANT — order matters in two ways on Bun (1.3.14):
+  //
+  //   (a) The OTLPLogExporter + processor + LoggerProvider must be CREATED
+  //       before VoltAgentObservability's constructor, otherwise outgoing
+  //       OTLP log POSTs ECONNREFUSE — likely a NodeSDK/AsyncLocalStorage
+  //       side effect interfering with Bun's node:http compat layer.
+  //
+  //   (b) `setGlobalLoggerProvider` must be called AFTER VoltAgentObservability
+  //       — its constructor unconditionally registers its own internal
+  //       LoggerProvider as the global, which would shadow ours if we set
+  //       ours first. Setting after wins.
+  const lokiOtlpLogsEndpoint =
+    Bun.env["LOKI_OTLP_ENDPOINT"] ?? DEFAULT_LOKI_OTLP_LOGS_ENDPOINT;
+  const otlpLogExporter = new OTLPLogExporter({
+    url: lokiOtlpLogsEndpoint,
+  });
+  logRecordProcessor = new BatchLogRecordProcessor(otlpLogExporter, {
+    // Match the trace pipeline cadence — same trade-off, same OTLP timeout.
+    scheduledDelayMillis: 2000,
+    maxExportBatchSize: 512,
+    maxQueueSize: 4096,
+    exportTimeoutMillis: 30_000,
+  });
+  loggerProvider = new LoggerProvider({
+    resource: resourceFromAttributes({
+      [ATTR_SERVICE_NAME]: config.telemetry.serviceName,
+      [ATTR_SERVICE_VERSION]: "0.0.1",
+    }),
+    processors: [logRecordProcessor],
+  });
+
   // Hand the wrapped processor to VoltAgent's observability, which registers a
   // single NodeTracerProvider globally and runs all spans (ours + voltagent's
   // own) through this processor list. VoltAgent owns provider.register(); we
@@ -192,18 +259,28 @@ export function initializeTracing(): void {
     spanFilters: { enabled: false },
   });
 
+  // Override VoltAgent's auto-registered LoggerProvider so our OTLP exporter
+  // — not VoltAgent's internal one — is what handles `logsAPI.getLogger`
+  // calls from the rest of the app. Disable the global first because
+  // logs.setGlobalLoggerProvider is a one-shot register that silently no-ops
+  // if a provider is already registered (which VoltAgent just did).
+  logsAPI.disable();
+  logsAPI.setGlobalLoggerProvider(loggerProvider);
+
   // Make this the global so every Agent (and workflow) reuses it instead of
   // calling createVoltAgentObservability() and triggering the duplicate-
   // registration storm we saw in production.
   AgentRegistry.getInstance().setGlobalObservability(voltAgentObservability);
 
   tracer = trace.getTracer(config.telemetry.serviceName);
+
   initialized = true;
 
   logger.info("OpenTelemetry tracing initialized", {
     module: "observability.tracing",
     serviceName: config.telemetry.serviceName,
     otlpEndpoint: config.telemetry.otlpEndpoint,
+    lokiOtlpEndpoint: lokiOtlpLogsEndpoint,
   });
 }
 
@@ -224,9 +301,38 @@ export async function shutdownTracing(): Promise<void> {
       });
     }
   }
+  if (logRecordProcessor != null) {
+    try {
+      await logRecordProcessor.forceFlush();
+    } catch (error) {
+      logger.warn("OTLP log forceFlush failed during shutdown", {
+        module: "observability.tracing",
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+  if (loggerProvider != null) {
+    try {
+      await loggerProvider.shutdown();
+    } catch (error) {
+      logger.warn("LoggerProvider shutdown failed", {
+        module: "observability.tracing",
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
   if (voltAgentObservability != null) {
     await voltAgentObservability.shutdown();
   }
+  // Allow a subsequent initializeTracing() to re-bootstrap from scratch.
+  // In production this is a no-op (process exits after shutdown); in tests
+  // it lets a sibling test file fresh-init without stale module state.
+  voltAgentObservability = null;
+  tracer = null;
+  batchProcessor = null;
+  loggerProvider = null;
+  logRecordProcessor = null;
+  initialized = false;
 }
 
 /**

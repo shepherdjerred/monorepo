@@ -11,6 +11,7 @@ import {
   prSummaryTokensTotal,
 } from "#observability/metrics.ts";
 import { getTraceContext, withSpan } from "#observability/tracing.ts";
+import { emitOtel } from "#observability/log.ts";
 import type { PrSummaryInput } from "#shared/schemas.ts";
 import {
   upsertSummaryComment,
@@ -129,16 +130,18 @@ function jsonLog(
   message: string,
   fields: Record<string, unknown> = {},
 ): void {
+  const flow = workflowFields();
   console.warn(
     JSON.stringify({
       level,
       msg: message,
       component: COMPONENT,
-      ...workflowFields(),
+      ...flow,
       ...getTraceContext(),
       ...fields,
     }),
   );
+  emitOtel(level, message, { module: COMPONENT, ...flow, ...fields });
 }
 
 function workflowFields(): Record<string, unknown> {

@@ -1,5 +1,6 @@
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-http";
 import { resourceFromAttributes } from "@opentelemetry/resources";
 import {
   ATTR_SERVICE_NAME,
@@ -15,21 +16,29 @@ import {
   type Span,
   type Tracer,
 } from "@opentelemetry/api";
+import { logs as logsAPI } from "@opentelemetry/api-logs";
 import {
   BatchSpanProcessor,
   type ReadableSpan,
   type SpanExporter,
   type SpanProcessor,
 } from "@opentelemetry/sdk-trace-base";
+import {
+  BatchLogRecordProcessor,
+  LoggerProvider,
+} from "@opentelemetry/sdk-logs";
 import { ExportResultCode, type ExportResult } from "@opentelemetry/core";
 import { buildArchiveSpanProcessor } from "@shepherdjerred/llm-observability";
 
 const DEFAULT_OTLP_ENDPOINT = "http://tempo.tempo.svc.cluster.local:4318";
+const DEFAULT_LOKI_OTLP_LOGS_ENDPOINT = "http://loki-gateway.loki/otlp/v1/logs";
 const DEFAULT_SERVICE_NAME = "temporal-worker";
 
 let sdk: NodeSDK | undefined;
 let tracer: Tracer | undefined;
 let batchProcessor: BatchSpanProcessor | undefined;
+let loggerProvider: LoggerProvider | undefined;
+let logRecordProcessor: BatchLogRecordProcessor | undefined;
 
 function jsonLog(
   level: "info" | "warning" | "error",
@@ -145,6 +154,40 @@ export function initializeTracing(): void {
     inner: batchProcessor,
   });
 
+  // OTLP logs path. Sibling LoggerProvider that ships LogRecords to Loki via
+  // OTLP HTTP at the Loki gateway. The base `OTLP_ENDPOINT` points at Tempo
+  // (which doesn't accept logs), so logs use a separate endpoint resolved
+  // from `LOKI_OTLP_ENDPOINT` (also used by integration tests / local stack).
+  //
+  // We share serviceName/serviceVersion with the trace pipeline so Loki's
+  // OTLP receiver tags every log stream with the matching `service_name`
+  // label. The OTel logs API automatically attaches the active span's
+  // trace_id/span_id to every record — that's what makes Grafana's
+  // "Logs for this span" button surface the right lines.
+  //
+  // IMPORTANT: this must be set up BEFORE NodeSDK.start(). Empirically, on
+  // Bun (1.3.14), creating the OTLPLogExporter after sdk.start() causes
+  // every outgoing POST to ECONNREFUSED — likely a NodeSDK side effect
+  // around AsyncLocalStorage/http patching that interferes with Bun's
+  // node:http compat layer. Order matters.
+  const lokiOtlpLogsEndpoint =
+    Bun.env["LOKI_OTLP_ENDPOINT"] ?? DEFAULT_LOKI_OTLP_LOGS_ENDPOINT;
+  const otlpLogExporter = new OTLPLogExporter({ url: lokiOtlpLogsEndpoint });
+  logRecordProcessor = new BatchLogRecordProcessor(otlpLogExporter, {
+    scheduledDelayMillis: 2000,
+    maxExportBatchSize: 512,
+    maxQueueSize: 4096,
+    exportTimeoutMillis: 30_000,
+  });
+  loggerProvider = new LoggerProvider({
+    resource: resourceFromAttributes({
+      [ATTR_SERVICE_NAME]: serviceName,
+      [ATTR_SERVICE_VERSION]: serviceVersion,
+    }),
+    processors: [logRecordProcessor],
+  });
+  logsAPI.setGlobalLoggerProvider(loggerProvider);
+
   sdk = new NodeSDK({
     resource: resourceFromAttributes({
       [ATTR_SERVICE_NAME]: serviceName,
@@ -160,6 +203,7 @@ export function initializeTracing(): void {
     serviceName,
     serviceVersion,
     otlpEndpoint,
+    lokiOtlpLogsEndpoint,
   });
 }
 
@@ -175,6 +219,24 @@ export async function shutdownTracing(): Promise<void> {
       await batchProcessor.forceFlush();
     } catch (error) {
       jsonLog("warning", "OTLP forceFlush failed during shutdown", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+  if (logRecordProcessor !== undefined) {
+    try {
+      await logRecordProcessor.forceFlush();
+    } catch (error) {
+      jsonLog("warning", "OTLP log forceFlush failed during shutdown", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+  if (loggerProvider !== undefined) {
+    try {
+      await loggerProvider.shutdown();
+    } catch (error) {
+      jsonLog("warning", "LoggerProvider shutdown failed", {
         error: error instanceof Error ? error.message : String(error),
       });
     }

@@ -1,0 +1,34 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+
+common:
+  ring:
+    instance_addr: 127.0.0.1
+    kvstore:
+      store: inmemory
+  replication_factor: 1
+  path_prefix: /tmp/loki
+
+# Required for OTLP structured metadata (trace_id, span_id).
+limits_config:
+  allow_structured_metadata: true
+  retention_period: 24h
+
+schema_config:
+  configs:
+    - from: 2025-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+storage_config:
+  tsdb_shipper:
+    active_index_directory: /tmp/loki/tsdb-active
+    cache_location: /tmp/loki/tsdb-cache
+  filesystem:
+    directory: /tmp/loki/chunks
