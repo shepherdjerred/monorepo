@@ -11,8 +11,6 @@
           }
         }
       },
-      "wins": 12,
-      "losses": 5,
       "placement": 1,
       "champion": {
         "riotIdGameName": "Player01",
