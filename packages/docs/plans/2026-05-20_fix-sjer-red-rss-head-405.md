@@ -2,7 +2,11 @@
 
 ## Status
 
-In Progress
+Partially Complete — PRs open, awaiting merge + ArgoCD rollout.
+
+- Monorepo PR: [shepherdjerred/monorepo#861](https://github.com/shepherdjerred/monorepo/pull/861)
+- Upstream PR: [lindenlab/caddy-s3-proxy#74](https://github.com/lindenlab/caddy-s3-proxy/pull/74)
+- Fork branch/tag: [`shepherdjerred/caddy-s3-proxy@v0.5.7-head1`](https://github.com/shepherdjerred/caddy-s3-proxy/tree/v0.5.7-head1)
 
 ## Context
 
@@ -231,3 +235,33 @@ Open an upstream PR from `shepherdjerred/caddy-s3-proxy:feat/head-and-304` → `
 | 8. Post-deploy (after ArgoCD sync) | `curl -sI https://sjer.red/rss.xml`; then `curl -i -H 'If-None-Match: <etag>' https://sjer.red/rss.xml`                                                         | `200` on HEAD, `304` on cached fetch             |
 | 9. End-to-end                      | Subscribe to the feed in a HEAD-using reader (e.g. NetNewsWire, FreshRSS)                                                                                       | Loads cleanly                                    |
 | 10. Reply to Farzad                | —                                                                                                                                                               | Confirm fix and thank them                       |
+
+## Session Log — 2026-05-20
+
+### Done
+
+- Diagnosed: every path on `s3-static-sites`-served domains returns 405 on HEAD, and conditional GET on directory-index paths is silently broken because the Caddyfile strips `If-Modified-Since` / `If-None-Match` as a `lindenlab/caddy-s3-proxy#63` workaround.
+- Forked `lindenlab/caddy-s3-proxy` → [`shepherdjerred/caddy-s3-proxy`](https://github.com/shepherdjerred/caddy-s3-proxy), pushed `feat/head-and-304`, tagged `v0.5.7-head1` (commit `ad193ad`).
+- Added `HeadHandler` + `headS3Object` + `writeResponseFromHeadObject` to the fork (uses `s3.HeadObject` — no body transfer; RFC 9110 §9.3.2 compliant).
+- Fixed the upstream 304-on-index regression in both `GetHandler` and `HeadHandler` (return 304 immediately instead of refetching the directory path).
+- Mapped AWS `NotFound` error code (HeadObject's missing-key signal) → HTTP 404 in `errors.go`.
+- Bumped fork deps (`caddy v2.6.4 → v2.11.3`, `aws-sdk-go v1.44.272 → v1.55.8`) for Go 1.21+ compatibility; updated `TestParseCaddyfile` expectations for the new caddyfile error format.
+- Eight new Go test cases covering HEAD on file/missing/hidden/index/directory + If-None-Match handling on both files and indexes. Full suite `go test -race ./...` passes against MinIO.
+- Monorepo: pointed `.dagger/src/image.ts` `xcaddy build` at the fork via `--with module-replacement` syntax (`github.com/lindenlab/caddy-s3-proxy=github.com/shepherdjerred/caddy-s3-proxy@v0.5.7-head1`).
+- Monorepo: dropped the `request_header -If-Modified-Since` / `-If-None-Match` strip in `generateCaddyfile()` (the workaround is no longer needed).
+- Monorepo: added `packages/homelab/src/cdk8s/src/misc/s3-static-site.test.ts` (9 cases) — asserts the strip is gone and existing directives are intact.
+- Verified: Dagger build produces Caddy v2.11.3, smoke test passes, full homelab `bun test` is green (80/85). End-to-end against MinIO + Docker: GET/HEAD/conditional GET/conditional HEAD on file and directory-index paths all behave correctly.
+- Opened [shepherdjerred/monorepo#861](https://github.com/shepherdjerred/monorepo/pull/861) and [lindenlab/caddy-s3-proxy#74](https://github.com/lindenlab/caddy-s3-proxy/pull/74).
+
+### Remaining
+
+- Merge [#861](https://github.com/shepherdjerred/monorepo/pull/861); CI will build + push the new caddy-s3proxy image and commit-back `versions.ts`. ArgoCD will then roll out new pods on all `s3-static-sites` charts.
+- Post-deploy verification: `curl -sI https://sjer.red/rss.xml` → `HTTP/2 200`; `curl -i -H 'If-None-Match: <etag>' https://sjer.red/rss.xml` → `304`. Spot-check `webring.sjer.red`, `resume.sjer.red`.
+- Reply to Farzad confirming the fix is live.
+- Wait for upstream review on [lindenlab/caddy-s3-proxy#74](https://github.com/lindenlab/caddy-s3-proxy/pull/74). If merged, drop the fork replacement in `.dagger/src/image.ts` and revert to plain `--with github.com/lindenlab/caddy-s3-proxy`.
+
+### Caveats
+
+- The fork is also a dep-bump (caddy / aws-sdk-go). The upstream maintainers may push back on the size; we can split that out if requested.
+- `versions.ts` was intentionally not bumped in #861 — the CI version-commit-back step picks up the new digest after the push step runs. Until that lands, the deployed caddy-s3proxy is still the old image (no HEAD support); the new Caddyfile is also not loaded yet (mounted ConfigMap changes don't restart Caddy until the Deployment manifest's image digest changes). So the transition is atomic from a user-facing standpoint: pods keep their cached old config until the new image triggers a rollout, at which point the new pod gets the new image + new Caddyfile together.
+- Localstack now requires a paid license, so the upstream `make localstack` target is broken. Used MinIO (`minio/minio` image on port 4566) for local Go tests instead. Worth noting in upstream PR if maintainers ask.
