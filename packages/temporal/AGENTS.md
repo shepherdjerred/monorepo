@@ -70,6 +70,7 @@ Workflow:
 - `ANTHROPIC_API_KEY` — direct Anthropic API key. Used by the SDK-native `runPrSummaryPipeline` activity (Phase 7 of the SOTA PR review bot plan). The Anthropic TypeScript SDK only accepts the direct API key, so this is required for the SDK summary path. Shadow-mode caveat: with both `CLAUDE_CODE_OAUTH_TOKEN` and `ANTHROPIC_API_KEY` set, the legacy `claude -p` CLI prefers the API key and bills direct credits instead of the subscription — accepted for the ~2-week shadow window; Phase 13 retires the CLI path and the conflict goes away.
 - `POSTAL_HOST`, `POSTAL_API_KEY` — Postal email service
 - `RECIPIENT_EMAIL`, `SENDER_EMAIL` — Email addresses for dependency summary and homelab audit
+- `AGENT_TASK_API_TOKEN` — required bearer token for the authenticated `/agent-tasks` scheduling API on port 9467
 - `RUNBOOK_PATH` — local override for the homelab-audit runbook (defaults to fetching `https://raw.githubusercontent.com/.../packages/docs/guides/2026-04-04_homelab-audit-runbook.md`)
 - `PAGERDUTY_TOKEN` — PagerDuty REST API token (homelab audit)
 - `BUGSINK_URL`, `BUGSINK_TOKEN` — Bugsink REST API base + token (homelab audit)
@@ -87,9 +88,33 @@ Workflow:
 
 ## Homelab audit (daily)
 
-`runHomelabAuditWorkflow` is registered as `homelab-audit-daily` (cron `30 6 * * *` PT). It invokes `claude -p` with the runbook at `packages/docs/guides/2026-04-04_homelab-audit-runbook.md` as the prompt, then renders the agent's markdown to HTML and sends it via Postal with tag `homelab-audit`. See `packages/docs/plans/2026-05-09_daily-homelab-audit-email.md` for the design + verification ladder.
+`homelab-audit-daily` (cron `30 6 * * *` PT) now runs through the generic `agentTaskWorkflow` on the `agent-task` queue. It checks out `shepherdjerred/monorepo`, asks Claude to follow `packages/docs/guides/2026-04-04_homelab-audit-runbook.md`, renders markdown to HTML, and sends a Postal email with tag `agent-task`. The previous bespoke `runHomelabAuditWorkflow` remains in-tree as a rollback path until the generic workflow is proven in production.
 
 The activity (`src/activities/homelab-audit.ts`) mirrors the `pr-agent` lifecycle (Bun.spawn `claude -p`, 10 s heartbeats, stderr line pump with token redaction, parsed `--output-format json` result, Sentry capture on failure, Prom metrics).
+
+## Generic agent tasks
+
+`agentTaskWorkflow` supports explicit one-off and cron-based report-only Claude/Codex tasks. It runs on `TASK_QUEUES.AGENT_TASK` so long LLM subprocesses do not block HA, PR review, or PR summary work.
+
+Create/update a task from a doc block locally as an operator:
+
+```bash
+cd packages/temporal
+TEMPORAL_ADDRESS=localhost:7233 bun run scripts/schedule-agent-task.ts --from-doc ../../packages/docs/guides/example.md
+```
+
+Authenticated HTTP creation is the public ingress path:
+
+```bash
+curl -fsS https://temporal-agent-tasks.sjer.red/agent-tasks \
+  -H "Authorization: Bearer $AGENT_TASK_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data @agent-task.json
+```
+
+Do not expose direct Temporal scheduling as a public ingress path. Public creation must go through the authenticated `/agent-tasks` HTTP API with `Authorization: Bearer $AGENT_TASK_API_TOKEN`.
+
+Inputs use `runAt` for one-off tasks or `cron` + stable `scheduleId` for recurring tasks. Recurring schedules use `America/Los_Angeles`. Agents may return `followUp` to schedule one more report-only task. Agents may return `cancelCron: true` only when the original input has `allowSelfCancel: true`; cancellation pauses the Temporal Schedule rather than deleting it.
 
 **Local dev loop (no Temporal, no cluster)** — see `scripts/run-homelab-audit-local.ts`:
 

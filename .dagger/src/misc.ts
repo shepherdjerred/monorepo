@@ -171,7 +171,7 @@ async function runSmokeTest(
     }
 
     throw new Error(
-      `Smoke test failed (exit code ${error.exitCode}).\n\nstdout:\n${error.stdout}\n\nstderr:\n${error.stderr}`,
+      `Smoke test failed (exit code ${exitCode}).\n\nstdout:\n${stdout}\n\nstderr:\n${stderr}`,
     );
   }
 }

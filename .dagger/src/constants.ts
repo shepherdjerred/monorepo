@@ -64,6 +64,9 @@ export const RELEASE_PLEASE_VERSION = "17.6.0";
 // renovate: datasource=npm depName=@anthropic-ai/claude-code
 export const CLAUDE_CODE_VERSION = "2.1.140";
 
+// renovate: datasource=npm depName=@openai/codex
+export const CODEX_CLI_VERSION = "0.130.0";
+
 // renovate: datasource=github-releases depName=golangci/golangci-lint
 export const GOLANGCI_LINT_VERSION = "v2.12.2";
 

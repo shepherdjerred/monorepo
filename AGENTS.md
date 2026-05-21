@@ -87,6 +87,35 @@ Active source TODOs must be documented and linked:
 - Keep TODO docs active-only. When the TODO is resolved, remove the source marker and move/delete/archive the TODO doc as appropriate.
 - `bun scripts/check-todos.ts` enforces this invariant in pre-commit and CI.
 
+## Temporal Agent Follow-ups
+
+When a doc captures a follow-up that should be checked later, schedule it explicitly with a `temporal-agent-task` block and the Temporal trigger script. Use report-only tasks by default; they may inspect current state and email results, but must not edit files, open PRs/issues, or mutate live systems.
+
+```md
+<!-- temporal-agent-task
+{
+  "title": "Recheck Birmel post-deploy metrics",
+  "provider": "claude",
+  "mode": "report-only",
+  "runAt": "2026-05-31T09:00:00-07:00",
+  "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "source": {
+    "docPath": "packages/docs/guides/2026-04-25_birmel-remediation-followups.md"
+  },
+  "prompt": "Pull the metrics from the Post-deploy verification section. Email whether each check is green or still red, with links/evidence."
+}
+-->
+```
+
+For recurring checks, replace `runAt` with `cron` and include a stable `scheduleId`. Schedules are evaluated in `America/Los_Angeles`. To create/update the task locally as an operator:
+
+```bash
+cd packages/temporal
+TEMPORAL_ADDRESS=localhost:7233 bun run scripts/schedule-agent-task.ts --from-doc ../../packages/docs/guides/<doc>.md
+```
+
+Do not expose direct Temporal scheduling as a public ingress path. Public creation must go through the authenticated `/agent-tasks` HTTP API with `Authorization: Bearer $AGENT_TASK_API_TOKEN`.
+
 ## Dagger & CI Code — Banned Patterns
 
 These patterns are banned in `.dagger/src/` and `scripts/ci/src/`. Automated checks (`scripts/check-dagger-hygiene.ts`) enforce this in pre-commit and CI. Do not write them.

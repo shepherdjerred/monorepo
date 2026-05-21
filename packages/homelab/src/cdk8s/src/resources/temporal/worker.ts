@@ -24,10 +24,13 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createTemporalWorkerAuditRbac } from "./audit-rbac.ts";
+import {
+  createAgentTaskApiService,
+  createTemporalWorkerGithubWebhookService,
+} from "./http-services.ts";
 
 export type CreateTemporalWorkerDeploymentProps = {
   serverServiceName: string;
@@ -313,10 +316,12 @@ export function createTemporalWorkerDeployment(
       // :9466 = GitHub webhook receiver (Hono server in event-bridge/
       //        github-webhook.ts) — exposed via Cloudflare Tunnel for PR
       //        review/summary events.
+      // :9467 = authenticated agent-task scheduling API.
       ports: [
         { number: 9464, name: "metrics" },
         { number: 9465, name: "app-metrics" },
         { number: 9466, name: "gh-webhook" },
+        { number: 9467, name: "agent-tasks" },
       ],
       securityContext: {
         user: UID,
@@ -448,6 +453,11 @@ export function createTemporalWorkerDeployment(
         // `isPostEnabled`.
         PR_REVIEW_POST_ENABLED: EnvValue.fromValue("true"),
         GITHUB_WEBHOOK_PORT: EnvValue.fromValue("9466"),
+        AGENT_TASK_API_PORT: EnvValue.fromValue("9467"),
+        AGENT_TASK_API_TOKEN: EnvValue.fromSecretValue({
+          secret,
+          key: "AGENT_TASK_API_TOKEN",
+        }),
         // pr-review-bot dismissed-comments KV (Phase 9). Single Redis
         // instance is deployed inside the temporal chart via the shared
         // Redis cdk8s construct; service name is `temporal-redis-master`
@@ -593,26 +603,8 @@ export function createTemporalWorkerDeployment(
     matchLabels: { app: "temporal-worker-app-metrics" },
   });
 
-  // Service + Cloudflare Tunnel binding for the GitHub webhook receiver
-  // (Hono server on :9466). Public URL: https://pr-bot.sjer.red — register
-  // this URL with the GitHub repo webhook (events: pull_request).
-  const webhookService = new Service(
-    chart,
-    "temporal-worker-gh-webhook-service",
-    {
-      metadata: {
-        name: "temporal-worker-gh-webhook",
-        labels: { app: "temporal-worker-gh-webhook" },
-      },
-      selector: deployment,
-      ports: [{ name: "gh-webhook", port: 9466, targetPort: 9466 }],
-    },
-  );
-
-  createCloudflareTunnelBinding(chart, "temporal-worker-gh-webhook-cf-tunnel", {
-    serviceName: webhookService.name,
-    subdomain: "pr-bot",
-  });
+  createTemporalWorkerGithubWebhookService(chart, deployment);
+  createAgentTaskApiService(chart, deployment);
 
   return { deployment };
 }

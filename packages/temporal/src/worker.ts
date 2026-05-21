@@ -6,6 +6,7 @@ import { registerSchedules } from "./schedules/register-schedules.ts";
 import { activities } from "./activities/index.ts";
 import {
   startEventBridge,
+  startHttpServers,
   type EventBridgeHandle,
 } from "./event-bridge/index.ts";
 import { startPrReactionListener } from "./event-bridge/start-pr-reaction-listener.ts";
@@ -216,6 +217,19 @@ async function main(): Promise<void> {
 
   jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.PR_SUMMARY });
 
+  // Dedicated queue for delayed/recurring report-only Claude/Codex tasks.
+  // These can run for tens of minutes and must not head-of-line block HA,
+  // schedule registration, PR summaries, or PR review specialist traffic.
+  const agentTaskWorker = await Worker.create({
+    connection,
+    namespace: "default",
+    taskQueue: TASK_QUEUES.AGENT_TASK,
+    workflowsPath,
+    activities,
+  });
+
+  jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.AGENT_TASK });
+
   const clientConnection = await Connection.connect({ address });
   const client = new Client({ connection: clientConnection });
   await registerSchedules(client);
@@ -228,6 +242,7 @@ async function main(): Promise<void> {
   await startPrReactionListener(client);
   jsonLog("info", "pr-review reaction listener boot attempted");
 
+  const httpServers = startHttpServers(client);
   const eventBridge = startEventBridgeSupervisor(client);
 
   // Guard against double-shutdown. Kubernetes may deliver SIGTERM more than
@@ -247,6 +262,7 @@ async function main(): Promise<void> {
     }
     shutdownStarted = true;
     jsonLog("info", "Shutting down worker", { signal });
+    await httpServers.close();
     await eventBridge.close();
     const workerState = worker.getState();
     if (workerState === "RUNNING") {
@@ -272,6 +288,14 @@ async function main(): Promise<void> {
         state: prSummaryState,
       });
     }
+    const agentTaskState = agentTaskWorker.getState();
+    if (agentTaskState === "RUNNING") {
+      agentTaskWorker.shutdown();
+    } else {
+      jsonLog("info", "agent-task worker not RUNNING, skipping shutdown()", {
+        state: agentTaskState,
+      });
+    }
     await stopMetricsServer();
     await shutdownTracing();
   };
@@ -287,6 +311,7 @@ async function main(): Promise<void> {
     worker.run(),
     prReviewWorker.run(),
     prSummaryWorker.run(),
+    agentTaskWorker.run(),
   ]);
 }
 

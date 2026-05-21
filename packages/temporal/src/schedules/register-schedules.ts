@@ -6,6 +6,7 @@ import {
 import type { Duration } from "@temporalio/common";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { EVAL_FIXTURES_PIN } from "#shared/pr-review/eval-fixture.ts";
+import type { AgentTaskInput } from "#shared/agent-task.ts";
 
 // All cron expressions below are wall-clock local time for the homelab.
 const SCHEDULE_TIMEZONE = "America/Los_Angeles";
@@ -33,6 +34,30 @@ const SCOUT_LANE_PRIOR_UPDATE_CONFIG = {
     holdoutSeed: "scout-lane-priors-patch-cadence-v1",
     threshold: 0.95,
   },
+};
+
+const HOMELAB_AUDIT_AGENT_TASK: AgentTaskInput = {
+  title: "Daily homelab health audit",
+  provider: "claude",
+  mode: "report-only",
+  repo: {
+    fullName: "shepherdjerred/monorepo",
+    ref: "main",
+  },
+  scheduleId: "homelab-audit-daily",
+  allowSelfCancel: false,
+  emailSubjectPrefix: "Homelab Audit",
+  source: {
+    docPath: "packages/docs/guides/2026-04-04_homelab-audit-runbook.md",
+  },
+  prompt: [
+    "Run the daily homelab health audit using the runbook at",
+    "`packages/docs/guides/2026-04-04_homelab-audit-runbook.md` in the checked-out repo.",
+    "Use live read-only evidence from the cluster and observability tools named in the runbook.",
+    "Do not mutate Kubernetes, GitHub, PagerDuty, Grafana, Bugsink, Cloudflare, files, or git state.",
+    "Return a concise markdown report suitable for email. Include current status, notable regressions,",
+    "resolved items, remaining action items, and exact evidence links or commands where useful.",
+  ].join(" "),
 };
 
 export const SCHEDULES: ScheduleDefinition[] = [
@@ -68,17 +93,15 @@ export const SCHEDULES: ScheduleDefinition[] = [
   },
   {
     id: "homelab-audit-daily",
-    workflowType: "runHomelabAuditWorkflow",
-    args: [{}],
+    workflowType: "agentTaskWorkflow",
+    args: [HOMELAB_AUDIT_AGENT_TASK],
     // 06:30 PT — staggered after dns-audit-daily (06:00). Lands in inbox
     // before goodMorningEarly (07:00 weekdays / 08:00 weekends) fires.
     cronExpression: "30 6 * * *",
-    taskQueue: TASK_QUEUES.DEFAULT,
+    taskQueue: TASK_QUEUES.AGENT_TASK,
     overlap: ScheduleOverlapPolicy.SKIP,
-    // The agent run targets ~25 min wall (start-to-close 45 min in the
-    // workflow); 60 min covers a single retry on transient failure.
-    workflowExecutionTimeout: "60 minutes",
-    memo: "Daily homelab health audit email (claude -p following the homelab-audit-runbook → Postal)",
+    workflowExecutionTimeout: "2 hours",
+    memo: "Daily homelab health audit email via generic report-only agent task (Claude -> Postal)",
   },
   {
     id: "scout-data-dragon-version-check",

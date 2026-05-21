@@ -124,6 +124,39 @@ export const homelabAuditEmailSentTotal = new Counter({
 });
 
 // ---------------------------------------------------------------------------
+// generic agent-task workflow metrics
+// ---------------------------------------------------------------------------
+
+export const agentTaskRunsTotal = new Counter({
+  name: "agent_task_runs_total",
+  help: "Generic scheduled agent-task runs, by provider and outcome",
+  labelNames: ["provider", "outcome"] as const,
+  registers: [register],
+});
+
+export const agentTaskSubprocessDurationSeconds = new Histogram({
+  name: "agent_task_subprocess_duration_seconds",
+  help: "Wall-clock duration of Claude/Codex subprocess invocations for generic agent tasks",
+  labelNames: ["provider", "model", "exit_code"] as const,
+  buckets: [30, 60, 180, 300, 600, 900, 1500, 1800, 2700, 3600],
+  registers: [register],
+});
+
+export const agentTaskSubprocessExitTotal = new Counter({
+  name: "agent_task_subprocess_exit_total",
+  help: "Generic agent-task subprocess exits, by provider and exit code",
+  labelNames: ["provider", "exit_code"] as const,
+  registers: [register],
+});
+
+export const agentTaskEmailSentTotal = new Counter({
+  name: "agent_task_email_sent_total",
+  help: "Generic agent-task emails sent via Postal, by outcome (success | failure)",
+  labelNames: ["outcome"] as const,
+  registers: [register],
+});
+
+// ---------------------------------------------------------------------------
 // scout-season-refresh workflow metrics
 //
 // Weekly LoL season-date drift check. claude -p researches the current season

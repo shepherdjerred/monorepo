@@ -4,6 +4,7 @@ import { dnsAuditActivities } from "./dns-audit.ts";
 import { golinkSyncActivities } from "./golink-sync.ts";
 import { haActivities } from "./ha.ts";
 import { homelabAuditActivities } from "./homelab-audit.ts";
+import { agentTaskActivities } from "./agent-task.ts";
 import { zfsMaintenanceActivities } from "./zfs-maintenance.ts";
 import { bugsinkHousekeepingActivities } from "./bugsink.ts";
 import { dataDragonActivities } from "./data-dragon.ts";
@@ -21,6 +22,7 @@ export const activities = {
   ...golinkSyncActivities,
   ...haActivities,
   ...homelabAuditActivities,
+  ...agentTaskActivities,
   ...zfsMaintenanceActivities,
   ...bugsinkHousekeepingActivities,
   ...dataDragonActivities,
