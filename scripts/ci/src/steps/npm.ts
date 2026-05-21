@@ -32,9 +32,15 @@ function npmPublishStep(
     .join(" ");
   const devSuffixFlag =
     mode === "dev" ? ` --dev-suffix "$BUILDKITE_BUILD_NUMBER"` : "";
+  // pkg-path = on-disk path under packages/. Required so the Dagger function
+  // mounts the package at its real source-tree location, otherwise `file:`
+  // refs in package.json (which are written relative to the source layout)
+  // resolve to wrong paths inside the container — see release.ts:publishNpmHelper.
+  const pkgPath = pkg.dir.replace(/^packages\//, "");
   const cmd =
     [
       `dagger call publish-npm --pkg-dir ./${pkg.dir} --pkg ${pkg.name}`,
+      `--pkg-path ${pkgPath}`,
       depFlags,
       `--npm-token env:NPM_TOKEN`,
       `--tsconfig ./tsconfig.base.json`,

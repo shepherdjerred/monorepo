@@ -896,7 +896,7 @@ export class Monorepo {
     ).stdout();
   }
 
-  /** Publish an npm package. Set devSuffix for dev releases (--tag dev, version becomes <pkg-version>-dev.<suffix>), leave empty for prod (--tag latest). */
+  /** Publish an npm package. Set devSuffix for dev releases (--tag dev, version becomes <pkg-version>-dev.<suffix>), leave empty for prod (--tag latest). Set pkgPath to the on-disk path under packages/ (e.g. "homelab/src/helm-types") when the npm name differs from the directory layout — required so `file:` workspace deps resolve correctly. */
   @func({ cache: "never" })
   async publishNpm(
     pkgDir: Directory,
@@ -907,6 +907,7 @@ export class Monorepo {
     dryrun = false,
     tsconfig: File | null = null,
     devSuffix: string = "",
+    pkgPath: string = "",
   ): Promise<string> {
     return publishNpmHelper(
       pkgDir,
@@ -917,6 +918,7 @@ export class Monorepo {
       dryrun,
       tsconfig,
       devSuffix,
+      pkgPath,
     ).stdout();
   }
 
