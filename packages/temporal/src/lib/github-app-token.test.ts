@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { createPrivateKey } from "node:crypto";
 import {
   createGitHubAppInstallationToken,
   createGitHubAppJwt,
@@ -58,6 +59,14 @@ async function testPrivateKeyPem(): Promise<string> {
   ].join("\n");
 }
 
+async function testPrivateKeyPemPkcs1(): Promise<string> {
+  const pkcs8Pem = await testPrivateKeyPem();
+  return createPrivateKey({ key: pkcs8Pem, format: "pem" }).export({
+    type: "pkcs1",
+    format: "pem",
+  });
+}
+
 function makeEnv(privateKey: string): GitHubAppEnv {
   return {
     GITHUB_APP_ID: "12345",
@@ -76,6 +85,17 @@ describe("github-app-token", () => {
   it("normalizes escaped PEM newlines", async () => {
     const pem = await testPrivateKeyPem();
     expect(normalizePrivateKey(pem.replaceAll("\n", String.raw`\n`))).toBe(pem);
+  });
+
+  it("accepts a PKCS#1 RSA PEM (GitHub's default download format)", async () => {
+    const pem = await testPrivateKeyPemPkcs1();
+    expect(pem).toContain("BEGIN RSA PRIVATE KEY");
+    const jwt = await createGitHubAppJwt({
+      appId: "12345",
+      privateKey: pem,
+      now: () => 1_800_000_000_000,
+    });
+    expect(jwt.split(".")).toHaveLength(3);
   });
 
   it("creates a RS256 JWT with app id and bounded expiry", async () => {

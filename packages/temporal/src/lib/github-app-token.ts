@@ -1,3 +1,5 @@
+import { createPrivateKey } from "node:crypto";
+
 export type GitHubAppEnv = {
   readonly GITHUB_APP_ID?: string;
   readonly GITHUB_APP_INSTALLATION_ID?: string;
@@ -64,30 +66,19 @@ function utf8Base64UrlEncode(value: string): string {
   return base64UrlEncode(new TextEncoder().encode(value));
 }
 
-function base64ToArrayBuffer(value: string): ArrayBuffer {
-  const binary = atob(value);
-  const buffer = new ArrayBuffer(binary.length);
-  const bytes = new Uint8Array(buffer);
-  for (let i = 0; i < binary.length; i++) {
-    const code = binary.codePointAt(i);
-    if (code === undefined || code > 255) {
-      throw new Error("Invalid base64 byte while decoding GitHub App key");
-    }
-    bytes[i] = code;
-  }
-  return buffer;
-}
-
 async function importPrivateKey(pem: string): Promise<CryptoKey> {
-  const body = normalizePrivateKey(pem)
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line !== "" && !line.startsWith("-----"))
-    .join("");
-
+  // GitHub's App settings UI downloads keys in PKCS#1 form
+  // (`BEGIN RSA PRIVATE KEY`), but WebCrypto's importKey only takes PKCS#8.
+  // node:crypto's createPrivateKey accepts both formats, so we round-trip
+  // through it to land in PKCS#8 DER before handing off to WebCrypto.
+  const normalized = normalizePrivateKey(pem);
+  const pkcs8Der = createPrivateKey({ key: normalized, format: "pem" }).export({
+    format: "der",
+    type: "pkcs8",
+  });
   return await crypto.subtle.importKey(
     "pkcs8",
-    base64ToArrayBuffer(body),
+    pkcs8Der,
     { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
     false,
     ["sign"],
