@@ -21,7 +21,12 @@ function npmPublishStep(
   pkgKeyMap?: Map<string, string>,
   mode: "dev" | "prod" = "dev",
 ): BuildkiteStep {
-  const deps = WORKSPACE_DEPS[pkg.name] ?? [];
+  // WORKSPACE_DEPS is keyed by directory path (e.g. "homelab/src/helm-types"),
+  // not npm package name — keep this consumer consistent with per-package.ts,
+  // sites.ts, images.ts so scoped packages like @shepherdjerred/helm-types
+  // pick up their `file:` workspace deps for mounting.
+  const depsKey = pkg.dir.replace(/^packages\//, "");
+  const deps = WORKSPACE_DEPS[depsKey] ?? [];
   const depFlags = deps
     .flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`])
     .join(" ");

@@ -32,7 +32,7 @@ export function cooklangReleaseGroup(pkgKey?: string): BuildkiteGroup {
         key: "cooklang-publish",
         if: MAIN_ONLY,
         depends_on: dependsOn,
-        command: `dagger call cooklang-build-and-publish --source . ${COOKLANG_PKG_FLAGS} --gh-token env:GH_TOKEN --plugin-repo "$COOKLANG_PLUGIN_REPO" ${GITHUB_APP_SECRET_ARGS}${DRYRUN_FLAG}`,
+        command: `dagger call cooklang-build-and-publish --source . ${COOKLANG_PKG_FLAGS} --gh-token env:GH_TOKEN --plugin-repo shepherdjerred/cooklang-for-obsidian ${GITHUB_APP_SECRET_ARGS}${DRYRUN_FLAG}`,
         timeout_in_minutes: 15,
         priority: 1,
         retry: RETRY,
