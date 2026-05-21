@@ -190,6 +190,7 @@ export async function createPrometheusApp(chart: Chart) {
       additionalDataSources: [
         {
           name: "loki",
+          uid: "loki",
           editable: false,
           type: "loki",
           url: "http://loki-gateway.loki",
@@ -197,13 +198,32 @@ export async function createPrometheusApp(chart: Chart) {
         },
         {
           name: "tempo",
+          uid: "tempo",
           editable: false,
           type: "tempo",
           url: "http://tempo.tempo.svc:3200",
           version: 1,
-          // TODO: tracesToLogsV2 must be configured manually in Grafana UI.
-          // See: docs/tempo-loki-correlation.md
-          // Blocked by: https://github.com/grafana/grafana/issues/110740
+          // tracesToLogsV2 links each Tempo span to the matching Loki logs.
+          // `filterByTraceID` makes Grafana append `| trace_id = "<id>"` to
+          // the generated LogQL — requires apps/Dagger CI to emit OTLP logs
+          // so trace_id rides as Loki structured metadata (loki.ts already
+          // sets allow_structured_metadata: true). `tags` maps the OTel
+          // span attribute `service.name` onto the Loki stream label
+          // `service_name`, which Loki's OTLP receiver auto-creates from
+          // the resource attribute. The ±5m time window covers clock skew
+          // and late-arriving log batches.
+          jsonData: {
+            tracesToLogsV2: {
+              datasourceUid: "loki",
+              spanStartTimeShift: "-5m",
+              spanEndTimeShift: "5m",
+              tags: [{ key: "service.name", value: "service_name" }],
+              filterByTraceID: true,
+              customQuery: false,
+            },
+            serviceMap: { datasourceUid: "prometheus" },
+            nodeGraph: { enabled: true },
+          },
         },
       ],
     },

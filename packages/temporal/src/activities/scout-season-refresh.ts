@@ -6,6 +6,7 @@ import {
   scoutSeasonRefreshRunsTotal,
 } from "#observability/metrics.ts";
 import { getTraceContext } from "#observability/tracing.ts";
+import { emitOtel } from "#observability/log.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import {
@@ -77,6 +78,7 @@ function jsonLog(
   };
   if (info !== undefined) Object.assign(base, info);
   console.warn(JSON.stringify(base));
+  emitOtel(level, message, { module: COMPONENT, ...info, ...fields });
 }
 
 function activityInfoOrUndefined(): Record<string, unknown> | undefined {

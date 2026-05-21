@@ -60,6 +60,15 @@ export const DAGGER_ENV: Record<string, string> = {
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://tempo.tempo.svc.cluster.local:4318",
   OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf",
   OTEL_SERVICE_NAME: "dagger-ci",
+  // Ship Dagger's per-exec stdout/stderr to Loki as OTLP log records so each
+  // Dagger span's container output is queryable in Grafana via the
+  // "Logs for this span" link. Dagger's OTel client deliberately does NOT
+  // fan the generic OTLP endpoint out to logs (per dagger/otel-go init.go:
+  // "we can't assume all OTLP endpoints support logs/metrics") — so this
+  // signal-specific endpoint is required. The protocol inherits from
+  // OTEL_EXPORTER_OTLP_PROTOCOL above; Loki's OTLP receiver accepts both
+  // http/protobuf and http/json content types.
+  OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "http://loki-gateway.loki/otlp/v1/logs",
 };
 
 /**

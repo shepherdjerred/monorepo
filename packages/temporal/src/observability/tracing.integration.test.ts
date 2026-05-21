@@ -9,6 +9,8 @@
 // original fix is exactly this assertion, codified.
 import { describe, expect, test, beforeAll, afterAll } from "bun:test";
 import * as Sentry from "@sentry/bun";
+import { trace, context, propagation } from "@opentelemetry/api";
+import { logs as logsAPI } from "@opentelemetry/api-logs";
 import { initializeTracing, shutdownTracing, withSpan } from "./tracing.ts";
 
 describe("OTLP tracing integration", () => {
@@ -33,6 +35,12 @@ describe("OTLP tracing integration", () => {
     });
     Bun.env["TELEMETRY_ENABLED"] = "true";
     Bun.env["OTLP_ENDPOINT"] = `http://localhost:${server.url.port}`;
+    // Point logs at the same stub — we don't assert on the log path here,
+    // but if LOKI_OTLP_ENDPOINT defaults to the production gateway (or
+    // points at a stopped sibling-test stub), the OTLP log exporter
+    // retries for ~15s and blocks shutdownTracing.
+    Bun.env["LOKI_OTLP_ENDPOINT"] =
+      `http://localhost:${server.url.port}/v1/logs`;
     Bun.env["TELEMETRY_SERVICE_NAME"] = "temporal-worker-test";
     // Mirror worker.ts initSentry — the unreachable DSN means nothing actually
     // ships to Sentry. The point is that skipOpenTelemetrySetup: true keeps
@@ -47,6 +55,11 @@ describe("OTLP tracing integration", () => {
 
   afterAll(async () => {
     await server.stop(true);
+    // Reset OTel global API state so a sibling test file can re-register.
+    trace.disable();
+    context.disable();
+    propagation.disable();
+    logsAPI.disable();
   });
 
   test("initializeTracing + withSpan POSTs to /v1/traces", async () => {

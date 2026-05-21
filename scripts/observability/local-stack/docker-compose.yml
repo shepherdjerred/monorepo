@@ -1,0 +1,31 @@
+services:
+  tempo:
+    image: grafana/tempo:2.6.0
+    ports:
+      - "3200:3200" # query API
+      - "4318:4318" # OTLP HTTP
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml:ro
+
+  loki:
+    image: grafana/loki:3.5.1
+    ports:
+      - "3100:3100" # /loki/api/v1/push, /otlp/v1/logs, query
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    volumes:
+      - ./loki.yaml:/etc/loki/local-config.yaml:ro
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    ports:
+      - "3000:3000"
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+    volumes:
+      - ./grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+    depends_on:
+      - tempo
+      - loki

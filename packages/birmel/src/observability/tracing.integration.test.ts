@@ -31,6 +31,8 @@ Bun.env["SENTRY_ENVIRONMENT"] = "development";
 Bun.env["SENTRY_TRACES_SAMPLE_RATE"] = "0";
 
 import { describe, expect, test, beforeAll, afterAll } from "bun:test";
+import { trace, context, propagation } from "@opentelemetry/api";
+import { logs as logsAPI } from "@opentelemetry/api-logs";
 import { resetConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { initializeObservability, shutdownObservability } from "./index.ts";
 import { withSpan } from "./tracing.ts";
@@ -56,6 +58,12 @@ describe("OTLP tracing integration", () => {
       },
     });
     Bun.env["OTLP_ENDPOINT"] = `http://localhost:${server.url.port}`;
+    // Point the OTLP logs exporter at our same stub — we don't assert on
+    // logs here, but if we leave LOKI_OTLP_ENDPOINT pointing at a
+    // previously-stopped stub (e.g. from logs.integration.test.ts), the
+    // exporter retries and blocks shutdownObservability for ~15s.
+    Bun.env["LOKI_OTLP_ENDPOINT"] =
+      `http://localhost:${server.url.port}/v1/logs`;
     // getConfig() caches on first call across all test files. If anything
     // earlier in the run touched it, our OTLP_ENDPOINT override is stuck on
     // the original cached value. Reset so initializeTracing reads fresh.
@@ -64,6 +72,13 @@ describe("OTLP tracing integration", () => {
 
   afterAll(async () => {
     await server.stop(true);
+    // Reset OTel global API state so sibling test files can re-register
+    // cleanly. Without this, `setGlobalXProvider` calls in later files
+    // silently no-op against our shut-down providers.
+    trace.disable();
+    context.disable();
+    propagation.disable();
+    logsAPI.disable();
   });
 
   test("initializeObservability + withSpan POSTs to /v1/traces", async () => {

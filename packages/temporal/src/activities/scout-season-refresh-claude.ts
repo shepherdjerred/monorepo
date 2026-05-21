@@ -5,6 +5,7 @@ import {
   scoutSeasonRefreshTokensTotal,
 } from "#observability/metrics.ts";
 import { getTraceContext } from "#observability/tracing.ts";
+import { emitOtel } from "#observability/log.ts";
 import { parseClaudeResultMessage } from "#shared/claude-result.ts";
 import { redactSecrets } from "#shared/redact.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
@@ -48,6 +49,7 @@ function jsonLog(
   };
   if (info !== undefined) Object.assign(base, info);
   console.warn(JSON.stringify(base));
+  emitOtel(level, message, { module: COMPONENT, ...info, ...fields });
 }
 
 function activityInfoOrUndefined(): Record<string, unknown> | undefined {

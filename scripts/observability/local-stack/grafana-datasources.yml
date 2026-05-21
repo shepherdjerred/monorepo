@@ -1,0 +1,34 @@
+apiVersion: 1
+# Mirrors the codified config in packages/homelab/src/cdk8s/src/resources/argo-applications/prometheus.ts.
+# When you change that file's tempo datasource block, mirror it here so the
+# local docker-compose validation exercises the same provisioning shape.
+datasources:
+  - name: loki
+    uid: loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    editable: false
+    isDefault: false
+    version: 1
+
+  - name: tempo
+    uid: tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    editable: false
+    isDefault: true
+    version: 1
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: "-5m"
+        spanEndTimeShift: "5m"
+        tags:
+          - key: "service.name"
+            value: "service_name"
+        filterByTraceID: true
+        customQuery: false
+      nodeGraph:
+        enabled: true
