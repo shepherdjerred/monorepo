@@ -967,4 +967,24 @@ describe("buildPipeline", () => {
       }
     });
   });
+
+  describe("publish step mount paths", () => {
+    it("passes --pkg-path equal to on-disk dir for every npm package", () => {
+      const pipeline = buildPipeline(fullBuild());
+      const groups = pipeline.steps.filter(isGroup);
+      const npmGroup = groups.find((g) => g.key === "publish-npm");
+      expect(npmGroup).toBeDefined();
+      const helmTypes = npmGroup!.steps.find((s) =>
+        s.label?.includes("@shepherdjerred/helm-types"),
+      );
+      expect(helmTypes).toBeDefined();
+      // Scoped/nested package: npm name and dir disagree, so --pkg-path is
+      // load-bearing for file: workspace dep resolution inside the container.
+      expect(helmTypes!.command).toContain("--pkg-path homelab/src/helm-types");
+      // Sanity: every dev publish step carries the flag.
+      for (const step of npmGroup!.steps) {
+        expect(step.command).toMatch(/--pkg-path \S+/);
+      }
+    });
+  });
 });
