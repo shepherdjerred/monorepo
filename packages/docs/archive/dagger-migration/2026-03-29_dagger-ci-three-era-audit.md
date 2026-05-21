@@ -2,7 +2,7 @@
 
 Comprehensive audit comparing Dagger CI/CD implementations across three eras:
 
-1. **Pre-Monorepo** — Individual repos (e.g. `shepherdjerred/scout-for-lol`) with per-package `.dagger/` modules
+1. **Pre-Monorepo** — Individual package repos with per-package `.dagger/` modules
 2. **Pre-Bazel Monorepo** (commit `e1e628d55`, Feb 2026) — Consolidated monorepo with 62 Dagger files + 22 library utilities
 3. **Current** (post-Bazel, Dagger brought back) — Simplified 7-file Dagger module + Buildkite pipeline generator
 

@@ -45,6 +45,24 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
       name: "scout-postmatch-reports",
       rules: [
         {
+          alert: "ScoutAiProviderIssueActive",
+          annotations: {
+            summary: escapePrometheusTemplate(
+              "Scout AI provider {{ $labels.provider }} {{ $labels.kind }} issue active",
+            ),
+            message: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} has an active AI provider issue from {{ $labels.source }} (provider={{ $labels.provider }}, kind={{ $labels.kind }}). Check provider billing/rate limits and Scout logs.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'max by (environment, app, provider, kind, source) (ai_provider_issue_active{app="scout-for-lol"}) == 1',
+          ),
+          for: "10m",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
           // Postmatch report rendering is the last step before posting to
           // Discord; failures silently advance the polling cursor and
           // permanently lose the match. Catching a sustained failure rate

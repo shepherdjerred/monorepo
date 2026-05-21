@@ -237,122 +237,124 @@
         }
       },
       "teamId": 8,
-      "teammate": {
-        "arenaMetrics": {
-          "playerScore0": 3,
-          "playerScore1": 13,
-          "playerScore2": 1291.400146484375,
-          "playerScore3": 0.40740740299224854,
-          "playerScore4": 6.200000286102295,
-          "playerScore5": 2586.505615234375,
-          "playerScore6": 1845.8271484375,
-          "playerScore7": 223.1538543701172,
-          "playerScore8": 7.853437900543213
-        },
-        "assists": 9,
-        "augments": [
-          {
-            "apiName": "Eureka",
-            "calculations": {
-              "APToHasteConversionCalc": {
-                "__type": "GameCalculation",
-                "mFormulaParts": [
-                  {
-                    "__type": "StatByNamedDataValueCalculationPart",
-                    "mDataValue": "APToHasteConversion"
-                  }
-                ]
-              }
-            },
-            "dataValues": {
-              "APToHasteConversion": 0.30000001192092896
-            },
-            "desc": "Gain Ability Haste equal to <scaleAP>@APToHasteConversion*100@% Ability Power</scaleAP>.",
-            "iconLarge": "assets/ux/cherry/augments/icons/eureka_large.png",
-            "iconSmall": "assets/ux/cherry/augments/icons/eureka_small.png",
-            "id": 30,
-            "name": "Eureka",
-            "rarity": "gold",
-            "tooltip": "Gain @APToHasteConversionCalc@ Ability Haste.",
-            "type": "full"
+      "teammates": [
+        {
+          "arenaMetrics": {
+            "playerScore0": 3,
+            "playerScore1": 13,
+            "playerScore2": 1291.400146484375,
+            "playerScore3": 0.40740740299224854,
+            "playerScore4": 6.200000286102295,
+            "playerScore5": 2586.505615234375,
+            "playerScore6": 1845.8271484375,
+            "playerScore7": 223.1538543701172,
+            "playerScore8": 7.853437900543213
           },
-          {
-            "apiName": "AcceleratingSorcery",
-            "calculations": {},
-            "dataValues": {
-              "HastePerCast": 12
+          "assists": 9,
+          "augments": [
+            {
+              "apiName": "Eureka",
+              "calculations": {
+                "APToHasteConversionCalc": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "StatByNamedDataValueCalculationPart",
+                      "mDataValue": "APToHasteConversion"
+                    }
+                  ]
+                }
+              },
+              "dataValues": {
+                "APToHasteConversion": 0.30000001192092896
+              },
+              "desc": "Gain Ability Haste equal to <scaleAP>@APToHasteConversion*100@% Ability Power</scaleAP>.",
+              "iconLarge": "assets/ux/cherry/augments/icons/eureka_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/eureka_small.png",
+              "id": 30,
+              "name": "Eureka",
+              "rarity": "gold",
+              "tooltip": "Gain @APToHasteConversionCalc@ Ability Haste.",
+              "type": "full"
             },
-            "desc": "Using Abilities grant you infinitely stacking Ability Haste, this resets each round.",
-            "iconLarge": "assets/ux/cherry/augments/icons/acceleratingsorcery_large.png",
-            "iconSmall": "assets/ux/cherry/augments/icons/acceleratingsorcery_small.png",
-            "id": 1,
-            "name": "Accelerating Sorcery",
-            "rarity": "gold",
-            "tooltip": "Using an Ability grants <scaleBonus>@HastePerCast@ Ability Haste</scaleBonus>, stacking infinitely, this resets each round.",
-            "type": "full"
-          },
-          {
-            "apiName": "Marksmage",
-            "calculations": {
-              "APDamage": {
-                "__type": "GameCalculation",
-                "mFormulaParts": [
-                  {
-                    "__type": "StatByNamedDataValueCalculationPart",
+            {
+              "apiName": "AcceleratingSorcery",
+              "calculations": {},
+              "dataValues": {
+                "HastePerCast": 12
+              },
+              "desc": "Using Abilities grant you infinitely stacking Ability Haste, this resets each round.",
+              "iconLarge": "assets/ux/cherry/augments/icons/acceleratingsorcery_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/acceleratingsorcery_small.png",
+              "id": 1,
+              "name": "Accelerating Sorcery",
+              "rarity": "gold",
+              "tooltip": "Using an Ability grants <scaleBonus>@HastePerCast@ Ability Haste</scaleBonus>, stacking infinitely, this resets each round.",
+              "type": "full"
+            },
+            {
+              "apiName": "Marksmage",
+              "calculations": {
+                "APDamage": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "StatByNamedDataValueCalculationPart",
+                      "mDataValue": "APRatio"
+                    }
+                  ],
+                  "mMultiplier": {
+                    "__type": "NamedDataValueCalculationPart",
                     "mDataValue": "APRatio"
                   }
-                ],
-                "mMultiplier": {
-                  "__type": "NamedDataValueCalculationPart",
-                  "mDataValue": "APRatio"
                 }
-              }
+              },
+              "dataValues": {
+                "APRatio": 1
+              },
+              "desc": "Your Attacks deal additional <physicalDamage>physical damage</physicalDamage> equal to <scaleAP>@APRatio*100@% Ability Power</scaleAP>.",
+              "iconLarge": "assets/ux/cherry/augments/icons/marksmage_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/marksmage_small.png",
+              "id": 129,
+              "name": "Marksmage",
+              "rarity": "prismatic",
+              "tooltip": "Your Attacks deal additional <physicalDamage>@APDamage@ physical damage</physicalDamage>.<br><br>Damage Dealt This Round: @f1@<br>Damage Dealt Total: @f2@",
+              "type": "full"
             },
-            "dataValues": {
-              "APRatio": 1
-            },
-            "desc": "Your Attacks deal additional <physicalDamage>physical damage</physicalDamage> equal to <scaleAP>@APRatio*100@% Ability Power</scaleAP>.",
-            "iconLarge": "assets/ux/cherry/augments/icons/marksmage_large.png",
-            "iconSmall": "assets/ux/cherry/augments/icons/marksmage_small.png",
-            "id": 129,
-            "name": "Marksmage",
-            "rarity": "prismatic",
-            "tooltip": "Your Attacks deal additional <physicalDamage>@APDamage@ physical damage</physicalDamage>.<br><br>Damage Dealt This Round: @f1@<br>Damage Dealt Total: @f2@",
-            "type": "full"
-          },
-          {
-            "apiName": "ItsKillingTime",
-            "calculations": {},
-            "dataValues": {
-              "Cooldown": 8,
-              "DamageStorePercentage": 0.4000000059604645,
-              "MarkDuration": 5,
-              "VFXHighDamageThreshold": 500
-            },
-            "desc": "After casting your Ultimate, mark all enemy champions for death. While marked, store a percentage of damage dealt to them, and detonate the damage when the mark ends.",
-            "iconLarge": "assets/ux/cherry/augments/icons/itskillingtime_large.png",
-            "iconSmall": "assets/ux/cherry/augments/icons/itskillingtime_small.png",
-            "id": 211,
-            "name": "It's Killing Time",
-            "rarity": "prismatic",
-            "tooltip": "After casting your Ultimate, mark all enemy champions for death. The mark stores @DamageStorePercentage*100@% of damage dealt to them, then detonates for the stored damage after @MarkDuration@ seconds. (@Cooldown@ second Cooldown).<br><br>Damage Dealt This Round: @f1@<br>Damage Dealt Total: @f2@",
-            "type": "full"
+            {
+              "apiName": "ItsKillingTime",
+              "calculations": {},
+              "dataValues": {
+                "Cooldown": 8,
+                "DamageStorePercentage": 0.4000000059604645,
+                "MarkDuration": 5,
+                "VFXHighDamageThreshold": 500
+              },
+              "desc": "After casting your Ultimate, mark all enemy champions for death. While marked, store a percentage of damage dealt to them, and detonate the damage when the mark ends.",
+              "iconLarge": "assets/ux/cherry/augments/icons/itskillingtime_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/itskillingtime_small.png",
+              "id": 211,
+              "name": "It's Killing Time",
+              "rarity": "prismatic",
+              "tooltip": "After casting your Ultimate, mark all enemy champions for death. The mark stores @DamageStorePercentage*100@% of damage dealt to them, then detonates for the stored damage after @MarkDuration@ seconds. (@Cooldown@ second Cooldown).<br><br>Damage Dealt This Round: @f1@<br>Damage Dealt Total: @f2@",
+              "type": "full"
+            }
+          ],
+          "championName": "Veigar",
+          "damage": 33624,
+          "deaths": 4,
+          "gold": 18266,
+          "items": [223009, 223135, 223157, 223089, 447106, 443080, 3348],
+          "kills": 6,
+          "level": 18,
+          "riotIdGameName": "xRARESTx",
+          "teamSupport": {
+            "damageShieldedOnTeammate": 0,
+            "damageTakenPercentage": 0.0714953953277693,
+            "healsOnTeammate": 0
           }
-        ],
-        "championName": "Veigar",
-        "damage": 33624,
-        "deaths": 4,
-        "gold": 18266,
-        "items": [223009, 223135, 223157, 223089, 447106, 443080, 3348],
-        "kills": 6,
-        "level": 18,
-        "riotIdGameName": "xRARESTx",
-        "teamSupport": {
-          "damageShieldedOnTeammate": 0,
-          "damageTakenPercentage": 0.0714953953277693,
-          "healsOnTeammate": 0
         }
-      }
+      ]
     }
   ],
   "queueType": "arena",

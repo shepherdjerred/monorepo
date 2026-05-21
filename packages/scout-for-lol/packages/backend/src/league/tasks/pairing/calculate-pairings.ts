@@ -2,7 +2,7 @@ import { createLogger } from "#src/logger.ts";
 import { queryMatchesByDateRange } from "#src/storage/s3-query.ts";
 import {
   type RawMatch,
-  parseQueueType,
+  resolveQueueTypeFromGame,
   findParticipant,
   MIN_GAME_DURATION_SECONDS,
   type PairingStatsEntry,
@@ -243,7 +243,10 @@ function processMatch(
   }
 
   // Check queue type against allowed types
-  const queueType = parseQueueType(match.info.queueId);
+  const queueType = resolveQueueTypeFromGame(
+    match.info.queueId,
+    match.info.gameMode,
+  );
   if (!queueType || !allowedQueueTypes.includes(queueType)) {
     return {
       filtered: true,

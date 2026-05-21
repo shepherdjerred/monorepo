@@ -80,6 +80,7 @@ describe("LoadingScreenParticipantSchema", () => {
   const validParticipant = {
     puuid: LeaguePuuidSchema.parse(samplePuuid),
     summonerName: "TestPlayer",
+    championId: LoadingScreenChampionIdSchema.parse(266),
     championName: "Aatrox",
     championDisplayName: "Aatrox",
     skinNum: 0,
@@ -156,6 +157,15 @@ describe("LoadingScreenParticipantSchema", () => {
     expect(result.team).toEqual({ arenaTeam: ArenaTeamIdSchema.parse(3) });
   });
 
+  test("accepts arena participant with unknown prematch team", () => {
+    const arenaParticipant = {
+      ...validParticipant,
+      team: { arenaTeam: null },
+    };
+    const result = LoadingScreenParticipantSchema.parse(arenaParticipant);
+    expect(result.team).toEqual({ arenaTeam: null });
+  });
+
   test("rejects negative skin number", () => {
     expect(() =>
       LoadingScreenParticipantSchema.parse({
@@ -210,10 +220,11 @@ function makePuuid(suffix: string) {
   return LeaguePuuidSchema.parse(`${samplePuuid}${suffix}`.slice(0, 78));
 }
 
-function makeParticipant(puuid: string, team: "blue" | "red") {
+function makeNonStandardParticipant(puuid: string, team: "blue" | "red") {
   return {
     puuid: LeaguePuuidSchema.parse(puuid),
     summonerName: `Player-${puuid.slice(0, 4)}`,
+    championId: LoadingScreenChampionIdSchema.parse(266),
     championName: "Aatrox",
     championDisplayName: "Aatrox",
     skinNum: 0,
@@ -221,6 +232,17 @@ function makeParticipant(puuid: string, team: "blue" | "red") {
     spell1Id: SummonerSpellIdSchema.parse(4),
     spell2Id: SummonerSpellIdSchema.parse(14),
     isTrackedPlayer: false,
+  };
+}
+
+function makeParticipant(
+  puuid: string,
+  team: "blue" | "red",
+  lane: "top" | "jungle" | "middle" | "adc" | "support",
+) {
+  return {
+    ...makeNonStandardParticipant(puuid, team),
+    lane,
   };
 }
 
@@ -233,16 +255,16 @@ describe("LoadingScreenDataSchema", () => {
     layout: "standard",
     mapName: "Summoner's Rift",
     participants: [
-      makeParticipant(makePuuid("01"), "blue"),
-      makeParticipant(makePuuid("02"), "blue"),
-      makeParticipant(makePuuid("03"), "blue"),
-      makeParticipant(makePuuid("04"), "blue"),
-      makeParticipant(makePuuid("05"), "blue"),
-      makeParticipant(makePuuid("06"), "red"),
-      makeParticipant(makePuuid("07"), "red"),
-      makeParticipant(makePuuid("08"), "red"),
-      makeParticipant(makePuuid("09"), "red"),
-      makeParticipant(makePuuid("10"), "red"),
+      makeParticipant(makePuuid("01"), "blue", "top"),
+      makeParticipant(makePuuid("02"), "blue", "jungle"),
+      makeParticipant(makePuuid("03"), "blue", "middle"),
+      makeParticipant(makePuuid("04"), "blue", "adc"),
+      makeParticipant(makePuuid("05"), "blue", "support"),
+      makeParticipant(makePuuid("06"), "red", "top"),
+      makeParticipant(makePuuid("07"), "red", "jungle"),
+      makeParticipant(makePuuid("08"), "red", "middle"),
+      makeParticipant(makePuuid("09"), "red", "adc"),
+      makeParticipant(makePuuid("10"), "red", "support"),
     ],
     bans: [
       {
@@ -267,6 +289,18 @@ describe("LoadingScreenDataSchema", () => {
     expect(result.bans).toHaveLength(2);
   });
 
+  test("rejects standard game participants without lanes", () => {
+    const participantsWithoutLane = validData.participants.map(
+      ({ lane: _lane, ...participant }) => participant,
+    );
+    expect(() =>
+      LoadingScreenDataSchema.parse({
+        ...validData,
+        participants: participantsWithoutLane,
+      }),
+    ).toThrow();
+  });
+
   test("accepts ARAM game with no bans", () => {
     const aramData = {
       ...validData,
@@ -275,6 +309,18 @@ describe("LoadingScreenDataSchema", () => {
       isRanked: false,
       layout: "aram",
       mapName: "Howling Abyss",
+      participants: [
+        makeNonStandardParticipant(makePuuid("01"), "blue"),
+        makeNonStandardParticipant(makePuuid("02"), "blue"),
+        makeNonStandardParticipant(makePuuid("03"), "blue"),
+        makeNonStandardParticipant(makePuuid("04"), "blue"),
+        makeNonStandardParticipant(makePuuid("05"), "blue"),
+        makeNonStandardParticipant(makePuuid("06"), "red"),
+        makeNonStandardParticipant(makePuuid("07"), "red"),
+        makeNonStandardParticipant(makePuuid("08"), "red"),
+        makeNonStandardParticipant(makePuuid("09"), "red"),
+        makeNonStandardParticipant(makePuuid("10"), "red"),
+      ],
       bans: [],
     };
     const result = LoadingScreenDataSchema.parse(aramData);
@@ -282,32 +328,41 @@ describe("LoadingScreenDataSchema", () => {
     expect(result.bans).toHaveLength(0);
   });
 
-  test("accepts Arena game with arenaTeam discriminated union", () => {
-    const arenaParticipants = Array.from({ length: 16 }, (_, i) => ({
-      puuid: makePuuid(`a${i.toString().padStart(2, "0")}`),
-      summonerName: `ArenaPlayer${i.toString()}`,
-      championName: "Aatrox",
-      championDisplayName: "Aatrox",
-      skinNum: 0,
-      team: { arenaTeam: ArenaTeamIdSchema.parse((i % 8) + 1) },
-      spell1Id: SummonerSpellIdSchema.parse(4),
-      spell2Id: SummonerSpellIdSchema.parse(14),
-      isTrackedPlayer: false,
-    }));
-    const arenaData = {
-      ...validData,
-      queueType: "arena",
-      queueDisplayName: makeQueueDisplayName("arena"),
-      isRanked: false,
-      layout: "arena",
-      mapName: "Rings of Wrath",
-      participants: arenaParticipants,
-      bans: [],
-    };
-    const result = LoadingScreenDataSchema.parse(arenaData);
-    expect(result.layout).toBe("arena");
-    expect(result.participants).toHaveLength(16);
-  });
+  test.each([16, 18])(
+    "accepts Arena game with %p participants and known or unknown arenaTeam discriminated union",
+    (participantCount) => {
+      const arenaParticipants = Array.from(
+        { length: participantCount },
+        (_, i) => ({
+          puuid: makePuuid(`a${i.toString().padStart(2, "0")}`),
+          summonerName: `ArenaPlayer${i.toString()}`,
+          championId: LoadingScreenChampionIdSchema.parse(266),
+          championName: "Aatrox",
+          championDisplayName: "Aatrox",
+          skinNum: 0,
+          team: {
+            arenaTeam: i < 8 ? ArenaTeamIdSchema.parse((i % 8) + 1) : null,
+          },
+          spell1Id: SummonerSpellIdSchema.parse(4),
+          spell2Id: SummonerSpellIdSchema.parse(14),
+          isTrackedPlayer: false,
+        }),
+      );
+      const arenaData = {
+        ...validData,
+        queueType: "arena",
+        queueDisplayName: makeQueueDisplayName("arena"),
+        isRanked: false,
+        layout: "arena",
+        mapName: "Rings of Wrath",
+        participants: arenaParticipants,
+        bans: [],
+      };
+      const result = LoadingScreenDataSchema.parse(arenaData);
+      expect(result.layout).toBe("arena");
+      expect(result.participants).toHaveLength(participantCount);
+    },
+  );
 
   test("rejects unknown map name", () => {
     expect(() =>

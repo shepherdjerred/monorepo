@@ -1,6 +1,6 @@
 name: exercises
 version: 0.1.0.0
-github: "shepherdjerred/learn-you-a-haskell-exercises"
+github: "shepherdjerred/monorepo"
 license: GPL-3.0
 author: "Noel Markham, modified by Jerred Shepherd"
 maintainer: "shepherdjerred@gmail.com"
@@ -16,7 +16,7 @@ extra-source-files:
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description: Please see the README on GitHub at <https://github.com/shepherdjerred/learn-you-a-haskell-exercises#readme>
+description: Please see the README on GitHub at <https://github.com/shepherdjerred/monorepo/tree/main/practice/learn-you-a-haskell-exercises#readme>
 
 dependencies:
   - base >= 4.7 && < 5

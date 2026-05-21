@@ -20,6 +20,43 @@ import {
 
 import { rustBaseContainer } from "./base";
 
+const GITHUB_APP_TOKEN_SCRIPT = "packages/temporal/src/lib/github-app-token.ts";
+const GITHUB_APP_TOKEN_SCRIPT_PATH = "/usr/local/bin/github-app-token.ts";
+const GITHUB_APP_TOKEN_PATH = "/tmp/github-app-token";
+
+function withGithubAppToken(
+  container: Container,
+  source: Directory,
+  githubAppId: Secret,
+  githubAppInstallationId: Secret,
+  githubAppPrivateKey: Secret,
+): Container {
+  return container
+    .withFile(
+      GITHUB_APP_TOKEN_SCRIPT_PATH,
+      source.file(GITHUB_APP_TOKEN_SCRIPT),
+    )
+    .withSecretVariable("GITHUB_APP_ID", githubAppId)
+    .withSecretVariable("GITHUB_APP_INSTALLATION_ID", githubAppInstallationId)
+    .withSecretVariable("GITHUB_APP_PRIVATE_KEY", githubAppPrivateKey)
+    .withExec([
+      "sh",
+      "-c",
+      `bun ${GITHUB_APP_TOKEN_SCRIPT_PATH} > ${GITHUB_APP_TOKEN_PATH}`,
+    ]);
+}
+
+function writeGithubAppAskpassCommand(): string {
+  return [
+    `printf '#!/bin/sh\\ncase "$1" in\\n  *Username*) printf "%s%s\\\\n" "x-access" "-token" ;;\\n  *) cat ${GITHUB_APP_TOKEN_PATH} ;;\\nesac\\n' > /usr/local/bin/git-askpass`,
+    `chmod +x /usr/local/bin/git-askpass`,
+  ].join(" && ");
+}
+
+function exportGithubAppTokenCommand(): string {
+  return `export GH_TOKEN="$(cat ${GITHUB_APP_TOKEN_PATH})"`;
+}
+
 // ---------------------------------------------------------------------------
 // Helm
 // ---------------------------------------------------------------------------
@@ -335,14 +372,25 @@ export function deploySiteHelper(
   container = container.withExec(["bun", "install", "--frozen-lockfile"]);
 
   // Build workspace deps that need compilation (e.g. astro-opengraph-images).
-  // Skip eslint-config (lint-only dep, no dist/ needed for site build).
-  const buildDeps = depNames.filter((d) => d !== "eslint-config");
+  // Skip source-only library deps that consumers resolve via package exports
+  // directly — they don't ship a dist/.
+  const SKIP_BUILD_DEPS: ReadonlySet<string> = new Set([
+    "eslint-config",
+    "llm-observability",
+  ]);
+  const buildDeps = depNames.filter((d) => !SKIP_BUILD_DEPS.has(d));
   for (const dep of buildDeps) {
     container = container
       .withWorkdir(`/workspace/packages/${dep}`)
       .withExec(["bun", "install", "--frozen-lockfile"])
       .withExec(["bun", "run", "build"]);
   }
+
+  // Reset workdir to the package being deployed after the build-deps loop
+  // potentially left us inside the last built dep's directory. Without this,
+  // a consumer's `bun run --filter='./packages/foo' build` resolves the
+  // filter against the wrong cwd and fails with "No packages matched".
+  container = container.withWorkdir(`/workspace/packages/${pkg}`);
 
   // Install Playwright only when the site needs it (e.g. sjer.red for OG image generation)
   if (needsPlaywright) {
@@ -532,7 +580,14 @@ export function cooklangBuildHelper(
     .withExec(["bun", "run", "build"]);
 }
 
-const COOKLANG_PLUGIN_REPO = "shepherdjerred/cooklang-for-obsidian";
+const GITHUB_REPO_SLUG_PATTERN = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
+
+function validateGitHubRepoSlug(repo: string, label: string): string {
+  if (!GITHUB_REPO_SLUG_PATTERN.test(repo)) {
+    throw new Error(`${label} must be a GitHub owner/repo slug`);
+  }
+  return repo;
+}
 
 /**
  * Publish cooklang plugin artifacts to the external plugin repository.
@@ -540,9 +595,9 @@ const COOKLANG_PLUGIN_REPO = "shepherdjerred/cooklang-for-obsidian";
  * Determines the next semver patch from the latest release tag (or the
  * built manifest's version if no releases exist), rewrites
  * artifacts/manifest.json with the new version, commits the three plugin
- * files + an updated versions.json to the plugin repo's main branch, and
- * cuts a GitHub release tagged with the bare version (Obsidian directory
- * convention).
+ * files to the plugin repo's main branch, updates versions.json only when
+ * the release changes the Obsidian compatibility boundary, and cuts a GitHub
+ * release tagged with the bare version (Obsidian directory convention).
  *
  * Emits the new version as the final line on stdout so callers can chain
  * a commit-back step.
@@ -550,8 +605,10 @@ const COOKLANG_PLUGIN_REPO = "shepherdjerred/cooklang-for-obsidian";
 export function cooklangPublishHelper(
   source: Directory,
   ghToken: Secret,
+  pluginRepo: string,
   dryrun = false,
 ): Container {
+  const cooklangPluginRepo = validateGitHubRepoSlug(pluginRepo, "pluginRepo");
   const container = dag
     .container()
     .from(ALPINE_IMAGE)
@@ -570,13 +627,13 @@ export function cooklangPublishHelper(
       "-c",
       [
         `set -eu`,
-        `latest=$(gh release list --repo ${COOKLANG_PLUGIN_REPO} --limit 50 --json tagName --jq '.[].tagName' | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+$' | head -1)`,
+        `latest=$(gh release list --repo ${cooklangPluginRepo} --limit 50 --json tagName --jq '.[].tagName' | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+$' | head -1)`,
         `base="\${latest:-$(jq -r .version /artifacts/manifest.json)}"`,
         `major=$(echo "$base" | cut -d. -f1)`,
         `minor=$(echo "$base" | cut -d. -f2)`,
         `patch=$(echo "$base" | cut -d. -f3)`,
         `new="$major.$minor.$((patch + 1))"`,
-        `echo "DRYRUN: cooklang plugin $base -> $new (would commit + release on ${COOKLANG_PLUGIN_REPO})"`,
+        `echo "DRYRUN: cooklang plugin $base -> $new (would commit + release on ${cooklangPluginRepo})"`,
         `echo "$new"`,
       ].join(" && "),
     ]);
@@ -595,12 +652,12 @@ export function cooklangPublishHelper(
       [
         `set -eu`,
         // Clone plugin repo
-        `git clone https://github.com/${COOKLANG_PLUGIN_REPO}.git /repo`,
+        `git clone https://github.com/${cooklangPluginRepo}.git /repo`,
         `cd /repo`,
         `git config user.email "ci@sjer.red"`,
         `git config user.name "CI Bot"`,
         // Compute next version: latest semver release tag + 1 patch, fallback to artifacts manifest
-        `latest=$(gh release list --repo ${COOKLANG_PLUGIN_REPO} --limit 50 --json tagName --jq '.[].tagName' | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+$' | head -1)`,
+        `latest=$(gh release list --repo ${cooklangPluginRepo} --limit 50 --json tagName --jq '.[].tagName' | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+$' | head -1)`,
         `base="\${latest:-$(jq -r .version /artifacts/manifest.json)}"`,
         `major=$(echo "$base" | cut -d. -f1)`,
         `minor=$(echo "$base" | cut -d. -f2)`,
@@ -611,16 +668,16 @@ export function cooklangPublishHelper(
         `jq --arg v "$new" '.version = $v' /artifacts/manifest.json > /artifacts/manifest.json.tmp`,
         `mv /artifacts/manifest.json.tmp /artifacts/manifest.json`,
         `min=$(jq -r .minAppVersion /artifacts/manifest.json)`,
-        // Copy artifacts to repo + update versions.json
+        // Copy artifacts to repo + update versions.json only for compatibility boundary changes
         `cp /artifacts/main.js /artifacts/manifest.json /artifacts/styles.css /repo/`,
-        `if [ ! -f /repo/versions.json ]; then echo '{}' > /repo/versions.json; fi`,
-        `jq --arg v "$new" --arg m "$min" '. + {($v): $m}' /repo/versions.json > /repo/versions.json.tmp`,
-        `mv /repo/versions.json.tmp /repo/versions.json`,
+        `if [ ! -s /repo/versions.json ]; then echo '{}' > /repo/versions.json; fi`,
+        `latest_min=$(jq -r 'to_entries | map(select(.key | test("^[0-9]+\\\\.[0-9]+\\\\.[0-9]+$"))) | sort_by(.key | split(".") | map(tonumber)) | (last // {"value": ""}) | .value' /repo/versions.json)`,
+        `if [ -z "$latest_min" ] || [ "$latest_min" != "$min" ]; then jq --arg v "$new" --arg m "$min" '.[$v] = $m' /repo/versions.json > /repo/versions.json.tmp && mv /repo/versions.json.tmp /repo/versions.json && git -C /repo add versions.json; else echo "versions.json compatibility boundary unchanged ($min)"; fi`,
         // Commit + push to plugin repo main
-        `git -C /repo add main.js manifest.json styles.css versions.json`,
+        `git -C /repo add main.js manifest.json styles.css`,
         `if git -C /repo diff --cached --quiet; then echo "No artifact changes to commit"; else git -C /repo commit -m "release: v$new" -m "Auto-Generated: ci-bot"; git -C /repo push origin HEAD:main; fi`,
         // Create the GitHub release on the plugin repo (idempotent: skip if tag already exists)
-        `if gh release view "$new" --repo ${COOKLANG_PLUGIN_REPO} >/dev/null 2>&1; then echo "Release $new already exists on ${COOKLANG_PLUGIN_REPO}, skipping"; else gh release create "$new" /artifacts/main.js /artifacts/manifest.json /artifacts/styles.css --repo ${COOKLANG_PLUGIN_REPO} --title "v$new" --generate-notes; fi`,
+        `if gh release view "$new" --repo ${cooklangPluginRepo} >/dev/null 2>&1; then echo "Release $new already exists on ${cooklangPluginRepo}, skipping"; else gh release create "$new" /artifacts/main.js /artifacts/manifest.json /artifacts/styles.css --repo ${cooklangPluginRepo} --title "v$new" --generate-notes; fi`,
         // Last line of stdout = new version, for callers
         `printf '%s\\n' "$new"`,
       ].join(" && "),
@@ -683,9 +740,12 @@ const COOKLANG_VERSION_BUMP_BRANCH = "chore/cooklang-version-bump-pending";
 
 /** Update versions.ts with new image digests and create or refresh an auto-merge PR. */
 export function versionCommitBackHelper(
+  source: Directory,
   digests: string,
   version: string,
-  ghToken: Secret,
+  githubAppId: Secret,
+  githubAppInstallationId: Secret,
+  githubAppPrivateKey: Secret,
   dryrun = false,
 ): Container {
   const container = dag
@@ -706,8 +766,7 @@ export function versionCommitBackHelper(
       "sh",
       "-c",
       `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
-    ])
-    .withSecretVariable("GH_TOKEN", ghToken);
+    ]);
 
   if (dryrun) {
     return container.withExec([
@@ -731,17 +790,22 @@ export function versionCommitBackHelper(
       })()
     : "";
 
-  return container
-    .withExec([
-      "sh",
-      "-c",
-      `printf '#!/bin/sh\\necho "$GH_TOKEN"\\n' > /usr/local/bin/git-askpass && chmod +x /usr/local/bin/git-askpass`,
-    ])
+  const authedContainer = withGithubAppToken(
+    container,
+    source,
+    githubAppId,
+    githubAppInstallationId,
+    githubAppPrivateKey,
+  );
+
+  return authedContainer
+    .withExec(["sh", "-c", writeGithubAppAskpassCommand()])
     .withEnvVariable("GIT_ASKPASS", "/usr/local/bin/git-askpass")
     .withExec([
       "sh",
       "-c",
       [
+        exportGithubAppTokenCommand(),
         `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
         `cd /repo`,
         `git config user.email "ci@sjer.red"`,
@@ -759,8 +823,11 @@ export function versionCommitBackHelper(
 
 /** Update the CI base image version pointer and create or refresh an auto-merge PR. */
 export function ciBaseVersionCommitBackHelper(
+  source: Directory,
   version: string,
-  ghToken: Secret,
+  githubAppId: Secret,
+  githubAppInstallationId: Secret,
+  githubAppPrivateKey: Secret,
   dryrun = false,
 ): Container {
   const container = dag
@@ -781,8 +848,7 @@ export function ciBaseVersionCommitBackHelper(
       "sh",
       "-c",
       `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
-    ])
-    .withSecretVariable("GH_TOKEN", ghToken);
+    ]);
 
   if (dryrun) {
     return container.withExec([
@@ -791,17 +857,22 @@ export function ciBaseVersionCommitBackHelper(
     ]);
   }
 
-  return container
-    .withExec([
-      "sh",
-      "-c",
-      `printf '#!/bin/sh\\necho "$GH_TOKEN"\\n' > /usr/local/bin/git-askpass && chmod +x /usr/local/bin/git-askpass`,
-    ])
+  const authedContainer = withGithubAppToken(
+    container,
+    source,
+    githubAppId,
+    githubAppInstallationId,
+    githubAppPrivateKey,
+  );
+
+  return authedContainer
+    .withExec(["sh", "-c", writeGithubAppAskpassCommand()])
     .withEnvVariable("GIT_ASKPASS", "/usr/local/bin/git-askpass")
     .withExec([
       "sh",
       "-c",
       [
+        exportGithubAppTokenCommand(),
         `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
         `cd /repo`,
         `git config user.email "ci@sjer.red"`,
@@ -818,14 +889,18 @@ export function ciBaseVersionCommitBackHelper(
 }
 
 /**
- * Bump packages/cooklang-for-obsidian/manifest.json + versions.json in the
- * monorepo to track a release that was just published to the plugin repo,
- * then open or refresh an auto-merge PR. Mirrors versionCommitBackHelper.
+ * Bump packages/cooklang-for-obsidian/manifest.json in the monorepo to track
+ * a release that was just published to the plugin repo. Update versions.json
+ * only when the release changes the Obsidian compatibility boundary, then
+ * open or refresh an auto-merge PR. Mirrors versionCommitBackHelper.
  */
 export function cooklangVersionCommitBackHelper(
+  source: Directory,
   version: string,
   minAppVersion: string,
-  ghToken: Secret,
+  githubAppId: Secret,
+  githubAppInstallationId: Secret,
+  githubAppPrivateKey: Secret,
   dryrun = false,
 ): Container {
   const container = dag
@@ -847,8 +922,7 @@ export function cooklangVersionCommitBackHelper(
       "sh",
       "-c",
       `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
-    ])
-    .withSecretVariable("GH_TOKEN", ghToken);
+    ]);
 
   if (dryrun) {
     return container.withExec([
@@ -857,17 +931,22 @@ export function cooklangVersionCommitBackHelper(
     ]);
   }
 
-  return container
-    .withExec([
-      "sh",
-      "-c",
-      `printf '#!/bin/sh\\necho "$GH_TOKEN"\\n' > /usr/local/bin/git-askpass && chmod +x /usr/local/bin/git-askpass`,
-    ])
+  const authedContainer = withGithubAppToken(
+    container,
+    source,
+    githubAppId,
+    githubAppInstallationId,
+    githubAppPrivateKey,
+  );
+
+  return authedContainer
+    .withExec(["sh", "-c", writeGithubAppAskpassCommand()])
     .withEnvVariable("GIT_ASKPASS", "/usr/local/bin/git-askpass")
     .withExec([
       "sh",
       "-c",
       [
+        exportGithubAppTokenCommand(),
         `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
         `cd /repo`,
         `git config user.email "ci@sjer.red"`,
@@ -875,10 +954,10 @@ export function cooklangVersionCommitBackHelper(
         `if git ls-remote --exit-code --heads origin "${COOKLANG_VERSION_BUMP_BRANCH}" >/dev/null 2>&1; then git fetch origin main:refs/remotes/origin/main "${COOKLANG_VERSION_BUMP_BRANCH}:${COOKLANG_VERSION_BUMP_BRANCH}" && git checkout "${COOKLANG_VERSION_BUMP_BRANCH}" && git rebase origin/main; else git fetch origin main:refs/remotes/origin/main && git checkout -b "${COOKLANG_VERSION_BUMP_BRANCH}" origin/main; fi`,
         `jq --arg v "${version}" '.version = $v' packages/cooklang-for-obsidian/manifest.json > packages/cooklang-for-obsidian/manifest.json.tmp`,
         `mv packages/cooklang-for-obsidian/manifest.json.tmp packages/cooklang-for-obsidian/manifest.json`,
-        `if [ ! -f packages/cooklang-for-obsidian/versions.json ]; then echo '{}' > packages/cooklang-for-obsidian/versions.json; fi`,
-        `jq --arg v "${version}" --arg m "${minAppVersion}" '. + {($v): $m}' packages/cooklang-for-obsidian/versions.json > packages/cooklang-for-obsidian/versions.json.tmp`,
-        `mv packages/cooklang-for-obsidian/versions.json.tmp packages/cooklang-for-obsidian/versions.json`,
-        `git add packages/cooklang-for-obsidian/manifest.json packages/cooklang-for-obsidian/versions.json`,
+        `if [ ! -s packages/cooklang-for-obsidian/versions.json ]; then echo '{}' > packages/cooklang-for-obsidian/versions.json; fi`,
+        `latest_min=$(jq -r 'to_entries | map(select(.key | test("^[0-9]+\\\\.[0-9]+\\\\.[0-9]+$"))) | sort_by(.key | split(".") | map(tonumber)) | (last // {"value": ""}) | .value' packages/cooklang-for-obsidian/versions.json)`,
+        `if [ -z "$latest_min" ] || [ "$latest_min" != "${minAppVersion}" ]; then jq --arg v "${version}" --arg m "${minAppVersion}" '.[$v] = $m' packages/cooklang-for-obsidian/versions.json > packages/cooklang-for-obsidian/versions.json.tmp && mv packages/cooklang-for-obsidian/versions.json.tmp packages/cooklang-for-obsidian/versions.json && git add packages/cooklang-for-obsidian/versions.json; else echo "versions.json compatibility boundary unchanged (${minAppVersion})"; fi`,
+        `git add packages/cooklang-for-obsidian/manifest.json`,
         `if git diff --cached --quiet; then HAS_CHANGES=0; echo "No cooklang version changes to commit"; else HAS_CHANGES=1; git commit -m "chore(cooklang): bump to v${version}" -m "Auto-Generated: ci-bot"; fi`,
         `if [ "$HAS_CHANGES" = "0" ] && git diff --quiet origin/main...HEAD; then echo "No cooklang changes and pending branch has no diff"; exit 0; fi`,
         `git push --force-with-lease -u origin "${COOKLANG_VERSION_BUMP_BRANCH}"`,
@@ -953,7 +1032,9 @@ export function clauderonCollectBinariesHelper(
 /** Run release-please to create release PRs and GitHub releases. */
 export function releasePleaseHelper(
   source: Directory,
-  ghToken: Secret,
+  githubAppId: Secret,
+  githubAppInstallationId: Secret,
+  githubAppPrivateKey: Secret,
   dryrun = false,
 ): Container {
   const container = dag
@@ -970,8 +1051,7 @@ export function releasePleaseHelper(
     ])
     .withExec(["bun", "add", "-g", `release-please@${RELEASE_PLEASE_VERSION}`])
     .withWorkdir("/workspace")
-    .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES })
-    .withSecretVariable("GH_TOKEN", ghToken);
+    .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES });
 
   if (dryrun) {
     return container.withExec([
@@ -979,12 +1059,21 @@ export function releasePleaseHelper(
       "DRYRUN: would run release-please (release-pr + github-release)",
     ]);
   }
-  return container.withExec([
+  const authedContainer = withGithubAppToken(
+    container,
+    source,
+    githubAppId,
+    githubAppInstallationId,
+    githubAppPrivateKey,
+  );
+
+  return authedContainer.withExec([
     "sh",
     "-c",
     [
-      `release-please release-pr --token=$GH_TOKEN --repo-url=shepherdjerred/monorepo --target-branch=main`,
-      `release-please github-release --token=$GH_TOKEN --repo-url=shepherdjerred/monorepo --target-branch=main`,
+      exportGithubAppTokenCommand(),
+      `release-please release-pr --token="$GH_TOKEN" --repo-url=shepherdjerred/monorepo --target-branch=main`,
+      `release-please github-release --token="$GH_TOKEN" --repo-url=shepherdjerred/monorepo --target-branch=main`,
     ].join(" && "),
   ]);
 }

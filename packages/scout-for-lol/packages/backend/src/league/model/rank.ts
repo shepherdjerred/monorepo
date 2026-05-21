@@ -14,10 +14,7 @@ import { api } from "#src/league/api/api.ts";
 import { filter, first, pipe } from "remeda";
 import { mapRegionToEnum } from "#src/league/model/region.ts";
 import { z } from "zod";
-import {
-  callRiotOrThrow,
-  callRiotOrUndefined,
-} from "#src/league/api/riot-call.ts";
+import { callRiotOrUndefined } from "#src/league/api/riot-call.ts";
 
 const solo = "RANKED_SOLO_5x5";
 const flex = "RANKED_FLEX_SR";
@@ -83,7 +80,7 @@ export async function getRankByPuuid(
 }
 
 export async function getRanks(player: PlayerConfigEntry): Promise<Ranks> {
-  const entries = await callRiotOrThrow(
+  const entries = await callRiotOrUndefined(
     {
       source: "rank",
       schema: z.array(RawSummonerLeagueSchema),
@@ -99,6 +96,12 @@ export async function getRanks(player: PlayerConfigEntry): Promise<Ranks> {
         mapRegionToEnum(player.league.leagueAccount.region),
       ),
   );
+  if (entries === undefined) {
+    return {
+      solo: undefined,
+      flex: undefined,
+    };
+  }
   return {
     solo: getRank(entries, solo),
     flex: getRank(entries, flex),

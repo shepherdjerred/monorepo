@@ -7,7 +7,12 @@
 import { readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { RETRY, DAGGER_ENV, DRYRUN_FLAG } from "../lib/buildkite.ts";
+import {
+  RETRY,
+  DAGGER_ENV,
+  DRYRUN_FLAG,
+  GITHUB_APP_SECRET_ARGS,
+} from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteStep } from "../lib/types.ts";
 
@@ -87,7 +92,7 @@ export function ciBaseVersionCommitBackStep(
     key: "ci-base-version-commit-back",
     if: MAIN_ONLY,
     depends_on: "push-ci-base",
-    command: `dagger call ci-base-version-commit-back --version "${version}" --gh-token env:GH_TOKEN${DRYRUN_FLAG}`,
+    command: `dagger call ci-base-version-commit-back --source . --version "${version}" ${GITHUB_APP_SECRET_ARGS}${DRYRUN_FLAG}`,
     timeout_in_minutes: 10,
     priority: 1,
     retry: RETRY,

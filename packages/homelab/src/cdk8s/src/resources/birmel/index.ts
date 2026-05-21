@@ -16,6 +16,7 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
+import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 
@@ -40,6 +41,19 @@ export function createBirmelDeployment(chart: Chart) {
   const onePasswordItem = new OnePasswordItem(chart, "birmel-1p", {
     spec: {
       itemPath: vaultItemPath("w5c27dzybxor3j6dzl7lub2soe"),
+    },
+  });
+
+  // Mirror the SeaweedFS S3 access credentials (the human-friendly
+  // SEAWEEDFS_ACCESS_KEY_ID / SEAWEEDFS_SECRET_ACCESS_KEY pair — same item
+  // used by s3-static-sites) into birmel's namespace so the LLM archive can
+  // PUT to s3://llm-archive without crossing namespaces.
+  const seaweedfsCreds = new OnePasswordItem(chart, "birmel-seaweedfs-1p", {
+    spec: {
+      itemPath: vaultItemPath("vet52jaeh75chsalu6lulugium"),
+    },
+    metadata: {
+      name: "birmel-seaweedfs-s3-credentials",
     },
   });
 
@@ -123,6 +137,28 @@ export function createBirmelDeployment(chart: Chart) {
           "http://tempo.tempo.svc.cluster.local:4318",
         ),
 
+        ...llmArchiveEnvVars(),
+        S3_ENDPOINT: EnvValue.fromValue(
+          "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+        ),
+        S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
+        AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "birmel-aws-access-key-id",
+            seaweedfsCreds.name,
+          ),
+          key: "SEAWEEDFS_ACCESS_KEY_ID",
+        }),
+        AWS_SECRET_ACCESS_KEY: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "birmel-aws-secret-access-key",
+            seaweedfsCreds.name,
+          ),
+          key: "SEAWEEDFS_SECRET_ACCESS_KEY",
+        }),
+
         // Sentry configuration
         SENTRY_ENABLED: EnvValue.fromValue("true"),
         SENTRY_DSN: EnvValue.fromSecretValue({
@@ -151,7 +187,7 @@ export function createBirmelDeployment(chart: Chart) {
           JSON.stringify([
             {
               name: "scout-for-lol",
-              repo: "shepherdjerred/scout-for-lol",
+              repo: "shepherdjerred/monorepo",
               branch: "main",
             },
             {

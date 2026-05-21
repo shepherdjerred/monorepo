@@ -38,13 +38,13 @@ export const TEXLIVE_IMAGE =
   "texlive/texlive:TL2024-historic@sha256:fd576ce8b1cfd03cdabc15ca75682fb050eb10de5c057d81449883c2ad644855";
 // renovate: datasource=docker depName=caddy
 export const CADDY_IMAGE =
-  "caddy:2.11.3-alpine@sha256:bb56e6200ec26a67f04be90255993dc390c9815967f67f24b4ca6466e88de64b";
+  "caddy:2.11.3-alpine@sha256:86deaf5e3d3408a6ccec08fbb79989783dd26e206ae10bcf78a801dc8c9ab794";
 // renovate: datasource=docker depName=caddy
 export const CADDY_BUILDER_IMAGE =
-  "caddy:2.11.3-builder-alpine@sha256:7d2315853f99b425d0daa6bcad826e8b0d65b4af1f70fcaeb6b152157d81771d";
+  "caddy:2.11.3-builder-alpine@sha256:52575959b1eeee9900869325a953d71e4c521ab9102dd5cce07d429ea8246b85";
 // renovate: datasource=docker depName=python
 export const PYTHON_IMAGE =
-  "python:3.14-slim@sha256:33ef7446e8c14b21cb247e23afbcdc90e98853b70812ca46b2265e769a7dfb8b";
+  "python:3.14-slim@sha256:7a500125bc50693f2214e842a621440a1b1b9cbb2188f74ab045d29ed2ea5856";
 
 // Base image for obsidian-headless container (uses Node, not Bun, due to native better-sqlite3 addon).
 // renovate: datasource=docker depName=node
@@ -87,6 +87,12 @@ export const ARGOCD_CLI_VERSION = "v3.4.2";
 
 // renovate: datasource=github-releases depName=vmware-tanzu/velero
 export const VELERO_CLI_VERSION = "v1.18.0";
+
+// renovate: datasource=github-releases depName=buildkite/cli
+export const BUILDKITE_CLI_VERSION = "3.42.0";
+
+// renovate: datasource=github-releases depName=temporalio/cli
+export const TEMPORAL_CLI_VERSION = "1.7.0";
 
 // ---------------------------------------------------------------------------
 // Cache volume names (stable — never include version numbers)

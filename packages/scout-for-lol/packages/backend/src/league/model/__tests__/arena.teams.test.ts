@@ -2,7 +2,7 @@ import { describe, it, expect } from "bun:test";
 import type { RawParticipant } from "@scout-for-lol/data";
 import {
   groupArenaTeams,
-  getArenaTeammate,
+  getArenaTeammates,
   toArenaSubteams,
 } from "#src/league/model/match.ts";
 
@@ -14,7 +14,7 @@ function makeParticipant(extra: Partial<RawParticipant> = {}): RawParticipant {
 }
 
 describe("arena team grouping and teammate lookup", () => {
-  it("groups participants into 8 subteams of 2", () => {
+  it("groups legacy participants into 8 subteams of 2", () => {
     const participants: RawParticipant[] = [];
     for (let sub = 1; sub <= 8; sub++) {
       participants.push(makeParticipant({ playerSubteamId: sub }));
@@ -25,12 +25,28 @@ describe("arena team grouping and teammate lookup", () => {
     expect(groups.every((g) => g.players.length === 2)).toBe(true);
   });
 
-  it("getArenaTeammate returns the other participant in the same subteam", () => {
+  it("groups current participants into 6 subteams of 3", () => {
+    const participants: RawParticipant[] = [];
+    for (let sub = 1; sub <= 6; sub++) {
+      participants.push(makeParticipant({ playerSubteamId: sub }));
+      participants.push(makeParticipant({ playerSubteamId: sub }));
+      participants.push(makeParticipant({ playerSubteamId: sub }));
+    }
+    const groups = groupArenaTeams(participants);
+    expect(groups.length).toBe(6);
+    expect(groups.every((g) => g.players.length === 3)).toBe(true);
+  });
+
+  it("getArenaTeammates returns every other participant in the same subteam", () => {
     const a = makeParticipant({ puuid: testPuuid("A"), playerSubteamId: 3 });
     const b = makeParticipant({ puuid: testPuuid("B"), playerSubteamId: 3 });
-    const c = makeParticipant({ puuid: testPuuid("C"), playerSubteamId: 4 });
-    const teammate = getArenaTeammate(a, [a, b, c]);
-    expect(teammate?.puuid).toBe(testPuuid("B"));
+    const c = makeParticipant({ puuid: testPuuid("C"), playerSubteamId: 3 });
+    const d = makeParticipant({ puuid: testPuuid("D"), playerSubteamId: 4 });
+    const teammates = getArenaTeammates(a, [a, b, c, d]);
+    expect(teammates.map((p) => p.puuid)).toEqual([
+      testPuuid("B"),
+      testPuuid("C"),
+    ]);
   });
 
   it("throws on invalid subteam ids or wrong sizes", () => {
@@ -58,8 +74,6 @@ describe("arena team grouping and teammate lookup", () => {
       makeParticipant({ playerSubteamId: 8, placement: 1 }),
     ];
     const participants = [a, b, ...others];
-    expect(async () => {
-      await toArenaSubteams(participants);
-    }).toThrow();
+    expect(() => toArenaSubteams(participants)).toThrow();
   });
 });

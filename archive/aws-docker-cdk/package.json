@@ -3,14 +3,14 @@
   "version": "1.0.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shepherdjerred/aws-docker-cdk.git"
+    "url": "git+https://github.com/shepherdjerred/monorepo.git"
   },
   "author": "Jerred Shepherd",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/shepherdjerred/aws-docker-cdk/issues"
+    "url": "https://github.com/shepherdjerred/monorepo/issues"
   },
-  "homepage": "https://github.com/shepherdjerred/aws-docker-cdk#readme",
+  "homepage": "https://github.com/shepherdjerred/monorepo/tree/main/archive/aws-docker-cdk#readme",
   "bin": {
     "infrastructure": "bin/cdk.js"
   },

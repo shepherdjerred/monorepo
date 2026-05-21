@@ -24,8 +24,10 @@
     "format:write": "bunx prettier --write src",
     "typecheck": "bunx tsc --noEmit",
     "generate": "bun run db:generate",
+    "generate-lane-priors": "bun run scripts/generate-lane-priors.ts",
+    "evaluate-lane-priors": "bun run scripts/evaluate-lane-priors.ts",
     "db:generate": "bunx --trust prisma generate && bun run brand-types && bunx prettier --write generated/ && bun run generate:test-template",
-    "generate:test-template": "bun run scripts/generate-test-template-db.ts",
+    "generate:test-template": "RUST_LOG=info bun run scripts/generate-test-template-db.ts",
     "brand-types": "bun run scripts/brand-prisma-types.ts",
     "db:push": "bunx prisma db push",
     "db:migrate": "bunx prisma migrate dev",
@@ -41,9 +43,18 @@
     "@prisma/adapter-libsql": "7.8.0",
     "@prisma/client": "^7.8.0",
     "@prisma/client-runtime-utils": "7.8.0",
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/context-async-hooks": "^2.7.1",
+    "@opentelemetry/core": "^2.7.1",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.218.0",
+    "@opentelemetry/resources": "^2.7.1",
+    "@opentelemetry/sdk-node": "^0.218.0",
+    "@opentelemetry/sdk-trace-base": "^2.7.1",
+    "@opentelemetry/semantic-conventions": "^1.40.0",
     "@scout-for-lol/data": "file:../data",
     "@scout-for-lol/report": "file:../report",
     "@sentry/bun": "^10.0.0",
+    "@shepherdjerred/llm-observability": "file:../../../llm-observability",
     "@trpc/server": "11",
     "cron": "^4.1.4",
     "cron-parser": "^5.5.0",
@@ -85,11 +96,11 @@
   "license": "GPL-3.0-only",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shepherdjerred/scout-for-lol.git"
+    "url": "git+https://github.com/shepherdjerred/monorepo.git"
   },
-  "homepage": "https://github.com/shepherdjerred/scout-for-lol",
+  "homepage": "https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol",
   "bugs": {
-    "url": "https://github.com/shepherdjerred/scout-for-lol/issues"
+    "url": "https://github.com/shepherdjerred/monorepo/issues"
   },
   "imports": {
     "#src/*": "./src/*",

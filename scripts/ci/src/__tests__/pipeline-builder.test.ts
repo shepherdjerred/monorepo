@@ -241,6 +241,25 @@ describe("buildPipeline", () => {
       }
     });
 
+    it("checks TasksForObsidian iOS native dependencies when the package changes", () => {
+      const affected = emptyAffected();
+      affected.packages.add("tasks-for-obsidian");
+
+      const pipeline = buildPipeline(affected);
+      const pkgGroup = pipeline.steps
+        .filter(isGroup)
+        .find((g) => g.key === "pkg-tasks-for-obsidian");
+      const nativeDepsStep = pkgGroup?.steps.find(
+        (s) => s.key === "ios-native-deps-tasks-for-obsidian",
+      );
+
+      expect(nativeDepsStep).toBeDefined();
+      expect(nativeDepsStep?.command).toContain(
+        ".buildkite/scripts/tasks-for-obsidian-ios-native-deps.sh",
+      );
+      expect(nativeDepsStep?.soft_fail).toBeUndefined();
+    });
+
     it("only builds the image whose package actually changed", () => {
       const affected = emptyAffected();
       affected.packages.add("temporal");
@@ -373,6 +392,19 @@ describe("buildPipeline", () => {
       for (const key of asyncKeys) {
         expect(Array.isArray(deps) ? deps : []).not.toContain(key);
       }
+    });
+
+    it("includes TasksForObsidian iOS native dependency check in full builds", () => {
+      const pipeline = buildPipeline(fullBuild());
+      const pkgGroup = pipeline.steps
+        .filter(isGroup)
+        .find((g) => g.key === "pkg-tasks-for-obsidian");
+
+      expect(
+        pkgGroup?.steps.some(
+          (s) => s.key === "ios-native-deps-tasks-for-obsidian",
+        ),
+      ).toBe(true);
     });
 
     it("smoke tests gate image pushes (smoke before push)", () => {
@@ -799,6 +831,7 @@ describe("buildPipeline", () => {
         "trivy-scan",
         "semgrep-scan",
         "tunnel-dns-coverage",
+        "ios-native-deps-tasks-for-obsidian",
       ]);
       const nonDagger: string[] = [];
 

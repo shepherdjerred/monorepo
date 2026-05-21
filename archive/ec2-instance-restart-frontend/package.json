@@ -4,12 +4,12 @@
   "private": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shepherdjerred/ec2-instance-restart-frontend.git"
+    "url": "git+https://github.com/shepherdjerred/monorepo.git"
   },
   "author": "Jerred Shepherd",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/shepherdjerred/ec2-instance-restart-frontend/issues"
+    "url": "https://github.com/shepherdjerred/monorepo/issues"
   },
   "scripts": {
     "start": "react-scripts start",

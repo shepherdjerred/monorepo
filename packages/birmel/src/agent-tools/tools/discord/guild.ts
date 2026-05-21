@@ -8,7 +8,7 @@ import { validateSnowflakes } from "./validation.ts";
 export const manageGuildTool = createTool({
   id: "manage-guild",
   description:
-    "Manage Discord guild/server: get info, get owner, modify settings, set icon, set banner, or get audit logs",
+    "Manage the guild/server itself: read guild info or owner, edit guild-level settings (name/description) via 'modify', upload icon or banner, or read audit logs. Does NOT manage channels, members, or roles — use the dedicated tools for those.",
   inputSchema: z.object({
     guildId: z.string().describe("The ID of the guild"),
     action: z
@@ -20,7 +20,9 @@ export const manageGuildTool = createTool({
         "set-banner",
         "get-audit-logs",
       ])
-      .describe("The action to perform"),
+      .describe(
+        "The action to perform. 'modify' edits the guild's own name/description — use 'set-icon' / 'set-banner' for image assets, not 'modify'.",
+      ),
     name: z.string().optional().describe("New server name (for modify)"),
     description: z
       .string()

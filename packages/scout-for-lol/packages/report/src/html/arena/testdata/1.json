@@ -142,205 +142,207 @@
         }
       },
       "teamId": 1,
-      "teammate": {
-        "arenaMetrics": {
-          "playerScore0": 2,
-          "playerScore1": 12,
-          "playerScore2": 1298.667236328125,
-          "playerScore3": 0.4057539999485016,
-          "playerScore4": 6.949999809265137,
-          "playerScore5": 5298.90185546875,
-          "playerScore6": 2998.101318359375,
-          "playerScore7": 919,
-          "playerScore8": 17.353477478027344
-        },
-        "assists": 3,
-        "augments": [
-          {
-            "apiName": "Overflow",
-            "calculations": {
-              "ManaCalc": {
-                "__type": "GameCalculation",
-                "mDisplayAsPercent": true,
-                "mFormulaParts": [
-                  {
-                    "__type": "NamedDataValueCalculationPart",
-                    "mDataValue": "{89ba3820}"
-                  },
-                  {
-                    "__type": "AbilityResourceByCoefficientCalculationPart",
-                    "mCoefficient": 0.004999999888241291
+      "teammates": [
+        {
+          "arenaMetrics": {
+            "playerScore0": 2,
+            "playerScore1": 12,
+            "playerScore2": 1298.667236328125,
+            "playerScore3": 0.4057539999485016,
+            "playerScore4": 6.949999809265137,
+            "playerScore5": 5298.90185546875,
+            "playerScore6": 2998.101318359375,
+            "playerScore7": 919,
+            "playerScore8": 17.353477478027344
+          },
+          "assists": 3,
+          "augments": [
+            {
+              "apiName": "Overflow",
+              "calculations": {
+                "ManaCalc": {
+                  "__type": "GameCalculation",
+                  "mDisplayAsPercent": true,
+                  "mFormulaParts": [
+                    {
+                      "__type": "NamedDataValueCalculationPart",
+                      "mDataValue": "{89ba3820}"
+                    },
+                    {
+                      "__type": "AbilityResourceByCoefficientCalculationPart",
+                      "mCoefficient": 0.004999999888241291
+                    }
+                  ],
+                  "mMultiplier": {
+                    "__type": "NumberCalculationPart",
+                    "mNumber": 0.009999999776482582
                   }
-                ],
-                "mMultiplier": {
-                  "__type": "NumberCalculationPart",
-                  "mNumber": 0.009999999776482582
                 }
-              }
-            },
-            "dataValues": {
-              "InitialAmpPercent": 10
-            },
-            "desc": "Your <scaleMana>Mana</scaleMana> costs double. Your Ability <healing>Heals</healing>, <shield>Shields</shield>, and damage are increased based on your <scaleMana>max Mana</scaleMana>.",
-            "iconLarge": "assets/ux/cherry/augments/icons/overflow_large.png",
-            "iconSmall": "assets/ux/cherry/augments/icons/overflow_small.png",
-            "id": 311,
-            "name": "Overflow",
-            "rarity": "prismatic",
-            "tooltip": "Your <scaleMana>Mana</scaleMana> costs double. Your Ability <healing>Heals</healing>, <shield>Shields</shield>, and damage are <scaleMana>@ManaCalc@</scaleMana> more effective.",
-            "type": "full"
-          },
-          {
-            "apiName": "DualWield",
-            "calculations": {
-              "{84eb6ffe}": {
-                "__type": "GameCalculation",
-                "mFormulaParts": [
-                  {
-                    "__type": "StatByNamedDataValueCalculationPart",
-                    "mDataValue": "AttackReduction",
-                    "mStat": 2
-                  }
-                ]
-              }
-            },
-            "dataValues": {
-              "AttackReduction": 0.4000000059604645,
-              "AttackSpeed": 0.25,
-              "OnHitMod": 0.4000000059604645,
-              "SecondMissileDelay": 0.15000000596046448
-            },
-            "desc": "When you Attack, fire a secondary bolt that deals @AttackReduction*100@% damage and applies your {{ Item_Keyword_OnHit }} effects at @OnHitMod*100@% effectiveness. Gain <attackSpeed>@AttackSpeed*100@% total Attack Speed</attackSpeed>.",
-            "iconLarge": "assets/ux/cherry/augments/icons/dualwield_large.png",
-            "iconSmall": "assets/ux/cherry/augments/icons/dualwield_small.png",
-            "id": 225,
-            "name": "Dual Wield",
-            "rarity": "gold",
-            "tooltip": "When you Attack, fire a secondary bolt that deals @AttackReduction*100@% damage and applies your {{ Item_Keyword_OnHit }} effects at @OnHitMod*100@% effectiveness. Gain <attackSpeed>@AttackSpeed*100@% total Attack Speed</attackSpeed>.",
-            "type": "full"
-          },
-          {
-            "apiName": "SymphonyofWar",
-            "calculations": {
-              "ASMelee": {
-                "__type": "GameCalculation",
-                "mFormulaParts": [
-                  {
-                    "__type": "ByCharLevelBreakpointsCalculationPart",
-                    "mBreakpoints": [
-                      {
-                        "__type": "Breakpoint",
-                        "mAdditionalBonusAtThisLevel": 0.009999999776482582,
-                        "mLevel": 3
-                      },
-                      {
-                        "__type": "Breakpoint",
-                        "mAdditionalBonusAtThisLevel": 0.009999999776482582,
-                        "mLevel": 6
-                      },
-                      {
-                        "__type": "Breakpoint",
-                        "mAdditionalBonusAtThisLevel": 0.009999999776482582,
-                        "mLevel": 9
-                      },
-                      {
-                        "__type": "Breakpoint",
-                        "mAdditionalBonusAtThisLevel": 0.009999999776482582,
-                        "mLevel": 12
-                      },
-                      {
-                        "__type": "Breakpoint",
-                        "mAdditionalBonusAtThisLevel": 0.009999999776482582,
-                        "mLevel": 15
-                      }
-                    ],
-                    "mLevel1Value": 0.12999999523162842
-                  }
-                ]
               },
-              "ASRanged": {
-                "__type": "GameCalculation",
-                "mFormulaParts": [
-                  {
-                    "__type": "ByCharLevelBreakpointsCalculationPart",
-                    "mBreakpoints": [
-                      {
-                        "__type": "Breakpoint",
-                        "mAdditionalBonusAtThisLevel": 0.009999999776482582,
-                        "mLevel": 3
-                      },
-                      {
-                        "__type": "Breakpoint",
-                        "mAdditionalBonusAtThisLevel": 0.009999999776482582,
-                        "mLevel": 6
-                      },
-                      {
-                        "__type": "Breakpoint",
-                        "mAdditionalBonusAtThisLevel": 0.009999999776482582,
-                        "mLevel": 9
-                      },
-                      {
-                        "__type": "Breakpoint",
-                        "mAdditionalBonusAtThisLevel": 0.009999999776482582,
-                        "mLevel": 12
-                      }
-                    ],
-                    "mLevel1Value": 0.07999999821186066
-                  }
-                ]
-              }
+              "dataValues": {
+                "InitialAmpPercent": 10
+              },
+              "desc": "Your <scaleMana>Mana</scaleMana> costs double. Your Ability <healing>Heals</healing>, <shield>Shields</shield>, and damage are increased based on your <scaleMana>max Mana</scaleMana>.",
+              "iconLarge": "assets/ux/cherry/augments/icons/overflow_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/overflow_small.png",
+              "id": 311,
+              "name": "Overflow",
+              "rarity": "prismatic",
+              "tooltip": "Your <scaleMana>Mana</scaleMana> costs double. Your Ability <healing>Heals</healing>, <shield>Shields</shield>, and damage are <scaleMana>@ManaCalc@</scaleMana> more effective.",
+              "type": "full"
             },
-            "dataValues": {
-              "ASCap": 10,
-              "BuffDuration": 5,
-              "Duration": 6,
-              "HealingPercent": 0.10000000149011612,
-              "MaxAdaptivePerStack": 5.5,
-              "MaxStacks": 12,
-              "MinAdaptivePerStack": 3,
-              "PerCastIDLockout": 10,
-              "RangeBonus": 50,
-              "RangedHealingPercent": 0.07999999821186066,
-              "StackCap": 6,
-              "TimeUntilNextStackFromSameSpell": 5
+            {
+              "apiName": "DualWield",
+              "calculations": {
+                "{84eb6ffe}": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "StatByNamedDataValueCalculationPart",
+                      "mDataValue": "AttackReduction",
+                      "mStat": 2
+                    }
+                  ]
+                }
+              },
+              "dataValues": {
+                "AttackReduction": 0.4000000059604645,
+                "AttackSpeed": 0.25,
+                "OnHitMod": 0.4000000059604645,
+                "SecondMissileDelay": 0.15000000596046448
+              },
+              "desc": "When you Attack, fire a secondary bolt that deals @AttackReduction*100@% damage and applies your {{ Item_Keyword_OnHit }} effects at @OnHitMod*100@% effectiveness. Gain <attackSpeed>@AttackSpeed*100@% total Attack Speed</attackSpeed>.",
+              "iconLarge": "assets/ux/cherry/augments/icons/dualwield_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/dualwield_small.png",
+              "id": 225,
+              "name": "Dual Wield",
+              "rarity": "gold",
+              "tooltip": "When you Attack, fire a secondary bolt that deals @AttackReduction*100@% damage and applies your {{ Item_Keyword_OnHit }} effects at @OnHitMod*100@% effectiveness. Gain <attackSpeed>@AttackSpeed*100@% total Attack Speed</attackSpeed>.",
+              "type": "full"
             },
-            "desc": "Gain the <spellName>Lethal Tempo</spellName> and <spellName>Conqueror</spellName> Keystone Runes.",
-            "iconLarge": "assets/ux/cherry/augments/icons/symphonyofwar_large.png",
-            "iconSmall": "assets/ux/cherry/augments/icons/symphonyofwar_small.png",
-            "id": 79,
-            "name": "Symphony of War",
-            "rarity": "gold",
-            "tooltip": "Gain the <spellName>Lethal Tempo</spellName> and <spellName>Conqueror</spellName> Keystone Runes.",
-            "type": "full"
-          },
-          {
-            "apiName": "TransmutePrismatic",
-            "calculations": {},
-            "dataValues": {},
-            "desc": "Gain a random Prismatic Augment.",
-            "iconLarge": "assets/ux/cherry/augments/icons/transmuteprismatic_large.png",
-            "iconSmall": "assets/ux/cherry/augments/icons/transmuteprismatic_small.png",
-            "id": 238,
-            "name": "Transmute: Prismatic",
-            "rarity": "prismatic",
-            "tooltip": "Gain a random Prismatic Augment.",
-            "type": "full"
+            {
+              "apiName": "SymphonyofWar",
+              "calculations": {
+                "ASMelee": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "ByCharLevelBreakpointsCalculationPart",
+                      "mBreakpoints": [
+                        {
+                          "__type": "Breakpoint",
+                          "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                          "mLevel": 3
+                        },
+                        {
+                          "__type": "Breakpoint",
+                          "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                          "mLevel": 6
+                        },
+                        {
+                          "__type": "Breakpoint",
+                          "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                          "mLevel": 9
+                        },
+                        {
+                          "__type": "Breakpoint",
+                          "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                          "mLevel": 12
+                        },
+                        {
+                          "__type": "Breakpoint",
+                          "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                          "mLevel": 15
+                        }
+                      ],
+                      "mLevel1Value": 0.12999999523162842
+                    }
+                  ]
+                },
+                "ASRanged": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "ByCharLevelBreakpointsCalculationPart",
+                      "mBreakpoints": [
+                        {
+                          "__type": "Breakpoint",
+                          "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                          "mLevel": 3
+                        },
+                        {
+                          "__type": "Breakpoint",
+                          "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                          "mLevel": 6
+                        },
+                        {
+                          "__type": "Breakpoint",
+                          "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                          "mLevel": 9
+                        },
+                        {
+                          "__type": "Breakpoint",
+                          "mAdditionalBonusAtThisLevel": 0.009999999776482582,
+                          "mLevel": 12
+                        }
+                      ],
+                      "mLevel1Value": 0.07999999821186066
+                    }
+                  ]
+                }
+              },
+              "dataValues": {
+                "ASCap": 10,
+                "BuffDuration": 5,
+                "Duration": 6,
+                "HealingPercent": 0.10000000149011612,
+                "MaxAdaptivePerStack": 5.5,
+                "MaxStacks": 12,
+                "MinAdaptivePerStack": 3,
+                "PerCastIDLockout": 10,
+                "RangeBonus": 50,
+                "RangedHealingPercent": 0.07999999821186066,
+                "StackCap": 6,
+                "TimeUntilNextStackFromSameSpell": 5
+              },
+              "desc": "Gain the <spellName>Lethal Tempo</spellName> and <spellName>Conqueror</spellName> Keystone Runes.",
+              "iconLarge": "assets/ux/cherry/augments/icons/symphonyofwar_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/symphonyofwar_small.png",
+              "id": 79,
+              "name": "Symphony of War",
+              "rarity": "gold",
+              "tooltip": "Gain the <spellName>Lethal Tempo</spellName> and <spellName>Conqueror</spellName> Keystone Runes.",
+              "type": "full"
+            },
+            {
+              "apiName": "TransmutePrismatic",
+              "calculations": {},
+              "dataValues": {},
+              "desc": "Gain a random Prismatic Augment.",
+              "iconLarge": "assets/ux/cherry/augments/icons/transmuteprismatic_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/transmuteprismatic_small.png",
+              "id": 238,
+              "name": "Transmute: Prismatic",
+              "rarity": "prismatic",
+              "tooltip": "Gain a random Prismatic Augment.",
+              "type": "full"
+            }
+          ],
+          "championName": "Nocturne",
+          "damage": 63586,
+          "deaths": 13,
+          "gold": 13900,
+          "items": [226672, 223124, 443090, 223042, 223091, 223153, 3348],
+          "kills": 15,
+          "level": 18,
+          "riotIdGameName": "ISSUESERASED",
+          "teamSupport": {
+            "damageShieldedOnTeammate": 0,
+            "damageTakenPercentage": 0.11960508933672628,
+            "healsOnTeammate": 0
           }
-        ],
-        "championName": "Nocturne",
-        "damage": 63586,
-        "deaths": 13,
-        "gold": 13900,
-        "items": [226672, 223124, 443090, 223042, 223091, 223153, 3348],
-        "kills": 15,
-        "level": 18,
-        "riotIdGameName": "ISSUESERASED",
-        "teamSupport": {
-          "damageShieldedOnTeammate": 0,
-          "damageTakenPercentage": 0.11960508933672628,
-          "healsOnTeammate": 0
         }
-      }
+      ]
     }
   ],
   "queueType": "arena",

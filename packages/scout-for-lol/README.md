@@ -29,9 +29,9 @@ Create custom competitions with configurable criteria:
 
 ### ⚡ Arena Mode Support
 
-Full support for League's Arena mode with detailed reports for all 16 players, including:
+Full support for League's Arena mode with detailed reports for current 18-player matches, plus legacy duo Arena reports, including:
 
-- Complete statistics for all 8 teams with team KDA
+- Complete statistics for all six teams of three with team KDA
 - Augment icons showing selections throughout the match
 - Final placements and performance metrics
 - Optimized report layout for better readability
@@ -153,8 +153,8 @@ The bot requires API tokens for Discord and Riot Games. In test mode (`NODE_ENV=
 - **Documentation**: [scout-for-lol.com/docs](https://scout-for-lol.com/docs)
 - **What's New**: [scout-for-lol.com/whatsnew](https://scout-for-lol.com/whatsnew)
 - **Add to Discord**: [Install Scout](https://discord.com/oauth2/authorize?client_id=1182800769188110366)
-- **GitHub**: [shepherdjerred/scout-for-lol](https://github.com/shepherdjerred/scout-for-lol)
-- **Support**: [GitHub Issues](https://github.com/shepherdjerred/scout-for-lol/issues)
+- **GitHub**: [monorepo package](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol)
+- **Support**: [GitHub Issues](https://github.com/shepherdjerred/monorepo/issues)
 
 ## Privacy & Terms
 

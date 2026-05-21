@@ -6,10 +6,12 @@ import type { HomePayload, HomelabPayload } from "../types.ts";
 const config: AppConfig = {
   port: 3000,
   trmnlApiKey: "secret",
+  displayTimeZone: "America/Los_Angeles",
   homeAssistant: {
     url: "http://homeassistant.local:8123",
     token: "ha-token",
     batteryThreshold: 20,
+    unavailableIgnoredDomains: [],
     presence: [],
     security: [],
     climate: [],
@@ -27,6 +29,7 @@ const config: AppConfig = {
 const homePayload: HomePayload = {
   screen: "home",
   generated_at: "2026-05-09T00:00:00.000Z",
+  generated_time: "5:00 PM",
   status: "ok",
   summary: "0 home · 0 unavailable · 0 low battery",
   counts: { unavailable: 0, low_battery: 0 },
@@ -41,6 +44,7 @@ const homePayload: HomePayload = {
 const homelabPayload: HomelabPayload = {
   screen: "homelab",
   generated_at: "2026-05-09T00:00:00.000Z",
+  generated_time: "5:00 PM",
   status: "ok",
   summary: "1/1 nodes · 0 critical alerts · 0 Bugsink · 0 PD",
   bugsink: { status: "ok", unresolved: 0, projects: [] },
@@ -97,5 +101,32 @@ describe("createHandler", () => {
     );
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual(homelabPayload);
+  });
+
+  it("serves authenticated diagnostics", async () => {
+    const handler = createHandler(config, {
+      collectHome: async () => ({
+        ...homePayload,
+        status: "warning",
+        errors: ["Home warning"],
+      }),
+      collectHomelab: async () => ({
+        ...homelabPayload,
+        status: "unknown",
+        errors: ["PagerDuty failed"],
+      }),
+    });
+    const response = await handler(
+      new Request("http://localhost/api/diagnostics", {
+        headers: { "x-api-key": "secret" },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      status: "warning",
+      home: { status: "warning", errors: ["Home warning"] },
+      homelab: { status: "unknown", errors: ["PagerDuty failed"] },
+    });
   });
 });

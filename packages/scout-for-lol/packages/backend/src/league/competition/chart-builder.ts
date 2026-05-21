@@ -123,13 +123,22 @@ function buildBars(
 }
 
 /**
- * Resolve the chart's x-axis time window for line charts:
+ * Resolve the chart's x-axis time window for line charts.
+ *
+ * Base window:
  * - startDate = competition.startDate (always populated by parseCompetition)
  * - endDate   = min(now, competition.endDate) so trailing whitespace doesn't
  *              dominate the chart while the competition is still active
+ *
+ * Then cropped to the actual snapshot range so the chart doesn't show empty
+ * gutters on the left (snapshots not yet collected) or the right (lag between
+ * the last snapshot and `now`). When cropping occurs, we log the original and
+ * cropped windows so it's obvious from the logs why the chart's x-axis
+ * doesn't match the competition window 1:1.
  */
 function resolveTimeWindow(
   competition: CompetitionWithCriteria,
+  snapshots: CachedLeaderboard[],
 ): { startDate: Date; endDate: Date } | null {
   if (competition.startDate === null || competition.endDate === null) {
     logger.warn(
@@ -137,10 +146,37 @@ function resolveTimeWindow(
     );
     return null;
   }
+  const firstSnapshot = snapshots[0];
+  const lastSnapshot = snapshots.at(-1);
+  if (firstSnapshot === undefined || lastSnapshot === undefined) {
+    return null;
+  }
+
+  const firstSnapshotAt = new Date(firstSnapshot.calculatedAt);
+  const lastSnapshotAt = new Date(lastSnapshot.calculatedAt);
   const now = new Date();
-  const endDate =
+  const competitionEnd =
     competition.endDate.getTime() < now.getTime() ? competition.endDate : now;
-  return { startDate: competition.startDate, endDate };
+
+  const startDate =
+    firstSnapshotAt.getTime() > competition.startDate.getTime()
+      ? firstSnapshotAt
+      : competition.startDate;
+  const endDate =
+    lastSnapshotAt.getTime() < competitionEnd.getTime()
+      ? lastSnapshotAt
+      : competitionEnd;
+
+  if (
+    startDate.getTime() !== competition.startDate.getTime() ||
+    endDate.getTime() !== competitionEnd.getTime()
+  ) {
+    logger.info(
+      `[CompetitionChart] 🪟 Competition ${competition.id.toString()} chart window cropped to snapshot range: ${startDate.toISOString()} → ${endDate.toISOString()} (competition window: ${competition.startDate.toISOString()} → ${competitionEnd.toISOString()})`,
+    );
+  }
+
+  return { startDate, endDate };
 }
 
 /**
@@ -207,10 +243,6 @@ export async function buildCompetitionChartAttachment(
         });
       })
       .with("line", async (): Promise<CompetitionChartProps | null> => {
-        const window = resolveTimeWindow(competition);
-        if (window === null) {
-          return null;
-        }
         const snapshots = await loadHistoricalLeaderboardSnapshots(
           competition.id,
         );
@@ -218,6 +250,10 @@ export async function buildCompetitionChartAttachment(
           logger.info(
             `[CompetitionChart] ⚠️  Skipping line chart for competition ${competition.id.toString()} — only ${snapshots.length.toString()} snapshot(s) available`,
           );
+          return null;
+        }
+        const window = resolveTimeWindow(competition, snapshots);
+        if (window === null) {
           return null;
         }
         return {

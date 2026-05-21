@@ -13,6 +13,7 @@ export type EntitySummary = {
 export type HomePayload = {
   screen: "home";
   generated_at: string;
+  generated_time: string;
   status: Status;
   summary: string;
   counts: {
@@ -30,6 +31,7 @@ export type HomePayload = {
 export type HomelabPayload = {
   screen: "homelab";
   generated_at: string;
+  generated_time: string;
   status: Status;
   summary: string;
   bugsink: BugsinkSection;

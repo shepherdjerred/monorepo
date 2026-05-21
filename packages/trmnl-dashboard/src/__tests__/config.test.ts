@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { parseEntities } from "../config.ts";
+import { loadConfig, parseEntities } from "../config.ts";
 import { worstStatus } from "../status.ts";
 
 describe("parseEntities", () => {
@@ -19,6 +19,21 @@ describe("parseEntities", () => {
         label: "binary_sensor.front_door",
       },
     ]);
+  });
+});
+
+describe("loadConfig", () => {
+  it("defaults service-specific dashboard configuration", () => {
+    const config = loadConfig({
+      TRMNL_API_KEY: "secret",
+      HA_TOKEN: "ha-token",
+    });
+
+    expect(config.displayTimeZone).toBe("America/Los_Angeles");
+    expect(config.homelab.bugsinkUrl).toBe(
+      "http://bugsink-bugsink-service.bugsink:8000/api/canonical/0",
+    );
+    expect(config.homeAssistant.unavailableIgnoredDomains).toContain("scene");
   });
 });
 

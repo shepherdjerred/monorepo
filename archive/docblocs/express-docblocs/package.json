@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ShepherdJerred/express-docblocs.git"
+    "url": "git+https://github.com/shepherdjerred/monorepo.git"
   },
   "author": "Jerred Shepherd",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/ShepherdJerred/express-docblocs/issues"
+    "url": "https://github.com/shepherdjerred/monorepo/issues"
   },
-  "homepage": "https://github.com/ShepherdJerred/express-docblocs#readme",
+  "homepage": "https://github.com/shepherdjerred/monorepo#readme",
   "devDependencies": {
     "eslint": "^4.19.1",
     "semistandard": "^12.0.1"

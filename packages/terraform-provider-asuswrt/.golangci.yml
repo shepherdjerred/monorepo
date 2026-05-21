@@ -182,7 +182,7 @@ formatters:
       extra-rules: true
     goimports:
       local-prefixes:
-        - github.com/shepherdjerred/terraform-provider-asuswrt
+        - github.com/shepherdjerred/monorepo/packages/terraform-provider-asuswrt
 
 issues:
   max-issues-per-linter: 0

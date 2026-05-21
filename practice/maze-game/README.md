@@ -1,6 +1,6 @@
 # Maze
 
-[![Build Status](https://travis-ci.org/ShepherdJerred/maze-game.svg?branch=master)](https://travis-ci.org/ShepherdJerred/maze-game)
+[![Build Status](https://travis-ci.org/shepherdjerred/monorepo?branch=master)](https://travis-ci.org/shepherdjerred/monorepo)
 
 ## About
 
@@ -16,7 +16,7 @@ The map is random every time, although it generally looks pretty much the same. 
 
 ### Playing the game
 
-1. Download the [latest release](https://github.com/ShepherdJerred/Maze/releases/latest)
+1. Download the [latest release](https://github.com/shepherdjerred/monorepo/releases/latest)
 2. Create a .bat file with the following
 
    java -jar maze-1.0.jar -Dfile.encoding=UTF-8

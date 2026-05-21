@@ -194,7 +194,7 @@
         &lt;h2&gt;Bootstrapping&lt;/h2&gt;
         &lt;p&gt;This does require a small amount of manual bootstrapping, which I describe in my
         &lt;a
-        href=&quot;https://github.com/shepherdjerred/homelab/blob/main/README.md&quot;&gt;repository
+        href=&quot;https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/README.md&quot;&gt;repository
         README&lt;/a&gt;. Whenever I setup a new cluster/node, I need to:&lt;/p&gt;
         &lt;ul&gt;
         &lt;li&gt;Install ArgoCD: &lt;code&gt;kubectl apply -n argocd -f
@@ -885,7 +885,7 @@
         import diagram from &quot;./xstate/diagram.png&quot;;
         import simulation from &quot;./xstate/simulation.mp4&quot;;&lt;/p&gt;
         &lt;p&gt;My current side project, &lt;a
-        href=&quot;https://github.com/shepherdjerred/discord-plays-pokemon&quot;&gt;Discord Plays
+        href=&quot;https://github.com/shepherdjerred/monorepo/tree/main/packages/discord-plays-pokemon&quot;&gt;Discord Plays
         Pokemon&lt;/a&gt;, has a lot of dependencies. The application streams video with Discord,
         which presents a challenge. Discord does not provide APIs for streaming video, and I
         didn&apos;t want to have to reverse-engineer the client. I chose to automate interactions

@@ -1,5 +1,7 @@
 import { OPENAI_RESPONSES_PROVIDER_OPTIONS } from "@shepherdjerred/birmel/voltagent/openai-provider-options.ts";
 import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
+import { traceTextStream } from "@shepherdjerred/llm-observability";
 
 // Typing cursor for progressive updates
 export const TYPING_CURSOR = " \u258C";
@@ -58,38 +60,52 @@ export async function streamAgentResponse(params: {
   placeholderMessage: EditableMessage;
 }): Promise<StreamAttemptResult> {
   const attemptStartMs = Date.now();
-  let accumulated = "";
-  let lastEditTime = Date.now();
-  const response = await params.agent.streamText(params.input, {
-    userId: params.userId,
-    conversationId: params.conversationId,
-    providerOptions: OPENAI_RESPONSES_PROVIDER_OPTIONS,
-    abortSignal: AbortSignal.timeout(STREAM_TIMEOUT_MS),
-  });
+  const model = getConfig().openai.model;
+  const result = await traceTextStream(
+    {
+      service: "birmel",
+      callSite: `voltagent-${params.attemptName}`,
+      system: "openai",
+      model,
+      input: params.input,
+    },
+    async () => {
+      let accumulated = "";
+      let lastEditTime = Date.now();
+      const response = await params.agent.streamText(params.input, {
+        userId: params.userId,
+        conversationId: params.conversationId,
+        providerOptions: OPENAI_RESPONSES_PROVIDER_OPTIONS,
+        abortSignal: AbortSignal.timeout(STREAM_TIMEOUT_MS),
+      });
 
-  for await (const chunk of response.textStream) {
-    accumulated += chunk;
+      for await (const chunk of response.textStream) {
+        accumulated += chunk;
 
-    const now = Date.now();
-    if (
-      now - lastEditTime >= EDIT_INTERVAL_MS &&
-      accumulated.length >= MIN_CONTENT_LENGTH
-    ) {
-      try {
-        await params.placeholderMessage.edit(accumulated + TYPING_CURSOR);
-        lastEditTime = now;
-      } catch (editError) {
-        logger.debug("Failed to edit placeholder message", {
-          editError,
-          attempt: params.attemptName,
-        });
+        const now = Date.now();
+        if (
+          now - lastEditTime >= EDIT_INTERVAL_MS &&
+          accumulated.length >= MIN_CONTENT_LENGTH
+        ) {
+          try {
+            await params.placeholderMessage.edit(accumulated + TYPING_CURSOR);
+            lastEditTime = now;
+          } catch (editError) {
+            logger.debug("Failed to edit placeholder message", {
+              editError,
+              attempt: params.attemptName,
+            });
+          }
+        }
       }
-    }
-  }
+
+      return { text: accumulated };
+    },
+  );
 
   return {
     name: params.attemptName,
-    text: accumulated,
+    text: result.text,
     durationMs: Date.now() - attemptStartMs,
   };
 }

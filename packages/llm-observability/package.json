@@ -1,0 +1,73 @@
+{
+  "name": "@shepherdjerred/llm-observability",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#src/*": "./src/*"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./span-processor": "./src/archive-span-processor.ts",
+    "./wrappers/anthropic": "./src/anthropic-wrapper.ts",
+    "./wrappers/openai": "./src/openai-wrapper.ts",
+    "./wrappers/gemini": "./src/gemini-wrapper.ts",
+    "./wrappers/claude-agent": "./src/claude-agent-wrapper.ts",
+    "./wrappers/text-stream": "./src/text-stream-wrapper.ts"
+  },
+  "scripts": {
+    "build": "true",
+    "typecheck": "bunx tsc --noEmit",
+    "lint": "bunx eslint --cache .",
+    "test": "bun test test/unit",
+    "test:e2e": "docker compose -f test/e2e/compose.yaml up -d --wait && bun test test/e2e ; ec=$? ; docker compose -f test/e2e/compose.yaml down -v ; exit $ec",
+    "test:e2e:debug": "docker compose -f test/e2e/compose.yaml up -d --wait && bun test test/e2e --watch"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/core": "^2.7.1",
+    "@opentelemetry/sdk-trace-base": "^2.7.1",
+    "@opentelemetry/semantic-conventions": "^1.40.0",
+    "zod": "^4.4.3"
+  },
+  "peerDependencies": {
+    "@ai-sdk/otel": "^1.0.0-beta.6",
+    "@anthropic-ai/claude-agent-sdk": "^0.3.0",
+    "@anthropic-ai/sdk": "^0.95.0",
+    "@google/generative-ai": "^0.24.0",
+    "openai": "^6.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@ai-sdk/otel": {
+      "optional": true
+    },
+    "@anthropic-ai/claude-agent-sdk": {
+      "optional": true
+    },
+    "@anthropic-ai/sdk": {
+      "optional": true
+    },
+    "@google/generative-ai": {
+      "optional": true
+    },
+    "openai": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.145",
+    "@anthropic-ai/sdk": "^0.95.1",
+    "@google/generative-ai": "^0.24.1",
+    "@opentelemetry/context-async-hooks": "^2.7.1",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.218.0",
+    "@opentelemetry/resources": "^2.7.1",
+    "@shepherdjerred/eslint-config": "file:../eslint-config",
+    "@tsconfig/node-lts": "^24.0.0",
+    "@tsconfig/recommended": "^1.0.13",
+    "@tsconfig/strictest": "^2.0.8",
+    "@types/bun": "^1.2.0",
+    "msw": "^2.6.0",
+    "openai": "^6.34.0",
+    "typescript": "^5.7.0"
+  }
+}

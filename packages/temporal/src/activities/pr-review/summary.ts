@@ -3,6 +3,7 @@ import { Octokit } from "@octokit/rest";
 import { Context } from "@temporalio/activity";
 import * as Sentry from "@sentry/bun";
 import { z } from "zod/v4";
+import { traceAnthropic } from "@shepherdjerred/llm-observability";
 import {
   prSummaryCommentsTotal,
   prSummaryCostUsd,
@@ -15,7 +16,12 @@ import {
   upsertSummaryComment,
   type OctokitForUpsert,
 } from "#lib/pr-summary-comment.ts";
+import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
+import {
+  recordProviderIssue,
+  resolveProviderIssue,
+} from "#activities/pr-review/provider-metrics.ts";
 import {
   SUMMARY_MARKER,
   buildSummarySystemBlocks,
@@ -152,9 +158,22 @@ function workflowFields(): Record<string, unknown> {
   }
 }
 
-function isAnthropicCreditBalanceError(error: unknown): boolean {
+function classifyAnthropicProviderIssue(
+  error: unknown,
+): "credit_balance_low" | "rate_limit" | null {
   const message = error instanceof Error ? error.message : String(error);
-  return message.includes("credit balance is too low");
+  const lowerMessage = message.toLowerCase();
+  if (lowerMessage.includes("credit balance is too low")) {
+    return "credit_balance_low";
+  }
+  if (
+    lowerMessage.includes("rate_limit_error") ||
+    lowerMessage.includes("rate limit") ||
+    lowerMessage.includes("429")
+  ) {
+    return "rate_limit";
+  }
+  return null;
 }
 
 function captureWithContext(
@@ -162,6 +181,23 @@ function captureWithContext(
   pr: PrSummaryInput,
   extra: Record<string, unknown> = {},
 ): void {
+  const providerIssueKind = classifyAnthropicProviderIssue(error);
+  if (providerIssueKind !== null) {
+    recordProviderIssue({
+      app: "temporal",
+      provider: "anthropic",
+      kind: providerIssueKind,
+      source: "pr_summary",
+    });
+    jsonLog("warning", "Anthropic provider issue recorded", {
+      providerIssueKind,
+      owner: pr.owner,
+      repo: pr.repo,
+      prNumber: pr.prNumber,
+    });
+    return;
+  }
+
   Sentry.withScope((scope) => {
     scope.setTag("component", COMPONENT);
     scope.setTag("repo", `${pr.owner}/${pr.repo}`);
@@ -172,10 +208,6 @@ function captureWithContext(
       commitSha: pr.commitSha,
       ...extra,
     });
-    if (isAnthropicCreditBalanceError(error)) {
-      scope.setTag("provider_error", "anthropic_credit_balance_low");
-      scope.setFingerprint(["anthropic-credit-balance-low"]);
-    }
     Sentry.captureException(error);
   });
 }
@@ -242,16 +274,30 @@ async function callHaiku(
   systemBlocks: Anthropic.TextBlockParam[],
   userPrompt: string,
 ): Promise<{ text: string; usage: Anthropic.Usage }> {
+  const messages = [{ role: "user", content: userPrompt }] as const;
   // Stream so we don't bump the SDK HTTP timeout if the model is slow.
   // We don't need per-token UX — `finalMessage()` collects the whole thing.
-  const stream = anthropic.messages.stream({
-    model: SUMMARY_MODEL,
-    max_tokens: MAX_OUTPUT_TOKENS,
-    system: systemBlocks,
-    messages: [{ role: "user", content: userPrompt }],
-  });
-
-  const final = await stream.finalMessage();
+  const final = await traceAnthropic(
+    {
+      service: "temporal",
+      callSite: "pr-summary",
+      request: {
+        model: SUMMARY_MODEL,
+        max_tokens: MAX_OUTPUT_TOKENS,
+        system: systemBlocks,
+        messages: [...messages],
+      },
+    },
+    async () =>
+      anthropic.messages
+        .stream({
+          model: SUMMARY_MODEL,
+          max_tokens: MAX_OUTPUT_TOKENS,
+          system: systemBlocks,
+          messages: [...messages],
+        })
+        .finalMessage(),
+  );
 
   let text = "";
   for (const block of final.content) {
@@ -316,6 +362,18 @@ export async function runPrSummary(
         systemBlocks,
         userPrompt,
       );
+      resolveProviderIssue({
+        app: "temporal",
+        provider: "anthropic",
+        kind: "credit_balance_low",
+        source: "pr_summary",
+      });
+      resolveProviderIssue({
+        app: "temporal",
+        provider: "anthropic",
+        kind: "rate_limit",
+        source: "pr_summary",
+      });
 
       const costUsd = estimateCostUsd(usage);
 
@@ -471,7 +529,8 @@ export type PrSummaryActivities = typeof prSummaryActivities;
 export const prSummaryActivities = {
   async runPrSummaryPipeline(pr: PrSummaryInput): Promise<RunSummaryResult> {
     const authToken = envOrThrow("CLAUDE_CODE_OAUTH_TOKEN");
-    const githubToken = envOrThrow("GITHUB_PERSONAL_ACCESS_TOKEN");
+    const tokenResult = await createGitHubAppInstallationToken();
+    const githubToken = tokenResult.token;
 
     const anthropic = new Anthropic({ authToken });
     const octokit = new Octokit({ auth: githubToken });

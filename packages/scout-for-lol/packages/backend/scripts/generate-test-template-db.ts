@@ -5,103 +5,43 @@
  */
 
 import { createLogger } from "#src/logger.ts";
+import { Database } from "bun:sqlite";
+import { existsSync, readdirSync, readFileSync, unlinkSync } from "node:fs";
+import { join } from "node:path";
 
 const logger = createLogger("generate-test-template-db");
 
 const templatePath = `${import.meta.dirname}/../src/testing/template.db`;
-const schemaPath = `${import.meta.dirname}/../prisma/schema.prisma`;
+const migrationsPath = `${import.meta.dirname}/../prisma/migrations`;
 
-// Remove existing template if it exists
-const templateFile = Bun.file(templatePath);
-if (await templateFile.exists()) {
-  const { unlinkSync } = await import("node:fs");
+if (existsSync(templatePath)) {
   unlinkSync(templatePath);
 }
 
 logger.info("Generating test template database...");
 
-function runPrismaDbPush(): number {
-  const result = Bun.spawnSync(
-    [
-      "bunx",
-      "prisma",
-      "db",
-      "push",
-      `--schema=${schemaPath}`,
-      "--accept-data-loss",
-    ],
-    {
-      cwd: `${import.meta.dirname}/..`,
-      env: {
-        ...Bun.env,
-        DATABASE_URL: `file:${templatePath}`,
-        PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-        PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-      },
-      stdout: "inherit",
-      stderr: "inherit",
-    },
-  );
-
-  return result.exitCode ?? 1;
-}
-
-async function applySchemaWithMigrateDiff(): Promise<void> {
-  logger.warn(
-    "prisma db push failed; falling back to migrate diff SQL for test template generation",
-  );
-
-  const diff = Bun.spawnSync(
-    [
-      "bunx",
-      "prisma",
-      "migrate",
-      "diff",
-      "--from-empty",
-      "--to-schema",
-      schemaPath,
-      "--script",
-    ],
-    {
-      cwd: `${import.meta.dirname}/..`,
-      env: {
-        ...Bun.env,
-        PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-        PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-      },
-      stderr: "inherit",
-    },
-  );
-
-  if (diff.exitCode !== 0) {
-    throw new Error("Failed to render schema SQL with prisma migrate diff");
-  }
-
-  const sql = new TextDecoder().decode(diff.stdout);
-  const { Database } = await import("bun:sqlite");
-  const db = new Database(templatePath, { create: true });
-  try {
-    db.exec("PRAGMA foreign_keys = OFF;");
-    db.exec(sql);
-    db.exec("PRAGMA foreign_keys = ON;");
-  } finally {
-    db.close();
-  }
-}
-
+const templateDb = new Database(templatePath);
 try {
-  const pushExitCode = runPrismaDbPush();
-  if (pushExitCode !== 0) {
-    await applySchemaWithMigrateDiff();
+  const migrationDirs = readdirSync(migrationsPath, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
+
+  for (const migrationDir of migrationDirs) {
+    const migrationPath = join(migrationsPath, migrationDir, "migration.sql");
+    if (!existsSync(migrationPath)) {
+      throw new Error(`Missing migration SQL at ${migrationPath}`);
+    }
+
+    logger.info(`Applying migration ${migrationDir}...`);
+    templateDb.exec(readFileSync(migrationPath, "utf8"));
   }
-} catch (error) {
-  logger.error("Failed to generate test template database", error);
-  process.exit(1);
+} finally {
+  templateDb.close();
 }
 
-// `prisma db push` creates the schema but doesn't run migration data steps,
-// so the Season table is empty. Seed it so tests that create season-based
-// competitions don't trip the FK constraint.
+// Seed Season rows so tests that create season-based competitions don't trip
+// the FK constraint.
 const { PrismaClient } = await import("#generated/prisma/client/index.js");
 const { PrismaLibSql } = await import("@prisma/adapter-libsql");
 const { SEASONS } = await import("@scout-for-lol/data");

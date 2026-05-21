@@ -1,8 +1,9 @@
-import type {
-  PlayerConfigEntry,
-  MatchId,
-  RawMatch,
-  RawTimeline,
+import {
+  isArenaQueueOrMode,
+  type PlayerConfigEntry,
+  type MatchId,
+  type RawMatch,
+  type RawTimeline,
 } from "@scout-for-lol/data/index.ts";
 import { saveTimelineToS3 } from "#src/storage/s3.ts";
 import { fetchMatchTimeline } from "./match-data-fetcher.ts";
@@ -22,7 +23,7 @@ export async function fetchTimelineIfStandardMatch(
   playersInMatch: PlayerConfigEntry[],
 ): Promise<RawTimeline | undefined> {
   // Don't fetch timeline for arena matches
-  if (matchData.info.queueId === 1700) {
+  if (isArenaQueueOrMode(matchData.info.queueId, matchData.info.gameMode)) {
     return undefined;
   }
 

@@ -25,7 +25,7 @@ export async function startOAuthServer(): Promise<void> {
   }
 
   // Check prerequisites and warn if missing
-  const claudeCheck = await checkClaudePrerequisites();
+  const claudeCheck = checkClaudePrerequisites();
   if (claudeCheck.installed) {
     logger.info("Claude Code CLI found", { version: claudeCheck.version });
     if (!claudeCheck.hasApiKey) {

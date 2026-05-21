@@ -331,7 +331,7 @@ Named volumes may be created by Docker as `root:root`. Your image should handle 
 
 ## Reference Implementation
 
-The default Clauderon image is [`ghcr.io/shepherdjerred/dotfiles`](https://github.com/shepherdjerred/dotfiles/blob/main/Dockerfile).
+The default Clauderon image is [`ghcr.io/shepherdjerred/dotfiles`](https://github.com/shepherdjerred/monorepo/blob/main/packages/dotfiles/Dockerfile).
 
 It includes:
 

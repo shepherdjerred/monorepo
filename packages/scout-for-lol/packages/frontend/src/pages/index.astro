@@ -13,12 +13,18 @@ import CTA from "../components/CTA.astro";
 import GalleryItem from "../components/GalleryItem.astro";
 import BenefitCard from "../components/BenefitCard.astro";
 import ProcessStep from "../components/ProcessStep.astro";
+
+const matchImg = "/match.png";
+const loadingScreenImg = "/loading-screen.png";
+const arenaDiscordImg = "/arena-discord.png";
+const soloDiscordImg = "/solo-discord.png";
+const leaderboardLpImg = "/leaderboard-lp.png";
 ---
 
 <Layout>
   <div class="bg-white dark:bg-gray-900">
-    <Navbar activePage="home" />
     <WhatsNewBanner />
+    <Navbar activePage="home" />
 
     <Hero
       title="Scout for League of Legends"
@@ -76,7 +82,7 @@ import ProcessStep from "../components/ProcessStep.astro";
           <FeatureCard
             icon="heroicons:bolt"
             title="Arena Mode Support"
-            description="Full support for League's Arena mode with detailed reports for all 16 players, augments, and placements."
+            description="Full support for League's Arena mode with detailed reports for 18-player 3v3 matches, augments, and placements, while legacy duo reports still render."
           />
         </FeatureGrid>
       </div>
@@ -93,7 +99,7 @@ import ProcessStep from "../components/ProcessStep.astro";
 
         <div class="mx-auto mt-16 max-w-5xl">
           <GalleryItem
-            imageSrc="/match.png"
+            imageSrc={matchImg}
             imageAlt="Example League of Legends match report showing team compositions, player statistics, KDA, damage dealt, gold earned, and items"
           />
 
@@ -137,7 +143,7 @@ import ProcessStep from "../components/ProcessStep.astro";
           <FeatureWithImage
             title="Pre-Match Loading Screens"
             description="Scout detects when tracked players enter a game and posts a full loading-screen preview to your Discord channel — complete with champion splash art, summoner spells, runes, and live rank badges for every player on both teams."
-            imageSrc="/loading-screen.png"
+            imageSrc={loadingScreenImg}
             imageAlt="Pre-match loading screen showing both teams' champion picks, runes, summoner spells, and ranks for a ranked flex game"
             imagePosition="right"
             badge={{
@@ -156,9 +162,9 @@ import ProcessStep from "../components/ProcessStep.astro";
           <!-- Arena Mode Reports -->
           <FeatureWithImage
             title="Complete Arena Coverage"
-            description="Full support for League's Arena mode with detailed stats for all 16 players, augments tracking, and placement results. Scout automatically detects Arena matches and generates comprehensive reports."
-            imageSrc="/arena-discord.png"
-            imageAlt="Arena mode match notification in Discord showing detailed stats for all 16 players"
+            description="Full support for League's Arena mode with detailed stats for 18-player 3v3 matches, augments tracking, and placement results. Scout automatically detects Arena matches, including CHERRY games that Riot reports as custom, and still renders legacy duo reports."
+            imageSrc={arenaDiscordImg}
+            imageAlt="Arena mode match notification in Discord showing detailed stats, augments, and placements"
             imagePosition="left"
             badge={{
               text: "Arena Mode",
@@ -166,7 +172,7 @@ import ProcessStep from "../components/ProcessStep.astro";
               color: "purple",
             }}
             checklist={[
-              "Track all 16 players in each Arena match",
+              "Track all 18 players across six teams of three",
               "See augment selections and synergies",
               "Beautiful placement and ranking display",
             ]}
@@ -176,7 +182,7 @@ import ProcessStep from "../components/ProcessStep.astro";
           <FeatureWithImage
             title="Real-Time Match Notifications"
             description="Get instant notifications when your friends finish their ranked games. See their performance, LP gains/losses, and rank changes in beautiful, easy-to-read Discord messages."
-            imageSrc="/solo-discord.png"
+            imageSrc={soloDiscordImg}
             imageAlt="Ranked match notification showing player stats, KDA, and LP gains in Discord"
             imagePosition="right"
             badge={{
@@ -195,7 +201,7 @@ import ProcessStep from "../components/ProcessStep.astro";
           <FeatureWithImage
             title="Custom Leaderboards"
             description="Create competitions and recurring report posts for your server with flexible criteria and time periods. Track LP gains, most wins, champion mastery, surrender trends, and more."
-            imageSrc="/leaderboard-lp.png"
+            imageSrc={leaderboardLpImg}
             imageAlt="Server leaderboard showing LP competition rankings"
             imagePosition="left"
             badge={{

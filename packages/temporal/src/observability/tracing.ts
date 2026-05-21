@@ -19,8 +19,10 @@ import {
   BatchSpanProcessor,
   type ReadableSpan,
   type SpanExporter,
+  type SpanProcessor,
 } from "@opentelemetry/sdk-trace-base";
 import { ExportResultCode, type ExportResult } from "@opentelemetry/core";
+import { buildArchiveSpanProcessor } from "@shepherdjerred/llm-observability";
 
 const DEFAULT_OTLP_ENDPOINT = "http://tempo.tempo.svc.cluster.local:4318";
 const DEFAULT_SERVICE_NAME = "temporal-worker";
@@ -134,12 +136,21 @@ export function initializeTracing(): void {
     exportTimeoutMillis: 30_000,
   });
 
+  // Wrap with the LLM archive processor — for any span carrying gen_ai.*
+  // body attributes, it gzips the bodies to SeaweedFS and replaces them with
+  // a ref before forwarding the slim span to the OTLP exporter. Spans without
+  // those attributes pass through unchanged. The wrapper is a no-op when
+  // LLM_OBSERVABILITY_ENABLED=false.
+  const rootProcessor: SpanProcessor = buildArchiveSpanProcessor({
+    inner: batchProcessor,
+  });
+
   sdk = new NodeSDK({
     resource: resourceFromAttributes({
       [ATTR_SERVICE_NAME]: serviceName,
       [ATTR_SERVICE_VERSION]: serviceVersion,
     }),
-    spanProcessors: [batchProcessor],
+    spanProcessors: [rootProcessor],
   });
 
   sdk.start();

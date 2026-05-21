@@ -11,7 +11,7 @@
 
   <name>castle-casters</name>
   <description>${game.name}</description>
-  <url>https://github.com/shepherdjerred/castle-casters</url>
+  <url>https://github.com/shepherdjerred/monorepo/tree/main/packages/castle-casters</url>
 
   <properties>
     <game.name>Castle Casters</game.name>
@@ -31,9 +31,9 @@
   </properties>
 
   <scm>
-    <connection>scm:git:https://github.com/shepherdjerred/castle-casters</connection>
-    <developerConnection>scm:git:https://github.com/shepherdjerred/castle-casters</developerConnection>
-    <url>https://github.com/shepherdjerred/castle-casters</url>
+    <connection>scm:git:https://github.com/shepherdjerred/monorepo.git</connection>
+    <developerConnection>scm:git:https://github.com/shepherdjerred/monorepo.git</developerConnection>
+    <url>https://github.com/shepherdjerred/monorepo/tree/main/packages/castle-casters</url>
   </scm>
 
   <profiles>

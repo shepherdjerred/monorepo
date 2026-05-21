@@ -104,6 +104,8 @@ describe("foundation: FindingSchema", () => {
       "eslint",
       "grep",
       "test",
+      "container-image",
+      "package-manifest",
       "none",
     ]);
   });

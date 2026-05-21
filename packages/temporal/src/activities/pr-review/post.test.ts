@@ -1,16 +1,19 @@
 import { describe, expect, it, mock } from "bun:test";
 import {
+  buildInlineReviewComments,
   findingMarker,
-  isPostEnabled,
+  inlineFindingMarker,
   markerFor,
   parseFindingMarker,
   renderCommentBody,
-  runPostReview,
+  renderStatusCommentBody,
   type PostReviewInput,
-  type PostReviewOctokit,
-} from "./post.ts";
+} from "./post-render.ts";
+import type { PostReviewOctokit } from "./post-github.ts";
+import { isPostEnabled, runPostReview, runPostReviewStatus } from "./post.ts";
 import type { Finding } from "#shared/pr-review/finding.ts";
 import type { PrReviewPipelineInput } from "#shared/schemas.ts";
+import type { PrFileDiff } from "#shared/pr-review/context.ts";
 
 const PIPELINE: PrReviewPipelineInput = {
   owner: "shepherdjerred",
@@ -26,25 +29,65 @@ const PIPELINE: PrReviewPipelineInput = {
 const INPUT: PostReviewInput = {
   pipeline: PIPELINE,
   findings: [],
+  changedFiles: [],
 };
 
 const WORKFLOW_ID = `pr-review-pipeline-${PIPELINE.owner}-${PIPELINE.repo}-${String(PIPELINE.prNumber)}-${PIPELINE.commitSha}`;
 
+const PATCHED_FILE: PrFileDiff = {
+  path: "packages/foo/src/api.ts",
+  status: "modified",
+  additions: 2,
+  deletions: 1,
+  patch: [
+    "@@ -39,5 +39,6 @@ export function getUser(id: string) {",
+    ' const prefix = "user";',
+    '-return db.query("select * from users where id=" + id);',
+    '+return db.query("select * from users where id=" + id);',
+    "+console.log(id);",
+    "}",
+  ].join("\n"),
+};
+
 type ExistingComment = { id: number; body?: string | null };
+
+type MakeOctokitOverrides = {
+  issues?: Partial<PostReviewOctokit["rest"]["issues"]>;
+  pulls?: Partial<PostReviewOctokit["rest"]["pulls"]>;
+  reviewComments?: ExistingComment[];
+};
 
 function makeOctokit(
   existingComments: ExistingComment[],
-  overrides: Partial<PostReviewOctokit["rest"]["issues"]> = {},
+  overrides: MakeOctokitOverrides = {},
 ): {
   octokit: PostReviewOctokit;
   createCalls: { body: string; issue_number: number }[];
   updateCalls: { comment_id: number; body: string }[];
+  reviewCalls: {
+    body: string;
+    comments: {
+      path: string;
+      body: string;
+      line: number;
+      start_line?: number;
+    }[];
+  }[];
 } {
   const createCalls: { body: string; issue_number: number }[] = [];
   const updateCalls: { comment_id: number; body: string }[] = [];
+  const reviewCalls: {
+    body: string;
+    comments: {
+      path: string;
+      body: string;
+      line: number;
+      start_line?: number;
+    }[];
+  }[] = [];
 
   const createComment =
-    overrides.createComment ??
+    overrides.issues?.createComment ??
     (async (params: {
       owner: string;
       repo: string;
@@ -59,7 +102,7 @@ function makeOctokit(
     });
 
   const updateComment =
-    overrides.updateComment ??
+    overrides.issues?.updateComment ??
     (async (params: {
       owner: string;
       repo: string;
@@ -70,11 +113,40 @@ function makeOctokit(
       return { data: { id: params.comment_id } };
     });
 
-  // Single-page iterator is enough for these unit tests; real Octokit
-  // paginates by `Link` header but the activity's marker scan logic doesn't
-  // care which page the comment shows up on.
-  const iterator = async function* () {
-    yield { data: existingComments };
+  const createReview =
+    overrides.pulls?.createReview ??
+    (async (params: {
+      owner: string;
+      repo: string;
+      pull_number: number;
+      commit_id: string;
+      event: "COMMENT";
+      body: string;
+      comments: {
+        path: string;
+        body: string;
+        side: "RIGHT";
+        line: number;
+        start_side?: "RIGHT";
+        start_line?: number;
+      }[];
+    }) => {
+      reviewCalls.push({ body: params.body, comments: params.comments });
+      return { data: { id: 313 } };
+    });
+
+  const iterator = async function* (
+    params: {
+      owner: string;
+      repo: string;
+      per_page: number;
+    } & ({ issue_number: number } | { pull_number: number }),
+  ) {
+    const data =
+      "issue_number" in params
+        ? existingComments
+        : (overrides.reviewComments ?? []);
+    yield { data };
   };
 
   // The activity only references `listComments` as a function pointer
@@ -82,11 +154,14 @@ function makeOctokit(
   // `PostReviewOctokit["rest"]["issues"]["listComments"]` is `unknown` so
   // any function literal satisfies it directly — no cast needed.
   const listComments: PostReviewOctokit["rest"]["issues"]["listComments"] =
-    overrides.listComments ?? (() => Promise.resolve());
+    overrides.issues?.listComments ?? (() => Promise.resolve());
+
+  const listReviewComments: PostReviewOctokit["rest"]["pulls"]["listReviewComments"] =
+    overrides.pulls?.listReviewComments ?? (() => Promise.resolve());
 
   const octokit: PostReviewOctokit = {
     paginate: {
-      iterator: () => iterator(),
+      iterator: (_route, params) => iterator(params),
     },
     rest: {
       issues: {
@@ -94,10 +169,14 @@ function makeOctokit(
         createComment,
         updateComment,
       },
+      pulls: {
+        listReviewComments,
+        createReview,
+      },
     },
   };
 
-  return { octokit, createCalls, updateCalls };
+  return { octokit, createCalls, updateCalls, reviewCalls };
 }
 
 const noopOnError = (_e: unknown, _extra: Record<string, unknown>): void => {
@@ -110,11 +189,17 @@ const failingCreateComment: PostReviewOctokit["rest"]["issues"]["createComment"]
     throw new Error("simulated API failure");
   };
 
+const failingCreateReview: PostReviewOctokit["rest"]["pulls"]["createReview"] =
+  async (_params) => {
+    await Promise.resolve();
+    throw new Error("review API down");
+  };
+
 describe("foundation: pr-review postReview", () => {
   describe("markerFor", () => {
-    it("embeds the workflow id so cross-PR comments can't collide", () => {
+    it("returns the stable PR-level status marker", () => {
       const marker = markerFor(WORKFLOW_ID);
-      expect(marker).toContain(WORKFLOW_ID);
+      expect(marker).toBe("<!-- pr-review-bot-status -->");
       expect(marker.startsWith("<!--")).toBe(true);
       expect(marker.endsWith("-->")).toBe(true);
     });
@@ -131,7 +216,7 @@ describe("foundation: pr-review postReview", () => {
       expect(firstLine).toBe(marker);
       const tail = rest.join("\n");
       expect(tail).toContain("pr-review-bot");
-      expect(tail).toContain("no substantive correctness issues found");
+      expect(tail).toContain("configured deterministic checks");
     });
 
     it("groups findings by severity (Critical → Warning → Nit) and renders each finding's metadata", () => {
@@ -139,6 +224,7 @@ describe("foundation: pr-review postReview", () => {
       const body = renderCommentBody(
         {
           pipeline: PIPELINE,
+          changedFiles: [],
           findings: [
             {
               id: "fA",
@@ -201,6 +287,7 @@ describe("foundation: pr-review postReview", () => {
       );
       expect(body).toContain("L42-L44");
       expect(body).toContain("_verifier_: `test`");
+      expect(body).toContain("_verification_: not-run");
       expect(body).toContain("_confidence_: 0.95");
       expect(body).toContain("race condition");
     });
@@ -255,7 +342,7 @@ describe("foundation: pr-review postReview", () => {
       expect(updated.body.startsWith(marker)).toBe(true);
     });
 
-    it("ignores comments with a marker for a different workflow id", async () => {
+    it("updates the stable status comment across workflow ids", async () => {
       const otherMarker = markerFor(
         "pr-review-pipeline-other-other-1-deadbeef",
       );
@@ -268,9 +355,9 @@ describe("foundation: pr-review postReview", () => {
         WORKFLOW_ID,
         noopOnError,
       );
-      expect(result.created).toBe(true);
-      expect(createCalls.length).toBe(1);
-      expect(updateCalls.length).toBe(0);
+      expect(result.created).toBe(false);
+      expect(createCalls.length).toBe(0);
+      expect(updateCalls.length).toBe(1);
     });
 
     it("propagates and reports errors from createComment", async () => {
@@ -280,7 +367,7 @@ describe("foundation: pr-review postReview", () => {
         },
       );
       const { octokit } = makeOctokit([], {
-        createComment: failingCreateComment,
+        issues: { createComment: failingCreateComment },
       });
       await expect(
         runPostReview(octokit, INPUT, WORKFLOW_ID, onError),
@@ -303,39 +390,181 @@ describe("foundation: pr-review postReview", () => {
       expect(createCalls.length).toBe(1);
     });
   });
+});
 
-  describe("isPostEnabled (dry-run gate)", () => {
-    it("returns false when the env var is absent (safe default — pipeline ships dry)", () => {
-      const env: Record<string, string> = {};
-      const value = env["PR_REVIEW_POST_ENABLED"];
-      expect(isPostEnabled(value)).toBe(false);
-    });
+describe("isPostEnabled (dry-run gate)", () => {
+  it("returns false when the env var is absent (safe default — pipeline ships dry)", () => {
+    const env: Record<string, string> = {};
+    const value = env["PR_REVIEW_POST_ENABLED"];
+    expect(isPostEnabled(value)).toBe(false);
+  });
 
-    it("returns false when the env var is the empty string", () => {
-      expect(isPostEnabled("")).toBe(false);
-    });
+  it("returns false when the env var is the empty string", () => {
+    expect(isPostEnabled("")).toBe(false);
+  });
 
-    it("returns false for any value that isn't case-insensitive 'true'", () => {
-      expect(isPostEnabled("1")).toBe(false);
-      expect(isPostEnabled("yes")).toBe(false);
-      expect(isPostEnabled("on")).toBe(false);
-      expect(isPostEnabled("false")).toBe(false);
-      expect(isPostEnabled("True!")).toBe(false);
-    });
+  it("returns false for any value that isn't case-insensitive 'true'", () => {
+    expect(isPostEnabled("1")).toBe(false);
+    expect(isPostEnabled("yes")).toBe(false);
+    expect(isPostEnabled("on")).toBe(false);
+    expect(isPostEnabled("false")).toBe(false);
+    expect(isPostEnabled("True!")).toBe(false);
+  });
 
-    it("returns true only for the literal string 'true' (case-insensitive)", () => {
-      expect(isPostEnabled("true")).toBe(true);
-      expect(isPostEnabled("TRUE")).toBe(true);
-      expect(isPostEnabled("True")).toBe(true);
+  it("returns true only for the literal string 'true' (case-insensitive)", () => {
+    expect(isPostEnabled("true")).toBe(true);
+    expect(isPostEnabled("TRUE")).toBe(true);
+    expect(isPostEnabled("True")).toBe(true);
+  });
+});
+
+describe("PR review lifecycle status comments", () => {
+  it("renders draft skipped status", () => {
+    const body = renderStatusCommentBody(
+      {
+        pipeline: PIPELINE,
+        state: "draft_skipped",
+        workflowId: WORKFLOW_ID,
+      },
+      markerFor(WORKFLOW_ID),
+    );
+    expect(body).toContain("Review skipped: draft PR detected");
+    expect(body).toContain(WORKFLOW_ID);
+  });
+
+  it("renders running and failed statuses", () => {
+    const running = renderStatusCommentBody(
+      { pipeline: PIPELINE, state: "running", workflowId: WORKFLOW_ID },
+      markerFor(WORKFLOW_ID),
+    );
+    expect(running).toContain("Review running");
+
+    const failed = renderStatusCommentBody(
+      {
+        pipeline: PIPELINE,
+        state: "failed",
+        reason: "Error: verifier crashed",
+        workflowId: WORKFLOW_ID,
+      },
+      markerFor(WORKFLOW_ID),
+    );
+    expect(failed).toContain("Review failed");
+    expect(failed).toContain("verifier crashed");
+  });
+
+  it("upserts the stable status comment", async () => {
+    const marker = markerFor(WORKFLOW_ID);
+    const { octokit, updateCalls } = makeOctokit([
+      { id: 77, body: `${marker}\nold status` },
+    ]);
+    const result = await runPostReviewStatus(
+      octokit,
+      { pipeline: PIPELINE, state: "running", workflowId: WORKFLOW_ID },
+      noopOnError,
+    );
+    expect(result.created).toBe(false);
+    expect(result.commentId).toBe(77);
+    expect(updateCalls.length).toBe(1);
+  });
+});
+
+describe("inline PR review comments", () => {
+  it("builds a GitHub suggestion block when the suggested range is on added lines", () => {
+    const built = buildInlineReviewComments({
+      pipeline: PIPELINE,
+      findings: [SUGGESTION_FINDING],
+      changedFiles: [PATCHED_FILE],
+      existingMarkers: new Set<string>(),
     });
+    expect(built.comments.length).toBe(1);
+    const comment = built.comments[0];
+    if (comment === undefined) {
+      throw new Error("expected one inline comment");
+    }
+    expect(comment.line).toBe(40);
+    expect(comment.body).toContain("```suggestion");
+    expect(comment.body).toContain("parameterized query");
+    expect(built.summary.posted).toBe(1);
+  });
+
+  it("skips unanchored findings and keeps them for the top-level status body", () => {
+    const built = buildInlineReviewComments({
+      pipeline: PIPELINE,
+      findings: [{ ...SAMPLE_FINDING, lineStart: 200, lineEnd: 200 }],
+      changedFiles: [PATCHED_FILE],
+      existingMarkers: new Set<string>(),
+    });
+    expect(built.comments.length).toBe(0);
+    expect(built.summary.skippedUnanchored).toBe(1);
+  });
+
+  it("skips duplicate inline markers for the same commit", () => {
+    const built = buildInlineReviewComments({
+      pipeline: PIPELINE,
+      findings: [SAMPLE_FINDING],
+      changedFiles: [PATCHED_FILE],
+      existingMarkers: new Set<string>([
+        inlineFindingMarker(SAMPLE_FINDING, PIPELINE.commitSha),
+      ]),
+    });
+    expect(built.comments.length).toBe(0);
+    expect(built.summary.skippedDuplicate).toBe(1);
+  });
+
+  it("submits inline review comments before updating the status summary", async () => {
+    const input: PostReviewInput = {
+      pipeline: PIPELINE,
+      findings: [SUGGESTION_FINDING],
+      changedFiles: [PATCHED_FILE],
+    };
+    const { octokit, createCalls, reviewCalls } = makeOctokit([]);
+    const result = await runPostReview(
+      octokit,
+      input,
+      WORKFLOW_ID,
+      noopOnError,
+    );
+    expect(result.inlineReviewId).toBe(313);
+    expect(result.inlineCommentsPosted).toBe(1);
+    expect(reviewCalls.length).toBe(1);
+    expect(createCalls.length).toBe(1);
+    const created = createCalls[0];
+    if (created === undefined) {
+      throw new Error("expected status comment");
+    }
+    expect(created.body).toContain("Posted 1 inline comment");
+  });
+
+  it("keeps the status comment when inline review submission fails", async () => {
+    const input: PostReviewInput = {
+      pipeline: PIPELINE,
+      findings: [SAMPLE_FINDING],
+      changedFiles: [PATCHED_FILE],
+    };
+    const { octokit, createCalls } = makeOctokit([], {
+      pulls: { createReview: failingCreateReview },
+    });
+    const result = await runPostReview(
+      octokit,
+      input,
+      WORKFLOW_ID,
+      noopOnError,
+    );
+    expect(result.inlineCommentsFailed).toBe(true);
+    expect(result.commentId).toBe(99);
+    const created = createCalls[0];
+    if (created === undefined) {
+      throw new Error("expected status comment");
+    }
+    expect(created.body).toContain("Inline review posting failed");
   });
 });
 
 const SAMPLE_FINDING: Finding = {
   id: "f1",
   file: "packages/foo/src/api.ts",
-  lineStart: 42,
-  lineEnd: 42,
+  lineStart: 40,
+  lineEnd: 40,
   kind: "security",
   severity: "warning",
   verifier: "none",
@@ -343,6 +572,17 @@ const SAMPLE_FINDING: Finding = {
   claim: "SQL injection via unparameterized query in `getUser`",
   evidence: "see L42 — string concat into query",
   confidence: 0.8,
+};
+
+const SUGGESTION_FINDING: Finding = {
+  ...SAMPLE_FINDING,
+  id: "f-suggestion",
+  lineStart: 40,
+  lineEnd: 40,
+  suggestion: {
+    replacement: 'return db.query("select * from users where id=?", [id]);',
+    rationale: "Use a parameterized query for the user-controlled id.",
+  },
 };
 
 describe("findingMarker (Phase 9 dedup hook)", () => {
@@ -355,8 +595,8 @@ describe("findingMarker (Phase 9 dedup hook)", () => {
     expect(parsed?.kind).toBe("security");
     expect(parsed?.file).toBe("packages/foo/src/api.ts");
     expect(parsed?.claim).toContain("SQL injection");
-    // Cluster key uses 7-line buckets, so line 42 → bucket 42.
-    expect(parsed?.cluster).toBe("packages/foo/src/api.ts|42");
+    // Cluster key uses 7-line buckets, so line 40 → bucket 35.
+    expect(parsed?.cluster).toBe("packages/foo/src/api.ts|35");
   });
 
   it("escapes a literal `-->` in the claim so it cannot break out of the comment", () => {
@@ -387,6 +627,7 @@ describe("findingMarker (Phase 9 dedup hook)", () => {
       {
         pipeline: PIPELINE,
         findings: [SAMPLE_FINDING],
+        changedFiles: [],
       },
       markerFor(WORKFLOW_ID),
     );

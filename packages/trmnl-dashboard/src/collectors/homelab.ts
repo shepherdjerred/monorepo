@@ -5,6 +5,7 @@ import { KubernetesClient } from "../clients/kubernetes.ts";
 import { PagerDutyClient } from "../clients/pagerduty.ts";
 import { PrometheusClient } from "../clients/prometheus.ts";
 import { statusFromCount, worstStatus, type Status } from "../status.ts";
+import { formatDisplayTime } from "../time.ts";
 import type {
   AlertsSection,
   BugsinkSection,
@@ -73,16 +74,23 @@ export async function collectHomelabPayload(
     alerts.status,
     errors.length > 0 ? "unknown" : "ok",
   ]);
+  const generatedAt = new Date();
 
   return {
     screen: "homelab",
-    generated_at: new Date().toISOString(),
+    generated_at: generatedAt.toISOString(),
+    generated_time: formatDisplayTime(generatedAt, config.displayTimeZone),
     status,
     summary: [
       `${kubernetes.ready_nodes.toString()}/${kubernetes.total_nodes.toString()} nodes`,
       `${alerts.critical.toString()} critical alerts`,
-      `${bugsink.unresolved.toString()} Bugsink`,
-      `${pagerduty.triggered.toString()} PD`,
+      `${alerts.warning.toString()} warning alerts`,
+      bugsink.status === "unknown"
+        ? "Bugsink ERR"
+        : `${bugsink.unresolved.toString()} Bugsink`,
+      pagerduty.status === "unknown"
+        ? "PD ERR"
+        : `${pagerduty.triggered.toString()} PD`,
     ].join(" · "),
     bugsink,
     pagerduty,
@@ -187,6 +195,7 @@ async function collectStorage(
         name: sample.metric["mountpoint"] ?? sample.metric["device"] ?? "disk",
         used_percent: round(sample.value),
       }))
+      .filter((volume) => isRelevantStorageVolume(volume.name))
       .filter((volume) => Number.isFinite(volume.used_percent))
       .toSorted((a, b) => b.used_percent - a.used_percent)
       .slice(0, 6);
@@ -200,6 +209,10 @@ async function collectStorage(
     errors.push(errorMessage("storage metrics", error));
     return { status: "unknown", max_disk_used_percent: null, volumes: [] };
   }
+}
+
+function isRelevantStorageVolume(name: string): boolean {
+  return !["/etc/extensions.yaml", "/usr/lib/firmware"].includes(name);
 }
 
 async function collectHardware(

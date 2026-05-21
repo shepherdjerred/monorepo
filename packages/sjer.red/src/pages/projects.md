@@ -8,13 +8,13 @@ This page documents some of the things I've worked on over the years.
 
 ## Timeless
 
-### [sjer.red](https://github.com/shepherdjerred/sjer.red)
+### [sjer.red](https://github.com/shepherdjerred/monorepo)
 
 My personal website. You can see my site (and taste) evolve over the years on the [Wayback Machine](https://web.archive.org/web/20240000000000*/shepherdjerred.com)
 
 ## 2024
 
-### [homelab](https://github.com/shepherdjerred/homelab)
+### [homelab](https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab)
 
 k3s Kubernetes cluster for self-hosted services like Plex, file syncing, and home automation. Self-updating with Renovate + ArgoCD + Chart Museum + GitHub Actions. Written in TypeScript with cdk8s and built with Bun.
 
@@ -22,21 +22,21 @@ k3s Kubernetes cluster for self-hosted services like Plex, file syncing, and hom
 
 Compiler for the Tiger language for [graduate compilers](https://omscs.gatech.edu/cs-8803-o08-compilers-theory-and-practice) at Georgia Tech.
 
-### [Astro Open Graph Images](https://github.com/shepherdjerred/astro-opengraph-images)
+### [Astro Open Graph Images](https://github.com/shepherdjerred/monorepo/tree/main/packages/astro-opengraph-images)
 
 Generate Open Graph images using React/Tailwind.
 
-### [webring](https://github.com/shepherdjerred/webring)
+### [webring](https://github.com/shepherdjerred/monorepo/tree/main/packages/webring)
 
 Fetch updates from lists of RSS feeds.
 
-### [Scout for LoL](https://github.com/shepherdjerred/scout-for-lol)
+### [Scout for LoL](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol)
 
 A Discord bot that tracks your friends' League of Legends matches. I've learnt a lot about developing with AI effectively while building this project.
 
 ## 2023
 
-### [macOS cross compiler](https://github.com/shepherdjerred/macos-cross-compiler)
+### [macOS cross compiler](https://github.com/shepherdjerred/monorepo/tree/main/packages/macos-cross-compiler)
 
 A C/C++/Fortran/Rust cross-compiler targeting amd64/aarch64 macOS from a Linux host.
 
@@ -44,7 +44,7 @@ A C/C++/Fortran/Rust cross-compiler targeting amd64/aarch64 macOS from a Linux h
 
 Implementation of Paxos for graduate [distributed systems](https://omscs.gatech.edu/cs-7210-distributed-computing) at Georgia Tech.
 
-### [Discord Plays Pokémon](https://github.com/shepherdjerred/discord-plays-pokemon)
+### [Discord Plays Pokémon](https://github.com/shepherdjerred/monorepo/tree/main/packages/discord-plays-pokemon)
 
 Multi-player Pokémon (or any Gameboy game) via Discord w/ video streaming & game input via chat.
 
@@ -71,7 +71,7 @@ In my first two years of college I was running a Minecraft server. I shut it dow
 
 ### 2018/2019 (senior year)
 
-#### [Castle Casters](https://github.com/shepherdjerred/castle-casters)
+#### [Castle Casters](https://github.com/shepherdjerred/monorepo/tree/main/packages/castle-casters)
 
 A game/game engine I wrote from scratch.
 

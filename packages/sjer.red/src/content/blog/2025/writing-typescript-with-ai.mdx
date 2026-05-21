@@ -11,9 +11,9 @@ I've had a great experience using [Cursor](https://cursor.com/), so I wanted to 
 
 Here's how I tend to use AI in my TypeScript projects. For reference, here are a few projects I've worked on with AI recently:
 
-- [Scout for League of Legends](https://github.com/shepherdjerred/scout-for-lol)
-- [Homelab](https://github.com/shepherdjerred/homelab)
-- [sjer.red](https://github.com/shepherdjerred/sjer.red)
+- [Scout for League of Legends](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol)
+- [Homelab](https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab)
+- [sjer.red](https://github.com/shepherdjerred/monorepo)
 
 ## Background
 
@@ -31,8 +31,8 @@ I also have the AI identify what commands it might need to run, e.g. to lint, bu
 
 Examples:
 
-- https://github.com/shepherdjerred/scout-for-lol/tree/080824b790e6f62e2579a727dc1611c3ad849e0f/ai_dev_log/competition/tasks
-- https://github.com/shepherdjerred/scout-for-lol/blob/main/ai_dev_log/competition/DEVELOPMENT_CHEATSHEET.md
+- https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol/ai_dev_log/competition/tasks
+- https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/ai_dev_log/competition/DEVELOPMENT_CHEATSHEET.md
 
 ### Guardrails
 
@@ -42,7 +42,7 @@ Cursors [rules](https://cursor.com/docs/context/rules) are very effective at ste
 
 More examples:
 
-- https://github.com/shepherdjerred/scout-for-lol/tree/080824b790e6f62e2579a727dc1611c3ad849e0f/.cursor/rules
+- https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol/.cursor/rules
 
 #### Static Analysis
 
@@ -165,7 +165,7 @@ import {
 
 const createRule = ESLintUtils.RuleCreator(
   (name) =>
-    `https://github.com/shepherdjerred/homelab/blob/main/eslint-rules/${name}.ts`,
+    `https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/eslint-rules/${name}.ts`,
 );
 
 export const noRedundantZodParse = createRule({
@@ -353,7 +353,7 @@ export const noRedundantZodParse = createRule({
 
 More examples:
 
-- https://github.com/shepherdjerred/scout-for-lol/blob/080824b790e6f62e2579a727dc1611c3ad849e0f/eslint.config.ts
-- https://github.com/shepherdjerred/scout-for-lol/tree/080824b790e6f62e2579a727dc1611c3ad849e0f/eslint-rules
+- https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/eslint.config.ts
+- https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol/eslint-rules
 
 ### Unit and Integration Tests

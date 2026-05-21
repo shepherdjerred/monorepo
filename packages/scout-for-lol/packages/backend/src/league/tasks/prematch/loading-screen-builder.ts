@@ -3,14 +3,15 @@ import type {
   RawCurrentGameParticipant,
   LoadingScreenData,
   LoadingScreenParticipant,
+  NonStandardLoadingScreenParticipant,
   LoadingScreenBan,
   LoadingScreenLayout,
   LoadingScreenTeam,
   Region,
   Ranks,
+  StandardLoadingScreenParticipant,
 } from "@scout-for-lol/data/index.ts";
 import {
-  parseQueueType,
   parseTeam,
   mapIdToName,
   makeQueueDisplayName,
@@ -21,6 +22,9 @@ import {
   LoadingScreenChampionIdSchema,
   ArenaTeamIdSchema,
   GameIdSchema,
+  inferStandardLanesWithCurrentPriors,
+  isArenaQueueOrMode,
+  resolveQueueTypeFromGame,
 } from "@scout-for-lol/data/index.ts";
 import {
   getChampionDisplayName,
@@ -35,7 +39,6 @@ const logger = createLogger("prematch-loading-screen-builder");
 
 const RANKED_SOLO_QUEUE_ID = 420;
 const RANKED_FLEX_QUEUE_ID = 440;
-const ARENA_QUEUE_ID = 1700;
 
 export class RecoverableLoadingScreenDataError extends Error {
   constructor(message: string) {
@@ -47,9 +50,10 @@ export class RecoverableLoadingScreenDataError extends Error {
 type BuildParticipantContext = {
   trackedPuuids: ReadonlySet<string>;
   layout: LoadingScreenLayout;
-  participantIndex: number;
-  participantCount: number;
 };
+
+type BaseBuiltParticipant = Omit<NonStandardLoadingScreenParticipant, "ranks">;
+type RankedBuiltParticipant = BaseBuiltParticipant & { ranks?: Ranks };
 
 /**
  * Determine the layout mode based on queue config ID.
@@ -57,13 +61,16 @@ type BuildParticipantContext = {
  * we only attempt to render known queue types.
  */
 function determineLayout(gameInfo: RawCurrentGameInfo): LoadingScreenLayout {
+  if (isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode)) {
+    return "arena";
+  }
+
   return match(gameInfo.gameQueueConfigId)
     .with(450, () => "aram" as const) // ARAM
     .with(720, () => "aram" as const) // ARAM Clash
     .with(2400, () => "aram" as const) // ARAM: Mayhem
     .with(3200, () => "aram" as const) // ARAM: Mayhem MMR variant
     .with(3270, () => "aram" as const) // ARAM: Mayhem
-    .with(ARENA_QUEUE_ID, () => "arena" as const) // Arena
     .with(0, () => "standard" as const) // Custom
     .with(3100, () => "standard" as const) // Custom
     .with(400, () => "standard" as const) // Draft Pick
@@ -88,29 +95,17 @@ function determineLayout(gameInfo: RawCurrentGameInfo): LoadingScreenLayout {
 /**
  * Resolve team assignment for a participant.
  * Standard/ARAM: returns "blue" | "red" via parseTeam (from teamId 100/200).
- * Arena: returns { arenaTeam: 1..8 } from playerSubteamId — Spectator V5
- * reports teamId as 100/200 even for Arena games, so the 8-team subteam
- * must come from the dedicated playerSubteamId field.
- * Throws on invalid IDs or missing Arena subteam info.
+ * Arena: returns { arenaTeam: 1..8 | null } from playerSubteamId. Spectator
+ * reports teamId as 100/200 or even all 100 for Arena games, so we do not
+ * infer subteams when Riot omits the dedicated playerSubteamId field.
  */
 function resolveTeam(
   participant: RawCurrentGameParticipant,
   layout: LoadingScreenLayout,
-  participantIndex: number,
-  participantCount: number,
 ): LoadingScreenTeam {
   if (layout === "arena") {
     if (participant.playerSubteamId === undefined) {
-      if (participantCount === 16) {
-        return {
-          arenaTeam: ArenaTeamIdSchema.parse(
-            Math.floor(participantIndex / 2) + 1,
-          ),
-        };
-      }
-      throw new RecoverableLoadingScreenDataError(
-        `Arena participant missing playerSubteamId and participant count ${participantCount.toString()} cannot be safely inferred`,
-      );
+      return { arenaTeam: null };
     }
     return { arenaTeam: ArenaTeamIdSchema.parse(participant.playerSubteamId) };
   }
@@ -130,7 +125,7 @@ function resolveTeam(
 async function buildParticipant(
   participant: RawCurrentGameParticipant,
   context: BuildParticipantContext,
-): Promise<Omit<LoadingScreenParticipant, "ranks">> {
+): Promise<BaseBuiltParticipant> {
   const championName = resolveChampionKey(participant.championId);
   const championDisplayName = getChampionDisplayName(participant.championId);
   const skinNum = await resolveSkinNum(participant, championName);
@@ -143,15 +138,11 @@ async function buildParticipant(
   return {
     puuid,
     summonerName: participant.riotId,
+    championId: LoadingScreenChampionIdSchema.parse(participant.championId),
     championName,
     championDisplayName,
     skinNum,
-    team: resolveTeam(
-      participant,
-      context.layout,
-      context.participantIndex,
-      context.participantCount,
-    ),
+    team: resolveTeam(participant, context.layout),
     spell1Id: SummonerSpellIdSchema.parse(participant.spell1Id),
     spell2Id: SummonerSpellIdSchema.parse(participant.spell2Id),
     keystoneRuneId:
@@ -164,6 +155,84 @@ async function buildParticipant(
         : RuneIdSchema.parse(participant.perks.perkSubStyle),
     isTrackedPlayer: puuid !== null && context.trackedPuuids.has(puuid),
   };
+}
+
+function laneInferenceKey(index: number): string {
+  return `participant:${index.toString()}`;
+}
+
+function buildStandardParticipant(
+  participant: RankedBuiltParticipant,
+  lane: StandardLoadingScreenParticipant["lane"],
+): StandardLoadingScreenParticipant {
+  if (participant.team !== "blue" && participant.team !== "red") {
+    throw new Error(
+      "Standard loading-screen participant has non-standard team",
+    );
+  }
+  return {
+    ...participant,
+    team: participant.team,
+    lane,
+  };
+}
+
+function inferStandardParticipants(
+  participants: readonly RankedBuiltParticipant[],
+): StandardLoadingScreenParticipant[] {
+  if (participants.length !== 10) {
+    throw new Error(
+      `Standard loading screen requires exactly 10 participants; received ${participants.length.toString()}`,
+    );
+  }
+
+  const result = new Map<number, StandardLoadingScreenParticipant>();
+
+  for (const team of ["blue", "red"]) {
+    const indexedTeam = participants
+      .map((participant, index) => ({ participant, index }))
+      .filter((entry) => entry.participant.team === team);
+    if (indexedTeam.length !== 5) {
+      throw new Error(
+        `Standard loading screen requires exactly 5 ${team} participants; received ${indexedTeam.length.toString()}`,
+      );
+    }
+
+    const inference = inferStandardLanesWithCurrentPriors(
+      indexedTeam.map((entry) => ({
+        participantKey: laneInferenceKey(entry.index),
+        championId: entry.participant.championId,
+        spell1Id: entry.participant.spell1Id,
+        spell2Id: entry.participant.spell2Id,
+      })),
+    );
+
+    for (const assignment of inference.assignments) {
+      const parsedIndex = Number(
+        assignment.participantKey.replace("participant:", ""),
+      );
+      const participant = participants[parsedIndex];
+      if (participant === undefined) {
+        throw new Error(`Missing participant for ${assignment.participantKey}`);
+      }
+      result.set(
+        parsedIndex,
+        buildStandardParticipant(participant, assignment.lane),
+      );
+    }
+  }
+
+  const inferred = participants.map((_, index) => {
+    const participant = result.get(index);
+    if (participant === undefined) {
+      throw new Error(
+        `Lane inference did not produce participant at index ${index.toString()}`,
+      );
+    }
+    return participant;
+  });
+
+  return inferred;
 }
 
 /**
@@ -203,7 +272,10 @@ export async function buildLoadingScreenData(
   trackedPuuids: ReadonlySet<string>,
   region: Region,
 ): Promise<LoadingScreenData> {
-  const queueType = parseQueueType(gameInfo.gameQueueConfigId);
+  const queueType = resolveQueueTypeFromGame(
+    gameInfo.gameQueueConfigId,
+    gameInfo.gameMode,
+  );
   if (queueType === undefined) {
     throw new Error(
       `Unknown queue type for queue config ID ${gameInfo.gameQueueConfigId.toString()} (gameId=${gameInfo.gameId.toString()}, mapId=${gameInfo.mapId.toString()}, gameMode=${gameInfo.gameMode})`,
@@ -227,12 +299,10 @@ export async function buildLoadingScreenData(
 
   // Build base participant data (without ranks)
   const baseParticipants = await Promise.all(
-    gameInfo.participants.map((p, idx) =>
+    gameInfo.participants.map((p) =>
       buildParticipant(p, {
         trackedPuuids,
         layout,
-        participantIndex: idx,
-        participantCount: gameInfo.participants.length,
       }),
     ),
   );
@@ -251,14 +321,18 @@ export async function buildLoadingScreenData(
   );
 
   // Combine base participants with rank results
-  const participants: LoadingScreenParticipant[] = baseParticipants.map(
+  const rankedParticipants: RankedBuiltParticipant[] = baseParticipants.map(
     (base, idx) => {
       const rankResult = rankResults[idx];
       const ranks: Ranks | undefined =
         rankResult?.status === "fulfilled" ? rankResult.value : undefined;
-      return { ...base, ranks };
+      return ranks === undefined ? base : { ...base, ranks };
     },
   );
+  const participants: LoadingScreenParticipant[] =
+    layout === "standard"
+      ? inferStandardParticipants(rankedParticipants)
+      : rankedParticipants;
 
   // Build bans (skip for ARAM/Arena which don't have bans)
   const bans = layout === "standard" ? buildBans(gameInfo) : [];

@@ -8,6 +8,7 @@ const config = [
         "src/domain/*.test.ts",
         "src/lib/*.test.ts",
         "src/data/sync/*.test.ts",
+        "scripts/*.ts",
       ],
       maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 50,
     },

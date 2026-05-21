@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/ShepherdJerred/usher.svg?branch=master)](https://travis-ci.org/ShepherdJerred/usher)
+[![Build Status](https://travis-ci.org/shepherdjerred/monorepo?branch=master)](https://travis-ci.org/shepherdjerred/monorepo)
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 

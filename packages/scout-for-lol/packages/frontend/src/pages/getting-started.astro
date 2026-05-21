@@ -7,6 +7,9 @@ import ProcessStep from "../components/ProcessStep.astro"; // Changed from StepC
 import InfoBox from "../components/InfoBox.astro";
 import CommandBox from "../components/CommandBox.astro";
 import GalleryItem from "../components/GalleryItem.astro";
+
+const soloDiscordImg = "/solo-discord.png";
+const leaderboardLpImg = "/leaderboard-lp.png";
 ---
 
 <Layout>
@@ -196,7 +199,7 @@ import GalleryItem from "../components/GalleryItem.astro";
                 Here's what your match notifications will look like:
               </h4>
               <GalleryItem
-                imageSrc="/solo-discord.png"
+                imageSrc={soloDiscordImg}
                 imageAlt="Example of a Scout match notification in Discord showing player stats, KDA, and LP gains"
                 caption="Scout automatically posts detailed match reports right in your Discord channel"
               />
@@ -228,9 +231,9 @@ import GalleryItem from "../components/GalleryItem.astro";
               </p>
               <div class="mt-4 mb-4">
                 <img
-                  src="/leaderboard-lp.png"
+                  src={leaderboardLpImg}
                   alt="Example of a Scout competition leaderboard showing LP rankings"
-                  class="w-full rounded-lg shadow-md ring-1 ring-gray-400/10 dark:ring-gray-600"
+                  class="w-full h-auto rounded-lg shadow-md ring-1 ring-gray-400/10 dark:ring-gray-600"
                   loading="lazy"
                 />
               </div>
@@ -281,7 +284,7 @@ import GalleryItem from "../components/GalleryItem.astro";
                   >Discord Support →</a
                 >
                 <a
-                  href="https://github.com/shepherdjerred/scout-for-lol/issues"
+                  href="https://github.com/shepherdjerred/monorepo/issues"
                   class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 font-medium"
                   >GitHub Issues →</a
                 >

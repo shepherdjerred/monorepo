@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { verify } from "@octokit/webhooks-methods";
+import { Octokit } from "octokit";
 import { z } from "zod/v4";
 import * as Sentry from "@sentry/bun";
 import type { Client } from "@temporalio/client";
@@ -17,6 +18,17 @@ import {
   prWebhookSignatureFailuresTotal,
   prWebhookSkippedTotal,
 } from "#observability/metrics.ts";
+import {
+  DRY_RUN_COMMENT_ID,
+  isPostEnabled,
+  runPostReviewStatus,
+} from "#activities/pr-review/post.ts";
+import {
+  renderStatusCommentBody,
+  STATUS_COMMENT_MARKER,
+  type PostReviewStatusInput,
+} from "#activities/pr-review/post-render.ts";
+import { type PostReviewStatusResult } from "#activities/pr-review/post-github.ts";
 
 const COMPONENT = "pr-webhook";
 const DEFAULT_PORT = 9466;
@@ -180,12 +192,82 @@ async function startPrWorkflows(
 }
 
 type StartFn = (input: PrAgentInput) => Promise<void>;
+type StatusFn = (input: PrAgentInput, state: "draft_skipped") => Promise<void>;
+
+function toPipelineInput(input: PrAgentInput): PrReviewPipelineInput {
+  return {
+    owner: input.owner,
+    repo: input.repo,
+    prNumber: input.prNumber,
+    commitSha: input.commitSha,
+    baseRef: input.baseRef,
+    headRef: input.headRef,
+    prTitle: input.prTitle,
+    prAuthor: input.prAuthor,
+  };
+}
+
+async function postWebhookStatus(
+  input: PrAgentInput,
+  state: "draft_skipped",
+): Promise<void> {
+  const statusInput: PostReviewStatusInput = {
+    pipeline: toPipelineInput(input),
+    state,
+    workflowId: `pr-review-webhook-${input.owner}-${input.repo}-${String(input.prNumber)}-${input.commitSha}`,
+  };
+
+  if (!isPostEnabled(Bun.env["PR_REVIEW_POST_ENABLED"])) {
+    const body = renderStatusCommentBody(statusInput, STATUS_COMMENT_MARKER);
+    jsonLog("info", "PR review webhook status suppressed", {
+      prNumber: input.prNumber,
+      state,
+      syntheticCommentId: DRY_RUN_COMMENT_ID,
+      bodyBytes: body.length,
+    });
+    return;
+  }
+
+  const token = Bun.env["GH_TOKEN"];
+  if (token === undefined || token === "") {
+    throw new Error("GH_TOKEN is required to post webhook review status");
+  }
+
+  const octokit = new Octokit({ auth: token });
+  const result: PostReviewStatusResult = await runPostReviewStatus(
+    octokit,
+    statusInput,
+    (error, extra) => {
+      Sentry.withScope((scope) => {
+        scope.setTag("component", COMPONENT);
+        scope.setContext("webhookStatus", {
+          owner: input.owner,
+          repo: input.repo,
+          prNumber: input.prNumber,
+          state,
+          ...extra,
+        });
+        Sentry.captureException(error);
+      });
+    },
+  );
+  jsonLog("info", "Posted PR review webhook status", {
+    prNumber: input.prNumber,
+    state,
+    commentId: result.commentId,
+    created: result.created,
+  });
+}
 
 /**
  * Pure handler — kept separate from Bun.serve so tests can drive it
  * directly without binding a real port.
  */
-export function buildWebhookApp(secret: string, startWorkflows: StartFn): Hono {
+export function buildWebhookApp(
+  secret: string,
+  startWorkflows: StartFn,
+  postStatus: StatusFn = postWebhookStatus,
+): Hono {
   const app = new Hono();
 
   app.get("/healthz", (c) => c.text("ok\n"));
@@ -255,24 +337,6 @@ export function buildWebhookApp(secret: string, startWorkflows: StartFn): Hono {
       return c.text("ignored\n");
     }
 
-    if (parsed.pull_request.draft === true && action !== "ready_for_review") {
-      prWebhookSkippedTotal.inc({ reason: "draft" });
-      jsonLog("info", "Skipping draft PR", {
-        prNumber: parsed.pull_request.number,
-        action,
-      });
-      return c.text("skipped: draft\n");
-    }
-
-    if (parsed.pull_request.user.type === "Bot") {
-      prWebhookSkippedTotal.inc({ reason: "bot-author" });
-      jsonLog("info", "Skipping bot-authored PR", {
-        prNumber: parsed.pull_request.number,
-        author: parsed.pull_request.user.login,
-      });
-      return c.text("skipped: bot\n");
-    }
-
     const baseInput: PrAgentInput = PrAgentInputSchema.parse({
       kind: "review",
       owner: parsed.repository.owner.login,
@@ -284,6 +348,47 @@ export function buildWebhookApp(secret: string, startWorkflows: StartFn): Hono {
       prTitle: parsed.pull_request.title,
       prAuthor: parsed.pull_request.user.login,
     });
+
+    if (parsed.pull_request.draft === true && action !== "ready_for_review") {
+      prWebhookSkippedTotal.inc({ reason: "draft" });
+      jsonLog("info", "Skipping draft PR", {
+        prNumber: parsed.pull_request.number,
+        action,
+      });
+      try {
+        await postStatus(baseInput, "draft_skipped");
+      } catch (error: unknown) {
+        Sentry.withScope((scope) => {
+          scope.setTag("component", COMPONENT);
+          scope.setContext("webhook", {
+            deliveryId,
+            action,
+            owner: baseInput.owner,
+            repo: baseInput.repo,
+            prNumber: baseInput.prNumber,
+            skipReason: "draft",
+          });
+          Sentry.captureException(error);
+        });
+        jsonLog("error", "Failed to post draft skipped status", {
+          deliveryId,
+          action,
+          prNumber: baseInput.prNumber,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        return c.text("draft status failed\n", 500);
+      }
+      return c.text("skipped: draft\n");
+    }
+
+    if (parsed.pull_request.user.type === "Bot") {
+      prWebhookSkippedTotal.inc({ reason: "bot-author" });
+      jsonLog("info", "Skipping bot-authored PR", {
+        prNumber: parsed.pull_request.number,
+        author: parsed.pull_request.user.login,
+      });
+      return c.text("skipped: bot\n");
+    }
 
     try {
       await startWorkflows(baseInput);

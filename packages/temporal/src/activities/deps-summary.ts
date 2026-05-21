@@ -2,10 +2,11 @@ import { Context } from "@temporalio/activity";
 import { simpleGit } from "simple-git";
 import OpenAI from "openai";
 import { z } from "zod/v4";
+import { traceOpenAi } from "@shepherdjerred/llm-observability";
 import { sendPostalEmail, resolvePostalAddresses } from "#shared/postal.ts";
 
-const VERSIONS_FILE_PATH = "src/cdk8s/src/versions.ts";
-const REPO_URL = "https://github.com/shepherdjerred/homelab.git";
+const VERSIONS_FILE_PATH = "packages/homelab/src/cdk8s/src/versions.ts";
+const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
 
 const VERSION_LINE_REGEX = /"([^"]+)":\s*"([^"]+)"/;
 export const DEPS_SUMMARY_CLONE_ARGS = [
@@ -368,11 +369,19 @@ Keep the summary actionable and focused on what matters for a self-hosted homela
 Format the response in HTML for email.`;
 
     try {
-      const completion = await openai.chat.completions.create({
+      const params = {
         model: "gpt-5.5",
-        messages: [{ role: "user", content: prompt }],
+        messages: [{ role: "user" as const, content: prompt }],
         max_completion_tokens: 8000,
-      });
+      };
+      const completion = await traceOpenAi(
+        {
+          service: "temporal",
+          callSite: "deps-summary",
+          request: params,
+        },
+        async () => openai.chat.completions.create(params),
+      );
 
       const choice = completion.choices[0];
       return choice?.message.content ?? "Failed to generate summary";

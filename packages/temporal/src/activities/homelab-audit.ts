@@ -21,6 +21,18 @@ import {
 } from "#shared/markdown-to-html.ts";
 import { resolvePostalAddresses, sendPostalEmail } from "#shared/postal.ts";
 import { redactSecrets } from "#shared/redact.ts";
+import {
+  archiveAuditBody,
+  archiveAuditMetadata,
+  type HomelabAuditArchiveBodyInput,
+  type HomelabAuditArchiveBodyResult,
+  type HomelabAuditArchiveMetadataInput,
+  type HomelabAuditArchiveMetadataResult,
+} from "./homelab-audit-archive.ts";
+import {
+  runAuditPreflight,
+  type HomelabAuditPreflightResult,
+} from "./homelab-audit-preflight.ts";
 
 const COMPONENT = "homelab-audit";
 
@@ -48,6 +60,8 @@ export type HomelabAuditAgentInput = {
   date?: string;
   /** Section IDs to include, or "all". */
   sections?: SectionsFilter;
+  /** Preflight result block to inject before the output requirements. */
+  toolingPreflightMarkdown?: string | undefined;
   /** Override the model (e.g. "claude-haiku-4-5-20251001" for cheap iteration). */
   model?: string;
   /** Override max-turns budget. */
@@ -144,8 +158,12 @@ function auditSecretTokens(): readonly (string | undefined)[] {
     Bun.env["GRAFANA_API_KEY"],
     Bun.env["ARGOCD_AUTH_TOKEN"],
     Bun.env["CLOUDFLARE_API_TOKEN"],
+    Bun.env["BUILDKITE_API_TOKEN"],
+    Bun.env["AWS_ACCESS_KEY_ID"],
+    Bun.env["AWS_SECRET_ACCESS_KEY"],
     Bun.env["GH_TOKEN"],
     Bun.env["GITHUB_PERSONAL_ACCESS_TOKEN"],
+    Bun.env["GITHUB_APP_PRIVATE_KEY"],
     Bun.env["POSTAL_API_KEY"],
   ];
 }
@@ -176,7 +194,12 @@ async function runAuditAgent(
   const maxTurns = input.maxTurns ?? DEFAULT_MAX_TURNS;
 
   const runbook = await loadRunbook();
-  const prompt = buildAuditPrompt({ date, runbook, sections });
+  const prompt = buildAuditPrompt({
+    date,
+    runbook,
+    sections,
+    toolingPreflightMarkdown: input.toolingPreflightMarkdown,
+  });
 
   const args = [
     "claude",
@@ -392,14 +415,27 @@ async function sendAuditEmail(
 export type HomelabAuditActivities = typeof homelabAuditActivities;
 
 export const homelabAuditActivities = {
+  async runHomelabAuditPreflight(): Promise<HomelabAuditPreflightResult> {
+    return runAuditPreflight();
+  },
   async runHomelabAuditAgent(
     input: HomelabAuditAgentInput,
   ): Promise<HomelabAuditAgentResult> {
     return runAuditAgent(input);
   },
+  async archiveHomelabAuditBody(
+    input: HomelabAuditArchiveBodyInput,
+  ): Promise<HomelabAuditArchiveBodyResult> {
+    return archiveAuditBody(input);
+  },
   async sendHomelabAuditEmail(
     input: HomelabAuditEmailInput,
   ): Promise<HomelabAuditEmailResult> {
     return sendAuditEmail(input);
+  },
+  async archiveHomelabAuditMetadata(
+    input: HomelabAuditArchiveMetadataInput,
+  ): Promise<HomelabAuditArchiveMetadataResult> {
+    return archiveAuditMetadata(input);
   },
 };

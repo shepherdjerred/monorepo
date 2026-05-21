@@ -11,12 +11,12 @@
 
   <name>jlox</name>
   <description>Java implementation of the Lox programming language</description>
-  <url>https://github.com/shepherdjerred/jlox</url>
+  <url>https://github.com/shepherdjerred/monorepo/tree/main/practice/jlox</url>
 
   <scm>
-    <connection>scm:git:https://github.com/shepherdjerred/jlox</connection>
-    <developerConnection>scm:git:https://github.com/shepherdjerred/jlox</developerConnection>
-    <url>https://github.com/shepherdjerred/jlox</url>
+    <connection>scm:git:https://github.com/shepherdjerred/monorepo.git</connection>
+    <developerConnection>scm:git:https://github.com/shepherdjerred/monorepo.git</developerConnection>
+    <url>https://github.com/shepherdjerred/monorepo/tree/main/practice/jlox</url>
   </scm>
 
   <properties>

@@ -70,11 +70,11 @@
   "license": "GPL-3.0-only",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shepherdjerred/scout-for-lol.git"
+    "url": "git+https://github.com/shepherdjerred/monorepo.git"
   },
-  "homepage": "https://github.com/shepherdjerred/scout-for-lol",
+  "homepage": "https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol",
   "bugs": {
-    "url": "https://github.com/shepherdjerred/scout-for-lol/issues"
+    "url": "https://github.com/shepherdjerred/monorepo/issues"
   },
   "imports": {
     "#src/*": "./src/*"

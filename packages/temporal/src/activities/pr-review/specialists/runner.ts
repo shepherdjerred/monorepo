@@ -28,10 +28,35 @@ import type { PrReviewPipelineInput } from "#shared/schemas.ts";
 import { permuteFiles } from "#lib/diff-slicing.ts";
 import { formatBlockDiff } from "#lib/block-diff.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
+import {
+  recordProviderIssue,
+  resolveProviderIssue,
+} from "#activities/pr-review/provider-metrics.ts";
+import {
+  classifyAnthropicProviderError as classifyAnthropicProviderErrorImpl,
+  resetAnthropicProviderErrorReporterForTests as resetAnthropicProviderErrorReporterForTestsImpl,
+  shouldReportAnthropicProviderError as shouldReportAnthropicProviderErrorImpl,
+  type AnthropicProviderErrorClassification,
+} from "./anthropic-provider-errors.ts";
 
 const COMPONENT = "pr-review-pipeline";
-const PROVIDER_ERROR_REPORT_INTERVAL_MS = 15 * 60 * 1000;
-const lastProviderErrorReportAtByKey = new Map<string, number>();
+
+export function classifyAnthropicProviderError(
+  error: unknown,
+): AnthropicProviderErrorClassification | null {
+  return classifyAnthropicProviderErrorImpl(error);
+}
+
+export function shouldReportAnthropicProviderError(
+  classification: AnthropicProviderErrorClassification,
+  nowMs = Date.now(),
+): boolean {
+  return shouldReportAnthropicProviderErrorImpl(classification, nowMs);
+}
+
+export function resetAnthropicProviderErrorReporterForTests(): void {
+  resetAnthropicProviderErrorReporterForTestsImpl();
+}
 
 /**
  * Effort tier per the `claude-api` skill. Opus 4.7 + adaptive thinking
@@ -265,98 +290,29 @@ function jsonLog(
   );
 }
 
-export type AnthropicProviderErrorKind = "credit_balance_low" | "rate_limit";
-
-export type AnthropicProviderErrorClassification = {
-  kind: AnthropicProviderErrorKind;
-  captureMessage: string;
-  fingerprint: string;
-  providerTag: string;
-  requestId: string | undefined;
-  originalMessage: string;
-};
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
-function readProperty(value: unknown, key: string): unknown {
-  if (value === null || value === undefined) {
-    return undefined;
-  }
-  return Reflect.get(new Object(value), key);
-}
-
-function extractAnthropicRequestId(message: string): string | undefined {
-  const match = /request[_ -]?id["':=\s]+([\w-]+)/i.exec(message);
-  return match?.[1];
-}
-
-export function classifyAnthropicProviderError(
-  error: unknown,
-): AnthropicProviderErrorClassification | null {
-  const message = errorMessage(error);
-  const status = readProperty(error, "status");
-  const nestedError = readProperty(error, "error");
-  const errorType = readProperty(nestedError, "type");
-  const requestId = extractAnthropicRequestId(message);
-
-  if (message.includes("credit balance is too low")) {
-    return {
-      kind: "credit_balance_low",
-      captureMessage: "Anthropic provider error: credit_balance_low",
-      fingerprint: "anthropic-credit-balance-low",
-      providerTag: "anthropic_credit_balance_low",
-      requestId,
-      originalMessage: message,
-    };
-  }
-
-  if (
-    status === 429 ||
-    errorType === "rate_limit_error" ||
-    message.includes("rate_limit_error") ||
-    message.toLowerCase().includes("rate limit")
-  ) {
-    return {
-      kind: "rate_limit",
-      captureMessage: "Anthropic provider error: rate_limit",
-      fingerprint: "anthropic-rate-limit",
-      providerTag: "anthropic_rate_limit",
-      requestId,
-      originalMessage: message,
-    };
-  }
-
-  return null;
-}
-
-export function shouldReportAnthropicProviderError(
-  classification: AnthropicProviderErrorClassification,
-  nowMs = Date.now(),
-): boolean {
-  const key = classification.kind;
-  const lastReportedAt = lastProviderErrorReportAtByKey.get(key);
-  if (
-    lastReportedAt !== undefined &&
-    nowMs - lastReportedAt < PROVIDER_ERROR_REPORT_INTERVAL_MS
-  ) {
-    return false;
-  }
-  lastProviderErrorReportAtByKey.set(key, nowMs);
-  return true;
-}
-
-export function resetAnthropicProviderErrorReporterForTests(): void {
-  lastProviderErrorReportAtByKey.clear();
-}
-
 function captureWithContext(error: unknown, request: SpecialistRequest): void {
   const providerError = classifyAnthropicProviderError(error);
   if (
     providerError !== null &&
     !shouldReportAnthropicProviderError(providerError)
   ) {
+    return;
+  }
+
+  if (providerError !== null) {
+    recordProviderIssue({
+      app: "temporal",
+      provider: "anthropic",
+      kind: providerError.kind,
+      source: "pr_review_specialist",
+    });
+    jsonLog("warning", "Anthropic provider issue recorded", {
+      providerError: providerError.providerTag,
+      requestId: providerError.requestId,
+      specialist: request.config.id,
+      passId: request.passId,
+      prNumber: request.pipeline.prNumber,
+    });
     return;
   }
 
@@ -375,18 +331,7 @@ function captureWithContext(error: unknown, request: SpecialistRequest): void {
       specialist: request.config.id,
       passId: request.passId,
     });
-    if (providerError !== null) {
-      scope.setTag("provider_error", providerError.providerTag);
-      scope.setFingerprint([providerError.fingerprint]);
-      scope.setContext("anthropicProviderError", {
-        kind: providerError.kind,
-        requestId: providerError.requestId,
-        originalMessage: providerError.originalMessage,
-      });
-    }
-    Sentry.captureException(
-      providerError === null ? error : new Error(providerError.captureMessage),
-    );
+    Sentry.captureException(error);
   });
 }
 
@@ -402,6 +347,8 @@ function captureWithContext(error: unknown, request: SpecialistRequest): void {
  *   - eslint    → { kind: "eslint", filePath, ruleId }
  *   - grep      → { kind: "grep", pattern, isLiteral, pathGlob, mustMatch }
  *   - test      → { kind: "test", packagePath, testNamePattern, expectPass }
+ *   - container-image → { kind: "container-image", registry, repository, reference, mustExist }
+ *   - package-manifest → { kind: "package-manifest", packageJsonPath, dependencyName, section, mustExist }
  *   - none      → { kind: "none", reason }
  */
 export const VERIFIER_TARGET_INSTRUCTIONS = `\
@@ -417,9 +364,15 @@ The shape depends on the \`verifier\` you declare:
 
 - \`verifier: "test"\` → \`verifierTarget: { kind: "test", packagePath: "packages/<name>", testNamePattern: "<bun-test-pattern>", expectPass: <true|false> }\`. The verifier runs \`bun test --testNamePattern <pattern>\` in \`packagePath\`. Set \`expectPass: true\` when your claim is "this test passes / would pass"; \`false\` when "this test fails / would fail".
 
+- \`verifier: "container-image"\` → \`verifierTarget: { kind: "container-image", registry: "ghcr.io", repository: "owner/image", reference: "tag-or-sha256:digest", mustExist: <true|false> }\`. Use this for deployment findings about image tags or digests that should or should not resolve in the registry.
+
+- \`verifier: "package-manifest"\` → \`verifierTarget: { kind: "package-manifest", packageJsonPath: "packages/<name>/package.json", dependencyName: "<package>", section: "dependencies" | "devDependencies" | "optionalDependencies" | "peerDependencies", mustExist: <true|false> }\`. Use this when a runtime dependency must be in \`dependencies\` or must not be satisfied by a non-runtime section.
+
 - \`verifier: "none"\` → \`verifierTarget: { kind: "none", reason: "<why-no-verifier-applies>" }\`. Use this honestly for subjective design calls, architectural concerns, or any finding where no empirical check applies. Findings with \`verifier: "none"\` ride entirely on consensus voting — they survive only if multiple specialists or passes agree.
 
-The \`verifierTarget.kind\` MUST match \`verifier\` exactly. The schema rejects mismatches.`;
+The \`verifierTarget.kind\` MUST match \`verifier\` exactly. The schema rejects mismatches.
+
+When the fix is concrete and local to the changed lines, also include \`suggestion: { replacement, lineStart?, lineEnd?, rationale? }\`. The replacement must be the exact text that should replace the target line/range and must not include markdown fences. Omit \`suggestion\` when the right fix is ambiguous, spans unrelated files, or requires design judgment.`;
 
 /**
  * Output schema factory. Two refinements layered on top of the base
@@ -494,6 +447,19 @@ export async function runSpecialistPass(
       },
     ],
     messages: [{ role: "user", content: userText }],
+  });
+
+  resolveProviderIssue({
+    app: "temporal",
+    provider: "anthropic",
+    kind: "credit_balance_low",
+    source: "pr_review_specialist",
+  });
+  resolveProviderIssue({
+    app: "temporal",
+    provider: "anthropic",
+    kind: "rate_limit",
+    source: "pr_review_specialist",
   });
 
   const durationMs = Date.now() - startMs;

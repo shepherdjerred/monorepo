@@ -103,6 +103,16 @@ import {
   smokeTestTrmnlDashboardHelper,
 } from "./misc";
 
+function requireRecord(
+  value: unknown,
+  message: string,
+): Record<string, unknown> {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(message);
+  }
+  return Object.fromEntries(Object.entries(value));
+}
+
 @object()
 export class Monorepo {
   // ---------------------------------------------------------------------------
@@ -1010,16 +1020,18 @@ export class Monorepo {
 
   /**
    * Publish built cooklang artifacts to the plugin repo: compute next patch
-   * version from the latest release tag, update manifest + versions.json,
-   * commit to main, and cut the GitHub release.
+   * version from the latest release tag, update manifest, update versions.json
+   * only for Obsidian compatibility boundary changes, commit to main, and cut
+   * the GitHub release.
    */
   @func({ cache: "never" })
   async cooklangPublish(
     source: Directory,
     ghToken: Secret,
+    pluginRepo: string,
     dryrun = false,
   ): Promise<string> {
-    return cooklangPublishHelper(source, ghToken, dryrun).stdout();
+    return cooklangPublishHelper(source, ghToken, pluginRepo, dryrun).stdout();
   }
 
   /**
@@ -1028,8 +1040,13 @@ export class Monorepo {
    */
   @func({ cache: "never" })
   async cooklangBuildAndPublish(
+    source: Directory,
     pkgDir: Directory,
     ghToken: Secret,
+    pluginRepo: string,
+    githubAppId: Secret,
+    githubAppInstallationId: Secret,
+    githubAppPrivateKey: Secret,
     depNames: string[] = [],
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
@@ -1039,6 +1056,7 @@ export class Monorepo {
     const publishOutput = await cooklangPublishHelper(
       dist,
       ghToken,
+      pluginRepo,
       dryrun,
     ).stdout();
     const lines = publishOutput.trim().split("\n");
@@ -1051,11 +1069,25 @@ export class Monorepo {
     const minAppVersion = await dist
       .file("manifest.json")
       .contents()
-      .then((c) => JSON.parse(c).minAppVersion as string);
+      .then((content) => {
+        const manifest: unknown = JSON.parse(content);
+        const record = requireRecord(
+          manifest,
+          "cooklang manifest.json missing minAppVersion",
+        );
+        const minAppVersion = record["minAppVersion"];
+        if (typeof minAppVersion !== "string") {
+          throw new Error("cooklang manifest.json missing minAppVersion");
+        }
+        return minAppVersion;
+      });
     const commitBackOutput = await cooklangVersionCommitBackHelper(
+      source,
       newVersion,
       minAppVersion,
-      ghToken,
+      githubAppId,
+      githubAppInstallationId,
+      githubAppPrivateKey,
       dryrun,
     ).stdout();
     return `${publishOutput}\n${commitBackOutput}`;
@@ -1102,49 +1134,84 @@ export class Monorepo {
   /** Update versions.ts with new image digests and create auto-merge PR */
   @func({ cache: "never" })
   async versionCommitBack(
+    source: Directory,
     digests: string,
     version: string,
-    ghToken: Secret,
+    githubAppId: Secret,
+    githubAppInstallationId: Secret,
+    githubAppPrivateKey: Secret,
     dryrun = false,
   ): Promise<string> {
-    return versionCommitBackHelper(digests, version, ghToken, dryrun).stdout();
+    return versionCommitBackHelper(
+      source,
+      digests,
+      version,
+      githubAppId,
+      githubAppInstallationId,
+      githubAppPrivateKey,
+      dryrun,
+    ).stdout();
   }
 
   /** Update the CI base image version pointer and create auto-merge PR */
   @func({ cache: "never" })
   async ciBaseVersionCommitBack(
+    source: Directory,
     version: string,
-    ghToken: Secret,
+    githubAppId: Secret,
+    githubAppInstallationId: Secret,
+    githubAppPrivateKey: Secret,
     dryrun = false,
   ): Promise<string> {
-    return ciBaseVersionCommitBackHelper(version, ghToken, dryrun).stdout();
+    return ciBaseVersionCommitBackHelper(
+      source,
+      version,
+      githubAppId,
+      githubAppInstallationId,
+      githubAppPrivateKey,
+      dryrun,
+    ).stdout();
   }
 
   /** Run release-please to create release PRs and GitHub releases */
   @func({ cache: "never" })
   async releasePlease(
     source: Directory,
-    ghToken: Secret,
+    githubAppId: Secret,
+    githubAppInstallationId: Secret,
+    githubAppPrivateKey: Secret,
     dryrun = false,
   ): Promise<string> {
-    return releasePleaseHelper(source, ghToken, dryrun).stdout();
+    return releasePleaseHelper(
+      source,
+      githubAppId,
+      githubAppInstallationId,
+      githubAppPrivateKey,
+      dryrun,
+    ).stdout();
   }
 
   /**
-   * Commit-back the cooklang plugin version + versions.json bump to the
-   * monorepo source after a successful publish.
+   * Commit-back the cooklang plugin version and any compatibility boundary
+   * versions.json update to the monorepo source after a successful publish.
    */
   @func({ cache: "never" })
   async cooklangVersionCommitBack(
+    source: Directory,
     version: string,
     minAppVersion: string,
-    ghToken: Secret,
+    githubAppId: Secret,
+    githubAppInstallationId: Secret,
+    githubAppPrivateKey: Secret,
     dryrun = false,
   ): Promise<string> {
     return cooklangVersionCommitBackHelper(
+      source,
       version,
       minAppVersion,
-      ghToken,
+      githubAppId,
+      githubAppInstallationId,
+      githubAppPrivateKey,
       dryrun,
     ).stdout();
   }

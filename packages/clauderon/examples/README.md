@@ -114,7 +114,7 @@ CMD ["/bin/bash"]
 
 For a full-featured production image, see the default Clauderon image:
 
-- Repository: [shepherdjerred/dotfiles](https://github.com/shepherdjerred/dotfiles)
+- Repository: [shepherdjerred/dotfiles](https://github.com/shepherdjerred/monorepo/tree/main/packages/dotfiles)
 - Image: `ghcr.io/shepherdjerred/dotfiles`
 
 It includes:

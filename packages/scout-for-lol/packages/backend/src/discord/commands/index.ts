@@ -384,7 +384,7 @@ export function handleCommands(client: Client) {
         const errorMessage =
           "❌ **There was an error while executing this command!**\n\n" +
           "If this issue persists, please report it:\n" +
-          "• Open an issue on GitHub: https://github.com/shepherdjerred/scout-for-lol/issues\n" +
+          "• Open an issue on GitHub: https://github.com/shepherdjerred/monorepo/issues\n" +
           "• Join our Discord server for support: https://discord.gg/qmRewyHXFE";
 
         await (interaction.replied || interaction.deferred

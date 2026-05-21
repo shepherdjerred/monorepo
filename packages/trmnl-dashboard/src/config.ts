@@ -8,10 +8,12 @@ export type ConfiguredEntity = {
 export type AppConfig = {
   port: number;
   trmnlApiKey: string;
+  displayTimeZone: string;
   homeAssistant: {
     url: string;
     token: string;
     batteryThreshold: number;
+    unavailableIgnoredDomains: string[];
     presence: ConfiguredEntity[];
     security: ConfiguredEntity[];
     climate: ConfiguredEntity[];
@@ -31,12 +33,18 @@ export type AppConfig = {
 const EnvSchema = z.object({
   PORT: z.coerce.number().int().positive().default(3000),
   TRMNL_API_KEY: z.string().min(1),
+  DISPLAY_TIME_ZONE: z.string().min(1).default("America/Los_Angeles"),
   HA_URL: z
     .string()
     .pipe(z.url())
     .default("http://homeassistant-service.home:8123"),
   HA_TOKEN: z.string().min(1),
   HA_BATTERY_THRESHOLD: z.coerce.number().min(0).max(100).default(20),
+  HA_UNAVAILABLE_IGNORED_DOMAINS: z
+    .string()
+    .default(
+      "group,automation,scene,script,button,event,number,select,text,update",
+    ),
   HA_PRESENCE_ENTITIES: z.string().default(""),
   HA_SECURITY_ENTITIES: z.string().default(""),
   HA_CLIMATE_ENTITIES: z.string().default(""),
@@ -51,7 +59,7 @@ const EnvSchema = z.object({
   BUGSINK_URL: z
     .string()
     .pipe(z.url())
-    .default("http://bugsink-service.bugsink:8000/api/canonical/0"),
+    .default("http://bugsink-bugsink-service.bugsink:8000/api/canonical/0"),
   BUGSINK_TOKEN: z.string().optional(),
   PAGERDUTY_TOKEN: z.string().optional(),
   KUBERNETES_SERVICE_HOST: z.string().optional(),
@@ -76,10 +84,14 @@ export function loadConfig(env: Record<string, string | undefined>): AppConfig {
   return {
     port: parsed.PORT,
     trmnlApiKey: parsed.TRMNL_API_KEY,
+    displayTimeZone: parsed.DISPLAY_TIME_ZONE,
     homeAssistant: {
       url: parsed.HA_URL,
       token: parsed.HA_TOKEN,
       batteryThreshold: parsed.HA_BATTERY_THRESHOLD,
+      unavailableIgnoredDomains: parseCsv(
+        parsed.HA_UNAVAILABLE_IGNORED_DOMAINS,
+      ),
       presence: parseEntities(parsed.HA_PRESENCE_ENTITIES),
       security: parseEntities(parsed.HA_SECURITY_ENTITIES),
       climate: parseEntities(parsed.HA_CLIMATE_ENTITIES),
@@ -99,6 +111,13 @@ export function loadConfig(env: Record<string, string | undefined>): AppConfig {
       kubernetesCaPath: parsed.KUBERNETES_CA_PATH,
     },
   };
+}
+
+function parseCsv(value: string): string[] {
+  return value
+    .split(",")
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
 }
 
 export function parseEntities(value: string): ConfiguredEntity[] {

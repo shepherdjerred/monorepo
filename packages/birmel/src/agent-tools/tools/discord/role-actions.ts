@@ -1,8 +1,45 @@
-import type { Guild } from "discord.js";
+import type { Guild, Role } from "discord.js";
+
+function colorToHex(num: number): string {
+  return `#${num.toString(16).padStart(6, "0")}`;
+}
+
+function verifyRoleEdit(
+  fresh: Role,
+  requested: {
+    name: string | undefined;
+    colorHex: string | undefined;
+    hoist: boolean | undefined;
+    mentionable: boolean | undefined;
+  },
+): boolean {
+  if (requested.name !== undefined && fresh.name !== requested.name)
+    return false;
+  if (
+    requested.colorHex !== undefined &&
+    fresh.hexColor.toLowerCase() !== requested.colorHex.toLowerCase()
+  )
+    return false;
+  if (requested.hoist !== undefined && fresh.hoist !== requested.hoist)
+    return false;
+  if (
+    requested.mentionable !== undefined &&
+    fresh.mentionable !== requested.mentionable
+  )
+    return false;
+  return true;
+}
 
 type RoleResult = {
   success: boolean;
   message: string;
+  /**
+   * Set on destructive writes (modify) to indicate the handler re-fetched the
+   * role after the write and confirmed each requested field matches the
+   * post-write state. False = the API accepted the call but the role's current
+   * state doesn't match the requested changes.
+   */
+  verified?: boolean;
   data?:
     | {
         id: string;
@@ -149,13 +186,46 @@ export async function handleModifyRole(
     color === undefined
       ? undefined
       : Number.parseInt(color.replace("#", ""), 16);
+  const expectedColorHex =
+    editColorNum === undefined ? undefined : colorToHex(editColorNum);
   await role.edit({
     ...(name !== undefined && { name }),
     ...(editColorNum !== undefined && { color: editColorNum }),
     ...(hoist !== undefined && { hoist }),
     ...(mentionable !== undefined && { mentionable }),
   });
-  return { success: true, message: `Updated role @${role.name}` };
+  // Read-back: re-fetch from API and confirm every requested field landed.
+  const fresh = await guild.roles.fetch(roleId, { force: true });
+  if (fresh == null) {
+    return {
+      success: false,
+      verified: false,
+      message: `Role disappeared after edit — likely deleted by another action`,
+    };
+  }
+  const verified = verifyRoleEdit(fresh, {
+    name,
+    colorHex: expectedColorHex,
+    hoist,
+    mentionable,
+  });
+  return {
+    success: true,
+    verified,
+    message: verified
+      ? `Updated role @${fresh.name}`
+      : `Discord accepted the edit but the role state did not change as requested (name=${fresh.name}, color=${fresh.hexColor}, hoist=${String(fresh.hoist)}, mentionable=${String(fresh.mentionable)})`,
+    data: {
+      id: fresh.id,
+      name: fresh.name,
+      color: fresh.hexColor,
+      position: fresh.position,
+      hoist: fresh.hoist,
+      mentionable: fresh.mentionable,
+      memberCount: fresh.members.size,
+      permissions: fresh.permissions.toArray(),
+    },
+  };
 }
 
 export async function handleDeleteRole(

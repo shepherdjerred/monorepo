@@ -20,4 +20,4 @@ A feature to install Earthly
 
 ---
 
-_Note: This file was auto-generated from the [devcontainer-feature.json](https://github.com/shepherdjerred/devcontainers-features/blob/main/src/earthly/devcontainer-feature.json). Add additional notes to a `NOTES.md`._
+_Note: This file was auto-generated from the [devcontainer-feature.json](https://github.com/shepherdjerred/monorepo/blob/main/archive/devcontainers-features/src/earthly/devcontainer-feature.json). Add additional notes to a `NOTES.md`._

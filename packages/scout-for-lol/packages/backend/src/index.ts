@@ -2,6 +2,11 @@ import configuration from "#src/configuration.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
 import { filterScoutSentryEvent } from "#src/sentry-filters.ts";
+import { initializeTracing } from "#src/observability/tracing.ts";
+
+// Initialize OTel tracing first so any subsequent module that opens a span
+// has a tracer provider attached. No-op when TELEMETRY_ENABLED is unset.
+initializeTracing();
 
 const logger = createLogger("app");
 

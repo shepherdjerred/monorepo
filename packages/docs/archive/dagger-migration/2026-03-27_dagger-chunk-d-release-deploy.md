@@ -69,7 +69,7 @@ Export helper functions (NOT decorated — `@func()` wrappers go in `index.ts`):
 
 8. **`cooklangPushHelper(artifacts, version, ghToken)`**
    - Container with `gh` CLI
-   - Commit each artifact to `shepherdjerred/cooklang-for-obsidian` repo via GitHub API
+   - Commit each artifact to the external plugin repo via GitHub API
 
 9. **`clauderonUploadHelper(binaries, version, ghToken)`**
    - Container with `gh` CLI

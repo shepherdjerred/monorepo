@@ -33,7 +33,7 @@ const versions = {
     "1.43.1.10611-1e34174b1-amd64@sha256:7fe30c0ca399103535e6a5b10207aa2b72d053c652763ee2ce69d082db797d74",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=docker
   "linuxserver/tautulli":
-    "2.17.1@sha256:7077fd6654547c225ca5a740c4c954379129589f875c84cbe138641d4dd8a9d9",
+    "2.17.1@sha256:fc429ca6a5e445135f0a7f839f4ecdc7a7ab51ef47fedc86a22b4b89c11279c0",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "linuxserver/bazarr":
     "1.5.6@sha256:4b7bb6d861c08bbf0c388b936ada8b2ba57669ca9974323f504e974577d19d63",
@@ -53,7 +53,7 @@ const versions = {
     "5.2.0@sha256:8bff8880f4e056c068ac6359de4cbcf44fb4811493cf15d83c1341fa05a515c0",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "linuxserver/radarr":
-    "6.1.1@sha256:15417a594ebda4c660a9fa9748e7199d33e2d17b31bbc5ad7ba2e86f0b414763",
+    "6.1.1@sha256:079e48870584baf2a3e7e43e7ba6d3c834555931851a59c82c51cc792d285caf",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "linuxserver/sonarr":
     "4.0.17@sha256:60f3b6b5c7647ba2bafd81163acfe34b11117b9b834ebd7fbcc3e5f1b309c7ef",
@@ -79,7 +79,7 @@ const versions = {
   "fuatakgun/eufy_security": "v8.2.4",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "linuxserver/syncthing":
-    "2.1.0@sha256:50025b5b39c0c1b0ae28e2a40f1a17b28b1575a1249e6ffc0cc477b66914b2c7",
+    "2.1.0@sha256:ab9bd1fbc77288617eae1ecb9035d17934aaa92bb1f303893cd06882dac8943d",
   // renovate: datasource=github-releases versioning=semver-coerced
   "dotdc/grafana-dashboards-kubernetes": "v3.0.6",
   // renovate: datasource=helm registryUrl=https://chartmuseum.github.io/charts versioning=semver
@@ -101,22 +101,22 @@ const versions = {
   openebs: "4.4.0",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/scout-for-lol/beta":
-    "2.0.0-2473@sha256:121e746e3dc37acb292c2fa80fbf21a51d3bac3f035c7f5891d5302f37673612",
+    "2.0.0-2572@sha256:aba5fd06599ab93ce1da8f036e70738ec6bc530c2a32adb6591ede019810dc6a",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
   "shepherdjerred/scout-for-lol/prod":
     "2.0.0-2473@sha256:121e746e3dc37acb292c2fa80fbf21a51d3bac3f035c7f5891d5302f37673612",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
-    "2.0.0-2455@sha256:ab800bc7ebb3baa853a3036d3958a2b29e55cf345add8c763f7b2318aa9c04e1",
+    "2.0.0-2553@sha256:f6cac92ca9f0930396c40837c68feb2a4f362e7e07a60749233a7109b5271357",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/starlight-karma-bot
   "shepherdjerred/starlight-karma-bot/prod":
     "2.0.0-2389@sha256:2e7d70440860bcd872d4d4f0dddda88e6436ec6e86b0990a0b9450549ebdf012",
   // not managed by renovate
   "shepherdjerred/birmel":
-    "2.0.0-2455@sha256:5b5e504519b14ca961ef433e1d4a946bd73792240208a8b3b946202cb39e554d",
+    "2.0.0-2553@sha256:91189106dc3aa40433f93ef7f2611ad02829770aeaa2d8e2e982107d93e30c04",
   // not managed by renovate
   "shepherdjerred/discord-plays-pokemon":
-    "2.0.0-2455@sha256:78f745c4e8cb0bdf3a3e9b6e54fcc8aecb92113ec16c3de98f019fd334627b9f",
+    "2.0.0-2553@sha256:9378d268638559cddf1a668682ee5fd0d1020c7470629af3c9cae919f990af42",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "freshrss/freshrss":
     "1.29.0@sha256:cca8988d05cd449e1c6c69405971b1e6fc2c2116ceeb45c9fa3fc33837997a75",
@@ -130,7 +130,7 @@ const versions = {
     "0.17.2@sha256:70df8358acb05a89bb9b9123278183d9b054851d65601498f5c42b1513cc878b",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "library/python":
-    "3.14-alpine@sha256:a3de013592ea520507c1f18d880592338bd21abfe706237e68ed4126e21b6900",
+    "3.14-alpine@sha256:5a824eb82cc75361f98611f3cfc5091ea33f10a6ccea4d4ebdabbc523b9a1614",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "bitnamilegacy/kubectl":
     "1.33.4@sha256:ed0b31a0508da84ee655c5c6e01bd3897fc56ad6cf69debb27fa1893a06d2246",
@@ -206,15 +206,15 @@ const versions = {
   // Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3
   // not managed by renovate
   "shepherdjerred/caddy-s3proxy":
-    "2.0.0-2473@sha256:b957cbf3938f1907868e3c8e1971978ae0922c65b662d5b49d2107786334f2c9",
+    "2.0.0-2572@sha256:91d9763b1a5575622b5d296c4f0b4b3caa45b460be817c9c92c39a598f27a400",
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
-    "2.0.0-2455@sha256:144fb38079de8984c0651e434cd9d667dcacf47c68fd6bd20879072db2ee5c2a",
+    "2.0.0-2553@sha256:4afe4c9e4db0cd9e579d38348a1ce2138d99016df68c64bd7d2046807ce1b852",
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
-    "2.0.0-2473@sha256:e30eb677aa0059e2f2d2d83bd2e219c55642e53539470bd85a3e22b328e41774",
+    "2.0.0-2572@sha256:556a581b62c57ce021138094f39b81486777790154286dade9fa57e6ab8d2942",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "temporalio/auto-setup":
     "1.29.6@sha256:1263120feed69d82e4ca23b8ca6f1d702c3029fe70714e382966d0192318eab6",
@@ -227,11 +227,11 @@ const versions = {
   // Custom temporal-worker image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/temporal-worker":
-    "2.0.0-2455@sha256:6b57f19efb9a7a8ab418bf56a29bdb414f901be8de844bbff88cd5a0833d9651",
+    "2.0.0-2572@sha256:178cf5cd912098ebff2bf53286037ab94871138d03bb2565b6ea6656724ebd28",
   // Custom TRMNL dashboard image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/trmnl-dashboard":
-    "2.0.0-2455@sha256:e6710e58f2f5bdc4204e4c930ebbca265eefa1f1a7ff8bf3748457db33cf5737",
+    "2.0.0-2553@sha256:17461540b117dfc6f59f9d6e0a12e6ed59b6699bb5aff766d931f138b511b6d6",
 };
 
 /**

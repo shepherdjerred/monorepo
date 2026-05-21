@@ -1,4 +1,4 @@
-module github.com/shepherdjerred/terraform-provider-asuswrt
+module github.com/shepherdjerred/monorepo/packages/terraform-provider-asuswrt
 
 go 1.25.8
 

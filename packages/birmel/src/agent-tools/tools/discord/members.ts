@@ -17,7 +17,7 @@ import {
 export const manageMemberTool = createTool({
   id: "manage-member",
   description:
-    "Manage Discord members: get, search, list, modify nickname, add role, or remove role",
+    "Manage Discord members: 'get' details, 'search', 'list', 'modify' a member's nickname, 'add-role' to grant a role to a member, 'remove-role' to revoke one. To grant/revoke roles to specific members use this tool, not manage-role.",
   inputSchema: z.object({
     guildId: z.string().describe("The ID of the guild"),
     action: z
@@ -43,6 +43,12 @@ export const manageMemberTool = createTool({
   outputSchema: z.object({
     success: z.boolean(),
     message: z.string(),
+    verified: z
+      .boolean()
+      .optional()
+      .describe(
+        "Set on destructive writes (add-role, remove-role, modify). False means the API call returned 2xx but the post-write read-back does NOT match the request — surface this honestly to the user instead of claiming success.",
+      ),
     data: z
       .union([
         z.object({

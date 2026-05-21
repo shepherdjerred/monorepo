@@ -124,6 +124,8 @@ function BansRow({
 }
 
 export function GameHeader({ data }: { data: LoadingScreenData }) {
+  const shouldRenderBans = data.bans.length > 0;
+
   return (
     <div
       style={{
@@ -148,27 +150,28 @@ export function GameHeader({ data }: { data: LoadingScreenData }) {
         {data.queueDisplayName}
       </span>
 
-      {/* Bans row */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "16px",
-        }}
-      >
-        <BansRow bans={data.bans} team="blue" />
-        <span
+      {shouldRenderBans ? (
+        <div
           style={{
-            fontSize: "12px",
-            fontFamily: font.body,
-            color: palette.grey[2],
-            textTransform: "uppercase",
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
           }}
         >
-          Bans
-        </span>
-        <BansRow bans={data.bans} team="red" />
-      </div>
+          <BansRow bans={data.bans} team="blue" />
+          <span
+            style={{
+              fontSize: "12px",
+              fontFamily: font.body,
+              color: palette.grey[2],
+              textTransform: "uppercase",
+            }}
+          >
+            Bans
+          </span>
+          <BansRow bans={data.bans} team="red" />
+        </div>
+      ) : null}
     </div>
   );
 }

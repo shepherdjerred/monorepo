@@ -1,6 +1,6 @@
 import { palette } from "#src/assets/colors.ts";
 
-// TODO(https://github.com/shepherdjerred/scout-for-lol/issues/182): Add champion icon to improve visual identification
+// TODO(https://github.com/shepherdjerred/monorepo/issues/182): Add champion icon to improve visual identification
 export function Names({
   summonerName,
   championName,

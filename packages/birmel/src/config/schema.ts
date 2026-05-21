@@ -25,9 +25,7 @@ export const AgentConfigSchema = z.object({
 
 export const TelemetryConfigSchema = z.object({
   enabled: z.boolean().default(true),
-  otlpEndpoint: z
-    .string()
-    .default("http://tempo.monitoring.svc.cluster.local:4318"),
+  otlpEndpoint: z.string().default("http://tempo.tempo.svc.cluster.local:4318"),
   serviceName: z.string().default("birmel"),
 });
 

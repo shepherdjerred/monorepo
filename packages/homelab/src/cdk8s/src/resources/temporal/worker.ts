@@ -25,6 +25,7 @@ import {
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
+import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createTemporalWorkerAuditRbac } from "./audit-rbac.ts";
 
@@ -50,26 +51,31 @@ function optionalSecretEnv(
   return env;
 }
 
-export function createTemporalWorkerDeployment(
-  chart: Chart,
-  props: CreateTemporalWorkerDeploymentProps,
-) {
-  const UID = 1000;
-  const GID = 1000;
+function homelabAuditEnv(secret: ISecret): Record<string, EnvValue> {
+  return {
+    // homelab-audit-daily workflow credentials. All secret fields are optional
+    // so the pod starts if 1P is incomplete; the audit activity then fails fast
+    // in its agent loop with a clear API-specific auth error.
+    BUGSINK_URL: EnvValue.fromValue("https://bugsink.sjer.red"),
+    BUILDKITE_ORGANIZATION_SLUG: EnvValue.fromValue("sjerred"),
+    BUILDKITE_PIPELINE_SLUG: EnvValue.fromValue("monorepo"),
+    ...optionalSecretEnv(secret, [
+      "PAGERDUTY_TOKEN",
+      "BUGSINK_TOKEN",
+      "GRAFANA_URL",
+      "GRAFANA_API_KEY",
+      "ARGOCD_SERVER",
+      "ARGOCD_AUTH_TOKEN",
+      "CLOUDFLARE_API_TOKEN",
+      "BUILDKITE_API_TOKEN",
+    ]),
+    // talosctl reads its config from $TALOSCONFIG; the optional secret volume
+    // below projects 1P field TALOSCONFIG_YAML to this path.
+    TALOSCONFIG: EnvValue.fromValue("/etc/talos/config"),
+  };
+}
 
-  const onePasswordItem = new OnePasswordItem(chart, "temporal-worker-1p", {
-    spec: {
-      itemPath: vaultItemPath("mjgnqqh37jxyzseqrddde2jgaq"),
-    },
-  });
-  const secret = Secret.fromSecretName(
-    chart,
-    "temporal-worker-secret",
-    onePasswordItem.name,
-  );
-
-  // ServiceAccount + RBAC for the golink-sync workflow, which lists Tailscale
-  // Ingresses cluster-wide via @kubernetes/client-node's in-cluster config.
+function createTemporalWorkerServiceAccount(chart: Chart): ServiceAccount {
   const serviceAccount = new ServiceAccount(chart, "temporal-worker-sa", {
     metadata: { name: "temporal-worker" },
   });
@@ -101,6 +107,13 @@ export function createTemporalWorkerDeployment(
     ],
   });
 
+  return serviceAccount;
+}
+
+function createTemporalWorkerMaintenanceRbac(
+  chart: Chart,
+  serviceAccount: ServiceAccount,
+) {
   // Namespace-scoped RBAC for the ZFS maintenance workflow, which execs into
   // the zfs-zpool-collector DaemonSet pod in the prometheus namespace.
   // `kubectl exec daemonset/<name>` resolves the daemonset → pod via a
@@ -244,6 +257,29 @@ export function createTemporalWorkerDeployment(
       },
     ],
   });
+}
+
+export function createTemporalWorkerDeployment(
+  chart: Chart,
+  props: CreateTemporalWorkerDeploymentProps,
+) {
+  const UID = 1000;
+  const GID = 1000;
+
+  const onePasswordItem = new OnePasswordItem(chart, "temporal-worker-1p", {
+    spec: {
+      itemPath: vaultItemPath("mjgnqqh37jxyzseqrddde2jgaq"),
+    },
+  });
+  const secret = Secret.fromSecretName(
+    chart,
+    "temporal-worker-secret",
+    onePasswordItem.name,
+  );
+
+  const serviceAccount = createTemporalWorkerServiceAccount(chart);
+
+  createTemporalWorkerMaintenanceRbac(chart, serviceAccount);
 
   // Cluster-wide read-only RBAC for the homelab-audit-daily workflow. See
   // ./audit-rbac.ts for the full rule set.
@@ -331,26 +367,26 @@ export function createTemporalWorkerDeployment(
           "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
         ),
         // Home Assistant
-        HA_URL: EnvValue.fromSecretValue({
-          secret,
-          key: "HA_URL",
-        }),
-        HA_TOKEN: EnvValue.fromSecretValue({
-          secret,
-          key: "HA_TOKEN",
-        }),
+        HA_URL: EnvValue.fromSecretValue({ secret, key: "HA_URL" }),
+        HA_TOKEN: EnvValue.fromSecretValue({ secret, key: "HA_TOKEN" }),
         // S3 / SeaweedFS (for fetcher)
         S3_BUCKET_NAME: EnvValue.fromSecretValue({
           secret,
           key: "S3_BUCKET_NAME",
         }),
-        S3_ENDPOINT: EnvValue.fromSecretValue({
-          secret,
-          key: "S3_ENDPOINT",
-        }),
+        S3_ENDPOINT: EnvValue.fromSecretValue({ secret, key: "S3_ENDPOINT" }),
         S3_KEY: EnvValue.fromValue("data/manifest.json"),
         S3_REGION: EnvValue.fromValue("us-east-1"),
         S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
+        ...llmArchiveEnvVars(),
+        HOMELAB_AUDIT_ARCHIVE_BUCKET: EnvValue.fromSecretValue(
+          {
+            secret,
+            key: "HOMELAB_AUDIT_ARCHIVE_BUCKET",
+          },
+          { optional: true },
+        ),
+        HOMELAB_AUDIT_ARCHIVE_PREFIX: EnvValue.fromValue("homelab-audits"),
         AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
           secret,
           key: "AWS_ACCESS_KEY_ID",
@@ -360,9 +396,25 @@ export function createTemporalWorkerDeployment(
           key: "AWS_SECRET_ACCESS_KEY",
         }),
         // GitHub
-        GH_TOKEN: EnvValue.fromSecretValue({
+        GH_TOKEN: EnvValue.fromSecretValue({ secret, key: "GH_TOKEN" }),
+        PR_REVIEW_FIXTURES_REPO_URL: EnvValue.fromSecretValue(
+          {
+            secret,
+            key: "PR_REVIEW_FIXTURES_REPO_URL",
+          },
+          { optional: true },
+        ),
+        GITHUB_APP_ID: EnvValue.fromSecretValue({
           secret,
-          key: "GH_TOKEN",
+          key: "GITHUB_APP_ID",
+        }),
+        GITHUB_APP_INSTALLATION_ID: EnvValue.fromSecretValue({
+          secret,
+          key: "GITHUB_APP_INSTALLATION_ID",
+        }),
+        GITHUB_APP_PRIVATE_KEY: EnvValue.fromSecretValue({
+          secret,
+          key: "GITHUB_APP_PRIVATE_KEY",
         }),
         // GitHub webhook ingest (pr-review / pr-summary). The pr-agent activity
         // shells out to `claude -p` with the GitHub MCP server; the MCP server
@@ -443,10 +495,7 @@ export function createTemporalWorkerDeployment(
           key: "OPENAI_API_KEY",
         }),
         // Postal email
-        POSTAL_HOST: EnvValue.fromSecretValue({
-          secret,
-          key: "POSTAL_HOST",
-        }),
+        POSTAL_HOST: EnvValue.fromSecretValue({ secret, key: "POSTAL_HOST" }),
         POSTAL_HOST_HEADER: EnvValue.fromSecretValue({
           secret,
           key: "POSTAL_HOST_HEADER",
@@ -474,33 +523,7 @@ export function createTemporalWorkerDeployment(
           },
           { optional: true },
         ),
-        // ---------------------------------------------------------------
-        // homelab-audit-daily workflow credentials. All marked optional so
-        // the pod still starts if a 1P field is unset — the audit activity
-        // fails fast in the agent loop with a clear "API X returned 401"
-        // when a token is missing, while every other workflow keeps running.
-        // Add these fields to 1P item `temporal-temporal-worker-1p`:
-        //   PAGERDUTY_TOKEN, BUGSINK_URL, BUGSINK_TOKEN,
-        //   GRAFANA_URL, GRAFANA_API_KEY,
-        //   ARGOCD_SERVER, ARGOCD_AUTH_TOKEN,
-        //   CLOUDFLARE_API_TOKEN  (for `tofu plan` against the cloudflare module)
-        // ---------------------------------------------------------------
-        ...optionalSecretEnv(secret, [
-          "PAGERDUTY_TOKEN",
-          "BUGSINK_URL",
-          "BUGSINK_TOKEN",
-          "GRAFANA_URL",
-          "GRAFANA_API_KEY",
-          "ARGOCD_SERVER",
-          "ARGOCD_AUTH_TOKEN",
-          "CLOUDFLARE_API_TOKEN",
-        ]),
-        // talosctl reads its config from $TALOSCONFIG; the file is projected
-        // from 1P field TALOSCONFIG_YAML via the volume mount above. The
-        // volume is `optional: true` so the pod still starts when the 1P
-        // field is unset — talosctl commands then fail fast with a clear
-        // error inside the audit run.
-        TALOSCONFIG: EnvValue.fromValue("/etc/talos/config"),
+        ...homelabAuditEnv(secret),
       },
     }),
   );

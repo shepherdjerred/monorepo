@@ -123,6 +123,10 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
     }
   }
 
+  if (pkg === "tasks-for-obsidian") {
+    steps.push(tasksForObsidianNativeDepsStep(resources));
+  }
+
   // homelab: build helm-types (nested NPM package under homelab).
   // No artifact upload — npm publish rebuilds via Dagger cache.
   if (pkg === "homelab") {
@@ -292,4 +296,18 @@ function daggerCallStep(
     step.depends_on = dependsOn;
   }
   return step;
+}
+
+function tasksForObsidianNativeDepsStep(resources: {
+  cpu: string;
+  memory: string;
+}): BuildkiteStep {
+  return {
+    label: ":iphone: iOS Native Deps",
+    key: "ios-native-deps-tasks-for-obsidian",
+    command: "bash .buildkite/scripts/tasks-for-obsidian-ios-native-deps.sh",
+    timeout_in_minutes: 10,
+    retry: RETRY,
+    plugins: [k8sPlugin({ cpu: resources.cpu, memory: resources.memory })],
+  };
 }

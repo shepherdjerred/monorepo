@@ -57,11 +57,15 @@ export const serverToolSet = [
 ];
 
 /**
- * Moderation Agent - handles moderation, roles, automod, webhooks
+ * Moderation Agent - handles moderation, roles, automod, webhooks.
+ * Includes memberTools because role grants/revokes and nickname changes are
+ * conceptually moderation actions; without them the moderation-agent would
+ * have to delegate to server-agent for every role assignment.
  */
 export const moderationToolSet = [
   ...moderationTools,
   ...roleTools,
+  ...memberTools,
   ...automodTools,
   ...webhookTools,
   ...inviteTools,
@@ -136,7 +140,7 @@ export function getAgentDescription(agentType: AgentType): string {
     case "server":
       return "Get server/guild information. List, create, modify channels. Search and manage members. Query database.";
     case "moderation":
-      return "Kick, ban, timeout, warn members. Manage roles and permissions. Configure automod rules. Manage webhooks and invites. Add emojis/stickers.";
+      return "Kick, ban, timeout, warn members. Manage role definitions. Grant/revoke roles to members. Change member nicknames. Configure automod rules. Manage webhooks and invites. Add emojis/stickers.";
     case "music":
       return "Play, pause, skip, stop music. Manage queue. Control volume and loop mode.";
     case "automation":

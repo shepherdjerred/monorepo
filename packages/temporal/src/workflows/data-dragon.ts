@@ -1,6 +1,7 @@
 import { proxyActivities } from "@temporalio/workflow";
 import type {
   DataDragonActivities,
+  DataDragonWorkflowInput,
   DataDragonUpdateMode,
   DataDragonUpdateResult,
 } from "#activities/data-dragon.ts";
@@ -35,6 +36,7 @@ const { updateDataDragon } = proxyActivities<DataDragonActivities>({
 
 export async function runScoutDataDragonUpdate(
   mode: DataDragonUpdateMode,
+  input: DataDragonWorkflowInput,
 ): Promise<DataDragonUpdateResult | undefined> {
   const state = await getDataDragonVersionState();
 
@@ -43,5 +45,9 @@ export async function runScoutDataDragonUpdate(
     return undefined;
   }
 
-  return await updateDataDragon({ ...state, mode });
+  return await updateDataDragon({
+    ...state,
+    mode,
+    lanePriors: input.lanePriors,
+  });
 }

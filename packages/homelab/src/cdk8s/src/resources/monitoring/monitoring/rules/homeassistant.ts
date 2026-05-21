@@ -2,6 +2,33 @@ import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/gen
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { createSensorAlert, createBinarySensorAlert } from "./shared.ts";
 
+const ignoredUnavailableEntityDomains = [
+  "group",
+  "automation",
+  "scene",
+  "script",
+  "button",
+  "event",
+  "number",
+  "select",
+  "text",
+  "update",
+];
+
+const ignoredUnavailableEntities = [
+  "sensor.unavailable_entities_count",
+  "conversation.home_assistant",
+  "stt.home_assistant_cloud",
+  "tts.home_assistant_cloud",
+];
+
+const ignoredUnavailableEntityDomainPattern = String.raw`^(${ignoredUnavailableEntityDomains.join("|")})\\..*`;
+
+const unavailableEntitiesAnnotationQuery = `homeassistant_entity_available{entity!~"${ignoredUnavailableEntityDomainPattern}",${ignoredUnavailableEntities.map((entity) => `entity!="${entity}"`).join(",")}} == 0`;
+
+const escapedUnavailableEntitiesAnnotationQuery =
+  unavailableEntitiesAnnotationQuery.replaceAll('"', String.raw`\"`);
+
 export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
     // Litter Robot monitoring
@@ -132,8 +159,7 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "HomeAssistantEntitiesUnavailable",
           annotations: {
-            description:
-              '{{ "{{" }} $value {{ "}}" }} Home Assistant entities are unavailable or unknown:\n{{ "{{" }} with query "homeassistant_entity_available == 0" {{ "}}" }}{{ "{{" }} range sortByLabel "friendly_name" . {{ "}}" }}\n- {{ "{{" }} .Labels.friendly_name {{ "}}" }} ({{ "{{" }} .Labels.entity {{ "}}" }}){{ "{{" }} end {{ "}}" }}{{ "{{" }} end {{ "}}" }}',
+            description: `{{ "{{" }} $value {{ "}}" }} Home Assistant entities are unavailable or unknown:\n{{ "{{" }} with query "${escapedUnavailableEntitiesAnnotationQuery}" {{ "}}" }}{{ "{{" }} range sortByLabel "friendly_name" . {{ "}}" }}\n- {{ "{{" }} .Labels.friendly_name {{ "}}" }} ({{ "{{" }} .Labels.entity {{ "}}" }}){{ "{{" }} end {{ "}}" }}{{ "{{" }} end {{ "}}" }}`,
             summary: "Home Assistant entities unavailable",
             runbook_url:
               "https://homeassistant.tailnet-1a49.ts.net/history?entity_id=sensor.unavailable_entities_count",

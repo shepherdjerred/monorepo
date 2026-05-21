@@ -139,7 +139,7 @@ For simpler setup, use GitHub Releases:
   "plugins": {
     "updater": {
       "endpoints": [
-        "https://github.com/shepherdjerred/scout-for-lol/releases/latest/download/latest.json"
+        "https://github.com/shepherdjerred/monorepo/releases/latest/download/latest.json"
       ]
     }
   }

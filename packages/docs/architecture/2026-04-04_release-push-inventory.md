@@ -15,7 +15,7 @@ All targets are orchestrated via **Buildkite CI** using **Dagger** as the build 
 | npm packages         | 3     | npm registry                             | NPM_TOKEN    |
 | Static sites (S3)    | 8     | SeaweedFS + Cloudflare R2                | AWS creds    |
 | GitHub releases      | 2     | GitHub API                               | GH_TOKEN     |
-| Git push (automated) | 2     | origin (version commits, release-please) | GH_TOKEN     |
+| Git push (automated) | 2     | origin (version commits, release-please) | GitHub App   |
 | OpenTofu apply       | 3     | Cloudflare, GitHub, SeaweedFS            | Multiple     |
 | ArgoCD sync          | 1     | K8s cluster via `argocd.sjer.red`        | ArgoCD token |
 
@@ -83,15 +83,15 @@ Method: `aws s3 sync --delete`. Code: `.dagger/src/release.ts`, `scripts/ci/src/
 
 ## GitHub Releases & Artifacts
 
-**Cooklang for Obsidian plugin** — auto-bumps semver patch from the latest plugin-repo release tag, updates `main.js`, `manifest.json`, `versions.json`, `styles.css` on `shepherdjerred/cooklang-for-obsidian` main, cuts a GitHub release tagged with the bare version (Obsidian directory convention), then opens an auto-merge commit-back PR on the monorepo. Code: `.dagger/src/release.ts` (cooklangPublishHelper, cooklangVersionCommitBackHelper).
+**Cooklang for Obsidian plugin** — auto-bumps semver patch from the latest configured plugin-repo release tag, updates `main.js`, `manifest.json`, `versions.json`, `styles.css` on the plugin repo's main branch, cuts a GitHub release tagged with the bare version (Obsidian directory convention), then opens an auto-merge commit-back PR on the monorepo. Code: `.dagger/src/release.ts` (cooklangPublishHelper, cooklangVersionCommitBackHelper).
 
 **Clauderon (Rust CLI)** — multi-arch binaries (x86_64 + arm64). Dev pre-releases `0.0.0-dev.{BUILD_NUMBER}` on `shepherdjerred/monorepo`. Prod releases via release-please. Code: `.dagger/src/release.ts` (clauderonUploadHelper, clauderonCollectBinariesHelper).
 
 ## Automated Git Pushes
 
-**Version commit-back** — updates `packages/homelab/src/cdk8s/src/versions.ts` with image digests, commits and pushes. Code: `.dagger/src/release.ts` (versionCommitBackHelper), `scripts/ci/src/steps/version.ts`.
+**Version commit-back** — updates `packages/homelab/src/cdk8s/src/versions.ts` with image digests, commits and pushes using a short-lived GitHub App installation token. Code: `.dagger/src/release.ts` (versionCommitBackHelper), `scripts/ci/src/steps/version.ts`.
 
-**Release-please** — creates/updates version bump PRs, auto-generates GitHub releases with changelogs. Config: `release-please-config.json`, `.release-please-manifest.json`. Code: `.dagger/src/release.ts` (releasePleaseHelper).
+**Release-please** — creates/updates version bump PRs, auto-generates GitHub releases with changelogs, and authenticates with a short-lived GitHub App installation token. Config: `release-please-config.json`, `.release-please-manifest.json`. Code: `.dagger/src/release.ts` (releasePleaseHelper).
 
 ## OpenTofu Infrastructure Apply
 

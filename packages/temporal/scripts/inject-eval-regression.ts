@@ -5,10 +5,10 @@
  * `PrReviewBotEvalPrecisionRegression` PagerDuty alert. Used to verify
  * the alert wiring end-to-end without waiting for a real regression.
  *
- * The script mutates the LIVE `monorepo-pr-review-fixtures` checkout
- * — by design, since the workflow clones from the upstream remote.
- * Run against a fresh clone of the fixtures repo (the script will
- * verify the cwd is a clone of that repo before touching anything).
+ * The script mutates the live fixture corpus checkout — by design, since the
+ * workflow clones from the upstream remote. Run against a fresh clone of the
+ * fixtures repo (the script verifies the expected fixture layout before
+ * touching anything).
  *
  * Steps (`--apply` mode):
  *   1. Read `fixtures/<id>/fixture.json`.
@@ -27,11 +27,11 @@
  *
  * Usage:
  *   bun run packages/temporal/scripts/inject-eval-regression.ts \
- *     --fixtures-repo ~/git/monorepo-pr-review-fixtures \
+ *     --fixtures-repo ~/git/pr-review-fixtures \
  *     --fixture-id scout-data-dragon-env-leak \
  *     --dry-run
  */
-import { readFile, writeFile } from "node:fs/promises";
+import { access, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { FixtureSchema, type Fixture } from "#shared/pr-review/eval-fixture.ts";
@@ -116,12 +116,10 @@ function git(repo: string, args: readonly string[]): Promise<string> {
 }
 
 async function verifyFixturesRepo(repo: string): Promise<void> {
+  await access(path.join(repo, "fixtures"));
   const remotes = await git(repo, ["remote", "-v"]);
-  if (!remotes.includes("monorepo-pr-review-fixtures")) {
-    throw new Error(
-      `${repo} does not look like a clone of monorepo-pr-review-fixtures. ` +
-        "Refusing to mutate.",
-    );
+  if (remotes.trim() === "") {
+    throw new Error(`${repo} does not have a git remote. Refusing to mutate.`);
   }
 }
 

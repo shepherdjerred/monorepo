@@ -13,7 +13,9 @@ export const manageEmojiTool = createTool({
     guildId: z.string().describe("The ID of the guild"),
     action: z
       .enum(["list", "create", "modify", "delete"])
-      .describe("The action to perform"),
+      .describe(
+        "The action to perform. 'modify' renames an emoji or changes its role restrictions — it does NOT change the emoji image.",
+      ),
     emojiId: z
       .string()
       .optional()

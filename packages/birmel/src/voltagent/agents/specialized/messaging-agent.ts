@@ -18,8 +18,7 @@ const MESSAGING_PURPOSE = `This agent handles Discord messaging operations.
 
 const MESSAGING_RESPONSIBILITIES = `Send, edit, delete, pin, and unpin Discord messages. Create threads and polls. Add and remove reactions. Schedule messages for later delivery. Send DMs. Track member activity. Store and retrieve memories (server-scope rules and owner-scope preferences) via the manage-memory tool.`;
 
-const MESSAGING_TOOL_GUIDANCE = `- Use \`manage-message\` for all message operations: action="send" for other channels, "edit"/"delete"/"pin"/"unpin", "add-reaction"/"remove-reaction", "send-dm", "bulk-delete", "get".
-- Do NOT call \`manage-message\` with action="reply"; the supervisor wires reply context automatically. Your final text output IS the reply.
+const MESSAGING_TOOL_GUIDANCE = `- Use \`manage-message\` for operations that aren't your direct reply: action="delete"/"pin"/"unpin", "add-reaction"/"remove-reaction", "send-dm", "bulk-delete", "get". For posting to a DIFFERENT channel use action="send" with that channel's id.
 - For memory: \`manage-memory\` with action="get"/"append"/"update"/"remove" and scope="server" or scope="owner". Always pick a scope.
 - For threads/polls/scheduling, use the dedicated \`manage-thread\` / \`manage-poll\` / \`manage-schedule\` tools.
 - After completing the work, write a short final message to the user describing what you did. Don't list every API call.`;

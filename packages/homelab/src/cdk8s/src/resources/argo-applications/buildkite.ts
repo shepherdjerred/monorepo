@@ -69,7 +69,7 @@ export function createBuildkiteApp(chart: Chart) {
     spec: {
       accessModes: ["ReadWriteMany"],
       storageClassName: NVME_STORAGE_CLASS,
-      resources: { requests: { storage: Quantity.fromString("5Gi") } },
+      resources: { requests: { storage: Quantity.fromString("20Gi") } },
     },
   });
 

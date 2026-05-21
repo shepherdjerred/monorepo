@@ -22,6 +22,9 @@ export const QueueTypeSchema = z.enum([
   "custom",
 ]);
 
+const ARENA_QUEUE_ID = 1700;
+const ARENA_GAME_MODE = "CHERRY";
+
 // Most queue IDs come from Riot's queues.json. Queue 3200 is currently absent
 // from that file, but live Spectator payloads report it for ARAM: Mayhem games
 // on Howling Abyss.
@@ -38,7 +41,7 @@ export function parseQueueType(input: number): QueueType | undefined {
     .with(480, () => "swiftplay")
     .with(490, () => "quickplay")
     .with(900, () => "arurf")
-    .with(1700, () => "arena")
+    .with(ARENA_QUEUE_ID, () => "arena")
     .with(2300, () => "brawl")
     .with(2400, () => "aram mayhem")
     .with(3200, () => "aram mayhem")
@@ -52,6 +55,20 @@ export function parseQueueType(input: number): QueueType | undefined {
       console.error(`unknown queue type: ${input.toString()}`);
       return;
     });
+}
+
+export function isArenaQueueOrMode(queueId: number, gameMode: string): boolean {
+  return queueId === ARENA_QUEUE_ID || gameMode === ARENA_GAME_MODE;
+}
+
+export function resolveQueueTypeFromGame(
+  queueId: number,
+  gameMode: string,
+): QueueType | undefined {
+  if (isArenaQueueOrMode(queueId, gameMode)) {
+    return "arena";
+  }
+  return parseQueueType(queueId);
 }
 
 export function queueTypeToDisplayString(queueType: QueueType): string {

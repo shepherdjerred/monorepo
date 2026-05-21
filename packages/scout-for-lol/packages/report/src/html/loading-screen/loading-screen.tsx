@@ -3,14 +3,14 @@ import { palette } from "#src/assets/colors.ts";
 import { GameHeader } from "#src/html/loading-screen/game-header.tsx";
 import { StandardLayout } from "#src/html/loading-screen/standard-layout.tsx";
 import { ArenaLayout } from "#src/html/loading-screen/arena-layout.tsx";
-import { match } from "ts-pattern";
 
 export function LoadingScreen({ data }: { data: LoadingScreenData }) {
-  const layoutContent = match(data.layout)
-    .with("standard", () => <StandardLayout data={data} />)
-    .with("aram", () => <StandardLayout data={data} />)
-    .with("arena", () => <ArenaLayout data={data} />)
-    .exhaustive();
+  const layoutContent =
+    data.layout === "arena" ? (
+      <ArenaLayout data={data} />
+    ) : (
+      <StandardLayout data={data} />
+    );
 
   return (
     <div

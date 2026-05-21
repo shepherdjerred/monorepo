@@ -17,9 +17,9 @@
     </licenses>
 
     <scm>
-        <url>https://github.com/ShepherdJerred/funsheet/</url>
-        <connection>scm:git:git://github.com/shepherdjerred/funsheet.git</connection>
-        <developerConnection>scm:git:git@github.com:shepherdjerred/funsheet.git</developerConnection>
+        <url>https://github.com/shepherdjerred/monorepo/</url>
+        <connection>scm:git:https://github.com/shepherdjerred/monorepo.git</connection>
+        <developerConnection>scm:git:git@github.com:shepherdjerred/monorepo.git</developerConnection>
     </scm>
 
     <developers>
