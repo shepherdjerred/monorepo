@@ -64,11 +64,6 @@ export function generateCaddyfile(props: CaddyfileGeneratorProps): string {
 	@noTrailingSlash path_regexp ^/[^.]*[^/]$
 	redir @noTrailingSlash {uri}/ 301
 
-	# Strip conditional headers to work around caddy-s3-proxy issue #63
-	# https://github.com/lindenlab/caddy-s3-proxy/issues/63
-	request_header -If-Modified-Since
-	request_header -If-None-Match
-
 	s3proxy {
 		bucket ${site.bucket}
 		region {$S3_REGION:${props.s3Region ?? "us-east-1"}}
