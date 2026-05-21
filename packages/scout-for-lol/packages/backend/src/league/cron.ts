@@ -1,17 +1,15 @@
 import { checkPostMatch } from "#src/league/tasks/postmatch/index.ts";
 import { checkPreMatch } from "#src/league/tasks/prematch/index.ts";
 import { runLifecycleCheck } from "#src/league/tasks/competition/lifecycle.ts";
-import { runScheduledCompetitionUpdates } from "#src/league/tasks/competition/scheduled-update-dispatcher.ts";
 import { runPlayerPruning } from "#src/league/tasks/cleanup/prune-players.ts";
 import { checkAbandonedGuilds } from "#src/league/tasks/cleanup/abandoned-guilds.ts";
 import { runDataValidation } from "#src/league/tasks/cleanup/validate-data.ts";
 import { refreshMatchTimes } from "#src/league/tasks/maintenance/refresh-match-times.ts";
-import { runWeeklyPairingUpdate } from "#src/league/tasks/pairing/index.ts";
 import { runOutreach } from "#src/league/tasks/outreach/index.ts";
+import { runScheduledReportDispatch } from "#src/reports/discord-dispatcher.ts";
 import { client } from "#src/discord/client.ts";
 import { createCronJob } from "#src/league/cron/helpers.ts";
 import { createLogger } from "#src/logger.ts";
-import { getFlag, MY_SERVER } from "#src/configuration/flags.ts";
 import { runStartupRecovery } from "#src/league/tasks/recovery/startup-recovery.ts";
 
 const logger = createLogger("league-cron");
@@ -67,21 +65,15 @@ export async function startCronJobs() {
     runOnInit: true,
   });
 
-  // dispatch per-competition scheduled leaderboard updates every minute.
-  // The dispatcher matches rows whose `nextScheduledUpdateAt` has passed and
-  // advances the next-fire from each row's CRON expression after posting.
-  logger.info(
-    "📅 Setting up scheduled competition leaderboard updates (every minute)",
-  );
+  logger.info("📅 Setting up scheduled report dispatch (every minute)");
   createCronJob({
     schedule: "0 * * * * *",
-    jobName: "scheduled_competition_updates",
-    task: runScheduledCompetitionUpdates,
-    logMessage: "📊 Dispatching scheduled competition leaderboard updates",
+    jobName: "scheduled_reports",
+    task: runScheduledReportDispatch,
+    logMessage: "📊 Dispatching scheduled reports",
     timezone: "UTC",
-    runOnInit: false, // Don't run on init - prevents startup notifications
-    logTrigger:
-      "Posting due per-competition leaderboard updates and advancing next-fire",
+    runOnInit: false,
+    logTrigger: "Posting due generic reports and advancing next-fire",
   });
 
   // prune orphaned players daily at 3 AM UTC
@@ -118,31 +110,6 @@ export async function startCronJobs() {
     runOnInit: true, // Run on startup to fix any stale data
   });
 
-  // post weekly Common Denominator update every Sunday at 6 PM UTC
-  // Shows pairing win rates and surrender stats for the past month
-  // Gated by common_denominator_enabled flag (currently only enabled for MY_SERVER)
-  logger.info("📅 Setting up weekly pairing update job (Sunday 6 PM UTC)");
-  createCronJob({
-    schedule: "0 0 18 * * 0", // 6 PM UTC on Sundays
-    jobName: "weekly_pairing_update",
-    task: async () => {
-      const isEnabled = getFlag("common_denominator_enabled", {
-        server: MY_SERVER,
-      });
-      if (!isEnabled) {
-        logger.info(
-          "📈 Common Denominator update skipped - feature not enabled for this server",
-        );
-        return;
-      }
-      await runWeeklyPairingUpdate();
-    },
-    logMessage: "📈 Running weekly Common Denominator update",
-    timezone: "UTC",
-    runOnInit: false, // Don't run on init - prevents startup notifications
-    logTrigger: "Posting weekly pairing win rates and surrender stats",
-  });
-
   // run outreach checks daily at 10 AM UTC
   logger.info("📅 Setting up outreach check job (daily 10 AM UTC)");
   createCronJob({
@@ -157,7 +124,7 @@ export async function startCronJobs() {
   logger.info("✅ Cron jobs initialized successfully");
   logger.info(
     "📊 Pre-match check (30s), match history polling (1min), competition lifecycle (15min), data validation (hourly), " +
-      "match time refresh (6hr), per-competition scheduled leaderboards (every minute, dispatched per row), " +
-      "player pruning (3AM UTC), abandoned guild cleanup (4AM UTC), and weekly pairing update (Sunday 6PM UTC) cron jobs are now active",
+      "match time refresh (6hr), scheduled reports (every minute), " +
+      "player pruning (3AM UTC), abandoned guild cleanup (4AM UTC) cron jobs are now active",
   );
 }

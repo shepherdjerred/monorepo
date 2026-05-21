@@ -504,6 +504,8 @@ const MODEL_ID_MAP: Record<string, string> = {
   Competition: "CompetitionId",
   CompetitionParticipant: "ParticipantId",
   CompetitionSnapshot: "SnapshotId",
+  Report: "ReportId",
+  ReportRun: "ReportRunId",
   Subscription: "SubscriptionId",
   ServerPermission: "PermissionId",
   GuildPermissionError: "PermissionErrorId",
@@ -541,6 +543,21 @@ const FIELD_TYPE_MAP: Record<string, string> = {
   userId: "DiscordAccountId",
 };
 
+const MODEL_FIELD_TYPE_MAP: Record<string, Record<string, string>> = {
+  Report: {
+    outputFormat: "ReportOutputFormat",
+    lastRunStatus: "ReportRunStatus",
+    sourceCompetitionId: "CompetitionId",
+    systemSource: "ReportSystemSource",
+  },
+  ReportRun: {
+    reportId: "ReportId",
+    trigger: "ReportRunTrigger",
+    status: "ReportRunStatus",
+    outputFormat: "ReportOutputFormat",
+  },
+};
+
 function getBrandedType(
   propName: string,
   parentTypeName: string,
@@ -548,6 +565,11 @@ function getBrandedType(
   // Check if this is an 'id' field with model-specific branding
   if (propName === "id") {
     return MODEL_ID_MAP[parentTypeName] ?? null;
+  }
+
+  const modelFieldType = MODEL_FIELD_TYPE_MAP[parentTypeName]?.[propName];
+  if (modelFieldType !== undefined) {
+    return modelFieldType;
   }
 
   // Check other field mappings

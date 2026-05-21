@@ -312,12 +312,24 @@ export const competitionCommand = new SlashCommandBuilder()
   .addSubcommand((subcommand) =>
     subcommand
       .setName("grant-permission")
-      .setDescription("Grant competition creation permission to a user")
+      .setDescription(
+        "Grant report or competition creation permission to a user",
+      )
       .addUserOption((option) =>
         option
           .setName("user")
           .setDescription("User to grant permission to")
           .setRequired(true),
+      )
+      .addStringOption((option) =>
+        option
+          .setName("permission")
+          .setDescription("Permission to grant")
+          .setRequired(false)
+          .addChoices(
+            { name: "Create Competition", value: "CREATE_COMPETITION" },
+            { name: "Create Report", value: "CREATE_REPORT" },
+          ),
       ),
   )
   .addSubcommand((subcommand) =>

@@ -22,6 +22,8 @@ describe("Feature Flags System", () => {
       expect(getLimit("accounts")).toBe(50);
       expect(getLimit("competitions_per_owner")).toBe(1);
       expect(getLimit("competitions_per_server")).toBe(2);
+      expect(getLimit("reports_per_owner_per_server")).toBe(2);
+      expect(getLimit("reports_per_server")).toBe(3);
     });
 
     test("returns default limit when no overrides match", () => {
@@ -283,6 +285,8 @@ describe("Feature Flags - Specificity & Overrides", () => {
         "accounts",
         "competitions_per_owner",
         "competitions_per_server",
+        "reports_per_owner_per_server",
+        "reports_per_server",
       ];
 
       for (const limit of validLimits) {

@@ -23,6 +23,15 @@ import { executeCompetitionInvite } from "#src/discord/commands/competition/invi
 import { executeCompetitionLeave } from "#src/discord/commands/competition/leave.ts";
 import { executeCompetitionView } from "#src/discord/commands/competition/view.ts";
 import { executeCompetitionList } from "#src/discord/commands/competition/list.ts";
+import { executeReportCreate } from "#src/discord/commands/report/create.ts";
+import {
+  executeReportDelete,
+  executeReportDisable,
+} from "#src/discord/commands/report/delete.ts";
+import { executeReportList } from "#src/discord/commands/report/list.ts";
+import { executeReportRun } from "#src/discord/commands/report/run.ts";
+import { executeReportUpdate } from "#src/discord/commands/report/update.ts";
+import { executeReportView } from "#src/discord/commands/report/view.ts";
 
 import {
   executeDebugDatabase,
@@ -85,8 +94,9 @@ export function handleCommands(client: Client) {
         // CRON preset suggestions for /competition create + update-schedule.
         // Users can still type a custom value; the value is validated on submit.
         if (
-          commandName === "competition" &&
-          focusedOption.name === "update-cron"
+          (commandName === "competition" &&
+            focusedOption.name === "update-cron") ||
+          (commandName === "report" && focusedOption.name === "schedule-cron")
         ) {
           const query = focusedOption.value.toLowerCase();
           const matchingPresets = query
@@ -190,6 +200,29 @@ export function handleCommands(client: Client) {
                 );
                 await interaction.reply({
                   content: "Unknown competition subcommand",
+                  ephemeral: true,
+                });
+              });
+
+            break;
+          }
+          case "report": {
+            const subcommandName = interaction.options.getSubcommand();
+            logger.info(`📊 Executing report ${subcommandName} command`);
+
+            await match(subcommandName)
+              .with("create", async () => executeReportCreate(interaction))
+              .with("update", async () => executeReportUpdate(interaction))
+              .with("run", async () => executeReportRun(interaction))
+              .with("run-now", async () => executeReportRun(interaction))
+              .with("view", async () => executeReportView(interaction))
+              .with("disable", async () => executeReportDisable(interaction))
+              .with("delete", async () => executeReportDelete(interaction))
+              .with("list", async () => executeReportList(interaction))
+              .otherwise(async () => {
+                logger.warn(`⚠️  Unknown report subcommand: ${subcommandName}`);
+                await interaction.reply({
+                  content: "Unknown report subcommand",
                   ephemeral: true,
                 });
               });
