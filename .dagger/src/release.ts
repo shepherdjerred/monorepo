@@ -238,13 +238,22 @@ export function publishNpmHelper(
   dryrun = false,
   tsconfig: File | null = null,
   devSuffix: string = "",
+  pkgPath: string = "",
 ): Container {
+  // pkgPath is the on-disk path under packages/ (e.g. "homelab/src/helm-types"
+  // for @shepherdjerred/helm-types). Mounting at the real on-disk path is
+  // required so that `file:` workspace deps in package.json resolve correctly
+  // — file: refs are written relative to the source-tree layout, not the npm
+  // package name. Default to `pkg` for top-level unscoped packages where the
+  // name and directory coincide (e.g. webring, astro-opengraph-images).
+  const mountPath = pkgPath !== "" ? pkgPath : pkg;
+
   let container = dag
     .container()
     .from(BUN_IMAGE)
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
-    .withWorkdir(`/workspace/packages/${pkg}`)
-    .withDirectory(`/workspace/packages/${pkg}`, pkgDir, {
+    .withWorkdir(`/workspace/packages/${mountPath}`)
+    .withDirectory(`/workspace/packages/${mountPath}`, pkgDir, {
       exclude: SOURCE_EXCLUDES,
     });
 
@@ -271,14 +280,14 @@ export function publishNpmHelper(
       .withExec(["bun", "run", "build"]);
   }
 
-  container = container.withWorkdir(`/workspace/packages/${pkg}`);
+  container = container.withWorkdir(`/workspace/packages/${mountPath}`);
 
   // Replace file: refs with actual versions before publishing
   container = container.withExec([
     "sh",
     "-c",
     [
-      `cd /workspace/packages/${pkg}`,
+      `cd /workspace/packages/${mountPath}`,
       `bun -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync("package.json","utf8")); for(const [,deps] of [["dependencies",p.dependencies||{}],["devDependencies",p.devDependencies||{}]]) { for(const [name,ver] of Object.entries(deps)) { if(typeof ver==="string"&&ver.startsWith("file:")) { try { const d=JSON.parse(fs.readFileSync(ver.replace("file:","")+"/package.json","utf8")); deps[name]="^"+d.version } catch {} } } } fs.writeFileSync("package.json",JSON.stringify(p,null,2)+"\\n")'`,
     ].join(" && "),
   ]);
