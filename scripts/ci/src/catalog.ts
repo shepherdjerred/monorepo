@@ -102,6 +102,7 @@ export interface DeploySite {
   buildDir: string;
   buildCmd: string;
   distDir: string;
+  buildEnvVars?: string[];
   needsPlaywright?: boolean;
   workspaceDeps?: string;
 }
@@ -148,6 +149,7 @@ export const DEPLOY_SITES: DeploySite[] = [
     buildDir: "packages/scout-for-lol",
     buildCmd: "bun run --filter='./packages/frontend' build",
     distDir: "packages/scout-for-lol/packages/frontend/dist",
+    buildEnvVars: ["PUBLIC_PINTEREST_TAG_ID", "PUBLIC_REDDIT_PIXEL_ID"],
   },
   {
     bucket: "better-skill-capped",

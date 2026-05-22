@@ -4,6 +4,7 @@ import {
   SheetTrigger,
 } from "#src/components/ui/sheet.tsx";
 import { Button } from "#src/components/ui/button.tsx";
+import { DISCORD_INSTALL_CLICK_EVENT } from "#src/lib/marketing-constants.ts";
 
 type MobileNavItem = {
   href: string;
@@ -64,6 +65,8 @@ export function ClientMobileNav({ items, activePage, discordLink }: Props) {
           <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
             <a
               href={discordLink}
+              data-scout-conversion={DISCORD_INSTALL_CLICK_EVENT}
+              data-scout-cta-location="navbar"
               className="block rounded-md bg-indigo-600 px-3 py-2 text-base font-semibold text-white text-center shadow-sm hover:bg-indigo-500"
             >
               Add to Discord

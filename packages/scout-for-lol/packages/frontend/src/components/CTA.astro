@@ -1,15 +1,29 @@
 ---
 import Button from "./Button.astro";
+import type { DiscordCtaLocation } from "#src/lib/marketing.ts";
+import type { DiscordInstallClickEvent } from "#src/lib/marketing-constants.ts";
+
+type TrackingButtonProps =
+  | {
+      trackingEvent: DiscordInstallClickEvent;
+      trackingLocation: DiscordCtaLocation;
+    }
+  | {
+      trackingEvent?: undefined;
+      trackingLocation?: undefined;
+    };
+
+type CtaButton = {
+  text: string;
+  href: string;
+  variant?: "primary" | "secondary";
+} & TrackingButtonProps;
 
 interface Props {
   title: string;
   description?: string;
   variant?: "indigo" | "default";
-  buttons?: Array<{
-    text: string;
-    href: string;
-    variant?: "primary" | "secondary";
-  }>;
+  buttons?: CtaButton[];
 }
 
 const { title, description, variant = "indigo", buttons = [] } = Astro.props;
@@ -43,15 +57,27 @@ const descClass =
       {
         buttons.length > 0 && (
           <div class="mt-10 flex items-center justify-center gap-x-6">
-            {buttons.map((button) => (
-              <Button
-                href={button.href}
-                variant={button.variant === "secondary" ? "text" : "primary"}
-                color={variant === "indigo" ? "white" : "indigo"}
-              >
-                {button.text}
-              </Button>
-            ))}
+            {buttons.map((button) =>
+              button.trackingEvent === undefined ? (
+                <Button
+                  href={button.href}
+                  variant={button.variant === "secondary" ? "text" : "primary"}
+                  color={variant === "indigo" ? "white" : "indigo"}
+                >
+                  {button.text}
+                </Button>
+              ) : (
+                <Button
+                  href={button.href}
+                  variant={button.variant === "secondary" ? "text" : "primary"}
+                  color={variant === "indigo" ? "white" : "indigo"}
+                  trackingEvent={button.trackingEvent}
+                  trackingLocation={button.trackingLocation}
+                >
+                  {button.text}
+                </Button>
+              ),
+            )}
           </div>
         )
       }

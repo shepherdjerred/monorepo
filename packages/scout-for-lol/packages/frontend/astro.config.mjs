@@ -1,5 +1,5 @@
 // @ts-check
-import { defineConfig } from "astro/config";
+import { defineConfig, envField } from "astro/config";
 import { resolve } from "path";
 import { fileURLToPath } from "url";
 
@@ -11,6 +11,18 @@ const dirname = fileURLToPath(new URL(".", import.meta.url));
 
 // https://astro.build/config
 export default defineConfig({
+  env: {
+    schema: {
+      PUBLIC_PINTEREST_TAG_ID: envField.string({
+        context: "client",
+        access: "public",
+      }),
+      PUBLIC_REDDIT_PIXEL_ID: envField.string({
+        context: "client",
+        access: "public",
+      }),
+    },
+  },
   integrations: [mdx(), react(), icon()],
   vite: {
     assetsInclude: ["**/*.txt"],

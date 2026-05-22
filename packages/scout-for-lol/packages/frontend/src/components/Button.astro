@@ -1,7 +1,9 @@
 ---
 import { cn } from "#src/lib/utils.ts";
+import type { DiscordCtaLocation } from "#src/lib/marketing.ts";
+import type { DiscordInstallClickEvent } from "#src/lib/marketing-constants.ts";
 
-interface Props {
+interface BaseProps {
   href: string;
   variant?: "primary" | "secondary" | "text";
   size?: "sm" | "md" | "lg";
@@ -10,14 +12,37 @@ interface Props {
   class?: string;
 }
 
+type TrackingProps =
+  | {
+      trackingEvent: DiscordInstallClickEvent;
+      trackingLocation: DiscordCtaLocation;
+    }
+  | {
+      trackingEvent?: undefined;
+      trackingLocation?: undefined;
+    };
+
+type Props = BaseProps & TrackingProps;
+
 const {
   href,
   variant = "primary",
   size = "md",
   color = "indigo",
   external = false,
+  trackingEvent,
+  trackingLocation,
   class: className = "",
 } = Astro.props;
+
+if (
+  (trackingEvent !== undefined && trackingLocation === undefined) ||
+  (trackingEvent === undefined && trackingLocation !== undefined)
+) {
+  throw new Error(
+    "Button trackingEvent and trackingLocation must be provided together",
+  );
+}
 
 let variantClasses = "";
 let sizeClasses: string;
@@ -90,6 +115,8 @@ const externalProps = external
 <a
   href={href}
   {...externalProps}
+  data-scout-conversion={trackingEvent}
+  data-scout-cta-location={trackingLocation}
   class={cn(baseClasses, variantClasses, sizeClasses, className)}
 >
   <slot />
