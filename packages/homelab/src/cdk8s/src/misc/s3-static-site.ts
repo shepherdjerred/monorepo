@@ -18,11 +18,18 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ApiObject } from "cdk8s";
 import { Probe } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com.ts";
 
+export type StaticSiteProbeConfig = {
+  endpoint: string;
+  path: `/${string}`;
+  module?: string;
+};
+
 export type StaticSiteConfig = {
   hostname: string;
   bucket: string;
   indexFile?: string;
   notFoundPage?: string;
+  probes?: StaticSiteProbeConfig[];
 };
 
 export type S3StaticSitesProps = {
@@ -82,6 +89,27 @@ export function generateCaddyfile(props: CaddyfileGeneratorProps): string {
   }
 
   return blocks.join("\n");
+}
+
+function hostnameSlug(hostname: string): string {
+  return hostname.replaceAll(".", "-");
+}
+
+function probeTargetUrl(hostname: string, path: `/${string}`): string {
+  return `https://${hostname}${path === "/" ? "" : path}`;
+}
+
+function probeConfigs(
+  site: StaticSiteConfig,
+): Required<StaticSiteProbeConfig>[] {
+  return [
+    { endpoint: "root", path: "/", module: "http_2xx" },
+    ...(site.probes ?? []).map((probe) => ({
+      endpoint: probe.endpoint,
+      path: probe.path,
+      module: probe.module ?? "http_2xx",
+    })),
+  ];
 }
 
 export class S3StaticSites extends Construct {
@@ -193,7 +221,7 @@ export class S3StaticSites extends Construct {
 
     for (const site of props.sites) {
       // DNS is managed by OpenTofu — disable cloudflare-operator DNS updates
-      new TunnelBinding(this, `tunnel-${site.hostname.replaceAll(".", "-")}`, {
+      new TunnelBinding(this, `tunnel-${hostnameSlug(site.hostname)}`, {
         metadata: {
           namespace,
         },
@@ -212,30 +240,42 @@ export class S3StaticSites extends Construct {
         },
       });
 
-      // Create Probe for HTTP monitoring via blackbox-exporter
-      new Probe(this, `probe-${site.hostname.replaceAll(".", "-")}`, {
-        metadata: {
-          name: `static-site-${site.hostname.replaceAll(".", "-")}`,
-          namespace,
-          labels: { release: "prometheus" },
-        },
-        spec: {
-          jobName: `static-site-${site.hostname}`,
-          interval: "60s",
-          module: "http_2xx",
-          prober: {
-            url: "prometheus-prometheus-blackbox-exporter.prometheus:9115",
+      for (const probe of probeConfigs(site)) {
+        const nameSuffix =
+          probe.endpoint === "root"
+            ? hostnameSlug(site.hostname)
+            : `${hostnameSlug(site.hostname)}-${probe.endpoint}`;
+
+        // Create Probe for HTTP monitoring via blackbox-exporter
+        new Probe(this, `probe-${nameSuffix}`, {
+          metadata: {
+            name: `static-site-${nameSuffix}`,
+            namespace,
+            labels: { release: "prometheus" },
           },
-          targets: {
-            staticConfig: {
-              static: [`https://${site.hostname}`],
-              labels: {
-                site: site.hostname,
+          spec: {
+            jobName:
+              probe.endpoint === "root"
+                ? `static-site-${site.hostname}`
+                : `static-site-${site.hostname}-${probe.endpoint}`,
+            interval: "60s",
+            module: probe.module,
+            prober: {
+              url: "prometheus-prometheus-blackbox-exporter.prometheus:9115",
+            },
+            targets: {
+              staticConfig: {
+                static: [probeTargetUrl(site.hostname, probe.path)],
+                labels: {
+                  endpoint: probe.endpoint,
+                  path: probe.path,
+                  site: site.hostname,
+                },
               },
             },
           },
-        },
-      });
+        });
+      }
     }
   }
 }
