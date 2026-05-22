@@ -290,7 +290,7 @@ export async function sendPrematchNotification(
     // Continue with text-only notification
   }
 
-  for (const { channel } of channels) {
+  for (const { channel, serverId } of channels) {
     try {
       const message =
         loadingScreenAttachment && loadingScreenEmbed
@@ -300,7 +300,7 @@ export async function sendPrematchNotification(
               embeds: [loadingScreenEmbed],
             }
           : { embeds: [buildFallbackPrematchEmbed(gameInfo, trackedPlayers)] };
-      await send(message, channel);
+      await send(message, channel, DiscordGuildIdSchema.parse(serverId));
     } catch (error) {
       if (error instanceof ChannelSendError && error.permissionError) {
         logger.warn(

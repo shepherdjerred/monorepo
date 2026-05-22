@@ -300,9 +300,11 @@ The backend exposes two HTTP endpoints:
 ### Metrics Exported
 
 - `discord_connection_status` - Bot connection state
-- `discord_guild_count` - Number of servers
-- `discord_user_count` - Total users across servers
+- `discord_guilds` - Number of Discord servers in the bot cache
+- `discord_users` - Number of Discord users in the bot cache
 - `discord_latency_ms` - API latency
+- `discord_permission_errors_total` - Permission failures by guild and error type
+- `discord_owner_notifications_total` - Owner DM notification attempts by guild and status
 - Process metrics (memory, CPU)
 
 ## Error Handling

@@ -226,8 +226,8 @@ export async function buildCompetitionChartAttachment(
       logger.info(
         `[CompetitionChart] ⚠️  Skipping chart for competition ${competition.id.toString()} — leaderboard is empty`,
       );
-      observe("skipped_too_few_snapshots");
-      inc("skipped_too_few_snapshots");
+      observe("skipped_empty_leaderboard");
+      inc("skipped_empty_leaderboard");
       return null;
     }
 

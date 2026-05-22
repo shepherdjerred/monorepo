@@ -127,22 +127,6 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           },
         },
         {
-          alert: "ScoutScheduledReportBudgetExceeded",
-          annotations: {
-            summary: "Scout scheduled report budget was exceeded",
-            message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} rejected {{ $value | humanize }} scheduled report run(s) in the last 30m for budget {{ $labels.budget }}. Tighten the query or increase the configured budget intentionally.",
-            ),
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "sum by (environment, budget) (increase(scheduled_report_budget_exceeded_total[30m])) > 0",
-          ),
-          for: "10m",
-          labels: {
-            severity: "warning",
-          },
-        },
-        {
           alert: "ScoutScheduledReportRuntimeHigh",
           annotations: {
             summary: "Scout scheduled reports are slow",
