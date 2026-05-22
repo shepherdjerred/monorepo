@@ -34,20 +34,18 @@ export default [
 - Allows PascalCase filenames alongside kebabCase
 - Disables `strict-boolean-expressions` (RN conditional rendering idiom)
 
-Both `clauderon/mobile` and `tasks-for-obsidian` use this config.
+`tasks-for-obsidian` uses this config.
 
 ## Acceptable Config Overrides
 
 Only these overrides are acceptable:
 
-| Override                                 | Packages                 | Reason                           |
-| ---------------------------------------- | ------------------------ | -------------------------------- |
-| `no-console`                             | CLIs, bots, RN apps      | CLI tools / RN need console      |
-| `max-params`                             | Dagger `index.ts`        | Dagger decorator pattern         |
-| `no-re-exports`                          | Library entry points     | Re-exports are the API surface   |
-| `no-unsafe-*`                            | `clauderon/web/frontend` | TypeShare generated types        |
-| `import/no-relative-packages`            | `clauderon/mobile`       | Not a workspace member           |
-| `no-color-literals` / `no-inline-styles` | `tasks-for-obsidian`     | TODO: migrate to theme constants |
+| Override                                 | Packages             | Reason                           |
+| ---------------------------------------- | -------------------- | -------------------------------- |
+| `no-console`                             | CLIs, bots, RN apps  | CLI tools / RN need console      |
+| `max-params`                             | Dagger `index.ts`    | Dagger decorator pattern         |
+| `no-re-exports`                          | Library entry points | Re-exports are the API surface   |
+| `no-color-literals` / `no-inline-styles` | `tasks-for-obsidian` | TODO: migrate to theme constants |
 
 ## CJS/ESM Interop
 

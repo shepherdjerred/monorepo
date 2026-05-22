@@ -11,14 +11,11 @@ import {
   TOFU_IMAGE,
   BUN_IMAGE,
   BUN_CACHE,
-  RUST_IMAGE,
   SOURCE_EXCLUDES,
   RELEASE_PLEASE_VERSION,
   CLAUDE_CODE_VERSION,
   GH_CLI_VERSION,
 } from "./constants";
-
-import { rustBaseContainer } from "./base";
 
 const GITHUB_APP_TOKEN_SCRIPT = "packages/temporal/src/lib/github-app-token.ts";
 const GITHUB_APP_TOKEN_SCRIPT_PATH = "/usr/local/bin/github-app-token.ts";
@@ -694,52 +691,6 @@ export function cooklangPublishHelper(
 }
 
 // ---------------------------------------------------------------------------
-// Clauderon
-// ---------------------------------------------------------------------------
-
-/** Upload clauderon binaries to a GitHub release. */
-export function clauderonUploadHelper(
-  binaries: Directory,
-  version: string,
-  ghToken: Secret,
-  dryrun = false,
-): Container {
-  const container = dag
-    .container()
-    .from(ALPINE_IMAGE)
-    .withExec([
-      "sh",
-      "-c",
-      `apk add --no-cache curl && curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
-    ])
-    .withSecretVariable("GH_TOKEN", ghToken)
-    .withWorkdir("/artifacts")
-    .withDirectory("/artifacts", binaries);
-
-  if (dryrun) {
-    return container.withExec([
-      "sh",
-      "-c",
-      `echo "DRYRUN: would upload clauderon-v${version}" && ls -la /artifacts/`,
-    ]);
-  }
-  // Dev releases (0.0.0-dev.*): create a prerelease. Prod releases: upload to existing release.
-  const isDev = version.includes("dev");
-  if (isDev) {
-    return container.withExec([
-      "sh",
-      "-c",
-      `gh release create "clauderon-v${version}" /artifacts/* --repo shepherdjerred/monorepo --title "clauderon v${version}" --prerelease --notes "Dev build"`,
-    ]);
-  }
-  return container.withExec([
-    "sh",
-    "-c",
-    `if ! gh release view "clauderon-v${version}" --repo shepherdjerred/monorepo; then echo "Release clauderon-v${version} does not exist — skipping upload"; exit 0; fi; gh release upload "clauderon-v${version}" /artifacts/* --repo shepherdjerred/monorepo --clobber`,
-  ]);
-}
-
-// ---------------------------------------------------------------------------
 // Version commit-back
 // ---------------------------------------------------------------------------
 
@@ -976,65 +927,6 @@ export function cooklangVersionCommitBackHelper(
 }
 
 // ---------------------------------------------------------------------------
-// Clauderon multi-arch binary collection
-// ---------------------------------------------------------------------------
-
-interface ClauderonTarget {
-  target: string;
-  filename: string;
-}
-
-/** Build clauderon for multiple targets and collect binaries into one Directory. */
-export function clauderonCollectBinariesHelper(
-  pkgDir: Directory,
-  targets: ClauderonTarget[],
-): Directory {
-  let output = dag.directory();
-
-  for (const { target, filename } of targets) {
-    let container = rustBaseContainer(pkgDir).withExec([
-      "rustup",
-      "target",
-      "add",
-      target,
-    ]);
-
-    // Cross-compilation setup for aarch64
-    if (target === "aarch64-unknown-linux-gnu") {
-      container = container
-        .withEnvVariable(
-          "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER",
-          "aarch64-linux-gnu-gcc",
-        )
-        .withEnvVariable(
-          "PKG_CONFIG_PATH",
-          "/usr/lib/aarch64-linux-gnu/pkgconfig",
-        )
-        .withEnvVariable("PKG_CONFIG_SYSROOT_DIR", "/usr/aarch64-linux-gnu")
-        .withExec([
-          "sh",
-          "-c",
-          `sed -i '/\\[target.aarch64-unknown-linux-gnu\\]/,/^\\[/{s/linker = .*/linker = "aarch64-linux-gnu-gcc"/; s/rustflags = .*/rustflags = []/}' .cargo/config.toml`,
-        ]);
-    }
-
-    const binary = container
-      .withExec(["cargo", "build", "--release", "--target", target])
-      // Copy binary out of cache mount so .file() can access it
-      .withExec([
-        "cp",
-        `/workspace/target/${target}/release/clauderon`,
-        "/tmp/clauderon",
-      ])
-      .file("/tmp/clauderon");
-
-    output = output.withFile(filename, binary);
-  }
-
-  return output;
-}
-
-// ---------------------------------------------------------------------------
 // Release-please
 // ---------------------------------------------------------------------------
 
@@ -1085,25 +977,4 @@ export function releasePleaseHelper(
       `release-please github-release --token="$GH_TOKEN" --repo-url=shepherdjerred/monorepo --target-branch=main`,
     ].join(" && "),
   ]);
-}
-
-// ---------------------------------------------------------------------------
-// Cargo deny
-// ---------------------------------------------------------------------------
-
-/** Run cargo deny check on the Rust project. */
-export function cargoDenyHelper(pkgDir: Directory): Container {
-  return dag
-    .container()
-    .from(RUST_IMAGE)
-    .withExec(["cargo", "install", "cargo-deny"])
-    .withWorkdir("/workspace")
-    .withDirectory("/workspace", pkgDir, {
-      exclude: ["target", "node_modules", ".git"],
-    })
-    .withMountedCache(
-      "/usr/local/cargo/registry",
-      dag.cacheVolume("cargo-registry"),
-    )
-    .withExec(["cargo", "deny", "check"]);
 }

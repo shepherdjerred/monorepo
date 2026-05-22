@@ -49,9 +49,9 @@ const RULES: GrepRule[] = [
   {
     key: "rust-allow",
     pattern: String.raw`#\[allow\(`,
-    searchPaths: ["packages/clauderon/src/"],
+    searchPaths: ["packages/"],
     includes: ["*.rs"],
-    excludeDirs: [],
+    excludeDirs: ["target", "archive"],
     excludePathPatterns: [],
   },
   {

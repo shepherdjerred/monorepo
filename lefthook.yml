@@ -37,6 +37,9 @@ pre-commit:
                   run: |
                     max=5242880
                     large=$(git diff --staged --name-only --diff-filter=d | while read -r f; do
+                      if [ "${f#archive/}" != "$f" ]; then
+                        continue
+                      fi
                       size=$(wc -c < "$f" 2>/dev/null || echo 0)
                       if [ "$size" -gt "$max" ]; then
                         echo "  $f ($(( size / 1048576 ))MB)"
@@ -95,36 +98,6 @@ pre-commit:
                 - name: eslint-eslint-config
                   root: "packages/eslint-config/"
                   glob: "packages/eslint-config/**/*.{ts,tsx,js,jsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-web-shared
-                  root: "packages/clauderon/web/shared/"
-                  glob: "packages/clauderon/web/shared/**/*.{ts,tsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-web-client
-                  root: "packages/clauderon/web/client/"
-                  glob: "packages/clauderon/web/client/**/*.{ts,tsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-web-frontend
-                  root: "packages/clauderon/web/frontend/"
-                  glob: "packages/clauderon/web/frontend/**/*.{ts,tsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-mobile
-                  root: "packages/clauderon/mobile/"
-                  glob: "packages/clauderon/mobile/**/*.{ts,tsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-docs
-                  root: "packages/clauderon/docs/"
-                  glob: "packages/clauderon/docs/**/*.{ts,tsx}"
                   run: bunx eslint --fix {staged_files}
                   stage_fixed: true
 
@@ -194,12 +167,6 @@ pre-commit:
                   run: bunx eslint --fix {staged_files}
                   stage_fixed: true
 
-                - name: eslint-hn-enhancer
-                  root: "packages/hn-enhancer/"
-                  glob: "packages/hn-enhancer/**/*.{ts,tsx,js,jsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
                 - name: eslint-monarch
                   root: "packages/monarch/"
                   glob: "packages/monarch/**/*.{ts,tsx,js,jsx}"
@@ -236,25 +203,6 @@ pre-commit:
                   run: bunx eslint --fix {staged_files}
                   stage_fixed: true
 
-                # --- cargo fmt ---
-                - name: cargo-fmt
-                  root: "packages/clauderon/"
-                  glob: "packages/clauderon/**/*.rs"
-                  run: cargo fmt
-
-                # --- swiftformat (Glance) ---
-                - name: swiftformat-glance
-                  root: "packages/glance/GlanceApp/"
-                  glob: "packages/glance/**/*.swift"
-                  run: swiftformat {staged_files}
-                  stage_fixed: true
-
-                # --- swiftlint (Glance) ---
-                - name: swiftlint-glance
-                  root: "packages/glance/GlanceApp/"
-                  glob: "packages/glance/**/*.swift"
-                  run: swiftlint --strict {staged_files}
-
                 # --- shellcheck ---
                 - name: shellcheck
                   glob: "**/*.sh"
@@ -269,31 +217,6 @@ pre-commit:
       group:
         parallel: true
         jobs:
-          # --- Rust ---
-          - name: cargo-clippy
-            root: "packages/clauderon/"
-            glob:
-              - "packages/clauderon/**/*.rs"
-              - "packages/clauderon/Cargo.toml"
-              - "packages/clauderon/Cargo.lock"
-            run: cargo clippy --all-targets --all-features -- -D warnings
-
-          - name: cargo-test
-            root: "packages/clauderon/"
-            glob:
-              - "packages/clauderon/**/*.rs"
-              - "packages/clauderon/Cargo.toml"
-              - "packages/clauderon/Cargo.lock"
-            run: cargo test --lib
-
-          - name: cargo-deny
-            root: "packages/clauderon/"
-            glob:
-              - "packages/clauderon/Cargo.toml"
-              - "packages/clauderon/Cargo.lock"
-              - "packages/clauderon/deny.toml"
-            run: cargo deny check
-
           # --- TypeScript typecheck per package ---
           - name: birmel-typecheck
             root: "packages/birmel/"
@@ -310,36 +233,6 @@ pre-commit:
             glob: "packages/eslint-config/**/*.{ts,tsx}"
             run: bun run typecheck
 
-          - name: web-shared-typecheck
-            root: "packages/clauderon/web/shared/"
-            glob: "packages/clauderon/web/shared/**/*.{ts,tsx}"
-            run: bun run typecheck
-
-          - name: web-client-typecheck
-            root: "packages/clauderon/web/client/"
-            glob: "packages/clauderon/web/client/**/*.{ts,tsx}"
-            run: bun run typecheck
-
-          - name: web-frontend-typecheck
-            root: "packages/clauderon/web/frontend/"
-            glob: "packages/clauderon/web/frontend/**/*.{ts,tsx}"
-            run: bun run typecheck
-
-          - name: mobile-typecheck
-            root: "packages/clauderon/mobile/"
-            glob: "packages/clauderon/mobile/**/*.{ts,tsx}"
-            run: bun run typecheck
-
-          - name: mobile-format-check
-            root: "packages/clauderon/mobile/"
-            glob: "packages/clauderon/mobile/**/*.{ts,tsx}"
-            run: bun run format:check
-
-          - name: mobile-test
-            root: "packages/clauderon/mobile/"
-            glob: "packages/clauderon/mobile/**/*.{ts,tsx}"
-            run: bun run test
-
           - name: astro-opengraph-images-test
             root: "packages/astro-opengraph-images/"
             glob: "packages/astro-opengraph-images/**/*.{ts,tsx}"
@@ -353,11 +246,6 @@ pre-commit:
           - name: eslint-config-test
             root: "packages/eslint-config/"
             glob: "packages/eslint-config/**/*.{ts,tsx}"
-            run: bun run test
-
-          - name: hn-enhancer-test
-            root: "packages/hn-enhancer/"
-            glob: "packages/hn-enhancer/**/*.{ts,tsx}"
             run: bun run test
 
           - name: monarch-test
@@ -399,16 +287,6 @@ pre-commit:
           - name: discord-plays-pokemon-test
             root: "packages/discord-plays-pokemon/"
             glob: "packages/discord-plays-pokemon/**/*.{ts,tsx}"
-            run: bun run test
-
-          - name: web-client-test
-            root: "packages/clauderon/web/client/"
-            glob: "packages/clauderon/web/client/**/*.{ts,tsx}"
-            run: bun run test
-
-          - name: web-frontend-test
-            root: "packages/clauderon/web/frontend/"
-            glob: "packages/clauderon/web/frontend/**/*.{ts,tsx}"
             run: bun run test
 
           - name: astro-opengraph-images-typecheck
@@ -456,11 +334,6 @@ pre-commit:
             glob: "packages/cooklang-rich-preview/**/*.{ts,tsx,astro}"
             run: bun run typecheck
 
-          - name: hn-enhancer-typecheck
-            root: "packages/hn-enhancer/"
-            glob: "packages/hn-enhancer/**/*.{ts,tsx}"
-            run: bun run typecheck
-
           - name: monarch-typecheck
             root: "packages/monarch/"
             glob: "packages/monarch/**/*.{ts,tsx}"
@@ -491,24 +364,6 @@ pre-commit:
             glob: "packages/leetcode/**/*.{ts,tsx}"
             run: bun run typecheck
 
-          - name: clauderon-docs-typecheck
-            root: "packages/clauderon/docs/"
-            glob: "packages/clauderon/docs/**/*.{ts,tsx,astro}"
-            run: bun run typecheck
-
-          # --- Swift (Glance) ---
-          - name: glance-build
-            root: "packages/glance/GlanceApp/"
-            glob: "packages/glance/**/*.swift"
-            run: swift build 2>&1
-
-          - name: glance-test
-            root: "packages/glance/GlanceApp/"
-            glob: "packages/glance/**/*.swift"
-            env:
-              DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
-            run: swift test 2>&1
-
           # --- Go (terraform-provider-asuswrt) ---
           - name: go-build
             root: "packages/terraform-provider-asuswrt/"
@@ -524,17 +379,6 @@ pre-commit:
             root: "packages/terraform-provider-asuswrt/"
             glob: "packages/terraform-provider-asuswrt/**/*.go"
             run: golangci-lint run
-
-          # --- Java (castle-casters) ---
-          - name: maven-build
-            root: "packages/castle-casters/"
-            glob: "packages/castle-casters/**/*.java"
-            run: mvn -q compile
-
-          - name: maven-test
-            root: "packages/castle-casters/"
-            glob: "packages/castle-casters/**/*.java"
-            run: mvn -q test
 
           # --- Astro check ---
           - name: sjer-red-astro-check

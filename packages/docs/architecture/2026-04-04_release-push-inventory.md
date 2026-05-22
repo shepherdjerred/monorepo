@@ -73,7 +73,6 @@ Method: `aws s3 sync --delete`. Code: `.dagger/src/release.ts`, `scripts/ci/src/
 | Site                       | Bucket              | URL                               |
 | -------------------------- | ------------------- | --------------------------------- |
 | sjer.red                   | sjer-red            | https://sjer.red                  |
-| clauderon docs             | clauderon           | https://clauderon.com             |
 | resume                     | resume              | https://resume.sjer.red           |
 | webring                    | webring             | https://webring.sjer.red          |
 | cooklang-rich-preview      | cook                | https://cook.sjer.red             |
@@ -84,8 +83,6 @@ Method: `aws s3 sync --delete`. Code: `.dagger/src/release.ts`, `scripts/ci/src/
 ## GitHub Releases & Artifacts
 
 **Cooklang for Obsidian plugin** — auto-bumps semver patch from the latest configured plugin-repo release tag, updates `main.js`, `manifest.json`, `versions.json`, `styles.css` on the plugin repo's main branch, cuts a GitHub release tagged with the bare version (Obsidian directory convention), then opens an auto-merge commit-back PR on the monorepo. Code: `.dagger/src/release.ts` (cooklangPublishHelper, cooklangVersionCommitBackHelper).
-
-**Clauderon (Rust CLI)** — multi-arch binaries (x86_64 + arm64). Dev pre-releases `0.0.0-dev.{BUILD_NUMBER}` on `shepherdjerred/monorepo`. Prod releases via release-please. Code: `.dagger/src/release.ts` (clauderonUploadHelper, clauderonCollectBinariesHelper).
 
 ## Automated Git Pushes
 
@@ -118,7 +115,6 @@ Git push to main
       ├─ Build + deploy static sites → S3
       ├─ Publish npm packages → npm
       ├─ CDK8s synth + Helm package → ChartMuseum
-      ├─ Clauderon binaries → GitHub Releases
       └─ Cooklang plugin → GitHub repo + releases
   → Version commit-back (digests → versions.ts)
   → Tofu apply (Cloudflare, GitHub, SeaweedFS)
