@@ -35,7 +35,7 @@ export function createSeerrDeployment(chart: Chart) {
     },
   });
 
-  const localPathVolume = new ZfsNvmeVolume(chart, "overseerr-pvc", {
+  const localPathVolume = new ZfsNvmeVolume(chart, "seerr-pvc", {
     storage: Size.gibibytes(8),
   });
 
@@ -108,20 +108,5 @@ export function createSeerrDeployment(chart: Chart) {
   createCloudflareTunnelBinding(chart, "seerr-cf-tunnel", {
     serviceName: service.name,
     subdomain: "seerr",
-  });
-
-  const overseerrAliasService = new Service(chart, "overseerr-service", {
-    selector: deployment,
-    ports: [{ port: SEERR_PORT }],
-  });
-
-  new TailscaleIngress(chart, "overseerr-tailscale-ingress", {
-    service: overseerrAliasService,
-    host: "overseerr",
-  });
-
-  createCloudflareTunnelBinding(chart, "overseerr-cf-tunnel", {
-    serviceName: overseerrAliasService.name,
-    subdomain: "overseerr",
   });
 }
