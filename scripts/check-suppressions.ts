@@ -36,8 +36,6 @@ const EXCLUDED_FILES = [
   "Cargo.toml",
   "clippy.toml",
   ".quality-baseline.json",
-  // Intentional: @sentry/react ErrorBoundary types incompatible with React 19
-  "packages/clauderon/web/frontend/src/main.tsx",
   "packages/better-skill-capped/src/components/app.tsx",
   "packages/better-skill-capped/src/components/router.tsx",
   // Intentional: discord-player-youtubei types incompatible without --preserveSymlinks

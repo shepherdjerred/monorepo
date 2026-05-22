@@ -10,7 +10,7 @@ import { BUN_IMAGE, ESLINT_CACHE, GOLANGCI_LINT_VERSION } from "./constants";
 
 import { WORKSPACE_DEPS } from "./deps";
 
-import { bunBaseContainer, rustBaseContainer, goBaseContainer } from "./base";
+import { bunBaseContainer, goBaseContainer } from "./base";
 
 import { formatSummary, formatFailureDetails } from "./ci-format";
 
@@ -80,39 +80,6 @@ export async function ciAllHelper(source: Directory): Promise<string> {
       check(`${pkg}: test`, base.withExec(["bun", "run", "test"])),
     );
   }
-
-  // Rust checks
-  const rustB = rustBaseContainer(source);
-  allChecks.push(
-    check(
-      "clauderon: fmt",
-      rustB
-        .withExec(["rustup", "component", "add", "rustfmt"])
-        .withExec(["cargo", "fmt", "--check"]),
-    ),
-  );
-  allChecks.push(
-    check(
-      "clauderon: clippy",
-      rustB
-        .withExec(["rustup", "component", "add", "clippy"])
-        .withExec([
-          "cargo",
-          "clippy",
-          "--all-targets",
-          "--all-features",
-          "--",
-          "-D",
-          "warnings",
-        ]),
-    ),
-  );
-  allChecks.push(
-    check(
-      "clauderon: test",
-      rustB.withExec(["cargo", "test", "--all-features"]),
-    ),
-  );
 
   // Go checks
   const goB = goBaseContainer(source);

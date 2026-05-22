@@ -93,8 +93,6 @@ export function isReleasePleaseMerge(): boolean {
  * Renovate classification (root package.json changes).
  */
 const NON_JS_PACKAGES = new Set([
-  "castle-casters", // Java
-  "clauderon", // Rust
   "terraform-provider-asuswrt", // Go
   "resume", // LaTeX
 ]);
@@ -522,9 +520,7 @@ function fullBuildResult(): AffectedPackages {
     packages: new Set(ALL_PACKAGES),
     buildAll: true,
     homelabChanged: true,
-    clauderonChanged: true,
     cooklangChanged: true,
-    castleCastersChanged: true,
     resumeChanged: true,
     ciImageChanged: false,
     hasImagePackages: new Set(PACKAGES_WITH_IMAGES),
@@ -542,9 +538,7 @@ function emptyResult(): AffectedPackages {
     packages: new Set(),
     buildAll: false,
     homelabChanged: false,
-    clauderonChanged: false,
     cooklangChanged: false,
-    castleCastersChanged: false,
     resumeChanged: false,
     ciImageChanged: false,
     hasImagePackages: new Set(),
@@ -581,11 +575,9 @@ function buildScopedResult(
     packages: allAffected,
     buildAll: false,
     homelabChanged: allAffected.has("homelab"),
-    clauderonChanged: allAffected.has("clauderon"),
     cooklangChanged:
       allAffected.has("cooklang-rich-preview") ||
       allAffected.has("cooklang-for-obsidian"),
-    castleCastersChanged: allAffected.has("castle-casters"),
     resumeChanged: allAffected.has("resume"),
     ciImageChanged,
     hasImagePackages,

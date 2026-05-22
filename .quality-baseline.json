@@ -2,7 +2,6 @@
   "eslint-disable": {
     "packages/better-skill-capped/src/components/app.tsx": 1,
     "packages/better-skill-capped/src/components/router.tsx": 1,
-    "packages/clauderon/web/frontend/src/main.tsx": 1,
     "packages/discord-plays-pokemon/packages/frontend/src/main.tsx": 1,
     "packages/scout-for-lol/packages/backend/src/testing/discord-mocks.ts": 2,
     "packages/toolkit/src/daemon/watch.ts": 1,
@@ -12,8 +11,13 @@
   "ts-suppressions": {
     "packages/home-assistant/test/typed-client.test-d.ts": 7
   },
-  "rust-allow": {},
+  "rust-allow": {
+    "packages/scout-for-lol/packages/desktop/src-tauri/src/backend_client.rs": 3,
+    "packages/scout-for-lol/packages/desktop/src-tauri/src/main.rs": 2,
+    "packages/scout-for-lol/packages/desktop/src-tauri/src/config.rs": 1,
+    "packages/scout-for-lol/packages/desktop/src-tauri/src/paths.rs": 1
+  },
   "prettier-ignore": {},
   "hermeticity-exempt": {},
-  "updated": "2026-04-25"
+  "updated": "2026-05-22"
 }

@@ -11,15 +11,12 @@ packages/
 ├── better-skill-capped/     # Browser extension
 ├── birmel/                  # Discord bot (VoltAgent + Claude AI)
 ├── bun-decompile/           # Bun binary decompiler
-├── castle-casters/          # Game project
-├── clauderon/               # Rust session manager (has its own AGENTS.md)
 ├── discord-plays-pokemon/   # Discord Plays Pokemon
 ├── docs/                    # AI-maintained monorepo documentation
 ├── dotfiles/                # Dotfiles & shell config
 ├── eslint-config/           # Shared ESLint rules
 ├── fonts/                   # Custom fonts
 ├── homelab/                 # Homelab infrastructure (K8s, Tofu)
-├── macos-cross-compiler/    # macOS cross-compilation
 ├── resume/                  # Resume site
 ├── scout-for-lol/           # League of Legends match analysis
 ├── sjer.red/                # Personal website
@@ -27,7 +24,7 @@ packages/
 ├── toolkit/                 # CLI developer tools (fetch, recall, pr, pd, bugsink, grafana)
 ├── webring/                 # Webring component
 scripts/ci/                  # TypeScript CI pipeline generator
-archive/                     # Legacy projects (do not modify)
+archive/                     # Legacy projects (do not modify), including castle-casters, clauderon, glance, hn-enhancer, macos-cross-compiler, tips
 ```
 
 ## Documentation Discipline — Per Session
@@ -163,7 +160,7 @@ The setup script runs 5 phases:
 
 1. **Tools** — `mise trust` for repo configs, `mise install`, and optional tool warnings
 2. **Dependencies** — root + per-package `bun install --frozen-lockfile`
-3. **Shared Builds** — eslint-config, webring, astro-opengraph-images, helm-types, clauderon/web shared+client
+3. **Shared Builds** — eslint-config, webring, astro-opengraph-images, helm-types
 4. **Code Generation** — Prisma (birmel, scout-for-lol), helm-types codegen, HA types
 5. **Verify** — checks critical build artifacts exist
 
@@ -210,7 +207,6 @@ After PR merge: `rm -rf ~/git/monorepo-<feature-slug>` and `git branch -d featur
 
 Each package has its own AGENTS.md with specific instructions:
 
-- `packages/clauderon/AGENTS.md` - Rust build order, backends, architecture
 - `packages/birmel/AGENTS.md` - VoltAgent setup, Discord bot config
 - `packages/homelab/AGENTS.md` - K8s, cdk8s, OpenTofu infrastructure
 - `packages/scout-for-lol/AGENTS.md` - Match analysis pipeline

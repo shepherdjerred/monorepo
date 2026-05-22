@@ -19,8 +19,6 @@ paths = [
   '''src/cdk8s/dist/''',
   # Minecraft server config files (RCON passwords are non-sensitive defaults)
   '''config/minecraft-.*/server\.properties$''',
-  # Example private key in Rust code (test/documentation constant, not a real key)
-  '''packages/clauderon/src/proxy/talos_gateway\.rs''',
   # JWT in README (documentation example)
   '''packages/discord-plays-pokemon/README\.md''',
   # Public Firebase web API key (client-side safe, same key as better-skill-capped fetcher)
