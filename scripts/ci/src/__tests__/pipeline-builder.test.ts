@@ -122,6 +122,50 @@ function withBuildkitePullRequest<T>(value: string, fn: () => T): T {
   }
 }
 
+function withDryRun<T>(fn: () => T): T {
+  const original = process.env["DRYRUN"];
+  process.env["DRYRUN"] = "true";
+
+  try {
+    return fn();
+  } finally {
+    if (original === undefined) {
+      delete process.env["DRYRUN"];
+    } else {
+      process.env["DRYRUN"] = original;
+    }
+  }
+}
+
+function withBuildkiteBranchContext<T>(
+  branch: string,
+  defaultBranch: string,
+  fn: () => T,
+): T {
+  const originalBranch = process.env["BUILDKITE_BRANCH"];
+  const originalDefaultBranch =
+    process.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"];
+
+  process.env["BUILDKITE_BRANCH"] = branch;
+  process.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"] = defaultBranch;
+
+  try {
+    return fn();
+  } finally {
+    if (originalBranch === undefined) {
+      delete process.env["BUILDKITE_BRANCH"];
+    } else {
+      process.env["BUILDKITE_BRANCH"] = originalBranch;
+    }
+
+    if (originalDefaultBranch === undefined) {
+      delete process.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"];
+    } else {
+      process.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"] = originalDefaultBranch;
+    }
+  }
+}
+
 describe("buildPipeline", () => {
   describe("no changes", () => {
     it("returns a minimal pipeline with no-changes and ci-complete steps", () => {
@@ -547,6 +591,56 @@ describe("buildPipeline", () => {
       expect(groupKeys).toContain("publish-npm");
       expect(groupKeys).toContain("cooklang-release");
       expect(groupKeys).toContain("deploy-sites");
+    });
+
+    it("forwards Scout marketing pixel env vars into the deploy build container", () => {
+      const pipeline = withBuildkiteBranchContext("main", "main", () =>
+        buildPipeline(fullBuild()),
+      );
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+
+      const scoutDeploy = allSteps.find(
+        (s) => s.key === "deploy-scout-frontend",
+      );
+
+      expect(scoutDeploy).toBeDefined();
+      expect(scoutDeploy?.command).toContain(
+        "--build-env-names PUBLIC_PINTEREST_TAG_ID",
+      );
+      expect(scoutDeploy?.command).toContain(
+        "--build-env-values env:PUBLIC_PINTEREST_TAG_ID",
+      );
+      expect(scoutDeploy?.command).toContain(
+        "--build-env-names PUBLIC_REDDIT_PIXEL_ID",
+      );
+      expect(scoutDeploy?.command).toContain(
+        "--build-env-values env:PUBLIC_REDDIT_PIXEL_ID",
+      );
+    });
+
+    it("uses explicit Scout marketing placeholders for dry-run deploy builds", () => {
+      const pipeline = withDryRun(() => buildPipeline(fullBuild()));
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+
+      const scoutDeploy = allSteps.find(
+        (s) => s.key === "deploy-scout-frontend",
+      );
+
+      expect(scoutDeploy).toBeDefined();
+      expect(scoutDeploy?.command).not.toContain(
+        "--build-env-values env:PUBLIC_PINTEREST_TAG_ID",
+      );
+      expect(scoutDeploy?.command).not.toContain(
+        "--build-env-values env:PUBLIC_REDDIT_PIXEL_ID",
+      );
+      expect(scoutDeploy?.command).toContain(
+        "PUBLIC_PINTEREST_TAG_ID='dev-pinterest-tag-id'",
+      );
+      expect(scoutDeploy?.command).toContain(
+        "PUBLIC_REDDIT_PIXEL_ID='dev-reddit-pixel-id'",
+      );
     });
 
     it("includes homelab track", () => {

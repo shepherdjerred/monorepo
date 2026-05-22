@@ -13,6 +13,36 @@ import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
 
+const DRYRUN_BUILD_ENV_VALUES: Readonly<Record<string, string>> = {
+  PUBLIC_PINTEREST_TAG_ID: "dev-pinterest-tag-id",
+  PUBLIC_REDDIT_PIXEL_ID: "dev-reddit-pixel-id",
+};
+
+function isDryrunBuild(): boolean {
+  const branch = process.env["BUILDKITE_BRANCH"];
+  const defaultBranch = process.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"];
+  if (process.env["DRYRUN"] === "true") return true;
+  if (branch === undefined || branch === "") return false;
+  if (defaultBranch === undefined || defaultBranch === "") return false;
+  return branch !== defaultBranch;
+}
+
+function shellQuote(value: string): string {
+  return `'${value.replaceAll("'", `'"'"'`)}'`;
+}
+
+function dryrunBuildEnvPrefix(buildEnvVars: string[]): string {
+  return buildEnvVars
+    .map((name) => {
+      const value = DRYRUN_BUILD_ENV_VALUES[name];
+      if (value === undefined) {
+        throw new Error(`Missing dry-run build env placeholder for ${name}`);
+      }
+      return `${name}=${shellQuote(value)}`;
+    })
+    .join(" ");
+}
+
 function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
   const cpu = "250m";
   const memory = "512Mi";
@@ -22,6 +52,19 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
   const depFlags = deps
     .flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`])
     .join(" ");
+  const buildEnvVars = site.buildEnvVars ?? [];
+  const useDryrunBuildEnv = isDryrunBuild() && buildEnvVars.length > 0;
+  const buildEnvFlags = useDryrunBuildEnv
+    ? ""
+    : buildEnvVars
+        .flatMap((name) => [
+          `--build-env-names ${name}`,
+          `--build-env-values env:${name}`,
+        ])
+        .join(" ");
+  const buildCmd = useDryrunBuildEnv
+    ? `${dryrunBuildEnvPrefix(buildEnvVars)} ${site.buildCmd}`
+    : site.buildCmd;
 
   // Compute dist subdir relative to package dir
   const distSubdir =
@@ -34,7 +77,8 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
     `dagger call deploy-site --pkg-dir ./${site.buildDir}`,
     `--pkg ${pkgPath}`,
     depFlags,
-    `--build-cmd "${site.buildCmd}"`,
+    buildEnvFlags,
+    `--build-cmd "${buildCmd}"`,
     `--bucket ${site.bucket}`,
     `--dist-subdir ${distSubdir}`,
     `--target seaweedfs`,

@@ -1,13 +1,29 @@
 ---
+import Button from "#src/components/Button.astro";
+import type { DiscordCtaLocation } from "#src/lib/marketing.ts";
+import type { DiscordInstallClickEvent } from "#src/lib/marketing-constants.ts";
+
+type TrackingButtonProps =
+  | {
+      trackingEvent: DiscordInstallClickEvent;
+      trackingLocation: DiscordCtaLocation;
+    }
+  | {
+      trackingEvent?: undefined;
+      trackingLocation?: undefined;
+    };
+
+type HeroCtaButton = {
+  text: string;
+  href: string;
+  variant?: "primary" | "secondary";
+} & TrackingButtonProps;
+
 interface Props {
   title: string;
   subtitle?: string;
   showGradient?: boolean;
-  ctaButtons?: Array<{
-    text: string;
-    href: string;
-    variant?: "primary" | "secondary";
-  }>;
+  ctaButtons?: HeroCtaButton[];
 }
 
 const { title, subtitle, showGradient = true, ctaButtons = [] } = Astro.props;
@@ -45,23 +61,46 @@ const { title, subtitle, showGradient = true, ctaButtons = [] } = Astro.props;
       {
         ctaButtons.length > 0 && (
           <div class="mt-10 flex items-center justify-center gap-x-6">
-            {ctaButtons.map((button) =>
-              button.variant === "secondary" ? (
-                <a
+            {ctaButtons.map((button) => {
+              if (button.trackingEvent === undefined) {
+                return button.variant === "secondary" ? (
+                  <Button
+                    href={button.href}
+                    variant="text"
+                    color="indigo"
+                    class="text-sm text-indigo-400 hover:text-indigo-300"
+                  >
+                    {button.text}
+                  </Button>
+                ) : (
+                  <Button href={button.href} size="lg">
+                    {button.text}
+                  </Button>
+                );
+              }
+
+              return button.variant === "secondary" ? (
+                <Button
                   href={button.href}
-                  class="text-sm font-semibold text-indigo-400 hover:text-indigo-300"
-                >
-                  {button.text} <span aria-hidden="true">→</span>
-                </a>
-              ) : (
-                <a
-                  href={button.href}
-                  class="inline-flex items-center justify-center rounded-md bg-indigo-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                  variant="text"
+                  color="indigo"
+                  class="text-sm text-indigo-400 hover:text-indigo-300"
+                  trackingEvent={button.trackingEvent}
+                  trackingLocation={button.trackingLocation}
                 >
                   {button.text}
-                </a>
-              ),
-            )}
+                </Button>
+              ) : (
+                <Button
+                  href={button.href}
+                  size="lg"
+                  trackingEvent={button.trackingEvent}
+                  trackingLocation={button.trackingLocation}
+                >
+                  {button.text}
+                </Button>
+              );
+            })}
           </div>
         )
       }
