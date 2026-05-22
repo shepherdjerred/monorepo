@@ -15,9 +15,7 @@ function emptyAffected(): AffectedPackages {
     packages: new Set(),
     buildAll: false,
     homelabChanged: false,
-    clauderonChanged: false,
     cooklangChanged: false,
-    castleCastersChanged: false,
     resumeChanged: false,
     ciImageChanged: false,
     hasImagePackages: new Set(),
@@ -35,9 +33,7 @@ function fullBuild(): AffectedPackages {
     packages: new Set(ALL_PACKAGES),
     buildAll: true,
     homelabChanged: true,
-    clauderonChanged: true,
     cooklangChanged: true,
-    castleCastersChanged: true,
     resumeChanged: true,
     ciImageChanged: false,
     hasImagePackages: new Set(PACKAGES_WITH_IMAGES),
@@ -487,7 +483,7 @@ describe("buildPipeline", () => {
       }
     });
 
-    it("includes image build/push, npm, clauderon, cooklang, and sites groups", () => {
+    it("includes image build/push, npm, cooklang, and sites groups", () => {
       const pipeline = buildPipeline(fullBuild());
       const groups = pipeline.steps.filter(isGroup);
       const groupKeys = groups.map((g) => g.key);
@@ -495,7 +491,6 @@ describe("buildPipeline", () => {
       expect(groupKeys).toContain("build-images");
       expect(groupKeys).toContain("push-images");
       expect(groupKeys).toContain("publish-npm");
-      expect(groupKeys).toContain("clauderon-build");
       expect(groupKeys).toContain("cooklang-release");
       expect(groupKeys).toContain("deploy-sites");
     });
@@ -675,11 +670,10 @@ describe("buildPipeline", () => {
       expect(steps.some((s) => s.key === "version-commit-back")).toBe(false);
     });
 
-    it("does NOT include unrelated packages (clauderon, cooklang, npm, sites)", () => {
+    it("does NOT include unrelated packages (cooklang, npm, sites)", () => {
       const pipeline = buildPipeline(versionBumpAffected());
       const groups = pipeline.steps.filter(isGroup);
       const groupKeys = groups.map((g) => g.key);
-      expect(groupKeys).not.toContain("clauderon-build");
       expect(groupKeys).not.toContain("cooklang-release");
       expect(groupKeys).not.toContain("publish-npm");
       expect(groupKeys).not.toContain("deploy-sites");
@@ -728,7 +722,7 @@ describe("buildPipeline", () => {
   });
 
   describe("homelab-only change", () => {
-    it("includes homelab track and images but not clauderon or cooklang", () => {
+    it("includes homelab track and images but not cooklang", () => {
       const affected = emptyAffected();
       affected.packages.add("homelab");
       affected.homelabChanged = true;
@@ -742,7 +736,6 @@ describe("buildPipeline", () => {
       expect(groupKeys).toContain("push-images");
       expect(groupKeys).toContain("homelab-helm-push");
       expect(groupKeys).toContain("homelab-tofu");
-      expect(groupKeys).not.toContain("clauderon-build");
       expect(groupKeys).not.toContain("cooklang-release");
     });
   });

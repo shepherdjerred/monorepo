@@ -32,12 +32,9 @@ import {
   cooklangBuildHelper,
   cooklangPublishHelper,
   cooklangVersionCommitBackHelper,
-  clauderonCollectBinariesHelper,
-  clauderonUploadHelper,
   versionCommitBackHelper,
   ciBaseVersionCommitBackHelper,
   releasePleaseHelper,
-  cargoDenyHelper,
 } from "./release";
 
 import {
@@ -71,13 +68,6 @@ import {
   buildCiBaseImageHelper,
   pushCiBaseImageHelper,
 } from "./image";
-
-import {
-  rustFmtHelper,
-  rustClippyHelper,
-  rustTestHelper,
-  rustBuildHelper,
-} from "./rust";
 
 import { goBuildHelper, goTestHelper, goLintHelper } from "./golang";
 
@@ -625,37 +615,6 @@ export class Monorepo {
   }
 
   // ---------------------------------------------------------------------------
-  // Rust operations (clauderon)
-  // ---------------------------------------------------------------------------
-
-  /** Run cargo fmt --check */
-  @func()
-  async rustFmt(pkgDir: Directory): Promise<string> {
-    return rustFmtHelper(pkgDir).stdout();
-  }
-
-  /** Run cargo clippy */
-  @func()
-  async rustClippy(pkgDir: Directory): Promise<string> {
-    return rustClippyHelper(pkgDir).stdout();
-  }
-
-  /** Run cargo test */
-  @func()
-  async rustTest(pkgDir: Directory): Promise<string> {
-    return rustTestHelper(pkgDir).stdout();
-  }
-
-  /** Build the Rust project */
-  @func()
-  rustBuild(
-    pkgDir: Directory,
-    target: string = "x86_64-unknown-linux-gnu",
-  ): Container {
-    return rustBuildHelper(pkgDir, target);
-  }
-
-  // ---------------------------------------------------------------------------
   // Go operations (terraform-provider-asuswrt)
   // ---------------------------------------------------------------------------
 
@@ -750,13 +709,13 @@ export class Monorepo {
   // Java/Maven operations
   // ---------------------------------------------------------------------------
 
-  /** Build the Maven project (castle-casters) with `mvn package -DskipTests` */
+  /** Build a Maven project with `mvn package -DskipTests` */
   @func()
   async mavenBuild(pkgDir: Directory): Promise<string> {
     return mavenBuildHelper(pkgDir).stdout();
   }
 
-  /** Test the Maven project (castle-casters) with `mvn test` */
+  /** Test a Maven project with `mvn test` */
   @func()
   async mavenTest(pkgDir: Directory): Promise<string> {
     return mavenTestHelper(pkgDir).stdout();
@@ -1095,44 +1054,6 @@ export class Monorepo {
     return `${publishOutput}\n${commitBackOutput}`;
   }
 
-  /** Build clauderon for multiple targets and collect binaries into one Directory */
-  @func()
-  clauderonCollectBinaries(pkgDir: Directory): Directory {
-    return clauderonCollectBinariesHelper(pkgDir, [
-      {
-        target: "x86_64-unknown-linux-gnu",
-        filename: "clauderon-linux-x86_64",
-      },
-      {
-        target: "aarch64-unknown-linux-gnu",
-        filename: "clauderon-linux-arm64",
-      },
-    ]);
-  }
-
-  /** Upload clauderon binaries to a GitHub release */
-  @func({ cache: "never" })
-  async clauderonUpload(
-    binaries: Directory,
-    version: string,
-    ghToken: Secret,
-    dryrun = false,
-  ): Promise<string> {
-    return clauderonUploadHelper(binaries, version, ghToken, dryrun).stdout();
-  }
-
-  /** Build clauderon for all targets and upload to GitHub release */
-  @func({ cache: "never" })
-  async clauderonBuildAndUpload(
-    pkgDir: Directory,
-    version: string,
-    ghToken: Secret,
-    dryrun = false,
-  ): Promise<string> {
-    const binaries = this.clauderonCollectBinaries(pkgDir);
-    return clauderonUploadHelper(binaries, version, ghToken, dryrun).stdout();
-  }
-
   /** Update versions.ts with new image digests and create auto-merge PR */
   @func({ cache: "never" })
   async versionCommitBack(
@@ -1216,12 +1137,6 @@ export class Monorepo {
       githubAppPrivateKey,
       dryrun,
     ).stdout();
-  }
-
-  /** Run cargo deny check on the Rust project */
-  @func()
-  async cargoDeny(pkgDir: Directory): Promise<string> {
-    return cargoDenyHelper(pkgDir).stdout();
   }
 
   // ---------------------------------------------------------------------------

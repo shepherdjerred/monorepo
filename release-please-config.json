@@ -15,11 +15,6 @@
     { "type": "style", "section": "Style", "hidden": true }
   ],
   "packages": {
-    "packages/clauderon": {
-      "release-type": "rust",
-      "package-name": "clauderon",
-      "component": "clauderon"
-    },
     "packages/astro-opengraph-images": {
       "release-type": "node",
       "package-name": "astro-opengraph-images"

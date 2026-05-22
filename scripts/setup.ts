@@ -166,17 +166,8 @@ async function ensureTools(): Promise<void> {
     macOnly?: boolean;
   }> = [
     { name: "helm", reason: "homelab helm-types generation" },
-    { name: "swift", reason: "tips/glance macOS apps", macOnly: true },
-    { name: "swiftlint", reason: "Swift linting (pre-commit)", macOnly: true },
-    {
-      name: "swiftformat",
-      reason: "Swift formatting (pre-commit)",
-      macOnly: true,
-    },
-    { name: "typeshare", reason: "clauderon Rust↔TS type sharing" },
     { name: "go", reason: "terraform-provider-asuswrt" },
     { name: "golangci-lint", reason: "Go linting (pre-commit)" },
-    { name: "mvn", reason: "castle-casters (Java game)" },
     { name: "gitleaks", reason: "secret scanning (pre-commit)" },
     { name: "shellcheck", reason: "shell script linting (pre-commit)" },
   ];
@@ -322,22 +313,6 @@ const DAG_TASKS: DagTask[] = [
     warnOnly: true,
   },
   {
-    id: "clauderon-shared",
-    label: "clauderon/web/shared build",
-    cmd: ["bun", "run", "build"],
-    cwd: "packages/clauderon/web/shared",
-    deps: [],
-    warnOnly: false,
-  },
-  {
-    id: "clauderon-client",
-    label: "clauderon/web/client build",
-    cmd: ["bun", "run", "build"],
-    cwd: "packages/clauderon/web/client",
-    deps: ["clauderon-shared"],
-    warnOnly: false,
-  },
-  {
     id: "birmel-prisma",
     label: "birmel prisma",
     cmd: ["bunx", "--trust", "prisma", "generate"],
@@ -440,14 +415,6 @@ async function verifySetup(): Promise<void> {
     {
       label: "helm-types dist",
       path: "packages/homelab/src/helm-types/dist/cli.js",
-    },
-    {
-      label: "clauderon/web/shared dist",
-      path: "packages/clauderon/web/shared/dist",
-    },
-    {
-      label: "clauderon/web/client dist",
-      path: "packages/clauderon/web/client/dist",
     },
     {
       label: "birmel prisma client",

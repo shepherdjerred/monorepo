@@ -223,7 +223,7 @@ async function main() {
       "Usage: bun run scripts/fix-negated-nullable.ts <pkg1> <pkg2> ...",
     );
     console.log(
-      "Example: bun run scripts/fix-negated-nullable.ts packages/birmel packages/clauderon/web/frontend",
+      "Example: bun run scripts/fix-negated-nullable.ts packages/birmel packages/temporal",
     );
     process.exit(1);
   }

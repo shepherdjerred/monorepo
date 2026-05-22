@@ -47,7 +47,6 @@ import {
 import { cdk8sSynthStep, homelabHelmGroup } from "./steps/helm.ts";
 import { homelabTofuGroup, homelabTofuPlanGroup } from "./steps/tofu.ts";
 import { argoCdSyncStep, argoCdHealthStep } from "./steps/argocd.ts";
-import { clauderonBuildGroup, clauderonUploadStep } from "./steps/clauderon.ts";
 import { cooklangReleaseGroup } from "./steps/cooklang.ts";
 import { versionCommitBackStep } from "./steps/version.ts";
 import {
@@ -172,7 +171,6 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     affected.hasSitePackages.size > 0 ||
     affected.hasNpmPackages.size > 0 ||
     affected.homelabChanged ||
-    affected.clauderonChanged ||
     affected.cooklangChanged ||
     affected.ciImageChanged;
 
@@ -234,11 +232,6 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
       steps.push(buildImagesWithSmokeGroup(imagesToBuild, pkgKeyMap));
     }
 
-    // --- Build clauderon binaries ---
-    if (affected.buildAll || affected.clauderonChanged) {
-      steps.push(clauderonBuildGroup(pkgKeyMap.get("clauderon")));
-    }
-
     // --- Build + push CI base image ---
     if (affected.ciImageChanged) {
       steps.push(ciBaseImageBuildStep());
@@ -266,11 +259,6 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     if (hasImages) {
       steps.push(pushImagesGroup(imagesToBuild));
       imagePushKeys = allPushKeys(imagesToBuild);
-    }
-
-    // --- Upload clauderon binaries ---
-    if (affected.buildAll || affected.clauderonChanged) {
-      steps.push(clauderonUploadStep());
     }
 
     // --- Publish NPM packages ---

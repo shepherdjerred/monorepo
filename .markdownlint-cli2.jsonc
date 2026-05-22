@@ -35,8 +35,6 @@
     "**/ai_dev_log/**",
     "**/CHANGELOG.md",
     "packages/discord-plays-pokemon/packages/frontend/public/emulatorjs/**",
-    "packages/tips/**",
-    "packages/glance/**",
     "practice/**",
     "**/.terraform/**",
     "packages/dotfiles/dot_agents/skills/**",
