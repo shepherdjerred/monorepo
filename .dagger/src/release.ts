@@ -21,7 +21,17 @@ const GITHUB_APP_TOKEN_SCRIPT = "packages/temporal/src/lib/github-app-token.ts";
 const GITHUB_APP_TOKEN_SCRIPT_PATH = "/usr/local/bin/github-app-token.ts";
 const GITHUB_APP_TOKEN_PATH = "/tmp/github-app-token";
 
-function withGithubAppToken(
+/**
+ * Inject the github-app-token mint script + the secret env vars needed to
+ * run it. The actual mint happens inline in each caller's withExec via
+ * `mintGithubAppTokenAndSetupGitAuth()`. A separate mint `withExec` would
+ * be cached across builds (its inputs — script file + secret digests — are
+ * stable), and GitHub App installation tokens expire after ~1 hour, so the
+ * next build would receive an expired token. Inlining the mint into the
+ * caller's exec means the cache key picks up the caller's per-build inputs
+ * (version string, digests, etc.) and forces a fresh mint each build.
+ */
+function withGithubAppCredentials(
   container: Container,
   source: Directory,
   githubAppId: Secret,
@@ -35,23 +45,44 @@ function withGithubAppToken(
     )
     .withSecretVariable("GITHUB_APP_ID", githubAppId)
     .withSecretVariable("GITHUB_APP_INSTALLATION_ID", githubAppInstallationId)
-    .withSecretVariable("GITHUB_APP_PRIVATE_KEY", githubAppPrivateKey)
-    .withExec([
-      "sh",
-      "-c",
-      `bun ${GITHUB_APP_TOKEN_SCRIPT_PATH} > ${GITHUB_APP_TOKEN_PATH}`,
-    ]);
+    .withSecretVariable("GITHUB_APP_PRIVATE_KEY", githubAppPrivateKey);
 }
 
-function writeGithubAppAskpassCommand(): string {
-  return [
-    `printf '#!/bin/sh\\ncase "$1" in\\n  *Username*) printf "%s%s\\\\n" "x-access" "-token" ;;\\n  *) cat ${GITHUB_APP_TOKEN_PATH} ;;\\nesac\\n' > /usr/local/bin/git-askpass`,
-    `chmod +x /usr/local/bin/git-askpass`,
-  ].join(" && ");
-}
-
-function exportGithubAppTokenCommand(): string {
-  return `export GH_TOKEN="$(cat ${GITHUB_APP_TOKEN_PATH})"`;
+/**
+ * Mint a fresh GitHub App installation token, write a git-askpass helper,
+ * and export `GIT_ASKPASS` + `GH_TOKEN` for the current shell. Returns a
+ * `&&`-chained command suitable for prepending to the caller's git ops.
+ *
+ * Includes a one-line diagnostic so any future "No anonymous write access"
+ * or "Bad credentials" failure is debuggable from the CI log without
+ * leaking token contents — prints askpass perms/owner/size, GIT_ASKPASS
+ * value, and the token file's byte count.
+ *
+ * Set `withAskpass=false` for callers that pass the token explicitly
+ * (e.g. release-please via `--token`) and don't need git's askpass dance.
+ */
+function mintGithubAppTokenAndSetupGitAuth(
+  opts: { withAskpass?: boolean } = {},
+): string {
+  const withAskpass = opts.withAskpass ?? true;
+  const steps = [
+    `bun ${GITHUB_APP_TOKEN_SCRIPT_PATH} > ${GITHUB_APP_TOKEN_PATH}`,
+    `test -s ${GITHUB_APP_TOKEN_PATH} || { echo "ERROR: ${GITHUB_APP_TOKEN_PATH} is empty after mint" >&2; exit 1; }`,
+    `export GH_TOKEN="$(cat ${GITHUB_APP_TOKEN_PATH})"`,
+  ];
+  if (withAskpass) {
+    steps.push(
+      `printf '#!/bin/sh\\ncase "$1" in\\n  *Username*) printf "%s%s\\\\n" "x-access" "-token" ;;\\n  *) cat ${GITHUB_APP_TOKEN_PATH} ;;\\nesac\\n' > /usr/local/bin/git-askpass`,
+      `chmod +x /usr/local/bin/git-askpass`,
+      `export GIT_ASKPASS=/usr/local/bin/git-askpass`,
+      `echo "git-auth-setup: $(ls -l /usr/local/bin/git-askpass | awk '{print $1, $3, $5}'), GIT_ASKPASS=$GIT_ASKPASS, token-bytes=$(wc -c < ${GITHUB_APP_TOKEN_PATH})"`,
+    );
+  } else {
+    steps.push(
+      `echo "git-auth-setup: token-bytes=$(wc -c < ${GITHUB_APP_TOKEN_PATH}) (no askpass)"`,
+    );
+  }
+  return steps.join(" && ");
 }
 
 // ---------------------------------------------------------------------------
@@ -547,6 +578,12 @@ export function argoCdHealthWaitHelper(
         `DRYRUN: would wait for ArgoCD app ${appName} to become healthy`,
       ]);
   }
+  // Use -sS (not -sf) so non-2xx responses surface as a status code + body
+  // rather than silently producing empty output for jq to choke on. -L
+  // follows redirects (one-hop trust; the previous bare `curl -sf` swallowed
+  // a 307 redirect-loop into an "Invalid numeric literal" jq error and timed
+  // out for 5 minutes). Fail fast on any non-200 since auth/ingress errors
+  // are not transient and looping wastes CI time.
   return dag
     .container()
     .from(ALPINE_IMAGE)
@@ -555,7 +592,29 @@ export function argoCdHealthWaitHelper(
     .withExec([
       "sh",
       "-c",
-      `elapsed=0; while [ $elapsed -lt ${timeoutSeconds} ]; do status=$(curl -sf -H "Authorization: Bearer $ARGOCD_TOKEN" "${serverUrl}/api/v1/applications/${appName}" | jq -r '.status.health.status'); echo "Health: $status ($elapsed/${timeoutSeconds}s)"; if [ "$status" = "Healthy" ]; then exit 0; fi; sleep 10; elapsed=$((elapsed + 10)); done; echo "Timeout waiting for ${appName} to become healthy"; exit 1`,
+      `set -eu
+elapsed=0
+while [ "$elapsed" -lt ${timeoutSeconds} ]; do
+  http=$(curl -sS -L --max-redirs 3 -o /tmp/argocd-resp -w '%{http_code}' \
+    -H "Authorization: Bearer $ARGOCD_TOKEN" \
+    "${serverUrl}/api/v1/applications/${appName}")
+  if [ "$http" != "200" ]; then
+    echo "ERROR: ${serverUrl}/api/v1/applications/${appName} returned HTTP $http"
+    if [ -s /tmp/argocd-resp ]; then
+      echo "Response body (first 1KB):"
+      head -c 1024 /tmp/argocd-resp
+      echo
+    fi
+    exit 1
+  fi
+  status=$(jq -r '.status.health.status' /tmp/argocd-resp)
+  echo "Health: $status ($elapsed/${timeoutSeconds}s)"
+  [ "$status" = "Healthy" ] && exit 0
+  sleep 10
+  elapsed=$((elapsed + 10))
+done
+echo "Timeout: ${appName} did not become Healthy within ${timeoutSeconds}s"
+exit 1`,
     ]);
 }
 
@@ -761,7 +820,7 @@ export function versionCommitBackHelper(
       })()
     : "";
 
-  const authedContainer = withGithubAppToken(
+  const authedContainer = withGithubAppCredentials(
     container,
     source,
     githubAppId,
@@ -770,13 +829,11 @@ export function versionCommitBackHelper(
   );
 
   return authedContainer
-    .withExec(["sh", "-c", writeGithubAppAskpassCommand()])
-    .withEnvVariable("GIT_ASKPASS", "/usr/local/bin/git-askpass")
     .withExec([
       "sh",
       "-c",
       [
-        exportGithubAppTokenCommand(),
+        mintGithubAppTokenAndSetupGitAuth(),
         `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
         `cd /repo`,
         `git config user.email "ci@sjer.red"`,
@@ -828,7 +885,7 @@ export function ciBaseVersionCommitBackHelper(
     ]);
   }
 
-  const authedContainer = withGithubAppToken(
+  const authedContainer = withGithubAppCredentials(
     container,
     source,
     githubAppId,
@@ -837,13 +894,11 @@ export function ciBaseVersionCommitBackHelper(
   );
 
   return authedContainer
-    .withExec(["sh", "-c", writeGithubAppAskpassCommand()])
-    .withEnvVariable("GIT_ASKPASS", "/usr/local/bin/git-askpass")
     .withExec([
       "sh",
       "-c",
       [
-        exportGithubAppTokenCommand(),
+        mintGithubAppTokenAndSetupGitAuth(),
         `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
         `cd /repo`,
         `git config user.email "ci@sjer.red"`,
@@ -902,7 +957,7 @@ export function cooklangVersionCommitBackHelper(
     ]);
   }
 
-  const authedContainer = withGithubAppToken(
+  const authedContainer = withGithubAppCredentials(
     container,
     source,
     githubAppId,
@@ -911,13 +966,11 @@ export function cooklangVersionCommitBackHelper(
   );
 
   return authedContainer
-    .withExec(["sh", "-c", writeGithubAppAskpassCommand()])
-    .withEnvVariable("GIT_ASKPASS", "/usr/local/bin/git-askpass")
     .withExec([
       "sh",
       "-c",
       [
-        exportGithubAppTokenCommand(),
+        mintGithubAppTokenAndSetupGitAuth(),
         `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
         `cd /repo`,
         `git config user.email "ci@sjer.red"`,
@@ -971,7 +1024,7 @@ export function releasePleaseHelper(
       "DRYRUN: would run release-please (release-pr + github-release)",
     ]);
   }
-  const authedContainer = withGithubAppToken(
+  const authedContainer = withGithubAppCredentials(
     container,
     source,
     githubAppId,
@@ -983,7 +1036,7 @@ export function releasePleaseHelper(
     "sh",
     "-c",
     [
-      exportGithubAppTokenCommand(),
+      mintGithubAppTokenAndSetupGitAuth({ withAskpass: false }),
       `release-please release-pr --token="$GH_TOKEN" --repo-url=shepherdjerred/monorepo --target-branch=main`,
       `release-please github-release --token="$GH_TOKEN" --repo-url=shepherdjerred/monorepo --target-branch=main`,
     ].join(" && "),
