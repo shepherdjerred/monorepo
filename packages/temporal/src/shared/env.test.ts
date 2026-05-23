@@ -28,4 +28,20 @@ describe("readPositiveIntegerEnv", () => {
       readPositiveIntegerEnv({ name: ENV_NAME, defaultValue: 3 }),
     ).toThrow(`${ENV_NAME} must be a positive integer; got 0`);
   });
+
+  test("rejects decimal environment values", () => {
+    Bun.env[ENV_NAME] = "1.0";
+
+    expect(() =>
+      readPositiveIntegerEnv({ name: ENV_NAME, defaultValue: 3 }),
+    ).toThrow(`${ENV_NAME} must be a positive integer; got 1.0`);
+  });
+
+  test("rejects exponent environment values", () => {
+    Bun.env[ENV_NAME] = "1e2";
+
+    expect(() =>
+      readPositiveIntegerEnv({ name: ENV_NAME, defaultValue: 3 }),
+    ).toThrow(`${ENV_NAME} must be a positive integer; got 1e2`);
+  });
 });

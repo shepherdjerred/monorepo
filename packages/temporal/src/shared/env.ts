@@ -13,8 +13,13 @@ export function readPositiveIntegerEnv(input: {
     return input.defaultValue;
   }
 
-  const value = Number(rawValue);
-  if (!Number.isInteger(value) || value < 1) {
+  if (!/^\d+$/.test(rawValue)) {
+    throw new Error(
+      `${input.name} must be a positive integer; got ${rawValue}`,
+    );
+  }
+  const value = Number.parseInt(rawValue, 10);
+  if (value < 1) {
     throw new Error(
       `${input.name} must be a positive integer; got ${rawValue}`,
     );

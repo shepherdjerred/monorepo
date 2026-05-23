@@ -35,7 +35,7 @@ Partially Complete
   - Verified `scout-beta-scout-backend-7ddf8d97df-n455g` is `1/1 Running` and `scout-service-beta` has endpoint `10.244.0.198:3000`.
 - Reduced Prometheus PVC pressure:
   - Changed Prometheus `retentionSize` from `240GB` to `200GB` in `packages/homelab/src/cdk8s/src/resources/argo-applications/prometheus.ts`.
-  - Added `velero.io/backup=disabled` next to `velero.io/exclude-from-backup=true` for the Prometheus PVC template.
+  - Kept the supported `velero.io/exclude-from-backup=true` label for the Prometheus PVC template.
   - Patched the live Prometheus CR retention size to `200GB`, labeled the live PVC, and verified the Prometheus StatefulSet rolled successfully.
 - Remediated the Scout Data Dragon weekly refresh failure path:
   - Added `AWS_REGION` / `AWS_DEFAULT_REGION` to the Temporal worker chart in `packages/homelab/src/cdk8s/src/resources/temporal/worker.ts`.
@@ -67,3 +67,7 @@ Partially Complete
 - The live Temporal worker `AWS_REGION` patch is also a bridge; the durable fix is the Homelab Temporal worker chart change plus the Scout S3 client fallback.
 - The Data Dragon retry workflow was intentionally terminated after PR #885 existed and auto-merge was enabled, to avoid a second generated PR from activity retry.
 - PagerDuty and Prometheus state are point-in-time snapshots from 2026-05-23; Alertmanager grouping and 24-hour PromQL windows can lag behind remediations.
+
+## Summary
+
+This session triaged the live PagerDuty alert set, applied temporary live mitigations where needed, and prepared durable Scout, Prometheus, and Temporal fixes in PR #886. Scout beta and the Data Dragon lane-prior path were recovered, while Prometheus PVC pressure and time-windowed alerts still need post-merge observation.

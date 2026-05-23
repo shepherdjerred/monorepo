@@ -20,11 +20,17 @@ export const LanePriorS3ConfigSchema = z.strictObject({
 export type LanePriorS3Config = z.infer<typeof LanePriorS3ConfigSchema>;
 
 export function lanePriorS3Region(): string {
-  const region = Bun.env["AWS_REGION"] ?? Bun.env["S3_REGION"];
-  if (region === undefined || region.trim() === "") {
-    return "us-east-1";
+  const awsRegion = Bun.env["AWS_REGION"];
+  if (awsRegion !== undefined && awsRegion.trim() !== "") {
+    return awsRegion;
   }
-  return region;
+
+  const s3Region = Bun.env["S3_REGION"];
+  if (s3Region !== undefined && s3Region.trim() !== "") {
+    return s3Region;
+  }
+
+  return "us-east-1";
 }
 
 function dateToPrefix(date: Date): string {
