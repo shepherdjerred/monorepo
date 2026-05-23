@@ -1,6 +1,7 @@
 # Plan: Root `.greptile/` for the monorepo
 
 ## Status
+
 Complete
 
 ## Context
@@ -21,12 +22,12 @@ That's it. No `rules.md`. No restated banned-patterns list. If a rule deserves t
 
 ## Decisions
 
-| Question | Choice |
-| --- | --- |
-| Scope | Root only |
-| Rule overlap with ESLint | Don't restate — point at AGENTS.md instead |
-| Strictness | 2 (default balanced) |
-| Ignore | Generated, archives, practice/POC, doc logs & todos. Other docs reviewable. |
+| Question                 | Choice                                                                      |
+| ------------------------ | --------------------------------------------------------------------------- |
+| Scope                    | Root only                                                                   |
+| Rule overlap with ESLint | Don't restate — point at AGENTS.md instead                                  |
+| Strictness               | 2 (default balanced)                                                        |
+| Ignore                   | Generated, archives, practice/POC, doc logs & todos. Other docs reviewable. |
 
 ## Files created
 
@@ -38,16 +39,16 @@ That's it. No `rules.md`. No restated banned-patterns list. If a rule deserves t
 
 ### `.greptile/config.json`
 
-| Field | Value | Why |
-| --- | --- | --- |
-| `strictness` | `2` | Balanced default |
-| `commentTypes` | `["logic", "syntax", "style", "info"]` | Greptile default |
-| `triggerOnUpdates` | `true` | Re-review on each push so addressed comments get re-validated |
-| `statusCheck` | `true` | Surface a GitHub status check we can later require in branch protection |
-| `fixWithAI` | `true` | Claude Code addresses Greptile comments; emit fix prompts |
-| `disabledLabels` | `["wip", "draft", "no-review"]` | Escape hatches |
-| `instructions` | One paragraph pointing at `AGENTS.md` as the single source of truth and noting that ESLint enforces mechanical rules separately | Grounds the reviewer in the architecture |
-| `ignorePatterns` | gitignore-syntax block; see file | User ignore set |
+| Field              | Value                                                                                                                           | Why                                                                     |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `strictness`       | `2`                                                                                                                             | Balanced default                                                        |
+| `commentTypes`     | `["logic", "syntax", "style", "info"]`                                                                                          | Greptile default                                                        |
+| `triggerOnUpdates` | `true`                                                                                                                          | Re-review on each push so addressed comments get re-validated           |
+| `statusCheck`      | `true`                                                                                                                          | Surface a GitHub status check we can later require in branch protection |
+| `fixWithAI`        | `true`                                                                                                                          | Claude Code addresses Greptile comments; emit fix prompts               |
+| `disabledLabels`   | `["wip", "draft", "no-review"]`                                                                                                 | Escape hatches                                                          |
+| `instructions`     | One paragraph pointing at `AGENTS.md` as the single source of truth and noting that ESLint enforces mechanical rules separately | Grounds the reviewer in the architecture                                |
+| `ignorePatterns`   | gitignore-syntax block; see file                                                                                                | User ignore set                                                         |
 
 `ignorePatterns` covers: generated/build output, `archive/`, `packages/docs/archive/**`, `practice/**`, `**/poc/**`, `packages/docs/logs/**`, `packages/docs/todos/**`, `obsidian/**`, personal data files, test artifacts, generated Prisma clients and helm-types.
 
