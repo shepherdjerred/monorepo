@@ -1,0 +1,282 @@
+---
+import { marketingTrackingConfig } from "#src/lib/marketing.ts";
+import { DISCORD_INSTALL_CLICK_EVENT } from "#src/lib/marketing-constants.ts";
+
+const { pinterestTagId, redditPixelId } = marketingTrackingConfig;
+const discordInstallClickEvent = DISCORD_INSTALL_CLICK_EVENT;
+---
+
+<script
+  is:inline
+  define:vars={{ pinterestTagId, redditPixelId, discordInstallClickEvent }}
+>
+  var consentStorageKey = "scout-marketing-consent";
+  var consentGrantedValue = "granted";
+  var consentDeniedValue = "denied";
+  var consentBannerId = "scout-marketing-consent-banner";
+  var consentSettingsId = "scout-marketing-consent-settings";
+
+  function readMarketingConsent() {
+    try {
+      return window.localStorage.getItem(consentStorageKey);
+    } catch (error) {
+      console.error("Unable to read Scout marketing consent state", error);
+      return consentDeniedValue;
+    }
+  }
+
+  function writeMarketingConsent(value) {
+    try {
+      window.localStorage.setItem(consentStorageKey, value);
+    } catch (error) {
+      console.error("Unable to store Scout marketing consent state", error);
+    }
+  }
+
+  function hasMarketingConsent() {
+    return readMarketingConsent() === consentGrantedValue;
+  }
+
+  function insertBeforeFirstScript(script) {
+    var firstScript = document.getElementsByTagName("script")[0];
+    if (firstScript.parentNode) {
+      firstScript.parentNode.insertBefore(script, firstScript);
+    }
+  }
+
+  function loadPinterestPixel() {
+    if (window.pintrk) {
+      return;
+    }
+
+    window.pintrk = function () {
+      window.pintrk.queue.push(Array.prototype.slice.call(arguments));
+    };
+    window.pintrk.queue = [];
+    window.pintrk.version = "3.0";
+
+    var script = document.createElement("script");
+    script.async = true;
+    script.src = "https://s.pinimg.com/ct/core.js";
+    insertBeforeFirstScript(script);
+
+    window.pintrk("load", pinterestTagId);
+    window.pintrk("page");
+  }
+
+  function loadRedditPixel() {
+    if (window.rdt) {
+      return;
+    }
+
+    var redditTracker = (window.rdt = function () {
+      if (redditTracker.sendEvent) {
+        redditTracker.sendEvent.apply(redditTracker, arguments);
+        return;
+      }
+
+      redditTracker.callQueue.push(arguments);
+    });
+    redditTracker.callQueue = [];
+
+    var script = document.createElement("script");
+    script.async = true;
+    script.src = "https://www.redditstatic.com/ads/pixel.js";
+    insertBeforeFirstScript(script);
+
+    window.rdt("init", redditPixelId);
+    window.rdt("track", "PageVisit");
+  }
+
+  function loadMarketingPixels() {
+    if (!hasMarketingConsent()) {
+      return;
+    }
+
+    loadPinterestPixel();
+    loadRedditPixel();
+  }
+
+  function removeElementById(id) {
+    var existingElement = document.getElementById(id);
+    if (existingElement) {
+      existingElement.remove();
+    }
+  }
+
+  function styleConsentButton(button, background, color, borderColor) {
+    button.style.border = "1px solid " + borderColor;
+    button.style.borderRadius = "6px";
+    button.style.background = background;
+    button.style.color = color;
+    button.style.font = "inherit";
+    button.style.fontWeight = "600";
+    button.style.padding = "0.5rem 0.75rem";
+    button.style.cursor = "pointer";
+  }
+
+  function renderConsentSettingsButton() {
+    if (document.getElementById(consentSettingsId)) {
+      return;
+    }
+
+    var button = document.createElement("button");
+    button.id = consentSettingsId;
+    button.type = "button";
+    button.textContent = "Cookie settings";
+    button.style.position = "fixed";
+    button.style.left = "1rem";
+    button.style.bottom = "1rem";
+    button.style.zIndex = "50";
+    button.style.border = "1px solid #d1d5db";
+    button.style.borderRadius = "6px";
+    button.style.background = "#ffffff";
+    button.style.color = "#111827";
+    button.style.font = "inherit";
+    button.style.fontSize = "0.875rem";
+    button.style.padding = "0.5rem 0.75rem";
+    button.style.boxShadow = "0 10px 15px -3px rgba(0, 0, 0, 0.1)";
+    button.style.cursor = "pointer";
+    button.addEventListener("click", renderConsentBanner);
+    document.body.append(button);
+  }
+
+  function renderConsentBanner() {
+    removeElementById(consentBannerId);
+
+    var banner = document.createElement("section");
+    banner.id = consentBannerId;
+    banner.setAttribute("role", "dialog");
+    banner.setAttribute("aria-label", "Marketing cookie settings");
+    banner.style.position = "fixed";
+    banner.style.left = "1rem";
+    banner.style.right = "1rem";
+    banner.style.bottom = "1rem";
+    banner.style.zIndex = "60";
+    banner.style.margin = "0 auto";
+    banner.style.maxWidth = "48rem";
+    banner.style.border = "1px solid #d1d5db";
+    banner.style.borderRadius = "8px";
+    banner.style.background = "#ffffff";
+    banner.style.color = "#111827";
+    banner.style.boxShadow = "0 20px 25px -5px rgba(0, 0, 0, 0.1)";
+    banner.style.padding = "1rem";
+
+    var copy = document.createElement("p");
+    copy.textContent =
+      "Scout uses Pinterest and Reddit pixels to measure ad visits and Add to Discord clicks. These marketing pixels stay off unless you allow them.";
+    copy.style.margin = "0 0 0.75rem";
+    copy.style.fontSize = "0.875rem";
+    copy.style.lineHeight = "1.5";
+
+    var actions = document.createElement("div");
+    actions.style.display = "flex";
+    actions.style.flexWrap = "wrap";
+    actions.style.gap = "0.5rem";
+
+    var allowButton = document.createElement("button");
+    allowButton.type = "button";
+    allowButton.textContent = "Allow";
+    styleConsentButton(allowButton, "#4f46e5", "#ffffff", "#4f46e5");
+    allowButton.addEventListener("click", function () {
+      writeMarketingConsent(consentGrantedValue);
+      removeElementById(consentBannerId);
+      renderConsentSettingsButton();
+      loadMarketingPixels();
+    });
+
+    var declineButton = document.createElement("button");
+    declineButton.type = "button";
+    declineButton.textContent = "Do not sell or share";
+    styleConsentButton(declineButton, "#ffffff", "#111827", "#d1d5db");
+    declineButton.addEventListener("click", function () {
+      writeMarketingConsent(consentDeniedValue);
+      removeElementById(consentBannerId);
+      renderConsentSettingsButton();
+    });
+
+    actions.append(allowButton, declineButton);
+    banner.append(copy, actions);
+    document.body.append(banner);
+  }
+
+  function initializeMarketingConsent() {
+    if (readMarketingConsent() === null) {
+      renderConsentBanner();
+    } else {
+      renderConsentSettingsButton();
+    }
+
+    loadMarketingPixels();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initializeMarketingConsent);
+  } else {
+    initializeMarketingConsent();
+  }
+
+  document.addEventListener(
+    "click",
+    function (event) {
+      if (!(event.target instanceof Element)) {
+        return;
+      }
+
+      var ctaElement = event.target.closest(
+        "[data-scout-conversion='" + discordInstallClickEvent + "']",
+      );
+      if (!(ctaElement instanceof HTMLElement)) {
+        return;
+      }
+
+      var ctaLocation = ctaElement.dataset.scoutCtaLocation;
+      if (!ctaLocation) {
+        console.error("Tracked Scout Discord CTA is missing a location");
+        return;
+      }
+
+      var eventId =
+        window.crypto && window.crypto.randomUUID
+          ? window.crypto.randomUUID()
+          : String(Date.now()) + "-" + Math.random().toString(36).slice(2);
+
+      var eventProperties = {
+        cta_location: ctaLocation,
+        event_id: eventId,
+      };
+
+      window.dispatchEvent(
+        new CustomEvent("scout:conversion", {
+          detail: {
+            event: discordInstallClickEvent,
+            properties: eventProperties,
+          },
+        }),
+      );
+
+      if (typeof window.plausible === "function") {
+        window.plausible(discordInstallClickEvent, {
+          props: eventProperties,
+        });
+      }
+
+      if (hasMarketingConsent() && typeof window.pintrk === "function") {
+        window.pintrk("track", "Lead", {
+          cta_location: ctaLocation,
+          event_id: eventId,
+          lead_type: discordInstallClickEvent,
+        });
+      }
+
+      if (hasMarketingConsent() && typeof window.rdt === "function") {
+        window.rdt("track", "Lead", {
+          conversionId: eventId,
+          cta_location: ctaLocation,
+          customEventName: discordInstallClickEvent,
+        });
+      }
+    },
+    { capture: true },
+  );
+</script>

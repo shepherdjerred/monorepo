@@ -103,6 +103,8 @@ The main conclusion is that release creation/upload, git push automation, and Op
 - Verified the Buildkite-equivalent Temporal Dagger `test` call passes locally after the test credential fix.
 - Fixed follow-up Temporal lint/typecheck failures in the test credential scaffolding by using `Bun.env`, restoring only fixed GitHub App env keys, and providing a fully typed fetch stub.
 - Verified `packages/temporal` lint, typecheck, focused token/agent-task tests, and the Buildkite-equivalent Temporal Dagger `lint` call pass locally after the cleanup.
+- Merged the latest default branch updates, resolved the CI pipeline test conflict by preserving both the GitHub App/GHCR regression test and the upstream Scout marketing deploy tests, and verified the focused CI generator test plus `scripts/ci` typecheck.
+- Fixed an upstream Scout marketing lint issue exposed during the merge by validating `import.meta.env` values through Zod, then verified the Scout frontend lint/typecheck commands with marketing placeholder environment values.
 
 ### Remaining
 
@@ -117,3 +119,4 @@ The main conclusion is that release creation/upload, git push automation, and Op
 - Local Dagger verification required elevated access to the local OrbStack/Docker socket.
 - The Buildkite-equivalent Temporal Dagger typecheck-with-secrets call could not run in this shell because `HASS_URL`/`HASS_TOKEN` are not present locally; package-local Temporal typecheck passes.
 - The local git fsmonitor daemon reports an IPC warning in this worktree, but git commands still return the expected status/diff data.
+- The merge commit hook runner was externally terminated during a long Scout package check after staged lint was already clean; equivalent affected checks were rerun manually before committing.
