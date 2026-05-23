@@ -75,13 +75,15 @@ Live checks on 2026-05-22 showed Prometheus, Loki, and Tempo datasources healthy
 - Resolved the `origin/main` merge conflicts in Scout scheduled-report dashboard panels and Prometheus Grafana values, preserving the zero-backed four-stat Scout row while taking main's shared `BLACKBOX_MODULES` extraction.
 - Re-ran homelab lint, typecheck, tests, and cdk8s render after the merge resolution.
 - Fixed Scout Data Dragon champion-name normalization for URL-encoded names such as `Nunu%20&%20Willump`, which unblocked Scout report tests after merging `origin/main`.
+- Pushed merge-resolution commit `5dc0dfc34` to PR #869 and verified Buildkite build #2696 passed.
+- Rechecked PR #869 after the push: GitHub reports it is mergeable, and the only Greptile P2 review threads are resolved and outdated.
 
 ### Remaining
 
-- Push the merge-resolution commit to PR #869 and recheck the post-merge Buildkite build.
+- None for the requested CI, merge-conflict, and P3-or-higher review-comment loop.
 
 ### Caveats
 
 - The filtered `render` script is not exposed at `packages/homelab`; render was run from `packages/homelab/src/cdk8s`.
 - Parallel homelab verification can race Bun's subpackage installs; rerunning typecheck and test sequentially passed.
-- Buildkite polling requires network access; local merge verification passed before pushing the merge-resolution commit.
+- PR #869 is still a draft, so pr-review-bot and CodeRabbit skipped full review until it is marked ready.
