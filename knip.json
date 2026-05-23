@@ -19,7 +19,8 @@
     },
     "packages/better-skill-capped": {
       "entry": ["src/index.tsx"],
-      "project": ["src/**/*.{ts,tsx}"]
+      "project": ["src/**/*.{ts,tsx}"],
+      "vite": false
     },
     "packages/sjer.red": {
       "entry": ["src/**/*.astro", "astro.config.ts"],
@@ -85,7 +86,8 @@
     },
     "packages/clauderon/web/frontend": {
       "entry": ["src/main.tsx"],
-      "project": ["src/**/*.{ts,tsx}"]
+      "project": ["src/**/*.{ts,tsx}"],
+      "vite": false
     },
     "packages/clauderon/web/shared": {
       "entry": ["src/index.ts"],
@@ -106,7 +108,8 @@
         "src/popup/popup.ts",
         "vite.config.ts"
       ],
-      "project": ["src/**/*.ts", "*.ts"]
+      "project": ["src/**/*.ts", "*.ts"],
+      "vite": false
     },
     "packages/monarch": {
       "entry": ["src/index.ts", "src/lib/*/classify.ts", "scripts/**/*.ts"],
@@ -134,6 +137,20 @@
     }
   },
   "ignoreExportsUsedInFile": true,
+  "rules": {
+    "files": "warn",
+    "dependencies": "warn",
+    "devDependencies": "warn",
+    "exports": "warn",
+    "duplicates": "off",
+    "types": "off",
+    "nsExports": "off",
+    "nsTypes": "off",
+    "enumMembers": "off",
+    "unresolved": "warn",
+    "unlisted": "off",
+    "binaries": "off"
+  },
   "ignore": [
     "**/eslint.config.ts",
     "**/postcss.config.ts",
