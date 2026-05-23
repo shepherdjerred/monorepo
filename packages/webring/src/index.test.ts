@@ -3,38 +3,19 @@ import type { Configuration } from "./types.ts";
 import { run } from "./index.ts";
 import { tmpdir } from "node:os";
 import { mkdtemp } from "node:fs/promises";
-import { createServer } from "node:net";
 import path from "node:path";
 
-async function getAvailablePort(): Promise<number> {
-  return await new Promise<number>((resolve, reject) => {
-    const probe = createServer();
-    probe.on("error", reject);
-    probe.listen(0, "127.0.0.1", () => {
-      const address = probe.address();
-      if (address === null || typeof address === "string") {
-        probe.close();
-        reject(new Error("Failed to reserve a test server port"));
-        return;
-      }
-
-      const reservedPort = address.port;
-      probe.close((error) => {
-        if (error !== undefined) {
-          reject(error);
-          return;
-        }
-        resolve(reservedPort);
-      });
-    });
-  });
+const testDataDir = path.join(import.meta.dir, "testdata");
+function assignedPort(port: number | undefined): number {
+  if (port === undefined) {
+    throw new Error("Bun did not assign a test server port");
+  }
+  return port;
 }
 
-const testDataDir = path.join(import.meta.dir, "testdata");
-const port = await getAvailablePort();
 const server = Bun.serve({
   hostname: "127.0.0.1",
-  port,
+  port: 0,
   async fetch(request) {
     const url = new URL(request.url);
     const file = Bun.file(path.join(testDataDir, path.basename(url.pathname)));
@@ -46,6 +27,7 @@ const server = Bun.serve({
     });
   },
 });
+const port = assignedPort(server.port);
 
 console.warn(`Test server listening at http://127.0.0.1:${port.toString()}`);
 
