@@ -51,7 +51,7 @@ const RULES: GrepRule[] = [
     pattern: String.raw`#\[allow\(`,
     searchPaths: ["packages/"],
     includes: ["*.rs"],
-    excludeDirs: ["target", "archive"],
+    excludeDirs: ["target", "archive", "node_modules"],
     excludePathPatterns: [],
   },
   {

@@ -11,10 +11,10 @@ export function getStaticSitesRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "StaticSiteDown",
           annotations: {
             summary: escapePrometheusTemplate(
-              "[{{ $labels.site }}] Static site is down",
+              "[{{ $labels.site }}{{ $labels.path }}] Static site endpoint is down",
             ),
             description: escapePrometheusTemplate(
-              "Static site {{ $labels.site }} has been unreachable for more than 5 minutes. The probe is failing to get a successful HTTP response.",
+              "Static site endpoint {{ $labels.site }}{{ $labels.path }} ({{ $labels.endpoint }}) has been unreachable for more than 5 minutes. The probe is failing to get a successful HTTP response.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -29,14 +29,14 @@ export function getStaticSitesRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "StaticSiteSlowResponse",
           annotations: {
             summary: escapePrometheusTemplate(
-              "[{{ $labels.site }}] Static site responding slowly",
+              "[{{ $labels.site }}{{ $labels.path }}] Static site endpoint responding slowly",
             ),
             description: escapePrometheusTemplate(
-              "Static site {{ $labels.site }} is responding slowly (>3s) for more than 10 minutes. Current response time: {{ $value | humanizeDuration }}",
+              "Static site endpoint {{ $labels.site }}{{ $labels.path }} ({{ $labels.endpoint }}) is responding slowly (>3s) for more than 10 minutes. Current response time: {{ $value | humanizeDuration }}",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'probe_http_duration_seconds{job=~"static-site-.*", phase="resolve"} + probe_http_duration_seconds{job=~"static-site-.*", phase="connect"} + probe_http_duration_seconds{job=~"static-site-.*", phase="tls"} + probe_http_duration_seconds{job=~"static-site-.*", phase="processing"} + probe_http_duration_seconds{job=~"static-site-.*", phase="transfer"} > 3',
+            'sum by (job, instance, site, endpoint, path) (probe_http_duration_seconds{job=~"static-site-.*", phase=~"resolve|connect|tls|processing|transfer"}) > 3',
           ),
           for: "10m",
           labels: {
@@ -54,7 +54,7 @@ export function getStaticSitesRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            '(probe_ssl_earliest_cert_expiry{job=~"static-site-.*"} - time()) / 86400 < 14',
+            '(probe_ssl_earliest_cert_expiry{job=~"static-site-.*", endpoint="root"} - time()) / 86400 < 14',
           ),
           for: "1h",
           labels: {
@@ -72,7 +72,7 @@ export function getStaticSitesRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            '(probe_ssl_earliest_cert_expiry{job=~"static-site-.*"} - time()) / 86400 < 3',
+            '(probe_ssl_earliest_cert_expiry{job=~"static-site-.*", endpoint="root"} - time()) / 86400 < 3',
           ),
           for: "1h",
           labels: {
@@ -88,6 +88,21 @@ export function getStaticSitesRuleGroups(): PrometheusRuleSpecGroups[] {
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             'absent(probe_success{job=~"static-site-.*"}) == 1',
+          ),
+          for: "10m",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
+          alert: "StaticSiteRssProbeAbsent",
+          annotations: {
+            summary: "sjer.red RSS probe is not running",
+            description:
+              "No probe_success metrics have been collected for https://sjer.red/rss.xml in the last 10 minutes. The Probe resource, Prometheus Operator, or blackbox-exporter may be misconfigured.",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'absent(probe_success{job="static-site-sjer.red-rss", site="sjer.red", endpoint="rss", path="/rss.xml"}) == 1',
           ),
           for: "10m",
           labels: {

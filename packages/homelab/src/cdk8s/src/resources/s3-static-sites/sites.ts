@@ -2,7 +2,11 @@ import type { StaticSiteConfig } from "@shepherdjerred/homelab/cdk8s/src/misc/s3
 
 // DNS records for all sites are managed by OpenTofu (src/tofu/cloudflare/).
 export const staticSites: StaticSiteConfig[] = [
-  { hostname: "sjer.red", bucket: "sjer-red" },
+  {
+    hostname: "sjer.red",
+    bucket: "sjer-red",
+    probes: [{ endpoint: "rss", path: "/rss.xml", module: "rss_2xx" }],
+  },
   { hostname: "webring.sjer.red", bucket: "webring" },
   { hostname: "resume.sjer.red", bucket: "resume" },
   { hostname: "discord-plays-pokemon.com", bucket: "dpp-docs" },

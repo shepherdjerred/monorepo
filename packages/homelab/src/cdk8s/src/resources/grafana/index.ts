@@ -11,6 +11,7 @@ import { exportBuildkiteDashboardJson } from "@shepherdjerred/homelab/cdk8s/graf
 import { exportZfsDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/zfs-dashboard.ts";
 import { exportTemporalDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/temporal-dashboard.ts";
 import { exportPrReviewBotDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/pr-review-bot-dashboard.ts";
+import { exportStaticSiteProbesDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/static-site-probes-dashboard.ts";
 
 /**
  * Dashboard configuration for creating Grafana dashboard ConfigMaps
@@ -123,6 +124,13 @@ const TEMPORAL_DASHBOARD: DashboardConfig = {
   exportFn: exportTemporalDashboardJson,
 };
 
+const STATIC_SITE_PROBES_DASHBOARD: DashboardConfig = {
+  id: "static-site-probes-dashboard-configmap",
+  name: "static-site-probes-dashboard",
+  jsonFilename: "static-site-probes.json",
+  exportFn: exportStaticSiteProbesDashboardJson,
+};
+
 const PR_REVIEW_BOT_DASHBOARD: DashboardConfig = {
   id: "pr-review-bot-dashboard-configmap",
   name: "pr-review-bot-dashboard",
@@ -138,6 +146,7 @@ const ALL_DASHBOARDS: DashboardConfig[] = [
   PR_REVIEW_BOT_DASHBOARD,
   SCOUT_DASHBOARD,
   SMARTCTL_DASHBOARD,
+  STATIC_SITE_PROBES_DASHBOARD,
   TASKNOTES_DASHBOARD,
   TEMPORAL_DASHBOARD,
   VELERO_DASHBOARD,
