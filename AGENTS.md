@@ -77,12 +77,13 @@ When a plan in `packages/docs/plans/` reaches `Status: Complete` and the work is
 
 ## TODO Documentation
 
-Active source TODOs must be documented and linked:
+`packages/docs/todos/` is for **general issue tracking** — deferred work, acceptance-testing gaps, post-merge verifications, and any thread that needs to outlive a single session. It is not limited to source-code markers; most todos will have no marker at all.
 
-- Use `TODO(todo:<kebab-id>): ...`, `FIXME(todo:<kebab-id>): ...`, or `XXX(todo:<kebab-id>): ...` in source comments.
-- Create exactly one matching doc at `packages/docs/todos/<kebab-id>.md`.
-- Keep TODO docs active-only. When the TODO is resolved, remove the source marker and move/delete/archive the TODO doc as appropriate.
-- `bun scripts/check-todos.ts` enforces this invariant in pre-commit and CI.
+- Every source marker (`TODO(todo:<kebab-id>)`, `FIXME(todo:<kebab-id>)`, `XXX(todo:<kebab-id>)`) MUST have a matching `packages/docs/todos/<kebab-id>.md`. This direction is enforced.
+- General issue todos may exist with no source marker. Use kebab-case ids; the filename (sans `.md`) is the id.
+- TODO docs use YAML frontmatter: `id`, `status` (one of `active`, `deferred`, `blocked`, `waiting-on-verification`, `resolved`), `origin` (path to the log/plan/PR that birthed it), and `source_marker: true` only if a code marker exists.
+- When resolved, delete the doc and remove any matching source marker in the same commit.
+- `bun scripts/check-todos.ts` enforces the source-marker → doc invariant (plus frontmatter/id sanity) in pre-commit and CI.
 
 ## Temporal Agent Follow-ups
 
