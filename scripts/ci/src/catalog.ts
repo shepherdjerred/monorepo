@@ -118,15 +118,6 @@ export const DEPLOY_SITES: DeploySite[] = [
     workspaceDeps: "astro-opengraph-images,webring",
   },
   {
-    bucket: "clauderon",
-    name: "clauderon docs",
-    url: "https://clauderon.com",
-    buildDir: "packages/clauderon/docs",
-    buildCmd: "bun run astro build",
-    distDir: "packages/clauderon/docs/dist",
-    workspaceDeps: "astro-opengraph-images",
-  },
-  {
     bucket: "resume",
     name: "resume",
     url: "https://resume.sjer.red",
@@ -260,7 +251,6 @@ export const HELM_CHARTS: string[] = [
 export const PACKAGE_TO_SITE: Record<string, string> = {
   "sjer.red": "sjer-red",
   resume: "resume",
-  clauderon: "clauderon",
   webring: "webring",
   "cooklang-rich-preview": "cook",
   "scout-for-lol": "scout-frontend",
@@ -286,8 +276,6 @@ export const ALL_PACKAGES: string[] = [
   "astro-opengraph-images",
   "better-skill-capped",
   "birmel",
-  "castle-casters",
-  "clauderon",
   "cooklang-for-obsidian",
   "cooklang-rich-preview",
   "discord-plays-pokemon",
@@ -295,13 +283,10 @@ export const ALL_PACKAGES: string[] = [
   "dotfiles",
   "eslint-config",
   "fonts",
-  "glance",
-  "hn-enhancer",
   "home-assistant",
   "homelab",
   "leetcode",
   "llm-observability",
-  "macos-cross-compiler",
   "monarch",
   "resume",
   "scout-for-lol",
@@ -312,7 +297,6 @@ export const ALL_PACKAGES: string[] = [
   "temporal",
   "tasks-for-obsidian",
   "terraform-provider-asuswrt",
-  "tips",
   "toolkit",
   "trmnl-dashboard",
   "webring",
@@ -331,7 +315,6 @@ const MEDIUM: ResourceTier = { cpu: "150m", memory: "384Mi" };
 const LIGHT: ResourceTier = { cpu: "100m", memory: "256Mi" };
 
 export const PACKAGE_RESOURCES: Record<string, ResourceTier> = {
-  clauderon: HEAVY,
   homelab: HEAVY,
   birmel: MEDIUM,
   "scout-for-lol": MEDIUM,
@@ -340,7 +323,6 @@ export const PACKAGE_RESOURCES: Record<string, ResourceTier> = {
   "tasknotes-server": MEDIUM,
   "better-skill-capped": MEDIUM,
   "sjer.red": MEDIUM,
-  "castle-casters": MEDIUM,
 };
 
 export { LIGHT as DEFAULT_RESOURCES };
@@ -359,9 +341,6 @@ export const SKIP_PACKAGES: Set<string> = new Set([
   "docs",
   "dotfiles",
   "fonts",
-  "macos-cross-compiler",
-  "glance", // Swift/macOS — needs Xcode, CI is Linux
-  "tips", // Swift/macOS — needs Xcode, CI is Linux
 ]);
 
 /** Packages that need `bun run generate` before lint/typecheck/test (Prisma). */

@@ -35,8 +35,6 @@ for npm packages.
 | Helm charts         | `2.0.0-BUILD`             | `2.0.0-695`          | ArgoCD `~2.0.0-0` tilde range auto-updates to latest prerelease              |
 | NPM (prod)          | semver via release-please | `0.1.0`              | Standard npm versioning; Renovate manages downstream consumers               |
 | NPM (dev)           | `<version>-dev.BUILD`     | `1.15.0-dev.695`     | `dev` dist-tag; `npm install pkg` still gets stable, `pkg@dev` gets dev      |
-| Clauderon (prod)    | semver via release-please | `0.1.0`              | GitHub Release with proper semver tag                                        |
-| Clauderon (dev)     | `0.0.0-dev.BUILD`         | `0.0.0-dev.695`      | GitHub pre-release; only built when clauderon code changes                   |
 | Cooklang            | `2.0.0-BUILD`             | `2.0.0-695`          | Same as Helm/Docker for consistency                                          |
 | versions.ts entries | `2.0.0-BUILD@sha256:...`  | `2.0.0-695@sha256:…` | Matches Docker tag format; only Docker images updated (Renovate handles npm) |
 | Static sites        | none                      | N/A                  | Latest version always deployed; no versioning needed                         |
@@ -70,7 +68,6 @@ Release-please manages semantic versioning for packages published to npm and con
 users:
 
 - `astro-opengraph-images`, `webring`, `@shepherdjerred/helm-types` (npm)
-- `clauderon` (GitHub Releases, Rust binary)
 
 Everything else (Docker images, Helm charts, cooklang, sites, infra) uses build numbers because they
 are internal artifacts consumed by our own infrastructure, not external semver contracts.
@@ -104,8 +101,6 @@ bump.
 - **Build numbers restart on CI migration**: If Buildkite is ever migrated or the pipeline
   recreated, build numbers restart. The `2.0.0-` prefix provides a stable base so `2.0.0-1` still
   sorts correctly within the `~2.0.0-0` range.
-- **Clauderon dev releases are slow**: Rust cross-compilation for two architectures. Dev releases
-  only run when clauderon code changes (`affected.clauderonChanged`), not on every commit.
 - **Buildkite artifact transfer**: NPM publish steps previously used Buildkite artifacts to pass
   pre-built `dist/` between steps. This was unreliable (intermittent download failures). Now build +
   publish happen in a single Dagger call with Dagger's built-in caching.

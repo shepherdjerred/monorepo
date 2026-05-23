@@ -1,6 +1,6 @@
 # Local Quality Check — Full Monorepo Verification
 
-Run all linters, tests, builds, and quality gates locally. Covers TypeScript/Bun, Rust (clauderon), Go (terraform-provider-asuswrt), Java (castle-casters), Swift (tips, glance), LaTeX (resume), plus repo-wide quality gates.
+Run all linters, tests, builds, and quality gates locally. Covers TypeScript/Bun, Go (terraform-provider-asuswrt), LaTeX (resume), plus repo-wide quality gates.
 
 ## Execution Strategy
 
@@ -27,21 +27,10 @@ bun run build      # tsc, Vite, Astro, Swift, Cargo, xelatex, bun compile
 
 - Prisma packages (birmel, scout-for-lol) run `prisma generate` inside their scripts
 - `resume` needs `xelatex` installed
-- Swift packages (tips, glance) need Xcode toolchain
 
 ## Wave 2: Non-JS Language Verification
 
 Explicit invocations with stricter flags than package.json defaults. Run in parallel with Wave 1.
-
-### Rust (clauderon)
-
-```bash
-cd packages/clauderon
-cargo clippy --all-targets --all-features -- -D warnings  # strict linting
-cargo test --all-features                                   # tests
-cargo fmt --check                                           # formatting
-cargo deny check                                            # dependency audit
-```
 
 ### Go (terraform-provider-asuswrt)
 
@@ -49,14 +38,6 @@ cargo deny check                                            # dependency audit
 cd packages/terraform-provider-asuswrt
 go build ./...
 go test ./...
-```
-
-### Java (castle-casters)
-
-```bash
-cd packages/castle-casters
-mvn -q compile
-mvn -q test
 ```
 
 ## Wave 3: Repo-Wide Quality Gates

@@ -69,56 +69,52 @@ export function createTasknotesDashboard() {
 
   builder.withPanel(
     createStatPanel({
-      title: "Request Rate",
-      query: `sum(rate(tasknotes_http_requests_total{namespace="tasknotes"}[5m]))`,
-      legend: "req/s",
+      title: "Task Operation Rate",
+      query: `sum(rate(tasknotes_tasks_created_total{namespace="tasknotes"}[5m]) + rate(tasknotes_tasks_updated_total{namespace="tasknotes"}[5m]) + rate(tasknotes_tasks_deleted_total{namespace="tasknotes"}[5m])) or on() vector(0)`,
+      legend: "ops/s",
       gridPos: { x: 12, y: 1, w: 6, h: 4 },
-      unit: "reqps",
+      unit: "ops",
     }),
   );
 
   builder.withPanel(
-    new stat.PanelBuilder()
-      .title("Error Rate")
-      .datasource(prometheusDatasource)
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            `sum(rate(tasknotes_http_requests_total{namespace="tasknotes", status=~"5.."}[5m]))
-             / sum(rate(tasknotes_http_requests_total{namespace="tasknotes"}[5m]))`,
-          )
-          .legendFormat("errors"),
-      )
-      .unit("percentunit")
-      .colorMode(common.BigValueColorMode.Value)
-      .graphMode(common.BigValueGraphMode.Area)
-      .thresholds(
-        new dashboard.ThresholdsConfigBuilder()
-          .mode(dashboard.ThresholdsMode.Absolute)
-          .steps([
-            { value: 0, color: "green" },
-            { value: 0.01, color: "yellow" },
-            { value: 0.05, color: "red" },
-          ]),
-      )
-      .gridPos({ x: 18, y: 1, w: 6, h: 4 }),
+    createStatPanel({
+      title: "Vault Files",
+      query: `tasknotes_sync_files_total{namespace="tasknotes"}`,
+      legend: "files",
+      gridPos: { x: 18, y: 1, w: 6, h: 4 },
+    }),
   );
 
-  // Row 2: HTTP Performance
-  builder.withRow(new dashboard.RowBuilder("HTTP Performance"));
+  // Row 2: Task Activity
+  builder.withRow(new dashboard.RowBuilder("Task Activity"));
 
   builder.withPanel(
     new timeseries.PanelBuilder()
-      .title("Request Rate by Route")
+      .title("Task Operation Rate")
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `sum by (route) (rate(tasknotes_http_requests_total{namespace="tasknotes"}[5m]))`,
+            `rate(tasknotes_tasks_created_total{namespace="tasknotes"}[5m]) or on() vector(0)`,
           )
-          .legendFormat("{{route}}"),
+          .legendFormat("created"),
       )
-      .unit("reqps")
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr(
+            `rate(tasknotes_tasks_updated_total{namespace="tasknotes"}[5m]) or on() vector(0)`,
+          )
+          .legendFormat("updated"),
+      )
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr(
+            `rate(tasknotes_tasks_deleted_total{namespace="tasknotes"}[5m]) or on() vector(0)`,
+          )
+          .legendFormat("deleted"),
+      )
+      .unit("ops")
       .lineWidth(2)
       .fillOpacity(10)
       .gridPos({ x: 0, y: 5, w: 12, h: 8 }),
@@ -126,30 +122,19 @@ export function createTasknotesDashboard() {
 
   builder.withPanel(
     new timeseries.PanelBuilder()
-      .title("Duration p50 / p95 / p99")
+      .title("Inventory")
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(
-            `histogram_quantile(0.50, sum(rate(tasknotes_http_request_duration_seconds_bucket{namespace="tasknotes"}[5m])) by (le))`,
-          )
-          .legendFormat("p50"),
+          .expr(`tasknotes_tasks_total{namespace="tasknotes"}`)
+          .legendFormat("tasks"),
       )
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(
-            `histogram_quantile(0.95, sum(rate(tasknotes_http_request_duration_seconds_bucket{namespace="tasknotes"}[5m])) by (le))`,
-          )
-          .legendFormat("p95"),
+          .expr(`tasknotes_sync_files_total{namespace="tasknotes"}`)
+          .legendFormat("vault files"),
       )
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            `histogram_quantile(0.99, sum(rate(tasknotes_http_request_duration_seconds_bucket{namespace="tasknotes"}[5m])) by (le))`,
-          )
-          .legendFormat("p99"),
-      )
-      .unit("s")
+      .unit("short")
       .lineWidth(2)
       .fillOpacity(10)
       .gridPos({ x: 12, y: 5, w: 12, h: 8 }),

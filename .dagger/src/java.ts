@@ -6,7 +6,7 @@
 import { dag, Container, Directory } from "@dagger.io/dagger";
 import { MAVEN_IMAGE, MAVEN_CACHE } from "./constants";
 
-/** Build a Maven project (castle-casters) with `mvn package -DskipTests`. */
+/** Build a Maven project with `mvn package -DskipTests`. */
 export function mavenBuildHelper(pkgDir: Directory): Container {
   return dag
     .container()
@@ -25,7 +25,7 @@ export function mavenBuildHelper(pkgDir: Directory): Container {
     ]);
 }
 
-/** Test a Maven project (castle-casters) with `mvn test`. */
+/** Test a Maven project with `mvn test`. */
 export function mavenTestHelper(pkgDir: Directory): Container {
   return dag
     .container()

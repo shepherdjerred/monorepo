@@ -1,5 +1,8 @@
 import { describe, expect, it } from "bun:test";
-import { validateCatalog } from "../lib/validate-catalog.ts";
+import {
+  getTrackedPackageNames,
+  validateCatalog,
+} from "../lib/validate-catalog.ts";
 import {
   ALL_PACKAGES,
   IMAGE_PUSH_TARGETS,
@@ -9,7 +12,6 @@ import {
   PACKAGE_TO_SITE,
   SKIP_PACKAGES,
 } from "../catalog.ts";
-import { readdir } from "node:fs/promises";
 import { execSync } from "node:child_process";
 
 const repoRoot = execSync("git rev-parse --show-toplevel", {
@@ -24,12 +26,8 @@ describe("validateCatalog", () => {
 });
 
 describe("catalog consistency", () => {
-  it("ALL_PACKAGES matches packages/ directories", async () => {
-    const dirs = await readdir(`${repoRoot}/packages`, { withFileTypes: true });
-    const actual = dirs
-      .filter((d) => d.isDirectory())
-      .map((d) => d.name)
-      .sort();
+  it("ALL_PACKAGES matches tracked packages/ roots", () => {
+    const actual = getTrackedPackageNames(repoRoot);
     const catalog = [...ALL_PACKAGES].sort();
     expect(catalog).toEqual(actual);
   });

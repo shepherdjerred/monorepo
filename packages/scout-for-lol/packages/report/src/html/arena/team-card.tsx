@@ -2,29 +2,32 @@ import { type ArenaTeam } from "@scout-for-lol/data";
 import { palette } from "#src/assets/colors.ts";
 import { TeamHeader } from "#src/html/arena/team-header.tsx";
 import { PlayerColumn } from "#src/html/arena/player-column.tsx";
+import { sumBy } from "remeda";
 
 export function TeamCard({
   team,
+  width,
   highlightNames,
 }: {
   team: ArenaTeam;
+  width: number;
   highlightNames: string[];
 }) {
   const maxTeamDamage = Math.max(...team.players.map((p) => p.damage), 0);
+  const totalTeamDamage = sumBy(team.players, (player) => player.damage);
   const teamSize = team.players.length;
 
   return (
     <div
       style={{
-        flex: 1,
+        width,
+        flexShrink: 0,
         display: "flex",
         flexDirection: "column",
-        gap: 24,
-        padding: "40px 32px 32px",
+        gap: 22,
+        padding: "36px 26px 28px",
         background: palette.blue[7],
         border: `1px solid ${palette.gold[5]}`,
-        borderRadius: 8,
-        boxShadow: `inset 0 0 32px rgba(200, 170, 110, 0.08)`,
       }}
     >
       <TeamHeader team={team} />
@@ -40,15 +43,20 @@ export function TeamCard({
       <div
         style={{
           display: "flex",
-          gap: 20,
+          gap: 0,
+          flex: 1,
+          alignItems: "stretch",
         }}
       >
-        {team.players.map((player) => (
+        {team.players.map((player, index) => (
           <PlayerColumn
             key={player.riotIdGameName}
             player={player}
             highlight={highlightNames.includes(player.riotIdGameName)}
+            isFirst={index === 0}
+            isLast={index === team.players.length - 1}
             maxTeamDamage={maxTeamDamage}
+            totalTeamDamage={totalTeamDamage}
             teamSize={teamSize}
           />
         ))}

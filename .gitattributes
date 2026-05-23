@@ -18,8 +18,8 @@
 *.targets           text eol=crlf
 
 # Entire Windows mobile target (catches NuGet.config, .gitignore, etc.)
-packages/clauderon/mobile/windows/**     text eol=crlf
-packages/clauderon/mobile/NuGet.config   text eol=crlf
+archive/clauderon/mobile/windows/**     text eol=crlf
+archive/clauderon/mobile/NuGet.config   text eol=crlf
 
 # --- Test fixtures: preserve byte-for-byte (real-world capture) ---
 packages/webring/src/testdata/rss-*.xml -text

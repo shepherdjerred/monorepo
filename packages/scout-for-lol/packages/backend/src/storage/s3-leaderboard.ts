@@ -353,7 +353,7 @@ async function fetchSnapshotByKey(
       return null;
     }
 
-    leaderboardSnapshotFetchTotal.inc({ status: "parse_error" });
+    leaderboardSnapshotFetchTotal.inc({ status: "error" });
     logger.warn(
       `[S3Leaderboard] ⚠️  Failed to fetch snapshot ${key} for competition ${competitionId.toString()}:`,
       error,

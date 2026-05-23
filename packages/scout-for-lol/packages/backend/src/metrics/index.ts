@@ -1,6 +1,7 @@
 import { Registry, Counter, Gauge, Histogram } from "prom-client";
 import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
+import { seedProviderIssueMetrics } from "#src/metrics/provider-issue-seeds.ts";
 
 const logger = createLogger("metrics");
 
@@ -600,6 +601,10 @@ export const aiProviderIssueActive = new Gauge({
   labelNames: ["app", "provider", "kind", "source"] as const,
   registers: [registry],
 });
+seedProviderIssueMetrics({
+  errorsTotal: aiProviderErrorsTotal,
+  issueActive: aiProviderIssueActive,
+});
 
 // =======================
 // Competition Leaderboard Chart Metrics
@@ -607,7 +612,7 @@ export const aiProviderIssueActive = new Gauge({
 
 /**
  * Total number of competition leaderboard chart renders.
- * status: success | error | skipped_too_few_snapshots | skipped_disabled
+ * status: success | error | skipped_too_few_snapshots | skipped_empty_leaderboard | skipped_disabled
  */
 export const leaderboardChartRendersTotal = new Counter({
   name: "leaderboard_chart_renders_total",
@@ -643,7 +648,7 @@ export const leaderboardChartPngBytes = new Histogram({
 
 /**
  * Per-snapshot fetch outcomes when loading historical leaderboard snapshots from S3.
- * status: success | parse_error | missing
+ * status: success | parse_error | missing | error
  */
 export const leaderboardSnapshotFetchTotal = new Counter({
   name: "leaderboard_snapshot_fetch_total",

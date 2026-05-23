@@ -707,12 +707,7 @@ describe("fail-fast base detection", () => {
 describe("NON_JS_PACKAGES and JS_TS_PACKAGES", () => {
   it("NON_JS_PACKAGES contains exactly the non-JS packages", () => {
     expect(_NON_JS_PACKAGES).toEqual(
-      new Set([
-        "castle-casters",
-        "clauderon",
-        "terraform-provider-asuswrt",
-        "resume",
-      ]),
+      new Set(["terraform-provider-asuswrt", "resume"]),
     );
   });
 

@@ -16,6 +16,7 @@ import { fetchMatchIdsForTimeRange } from "#src/league/tasks/recovery/backfill-t
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
 import { saveMatchToS3 } from "#src/storage/s3.ts";
 import { saveCachedLeaderboard } from "#src/storage/s3-leaderboard.ts";
+import { recordMatchForReportStore } from "#src/report-store/live-ingest.ts";
 
 const ArgsSchema = z.object({
   apply: z.boolean(),
@@ -30,23 +31,35 @@ function parseArgs(argv: string[]): RepairArgs {
 
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
-    if (arg === "--apply") {
-      apply = true;
-    } else if (arg === "--dry-run") {
-      apply = false;
-    } else if (arg === "--max-matches-per-competition") {
-      const value = argv[index + 1];
-      if (value === undefined) {
-        throw new Error("--max-matches-per-competition requires a value");
+    if (arg === undefined) {
+      throw new Error(`Missing argument at index ${index.toString()}`);
+    }
+
+    switch (arg) {
+      case "--apply": {
+        apply = true;
+        break;
       }
-      maxMatchesPerCompetition = z.coerce
-        .number()
-        .int()
-        .positive()
-        .parse(value);
-      index += 1;
-    } else {
-      throw new Error(`Unknown argument: ${arg}`);
+      case "--dry-run": {
+        apply = false;
+        break;
+      }
+      case "--max-matches-per-competition": {
+        const value = argv[index + 1];
+        if (value === undefined) {
+          throw new Error("--max-matches-per-competition requires a value");
+        }
+        maxMatchesPerCompetition = z.coerce
+          .number()
+          .int()
+          .positive()
+          .parse(value);
+        index += 1;
+        break;
+      }
+      default: {
+        throw new Error(`Unknown argument: ${arg}`);
+      }
     }
   }
 
@@ -203,6 +216,11 @@ async function repairCompetition(
         matchesFailed += 1;
         continue;
       }
+      await recordMatchForReportStore({
+        prisma,
+        match: matchData,
+        source: "repair_active_competitions",
+      });
       await saveMatchToS3(
         matchData,
         matches.aliasesByMatchId.get(matchId) ?? [],

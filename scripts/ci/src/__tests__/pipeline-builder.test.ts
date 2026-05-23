@@ -15,9 +15,7 @@ function emptyAffected(): AffectedPackages {
     packages: new Set(),
     buildAll: false,
     homelabChanged: false,
-    clauderonChanged: false,
     cooklangChanged: false,
-    castleCastersChanged: false,
     resumeChanged: false,
     ciImageChanged: false,
     hasImagePackages: new Set(),
@@ -35,9 +33,7 @@ function fullBuild(): AffectedPackages {
     packages: new Set(ALL_PACKAGES),
     buildAll: true,
     homelabChanged: true,
-    clauderonChanged: true,
     cooklangChanged: true,
-    castleCastersChanged: true,
     resumeChanged: true,
     ciImageChanged: false,
     hasImagePackages: new Set(PACKAGES_WITH_IMAGES),
@@ -81,6 +77,32 @@ function collectSteps(steps: unknown[], allSteps: BuildkiteStep[]): void {
         (s as Record<string, unknown>)["steps"] as unknown[],
         allSteps,
       );
+    }
+  }
+}
+
+function collectKeysAndDeps(
+  steps: unknown[],
+  allKeys: Set<string>,
+  allDeps: string[],
+): void {
+  for (const step of steps) {
+    if (typeof step !== "object" || step === null) continue;
+    if ("key" in step && typeof step.key === "string") {
+      allKeys.add(step.key);
+    }
+    if ("depends_on" in step && typeof step.depends_on === "string") {
+      allDeps.push(step.depends_on);
+    }
+    if ("depends_on" in step && Array.isArray(step.depends_on)) {
+      for (const dep of step.depends_on) {
+        if (typeof dep === "string") {
+          allDeps.push(dep);
+        }
+      }
+    }
+    if ("steps" in step && Array.isArray(step.steps)) {
+      collectKeysAndDeps(step.steps, allKeys, allDeps);
     }
   }
 }
@@ -487,7 +509,35 @@ describe("buildPipeline", () => {
       }
     });
 
-    it("includes image build/push, npm, clauderon, cooklang, and sites groups", () => {
+    it("omits main-only release and deploy graph from pull request builds", () => {
+      const pipeline = withBuildkitePullRequest("123", () =>
+        buildPipeline(fullBuild()),
+      );
+      const groups = pipeline.steps.filter(isGroup);
+      const groupKeys = groups.map((g) => g.key);
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+      const stepKeys = allSteps.map((s) => s.key);
+
+      expect(groupKeys).toContain("build-images");
+      expect(groupKeys).toContain("homelab-tofu-plan");
+      expect(stepKeys).toContain("ci-complete");
+
+      expect(groupKeys).not.toContain("push-images");
+      expect(groupKeys).not.toContain("publish-npm");
+      expect(groupKeys).not.toContain("cooklang-release");
+      expect(groupKeys).not.toContain("deploy-sites");
+      expect(groupKeys).not.toContain("homelab-helm-push");
+      expect(groupKeys).not.toContain("homelab-tofu");
+
+      expect(stepKeys).not.toContain("release-please");
+      expect(stepKeys).not.toContain("deploy-argocd");
+      expect(stepKeys).not.toContain("argocd-health");
+      expect(stepKeys).not.toContain("version-commit-back");
+      expect(stepKeys).not.toContain("build-summary");
+    });
+
+    it("includes image build/push, npm, cooklang, and sites groups", () => {
       const pipeline = buildPipeline(fullBuild());
       const groups = pipeline.steps.filter(isGroup);
       const groupKeys = groups.map((g) => g.key);
@@ -495,7 +545,6 @@ describe("buildPipeline", () => {
       expect(groupKeys).toContain("build-images");
       expect(groupKeys).toContain("push-images");
       expect(groupKeys).toContain("publish-npm");
-      expect(groupKeys).toContain("clauderon-build");
       expect(groupKeys).toContain("cooklang-release");
       expect(groupKeys).toContain("deploy-sites");
     });
@@ -675,11 +724,10 @@ describe("buildPipeline", () => {
       expect(steps.some((s) => s.key === "version-commit-back")).toBe(false);
     });
 
-    it("does NOT include unrelated packages (clauderon, cooklang, npm, sites)", () => {
+    it("does NOT include unrelated packages (cooklang, npm, sites)", () => {
       const pipeline = buildPipeline(versionBumpAffected());
       const groups = pipeline.steps.filter(isGroup);
       const groupKeys = groups.map((g) => g.key);
-      expect(groupKeys).not.toContain("clauderon-build");
       expect(groupKeys).not.toContain("cooklang-release");
       expect(groupKeys).not.toContain("publish-npm");
       expect(groupKeys).not.toContain("deploy-sites");
@@ -728,7 +776,7 @@ describe("buildPipeline", () => {
   });
 
   describe("homelab-only change", () => {
-    it("includes homelab track and images but not clauderon or cooklang", () => {
+    it("includes homelab track and images but not cooklang", () => {
       const affected = emptyAffected();
       affected.packages.add("homelab");
       affected.homelabChanged = true;
@@ -742,7 +790,6 @@ describe("buildPipeline", () => {
       expect(groupKeys).toContain("push-images");
       expect(groupKeys).toContain("homelab-helm-push");
       expect(groupKeys).toContain("homelab-tofu");
-      expect(groupKeys).not.toContain("clauderon-build");
       expect(groupKeys).not.toContain("cooklang-release");
     });
   });
@@ -807,6 +854,19 @@ describe("buildPipeline", () => {
       collect(pipeline.steps);
 
       const missing = allDeps.filter((d) => !allKeys.has(d));
+      expect(missing).toEqual([]);
+    });
+
+    it("has valid depends_on references in full pull request build", () => {
+      const pipeline = withBuildkitePullRequest("123", () =>
+        buildPipeline(fullBuild()),
+      );
+      const allKeys = new Set<string>();
+      const allDeps: string[] = [];
+
+      collectKeysAndDeps(pipeline.steps, allKeys, allDeps);
+
+      const missing = allDeps.filter((dep) => !allKeys.has(dep));
       expect(missing).toEqual([]);
     });
 

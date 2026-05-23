@@ -7,6 +7,11 @@ import { exportDashboardWithHelmEscaping } from "./dashboard-export.ts";
 
 // TODO: grafana is not creating this one
 
+const GICKUP_SOURCES_SUCCESS_RATE =
+  "((gickup_sources_complete / gickup_sources) * 100) or on() vector(100)";
+const GICKUP_DESTINATIONS_SUCCESS_RATE =
+  "((gickup_destinations_complete / gickup_destinations) * 100) or on() vector(100)";
+
 /**
  * Creates a Grafana dashboard for Gitckup backup monitoring
  * Shows backup success rates and backup counts (repos, sources, destinations)
@@ -39,7 +44,7 @@ export function createGitckupDashboard() {
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            "(count(gickup_repo_success == 1) / gickup_repos_discovered) * 100",
+            "(sum(gickup_repo_success) / max(gickup_repos_discovered)) * 100",
           )
           .legendFormat("Success Rate"),
       )
@@ -67,7 +72,7 @@ export function createGitckupDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr("(gickup_sources_complete / gickup_sources) * 100")
+          .expr(GICKUP_SOURCES_SUCCESS_RATE)
           .legendFormat("Success Rate"),
       )
       .unit("percent")
@@ -94,7 +99,7 @@ export function createGitckupDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr("(gickup_destinations_complete / gickup_destinations) * 100")
+          .expr(GICKUP_DESTINATIONS_SUCCESS_RATE)
           .legendFormat("Success Rate"),
       )
       .unit("percent")
@@ -168,7 +173,7 @@ export function createGitckupDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr("count(gickup_repo_success == 1)")
+          .expr("sum(gickup_repo_success)")
           .legendFormat("Success"),
       )
       .unit("short")
@@ -273,7 +278,7 @@ export function createGitckupDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr("gickup_repos_discovered - count(gickup_repo_success == 1)")
+          .expr("max(gickup_repos_discovered) - sum(gickup_repo_success)")
           .legendFormat("Failed"),
       )
       .unit("short")
@@ -303,7 +308,7 @@ export function createGitckupDashboard() {
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            "(count(gickup_repo_success == 1) / gickup_repos_discovered) * 100",
+            "(sum(gickup_repo_success) / max(gickup_repos_discovered)) * 100",
           )
           .legendFormat("Success Rate"),
       )
@@ -331,12 +336,12 @@ export function createGitckupDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr("(gickup_sources_complete / gickup_sources) * 100")
+          .expr(GICKUP_SOURCES_SUCCESS_RATE)
           .legendFormat("Sources"),
       )
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr("(gickup_destinations_complete / gickup_destinations) * 100")
+          .expr(GICKUP_DESTINATIONS_SUCCESS_RATE)
           .legendFormat("Destinations"),
       )
       .unit("percent")
@@ -371,7 +376,7 @@ export function createGitckupDashboard() {
       )
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr("count(gickup_repo_success == 1)")
+          .expr("sum(gickup_repo_success)")
           .legendFormat("Backed Up"),
       )
       .unit("short")

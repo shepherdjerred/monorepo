@@ -39,9 +39,7 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
   const resources = PACKAGE_RESOURCES[pkg] ?? DEFAULT_RESOURCES;
 
   // Determine which type of package this is
-  if (pkg === "clauderon") return rustPackageGroup(sk);
   if (pkg === "terraform-provider-asuswrt") return goPackageGroup(sk);
-  if (pkg === "castle-casters") return javaPackageGroup(sk);
   if (pkg === "resume") return latexPackageGroup(sk);
 
   // Standard Bun/TS package
@@ -179,40 +177,6 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
   };
 }
 
-function rustPackageGroup(sk: string): BuildkiteGroup {
-  const resources = PACKAGE_RESOURCES["clauderon"] ?? DEFAULT_RESOURCES;
-  return {
-    group: `:dagger_knife: clauderon`,
-    key: `pkg-${sk}`,
-    steps: [
-      daggerCallStep(
-        `:art: Fmt`,
-        `fmt-${sk}`,
-        `dagger call rust-fmt --pkg-dir ./packages/clauderon`,
-        resources,
-      ),
-      daggerCallStep(
-        `:mag: Clippy`,
-        `clippy-${sk}`,
-        `dagger call rust-clippy --pkg-dir ./packages/clauderon`,
-        resources,
-      ),
-      daggerCallStep(
-        `:test_tube: Test`,
-        `test-${sk}`,
-        `dagger call rust-test --pkg-dir ./packages/clauderon`,
-        resources,
-      ),
-      daggerCallStep(
-        `:shield: Cargo Deny`,
-        `cargo-deny-${sk}`,
-        `dagger call cargo-deny --pkg-dir ./packages/clauderon`,
-        resources,
-      ),
-    ],
-  };
-}
-
 function goPackageGroup(sk: string): BuildkiteGroup {
   return {
     group: `:dagger_knife: terraform-provider-asuswrt`,
@@ -235,27 +199,6 @@ function goPackageGroup(sk: string): BuildkiteGroup {
         `lint-${sk}`,
         `dagger call go-lint --pkg-dir ./packages/terraform-provider-asuswrt`,
         DEFAULT_RESOURCES,
-      ),
-    ],
-  };
-}
-
-function javaPackageGroup(sk: string): BuildkiteGroup {
-  return {
-    group: `:dagger_knife: castle-casters`,
-    key: `pkg-${sk}`,
-    steps: [
-      daggerCallStep(
-        `:building_construction: Maven Build`,
-        `maven-build-${sk}`,
-        `dagger call maven-build --pkg-dir ./packages/castle-casters`,
-        PACKAGE_RESOURCES["castle-casters"] ?? DEFAULT_RESOURCES,
-      ),
-      daggerCallStep(
-        `:test_tube: Maven Test`,
-        `maven-test-${sk}`,
-        `dagger call maven-test --pkg-dir ./packages/castle-casters`,
-        PACKAGE_RESOURCES["castle-casters"] ?? DEFAULT_RESOURCES,
       ),
     ],
   };

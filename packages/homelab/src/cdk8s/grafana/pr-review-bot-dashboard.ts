@@ -154,7 +154,7 @@ export function createPrReviewBotDashboard() {
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `sum without(pod, instance, container, endpoint, repo) (rate(pr_review_count_total{${repoFilter}}[1h])) * 3600`,
+            `sum without(pod, instance, container, endpoint, repo) (rate(pr_review_count_total{${repoFilter}}[1h])) * 3600 or on() vector(0)`,
           )
           .legendFormat("{{status}}"),
       )
@@ -218,7 +218,7 @@ export function createPrReviewBotDashboard() {
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            "histogram_quantile(0.5, sum without(pod, instance, container, endpoint) by (model, le) (rate(pr_review_cost_usd_bucket[24h])))",
+            "histogram_quantile(0.5, sum by (model, le) (rate(pr_review_cost_usd_bucket[24h]))) or on() vector(0)",
           )
           .legendFormat("{{model}}"),
       )
@@ -237,14 +237,14 @@ export function createPrReviewBotDashboard() {
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            "histogram_quantile(0.5, sum without(pod, instance, container, endpoint, model) (rate(pr_review_cost_usd_bucket[24h])))",
+            "histogram_quantile(0.5, sum without(pod, instance, container, endpoint, model) (rate(pr_review_cost_usd_bucket[24h]))) or on() vector(0)",
           )
           .legendFormat("p50"),
       )
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            "histogram_quantile(0.95, sum without(pod, instance, container, endpoint, model) (rate(pr_review_cost_usd_bucket[24h])))",
+            "histogram_quantile(0.95, sum without(pod, instance, container, endpoint, model) (rate(pr_review_cost_usd_bucket[24h]))) or on() vector(0)",
           )
           .legendFormat("p95"),
       )
@@ -313,7 +313,7 @@ export function createPrReviewBotDashboard() {
               sum without(pod, instance, container, endpoint, repo) (rate(pr_review_count_total{${repoFilter}, status="failed"}[1h]))
               /
               sum without(pod, instance, container, endpoint, repo, status) (rate(pr_review_count_total{${repoFilter}}[1h]))
-            )`,
+            ) or on() vector(0)`,
           )
           .legendFormat("failure rate"),
       )
@@ -388,14 +388,14 @@ export function createPrReviewBotDashboard() {
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            "histogram_quantile(0.5, sum without(pod, instance, container, endpoint) (rate(pr_review_comments_per_pr_bucket[6h])))",
+            "histogram_quantile(0.5, sum without(pod, instance, container, endpoint) (rate(pr_review_comments_per_pr_bucket[6h]))) or on() vector(0)",
           )
           .legendFormat("p50"),
       )
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            "histogram_quantile(0.95, sum without(pod, instance, container, endpoint) (rate(pr_review_comments_per_pr_bucket[6h])))",
+            "histogram_quantile(0.95, sum without(pod, instance, container, endpoint) (rate(pr_review_comments_per_pr_bucket[6h]))) or on() vector(0)",
           )
           .legendFormat("p95"),
       )

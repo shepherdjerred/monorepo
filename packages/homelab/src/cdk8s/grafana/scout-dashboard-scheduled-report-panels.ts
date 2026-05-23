@@ -34,7 +34,7 @@ export function addScheduledReportRows(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `sum by (environment) (scheduled_reports_active{${buildFilter()}})`,
+            `sum by (environment) (scheduled_reports_active{${buildFilter()}}) or on() vector(0)`,
           )
           .legendFormat("{{environment}}"),
       )
@@ -52,7 +52,7 @@ export function addScheduledReportRows(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `sum by (environment) (increase(scheduled_reports_due_total{${buildFilter()}}[1h]))`,
+            `sum by (environment) (increase(scheduled_reports_due_total{${buildFilter()}}[1h])) or on() vector(0)`,
           )
           .legendFormat("{{environment}}"),
       )
@@ -70,7 +70,7 @@ export function addScheduledReportRows(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `sum by (environment) (increase(scheduled_reports_failed_total{${buildFilter()}}[1h]))`,
+            `sum by (environment) (increase(scheduled_reports_failed_total{${buildFilter()}}[1h])) or on() vector(0)`,
           )
           .legendFormat("{{environment}}"),
       )
@@ -98,7 +98,7 @@ export function addScheduledReportRows(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `sum by (environment) (increase(scheduled_report_budget_exceeded_total{${buildFilter()}}[1h]))`,
+            `sum by (environment) (increase(scheduled_report_budget_exceeded_total{${buildFilter()}}[1h])) or on() vector(0)`,
           )
           .legendFormat("{{environment}}"),
       )
@@ -124,7 +124,7 @@ export function addScheduledReportRows(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `sum by (environment, status, trigger, system_source) (rate(scheduled_reports_run_total{${buildFilter()}}[5m])) * 60`,
+            `sum by (environment, status, trigger, system_source) (rate(scheduled_reports_run_total{${buildFilter()}}[5m])) * 60 or on() vector(0)`,
           )
           .legendFormat(
             "{{environment}} - {{status}} - {{trigger}} - {{system_source}}",
@@ -144,7 +144,7 @@ export function addScheduledReportRows(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `histogram_quantile(0.95, sum by (environment, system_source, le) (rate(scheduled_reports_duration_ms_bucket{${buildFilter()}}[15m])))`,
+            `histogram_quantile(0.95, sum by (environment, system_source, le) (rate(scheduled_reports_duration_ms_bucket{${buildFilter()}}[15m]))) or on() vector(0)`,
           )
           .legendFormat("{{environment}} - {{system_source}}"),
       )
@@ -162,7 +162,7 @@ export function addScheduledReportRows(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `sum by (environment, trigger, system_source) (rate(scheduled_reports_rows_scanned_total{${buildFilter()}}[5m])) * 60`,
+            `sum by (environment, trigger, system_source) (rate(scheduled_reports_rows_scanned_total{${buildFilter()}}[5m])) * 60 or on() vector(0)`,
           )
           .legendFormat("{{environment}} - {{trigger}} - {{system_source}}"),
       )
@@ -180,7 +180,7 @@ export function addScheduledReportRows(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `sum by (environment, trigger, system_source) (rate(scheduled_reports_rows_returned_total{${buildFilter()}}[5m])) * 60`,
+            `sum by (environment, trigger, system_source) (rate(scheduled_reports_rows_returned_total{${buildFilter()}}[5m])) * 60 or on() vector(0)`,
           )
           .legendFormat("{{environment}} - {{trigger}} - {{system_source}}"),
       )

@@ -89,7 +89,7 @@ This usually means that Prometheus is not successfully scraping metrics from the
     .withTarget(
       new prometheus.DataqueryBuilder()
         .expr(
-          `count(increase(velero_backup_failure_total{schedule!=""}[24h]) > 0) == 0`,
+          `absent(increase(velero_backup_failure_total{schedule!=""}[24h]) > 0) or on() vector(0)`,
         )
         .legendFormat("Status"),
     )
@@ -252,7 +252,7 @@ This usually means that Prometheus is not successfully scraping metrics from the
     createStatPanel({
       title: "Current Backup Status",
       description: "1 = Success in last hour, 0 = No success",
-      expr: `(sum by (schedule) (increase(velero_backup_success_total{${buildScheduleFilter()}}[1h])) > 0)`,
+      expr: `(sum by (schedule) (increase(velero_backup_success_total{${buildScheduleFilter()}}[1h])) > bool 0) or on() vector(0)`,
       legend: "{{schedule}}",
       gridPos: { x: 18, y: 13, w: 6, h: 4 },
     }).thresholds(
@@ -365,26 +365,24 @@ This usually means that Prometheus is not successfully scraping metrics from the
   );
 
   // Row 4: Storage Size Monitoring
-  builder.withRow(new dashboard.RowBuilder("Storage Size Monitoring"));
+  builder.withRow(new dashboard.RowBuilder("PVC Storage Monitoring"));
 
-  // Total Backup Eligible Storage
   builder.withPanel(
     createStatPanel({
-      title: "Total Backup Eligible Storage",
-      description: "Total size of PVCs marked for backup",
-      expr: `sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{label_velero_io_backup="enabled",${buildNamespaceFilter()}})`,
+      title: "Total PVC Storage",
+      description: "Total requested storage across all PVCs",
+      expr: `sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{${buildNamespaceFilter()}})`,
       legend: "Total",
       gridPos: { x: 0, y: 37, w: 6, h: 4 },
       unit: "bytes",
     }),
   );
 
-  // Backup Eligible Storage by Namespace
   builder.withPanel(
     createStatPanel({
-      title: "Backup Eligible Storage by Namespace",
-      description: "Total size of PVCs marked for backup by namespace",
-      expr: `sum by (namespace) (kube_persistentvolumeclaim_resource_requests_storage_bytes{label_velero_io_backup="enabled",${buildNamespaceFilter()}})`,
+      title: "PVC Storage by Namespace",
+      description: "Requested PVC storage by namespace",
+      expr: `sum by (namespace) (kube_persistentvolumeclaim_resource_requests_storage_bytes{${buildNamespaceFilter()}})`,
       legend: "{{namespace}}",
       gridPos: { x: 6, y: 37, w: 6, h: 4 },
       unit: "bytes",
@@ -394,33 +392,31 @@ This usually means that Prometheus is not successfully scraping metrics from the
   // Total Storage (All PVCs)
   builder.withPanel(
     createStatPanel({
-      title: "Total Storage (All PVCs)",
-      description: "Total size of all PVCs in cluster",
-      expr: `sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{${buildNamespaceFilter()}})`,
-      legend: "Total",
+      title: "PVC Count",
+      description: "PVCs discovered by kube-state-metrics",
+      expr: `count(kube_persistentvolumeclaim_resource_requests_storage_bytes{${buildNamespaceFilter()}})`,
+      legend: "PVCs",
       gridPos: { x: 12, y: 37, w: 6, h: 4 },
-      unit: "bytes",
+      unit: "short",
     }),
   );
 
-  // Backup Coverage Percentage
   builder.withPanel(
     createStatPanel({
-      title: "Backup Coverage",
-      description: "Percentage of storage covered by backups",
-      expr: `(sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{label_velero_io_backup="enabled",${buildNamespaceFilter()}}) / sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{${buildNamespaceFilter()}})) * 100`,
-      legend: "Coverage",
+      title: "Healthy Schedules",
+      description:
+        "Velero schedules whose latest backup status is successful. PVC backup labels are not exported by kube-state-metrics in this cluster.",
+      expr: `count(max by (schedule) (velero_backup_last_status{${buildScheduleFilter()}}) == 1) or on() vector(0)`,
+      legend: "healthy",
       gridPos: { x: 18, y: 37, w: 6, h: 4 },
-      unit: "percent",
+      unit: "short",
       graphMode: common.BigValueGraphMode.None,
-      decimals: 1,
     }).thresholds(
       new dashboard.ThresholdsConfigBuilder()
         .mode(dashboard.ThresholdsMode.Absolute)
         .steps([
           { value: 0, color: "red" },
-          { value: 50, color: "yellow" },
-          { value: 80, color: "green" },
+          { value: 1, color: "green" },
         ]),
     ),
   );
@@ -428,22 +424,15 @@ This usually means that Prometheus is not successfully scraping metrics from the
   // Storage Size Over Time
   builder.withPanel(
     new timeseries.PanelBuilder()
-      .title("Backup Eligible Storage Over Time")
-      .description("Total size of volumes eligible for backup")
+      .title("PVC Storage Over Time")
+      .description("Total requested PVC storage")
       .datasource(prometheusDatasource)
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            `sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{label_velero_io_backup="enabled",${buildNamespaceFilter()}})`,
-          )
-          .legendFormat("Total Eligible"),
-      )
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
             `sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{${buildNamespaceFilter()}})`,
           )
-          .legendFormat("Total All PVCs"),
+          .legendFormat("Total PVCs"),
       )
       .unit("bytes")
       .lineWidth(2)
@@ -455,21 +444,14 @@ This usually means that Prometheus is not successfully scraping metrics from the
   builder.withPanel(
     new timeseries.PanelBuilder()
       .title("Storage by Namespace Over Time")
-      .description("Storage size by namespace (backup eligible vs all)")
+      .description("Requested PVC storage by namespace")
       .datasource(prometheusDatasource)
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            `sum by (namespace) (kube_persistentvolumeclaim_resource_requests_storage_bytes{label_velero_io_backup="enabled",${buildNamespaceFilter()}})`,
-          )
-          .legendFormat("{{namespace}} (Backup Eligible)"),
-      )
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
             `sum by (namespace) (kube_persistentvolumeclaim_resource_requests_storage_bytes{${buildNamespaceFilter()}})`,
           )
-          .legendFormat("{{namespace}} (All)"),
+          .legendFormat("{{namespace}}"),
       )
       .unit("bytes")
       .lineWidth(2)

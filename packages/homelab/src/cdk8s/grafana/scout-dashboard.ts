@@ -206,7 +206,7 @@ export function createScoutDashboard() {
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `sum by (environment) (rate(discord_commands_total{${buildFilter()}}[5m]))`,
+            `sum by (environment) (rate(discord_commands_total{${buildFilter()}}[5m])) or on() vector(0)`,
           )
           .legendFormat("{{environment}}"),
       )
