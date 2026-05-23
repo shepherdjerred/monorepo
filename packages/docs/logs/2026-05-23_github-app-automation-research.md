@@ -90,3 +90,25 @@ The main conclusion is that release creation/upload, git push automation, and Op
 - Local `tofu init` with the real backend failed because this shell does not have S3 backend credentials.
 - Backendless OpenTofu init and provider validation passed with dummy GitHub App env vars.
 - Dagger module validation required elevated access to the local OrbStack/Docker socket.
+
+## Session Log - 2026-05-23 CI Follow-up
+
+### Done
+
+- Fixed Buildkite Trivy failures by refreshing vulnerable dependency pins and lockfiles.
+- Addressed review comments by reducing GitHub App credential exposure in subprocess environments, removing redundant Dagger Tofu secret injection, making dependency release-note fetches mint app tokens only after GitHub auth failures, and documenting Temporal follow-ups.
+- Fixed Buildkite package-scoped frozen-lockfile failures by refreshing `packages/discord-plays-pokemon/bun.lock` and `packages/scout-for-lol/bun.lock`.
+- Verified the Scout package Dagger `generate-and-lint`, `generate-and-typecheck`, and `generate-and-test` calls pass locally after the lockfile refresh.
+
+### Remaining
+
+- Wait for the new Buildkite build on the latest pushed commit to finish green.
+- Recheck PR mergeability and review threads after CI completes.
+- Provision or rename the Buildkite/1Password registry secret as `GHCR_TOKEN`.
+- Ensure the reused GitHub App has the required permissions and repository installation coverage before merge-time release/Tofu jobs run.
+- Run a real OpenTofu backend init/plan with S3 backend credentials and real app credentials in the operator environment.
+
+### Caveats
+
+- Local Dagger verification required elevated access to the local OrbStack/Docker socket.
+- The local git fsmonitor daemon reports an IPC warning in this worktree, but git commands still return the expected status/diff data.
