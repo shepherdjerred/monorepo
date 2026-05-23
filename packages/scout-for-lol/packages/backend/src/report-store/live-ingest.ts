@@ -125,15 +125,11 @@ export async function recordMatchForReportStore(
     );
     return { status: "stored", factCount: result.factCount };
   } catch (error) {
+    const failure = recordFailure("match", options.source, error);
     if (onError(options) === "throw") {
-      reportStoreIngestTotal.inc({
-        payload_type: "match",
-        source: options.source,
-        status: "failed",
-      });
       throw error;
     }
-    return recordFailure("match", options.source, error);
+    return failure;
   }
 }
 
@@ -151,15 +147,11 @@ export async function recordTimelineForReportStore(
     );
     return { status: "stored", factCount: 0 };
   } catch (error) {
+    const failure = recordFailure("timeline", options.source, error);
     if (onError(options) === "throw") {
-      reportStoreIngestTotal.inc({
-        payload_type: "timeline",
-        source: options.source,
-        status: "failed",
-      });
       throw error;
     }
-    return recordFailure("timeline", options.source, error);
+    return failure;
   }
 }
 
@@ -182,14 +174,10 @@ export async function recordPrematchForReportStore(
     );
     return { status: "stored", factCount: result.factCount };
   } catch (error) {
+    const failure = recordFailure("prematch", options.source, error);
     if (onError(options) === "throw") {
-      reportStoreIngestTotal.inc({
-        payload_type: "prematch",
-        source: options.source,
-        status: "failed",
-      });
       throw error;
     }
-    return recordFailure("prematch", options.source, error);
+    return failure;
   }
 }

@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import {
   LeaguePuuidSchema,
   RawCurrentGameInfoSchema,
@@ -101,7 +101,7 @@ beforeEach(async () => {
   await cleanup();
 });
 
-afterAll(async () => {
+afterEach(async () => {
   await cleanup();
   await prisma.$disconnect();
 });
@@ -163,7 +163,7 @@ describe("live report-store ingestion", () => {
     expect(storedTimeline.importedFromS3).toBe(false);
   });
 
-  test("records live prematches idempotently by game id", async () => {
+  test("records live prematches idempotently by platform and game id", async () => {
     const puuid = testPuuid("live-prematch");
     await createTrackedPlayer({
       alias: "Live Prematch Player",
@@ -210,8 +210,97 @@ describe("live report-store ingestion", () => {
 
     expect(await prisma.storedPrematch.count()).toBe(1);
     expect(await prisma.prematchParticipantFact.count()).toBe(1);
+    const storedPrematch = await prisma.storedPrematch.findFirstOrThrow();
+    expect(storedPrematch.dedupeKey).toBe("NA1:9000000002");
+    expect(storedPrematch.observedAt).toEqual(
+      new Date("2026-05-22T18:01:00.000Z"),
+    );
     const fact = await prisma.prematchParticipantFact.findFirstOrThrow();
     expect(fact.puuid).toBe(puuid);
     expect(fact.riotId).toBe("LivePrematch#NA1");
+  });
+
+  test("preserves archive provenance when duplicate live payloads arrive", async () => {
+    const match = await loadMatchFixture();
+    const timeline = createTimelineFixture(match);
+    const puuid = testPuuid("live-after-archive");
+    const gameInfo = RawCurrentGameInfoSchema.parse({
+      gameId: 9_000_000_003,
+      gameStartTime: Date.UTC(2026, 4, 22, 19, 0, 0),
+      gameMode: "CLASSIC",
+      mapId: 11,
+      gameType: "MATCHED_GAME",
+      gameQueueConfigId: 420,
+      gameLength: -30,
+      platformId: "NA1",
+      bannedChampions: [],
+      participants: [
+        {
+          championId: 222,
+          puuid,
+          teamId: 100,
+          riotId: "ArchivedPrematch#NA1",
+          spell1Id: 4,
+          spell2Id: 7,
+          lastSelectedSkinIndex: 1,
+          bot: false,
+          profileIconId: 10,
+        },
+      ],
+    });
+
+    await recordMatchForReportStore({
+      prisma,
+      match,
+      source: "test_s3_match",
+      importedFromS3: true,
+      s3Key: "games/NA1_5370969615.json",
+    });
+    await recordMatchForReportStore({
+      prisma,
+      match,
+      source: "test_live_match",
+    });
+    await recordTimelineForReportStore({
+      prisma,
+      timeline,
+      source: "test_s3_timeline",
+      importedFromS3: true,
+      s3Key: "timelines/NA1_5370969615.json",
+    });
+    await recordTimelineForReportStore({
+      prisma,
+      timeline,
+      source: "test_live_timeline",
+    });
+    await recordPrematchForReportStore({
+      prisma,
+      gameInfo,
+      observedAt: new Date("2026-05-22T19:00:00.000Z"),
+      source: "test_s3_prematch",
+      importedFromS3: true,
+      s3Key: "prematch/NA1/9000000003.json",
+    });
+    await recordPrematchForReportStore({
+      prisma,
+      gameInfo,
+      observedAt: new Date("2026-05-22T19:01:00.000Z"),
+      source: "test_live_prematch",
+    });
+
+    const storedMatch = await prisma.storedMatch.findFirstOrThrow();
+    expect(storedMatch.importedFromS3).toBe(true);
+    expect(storedMatch.s3Key).toBe("games/NA1_5370969615.json");
+
+    const storedTimeline = await prisma.storedMatchTimeline.findFirstOrThrow();
+    expect(storedTimeline.importedFromS3).toBe(true);
+    expect(storedTimeline.s3Key).toBe("timelines/NA1_5370969615.json");
+
+    const storedPrematch = await prisma.storedPrematch.findFirstOrThrow();
+    expect(storedPrematch.importedFromS3).toBe(true);
+    expect(storedPrematch.s3Key).toBe("prematch/NA1/9000000003.json");
+    expect(storedPrematch.observedAt).toEqual(
+      new Date("2026-05-22T19:01:00.000Z"),
+    );
   });
 });

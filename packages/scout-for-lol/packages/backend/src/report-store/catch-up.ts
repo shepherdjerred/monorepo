@@ -18,6 +18,10 @@ function parsePositiveIntEnv(name: string, defaultValue: number): number {
     return defaultValue;
   }
 
+  if (!/^\d+$/.test(raw)) {
+    throw new Error(`${name} must be a positive integer, got "${raw}"`);
+  }
+
   const parsed = Number.parseInt(raw, 10);
   if (!Number.isSafeInteger(parsed) || parsed <= 0) {
     throw new Error(`${name} must be a positive integer, got "${raw}"`);
