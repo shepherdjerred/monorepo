@@ -877,25 +877,24 @@ export function versionCommitBackHelper(
     githubAppPrivateKey,
   );
 
-  return authedContainer
-    .withExec([
-      "sh",
-      "-c",
-      [
-        mintGithubAppTokenAndSetupGitAuth(),
-        `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
-        `cd /repo`,
-        `git config user.email "ci@sjer.red"`,
-        `git config user.name "CI Bot"`,
-        `if git ls-remote --exit-code --heads origin "${VERSION_BUMP_BRANCH}" >/dev/null 2>&1; then git fetch origin main:refs/remotes/origin/main "${VERSION_BUMP_BRANCH}:${VERSION_BUMP_BRANCH}" && git checkout "${VERSION_BUMP_BRANCH}" && git rebase origin/main; else git fetch origin main:refs/remotes/origin/main && git checkout -b "${VERSION_BUMP_BRANCH}" origin/main; fi`,
-        `bun run .buildkite/scripts/update-versions.ts packages/homelab/src/cdk8s/src/versions.ts "${version}" ${digestArgs}`,
-        `git add packages/homelab/src/cdk8s/src/versions.ts`,
-        `if git diff --cached --quiet; then HAS_VERSION_CHANGES=0; echo "No version changes to commit"; else HAS_VERSION_CHANGES=1; git commit -m "chore: bump image versions to ${version}" -m "Auto-Generated: ci-bot"; fi`,
-        `if [ "$HAS_VERSION_CHANGES" = "0" ] && git diff --quiet origin/main...HEAD; then echo "No version changes and pending branch has no diff"; exit 0; fi`,
-        `git push --force-with-lease -u origin "${VERSION_BUMP_BRANCH}"`,
-        `PR_NUMBER=$(gh pr list --head "${VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty'); if [ -z "$PR_NUMBER" ]; then gh pr create --base main --head "${VERSION_BUMP_BRANCH}" --title "chore: bump pending image versions" --body "Auto-generated version bump"; PR_NUMBER=$(gh pr view "${VERSION_BUMP_BRANCH}" --json number -q .number); fi; gh pr merge "$PR_NUMBER" --auto --merge`,
-      ].join(" && "),
-    ]);
+  return authedContainer.withExec([
+    "sh",
+    "-c",
+    [
+      mintGithubAppTokenAndSetupGitAuth(),
+      `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
+      `cd /repo`,
+      `git config user.email "ci@sjer.red"`,
+      `git config user.name "CI Bot"`,
+      `if git ls-remote --exit-code --heads origin "${VERSION_BUMP_BRANCH}" >/dev/null 2>&1; then git fetch origin main:refs/remotes/origin/main "${VERSION_BUMP_BRANCH}:${VERSION_BUMP_BRANCH}" && git checkout "${VERSION_BUMP_BRANCH}" && git rebase origin/main; else git fetch origin main:refs/remotes/origin/main && git checkout -b "${VERSION_BUMP_BRANCH}" origin/main; fi`,
+      `bun run .buildkite/scripts/update-versions.ts packages/homelab/src/cdk8s/src/versions.ts "${version}" ${digestArgs}`,
+      `git add packages/homelab/src/cdk8s/src/versions.ts`,
+      `if git diff --cached --quiet; then HAS_VERSION_CHANGES=0; echo "No version changes to commit"; else HAS_VERSION_CHANGES=1; git commit -m "chore: bump image versions to ${version}" -m "Auto-Generated: ci-bot"; fi`,
+      `if [ "$HAS_VERSION_CHANGES" = "0" ] && git diff --quiet origin/main...HEAD; then echo "No version changes and pending branch has no diff"; exit 0; fi`,
+      `git push --force-with-lease -u origin "${VERSION_BUMP_BRANCH}"`,
+      `PR_NUMBER=$(gh pr list --head "${VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty'); if [ -z "$PR_NUMBER" ]; then gh pr create --base main --head "${VERSION_BUMP_BRANCH}" --title "chore: bump pending image versions" --body "Auto-generated version bump"; PR_NUMBER=$(gh pr view "${VERSION_BUMP_BRANCH}" --json number -q .number); fi; gh pr merge "$PR_NUMBER" --auto --merge`,
+    ].join(" && "),
+  ]);
 }
 
 /** Update the CI base image version pointer and create or refresh an auto-merge PR. */
@@ -942,25 +941,24 @@ export function ciBaseVersionCommitBackHelper(
     githubAppPrivateKey,
   );
 
-  return authedContainer
-    .withExec([
-      "sh",
-      "-c",
-      [
-        mintGithubAppTokenAndSetupGitAuth(),
-        `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
-        `cd /repo`,
-        `git config user.email "ci@sjer.red"`,
-        `git config user.name "CI Bot"`,
-        `if git ls-remote --exit-code --heads origin "${CI_BASE_VERSION_BUMP_BRANCH}" >/dev/null 2>&1; then git fetch origin main:refs/remotes/origin/main "${CI_BASE_VERSION_BUMP_BRANCH}:${CI_BASE_VERSION_BUMP_BRANCH}" && git checkout "${CI_BASE_VERSION_BUMP_BRANCH}" && git rebase origin/main; else git fetch origin main:refs/remotes/origin/main && git checkout -b "${CI_BASE_VERSION_BUMP_BRANCH}" origin/main; fi`,
-        `printf '%s\\n' "${version}" > .buildkite/ci-image/VERSION`,
-        `git add -- .buildkite/ci-image/VERSION`,
-        `if git diff --cached --quiet; then HAS_VERSION_CHANGES=0; echo "No ci-base version changes to commit"; else HAS_VERSION_CHANGES=1; git commit -m "chore: bump ci-base image to ${version}" -m "Auto-Generated: ci-bot"; fi`,
-        `if [ "$HAS_VERSION_CHANGES" = "0" ] && git diff --quiet origin/main...HEAD; then echo "No ci-base version changes and pending branch has no diff"; exit 0; fi`,
-        `git push --force-with-lease -u origin "${CI_BASE_VERSION_BUMP_BRANCH}"`,
-        `PR_NUMBER=$(gh pr list --head "${CI_BASE_VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty'); if [ -z "$PR_NUMBER" ]; then gh pr create --base main --head "${CI_BASE_VERSION_BUMP_BRANCH}" --title "chore: bump ci-base image to ${version}" --body "Auto-generated ci-base version bump"; PR_NUMBER=$(gh pr view "${CI_BASE_VERSION_BUMP_BRANCH}" --json number -q .number); fi; gh pr merge "$PR_NUMBER" --auto --merge`,
-      ].join(" && "),
-    ]);
+  return authedContainer.withExec([
+    "sh",
+    "-c",
+    [
+      mintGithubAppTokenAndSetupGitAuth(),
+      `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
+      `cd /repo`,
+      `git config user.email "ci@sjer.red"`,
+      `git config user.name "CI Bot"`,
+      `if git ls-remote --exit-code --heads origin "${CI_BASE_VERSION_BUMP_BRANCH}" >/dev/null 2>&1; then git fetch origin main:refs/remotes/origin/main "${CI_BASE_VERSION_BUMP_BRANCH}:${CI_BASE_VERSION_BUMP_BRANCH}" && git checkout "${CI_BASE_VERSION_BUMP_BRANCH}" && git rebase origin/main; else git fetch origin main:refs/remotes/origin/main && git checkout -b "${CI_BASE_VERSION_BUMP_BRANCH}" origin/main; fi`,
+      `printf '%s\\n' "${version}" > .buildkite/ci-image/VERSION`,
+      `git add -- .buildkite/ci-image/VERSION`,
+      `if git diff --cached --quiet; then HAS_VERSION_CHANGES=0; echo "No ci-base version changes to commit"; else HAS_VERSION_CHANGES=1; git commit -m "chore: bump ci-base image to ${version}" -m "Auto-Generated: ci-bot"; fi`,
+      `if [ "$HAS_VERSION_CHANGES" = "0" ] && git diff --quiet origin/main...HEAD; then echo "No ci-base version changes and pending branch has no diff"; exit 0; fi`,
+      `git push --force-with-lease -u origin "${CI_BASE_VERSION_BUMP_BRANCH}"`,
+      `PR_NUMBER=$(gh pr list --head "${CI_BASE_VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty'); if [ -z "$PR_NUMBER" ]; then gh pr create --base main --head "${CI_BASE_VERSION_BUMP_BRANCH}" --title "chore: bump ci-base image to ${version}" --body "Auto-generated ci-base version bump"; PR_NUMBER=$(gh pr view "${CI_BASE_VERSION_BUMP_BRANCH}" --json number -q .number); fi; gh pr merge "$PR_NUMBER" --auto --merge`,
+    ].join(" && "),
+  ]);
 }
 
 /**
@@ -1014,29 +1012,28 @@ export function cooklangVersionCommitBackHelper(
     githubAppPrivateKey,
   );
 
-  return authedContainer
-    .withExec([
-      "sh",
-      "-c",
-      [
-        mintGithubAppTokenAndSetupGitAuth(),
-        `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
-        `cd /repo`,
-        `git config user.email "ci@sjer.red"`,
-        `git config user.name "CI Bot"`,
-        `if git ls-remote --exit-code --heads origin "${COOKLANG_VERSION_BUMP_BRANCH}" >/dev/null 2>&1; then git fetch origin main:refs/remotes/origin/main "${COOKLANG_VERSION_BUMP_BRANCH}:${COOKLANG_VERSION_BUMP_BRANCH}" && git checkout "${COOKLANG_VERSION_BUMP_BRANCH}" && git rebase origin/main; else git fetch origin main:refs/remotes/origin/main && git checkout -b "${COOKLANG_VERSION_BUMP_BRANCH}" origin/main; fi`,
-        `jq --arg v "${version}" '.version = $v' packages/cooklang-for-obsidian/manifest.json > packages/cooklang-for-obsidian/manifest.json.tmp`,
-        `mv packages/cooklang-for-obsidian/manifest.json.tmp packages/cooklang-for-obsidian/manifest.json`,
-        `if [ ! -s packages/cooklang-for-obsidian/versions.json ]; then echo '{}' > packages/cooklang-for-obsidian/versions.json; fi`,
-        `latest_min=$(jq -r 'to_entries | map(select(.key | test("^[0-9]+\\\\.[0-9]+\\\\.[0-9]+$"))) | sort_by(.key | split(".") | map(tonumber)) | (last // {"value": ""}) | .value' packages/cooklang-for-obsidian/versions.json)`,
-        `if [ -z "$latest_min" ] || [ "$latest_min" != "${minAppVersion}" ]; then jq --arg v "${version}" --arg m "${minAppVersion}" '.[$v] = $m' packages/cooklang-for-obsidian/versions.json > packages/cooklang-for-obsidian/versions.json.tmp && mv packages/cooklang-for-obsidian/versions.json.tmp packages/cooklang-for-obsidian/versions.json && git add packages/cooklang-for-obsidian/versions.json; else echo "versions.json compatibility boundary unchanged (${minAppVersion})"; fi`,
-        `git add packages/cooklang-for-obsidian/manifest.json`,
-        `if git diff --cached --quiet; then HAS_CHANGES=0; echo "No cooklang version changes to commit"; else HAS_CHANGES=1; git commit -m "chore(cooklang): bump to v${version}" -m "Auto-Generated: ci-bot"; fi`,
-        `if [ "$HAS_CHANGES" = "0" ] && git diff --quiet origin/main...HEAD; then echo "No cooklang changes and pending branch has no diff"; exit 0; fi`,
-        `git push --force-with-lease -u origin "${COOKLANG_VERSION_BUMP_BRANCH}"`,
-        `PR_NUMBER=$(gh pr list --head "${COOKLANG_VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty'); if [ -z "$PR_NUMBER" ]; then gh pr create --base main --head "${COOKLANG_VERSION_BUMP_BRANCH}" --title "chore(cooklang): bump plugin manifest version" --body "Auto-generated cooklang manifest version bump"; PR_NUMBER=$(gh pr view "${COOKLANG_VERSION_BUMP_BRANCH}" --json number -q .number); fi; gh pr merge "$PR_NUMBER" --auto --merge`,
-      ].join(" && "),
-    ]);
+  return authedContainer.withExec([
+    "sh",
+    "-c",
+    [
+      mintGithubAppTokenAndSetupGitAuth(),
+      `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
+      `cd /repo`,
+      `git config user.email "ci@sjer.red"`,
+      `git config user.name "CI Bot"`,
+      `if git ls-remote --exit-code --heads origin "${COOKLANG_VERSION_BUMP_BRANCH}" >/dev/null 2>&1; then git fetch origin main:refs/remotes/origin/main "${COOKLANG_VERSION_BUMP_BRANCH}:${COOKLANG_VERSION_BUMP_BRANCH}" && git checkout "${COOKLANG_VERSION_BUMP_BRANCH}" && git rebase origin/main; else git fetch origin main:refs/remotes/origin/main && git checkout -b "${COOKLANG_VERSION_BUMP_BRANCH}" origin/main; fi`,
+      `jq --arg v "${version}" '.version = $v' packages/cooklang-for-obsidian/manifest.json > packages/cooklang-for-obsidian/manifest.json.tmp`,
+      `mv packages/cooklang-for-obsidian/manifest.json.tmp packages/cooklang-for-obsidian/manifest.json`,
+      `if [ ! -s packages/cooklang-for-obsidian/versions.json ]; then echo '{}' > packages/cooklang-for-obsidian/versions.json; fi`,
+      `latest_min=$(jq -r 'to_entries | map(select(.key | test("^[0-9]+\\\\.[0-9]+\\\\.[0-9]+$"))) | sort_by(.key | split(".") | map(tonumber)) | (last // {"value": ""}) | .value' packages/cooklang-for-obsidian/versions.json)`,
+      `if [ -z "$latest_min" ] || [ "$latest_min" != "${minAppVersion}" ]; then jq --arg v "${version}" --arg m "${minAppVersion}" '.[$v] = $m' packages/cooklang-for-obsidian/versions.json > packages/cooklang-for-obsidian/versions.json.tmp && mv packages/cooklang-for-obsidian/versions.json.tmp packages/cooklang-for-obsidian/versions.json && git add packages/cooklang-for-obsidian/versions.json; else echo "versions.json compatibility boundary unchanged (${minAppVersion})"; fi`,
+      `git add packages/cooklang-for-obsidian/manifest.json`,
+      `if git diff --cached --quiet; then HAS_CHANGES=0; echo "No cooklang version changes to commit"; else HAS_CHANGES=1; git commit -m "chore(cooklang): bump to v${version}" -m "Auto-Generated: ci-bot"; fi`,
+      `if [ "$HAS_CHANGES" = "0" ] && git diff --quiet origin/main...HEAD; then echo "No cooklang changes and pending branch has no diff"; exit 0; fi`,
+      `git push --force-with-lease -u origin "${COOKLANG_VERSION_BUMP_BRANCH}"`,
+      `PR_NUMBER=$(gh pr list --head "${COOKLANG_VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty'); if [ -z "$PR_NUMBER" ]; then gh pr create --base main --head "${COOKLANG_VERSION_BUMP_BRANCH}" --title "chore(cooklang): bump plugin manifest version" --body "Auto-generated cooklang manifest version bump"; PR_NUMBER=$(gh pr view "${COOKLANG_VERSION_BUMP_BRANCH}" --json number -q .number); fi; gh pr merge "$PR_NUMBER" --auto --merge`,
+    ].join(" && "),
+  ]);
 }
 
 // ---------------------------------------------------------------------------
