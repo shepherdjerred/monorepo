@@ -95,14 +95,17 @@ export function getStaticSitesRuleGroups(): PrometheusRuleSpecGroups[] {
           },
         },
         {
+          // Suppress when StaticSiteProbeAbsent already fires for a total
+          // blackbox outage — that alert is the superset condition and would
+          // otherwise double-page on the same root cause.
           alert: "StaticSiteRssProbeAbsent",
           annotations: {
             summary: "sjer.red RSS probe is not running",
             description:
-              "No probe_success metrics have been collected for https://sjer.red/rss.xml in the last 10 minutes. The Probe resource, Prometheus Operator, or blackbox-exporter may be misconfigured.",
+              "No probe_success metrics have been collected for https://sjer.red/rss.xml in the last 10 minutes, but other static-site probes are reporting. The RSS Probe resource or its scrape config is likely the problem.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'absent(probe_success{job="static-site-sjer.red-rss", site="sjer.red", endpoint="rss", path="/rss.xml"}) == 1',
+            'absent(probe_success{job="static-site-sjer.red-rss", site="sjer.red", endpoint="rss", path="/rss.xml"}) == 1 unless on() absent(probe_success{job=~"static-site-.*"}) == 1',
           ),
           for: "10m",
           labels: {

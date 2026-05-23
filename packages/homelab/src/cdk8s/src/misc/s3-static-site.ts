@@ -97,7 +97,7 @@ function probeTargetUrl(hostname: string, path: `/${string}`): string {
 function probeConfigs(
   site: StaticSiteConfig,
 ): Required<StaticSiteProbeConfig>[] {
-  return [
+  const configs: Required<StaticSiteProbeConfig>[] = [
     { endpoint: "root", path: "/", module: "http_2xx" },
     ...(site.probes ?? []).map((probe) => ({
       endpoint: probe.endpoint,
@@ -105,6 +105,23 @@ function probeConfigs(
       module: probe.module ?? "http_2xx",
     })),
   ];
+
+  // `endpoint` becomes part of the Probe construct ID and metadata name; a
+  // collision would make cdk8s synth fail with a hard-to-trace duplicate-id
+  // error. Surface it here with the offending site for fast debugging. The
+  // "root" endpoint is reserved for the implicit homepage probe above, so
+  // user-provided probes cannot reuse that name.
+  const seen = new Set<string>();
+  for (const probe of configs) {
+    if (seen.has(probe.endpoint)) {
+      throw new Error(
+        `Duplicate probe endpoint '${probe.endpoint}' for site '${site.hostname}' — endpoints must be unique, and 'root' is reserved for the homepage probe.`,
+      );
+    }
+    seen.add(probe.endpoint);
+  }
+
+  return configs;
 }
 
 export class S3StaticSites extends Construct {

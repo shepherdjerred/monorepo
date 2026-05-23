@@ -36,6 +36,20 @@ Add RSS-aware monitoring for `https://sjer.red/rss.xml` using the existing homel
 
 ### Remaining
 
+<!-- temporal-agent-task
+{
+  "title": "Verify RSS feed monitoring post-deploy",
+  "provider": "claude",
+  "mode": "report-only",
+  "runAt": "2026-05-25T09:00:00-07:00",
+  "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "source": {
+    "docPath": "packages/docs/plans/2026-05-22_rss-feed-monitoring.md"
+  },
+  "prompt": "Verify the RSS feed monitoring rollout from PR #864. Email a report covering: (1) Are probe_success and probe_http_status_code series present for job=\"static-site-sjer.red-rss\" in Prometheus? Include the most recent sample timestamps. (2) Are any StaticSite* alerts firing in Alertmanager — especially StaticSiteRssProbeAbsent, StaticSiteDown, or the SSL expiry alerts? (3) Is the \"Static Site Probes\" Grafana dashboard provisioned and rendering panels? Use the grafana-helper skill to query. Do not edit files or mutate live systems."
+}
+-->
+
 - After ArgoCD deploys the chart, verify live Prometheus metrics for `probe_success{job="static-site-sjer.red-rss"}` and `probe_http_status_code{job="static-site-sjer.red-rss"}`.
 - Confirm no new `StaticSite*` alerts are firing and that Grafana provisions the `Static Site Probes` dashboard.
 

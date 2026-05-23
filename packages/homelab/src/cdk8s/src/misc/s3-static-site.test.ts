@@ -74,7 +74,41 @@ describe("S3StaticSites probes", () => {
       site: "sjer.red",
     });
   });
+
+  test("throws when two probes share an endpoint name", () => {
+    expect(() =>
+      synthesizeWithProbes([
+        { endpoint: "feed", path: "/rss.xml", module: "rss_2xx" },
+        { endpoint: "feed", path: "/atom.xml", module: "rss_2xx" },
+      ]),
+    ).toThrow(/Duplicate probe endpoint 'feed'/);
+  });
+
+  test("throws when a user-provided probe reuses the reserved 'root' endpoint", () => {
+    expect(() =>
+      synthesizeWithProbes([{ endpoint: "root", path: "/sitemap.xml" }]),
+    ).toThrow(/Duplicate probe endpoint 'root'/);
+  });
 });
+
+function synthesizeWithProbes(
+  probes: { endpoint: string; path: `/${string}`; module?: string }[],
+) {
+  const app = new App();
+  const chart = new Chart(app, "test", { namespace: "s3-static-sites" });
+  new S3StaticSites(chart, "s3-static-sites", {
+    credentialsSecretName: "seaweedfs-s3-credentials",
+    s3Endpoint: "https://seaweedfs.sjer.red",
+    sites: [
+      {
+        hostname: "sjer.red",
+        bucket: "sjer-red",
+        probes,
+      },
+    ],
+  });
+  app.synthYaml();
+}
 
 const baseProps = {
   sites: [
