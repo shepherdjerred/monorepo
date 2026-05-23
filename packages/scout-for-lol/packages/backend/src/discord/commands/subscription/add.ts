@@ -13,6 +13,7 @@ import {
 import { createLogger } from "#src/logger.ts";
 import {
   addSubscription,
+  resolveSubscriptionPuuid,
   runBackfillAfterCommit,
 } from "#src/lib/subscription/add.ts";
 import type { AddSubscriptionResult } from "#src/lib/subscription/types.ts";
@@ -59,6 +60,17 @@ export async function executeSubscriptionAdd(
   const args = parseResult.data;
   await interaction.deferReply({ ephemeral: true });
 
+  // Resolve PUUID via Riot's API BEFORE opening the Prisma transaction —
+  // a 1-3s Riot response inside a 5s tx would trip P2028.
+  const puuidResult = await resolveSubscriptionPuuid(args.riotId, args.region);
+  if (puuidResult.kind !== "ok") {
+    await interaction.editReply({
+      content: `Error looking up Riot ID: ${puuidResult.message}`,
+    });
+    return;
+  }
+  const puuid = puuidResult.puuid;
+
   let result;
   try {
     result = await prisma.$transaction((tx) =>
@@ -72,6 +84,7 @@ export async function executeSubscriptionAdd(
           discordUserId: args.user,
           creatorDiscordId,
         },
+        puuid,
         tx,
       ),
     );
@@ -107,7 +120,7 @@ export async function executeSubscriptionAdd(
       alias: args.alias,
       league: {
         leagueAccount: {
-          puuid: LeaguePuuidSchema.parse(result.account.puuid),
+          puuid,
           region: RegionSchema.parse(args.region),
         },
       },

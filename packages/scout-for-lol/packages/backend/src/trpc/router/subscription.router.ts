@@ -20,7 +20,12 @@ import {
 import { router, webProcedure, webMutationProcedure } from "#src/trpc/trpc.ts";
 import { assertGuildAdmin } from "#src/trpc/guild-guard.ts";
 import { prisma } from "#src/database/index.ts";
-import { addSubscription } from "#src/lib/subscription/add.ts";
+import {
+  addSubscription,
+  resolveSubscriptionPuuid,
+  runBackfillAfterCommit,
+} from "#src/lib/subscription/add.ts";
+import type { AddSubscriptionResult } from "#src/lib/subscription/types.ts";
 import { removeSubscription } from "#src/lib/subscription/remove.ts";
 import { moveSubscription } from "#src/lib/subscription/move.ts";
 import { addSubscriptionChannel } from "#src/lib/subscription/add-channel.ts";
@@ -87,8 +92,24 @@ export const subscriptionRouter = router({
       await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
       const actorDiscordId = ctx.user.discordId;
 
-      return prisma.$transaction(async (tx) => {
-        const result = await addSubscription(
+      // Riot lookup runs OUTSIDE the transaction — Prisma's 5s tx
+      // timeout vs. Riot's 1-3s typical (with occasional spikes) would
+      // trip P2028 Transaction already closed for slow upstreams.
+      const puuidResult = await resolveSubscriptionPuuid(
+        input.riotId,
+        input.region,
+      );
+      if (puuidResult.kind !== "ok") {
+        const notFound: AddSubscriptionResult = {
+          kind: "riot-id-not-found",
+          message: puuidResult.message,
+        };
+        return notFound;
+      }
+      const puuid = puuidResult.puuid;
+
+      const result = await prisma.$transaction(async (tx) => {
+        const r = await addSubscription(
           {
             guildId: input.guildId,
             channelId: input.channelId,
@@ -98,23 +119,24 @@ export const subscriptionRouter = router({
             discordUserId: input.discordUserId,
             creatorDiscordId: actorDiscordId,
           },
+          puuid,
           tx,
         );
 
-        if (result.kind === "created") {
+        if (r.kind === "created") {
           await recordAudit(
             {
               action: "SUBSCRIPTION_ADD",
               actorDiscordId,
               serverId: input.guildId,
               targetChannelId: input.channelId,
-              targetPlayerId: result.player.id,
-              targetAccountId: result.account.id,
+              targetPlayerId: r.player.id,
+              targetAccountId: r.account.id,
               payload: {
                 riotId: input.riotId,
                 region: input.region,
                 alias: input.alias,
-                isAddingToExistingPlayer: result.isAddingToExistingPlayer,
+                isAddingToExistingPlayer: r.isAddingToExistingPlayer,
               },
               ipAddress: ctx.webSession.ipAddress,
               userAgent: ctx.webSession.userAgent,
@@ -123,8 +145,23 @@ export const subscriptionRouter = router({
           );
         }
 
-        return result;
+        return r;
       });
+
+      if (result.kind === "created") {
+        // Best-effort match-history backfill so the poll cycle doesn't
+        // emit notifications for historical matches the first time it
+        // encounters the account. Fire-and-forget; never block the
+        // mutation response on it.
+        void runBackfillAfterCommit({
+          alias: input.alias,
+          puuid,
+          region: input.region,
+          discordUserId: input.discordUserId,
+        });
+      }
+
+      return result;
     }),
 
   remove: webMutationProcedure

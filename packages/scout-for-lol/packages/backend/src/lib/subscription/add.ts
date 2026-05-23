@@ -169,11 +169,30 @@ async function commitSubscription(params: {
 }
 
 /**
- * Resolve the Riot ID, then commit the DB writes inside the supplied
- * transaction. Limits are re-checked under the same txn to close the
- * race window between two concurrent adds. Callers (the tRPC router,
- * the Discord command) open the transaction themselves so audit-row
- * writes can join the same atomic unit.
+ * Resolve the Riot ID to a PUUID via the Riot API. Run BEFORE opening a
+ * Prisma transaction — Riot calls can spike past Prisma's 5s tx timeout
+ * and cause `P2028 Transaction already closed`. Returns the PUUID for
+ * the caller to thread into `commitSubscription`.
+ */
+export async function resolveSubscriptionPuuid(
+  riotId: AddSubscriptionInput["riotId"],
+  region: AddSubscriptionInput["region"],
+): Promise<
+  | { kind: "ok"; puuid: LeaguePuuid }
+  | { kind: "riot-id-not-found"; message: string }
+> {
+  const resolved = await resolveRiotIdToPuuid(riotId, region);
+  if (resolved.kind !== "ok") {
+    return { kind: "riot-id-not-found", message: resolved.message };
+  }
+  return { kind: "ok", puuid: LeaguePuuidSchema.parse(resolved.puuid) };
+}
+
+/**
+ * Commit the subscription DB writes inside the supplied transaction.
+ * Limits are re-checked under the same txn to close the race between
+ * concurrent adds. Caller MUST have already resolved the PUUID via
+ * `resolveSubscriptionPuuid` outside the transaction.
  *
  * Backfill is intentionally NOT done here — long-running external
  * calls don't belong in a DB transaction. Callers run
@@ -181,14 +200,9 @@ async function commitSubscription(params: {
  */
 export async function addSubscription(
   input: AddSubscriptionInput,
+  puuid: LeaguePuuid,
   db: Db,
 ): Promise<AddSubscriptionResult> {
-  const resolved = await resolveRiotIdToPuuid(input.riotId, input.region);
-  if (resolved.kind !== "ok") {
-    return { kind: "riot-id-not-found", message: resolved.message };
-  }
-  const puuid = LeaguePuuidSchema.parse(resolved.puuid);
-
   try {
     return await commitSubscription({ input, puuid, db });
   } catch (error) {

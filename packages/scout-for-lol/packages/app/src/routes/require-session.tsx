@@ -18,7 +18,11 @@ export function RequireSession() {
   }
 
   if (isError || data === undefined) {
-    const returnTo = `${location.pathname}${location.search}`;
+    // location.pathname is relative to the BrowserRouter basename (/app),
+    // so we re-prefix it before handing to the server. Without the
+    // prefix, the backend's safeReturnTo guard rejects the value and the
+    // user lands back at /app/ instead of their original destination.
+    const returnTo = `/app${location.pathname}${location.search}`;
     return (
       <Navigate
         to={`/login?returnTo=${encodeURIComponent(returnTo)}`}
