@@ -5,7 +5,8 @@ name = "pypi"
 
 [packages]
 mkdocs-material = {file = "file:./insiders.zip"}
-pillow = "*"
+pillow = ">=12.2.0"
+urllib3 = ">=2.7.0"
 cairosvg = "*"
 
 [dev-packages]
