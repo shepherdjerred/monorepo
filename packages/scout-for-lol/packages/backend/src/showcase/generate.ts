@@ -1,5 +1,3 @@
-import { mkdir } from "node:fs/promises";
-import path from "node:path";
 import type { S3Client } from "@aws-sdk/client-s3";
 import {
   CachedLeaderboardSchema,
@@ -70,6 +68,10 @@ function safeFileName(id: string, extension: "png" | "webp"): string {
   return `${normalized}.${extension}`;
 }
 
+function joinPath(directory: string, fileName: string): string {
+  return `${directory.replace(/\/+$/, "")}/${fileName}`;
+}
+
 async function loadManifest(manifestPath: string): Promise<ShowcaseManifest> {
   const text = await Bun.file(manifestPath).text();
   const parsed: unknown = JSON.parse(text);
@@ -80,10 +82,10 @@ async function writeImage(params: {
   outputDir: string;
   image: GeneratedImage;
 }): Promise<void> {
-  await mkdir(params.outputDir, { recursive: true });
   await Bun.write(
-    path.join(params.outputDir, params.image.fileName),
+    joinPath(params.outputDir, params.image.fileName),
     params.image.bytes,
+    { createPath: true },
   );
 }
 
@@ -451,9 +453,9 @@ export async function generateShowcaseAssets(
   });
   validateRequiredShowcaseCoverage(index);
 
-  await mkdir(path.dirname(options.assetIndexPath), { recursive: true });
   await Bun.write(
     options.assetIndexPath,
     `${JSON.stringify(index, null, 2)}\n`,
+    { createPath: true },
   );
 }

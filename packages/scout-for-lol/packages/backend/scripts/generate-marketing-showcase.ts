@@ -1,17 +1,59 @@
-import { parseArgs } from "node:util";
+import { z } from "zod";
 import { generateShowcaseAssets } from "#src/showcase/generate.ts";
 
-const { values } = parseArgs({
-  args: Bun.argv.slice(2),
-  options: {
-    manifest: { type: "string" },
-    out: { type: "string" },
-    "asset-index": { type: "string" },
-    bucket: { type: "string" },
-    "public-base-path": { type: "string" },
-  },
-  strict: true,
+const CliFlagNameSchema = z.enum([
+  "manifest",
+  "out",
+  "asset-index",
+  "bucket",
+  "public-base-path",
+]);
+
+const CliValuesSchema = z.strictObject({
+  manifest: z.string().optional(),
+  out: z.string().optional(),
+  "asset-index": z.string().optional(),
+  bucket: z.string().optional(),
+  "public-base-path": z.string().optional(),
 });
+
+function parseCliValues(args: string[]): z.infer<typeof CliValuesSchema> {
+  const entries: [string, string][] = [];
+  const seen = new Set<string>();
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === undefined) {
+      throw new Error(`Missing argument at index ${index.toString()}`);
+    }
+    if (!arg.startsWith("--")) {
+      throw new Error(`Unexpected positional argument: ${arg}`);
+    }
+
+    const raw = arg.slice(2);
+    const equalsIndex = raw.indexOf("=");
+    const rawName = equalsIndex === -1 ? raw : raw.slice(0, equalsIndex);
+    const name = CliFlagNameSchema.parse(rawName);
+    if (seen.has(name)) {
+      throw new Error(`Duplicate --${name}`);
+    }
+    seen.add(name);
+
+    const value =
+      equalsIndex === -1 ? args[index + 1] : raw.slice(equalsIndex + 1);
+    if (value === undefined || value.startsWith("--") || value.length === 0) {
+      throw new Error(`Missing value for --${name}`);
+    }
+    if (equalsIndex === -1) {
+      index += 1;
+    }
+    entries.push([name, value]);
+  }
+
+  return CliValuesSchema.parse(Object.fromEntries(entries));
+}
+
+const values = parseCliValues(Bun.argv.slice(2));
 
 function requiredFlag(name: keyof typeof values): string {
   const value = values[name];

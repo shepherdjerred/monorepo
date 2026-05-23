@@ -2,7 +2,7 @@
 
 ## Status
 
-Complete
+Partially Complete
 
 ## Summary
 
@@ -90,12 +90,17 @@ src/showcase/generate.ts src/showcase/manifest.ts src/showcase/manifest.test.ts`
   `bun run --cwd packages/scout-for-lol/packages/frontend typecheck`.
 - Re-ran the PR pre-commit hook through the amend workflow; Scout typecheck,
   generated database template creation, and Scout tests passed.
+- Verified Buildkite build #2701 passed for commit
+  `d49573221be98a9bb978a8aa6f3868b18cae483a` before addressing the final
+  CodeRabbit follow-up comments.
+- Addressed CodeRabbit follow-up comments by replacing Node CLI parsing with
+  Bun argv parsing, writing generated files through Bun APIs, adding duplicate
+  id checks to manifest/index schemas, and simplifying generated-asset
+  selection.
 
 ### Remaining
 
-- No implementation work remains for the PR health loop.
-- Keep monitoring the ready-for-review PR until the final commit has green CI,
-  no merge conflicts, and no unresolved P3 or higher review comments.
+- Re-run CI/review checks on the follow-up commit and merge PR #877.
 
 ### Caveats
 

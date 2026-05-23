@@ -72,10 +72,25 @@ export const ShowcaseEntrySchema = z.discriminatedUnion("kind", [
 ]);
 export type ShowcaseEntry = z.infer<typeof ShowcaseEntrySchema>;
 
-export const ShowcaseManifestSchema = z.strictObject({
-  version: z.literal(1),
-  entries: z.array(ShowcaseEntrySchema).min(1),
-});
+export const ShowcaseManifestSchema = z
+  .strictObject({
+    version: z.literal(1),
+    entries: z.array(ShowcaseEntrySchema).min(1),
+  })
+  .superRefine((manifest, ctx) => {
+    const seen = new Set<string>();
+    for (const [index, entry] of manifest.entries.entries()) {
+      if (seen.has(entry.id)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["entries", index, "id"],
+          message: `Duplicate showcase entry id: ${entry.id}`,
+        });
+        continue;
+      }
+      seen.add(entry.id);
+    }
+  });
 export type ShowcaseManifest = z.infer<typeof ShowcaseManifestSchema>;
 
 const BaseGeneratedAssetSchema = BaseEntrySchema.extend({
@@ -103,11 +118,26 @@ export const ShowcaseAssetSchema = z.discriminatedUnion("status", [
 ]);
 export type ShowcaseAsset = z.infer<typeof ShowcaseAssetSchema>;
 
-export const ShowcaseAssetIndexSchema = z.strictObject({
-  version: z.literal(1),
-  generatedAt: z.iso.datetime(),
-  assets: z.array(ShowcaseAssetSchema).min(1),
-});
+export const ShowcaseAssetIndexSchema = z
+  .strictObject({
+    version: z.literal(1),
+    generatedAt: z.iso.datetime(),
+    assets: z.array(ShowcaseAssetSchema).min(1),
+  })
+  .superRefine((index, ctx) => {
+    const seen = new Set<string>();
+    for (const [assetIndex, asset] of index.assets.entries()) {
+      if (seen.has(asset.id)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["assets", assetIndex, "id"],
+          message: `Duplicate showcase asset id: ${asset.id}`,
+        });
+        continue;
+      }
+      seen.add(asset.id);
+    }
+  });
 export type ShowcaseAssetIndex = z.infer<typeof ShowcaseAssetIndexSchema>;
 
 const REQUIRED_SHOWCASE_VARIANT_IDS = [
