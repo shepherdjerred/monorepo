@@ -33,6 +33,8 @@ Update Scout's public privacy policy to disclose that all data collected by the 
 - Updated `packages/scout-for-lol/packages/frontend/src/data/changelog.tsx` with a May 23, 2026 What's New entry for the privacy policy clarification.
 - Installed locked dependencies and generated Scout backend Prisma artifacts needed for local verification in this fresh worktree.
 - Verified with `bun run --filter='./packages/frontend' typecheck` and `bun run --filter='./packages/frontend' lint`.
+- Addressed PR review feedback by removing duplicate no-sale wording and clarifying that users can object to or restrict marketing and documentation use where applicable.
+- Re-verified the review update with `bun run --filter='./packages/frontend' typecheck` and `bun run --filter='./packages/frontend' lint`.
 
 ### Remaining
 
