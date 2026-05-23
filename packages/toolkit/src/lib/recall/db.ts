@@ -1,6 +1,7 @@
 import { Database } from "bun:sqlite";
 import * as lancedb from "@lancedb/lancedb";
 import { mkdir } from "node:fs/promises";
+import path from "node:path";
 import { z } from "zod";
 import { LANCE_DIR, SQLITE_PATH, RECALL_DIR, EMBEDDING_DIM } from "./config.ts";
 
@@ -41,11 +42,16 @@ export type RecallDbOptions = {
 export class RecallDb {
   readonly sqlite: Database;
   readonly readOnly: boolean;
+  protected readonly lanceDir: string;
   private lanceDb: lancedb.Connection | null = null;
   private lanceTable: lancedb.Table | null = null;
 
   constructor(sqlitePath: string = SQLITE_PATH, options: RecallDbOptions = {}) {
     this.readOnly = options.readOnly ?? false;
+    this.lanceDir =
+      sqlitePath === SQLITE_PATH
+        ? LANCE_DIR
+        : path.join(path.dirname(sqlitePath), "lance");
     this.sqlite = new Database(sqlitePath, {
       create: !this.readOnly,
       readonly: this.readOnly,
@@ -120,10 +126,10 @@ export class RecallDb {
     }
 
     if (!this.readOnly) {
-      await mkdir(LANCE_DIR, { recursive: true });
+      await mkdir(this.lanceDir, { recursive: true });
     }
 
-    this.lanceDb = await lancedb.connect(LANCE_DIR);
+    this.lanceDb = await lancedb.connect(this.lanceDir);
 
     const tableNames = await this.lanceDb.tableNames();
     if (tableNames.includes(LANCE_TABLE)) {
@@ -333,10 +339,17 @@ export class RecallDb {
 
 export async function createRecallDb(
   options: RecallDbOptions = {},
+  sqlitePath: string = SQLITE_PATH,
 ): Promise<RecallDb> {
-  if (options.readOnly !== true) {
-    await mkdir(RECALL_DIR, { recursive: true });
+  const recallDir =
+    sqlitePath === SQLITE_PATH ? RECALL_DIR : path.dirname(sqlitePath);
+
+  if (options.readOnly === true && !(await Bun.file(sqlitePath).exists())) {
+    await mkdir(recallDir, { recursive: true });
+    new RecallDb(sqlitePath).close();
+  } else if (options.readOnly !== true) {
+    await mkdir(recallDir, { recursive: true });
   }
 
-  return new RecallDb(SQLITE_PATH, options);
+  return new RecallDb(sqlitePath, options);
 }
