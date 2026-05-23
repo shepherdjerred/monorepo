@@ -52,54 +52,51 @@ export function addBackupCoveragePanels(
   ds: Datasource,
   buildNamespaceFilter: () => string,
 ): void {
-  builder.withRow(new dashboard.RowBuilder("Backup Coverage Analysis"));
+  builder.withRow(new dashboard.RowBuilder("PVC Inventory"));
 
-  // Storage Not Backed Up
   builder.withPanel(
     createStatPanel(ds, {
-      title: "Storage Not Backed Up",
-      description: "Total size of PVCs without velero.io/backup label",
-      expr: `sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{label_velero_io_backup!="enabled",${buildNamespaceFilter()}})`,
-      legend: "Not Backed Up",
+      title: "Largest PVC",
+      description: "Largest PVC request by namespace and claim",
+      expr: `topk(1, kube_persistentvolumeclaim_resource_requests_storage_bytes{${buildNamespaceFilter()}})`,
+      legend: "{{namespace}} / {{persistentvolumeclaim}}",
       gridPos: { x: 0, y: 49, w: 6, h: 4 },
       unit: "bytes",
     }),
   );
 
-  // Storage Backed Up
   builder.withPanel(
     createStatPanel(ds, {
-      title: "Storage Backed Up",
-      description: "Total size of PVCs with velero.io/backup=enabled label",
-      expr: `sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{label_velero_io_backup="enabled",${buildNamespaceFilter()}})`,
-      legend: "Backed Up",
+      title: "PVC Namespaces",
+      description: "Namespaces with at least one PVC",
+      expr: `count(count by (namespace) (kube_persistentvolumeclaim_resource_requests_storage_bytes{${buildNamespaceFilter()}}))`,
+      legend: "namespaces",
       gridPos: { x: 6, y: 49, w: 6, h: 4 },
-      unit: "bytes",
+      unit: "short",
+      graphMode: common.BigValueGraphMode.None,
     }),
   );
 
-  // Number of PVCs Not Backed Up
   builder.withPanel(
     createStatPanel(ds, {
-      title: "PVCs Not Backed Up",
-      description: "Count of PVCs without backup label",
-      expr: `count(kube_persistentvolumeclaim_resource_requests_storage_bytes{label_velero_io_backup!="enabled",${buildNamespaceFilter()}})`,
-      legend: "Count",
+      title: "PVC Count",
+      description: "PVCs discovered by kube-state-metrics",
+      expr: `count(kube_persistentvolumeclaim_resource_requests_storage_bytes{${buildNamespaceFilter()}})`,
+      legend: "PVCs",
       gridPos: { x: 12, y: 49, w: 6, h: 4 },
       unit: "short",
       graphMode: common.BigValueGraphMode.None,
     }),
   );
 
-  // Number of PVCs Backed Up
   builder.withPanel(
     createStatPanel(ds, {
-      title: "PVCs Backed Up",
-      description: "Count of PVCs with backup label",
-      expr: `count(kube_persistentvolumeclaim_resource_requests_storage_bytes{label_velero_io_backup="enabled",${buildNamespaceFilter()}})`,
-      legend: "Count",
+      title: "Total PVC Storage",
+      description: "Total requested storage across all PVCs",
+      expr: `sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{${buildNamespaceFilter()}})`,
+      legend: "storage",
       gridPos: { x: 18, y: 49, w: 6, h: 4 },
-      unit: "short",
+      unit: "bytes",
       graphMode: common.BigValueGraphMode.None,
     }),
   );

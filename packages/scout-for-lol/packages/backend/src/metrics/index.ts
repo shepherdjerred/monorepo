@@ -1,6 +1,7 @@
 import { Registry, Counter, Gauge, Histogram } from "prom-client";
 import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
+import { seedProviderIssueMetrics } from "#src/metrics/provider-issue-seeds.ts";
 
 const logger = createLogger("metrics");
 
@@ -599,6 +600,10 @@ export const aiProviderIssueActive = new Gauge({
   help: "Whether an AI provider operational issue is currently active for this app/source",
   labelNames: ["app", "provider", "kind", "source"] as const,
   registers: [registry],
+});
+seedProviderIssueMetrics({
+  errorsTotal: aiProviderErrorsTotal,
+  issueActive: aiProviderIssueActive,
 });
 
 // =======================

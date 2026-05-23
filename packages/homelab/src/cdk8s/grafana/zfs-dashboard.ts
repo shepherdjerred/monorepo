@@ -63,7 +63,7 @@ export function createZfsDashboard() {
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            "(time() - zfs_zpool_last_scrub_completion_timestamp{zfs_zpool_last_scrub_completion_timestamp > 0}) / 86400",
+            "((time() - zfs_zpool_last_scrub_completion_timestamp) / 86400) and zfs_zpool_last_scrub_completion_timestamp > 0",
           )
           .legendFormat("{{zpool_name}}"),
       )
