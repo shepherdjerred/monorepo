@@ -46,7 +46,6 @@ const scoutShowcaseAssetIndex =
   ScoutShowcaseAssetIndexSchema.parse(rawShowcaseAssets);
 
 export const generatedScoutShowcaseAssets =
-  scoutShowcaseAssetIndex.assets.flatMap((asset) => {
-    const result = GeneratedScoutShowcaseAssetSchema.safeParse(asset);
-    return result.success ? [result.data] : [];
-  });
+  scoutShowcaseAssetIndex.assets.flatMap((asset) =>
+    asset.status === "generated" ? [asset] : [],
+  );

@@ -66,6 +66,59 @@ describe("showcase manifest schemas", () => {
     ).toThrow("s3-image entries with dataKey must include state");
   });
 
+  test("rejects duplicate manifest entry ids", () => {
+    expect(() =>
+      ShowcaseManifestSchema.parse({
+        version: 1,
+        entries: [
+          {
+            kind: "unsupported",
+            id: "draft-prematch",
+            title: "Draft Pre-Match",
+            group: "Draft",
+            reason: "No real data yet.",
+          },
+          {
+            kind: "unsupported",
+            id: "draft-prematch",
+            title: "Draft Pre-Match Duplicate",
+            group: "Draft",
+            reason: "No real data yet.",
+          },
+        ],
+      }),
+    ).toThrow("Duplicate showcase entry id: draft-prematch");
+  });
+
+  test("rejects duplicate asset ids", () => {
+    expect(() =>
+      ShowcaseAssetIndexSchema.parse({
+        version: 1,
+        generatedAt: "2026-05-22T00:00:00.000Z",
+        assets: [
+          {
+            id: "draft-prematch",
+            title: "Draft Pre-Match",
+            group: "Draft",
+            kind: "unsupported",
+            status: "unsupported",
+            sourceKeys: [],
+            reason: "No real data yet.",
+          },
+          {
+            id: "draft-prematch",
+            title: "Draft Pre-Match Duplicate",
+            group: "Draft",
+            kind: "unsupported",
+            status: "unsupported",
+            sourceKeys: [],
+            reason: "No real data yet.",
+          },
+        ],
+      }),
+    ).toThrow("Duplicate showcase asset id: draft-prematch");
+  });
+
   test("rejects missing required showcase coverage", () => {
     const index = ShowcaseAssetIndexSchema.parse({
       version: 1,
