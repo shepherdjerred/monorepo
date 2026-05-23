@@ -301,7 +301,6 @@ export async function createPrometheusApp(chart: Chart) {
           volumeClaimTemplate: {
             metadata: {
               labels: {
-                "velero.io/backup": "disabled",
                 "velero.io/exclude-from-backup": "true",
               },
             },
