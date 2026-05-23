@@ -2,6 +2,7 @@ import {
   Cpu,
   Deployment,
   DeploymentStrategy,
+  EnvValue,
   type PersistentVolumeClaim,
   Service,
   Volume,
@@ -42,6 +43,9 @@ export function createBazarrDeployment(
     withCommonLinuxServerProps({
       image: `ghcr.io/linuxserver/bazarr:${versions["linuxserver/bazarr"]}`,
       portNumber: 6767,
+      envVariables: {
+        TZ: EnvValue.fromValue(""),
+      },
       volumeMounts: [
         {
           path: "/config",

@@ -53,7 +53,6 @@ export function createJellyfinDeployment(
   });
   const cacheVolume = new ZfsNvmeVolume(chart, "jellyfin-cache-pvc", {
     storage: Size.gibibytes(32),
-    backupEnabled: false,
   });
 
   deployment.addContainer(

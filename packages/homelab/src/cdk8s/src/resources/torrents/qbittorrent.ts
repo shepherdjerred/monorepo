@@ -1,10 +1,8 @@
 import {
   Cpu,
-  Capability,
   Deployment,
   DeploymentStrategy,
   EnvValue,
-  HostPathVolumeType,
   type PersistentVolumeClaim,
   Secret,
   Service,
@@ -48,6 +46,10 @@ export function createQBitTorrentDeployment(
     strategy: DeploymentStrategy.recreate(),
     metadata: {
       annotations: {
+        "ignore-check.kube-linter.io/privileged-container":
+          "Gluetun VPN container requires privileged for network setup",
+        "ignore-check.kube-linter.io/privilege-escalation-container":
+          "Required when privileged is true",
         "ignore-check.kube-linter.io/run-as-non-root":
           "Gluetun and LinuxServer images require root",
         "ignore-check.kube-linter.io/no-read-only-root-fs":
@@ -67,13 +69,10 @@ export function createQBitTorrentDeployment(
       // TODO: replace this with capability to run as non-root
       // this is mostly required right now to setup the VPN
       securityContext: {
-        privileged: false,
-        allowPrivilegeEscalation: false,
+        privileged: true,
+        allowPrivilegeEscalation: true,
         ensureNonRoot: false,
         readOnlyRootFilesystem: false,
-        capabilities: {
-          add: [Capability.NET_ADMIN],
-        },
       },
       envVariables: {
         DOT: EnvValue.fromValue("off"),
@@ -98,20 +97,6 @@ export function createQBitTorrentDeployment(
         ),
         FIREWALL_VPN_INPUT_PORTS: EnvValue.fromValue("17826"),
       },
-      volumeMounts: [
-        {
-          path: "/dev/net/tun",
-          volume: Volume.fromHostPath(
-            chart,
-            "gluetun-tun-device",
-            "gluetun-tun-device",
-            {
-              path: "/dev/net/tun",
-              type: HostPathVolumeType.CHAR_DEVICE,
-            },
-          ),
-        },
-      ],
     }),
   );
   deployment.addContainer(

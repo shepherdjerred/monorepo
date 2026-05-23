@@ -10,25 +10,22 @@ import { NVME_STORAGE_CLASS } from "./storage-classes.ts";
 import type { SetRequired } from "type-fest";
 import { Size } from "cdk8s";
 
-type ZfsNvmeVolumeProps = Omit<
-  SetRequired<PersistentVolumeClaimProps, "storage">,
-  "storageClassName" | "accessModes" | "volumeMode" | "metadata"
-> & {
-  backupEnabled?: boolean;
-};
-
 export class ZfsNvmeVolume extends Construct {
   public readonly claim: PersistentVolumeClaim;
-  constructor(scope: Construct, id: string, props: ZfsNvmeVolumeProps) {
+  constructor(
+    scope: Construct,
+    id: string,
+    props: Omit<
+      SetRequired<PersistentVolumeClaimProps, "storage">,
+      "storageClassName" | "accessModes" | "volumeMode" | "metadata"
+    >,
+  ) {
     super(scope, id);
 
     // Check if storage is under 200GB for backup labeling
     // Use native CDK8s Size conversion methods for accurate comparison
     const shouldBackup =
-      props.backupEnabled ??
       props.storage.toKibibytes() < Size.gibibytes(200).toKibibytes();
-
-    const { backupEnabled: _backupEnabled, ...claimProps } = props;
 
     const baseProps: PersistentVolumeClaimProps = {
       storage: props.storage,
@@ -47,7 +44,7 @@ export class ZfsNvmeVolume extends Construct {
     this.claim = new PersistentVolumeClaim(
       scope,
       `${id}-pvc`,
-      merge({}, baseProps, claimProps),
+      merge({}, baseProps, props),
     );
   }
 }
