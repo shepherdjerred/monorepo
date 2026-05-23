@@ -1,71 +1,73 @@
-[
-  {
-    "path": "AGENTS.md",
-    "description": "Repo-wide conventions and the single source of truth for AI/reviewer rules. Covers ESLint discipline, the Dagger/CI banned-patterns list (enforced by scripts/check-dagger-hygiene.ts), documentation discipline (session log/plan rule, packages/docs taxonomy), TODO(todo:<id>) format, temporal-agent-task block schema, secret hygiene, and fail-fast principles. CLAUDE.md is a symlink to this file."
-  },
-  {
-    "path": "packages/docs/AGENTS.md",
-    "description": "Docs taxonomy and authoring rules: how logs, plans, todos, architecture, patterns, decisions, and guides differ; the per-session log/plan requirement; the temporal-agent-task block format.",
-    "scope": ["packages/docs/**"]
-  },
-  {
-    "path": "packages/homelab/AGENTS.md",
-    "description": "Homelab infrastructure conventions: K8s manifests via cdk8s, OpenTofu state in SeaweedFS, ArgoCD app patterns, 1Password Connect for secrets, Talos/K8s version pins in versions.ts must mirror what is deployed, no type assertions, Bun-only APIs.",
-    "scope": ["packages/homelab/**"]
-  },
-  {
-    "path": "packages/birmel/AGENTS.md",
-    "description": "Birmel Discord bot conventions: VoltAgent setup, Prisma + libSQL memory persistence, OpenAI provider options (store: false), Bun env, Prisma client teardown in tests, no .env.test commits.",
-    "scope": ["packages/birmel/**"]
-  },
-  {
-    "path": "packages/scout-for-lol/AGENTS.md",
-    "description": "League match analysis pipeline conventions: Raw* prefix for external API types (never *Dto), Zod validation everywhere, no type assertions, no ../ imports, no workspace:* protocol (file: deps are intentional), Prisma teardown in tests, satori rendering best practices.",
-    "scope": ["packages/scout-for-lol/**"]
-  },
-  {
-    "path": "packages/temporal/AGENTS.md",
-    "description": "Temporal workflows + Home Assistant integration: workflows must be deterministic (no I/O), activities do all work, HA schema codegen, Bun.env not process.env, agent-task block schema, no direct Temporal ingress (use authenticated /agent-tasks endpoint).",
-    "scope": ["packages/temporal/**"]
-  },
-  {
-    "path": "packages/toolkit/AGENTS.md",
-    "description": "Toolkit CLI conventions: gh CLI for all GitHub operations (no embedded tokens), lightpanda + PinchTab for fetch, structured logging, Bun shell ($), env-var-driven config, no secrets on disk, LanceDB for recall index.",
-    "scope": ["packages/toolkit/**"]
-  },
-  {
-    "path": "packages/tasks-for-obsidian/AGENTS.md",
-    "description": "React Native task app for iOS/Android: Sentry setup, Obsidian plugin API constraints, no embedded secrets in plugin bundle, build artifact handling.",
-    "scope": ["packages/tasks-for-obsidian/**"]
-  },
-  {
-    "path": "packages/dotfiles/AGENTS.md",
-    "description": "Chezmoi-managed portable dotfiles. Templates over hard-coded machine state; the live file is always truth, always re-add, never apply.",
-    "scope": ["packages/dotfiles/**"]
-  },
-  {
-    "path": "packages/tasknotes-server/AGENTS.md",
-    "description": "TaskNotes server conventions.",
-    "scope": ["packages/tasknotes-server/**"]
-  },
-  {
-    "path": "packages/tasknotes-types/AGENTS.md",
-    "description": "TaskNotes shared types package.",
-    "scope": ["packages/tasknotes-types/**"]
-  },
-  {
-    "path": "packages/home-assistant/AGENTS.md",
-    "description": "Home Assistant integration helpers.",
-    "scope": ["packages/home-assistant/**"]
-  },
-  {
-    "path": "packages/terraform-provider-asuswrt/AGENTS.md",
-    "description": "Asuswrt Terraform provider.",
-    "scope": ["packages/terraform-provider-asuswrt/**"]
-  },
-  {
-    "path": "packages/resume/AGENTS.md",
-    "description": "Resume site.",
-    "scope": ["packages/resume/**"]
-  }
-]
+{
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "description": "Repo-wide conventions and the single source of truth for AI/reviewer rules. Covers ESLint discipline, the Dagger/CI banned-patterns list (enforced by scripts/check-dagger-hygiene.ts), documentation discipline (session log/plan rule, packages/docs taxonomy), TODO(todo:<id>) format, temporal-agent-task block schema, secret hygiene, and fail-fast principles. CLAUDE.md is a symlink to this file."
+    },
+    {
+      "path": "packages/docs/AGENTS.md",
+      "description": "Docs taxonomy and authoring rules: how logs, plans, todos, architecture, patterns, decisions, and guides differ; the per-session log/plan requirement; the temporal-agent-task block format.",
+      "scope": ["packages/docs/**"]
+    },
+    {
+      "path": "packages/homelab/AGENTS.md",
+      "description": "Homelab infrastructure conventions: K8s manifests via cdk8s, OpenTofu state in SeaweedFS, ArgoCD app patterns, 1Password Connect for secrets, Talos/K8s version pins in versions.ts must mirror what is deployed, no type assertions, Bun-only APIs.",
+      "scope": ["packages/homelab/**"]
+    },
+    {
+      "path": "packages/birmel/AGENTS.md",
+      "description": "Birmel Discord bot conventions: VoltAgent setup, Prisma + libSQL memory persistence, OpenAI provider options (store: false), Bun env, Prisma client teardown in tests, no .env.test commits.",
+      "scope": ["packages/birmel/**"]
+    },
+    {
+      "path": "packages/scout-for-lol/AGENTS.md",
+      "description": "League match analysis pipeline conventions: Raw* prefix for external API types (never *Dto), Zod validation everywhere, no type assertions, no ../ imports, no workspace:* protocol (file: deps are intentional), Prisma teardown in tests, satori rendering best practices.",
+      "scope": ["packages/scout-for-lol/**"]
+    },
+    {
+      "path": "packages/temporal/AGENTS.md",
+      "description": "Temporal workflows + Home Assistant integration: workflows must be deterministic (no I/O), activities do all work, HA schema codegen, Bun.env not process.env, agent-task block schema, no direct Temporal ingress (use authenticated /agent-tasks endpoint).",
+      "scope": ["packages/temporal/**"]
+    },
+    {
+      "path": "packages/toolkit/AGENTS.md",
+      "description": "Toolkit CLI conventions: gh CLI for all GitHub operations (no embedded tokens), lightpanda + PinchTab for fetch, structured logging, Bun shell ($), env-var-driven config, no secrets on disk, LanceDB for recall index.",
+      "scope": ["packages/toolkit/**"]
+    },
+    {
+      "path": "packages/tasks-for-obsidian/AGENTS.md",
+      "description": "React Native task app for iOS/Android: Sentry setup, Obsidian plugin API constraints, no embedded secrets in plugin bundle, build artifact handling.",
+      "scope": ["packages/tasks-for-obsidian/**"]
+    },
+    {
+      "path": "packages/dotfiles/AGENTS.md",
+      "description": "Chezmoi-managed portable dotfiles. Templates over hard-coded machine state; the live file is always truth, always re-add, never apply.",
+      "scope": ["packages/dotfiles/**"]
+    },
+    {
+      "path": "packages/tasknotes-server/AGENTS.md",
+      "description": "TaskNotes server conventions.",
+      "scope": ["packages/tasknotes-server/**"]
+    },
+    {
+      "path": "packages/tasknotes-types/AGENTS.md",
+      "description": "TaskNotes shared types package.",
+      "scope": ["packages/tasknotes-types/**"]
+    },
+    {
+      "path": "packages/home-assistant/AGENTS.md",
+      "description": "Home Assistant integration helpers.",
+      "scope": ["packages/home-assistant/**"]
+    },
+    {
+      "path": "packages/terraform-provider-asuswrt/AGENTS.md",
+      "description": "Asuswrt Terraform provider.",
+      "scope": ["packages/terraform-provider-asuswrt/**"]
+    },
+    {
+      "path": "packages/resume/AGENTS.md",
+      "description": "Resume site.",
+      "scope": ["packages/resume/**"]
+    }
+  ]
+}

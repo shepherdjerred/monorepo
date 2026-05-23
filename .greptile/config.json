@@ -1,6 +1,6 @@
 {
   "strictness": 2,
-  "commentTypes": ["logic", "syntax", "style", "info"],
+  "commentTypes": ["logic", "syntax", "style"],
   "triggerOnUpdates": true,
   "statusCheck": true,
   "fixWithAI": true,
