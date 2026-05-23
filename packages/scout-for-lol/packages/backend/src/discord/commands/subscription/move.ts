@@ -8,6 +8,7 @@ import {
 } from "@scout-for-lol/data/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { moveSubscription } from "#src/lib/subscription/move.ts";
+import { prisma } from "#src/database/index.ts";
 
 const logger = createLogger("subscription-move-command");
 
@@ -51,13 +52,18 @@ export async function executeSubscriptionMove(
 
   await interaction.deferReply({ ephemeral: true });
 
-  const result = await moveSubscription({
-    guildId,
-    alias,
-    fromChannelId: fromChannel,
-    toChannelId: toChannel,
-    actorDiscordId: DiscordAccountIdSchema.parse(interaction.user.id),
-  });
+  const result = await prisma.$transaction((tx) =>
+    moveSubscription(
+      {
+        guildId,
+        alias,
+        fromChannelId: fromChannel,
+        toChannelId: toChannel,
+        actorDiscordId: DiscordAccountIdSchema.parse(interaction.user.id),
+      },
+      tx,
+    ),
+  );
 
   switch (result.kind) {
     case "player-not-found":

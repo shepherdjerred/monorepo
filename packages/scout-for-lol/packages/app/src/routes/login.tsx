@@ -1,27 +1,17 @@
-import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
-import { useTRPC } from "#src/lib/trpc.ts";
 
+/**
+ * The "Sign in with Discord" anchor points at the backend's
+ * /api/auth/discord/start route. That route mints the OAuth state
+ * nonce, sets the pre-auth cookie, and 302s the browser to Discord —
+ * all without the SPA touching any token material.
+ */
 export function Login() {
-  const trpc = useTRPC();
   const [params] = useSearchParams();
   const returnTo = params.get("returnTo") ?? "/app/";
   const error = params.get("error");
-  const [callbackOrigin, setCallbackOrigin] = useState<string | null>(null);
 
-  useEffect(() => {
-    setCallbackOrigin(globalThis.location.origin);
-  }, []);
-
-  const oauthQuery = useQuery(
-    trpc.auth.getWebOAuthUrl.queryOptions(
-      callbackOrigin === null
-        ? { callbackOrigin: "https://scout-for-lol.com", returnTo }
-        : { callbackOrigin, returnTo },
-      { enabled: callbackOrigin !== null },
-    ),
-  );
+  const startUrl = `/api/auth/discord/start?returnTo=${encodeURIComponent(returnTo)}`;
 
   return (
     <div
@@ -36,28 +26,33 @@ export function Login() {
         <h1>Scout for LoL</h1>
         <p>Sign in with Discord to manage your guild&apos;s subscriptions.</p>
         {error !== null && (
-          <p style={{ color: "crimson" }}>Discord sign-in error: {error}</p>
+          <p style={{ color: "crimson" }}>{describeError(error)}</p>
         )}
-        {oauthQuery.data === undefined ? (
-          <button type="button" disabled>
-            Loading…
-          </button>
-        ) : (
-          <a
-            href={oauthQuery.data.url}
-            style={{
-              display: "inline-block",
-              padding: "0.75rem 1.5rem",
-              background: "#5865F2",
-              color: "white",
-              textDecoration: "none",
-              borderRadius: 6,
-            }}
-          >
-            Sign in with Discord
-          </a>
-        )}
+        <a
+          href={startUrl}
+          style={{
+            display: "inline-block",
+            padding: "0.75rem 1.5rem",
+            background: "#5865F2",
+            color: "white",
+            textDecoration: "none",
+            borderRadius: 6,
+          }}
+        >
+          Sign in with Discord
+        </a>
       </div>
     </div>
   );
+}
+
+function describeError(error: string): string {
+  switch (error) {
+    case "state_mismatch":
+      return "Discord sign-in expired or was tampered with. Please try again.";
+    case "access_denied":
+      return "You denied Scout access. To use the web UI, sign in again and approve.";
+    default:
+      return `Discord sign-in error: ${error}`;
+  }
 }

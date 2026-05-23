@@ -313,46 +313,6 @@ export const authRouter = router({
   }),
 
   /**
-   * Build the Discord OAuth URL for the web sign-in flow.
-   * Requests `identify email guilds` so we can later filter manageable guilds.
-   * The callback URL is the backend's own HTTP route, not a SPA route, so
-   * the cookie + redirect handshake is server-driven.
-   */
-  getWebOAuthUrl: publicProcedure
-    .input(
-      z.object({
-        callbackOrigin: z.url(),
-        returnTo: z.string().optional(),
-      }),
-    )
-    .query(({ input }) => {
-      const clientId = configuration.applicationId;
-      const scopes = ["identify", "email", "guilds"].join(" ");
-      const redirectUri = `${input.callbackOrigin}/api/auth/discord/callback`;
-      const state =
-        input.returnTo === undefined || input.returnTo.length === 0
-          ? globalThis.crypto.randomUUID()
-          : globalThis.crypto.randomUUID() +
-            "|" +
-            encodeURIComponent(input.returnTo);
-
-      const params = new URLSearchParams({
-        client_id: clientId,
-        redirect_uri: redirectUri,
-        response_type: "code",
-        scope: scopes,
-        prompt: "consent",
-        state,
-      });
-
-      return {
-        url: `https://discord.com/api/oauth2/authorize?${params.toString()}`,
-        redirectUri,
-        state,
-      };
-    }),
-
-  /**
    * Get the currently signed-in web user (from scout_session cookie).
    * Returns 401 if not signed in.
    */

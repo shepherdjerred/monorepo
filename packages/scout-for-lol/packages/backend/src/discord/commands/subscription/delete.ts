@@ -8,6 +8,7 @@ import {
 } from "@scout-for-lol/data/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { removeSubscription } from "#src/lib/subscription/remove.ts";
+import { prisma } from "#src/database/index.ts";
 
 const logger = createLogger("subscription-delete-command");
 
@@ -40,12 +41,17 @@ export async function executeSubscriptionDelete(
   const { alias, channel, guildId } = parseResult.data;
   await interaction.deferReply({ ephemeral: true });
 
-  const result = await removeSubscription({
-    guildId,
-    channelId: channel,
-    alias,
-    actorDiscordId: DiscordAccountIdSchema.parse(interaction.user.id),
-  });
+  const result = await prisma.$transaction((tx) =>
+    removeSubscription(
+      {
+        guildId,
+        channelId: channel,
+        alias,
+        actorDiscordId: DiscordAccountIdSchema.parse(interaction.user.id),
+      },
+      tx,
+    ),
+  );
 
   switch (result.kind) {
     case "player-not-found":

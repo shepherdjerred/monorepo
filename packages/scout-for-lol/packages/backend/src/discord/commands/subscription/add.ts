@@ -11,10 +11,14 @@ import {
   type RiotId,
 } from "@scout-for-lol/data/index.ts";
 import { createLogger } from "#src/logger.ts";
-import { addSubscription } from "#src/lib/subscription/add.ts";
+import {
+  addSubscription,
+  runBackfillAfterCommit,
+} from "#src/lib/subscription/add.ts";
 import type { AddSubscriptionResult } from "#src/lib/subscription/types.ts";
 import { sendWelcomeMatch } from "#src/discord/commands/subscription/welcome-match.ts";
 import { DISCORD_SERVER_INVITE } from "#src/configuration/subscription-limits.ts";
+import { prisma } from "#src/database/index.ts";
 
 const logger = createLogger("subscription-add-command");
 
@@ -54,15 +58,20 @@ export async function executeSubscriptionAdd(
   const args = parseResult.data;
   await interaction.deferReply({ ephemeral: true });
 
-  const result = await addSubscription({
-    guildId: args.guildId,
-    channelId: args.channel,
-    region: args.region,
-    riotId: args.riotId,
-    alias: args.alias,
-    discordUserId: args.user,
-    creatorDiscordId,
-  });
+  const result = await prisma.$transaction((tx) =>
+    addSubscription(
+      {
+        guildId: args.guildId,
+        channelId: args.channel,
+        region: args.region,
+        riotId: args.riotId,
+        alias: args.alias,
+        discordUserId: args.user,
+        creatorDiscordId,
+      },
+      tx,
+    ),
+  );
 
   await interaction.editReply({
     content: formatAddResult(result, args.riotId, args.alias, args.channel),
@@ -74,6 +83,16 @@ export async function executeSubscriptionAdd(
         ? `⚠️  **Approaching subscription limit**\n\nYou will have ${warning.remaining.toString()} subscription slot${warning.remaining === 1 ? "" : "s"} remaining after this addition.\n\nIf you need more subscriptions, please contact us: ${DISCORD_SERVER_INVITE}`
         : `⚠️  **Approaching account limit**\n\nYou will have ${warning.remaining.toString()} account slot${warning.remaining === 1 ? "" : "s"} remaining after this addition.\n\nIf you need more accounts, please contact us: ${DISCORD_SERVER_INVITE}`;
     await interaction.followUp({ content: msg, ephemeral: true });
+  }
+
+  if (result.kind === "created") {
+    // Backfill is async + best-effort; never block the response on it.
+    void runBackfillAfterCommit({
+      alias: args.alias,
+      puuid: LeaguePuuidSchema.parse(result.account.puuid),
+      region: args.region,
+      discordUserId: args.user,
+    });
   }
 
   if (result.kind === "created" && result.isFirstSubscription) {

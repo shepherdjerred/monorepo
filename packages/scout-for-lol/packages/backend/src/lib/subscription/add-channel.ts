@@ -1,6 +1,7 @@
-import { prisma } from "#src/database/index.ts";
+import { z } from "zod";
 import { getErrorMessage } from "#src/utils/errors.ts";
 import { createLogger } from "#src/logger.ts";
+import type { Db } from "#src/lib/audit/index.ts";
 import type {
   AddSubscriptionChannelInput,
   AddSubscriptionChannelResult,
@@ -8,13 +9,21 @@ import type {
 
 const logger = createLogger("subscription-add-channel");
 
+const PrismaKnownErrorSchema = z.object({ code: z.string() });
+
+function isUniqueConstraintError(error: unknown): boolean {
+  const parsed = PrismaKnownErrorSchema.safeParse(error);
+  return parsed.success && parsed.data.code === "P2002";
+}
+
 export async function addSubscriptionChannel(
   input: AddSubscriptionChannelInput,
+  db: Db,
 ): Promise<AddSubscriptionChannelResult> {
   const { guildId, alias, channelId, actorDiscordId } = input;
 
   try {
-    const player = await prisma.player.findUnique({
+    const player = await db.player.findUnique({
       where: { serverId_alias: { serverId: guildId, alias } },
       include: { subscriptions: true },
     });
@@ -31,7 +40,7 @@ export async function addSubscriptionChannel(
     }
 
     const now = new Date();
-    await prisma.subscription.create({
+    await db.subscription.create({
       data: {
         playerId: player.id,
         channelId,
@@ -52,6 +61,9 @@ export async function addSubscriptionChannel(
       ],
     };
   } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      return { kind: "already-subscribed", channelId };
+    }
     logger.error("❌ Error adding subscription channel:", error);
     return { kind: "internal-error", message: getErrorMessage(error) };
   }

@@ -11,7 +11,11 @@
 
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { ChannelType, type GuildBasedChannel } from "discord.js";
+import {
+  ChannelType,
+  PermissionFlagsBits,
+  type GuildBasedChannel,
+} from "discord.js";
 import { router, webProcedure } from "#src/trpc/trpc.ts";
 import { client as discordClient } from "#src/discord/client.ts";
 import { fetchUserGuilds, hasAdministrator } from "#src/lib/discord-rest.ts";
@@ -77,12 +81,22 @@ export const guildRouter = router({
         });
       }
 
+      const me = guild.members.me;
       const channels = guild.channels.cache
-        .filter(
-          (c: GuildBasedChannel) =>
+        .filter((c: GuildBasedChannel) => {
+          const isText =
             c.type === ChannelType.GuildText ||
-            c.type === ChannelType.GuildAnnouncement,
-        )
+            c.type === ChannelType.GuildAnnouncement;
+          if (!isText) return false;
+          // Only offer channels the bot can actually post in. Without
+          // this we'd show channels Scout could read but never message.
+          const perms = me?.permissionsIn(c);
+          return (
+            perms !== undefined &&
+            perms.has(PermissionFlagsBits.ViewChannel) &&
+            perms.has(PermissionFlagsBits.SendMessages)
+          );
+        })
         .map((c: GuildBasedChannel) => ({
           id: c.id,
           name: c.name,

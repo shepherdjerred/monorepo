@@ -11,5 +11,12 @@ RUN bun run build
 
 FROM caddy:2.10-alpine
 COPY --from=build /work/dist /var/www/app
-# Caddyfile injected at runtime via ConfigMap mount → /etc/caddy/Caddyfile
+# Caddyfile injected at runtime via ConfigMap mount → /etc/caddy/Caddyfile.
+# /data and /config are emptyDir volumes injected by k8s at runtime (the
+# pod runs as 1000/1000 per scout/app.ts) — Caddy needs to be able to
+# write there.
+RUN addgroup -g 1000 scout && \
+    adduser -D -u 1000 -G scout scout && \
+    chown -R 1000:1000 /var/www/app
+USER 1000
 EXPOSE 80

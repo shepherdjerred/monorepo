@@ -5,7 +5,11 @@ import { createLogger } from "#src/logger.ts";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { appRouter } from "#src/trpc/router/index.ts";
 import { createContext } from "#src/trpc/context.ts";
-import { handleDiscordCallback, handleWebLogout } from "#src/trpc/auth-web.ts";
+import {
+  handleDiscordCallback,
+  handleDiscordStart,
+  handleWebLogout,
+} from "#src/trpc/auth-web.ts";
 
 const logger = createLogger("http-server");
 
@@ -175,6 +179,20 @@ const server = Bun.serve({
           headers: {
             "Content-Type": "text/plain",
           },
+        });
+      }
+    }
+
+    // Web auth: kick off Discord OAuth (sets the state cookie + 302)
+    if (url.pathname === "/api/auth/discord/start") {
+      try {
+        return handleDiscordStart(request);
+      } catch (error) {
+        logger.error("❌ OAuth start error:", error);
+        Sentry.captureException(error, { tags: { source: "auth-web-start" } });
+        return new Response("OAuth start failed", {
+          status: 500,
+          headers: { "Content-Type": "text/plain" },
         });
       }
     }

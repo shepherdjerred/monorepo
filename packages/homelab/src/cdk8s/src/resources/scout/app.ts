@@ -1,12 +1,13 @@
 import {
   ConfigMap,
+  Cpu,
   Deployment,
   DeploymentStrategy,
   Service,
   Volume,
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
-import { Duration } from "cdk8s";
+import { Duration, Size } from "cdk8s";
 import {
   withCommonProps,
   setRevisionHistoryLimit,
@@ -121,6 +122,29 @@ export function createScoutAppDeployment(chart: Chart, stage: Stage) {
         user: 1000,
         group: 1000,
       },
+      // Caddy serving static assets + reverse proxy is cheap.
+      // Requests sized below to fit one replica comfortably; limits
+      // capped so a runaway reverse-proxy loop can't starve the node.
+      resources: {
+        cpu: {
+          request: Cpu.millis(20),
+          limit: Cpu.millis(500),
+        },
+        memory: {
+          request: Size.mebibytes(32),
+          limit: Size.mebibytes(128),
+        },
+      },
+      startup: Probe.fromHttpGet("/app/", {
+        port: 80,
+        periodSeconds: Duration.seconds(5),
+        failureThreshold: 30,
+      }),
+      readiness: Probe.fromHttpGet("/app/", {
+        port: 80,
+        periodSeconds: Duration.seconds(10),
+        failureThreshold: 3,
+      }),
       liveness: Probe.fromHttpGet("/app/", {
         port: 80,
         periodSeconds: Duration.seconds(30),

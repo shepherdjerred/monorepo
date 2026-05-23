@@ -240,6 +240,20 @@ End-to-end checks the implementation must pass before merge:
 
 ### Remaining
 
+<!-- temporal-agent-task
+{
+  "title": "Verify scout-for-lol.com/app/ web UI is live",
+  "provider": "claude",
+  "mode": "report-only",
+  "runAt": "2026-06-05T09:00:00-07:00",
+  "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "source": {
+    "docPath": "packages/docs/plans/2026-05-22_scout-web-ui-foundation.md"
+  },
+  "prompt": "Two weeks after the scout web UI foundation PR. Verify:\n1. https://scout-for-lol.com/app/ returns 200 with the SPA HTML.\n2. https://scout-for-lol.com/api/auth/discord/start?returnTo=/app/ 302-redirects to discord.com/api/oauth2/authorize.\n3. https://scout-for-lol.com/trpc/auth.meWeb returns 401 (no session) with a real JSON tRPC error, not an HTML error page.\nIf any check fails, email the failure with the response status, body snippet, and a link to the latest scout-app pod logs in the homelab cluster. Do NOT edit files."
+}
+-->
+
 - **1Password secrets to add** (cannot be created from this session — they live in the existing scout vault items at `vaults/v64ocnykdqju4ui6j6pua56xw4/items/{beta,prod}`): `JWT_SIGNING_SECRET` (≥32 random chars) and `DISCORD_CLIENT_SECRET` (paste from Discord app dashboard for each app id). Without these the backend will refuse to mint sessions.
 - **Build the scout-app container image and publish to ghcr.io.** Versions currently set to placeholder `0.0.1-dev`. Once the CI pipeline knows how to build `packages/scout-for-lol/packages/app/Dockerfile`, swap to real image digests via the existing version-commit-back flow.
 - **CF Tunnel ingress configuration**: confirm the cluster's CF Tunnel allows `scout-for-lol.com` (apex) and `scout-for-lol-beta.sjer.red`. The TunnelBinding is created with `disableDnsUpdates: true` because the apex DNS for scout-for-lol.com is managed in OpenTofu — verify that pointer still routes correctly.

@@ -1,11 +1,14 @@
 import {
   DiscordAccountIdSchema,
+  type DiscordAccountId,
   LeaguePuuidSchema,
+  type LeaguePuuid,
+  type Region,
 } from "@scout-for-lol/data/index.ts";
-import { prisma } from "#src/database/index.ts";
 import { backfillLastMatchTime } from "#src/league/api/backfill-match-history.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
 import { createLogger } from "#src/logger.ts";
+import type { Db } from "#src/lib/audit/index.ts";
 import type {
   AddSubscriptionInput,
   AddSubscriptionResult,
@@ -15,46 +18,51 @@ import { checkSubscriptionAndAccountLimits } from "#src/lib/subscription/limits.
 
 const logger = createLogger("subscription-add");
 
-export async function addSubscription(
-  input: AddSubscriptionInput,
-): Promise<AddSubscriptionResult> {
-  const {
-    guildId,
-    channelId,
-    region,
-    riotId,
-    alias,
-    discordUserId,
-    creatorDiscordId,
-  } = input;
+/**
+ * Create the Player (if new), Account, and Subscription rows for a
+ * subscription request. Pure DB work — assumes the PUUID has already
+ * been resolved (call resolveRiotIdToPuuid first). Limits are
+ * re-checked inside the txn to close the race window between two
+ * concurrent adds for the same guild.
+ *
+ * Backfill is intentionally NOT done here — long-running external
+ * calls don't belong in a DB transaction. Callers run
+ * backfillLastMatchTime as a best-effort step AFTER this resolves.
+ */
+async function commitSubscription(params: {
+  input: AddSubscriptionInput;
+  puuid: LeaguePuuid;
+  db: Db;
+}): Promise<AddSubscriptionResult> {
+  const { input, puuid, db } = params;
+  const { guildId, channelId, region, alias, discordUserId, creatorDiscordId } =
+    input;
+  const now = new Date();
 
-  const existingPlayer = await prisma.player.findUnique({
+  const existingPlayer = await db.player.findUnique({
     where: { serverId_alias: { serverId: guildId, alias } },
   });
+  const isAddingToExistingPlayer = existingPlayer !== null;
 
+  // Re-check limits inside the txn — a count taken before is meaningless
+  // under concurrent writers.
   const limits = await checkSubscriptionAndAccountLimits({
     guildId,
-    isAddingToExistingPlayer: existingPlayer !== null,
+    isAddingToExistingPlayer,
+    db,
   });
   if (limits.kind !== "ok") {
     return limits;
   }
 
-  const resolved = await resolveRiotIdToPuuid(riotId, region);
-  if (resolved.kind !== "ok") {
-    return { kind: "riot-id-not-found", message: resolved.message };
-  }
-  const puuid = LeaguePuuidSchema.parse(resolved.puuid);
-
-  const existingAccount = await prisma.account.findUnique({
+  // Existing-account collision must be inside the txn too; another
+  // request could have inserted the same PUUID between our pre-flight
+  // and this txn.
+  const existingAccount = await db.account.findUnique({
     where: { serverId_puuid: { serverId: guildId, puuid } },
     include: { player: { include: { subscriptions: true } } },
   });
-
   if (existingAccount) {
-    logger.info(
-      `⚠️  Account already exists for "${existingAccount.player.alias}"`,
-    );
     return {
       kind: "account-already-subscribed",
       existingPlayerAlias: existingAccount.player.alias,
@@ -62,118 +70,160 @@ export async function addSubscription(
     };
   }
 
-  const now = new Date();
-  try {
-    const isAddingToExistingPlayer = existingPlayer !== null;
-
-    const account = await prisma.account.create({
-      data: {
-        alias,
-        puuid,
-        region,
-        serverId: guildId,
-        creatorDiscordId,
-        player: {
-          connectOrCreate: {
-            where: { serverId_alias: { serverId: guildId, alias } },
-            create: {
-              alias,
-              discordId: discordUserId ?? null,
-              createdTime: now,
-              updatedTime: now,
-              creatorDiscordId,
-              serverId: guildId,
-            },
+  const account = await db.account.create({
+    data: {
+      alias,
+      puuid,
+      region,
+      serverId: guildId,
+      creatorDiscordId,
+      player: {
+        connectOrCreate: {
+          where: { serverId_alias: { serverId: guildId, alias } },
+          create: {
+            alias,
+            discordId: discordUserId ?? null,
+            createdTime: now,
+            updatedTime: now,
+            creatorDiscordId,
+            serverId: guildId,
           },
         },
-        createdTime: now,
-        updatedTime: now,
       },
-    });
+      createdTime: now,
+      updatedTime: now,
+    },
+  });
 
-    const playerConfigEntry = {
-      alias,
-      league: {
-        leagueAccount: { puuid, region },
-      },
-      discordAccount: { id: discordUserId },
-    };
+  const playerAccount = await db.account.findUnique({
+    where: { id: account.id },
+    include: { player: { include: { accounts: true } } },
+  });
 
-    await backfillLastMatchTime(playerConfigEntry, puuid);
-
-    const playerAccount = await prisma.account.findUnique({
-      where: { id: account.id },
-      include: { player: { include: { accounts: true } } },
-    });
-
-    if (!playerAccount) {
-      return {
-        kind: "internal-error",
-        message: "Failed to find player for newly created account",
-      };
-    }
-
-    const existingSubscription = await prisma.subscription.findUnique({
-      where: {
-        serverId_playerId_channelId: {
-          serverId: guildId,
-          playerId: playerAccount.player.id,
-          channelId,
-        },
-      },
-    });
-
-    if (existingSubscription) {
-      return {
-        kind: "subscription-already-exists",
-        playerAlias: playerAccount.player.alias,
-        addedToExistingPlayer: isAddingToExistingPlayer,
-        accounts: playerAccount.player.accounts.map((a) => ({
-          alias: a.alias,
-          region: a.region,
-        })),
-      };
-    }
-
-    const existingSubscriptionCount = await prisma.subscription.count({
-      where: { serverId: guildId },
-    });
-    const isFirstSubscription = existingSubscriptionCount === 0;
-
-    const subscription = await prisma.subscription.create({
-      data: {
-        channelId,
-        playerId: playerAccount.player.id,
-        createdTime: now,
-        updatedTime: now,
-        creatorDiscordId: DiscordAccountIdSchema.parse(creatorDiscordId),
-        serverId: guildId,
-      },
-    });
-
+  if (!playerAccount) {
     return {
-      kind: "created",
-      subscription: { id: subscription.id },
-      account: {
-        id: playerAccount.id,
-        puuid,
-        region: playerAccount.region,
-        alias: playerAccount.alias,
-      },
-      player: {
-        id: playerAccount.player.id,
-        alias: playerAccount.player.alias,
-        accounts: playerAccount.player.accounts.map((a) => ({
-          alias: a.alias,
-          region: a.region,
-        })),
-      },
-      isAddingToExistingPlayer,
-      isFirstSubscription,
-      warnings: limits.warnings,
+      kind: "internal-error",
+      message: "Failed to find player for newly created account",
     };
+  }
+
+  const existingSubscription = await db.subscription.findUnique({
+    where: {
+      serverId_playerId_channelId: {
+        serverId: guildId,
+        playerId: playerAccount.player.id,
+        channelId,
+      },
+    },
+  });
+
+  if (existingSubscription) {
+    return {
+      kind: "subscription-already-exists",
+      playerAlias: playerAccount.player.alias,
+      addedToExistingPlayer: isAddingToExistingPlayer,
+      accounts: playerAccount.player.accounts.map((a) => ({
+        alias: a.alias,
+        region: a.region,
+      })),
+    };
+  }
+
+  const existingSubscriptionCount = await db.subscription.count({
+    where: { serverId: guildId },
+  });
+  const isFirstSubscription = existingSubscriptionCount === 0;
+
+  const subscription = await db.subscription.create({
+    data: {
+      channelId,
+      playerId: playerAccount.player.id,
+      createdTime: now,
+      updatedTime: now,
+      creatorDiscordId: DiscordAccountIdSchema.parse(creatorDiscordId),
+      serverId: guildId,
+    },
+  });
+
+  return {
+    kind: "created",
+    subscription: { id: subscription.id },
+    account: {
+      id: playerAccount.id,
+      puuid,
+      region: playerAccount.region,
+      alias: playerAccount.alias,
+    },
+    player: {
+      id: playerAccount.player.id,
+      alias: playerAccount.player.alias,
+      accounts: playerAccount.player.accounts.map((a) => ({
+        alias: a.alias,
+        region: a.region,
+      })),
+    },
+    isAddingToExistingPlayer,
+    isFirstSubscription,
+    warnings: limits.warnings,
+  };
+}
+
+/**
+ * Resolve the Riot ID, then commit the DB writes inside the supplied
+ * transaction. Limits are re-checked under the same txn to close the
+ * race window between two concurrent adds. Callers (the tRPC router,
+ * the Discord command) open the transaction themselves so audit-row
+ * writes can join the same atomic unit.
+ *
+ * Backfill is intentionally NOT done here — long-running external
+ * calls don't belong in a DB transaction. Callers run
+ * `runBackfillAfterCommit` after the transaction commits.
+ */
+export async function addSubscription(
+  input: AddSubscriptionInput,
+  db: Db,
+): Promise<AddSubscriptionResult> {
+  const resolved = await resolveRiotIdToPuuid(input.riotId, input.region);
+  if (resolved.kind !== "ok") {
+    return { kind: "riot-id-not-found", message: resolved.message };
+  }
+  const puuid = LeaguePuuidSchema.parse(resolved.puuid);
+
+  try {
+    return await commitSubscription({ input, puuid, db });
   } catch (error) {
     logger.error("❌ Database error during subscription:", error);
     return { kind: "internal-error", message: getErrorMessage(error) };
+  }
+}
+
+/**
+ * Best-effort: backfill match history after the subscription commits.
+ * Called by the caller AFTER the transaction has resolved successfully.
+ * If this fails the next poll cycle will populate match history; we
+ * don't want a flaky external call to orphan the account.
+ */
+export async function runBackfillAfterCommit(params: {
+  alias: string;
+  puuid: LeaguePuuid;
+  region: Region;
+  discordUserId: DiscordAccountId | undefined;
+}): Promise<void> {
+  try {
+    await backfillLastMatchTime(
+      {
+        alias: params.alias,
+        league: {
+          leagueAccount: { puuid: params.puuid, region: params.region },
+        },
+        discordAccount: { id: params.discordUserId },
+      },
+      params.puuid,
+    );
+  } catch (error) {
+    logger.warn(
+      "Backfill failed after subscription create — match history will populate on next poll",
+      { error, puuid: params.puuid },
+    );
   }
 }

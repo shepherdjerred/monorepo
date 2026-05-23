@@ -1,8 +1,8 @@
 import { type DiscordGuildId } from "@scout-for-lol/data/index.ts";
-import { prisma } from "#src/database/index.ts";
 import { getLimit } from "#src/configuration/flags.ts";
 import { LIMIT_WARNING_THRESHOLD } from "#src/configuration/subscription-limits.ts";
 import { createLogger } from "#src/logger.ts";
+import type { Db } from "#src/lib/audit/index.ts";
 import type { LimitWarning } from "#src/lib/subscription/types.ts";
 
 const logger = createLogger("subscription-limits");
@@ -23,8 +23,9 @@ export type LimitCheckResult =
 export async function checkSubscriptionAndAccountLimits(params: {
   guildId: DiscordGuildId;
   isAddingToExistingPlayer: boolean;
+  db: Db;
 }): Promise<LimitCheckResult> {
-  const { guildId, isAddingToExistingPlayer } = params;
+  const { guildId, isAddingToExistingPlayer, db } = params;
   const warnings: LimitWarning[] = [];
 
   if (!isAddingToExistingPlayer) {
@@ -32,7 +33,7 @@ export async function checkSubscriptionAndAccountLimits(params: {
       server: guildId,
     });
     if (subscriptionLimit !== "unlimited") {
-      const subscribedPlayerCount = await prisma.player.count({
+      const subscribedPlayerCount = await db.player.count({
         where: {
           serverId: guildId,
           subscriptions: { some: {} },
@@ -64,7 +65,7 @@ export async function checkSubscriptionAndAccountLimits(params: {
 
   const accountLimit = getLimit("accounts", { server: guildId });
   if (accountLimit !== "unlimited") {
-    const accountCount = await prisma.account.count({
+    const accountCount = await db.account.count({
       where: { serverId: guildId },
     });
 

@@ -1,6 +1,6 @@
-import { prisma } from "#src/database/index.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
 import { createLogger } from "#src/logger.ts";
+import type { Db } from "#src/lib/audit/index.ts";
 import type {
   RemoveSubscriptionInput,
   RemoveSubscriptionResult,
@@ -10,11 +10,12 @@ const logger = createLogger("subscription-remove");
 
 export async function removeSubscription(
   input: RemoveSubscriptionInput,
+  db: Db,
 ): Promise<RemoveSubscriptionResult> {
   const { guildId, channelId, alias } = input;
 
   try {
-    const player = await prisma.player.findUnique({
+    const player = await db.player.findUnique({
       where: { serverId_alias: { serverId: guildId, alias } },
       include: { subscriptions: true, accounts: true },
     });
@@ -23,7 +24,7 @@ export async function removeSubscription(
       return { kind: "player-not-found" };
     }
 
-    const subscription = await prisma.subscription.findUnique({
+    const subscription = await db.subscription.findUnique({
       where: {
         serverId_playerId_channelId: {
           serverId: guildId,
@@ -42,7 +43,7 @@ export async function removeSubscription(
       };
     }
 
-    await prisma.subscription.delete({ where: { id: subscription.id } });
+    await db.subscription.delete({ where: { id: subscription.id } });
     logger.info(`✅ Removed subscription ID ${subscription.id.toString()}`);
 
     const remainingChannelIds = player.subscriptions

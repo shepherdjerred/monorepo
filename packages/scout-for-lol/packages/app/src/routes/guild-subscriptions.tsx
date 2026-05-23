@@ -65,6 +65,11 @@ export function GuildSubscriptions() {
           Failed to load: {subsQuery.error.message}
         </p>
       )}
+      {removeMutation.error && (
+        <p style={{ color: "crimson" }}>
+          Failed to remove: {removeMutation.error.message}
+        </p>
+      )}
 
       {subsQuery.data && subsQuery.data.length === 0 && (
         <p>

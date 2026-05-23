@@ -105,11 +105,12 @@ const GUILDS_CACHE_TTL_MS = 5 * 60 * 1000;
 
 export async function fetchUserGuilds(user: User): Promise<PartialGuild[]> {
   const cached = guildsCache.get(user.discordId);
-  if (
-    cached !== undefined &&
-    Date.now() - cached.fetchedAt < GUILDS_CACHE_TTL_MS
-  ) {
-    return cached.guilds;
+  if (cached !== undefined) {
+    if (Date.now() - cached.fetchedAt < GUILDS_CACHE_TTL_MS) {
+      return cached.guilds;
+    }
+    // Stale — drop so the Map stays bounded across long-running pods.
+    guildsCache.delete(user.discordId);
   }
 
   const token = await getFreshUserAccessToken(user);

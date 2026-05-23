@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { RiotIdSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 
 type Channel = { id: string; name: string };
@@ -81,7 +82,11 @@ export function AddSubscriptionDialog(props: Props) {
   function handleSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
     setError(null);
-    if (!/^[\p{L}0-9 ]{3,16}#[\p{L}0-9]{3,5}$/u.test(riotIdInput)) {
+    // Same schema the backend uses; reusing it keeps the contract
+    // single-sourced. We only need the input-side validation here; the
+    // server re-parses + transforms on receipt.
+    const riotIdParse = RiotIdSchema.safeParse(riotIdInput);
+    if (!riotIdParse.success) {
       setError("Riot ID must be in the form game_name#tag");
       return;
     }
@@ -89,7 +94,6 @@ export function AddSubscriptionDialog(props: Props) {
       guildId: props.guildId,
       channelId,
       region,
-      // RiotIdSchema accepts the raw string and transforms server-side.
       riotId: riotIdInput,
       alias: alias.trim(),
       ...(discordUserId.length > 0 && { discordUserId }),

@@ -63,9 +63,14 @@ export function RequireSession() {
 }
 
 async function logout() {
-  await fetch("/api/auth/logout", {
-    method: "POST",
-    credentials: "include",
-  });
-  globalThis.location.assign("/app/login");
+  // Always navigate to /app/login, even if the fetch fails — the user
+  // expects "Sign out" to land them on the login page regardless.
+  try {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+  } finally {
+    globalThis.location.assign("/app/login");
+  }
 }

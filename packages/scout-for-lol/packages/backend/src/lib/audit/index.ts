@@ -3,8 +3,8 @@ import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data/index.ts";
-import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
+import type { ExtendedPrismaClient } from "#src/database/index.ts";
 
 const logger = createLogger("audit");
 
@@ -16,6 +16,23 @@ export const AuditActionSchema = z.enum([
   "PLAYER_CREATE",
 ]);
 export type AuditAction = z.infer<typeof AuditActionSchema>;
+
+/**
+ * The transaction client handed to the callback of
+ * `prisma.$transaction(...)` from our extended Prisma client. The
+ * extension changes the internal generics enough that the stock
+ * `Prisma.TransactionClient` type doesn't unify — we derive Db from the
+ * actual client so lib functions accept exactly what the router and
+ * Discord commands pass through.
+ *
+ * Functions that need to run mutation + audit atomically open the
+ * transaction at the caller boundary and thread `tx` through.
+ */
+type TxCallback = Extract<
+  Parameters<ExtendedPrismaClient["$transaction"]>[0],
+  (arg: never) => unknown
+>;
+export type Db = Parameters<TxCallback>[0];
 
 export type RecordAuditInput = {
   action: AuditAction;
@@ -29,9 +46,17 @@ export type RecordAuditInput = {
   userAgent?: string | null;
 };
 
-export async function recordAudit(input: RecordAuditInput): Promise<void> {
+/**
+ * Record a single audit row. Throws if the write fails so the caller's
+ * transaction rolls back — we'd rather fail the whole mutation than
+ * leave a state change without an audit trail.
+ */
+export async function recordAudit(
+  input: RecordAuditInput,
+  db: Db,
+): Promise<void> {
   try {
-    await prisma.auditLog.create({
+    await db.auditLog.create({
       data: {
         actorDiscordId: DiscordAccountIdSchema.parse(input.actorDiscordId),
         serverId: DiscordGuildIdSchema.parse(input.serverId),
@@ -50,5 +75,6 @@ export async function recordAudit(input: RecordAuditInput): Promise<void> {
       action: input.action,
       serverId: input.serverId,
     });
+    throw error;
   }
 }
