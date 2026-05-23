@@ -7,6 +7,10 @@ import InfoBox from "../components/InfoBox.astro";
 import CommandBox from "../components/CommandBox.astro";
 import FAQItem from "../components/FAQItem.astro";
 import { POLLING_TIERS } from "@scout-for-lol/data/polling-config.ts";
+import {
+  DISCORD_INSTALL_CLICK_EVENT,
+  DISCORD_INVITE_URL,
+} from "#src/lib/marketing-constants.ts";
 
 const maxTier = POLLING_TIERS[POLLING_TIERS.length - 1]!;
 ---
@@ -1465,7 +1469,9 @@ const maxTier = POLLING_TIERS[POLLING_TIERS.length - 1]!;
             Can't find what you're looking for? We're here to help!
           </p>
           <a
-            href="https://discord.com/oauth2/authorize?client_id=1182800769188110366"
+            href={DISCORD_INVITE_URL}
+            data-scout-conversion={DISCORD_INSTALL_CLICK_EVENT}
+            data-scout-cta-location="docs"
             class="inline-flex items-center rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           >
             Add Scout to Discord

@@ -390,10 +390,18 @@ export function deploySiteHelper(
   cloudflareAccountId: string = "",
   depNames: string[] = [],
   depDirs: Directory[] = [],
+  buildEnvNames: string[] = [],
+  buildEnvValues: Secret[] = [],
   dryrun = false,
   tsconfig: File | null = null,
   needsPlaywright = false,
 ): Container {
+  if (buildEnvNames.length !== buildEnvValues.length) {
+    throw new Error(
+      `Expected ${buildEnvNames.length} build env secret values, received ${buildEnvValues.length}`,
+    );
+  }
+
   let container = dag
     .container()
     .from(BUN_IMAGE)
@@ -467,6 +475,15 @@ export function deploySiteHelper(
     .withEnvVariable("AWS_DEFAULT_REGION", "us-east-1")
     .withEnvVariable("AWS_REQUEST_CHECKSUM_CALCULATION", "WHEN_REQUIRED")
     .withEnvVariable("AWS_RESPONSE_CHECKSUM_VALIDATION", "WHEN_REQUIRED");
+
+  for (let i = 0; i < buildEnvNames.length; i++) {
+    const name = buildEnvNames[i];
+    const value = buildEnvValues[i];
+    if (name === "" || value == null) {
+      throw new Error(`Invalid build env secret at index ${i}`);
+    }
+    container = container.withSecretVariable(name, value);
+  }
 
   if (buildCmd) {
     container = container.withExec(["sh", "-c", buildCmd]);

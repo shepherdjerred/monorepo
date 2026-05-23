@@ -14,6 +14,10 @@ import GalleryItem from "../components/GalleryItem.astro";
 import BenefitCard from "../components/BenefitCard.astro";
 import ProcessStep from "../components/ProcessStep.astro";
 import { generatedScoutShowcaseAssets } from "../data/scout-showcase";
+import {
+  DISCORD_INSTALL_CLICK_EVENT,
+  DISCORD_INVITE_URL,
+} from "#src/lib/marketing-constants.ts";
 
 const matchImg = "/match.png";
 const loadingScreenImg = "/loading-screen.png";
@@ -34,8 +38,10 @@ const leaderboardLpImg = "/leaderboard-lp.png";
       ctaButtons={[
         {
           text: "Add to Discord",
-          href: "https://discord.com/oauth2/authorize?client_id=1182800769188110366",
+          href: DISCORD_INVITE_URL,
           variant: "primary",
+          trackingEvent: DISCORD_INSTALL_CLICK_EVENT,
+          trackingLocation: "home_hero",
         },
         { text: "View Documentation", href: "/docs", variant: "secondary" },
       ]}
@@ -327,8 +333,10 @@ const leaderboardLpImg = "/leaderboard-lp.png";
       buttons={[
         {
           text: "Add to Discord",
-          href: "https://discord.com/oauth2/authorize?client_id=1182800769188110366",
+          href: DISCORD_INVITE_URL,
           variant: "primary",
+          trackingEvent: DISCORD_INSTALL_CLICK_EVENT,
+          trackingLocation: "home_final_cta",
         },
         { text: "Read the docs", href: "/docs", variant: "secondary" },
       ]}
