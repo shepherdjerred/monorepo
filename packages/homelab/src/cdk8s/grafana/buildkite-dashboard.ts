@@ -70,34 +70,34 @@ function createTimeseriesPanel(options: {
 /**
  * Creates a Grafana dashboard for Buildkite CI resource monitoring.
  *
- * Shows Kueue queue health, resource sizing accuracy (actual vs requested),
- * and concurrency/throughput metrics to help detect wrong-sized jobs.
+ * Shows Buildkite agent health, resource sizing accuracy (actual vs requested),
+ * and concurrency metrics to help detect wrong-sized jobs.
  */
 export function createBuildkiteDashboard() {
   const builder = new dashboard.DashboardBuilder("Buildkite — CI Resources")
     .uid("buildkite-ci-dashboard")
-    .tags(["buildkite", "kueue", "ci"])
+    .tags(["buildkite", "ci", "resources"])
     .time({ from: "now-6h", to: "now" })
     .refresh("30s")
     .timezone("browser")
     .editable();
 
-  // --- Row 1: Kueue Queue Health ---
-  builder.withRow(new dashboard.RowBuilder("Kueue Queue Health"));
+  // --- Row 1: Agent Health ---
+  builder.withRow(new dashboard.RowBuilder("Agent Health"));
 
   builder.withPanel(
     createStatPanel({
-      title: "Admitted Workloads",
-      query: `kueue_admitted_active_workloads{cluster_queue="buildkite"}`,
-      legend: "admitted",
+      title: "Available Agents",
+      query: `kube_deployment_status_replicas_available{namespace="buildkite", deployment="buildkite-agent-stack-k8s"}`,
+      legend: "available",
       gridPos: { x: 0, y: 1, w: 6, h: 4 },
     }),
   );
 
   builder.withPanel(
     createStatPanel({
-      title: "Pending Workloads",
-      query: `kueue_pending_workloads{cluster_queue="buildkite", status="active"}`,
+      title: "Pending Pods",
+      query: `count(kube_pod_status_phase{namespace="buildkite", phase="Pending"} == 1) or on() vector(0)`,
       legend: "pending",
       gridPos: { x: 6, y: 1, w: 6, h: 4 },
       thresholds: [
@@ -110,9 +110,9 @@ export function createBuildkiteDashboard() {
 
   builder.withPanel(
     createStatPanel({
-      title: "CPU Quota Usage",
-      query: `kueue_cluster_queue_resource_usage{cluster_queue="buildkite", resource="cpu"} / kueue_cluster_queue_nominal_quota{cluster_queue="buildkite", resource="cpu"}`,
-      legend: "usage",
+      title: "CPU Utilization Ratio",
+      query: `sum(rate(container_cpu_usage_seconds_total{namespace="buildkite", container!=""}[5m])) / sum(kube_pod_container_resource_requests{namespace="buildkite", resource="cpu"})`,
+      legend: "actual/requested",
       gridPos: { x: 12, y: 1, w: 6, h: 4 },
       unit: "percentunit",
       thresholds: [
@@ -125,9 +125,9 @@ export function createBuildkiteDashboard() {
 
   builder.withPanel(
     createStatPanel({
-      title: "Memory Quota Usage",
-      query: `kueue_cluster_queue_resource_usage{cluster_queue="buildkite", resource="memory"} / kueue_cluster_queue_nominal_quota{cluster_queue="buildkite", resource="memory"}`,
-      legend: "usage",
+      title: "Memory Utilization Ratio",
+      query: `sum(container_memory_working_set_bytes{namespace="buildkite", container!=""}) / sum(kube_pod_container_resource_requests{namespace="buildkite", resource="memory"})`,
+      legend: "actual/requested",
       gridPos: { x: 18, y: 1, w: 6, h: 4 },
       unit: "percentunit",
       thresholds: [
@@ -140,15 +140,15 @@ export function createBuildkiteDashboard() {
 
   builder.withPanel(
     createTimeseriesPanel({
-      title: "Quota Usage Over Time",
+      title: "CPU Usage vs Requested",
       targets: [
         {
-          query: `kueue_cluster_queue_resource_usage{cluster_queue="buildkite", resource="cpu"}`,
-          legend: "CPU used",
+          query: `sum(rate(container_cpu_usage_seconds_total{namespace="buildkite", container!=""}[5m]))`,
+          legend: "actual",
         },
         {
-          query: `kueue_cluster_queue_nominal_quota{cluster_queue="buildkite", resource="cpu"}`,
-          legend: "CPU quota",
+          query: `sum(kube_pod_container_resource_requests{namespace="buildkite", resource="cpu"})`,
+          legend: "requested",
         },
       ],
       gridPos: { x: 0, y: 5, w: 12, h: 8 },
@@ -158,14 +158,14 @@ export function createBuildkiteDashboard() {
 
   builder.withPanel(
     createTimeseriesPanel({
-      title: "Admitted vs Pending Over Time",
+      title: "Running vs Pending Pods",
       targets: [
         {
-          query: `kueue_admitted_active_workloads{cluster_queue="buildkite"}`,
-          legend: "admitted",
+          query: `count(kube_pod_status_phase{namespace="buildkite", phase="Running"} == 1)`,
+          legend: "running",
         },
         {
-          query: `kueue_pending_workloads{cluster_queue="buildkite", status="active"}`,
+          query: `count(kube_pod_status_phase{namespace="buildkite", phase="Pending"} == 1) or on() vector(0)`,
           legend: "pending",
         },
       ],
@@ -271,15 +271,15 @@ export function createBuildkiteDashboard() {
 
   builder.withPanel(
     createTimeseriesPanel({
-      title: "Kueue Admission Rate",
+      title: "Agent Restarts",
       targets: [
         {
-          query: `rate(kueue_admitted_workloads_total{cluster_queue="buildkite"}[5m])`,
-          legend: "admissions/s",
+          query: `sum by (container) (increase(kube_pod_container_status_restarts_total{namespace="buildkite"}[6h])) or on() vector(0)`,
+          legend: "{{container}}",
         },
       ],
       gridPos: { x: 12, y: 27, w: 12, h: 8 },
-      unit: "ops",
+      unit: "short",
     }),
   );
 

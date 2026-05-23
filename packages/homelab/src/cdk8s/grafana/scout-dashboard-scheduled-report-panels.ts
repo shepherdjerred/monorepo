@@ -34,14 +34,14 @@ export function addScheduledReportRows(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `sum by (environment) (scheduled_reports_active{${buildFilter()}})`,
+            `sum by (environment) (scheduled_reports_active{${buildFilter()}}) or on() vector(0)`,
           )
           .legendFormat("{{environment}}"),
       )
       .unit("short")
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
-      .gridPos({ x: 0, y: 115, w: 8, h: 4 }),
+      .gridPos({ x: 0, y: 115, w: 6, h: 4 }),
   );
 
   builder.withPanel(
@@ -52,14 +52,14 @@ export function addScheduledReportRows(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `sum by (environment) (increase(scheduled_reports_due_total{${buildFilter()}}[1h]))`,
+            `sum by (environment) (increase(scheduled_reports_due_total{${buildFilter()}}[1h])) or on() vector(0)`,
           )
           .legendFormat("{{environment}}"),
       )
       .unit("short")
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
-      .gridPos({ x: 8, y: 115, w: 8, h: 4 }),
+      .gridPos({ x: 6, y: 115, w: 6, h: 4 }),
   );
 
   builder.withPanel(
@@ -70,7 +70,7 @@ export function addScheduledReportRows(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `sum by (environment) (increase(scheduled_reports_failed_total{${buildFilter()}}[1h]))`,
+            `sum by (environment) (increase(scheduled_reports_failed_total{${buildFilter()}}[1h])) or on() vector(0)`,
           )
           .legendFormat("{{environment}}"),
       )
@@ -85,7 +85,35 @@ export function addScheduledReportRows(
             { value: 1, color: "red" },
           ]),
       )
-      .gridPos({ x: 16, y: 115, w: 8, h: 4 }),
+      .gridPos({ x: 12, y: 115, w: 6, h: 4 }),
+  );
+
+  builder.withPanel(
+    new stat.PanelBuilder()
+      .title("Budget rejections")
+      .description(
+        "Report executions rejected for exceeding configured budgets",
+      )
+      .datasource(prometheusDatasource)
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr(
+            `sum by (environment) (increase(scheduled_report_budget_exceeded_total{${buildFilter()}}[1h])) or on() vector(0)`,
+          )
+          .legendFormat("{{environment}}"),
+      )
+      .unit("short")
+      .colorMode(common.BigValueColorMode.Value)
+      .graphMode(common.BigValueGraphMode.Area)
+      .thresholds(
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 1, color: "red" },
+          ]),
+      )
+      .gridPos({ x: 18, y: 115, w: 6, h: 4 }),
   );
 
   builder.withPanel(
@@ -96,7 +124,7 @@ export function addScheduledReportRows(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `sum by (environment, status, trigger, system_source) (rate(scheduled_reports_run_total{${buildFilter()}}[5m])) * 60`,
+            `sum by (environment, status, trigger, system_source) (rate(scheduled_reports_run_total{${buildFilter()}}[5m])) * 60 or on() vector(0)`,
           )
           .legendFormat(
             "{{environment}} - {{status}} - {{trigger}} - {{system_source}}",
@@ -116,7 +144,7 @@ export function addScheduledReportRows(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `histogram_quantile(0.95, sum by (environment, system_source, le) (rate(scheduled_reports_duration_ms_bucket{${buildFilter()}}[15m])))`,
+            `histogram_quantile(0.95, sum by (environment, system_source, le) (rate(scheduled_reports_duration_ms_bucket{${buildFilter()}}[15m]))) or on() vector(0)`,
           )
           .legendFormat("{{environment}} - {{system_source}}"),
       )
@@ -134,7 +162,7 @@ export function addScheduledReportRows(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `sum by (environment, trigger, system_source) (rate(scheduled_reports_rows_scanned_total{${buildFilter()}}[5m])) * 60`,
+            `sum by (environment, trigger, system_source) (rate(scheduled_reports_rows_scanned_total{${buildFilter()}}[5m])) * 60 or on() vector(0)`,
           )
           .legendFormat("{{environment}} - {{trigger}} - {{system_source}}"),
       )
@@ -152,7 +180,7 @@ export function addScheduledReportRows(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `sum by (environment, trigger, system_source) (rate(scheduled_reports_rows_returned_total{${buildFilter()}}[5m])) * 60`,
+            `sum by (environment, trigger, system_source) (rate(scheduled_reports_rows_returned_total{${buildFilter()}}[5m])) * 60 or on() vector(0)`,
           )
           .legendFormat("{{environment}} - {{trigger}} - {{system_source}}"),
       )

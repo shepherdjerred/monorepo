@@ -298,11 +298,24 @@ async function processFile(
   if (source === null) {
     return [];
   }
-  return extractSymbolsFromSource({
-    filePath: relPath,
-    source,
-    language: langInfo.language,
-  });
+  try {
+    return await extractSymbolsFromSource({
+      filePath: relPath,
+      source,
+      language: langInfo.language,
+    });
+  } catch (error: unknown) {
+    console.warn(
+      JSON.stringify({
+        level: "warning",
+        msg: "symbol-index parse failed; skipping file",
+        component: "pr-review-pipeline",
+        file: relPath,
+        error: error instanceof Error ? error.message : String(error),
+      }),
+    );
+    return [];
+  }
 }
 
 function cachePathFor(commitSha: string): string {

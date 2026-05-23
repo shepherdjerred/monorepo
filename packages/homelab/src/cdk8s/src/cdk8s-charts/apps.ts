@@ -11,7 +11,6 @@ import { createIntelGpuDevicePluginApp } from "@shepherdjerred/homelab/cdk8s/src
 import { createCertManagerApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/cert-manager.ts";
 import { createCloudflareOperatorApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/cloudflare-operator.ts";
 import { createNfdApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/nfd.ts";
-import { createGrafanaApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/grafana.ts";
 import { createChartMuseumApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/chartmuseum.ts";
 import { createMinecraftSjerredApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/minecraft-sjerred.ts";
 import { createMinecraftShuxinApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/minecraft-shuxin.ts";
@@ -97,7 +96,6 @@ export async function createAppsChart(app: App) {
   createCertManagerApp(chart);
   createCloudflareOperatorApp(chart);
   createNfdApp(chart);
-  createGrafanaApp(chart);
   createChartMuseumApp(chart);
   createMcRouterApp(chart);
   createMinecraftSjerredApp(chart);

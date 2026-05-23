@@ -22,6 +22,11 @@ type ScheduleDefinition = {
   workflowExecutionTimeout?: Duration;
 };
 
+const PR_REVIEW_EVAL_SCHEDULE_ID = "pr-review-eval-nightly";
+const PR_REVIEW_FIXTURES_REPO_URL_ENV = "PR_REVIEW_FIXTURES_REPO_URL";
+const PR_REVIEW_EVAL_PAUSE_REASON =
+  "Paused because PR_REVIEW_FIXTURES_REPO_URL is not configured on the Temporal worker";
+
 const SCOUT_LANE_PRIOR_UPDATE_CONFIG = {
   lanePriors: {
     bucket: "scout-prod",
@@ -46,6 +51,7 @@ const HOMELAB_AUDIT_AGENT_TASK: AgentTaskInput = {
   },
   scheduleId: "homelab-audit-daily",
   allowSelfCancel: false,
+  maxTurns: 35,
   emailSubjectPrefix: "Homelab Audit",
   source: {
     docPath: "packages/docs/guides/2026-04-04_homelab-audit-runbook.md",
@@ -55,6 +61,10 @@ const HOMELAB_AUDIT_AGENT_TASK: AgentTaskInput = {
     "`packages/docs/guides/2026-04-04_homelab-audit-runbook.md` in the checked-out repo.",
     "Use live read-only evidence from the cluster and observability tools named in the runbook.",
     "Do not mutate Kubernetes, GitHub, PagerDuty, Grafana, Bugsink, Cloudflare, files, or git state.",
+    "Keep the run bounded: prioritize active incidents, firing alerts, failed Temporal workflows,",
+    "and changed deltas over exhaustive historical sweeps. Avoid broad unbounded log queries.",
+    "If a tool is slow or a section would exceed the useful audit window, skip that section,",
+    "state exactly what was skipped, and return a partial report instead of continuing indefinitely.",
     "Return a concise markdown report suitable for email. Include current status, notable regressions,",
     "resolved items, remaining action items, and exact evidence links or commands where useful.",
   ].join(" "),
@@ -180,7 +190,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Weekly pr-review-bot A/B significance report — Bayesian posterior over real-PR acceptance, Discord post Mon 09:00 PT",
   },
   {
-    id: "pr-review-eval-nightly",
+    id: PR_REVIEW_EVAL_SCHEDULE_ID,
     workflowType: "prReviewEvalWorkflow",
     args: [{ pin: EVAL_FIXTURES_PIN }],
     // 04:00 PT — staggered after velero-orphan-audit (03:30) so the
@@ -300,14 +310,49 @@ export const SCHEDULES: ScheduleDefinition[] = [
   },
 ];
 
+export function prReviewEvalFixturesConfigured(
+  env: Record<string, string | undefined> = Bun.env,
+): boolean {
+  return (env[PR_REVIEW_FIXTURES_REPO_URL_ENV]?.trim() ?? "").length > 0;
+}
+
+export function scheduleRequiresConfigPause(
+  schedule: ScheduleDefinition,
+  env: Record<string, string | undefined> = Bun.env,
+): { paused: boolean; reason: string | undefined } {
+  if (schedule.id !== PR_REVIEW_EVAL_SCHEDULE_ID) {
+    return { paused: false, reason: undefined };
+  }
+  if (prReviewEvalFixturesConfigured(env)) {
+    return { paused: false, reason: undefined };
+  }
+  return { paused: true, reason: PR_REVIEW_EVAL_PAUSE_REASON };
+}
+
+async function reconcileSchedulePauseState(
+  handle: ReturnType<Client["schedule"]["getHandle"]>,
+  schedule: ScheduleDefinition,
+): Promise<void> {
+  const desired = scheduleRequiresConfigPause(schedule);
+  if (desired.paused) {
+    await handle.pause(desired.reason ?? "Paused by schedule configuration");
+    console.warn(`Paused schedule: ${schedule.id} (${desired.reason ?? ""})`);
+    return;
+  }
+  if (schedule.id === PR_REVIEW_EVAL_SCHEDULE_ID) {
+    await handle.unpause(
+      `${PR_REVIEW_FIXTURES_REPO_URL_ENV} is configured; eval schedule enabled`,
+    );
+    console.warn(`Unpaused schedule: ${schedule.id}`);
+  }
+}
+
 export async function registerSchedules(client: Client): Promise<void> {
   const scheduleClient = client.schedule;
 
   for (const schedule of SCHEDULES) {
+    let handle = scheduleClient.getHandle(schedule.id);
     try {
-      // Try to get existing schedule handle
-      const handle = scheduleClient.getHandle(schedule.id);
-
       // Update the existing schedule
       await handle.update((prev) => ({
         ...prev,
@@ -357,6 +402,8 @@ export async function registerSchedules(client: Client): Promise<void> {
       });
 
       console.warn(`Created schedule: ${schedule.id}`);
+      handle = scheduleClient.getHandle(schedule.id);
     }
+    await reconcileSchedulePauseState(handle, schedule);
   }
 }

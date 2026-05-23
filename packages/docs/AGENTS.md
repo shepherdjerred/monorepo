@@ -20,7 +20,7 @@ docs/
 ├── guides/            # How-to guides, runbooks, operational docs, research notes
 ├── plans/             # Implementation plans (substantive multi-step work, in-progress or upcoming)
 ├── logs/              # Per-session journals (one-shot fixes, Q&A, bug recaps) — the default for sessions
-├── todos/             # One active TODO doc per source TODO marker
+├── todos/             # General issue tracking; required for every source TODO marker
 └── archive/           # Historical docs no longer actively maintained
     ├── bazel/         # Bazel-era docs (Bazel removed from monorepo)
     ├── completed/     # Plans whose work shipped (preserved for design context)
@@ -29,15 +29,15 @@ docs/
 
 ## Where to Put New Docs
 
-| Type                                       | Directory       | Examples                                                       |
-| ------------------------------------------ | --------------- | -------------------------------------------------------------- |
-| System design, how components fit together | `architecture/` | Service architecture, data flow, package relationships         |
-| Reusable patterns across the codebase      | `patterns/`     | ESLint config patterns, testing conventions, naming rules      |
-| "We decided X because Y"                   | `decisions/`    | Technology choices, audits, tradeoff analyses                  |
-| "How to do X" or operational knowledge     | `guides/`       | Deployment runbooks, health audits, research notes, changelogs |
-| "We plan to build X" (future/in-progress)  | `plans/`        | Implementation plans, feature proposals, migration plans       |
-| Per-session journal (default)              | `logs/`         | Bug-fix recaps, one-shot edits, Q&A answers                    |
-| Active source TODO                         | `todos/`        | One doc per `TODO(todo:<id>)` source marker                    |
+| Type                                        | Directory       | Examples                                                                  |
+| ------------------------------------------- | --------------- | ------------------------------------------------------------------------- |
+| System design, how components fit together  | `architecture/` | Service architecture, data flow, package relationships                    |
+| Reusable patterns across the codebase       | `patterns/`     | ESLint config patterns, testing conventions, naming rules                 |
+| "We decided X because Y"                    | `decisions/`    | Technology choices, audits, tradeoff analyses                             |
+| "How to do X" or operational knowledge      | `guides/`       | Deployment runbooks, health audits, research notes, changelogs            |
+| "We plan to build X" (future/in-progress)   | `plans/`        | Implementation plans, feature proposals, migration plans                  |
+| Per-session journal (default)               | `logs/`         | Bug-fix recaps, one-shot edits, Q&A answers                               |
+| Tracked issue / deferred work / source TODO | `todos/`        | Verification follow-ups, deferred fixes, source `TODO(todo:<id>)` markers |
 
 **When in doubt:** If it records a choice and its reasoning, it's a decision. If it describes steps to follow, it's a guide. If it describes something to build, it's a plan. If it's a journal of what one session did, it's a log.
 
@@ -51,7 +51,7 @@ docs/
 - Keep `index.md` stable: do not add individual entries for `plans/`, `logs/`, or `todos/`
 - Prefer updating existing docs over creating new ones
 - Plans must be raw Markdown — do not generate PDF or Typst renderings alongside `.md` files
-- TODO docs must be active-only and match exactly one source marker; `bun scripts/check-todos.ts` enforces this
+- TODO docs use YAML frontmatter (`id`, `status`, `origin`, optional `source_marker: true`). Every source `TODO(todo:<id>)` marker MUST have a matching `<id>.md` (enforced by `bun scripts/check-todos.ts`); docs without source markers are allowed for general issue tracking
 
 ## Scheduling Follow-ups
 

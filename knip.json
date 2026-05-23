@@ -19,7 +19,8 @@
     },
     "packages/better-skill-capped": {
       "entry": ["src/index.tsx"],
-      "project": ["src/**/*.{ts,tsx}"]
+      "project": ["src/**/*.{ts,tsx}"],
+      "vite": false
     },
     "packages/sjer.red": {
       "entry": ["src/**/*.astro", "astro.config.ts"],
@@ -109,6 +110,20 @@
     }
   },
   "ignoreExportsUsedInFile": true,
+  "rules": {
+    "files": "warn",
+    "dependencies": "warn",
+    "devDependencies": "warn",
+    "exports": "warn",
+    "duplicates": "off",
+    "types": "off",
+    "nsExports": "off",
+    "nsTypes": "off",
+    "enumMembers": "off",
+    "unresolved": "warn",
+    "unlisted": "off",
+    "binaries": "off"
+  },
   "ignore": [
     "**/eslint.config.ts",
     "**/postcss.config.ts",

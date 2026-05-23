@@ -75,5 +75,8 @@
   },
   "patchedDependencies": {
     "@react-native/gradle-plugin@0.85.3": "patches/@react-native%2Fgradle-plugin@0.85.3.patch"
+  },
+  "overrides": {
+    "fast-xml-builder": "1.1.7"
   }
 }

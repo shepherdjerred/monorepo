@@ -1,7 +1,7 @@
 import { api } from "#src/league/api/api.ts";
 import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
 import { mapRegionToEnum } from "#src/league/model/region.ts";
-import { getAccountsWithState } from "#src/database/index.ts";
+import { getAccountsWithState, prisma } from "#src/database/index.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
 import { saveMatchToS3 } from "#src/storage/s3.ts";
 import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
@@ -14,6 +14,7 @@ import {
 import { z } from "zod";
 import { callRiotOrUndefined } from "#src/league/api/riot-call.ts";
 import * as Sentry from "@sentry/bun";
+import { recordMatchForReportStore } from "#src/report-store/live-ingest.ts";
 
 const logger = createLogger("backfill-to-s3");
 
@@ -194,6 +195,11 @@ export async function backfillMatchesToS3(
         continue;
       }
 
+      await recordMatchForReportStore({
+        prisma,
+        match: matchData,
+        source: "recovery_backfill",
+      });
       await saveMatchToS3(matchData, aliases);
       result.totalMatchesSaved += 1;
       backfillMatchesTotal.inc({ status: "saved" });

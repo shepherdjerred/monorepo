@@ -22,6 +22,11 @@ junit.xml
 jscpd-report/
 
 **/generated/
+!packages/frontend/public/generated/
+!packages/frontend/public/generated/scout-showcase/
+!packages/frontend/public/generated/scout-showcase/*.png
+!packages/frontend/src/data/generated/
+!packages/frontend/src/data/generated/scout-showcase-assets.json
 
 settings.local.json
 

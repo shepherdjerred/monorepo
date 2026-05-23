@@ -92,7 +92,7 @@ export function addApiAndCompetitionRows(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `sum by (environment) (rate(reports_failed_total{${buildFilter()}}[5m])) * 60`,
+            `sum by (environment) (rate(reports_failed_total{${buildFilter()}}[5m])) * 60 or on() vector(0)`,
           )
           .legendFormat("{{environment}}"),
       )
@@ -120,7 +120,7 @@ export function addApiAndCompetitionRows(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `sum by (environment, http_status) (rate(riot_api_errors_total{${buildFilter()}}[5m]))`,
+            `sum by (environment, http_status) (rate(riot_api_errors_total{${buildFilter()}}[5m])) or on() vector(0)`,
           )
           .legendFormat("{{environment}} - {{http_status}}"),
       )

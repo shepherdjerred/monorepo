@@ -28,8 +28,14 @@ import {
   STATUS_COMMENT_MARKER,
   type PostReviewStatusInput,
 } from "#activities/pr-review/post-render.ts";
-import { type PostReviewStatusResult } from "#activities/pr-review/post-github.ts";
-import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
+import {
+  type PostReviewOctokit,
+  type PostReviewStatusResult,
+} from "#activities/pr-review/post-github.ts";
+import {
+  createGitHubAppInstallationToken,
+  type GitHubAppTokenResult,
+} from "#lib/github-app-token.ts";
 
 const COMPONENT = "pr-webhook";
 const DEFAULT_PORT = 9466;
@@ -194,6 +200,10 @@ async function startPrWorkflows(
 
 type StartFn = (input: PrAgentInput) => Promise<void>;
 type StatusFn = (input: PrAgentInput, state: "draft_skipped") => Promise<void>;
+type WebhookStatusDeps = {
+  createInstallationToken?: () => Promise<GitHubAppTokenResult>;
+  createOctokit?: (token: string) => PostReviewOctokit;
+};
 
 function toPipelineInput(input: PrAgentInput): PrReviewPipelineInput {
   return {
@@ -208,9 +218,10 @@ function toPipelineInput(input: PrAgentInput): PrReviewPipelineInput {
   };
 }
 
-async function postWebhookStatus(
+export async function postWebhookStatus(
   input: PrAgentInput,
   state: "draft_skipped",
+  deps: WebhookStatusDeps = {},
 ): Promise<void> {
   const statusInput: PostReviewStatusInput = {
     pipeline: toPipelineInput(input),
@@ -229,8 +240,12 @@ async function postWebhookStatus(
     return;
   }
 
-  const tokenResult = await createGitHubAppInstallationToken();
-  const octokit = new Octokit({ auth: tokenResult.token });
+  const tokenResult = await (
+    deps.createInstallationToken ?? createGitHubAppInstallationToken
+  )();
+  const octokit =
+    deps.createOctokit?.(tokenResult.token) ??
+    new Octokit({ auth: tokenResult.token });
   const result: PostReviewStatusResult = await runPostReviewStatus(
     octokit,
     statusInput,

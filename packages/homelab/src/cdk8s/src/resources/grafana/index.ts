@@ -2,7 +2,6 @@ import type { Chart } from "cdk8s";
 import { ConfigMap } from "cdk8s-plus-31";
 import { exportAiProviderDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/ai-provider-dashboard.ts";
 import { exportGitckupDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/gitckup-dashboard.ts";
-import { exportHaWorkflowDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/ha-workflow-dashboard.ts";
 import { exportScoutDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/scout-dashboard.ts";
 import { exportSmartctlDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/smartctl-dashboard.ts";
 import { exportVeleroDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/velero-dashboard.ts";
@@ -40,8 +39,8 @@ function createDashboardConfigMap(chart: Chart, config: DashboardConfig) {
       name: config.name,
       namespace: "prometheus",
       labels: {
-        // Required labels for Grafana sidecar discovery
-        grafana_dashboard: "1",
+        // Only curated homelab dashboards are imported by the Grafana sidecar.
+        homelab_grafana_dashboard: "1",
         app: "grafana",
       },
     },
@@ -66,13 +65,6 @@ const AI_PROVIDER_DASHBOARD: DashboardConfig = {
   name: "ai-provider-dashboard",
   jsonFilename: "ai-provider.json",
   exportFn: exportAiProviderDashboardJson,
-};
-
-const HA_WORKFLOW_DASHBOARD: DashboardConfig = {
-  id: "ha-workflow-dashboard-configmap",
-  name: "ha-workflow-dashboard",
-  jsonFilename: "ha-workflow.json",
-  exportFn: exportHaWorkflowDashboardJson,
 };
 
 const SCOUT_DASHBOARD: DashboardConfig = {
@@ -142,7 +134,6 @@ const ALL_DASHBOARDS: DashboardConfig[] = [
   AI_PROVIDER_DASHBOARD,
   BUILDKITE_DASHBOARD,
   GITCKUP_DASHBOARD,
-  HA_WORKFLOW_DASHBOARD,
   PR_REVIEW_BOT_DASHBOARD,
   SCOUT_DASHBOARD,
   SMARTCTL_DASHBOARD,

@@ -204,7 +204,7 @@ export function addPreMatchRow(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `topk(10, sum by (champion, requested_skin) (increase(prematch_loading_screen_skin_fallback_total{${PREMATCH_FILTER}}[24h])))`,
+            `topk(10, sum by (champion, requested_skin) (increase(prematch_loading_screen_skin_fallback_total{${PREMATCH_FILTER}}[24h]))) or on() vector(0)`,
           )
           .legendFormat("{{champion}} skin {{requested_skin}}")
           .format(prometheus.PromQueryFormat.Table)
