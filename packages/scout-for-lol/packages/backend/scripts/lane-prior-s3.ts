@@ -20,13 +20,13 @@ export const LanePriorS3ConfigSchema = z.strictObject({
 export type LanePriorS3Config = z.infer<typeof LanePriorS3ConfigSchema>;
 
 export function lanePriorS3Region(): string {
-  const awsRegion = Bun.env["AWS_REGION"];
-  if (awsRegion !== undefined && awsRegion.trim() !== "") {
+  const awsRegion = Bun.env["AWS_REGION"]?.trim();
+  if (awsRegion !== undefined && awsRegion !== "") {
     return awsRegion;
   }
 
-  const s3Region = Bun.env["S3_REGION"];
-  if (s3Region !== undefined && s3Region.trim() !== "") {
+  const s3Region = Bun.env["S3_REGION"]?.trim();
+  if (s3Region !== undefined && s3Region !== "") {
     return s3Region;
   }
 
