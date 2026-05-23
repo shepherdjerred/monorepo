@@ -9,19 +9,38 @@ import { ARENA_DEFAULT_SKIN_NUM } from "#src/html/arena/utils.ts";
 import { round } from "remeda";
 
 const SPLASH_HEIGHT = 320;
+const TRACKED_WEIGHT = 1.12;
+
+export function getDamageSharePercent(damage: number, totalDamage: number) {
+  if (totalDamage === 0) {
+    return 0;
+  }
+
+  return round((damage / totalDamage) * 100, 0);
+}
 
 export function PlayerColumn({
   player,
   highlight,
+  isFirst,
+  isLast,
   maxTeamDamage,
+  totalTeamDamage,
   teamSize,
 }: {
   player: ArenaChampion;
   highlight: boolean;
+  isFirst: boolean;
+  isLast: boolean;
   maxTeamDamage: number;
+  totalTeamDamage: number;
   teamSize: number;
 }) {
   const damagePercent = round((player.damage / (maxTeamDamage || 1)) * 100, 0);
+  const teamDamagePercent = getDamageSharePercent(
+    player.damage,
+    totalTeamDamage,
+  );
   const splash = getChampionLoadingImage(
     player.championName,
     ARENA_DEFAULT_SKIN_NUM,
@@ -30,11 +49,20 @@ export function PlayerColumn({
   return (
     <div
       style={{
-        flex: 1,
+        flexGrow: highlight ? TRACKED_WEIGHT : 1,
+        flexShrink: 1,
+        flexBasis: 0,
         display: "flex",
         flexDirection: "column",
-        gap: 10,
         minWidth: 0,
+        borderLeft: isFirst ? `1px solid ${palette.gold[6]}` : "none",
+        borderRight: isLast
+          ? `1px solid ${palette.gold[6]}`
+          : `1px solid rgba(120, 90, 40, 0.55)`,
+        borderBottom: `1px solid ${palette.gold[6]}`,
+        backgroundColor: highlight
+          ? "rgba(200, 170, 110, 0.06)"
+          : "rgba(5, 10, 20, 0.08)",
       }}
     >
       <div
@@ -44,9 +72,12 @@ export function PlayerColumn({
           display: "flex",
           position: "relative",
           overflow: "hidden",
-          border: highlight
+          borderTop: highlight
             ? `2px solid ${palette.gold.bright}`
-            : `1px solid rgba(120, 90, 40, 0.35)`,
+            : `1px solid rgba(120, 90, 40, 0.45)`,
+          borderBottom: `1px solid ${palette.gold[5]}`,
+          borderLeft: highlight ? `2px solid ${palette.gold.bright}` : "none",
+          borderRight: highlight ? `2px solid ${palette.gold.bright}` : "none",
         }}
       >
         <img
@@ -69,94 +100,109 @@ export function PlayerColumn({
             left: 0,
             right: 0,
             display: "flex",
-            height: 36,
-            background: "linear-gradient(transparent, rgba(0, 0, 0, 0.85) 60%)",
+            height: 110,
+            background:
+              "linear-gradient(transparent, rgba(0, 0, 0, 0.9) 66%, rgba(0, 0, 0, 0.98))",
           }}
         />
+        <div
+          style={{
+            position: "absolute",
+            bottom: 12,
+            left: 10,
+            right: 10,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 4,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              fontFamily: font.title,
+              fontSize: 16,
+              fontWeight: 700,
+              lineHeight: 1,
+              color: highlight ? palette.gold.bright : palette.grey[1],
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              maxWidth: "100%",
+            }}
+          >
+            {player.riotIdGameName}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              fontFamily: font.body,
+              fontSize: 10,
+              lineHeight: 1,
+              letterSpacing: 4,
+              color: highlight ? palette.gold[1] : palette.grey[2],
+              textTransform: "uppercase",
+            }}
+          >
+            {player.championName}
+          </div>
+        </div>
       </div>
 
       <div
         style={{
           display: "flex",
-          fontFamily: font.title,
-          fontSize: 20,
-          fontWeight: 700,
-          color: highlight ? palette.gold.bright : palette.grey[1],
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-          maxWidth: "100%",
-        }}
-      >
-        {player.riotIdGameName}
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          fontFamily: font.body,
-          fontSize: 11,
-          letterSpacing: 3,
-          color: palette.grey[1],
-          textTransform: "uppercase",
-        }}
-      >
-        {player.championName}
-      </div>
-
-      <div
-        style={{
-          height: 1,
-          width: "100%",
-          display: "flex",
-          background: palette.gold[5],
-          opacity: highlight ? 0.7 : 0.25,
-          marginTop: 4,
-          marginBottom: 4,
-        }}
-      />
-
-      <div
-        style={{
-          display: "flex",
-          alignItems: "baseline",
+          flex: 1,
+          flexDirection: "column",
           gap: 8,
-          fontFamily: font.title,
-          fontSize: 26,
-          fontWeight: 700,
-          color: palette.white[1],
+          padding: "18px 14px 16px",
         }}
       >
-        <span>{player.kills.toString()}</span>
-        <span style={{ color: palette.grey[1] }}>/</span>
-        <span>{player.deaths.toString()}</span>
-        <span style={{ color: palette.grey[1] }}>/</span>
-        <span>{player.assists.toString()}</span>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "baseline",
+            gap: 7,
+            fontFamily: font.title,
+            fontSize: 24,
+            fontWeight: 700,
+            color: palette.white[1],
+          }}
+        >
+          <span>{player.kills.toString()}</span>
+          <span style={{ color: palette.grey[1] }}>/</span>
+          <span>{player.deaths.toString()}</span>
+          <span style={{ color: palette.grey[1] }}>/</span>
+          <span>{player.assists.toString()}</span>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            fontFamily: font.body,
+            fontSize: 11,
+            letterSpacing: 2,
+            color: palette.grey[1],
+            textTransform: "uppercase",
+          }}
+        >
+          {kdaRatio(player.kills, player.deaths, player.assists)} KDA
+        </div>
+
+        <Damage
+          value={player.damage}
+          percent={damagePercent}
+          teamPercent={teamDamagePercent}
+          highlight={highlight}
+          teamSize={teamSize}
+        />
+
+        <ItemsRow items={player.items} />
+
+        <AugmentsDisplay augments={player.augments} />
       </div>
-
-      <div
-        style={{
-          display: "flex",
-          fontFamily: font.body,
-          fontSize: 11,
-          letterSpacing: 2,
-          color: palette.grey[1],
-          textTransform: "uppercase",
-        }}
-      >
-        {kdaRatio(player.kills, player.deaths, player.assists)} KDA
-      </div>
-
-      <Damage
-        value={player.damage}
-        percent={damagePercent}
-        highlight={highlight}
-        teamSize={teamSize}
-      />
-
-      <ItemsRow items={player.items} />
-
-      <AugmentsDisplay augments={player.augments} />
     </div>
   );
 }
