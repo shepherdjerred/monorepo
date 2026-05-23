@@ -36,6 +36,20 @@ Reports read SQLite-backed facts for match, pair, competition, and prematch repo
 
 - Deploy to beta and run the acceptance checks against live beta: `liveMatches > 0`, `livePrematches > 0`, newest `MatchParticipantFact` advances beyond the stale May 20 point, and affected scheduled reports use non-stale data.
 
+<!-- temporal-agent-task
+{
+  "title": "Scout beta report-store acceptance checks",
+  "provider": "claude",
+  "mode": "report-only",
+  "runAt": "2026-05-24T09:00:00-07:00",
+  "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "source": {
+    "docPath": "packages/docs/plans/2026-05-22_scout-report-data-ingress-fix.md"
+  },
+  "prompt": "Owner: Jerred. Check beta after report-store ingress deploy. Report whether liveMatches > 0, livePrematches > 0, newest MatchParticipantFact advances beyond the stale May 20 point, and affected scheduled reports use non-stale data."
+}
+-->
+
 ### Caveats
 
 - Full backend tests pass, but test logs still include an existing background usage-metrics query against the default test DB before isolated test DBs are created.

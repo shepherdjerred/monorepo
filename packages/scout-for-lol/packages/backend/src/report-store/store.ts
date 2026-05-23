@@ -15,6 +15,13 @@ export type StoredPayloadOptions = {
   importedFromS3?: boolean;
 };
 
+function shouldUpdateStoredPayloadMetadata(
+  options: StoredPayloadOptions,
+  importedFromS3: boolean,
+): boolean {
+  return options.s3Key !== undefined || importedFromS3;
+}
+
 type AccountWithPlayer = Prisma.AccountGetPayload<{
   include: {
     player: true;
@@ -119,8 +126,12 @@ export async function upsertStoredMatchWithFacts(
       durationSeconds: match.info.gameDuration,
       participantPuuidsJson: toJson(match.metadata.participants),
       rawJson: toJson(match),
-      s3Key: options.s3Key ?? null,
-      importedFromS3,
+      ...(shouldUpdateStoredPayloadMetadata(options, importedFromS3)
+        ? {
+            s3Key: options.s3Key ?? null,
+            importedFromS3,
+          }
+        : {}),
     },
   });
 
@@ -237,8 +248,12 @@ export async function upsertStoredTimeline(
     },
     update: {
       rawJson: toJson(timeline),
-      s3Key: options.s3Key ?? null,
-      importedFromS3,
+      ...(shouldUpdateStoredPayloadMetadata(options, importedFromS3)
+        ? {
+            s3Key: options.s3Key ?? null,
+            importedFromS3,
+          }
+        : {}),
     },
   });
 }
@@ -262,7 +277,7 @@ export async function upsertStoredPrematchWithFacts(
   const gameStartAt =
     gameInfo.gameStartTime > 0 ? toDate(gameInfo.gameStartTime) : undefined;
   const puuids = participantPuuids(gameInfo);
-  const dedupeKey = gameInfo.gameId.toString();
+  const dedupeKey = `${gameInfo.platformId}:${gameInfo.gameId.toString()}`;
 
   const storedPrematch = await prisma.storedPrematch.upsert({
     where: {
@@ -285,6 +300,7 @@ export async function upsertStoredPrematchWithFacts(
     },
     update: {
       gameStartAt: gameStartAt ?? null,
+      observedAt,
       platformId: gameInfo.platformId,
       queueId: gameInfo.gameQueueConfigId,
       queue: queue ?? null,
@@ -292,8 +308,12 @@ export async function upsertStoredPrematchWithFacts(
       gameType: gameInfo.gameType,
       participantPuuidsJson: toJson(puuids),
       rawJson: toJson(gameInfo),
-      s3Key: options.s3Key ?? null,
-      importedFromS3,
+      ...(shouldUpdateStoredPayloadMetadata(options, importedFromS3)
+        ? {
+            s3Key: options.s3Key ?? null,
+            importedFromS3,
+          }
+        : {}),
     },
   });
 
