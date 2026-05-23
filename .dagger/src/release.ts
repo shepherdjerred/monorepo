@@ -314,12 +314,23 @@ export function publishNpmHelper(
   // Write .npmrc in project dir and publish in same sh -c so the token is available.
   // bun publish has no --token flag; env var names with // are invalid.
   // Ephemeral Dagger container — .npmrc never committed.
+  //
+  // Precheck: if NPM_TOKEN doesn't bypass 2FA, bun publish silently falls into
+  // npm's interactive web-auth flow and hangs ~5 minutes per package per build.
+  // Detect this up-front via /-/npm/v1/tokens and fail fast with an actionable
+  // message before bun gets a chance to wait. Skipped when the workspace has
+  // no internet (shouldn't happen in CI), in which case bun publish itself
+  // surfaces the network error.
   return container
     .withSecretVariable("NPM_TOKEN", npmToken)
     .withExec([
       "sh",
       "-c",
-      `echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc && bun publish --access public --tag ${tag} --tolerate-republish`,
+      [
+        `echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc`,
+        `bun -e 'const token=process.env.NPM_TOKEN; if(!token){console.error("NPM_TOKEN is empty"); process.exit(1);} const r=await fetch("https://registry.npmjs.org/-/npm/v1/tokens",{headers:{Authorization:\`Bearer \${token}\`}}); if(!r.ok){console.error(\`npm token introspection failed: HTTP \${r.status} \${r.statusText}\`); process.exit(1);} const data=await r.json(); const me=data.objects?.find(o=>{const [pre,suf]=o.token.split("..."); return token.startsWith(pre)&&token.endsWith(suf);}); if(!me){console.error("Current NPM_TOKEN not found in /-/npm/v1/tokens — token may be revoked or registry response shape changed"); process.exit(1);} if(!me.bypass_2fa){console.error("ERROR: NPM_TOKEN does not bypass 2FA. bun publish will hang on npm interactive web-auth fallback in CI. Rotate to an automation token (npm token create --read-and-write) or a granular token with the 2FA-bypass option enabled."); process.exit(1);} console.log(\`OK: NPM_TOKEN bypasses 2FA (token name: \${me.name})\`);'`,
+        `bun publish --access public --tag ${tag} --tolerate-republish`,
+      ].join(" && "),
     ]);
 }
 
