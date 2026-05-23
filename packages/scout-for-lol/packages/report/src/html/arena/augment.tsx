@@ -18,8 +18,9 @@ export function AugmentRow({ augment }: { augment: Augment }) {
           alignItems: "center",
           gap: 6,
           fontFamily: font.body,
-          fontSize: 12,
+          fontSize: 11,
           color: palette.gold[1],
+          minWidth: 0,
         }}
       >
         {iconUrl !== null && iconUrl.length > 0 ? (
@@ -52,6 +53,7 @@ export function AugmentRow({ augment }: { augment: Augment }) {
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
+            minWidth: 0,
           }}
         >
           {augment.name}
@@ -67,8 +69,9 @@ export function AugmentRow({ augment }: { augment: Augment }) {
         alignItems: "center",
         gap: 6,
         fontFamily: font.body,
-        fontSize: 12,
+        fontSize: 11,
         color: palette.grey[1],
+        minWidth: 0,
       }}
     >
       <div

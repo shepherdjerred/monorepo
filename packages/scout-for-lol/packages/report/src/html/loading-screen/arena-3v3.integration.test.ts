@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { LoadingScreenDataSchema } from "@scout-for-lol/data";
 import {
+  getLoadingScreenCanvasDimensions,
   loadingScreenToImage,
   loadingScreenToSvg,
 } from "#src/html/loading-screen/index.tsx";
@@ -38,10 +39,46 @@ test("Arena loading screen renders only tracked player champions", async () => {
     throw new Error(`Expected arena layout, received ${data.layout}`);
   }
   expect(getArenaTrackedParticipants(data)).toHaveLength(1);
+  expect(getLoadingScreenCanvasDimensions(data)).toEqual({
+    width: 640,
+    height: 720,
+  });
 
   const svg = await loadingScreenToSvg(data);
   const png = await loadingScreenToImage(data);
 
   expect(svg.slice(0, 4)).toBe("<svg");
   expect(png.byteLength).toBeGreaterThan(1000);
+});
+
+test("Arena loading screen dimensions scale with tracked champions", async () => {
+  const raw = await Bun.file(`${currentDir}testdata/arena-3v3.json`).json();
+  const data = LoadingScreenDataSchema.parse(raw);
+  if (data.layout !== "arena") {
+    throw new Error(`Expected arena layout, received ${data.layout}`);
+  }
+
+  const threeTracked = {
+    ...data,
+    participants: data.participants.map((participant, index) => ({
+      ...participant,
+      isTrackedPlayer: index < 3,
+    })),
+  };
+  const sevenTracked = {
+    ...data,
+    participants: data.participants.map((participant, index) => ({
+      ...participant,
+      isTrackedPlayer: index < 7,
+    })),
+  };
+
+  expect(getLoadingScreenCanvasDimensions(threeTracked)).toEqual({
+    width: 940,
+    height: 720,
+  });
+  expect(getLoadingScreenCanvasDimensions(sevenTracked)).toEqual({
+    width: 1414,
+    height: 978,
+  });
 });

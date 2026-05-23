@@ -8,6 +8,7 @@ const EMPTY_CONTEXT: BootstrapResult = {
   claudeMdHierarchy: [],
   retrievedSymbols: [],
   blockDiffs: [],
+  skipReviewReason: null,
 };
 
 describe("runDeterministicSignals — container image refs", () => {

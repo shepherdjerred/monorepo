@@ -4,8 +4,11 @@ import { ZfsSataVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-sata-v
 import { createBazarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/bazarr.ts";
 import { createTautulliDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/media/tautulli.ts";
 import { createPlexDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/media/plex.ts";
+import { createJellyfinDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/media/jellyfin.ts";
+import { createKometaCronJob } from "@shepherdjerred/homelab/cdk8s/src/resources/media/kometa.ts";
 import { createRadarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/radarr.ts";
 import { createOverseerrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/overseerr.ts";
+import { createSeerrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/seerr.ts";
 import { createQBitTorrentDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/qbittorrent.ts";
 import { createSonarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/sonarr.ts";
 import { createProwlarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/prowlarr.ts";
@@ -41,11 +44,17 @@ export function createMediaChart(app: App) {
     tv: tvVolume.claim,
     movies: moviesVolume.claim,
   });
+  createJellyfinDeployment(chart, {
+    tv: tvVolume.claim,
+    movies: moviesVolume.claim,
+  });
+  createKometaCronJob(chart);
   createRadarrDeployment(chart, {
     movies: moviesVolume.claim,
     downloads: downloadsVolume.claim,
   });
   createOverseerrDeployment(chart);
+  createSeerrDeployment(chart);
   createQBitTorrentDeployment(chart, {
     downloads: downloadsVolume.claim,
   });
@@ -76,7 +85,7 @@ export function createMediaChart(app: App) {
             },
           ],
         },
-        // Allow from Cloudflare tunnel (public access for plex, overseerr)
+        // Allow from Cloudflare tunnel (public access for Plex, Seerr, Jellyfin)
         {
           from: [
             {
@@ -89,7 +98,7 @@ export function createMediaChart(app: App) {
           ],
         },
         // Allow all intra-namespace communication
-        // Media services are highly interconnected: sonarr<->radarr<->prowlarr<->qbittorrent<->bazarr<->plex<->overseerr<->maintainerr
+        // Media services are highly interconnected: sonarr<->radarr<->prowlarr<->qbittorrent<->bazarr<->plex<->seerr<->maintainerr
         {
           from: [{ podSelector: {} }],
         },

@@ -9,7 +9,14 @@ export function AugmentsDisplay({ augments }: { augments: Augment[] }) {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 4,
+        minWidth: 0,
+      }}
+    >
       {displayAugments.map((augment, idx) => (
         <AugmentRow key={idx} augment={augment} />
       ))}

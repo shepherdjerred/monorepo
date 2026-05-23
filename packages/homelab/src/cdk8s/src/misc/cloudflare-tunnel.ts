@@ -17,6 +17,16 @@ export function createCloudflareTunnelBinding(
     namespace?: string;
     annotations?: Record<string, string>;
     disableDnsUpdates?: boolean;
+    /**
+     * Origin protocol the cloudflared agent uses to reach the in-cluster
+     * Service. Defaults to "http" (or "https" if the matched service port is
+     * 443). Override to "https" for services that 307-redirect HTTP→HTTPS
+     * (e.g. argocd-server in default secure mode); pair with `noTlsVerify`
+     * since in-cluster TLS certs are typically self-signed.
+     */
+    protocol?: "http" | "https" | "tcp" | "udp" | "ssh" | "rdp";
+    /** Skip TLS verification when `protocol: "https"`. */
+    noTlsVerify?: boolean;
   } & ({ subdomain: string } | { fqdn: string }),
 ) {
   const fqdn = "fqdn" in props ? props.fqdn : `${props.subdomain}.sjer.red`;
@@ -39,6 +49,10 @@ export function createCloudflareTunnelBinding(
         name: props.serviceName,
         spec: {
           fqdn,
+          ...(props.protocol === undefined ? {} : { protocol: props.protocol }),
+          ...(props.noTlsVerify === undefined
+            ? {}
+            : { noTlsVerify: props.noTlsVerify }),
         },
       },
     ],

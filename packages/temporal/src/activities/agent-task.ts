@@ -126,6 +126,14 @@ function safeHeartbeat(payload: Record<string, unknown>): void {
   }
 }
 
+function activityCancellationSignalOrUndefined(): AbortSignal | undefined {
+  try {
+    return Context.current().cancellationSignal;
+  } catch {
+    return undefined;
+  }
+}
+
 function workflowId(): string {
   try {
     return (
@@ -250,6 +258,21 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
   const heartbeat = setInterval(() => {
     safeHeartbeat({ phase: "agent", elapsedMs: Date.now() - startMs });
   }, HEARTBEAT_INTERVAL_MS);
+  const cancellationSignal = activityCancellationSignalOrUndefined();
+  const abort = (): void => {
+    jsonLog(
+      "warning",
+      "Agent task cancellation requested; killing subprocess",
+      {
+        provider,
+        title: parsed.title,
+        model: command.model,
+        elapsedMs: Date.now() - startMs,
+      },
+    );
+    proc.kill();
+  };
+  cancellationSignal?.addEventListener("abort", abort, { once: true });
 
   let stdout: string;
   let exitCode: number;
@@ -261,19 +284,33 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
     ]);
   } finally {
     clearInterval(heartbeat);
+    cancellationSignal?.removeEventListener("abort", abort);
   }
 
   const durationMs = Date.now() - startMs;
+  const cancelled = cancellationSignal?.aborted === true;
   agentTaskSubprocessDurationSeconds.observe(
-    { provider, model: command.model, exit_code: String(exitCode) },
+    {
+      provider,
+      model: command.model,
+      exit_code: cancelled ? "cancelled" : String(exitCode),
+    },
     durationMs / 1000,
   );
   agentTaskSubprocessExitTotal.inc({
     provider,
-    exit_code: String(exitCode),
+    exit_code: cancelled ? "cancelled" : String(exitCode),
   });
 
+  if (cancelled) {
+    agentTaskRunsTotal.inc({ provider, outcome: "cancelled" });
+    const error = new Error(`${provider} agent task cancelled`);
+    captureWithContext(error, { provider, durationMs });
+    throw error;
+  }
+
   if (exitCode !== 0) {
+    agentTaskRunsTotal.inc({ provider, outcome: "subprocess_failed" });
     const error = new Error(
       `${provider} agent task exited with code ${String(exitCode)}`,
     );
@@ -282,16 +319,24 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
   }
 
   let payload: AgentTaskResultPayload;
-  if (provider === "claude") {
-    payload = parseAgentPayload(parseClaudeResultMessage(stdout).result ?? "");
-  } else {
-    if (command.outputPath === undefined) {
-      throw new Error("Codex agent task completed without an output path");
+  try {
+    if (provider === "claude") {
+      payload = parseAgentPayload(
+        parseClaudeResultMessage(stdout).result ?? "",
+      );
+    } else {
+      if (command.outputPath === undefined) {
+        throw new Error("Codex agent task completed without an output path");
+      }
+      payload = parseAgentPayload(await Bun.file(command.outputPath).text());
     }
-    payload = parseAgentPayload(await Bun.file(command.outputPath).text());
+  } catch (error: unknown) {
+    agentTaskRunsTotal.inc({ provider, outcome: "parse_failed" });
+    captureWithContext(error, { provider, durationMs, phase: "parse-output" });
+    throw error;
   }
-
   agentTaskRunsTotal.inc({ provider, outcome: "success" });
+
   jsonLog("info", "Agent task completed", {
     provider,
     title: parsed.title,
@@ -361,6 +406,10 @@ async function sendEmail(
     };
   } catch (error: unknown) {
     agentTaskEmailSentTotal.inc({ outcome: "failure" });
+    agentTaskRunsTotal.inc({
+      provider: input.result.provider,
+      outcome: "email_failed",
+    });
     captureWithContext(error, { subject });
     throw error;
   }

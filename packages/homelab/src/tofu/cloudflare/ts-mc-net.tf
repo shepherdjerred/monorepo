@@ -5,12 +5,12 @@ resource "cloudflare_zone" "ts_mc_net" {
 
 # ── A records ───────────────────────────────────────────────────────────────
 
-resource "cloudflare_dns_record" "ts_mc_net_a_minecraft" {
+resource "cloudflare_dns_record" "ts_mc_net_cname_minecraft" {
   zone_id = cloudflare_zone.ts_mc_net.id
   ttl     = 1
   name    = "minecraft"
-  type    = "A"
-  content = "15.204.44.15"
+  type    = "CNAME"
+  content = "ddns.sjer.red"
   proxied = false
 }
 

@@ -21,9 +21,9 @@ import { Octokit } from "octokit";
 import Anthropic from "@anthropic-ai/sdk";
 import {
   cleanupWorkdir,
-  enrichBootstrapWithWorkdir,
   runBootstrap,
 } from "#activities/pr-review/bootstrap.ts";
+import { enrichBootstrapWithWorkdir } from "#activities/pr-review/bootstrap-enrich.ts";
 import { deterministicSignalActivities } from "#activities/pr-review/deterministic-signals.ts";
 import {
   buildCorrectnessUserText,

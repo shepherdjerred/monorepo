@@ -3,11 +3,11 @@ import { mkdtemp, rm, writeFile, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
-  enrichBootstrapWithWorkdir,
   runBootstrap,
   type BootstrapOctokit,
   type BootstrapResult,
 } from "./bootstrap.ts";
+import { enrichBootstrapWithWorkdir } from "./bootstrap-enrich.ts";
 import type { PrReviewPipelineInput } from "#shared/schemas.ts";
 import type { CloneParams, WorkdirDeps } from "#lib/pr-review-workdir.ts";
 
@@ -205,6 +205,22 @@ describe("foundation: bootstrap.runBootstrap", () => {
     });
     expect(result.blockDiffs).toEqual([]);
   });
+
+  it("marks oversized PRs for workflow-level skip before workdir enrichment", async () => {
+    const files = Array.from({ length: 201 }, (_, index) => ({
+      filename: `archive/legacy-${String(index)}/index.ts`,
+      status: "modified",
+      additions: 1,
+      deletions: 0,
+      patch: "@@ -1 +1 @@\n-a\n+b",
+    }));
+    const octokit = makeOctokit({ files, contents: new Map() });
+    const result = await runBootstrap(octokit, PIPELINE, () => {
+      // intentionally silent
+    });
+    expect(result.skipReviewReason).toContain("above the deep-review limit");
+    expect(result.workdir).toBe("");
+  });
 });
 
 /**
@@ -297,6 +313,7 @@ describe("enrichBootstrapWithWorkdir", () => {
     claudeMdHierarchy: [],
     retrievedSymbols: [],
     blockDiffs: [],
+    skipReviewReason: null,
   };
 
   it("populates workdir, retrievedSymbols, and blockDiffs from the cloned tree", async () => {

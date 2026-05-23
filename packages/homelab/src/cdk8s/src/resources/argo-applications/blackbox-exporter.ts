@@ -2,22 +2,13 @@ import type { Chart } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import { BLACKBOX_MODULES } from "@shepherdjerred/homelab/cdk8s/src/misc/blackbox-modules.ts";
 
 export function createBlackboxExporterApp(chart: Chart) {
   const values: HelmValuesForChart<"prometheus-blackbox-exporter"> = {
     serviceMonitor: { enabled: true },
     config: {
-      modules: {
-        http_2xx: {
-          prober: "http",
-          timeout: "10s",
-          http: {
-            valid_http_versions: ["HTTP/1.1", "HTTP/2.0"],
-            follow_redirects: true,
-            preferred_ip_protocol: "ip4",
-          },
-        },
-      },
+      modules: BLACKBOX_MODULES,
     },
   };
 

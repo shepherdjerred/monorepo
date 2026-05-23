@@ -38,8 +38,18 @@ const versions = {
   "linuxserver/bazarr":
     "1.5.6@sha256:4b7bb6d861c08bbf0c388b936ada8b2ba57669ca9974323f504e974577d19d63",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=docker
+  // Kept alongside Seerr during the migration; remove once Seerr fully owns the request flow.
   "linuxserver/overseerr":
     "1.35.0@sha256:6108ed066d4a919c05251d9dab041c1e55e67ff7247e7b31be97b65ffcbaeeb1",
+  // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
+  "seerr-team/seerr":
+    "v3.2.0@sha256:c4cbd5121236ac2f70a843a0b920b68a27976be57917555f1c45b08a1e6b2aad",
+  // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
+  "jellyfin/jellyfin":
+    "10.11.8@sha256:93227545077893cc9516f28b3adb733b67bc4691f41b6167428a2a0e3220b81c",
+  // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
+  "kometateam/kometa":
+    "v2.3.1@sha256:683c04827ef3fecf1cc5cb178f75f91f968aef6c6d89d34bc9c70966fd1d7259",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "linuxserver/prowlarr":
     "2.3.5@sha256:a89f252d6a22bd25af14a5380aec0adcc3c3af2e3282164f981680e6844070f3",

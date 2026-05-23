@@ -17,6 +17,13 @@ export type SearchOptions = {
   verbose: boolean;
 };
 
+type SearchStatOptions = {
+  start: number;
+  query: string;
+  resultCount: number;
+  mode: SearchOptions["mode"];
+};
+
 /**
  * Hybrid search: vector similarity + FTS5 keyword search, merged via RRF.
  */
@@ -46,13 +53,47 @@ export async function hybridSearch(
           "[search] embedding failed, falling back to keyword-only",
         );
       }
-      return keywordSearch(db, query, limit, verbose);
+      const fallbackResults = keywordSearch(db, query, limit, verbose);
+      recordSearchStat(db, {
+        start,
+        query,
+        resultCount: fallbackResults.length,
+        mode,
+      });
+      return fallbackResults;
     }
 
     const embedMs = performance.now() - embedStart;
 
     const vecStart = performance.now();
-    const vecCandidates = await db.vectorSearch(queryVector, candidateLimit);
+    let vecCandidates: Awaited<ReturnType<RecallDb["vectorSearch"]>>;
+    try {
+      vecCandidates = await db.vectorSearch(queryVector, candidateLimit);
+    } catch (error) {
+      if (mode === "semantic") {
+        recordSearchStat(db, {
+          start,
+          query,
+          resultCount: 0,
+          mode,
+        });
+        throw error;
+      }
+
+      if (verbose) {
+        console.error(
+          `[search] vector search failed, falling back to keyword-only: ${String(error)}`,
+        );
+      }
+      const fallbackResults = keywordSearch(db, query, limit, verbose);
+      recordSearchStat(db, {
+        start,
+        query,
+        resultCount: fallbackResults.length,
+        mode,
+      });
+      return fallbackResults;
+    }
     const vecMs = performance.now() - vecStart;
 
     if (verbose) {
@@ -119,7 +160,12 @@ export async function hybridSearch(
   });
 
   const finalResults = deduped.slice(0, limit);
-  const totalMs = performance.now() - start;
+  const totalMs = recordSearchStat(db, {
+    start,
+    query,
+    resultCount: finalResults.length,
+    mode,
+  });
 
   if (verbose) {
     console.error(
@@ -127,14 +173,20 @@ export async function hybridSearch(
     );
   }
 
-  // Record stat
+  return finalResults;
+}
+
+function recordSearchStat(
+  db: RecallDb,
+  { start, query, resultCount, mode }: SearchStatOptions,
+): number {
+  const totalMs = performance.now() - start;
   db.recordStat("search", totalMs, {
     query,
-    results: finalResults.length,
+    results: resultCount,
     mode,
   });
-
-  return finalResults;
+  return totalMs;
 }
 
 /**

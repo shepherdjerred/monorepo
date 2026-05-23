@@ -2,7 +2,6 @@ import type { Chart } from "cdk8s";
 import { ConfigMap } from "cdk8s-plus-31";
 import { exportAiProviderDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/ai-provider-dashboard.ts";
 import { exportGitckupDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/gitckup-dashboard.ts";
-import { exportHaWorkflowDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/ha-workflow-dashboard.ts";
 import { exportScoutDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/scout-dashboard.ts";
 import { exportSmartctlDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/smartctl-dashboard.ts";
 import { exportVeleroDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/velero-dashboard.ts";
@@ -11,6 +10,7 @@ import { exportBuildkiteDashboardJson } from "@shepherdjerred/homelab/cdk8s/graf
 import { exportZfsDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/zfs-dashboard.ts";
 import { exportTemporalDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/temporal-dashboard.ts";
 import { exportPrReviewBotDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/pr-review-bot-dashboard.ts";
+import { exportStaticSiteProbesDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/static-site-probes-dashboard.ts";
 
 /**
  * Dashboard configuration for creating Grafana dashboard ConfigMaps
@@ -39,8 +39,8 @@ function createDashboardConfigMap(chart: Chart, config: DashboardConfig) {
       name: config.name,
       namespace: "prometheus",
       labels: {
-        // Required labels for Grafana sidecar discovery
-        grafana_dashboard: "1",
+        // Only curated homelab dashboards are imported by the Grafana sidecar.
+        homelab_grafana_dashboard: "1",
         app: "grafana",
       },
     },
@@ -65,13 +65,6 @@ const AI_PROVIDER_DASHBOARD: DashboardConfig = {
   name: "ai-provider-dashboard",
   jsonFilename: "ai-provider.json",
   exportFn: exportAiProviderDashboardJson,
-};
-
-const HA_WORKFLOW_DASHBOARD: DashboardConfig = {
-  id: "ha-workflow-dashboard-configmap",
-  name: "ha-workflow-dashboard",
-  jsonFilename: "ha-workflow.json",
-  exportFn: exportHaWorkflowDashboardJson,
 };
 
 const SCOUT_DASHBOARD: DashboardConfig = {
@@ -123,6 +116,13 @@ const TEMPORAL_DASHBOARD: DashboardConfig = {
   exportFn: exportTemporalDashboardJson,
 };
 
+const STATIC_SITE_PROBES_DASHBOARD: DashboardConfig = {
+  id: "static-site-probes-dashboard-configmap",
+  name: "static-site-probes-dashboard",
+  jsonFilename: "static-site-probes.json",
+  exportFn: exportStaticSiteProbesDashboardJson,
+};
+
 const PR_REVIEW_BOT_DASHBOARD: DashboardConfig = {
   id: "pr-review-bot-dashboard-configmap",
   name: "pr-review-bot-dashboard",
@@ -134,10 +134,10 @@ const ALL_DASHBOARDS: DashboardConfig[] = [
   AI_PROVIDER_DASHBOARD,
   BUILDKITE_DASHBOARD,
   GITCKUP_DASHBOARD,
-  HA_WORKFLOW_DASHBOARD,
   PR_REVIEW_BOT_DASHBOARD,
   SCOUT_DASHBOARD,
   SMARTCTL_DASHBOARD,
+  STATIC_SITE_PROBES_DASHBOARD,
   TASKNOTES_DASHBOARD,
   TEMPORAL_DASHBOARD,
   VELERO_DASHBOARD,

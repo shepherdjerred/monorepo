@@ -19,9 +19,18 @@ import {
 
 const GITHUB_APP_TOKEN_SCRIPT = "packages/temporal/src/lib/github-app-token.ts";
 const GITHUB_APP_TOKEN_SCRIPT_PATH = "/usr/local/bin/github-app-token.ts";
-const GITHUB_APP_TOKEN_PATH = "/tmp/github-app-token";
 
-function withGithubAppToken(
+/**
+ * Inject the github-app-token mint script + the secret env vars needed to
+ * run it. The actual mint happens inline in each caller's withExec via
+ * `mintGithubAppTokenAndSetupGitAuth()`. A separate mint `withExec` would
+ * be cached across builds (its inputs — script file + secret digests — are
+ * stable), and GitHub App installation tokens expire after ~1 hour, so the
+ * next build would receive an expired token. Inlining the mint into the
+ * caller's exec means the cache key picks up the caller's per-build inputs
+ * (version string, digests, etc.) and forces a fresh mint each build.
+ */
+function withGithubAppCredentials(
   container: Container,
   source: Directory,
   githubAppId: Secret,
@@ -35,23 +44,51 @@ function withGithubAppToken(
     )
     .withSecretVariable("GITHUB_APP_ID", githubAppId)
     .withSecretVariable("GITHUB_APP_INSTALLATION_ID", githubAppInstallationId)
-    .withSecretVariable("GITHUB_APP_PRIVATE_KEY", githubAppPrivateKey)
-    .withExec([
-      "sh",
-      "-c",
-      `bun ${GITHUB_APP_TOKEN_SCRIPT_PATH} > ${GITHUB_APP_TOKEN_PATH}`,
-    ]);
+    .withSecretVariable("GITHUB_APP_PRIVATE_KEY", githubAppPrivateKey);
 }
 
-function writeGithubAppAskpassCommand(): string {
-  return [
-    `printf '#!/bin/sh\\ncase "$1" in\\n  *Username*) printf "%s%s\\\\n" "x-access" "-token" ;;\\n  *) cat ${GITHUB_APP_TOKEN_PATH} ;;\\nesac\\n' > /usr/local/bin/git-askpass`,
-    `chmod +x /usr/local/bin/git-askpass`,
-  ].join(" && ");
-}
-
-function exportGithubAppTokenCommand(): string {
-  return `export GH_TOKEN="$(cat ${GITHUB_APP_TOKEN_PATH})"`;
+/**
+ * Mint a fresh GitHub App installation token, write a git-askpass helper,
+ * and export `GIT_ASKPASS` + `GH_TOKEN` for the current shell. Returns a
+ * `&&`-chained command suitable for prepending to the caller's git ops.
+ *
+ * The minted token lives only in the `GH_TOKEN` environment variable — it is
+ * never persisted to disk. The askpass helper script is plain shell text
+ * (single-quoted in the outer printf so `$GH_TOKEN` stays literal in the
+ * file content), and at git's invocation time the askpass subprocess
+ * inherits `GH_TOKEN` from the parent shell and `printf`s it back. This
+ * keeps the `.dagger/src/**` "no writing tokens to files" rule intact.
+ *
+ * Includes a one-line diagnostic so any future "No anonymous write access"
+ * or "Bad credentials" failure is debuggable from the CI log without
+ * leaking token contents — prints askpass perms/owner/size, GIT_ASKPASS
+ * value, and the token's byte length (computed from `$GH_TOKEN`, not a
+ * file).
+ *
+ * Set `withAskpass=false` for callers that pass the token explicitly
+ * (e.g. release-please via `--token`) and don't need git's askpass dance.
+ */
+function mintGithubAppTokenAndSetupGitAuth(
+  opts: { withAskpass?: boolean } = {},
+): string {
+  const withAskpass = opts.withAskpass ?? true;
+  const steps = [
+    `export GH_TOKEN="$(bun ${GITHUB_APP_TOKEN_SCRIPT_PATH})"`,
+    `test -n "$GH_TOKEN" || { echo "ERROR: GH_TOKEN is empty after mint" >&2; exit 1; }`,
+  ];
+  if (withAskpass) {
+    steps.push(
+      `printf '#!/bin/sh\\ncase "$1" in\\n  *Username*) printf "%s%s\\\\n" "x-access" "-token" ;;\\n  *) printf "%s\\\\n" "$GH_TOKEN" ;;\\nesac\\n' > /usr/local/bin/git-askpass`,
+      `chmod +x /usr/local/bin/git-askpass`,
+      `export GIT_ASKPASS=/usr/local/bin/git-askpass`,
+      `echo "git-auth-setup: $(ls -l /usr/local/bin/git-askpass | awk '{print $1, $3, $5}'), GIT_ASKPASS=$GIT_ASKPASS, token-bytes=$(printf %s \"$GH_TOKEN\" | wc -c)"`,
+    );
+  } else {
+    steps.push(
+      `echo "git-auth-setup: token-bytes=$(printf %s \"$GH_TOKEN\" | wc -c) (no askpass)"`,
+    );
+  }
+  return steps.join(" && ");
 }
 
 // ---------------------------------------------------------------------------
@@ -311,15 +348,28 @@ export function publishNpmHelper(
     ]);
   }
 
-  // Write .npmrc in project dir and publish in same sh -c so the token is available.
-  // bun publish has no --token flag; env var names with // are invalid.
-  // Ephemeral Dagger container — .npmrc never committed.
+  // Write a STATIC .npmrc whose `_authToken` value is a literal `${NPM_TOKEN}`
+  // — bun substitutes the env var at .npmrc-parse time, so the secret bytes
+  // never touch the filesystem (this avoids the ".dagger/src/** must not write
+  // tokens to files" rule). bun publish has no --token flag, and npm-style
+  // env vars like `NPM_CONFIG_//registry.npmjs.org/:_authToken` contain `/`s
+  // and aren't valid POSIX env var names, so this is the cleanest path.
+  //
+  // Precheck: if NPM_TOKEN doesn't bypass 2FA, bun publish silently falls into
+  // npm's interactive web-auth flow and hangs ~5 minutes per package per build.
+  // Detect this up-front via /-/npm/v1/tokens (paginated; some accounts have
+  // dozens of tokens) and fail fast with an actionable message before bun gets
+  // a chance to wait.
   return container
     .withSecretVariable("NPM_TOKEN", npmToken)
     .withExec([
       "sh",
       "-c",
-      `echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc && bun publish --access public --tag ${tag} --tolerate-republish`,
+      [
+        `printf '%s\\n' '//registry.npmjs.org/:_authToken=\${NPM_TOKEN}' > .npmrc`,
+        `bun -e 'const token=process.env.NPM_TOKEN; if(!token){console.error("NPM_TOKEN is empty"); process.exit(1);} let url="https://registry.npmjs.org/-/npm/v1/tokens"; let me=null; let pages=0; while(url&&!me){pages++; const r=await fetch(url,{headers:{Authorization:\`Bearer \${token}\`}}); if(!r.ok){console.error(\`npm token introspection failed (page \${pages}): HTTP \${r.status} \${r.statusText}\`); process.exit(1);} const data=await r.json(); me=data.objects?.find(o=>{const parts=(o.token||"").split("..."); if(parts.length!==2) return false; const [pre,suf]=parts; return token.startsWith(pre)&&token.endsWith(suf);}); url=data.urls?.next?(data.urls.next.startsWith("http")?data.urls.next:\`https://registry.npmjs.org\${data.urls.next}\`):null;} if(!me){console.error(\`Current NPM_TOKEN not found across \${pages} page(s) of /-/npm/v1/tokens — token may be revoked, or the registry truncated/changed its response shape\`); process.exit(1);} if(!me.bypass_2fa){console.error("ERROR: NPM_TOKEN does not bypass 2FA. bun publish will hang on npm interactive web-auth fallback in CI. Rotate to a granular token with bypass-2FA enabled: sign in to npmjs.com with a WebAuthn passkey in the same session (TOTP alone leaves the bypass-2FA checkbox disabled per npm policy since 2026-05), then mint at https://www.npmjs.com/settings/<user>/tokens/new. Classic Automation tokens were retired by npm in 2025."); process.exit(1);} console.log(\`OK: NPM_TOKEN bypasses 2FA (token name: \${me.name}, found on page \${pages})\`);'`,
+        `bun publish --access public --tag ${tag} --tolerate-republish`,
+      ].join(" && "),
     ]);
 }
 
@@ -536,6 +586,12 @@ export function argoCdHealthWaitHelper(
         `DRYRUN: would wait for ArgoCD app ${appName} to become healthy`,
       ]);
   }
+  // Use -sS (not -sf) so non-2xx responses surface as a status code + body
+  // rather than silently producing empty output for jq to choke on. -L
+  // follows redirects (one-hop trust; the previous bare `curl -sf` swallowed
+  // a 307 redirect-loop into an "Invalid numeric literal" jq error and timed
+  // out for 5 minutes). Fail fast on any non-200 since auth/ingress errors
+  // are not transient and looping wastes CI time.
   return dag
     .container()
     .from(ALPINE_IMAGE)
@@ -544,7 +600,29 @@ export function argoCdHealthWaitHelper(
     .withExec([
       "sh",
       "-c",
-      `elapsed=0; while [ $elapsed -lt ${timeoutSeconds} ]; do status=$(curl -sf -H "Authorization: Bearer $ARGOCD_TOKEN" "${serverUrl}/api/v1/applications/${appName}" | jq -r '.status.health.status'); echo "Health: $status ($elapsed/${timeoutSeconds}s)"; if [ "$status" = "Healthy" ]; then exit 0; fi; sleep 10; elapsed=$((elapsed + 10)); done; echo "Timeout waiting for ${appName} to become healthy"; exit 1`,
+      `set -eu
+elapsed=0
+while [ "$elapsed" -lt ${timeoutSeconds} ]; do
+  http=$(curl -sS -L --max-redirs 3 -o /tmp/argocd-resp -w '%{http_code}' \
+    -H "Authorization: Bearer $ARGOCD_TOKEN" \
+    "${serverUrl}/api/v1/applications/${appName}")
+  if [ "$http" != "200" ]; then
+    echo "ERROR: ${serverUrl}/api/v1/applications/${appName} returned HTTP $http"
+    if [ -s /tmp/argocd-resp ]; then
+      echo "Response body (first 1KB):"
+      head -c 1024 /tmp/argocd-resp
+      echo
+    fi
+    exit 1
+  fi
+  status=$(jq -r '.status.health.status' /tmp/argocd-resp)
+  echo "Health: $status ($elapsed/${timeoutSeconds}s)"
+  [ "$status" = "Healthy" ] && exit 0
+  sleep 10
+  elapsed=$((elapsed + 10))
+done
+echo "Timeout: ${appName} did not become Healthy within ${timeoutSeconds}s"
+exit 1`,
     ]);
 }
 
@@ -750,7 +828,7 @@ export function versionCommitBackHelper(
       })()
     : "";
 
-  const authedContainer = withGithubAppToken(
+  const authedContainer = withGithubAppCredentials(
     container,
     source,
     githubAppId,
@@ -758,27 +836,24 @@ export function versionCommitBackHelper(
     githubAppPrivateKey,
   );
 
-  return authedContainer
-    .withExec(["sh", "-c", writeGithubAppAskpassCommand()])
-    .withEnvVariable("GIT_ASKPASS", "/usr/local/bin/git-askpass")
-    .withExec([
-      "sh",
-      "-c",
-      [
-        exportGithubAppTokenCommand(),
-        `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
-        `cd /repo`,
-        `git config user.email "ci@sjer.red"`,
-        `git config user.name "CI Bot"`,
-        `if git ls-remote --exit-code --heads origin "${VERSION_BUMP_BRANCH}" >/dev/null 2>&1; then git fetch origin main:refs/remotes/origin/main "${VERSION_BUMP_BRANCH}:${VERSION_BUMP_BRANCH}" && git checkout "${VERSION_BUMP_BRANCH}" && git rebase origin/main; else git fetch origin main:refs/remotes/origin/main && git checkout -b "${VERSION_BUMP_BRANCH}" origin/main; fi`,
-        `bun run .buildkite/scripts/update-versions.ts packages/homelab/src/cdk8s/src/versions.ts "${version}" ${digestArgs}`,
-        `git add packages/homelab/src/cdk8s/src/versions.ts`,
-        `if git diff --cached --quiet; then HAS_VERSION_CHANGES=0; echo "No version changes to commit"; else HAS_VERSION_CHANGES=1; git commit -m "chore: bump image versions to ${version}" -m "Auto-Generated: ci-bot"; fi`,
-        `if [ "$HAS_VERSION_CHANGES" = "0" ] && git diff --quiet origin/main...HEAD; then echo "No version changes and pending branch has no diff"; exit 0; fi`,
-        `git push --force-with-lease -u origin "${VERSION_BUMP_BRANCH}"`,
-        `PR_NUMBER=$(gh pr list --head "${VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty'); if [ -z "$PR_NUMBER" ]; then gh pr create --base main --head "${VERSION_BUMP_BRANCH}" --title "chore: bump pending image versions" --body "Auto-generated version bump"; PR_NUMBER=$(gh pr view "${VERSION_BUMP_BRANCH}" --json number -q .number); fi; gh pr merge "$PR_NUMBER" --auto --merge`,
-      ].join(" && "),
-    ]);
+  return authedContainer.withExec([
+    "sh",
+    "-c",
+    [
+      mintGithubAppTokenAndSetupGitAuth(),
+      `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
+      `cd /repo`,
+      `git config user.email "ci@sjer.red"`,
+      `git config user.name "CI Bot"`,
+      `if git ls-remote --exit-code --heads origin "${VERSION_BUMP_BRANCH}" >/dev/null 2>&1; then git fetch origin main:refs/remotes/origin/main "${VERSION_BUMP_BRANCH}:${VERSION_BUMP_BRANCH}" && git checkout "${VERSION_BUMP_BRANCH}" && git rebase origin/main; else git fetch origin main:refs/remotes/origin/main && git checkout -b "${VERSION_BUMP_BRANCH}" origin/main; fi`,
+      `bun run .buildkite/scripts/update-versions.ts packages/homelab/src/cdk8s/src/versions.ts "${version}" ${digestArgs}`,
+      `git add packages/homelab/src/cdk8s/src/versions.ts`,
+      `if git diff --cached --quiet; then HAS_VERSION_CHANGES=0; echo "No version changes to commit"; else HAS_VERSION_CHANGES=1; git commit -m "chore: bump image versions to ${version}" -m "Auto-Generated: ci-bot"; fi`,
+      `if [ "$HAS_VERSION_CHANGES" = "0" ] && git diff --quiet origin/main...HEAD; then echo "No version changes and pending branch has no diff"; exit 0; fi`,
+      `git push --force-with-lease -u origin "${VERSION_BUMP_BRANCH}"`,
+      `PR_NUMBER=$(gh pr list --head "${VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty'); if [ -z "$PR_NUMBER" ]; then gh pr create --base main --head "${VERSION_BUMP_BRANCH}" --title "chore: bump pending image versions" --body "Auto-generated version bump"; PR_NUMBER=$(gh pr view "${VERSION_BUMP_BRANCH}" --json number -q .number); fi; gh pr merge "$PR_NUMBER" --auto --merge`,
+    ].join(" && "),
+  ]);
 }
 
 /** Update the CI base image version pointer and create or refresh an auto-merge PR. */
@@ -817,7 +892,7 @@ export function ciBaseVersionCommitBackHelper(
     ]);
   }
 
-  const authedContainer = withGithubAppToken(
+  const authedContainer = withGithubAppCredentials(
     container,
     source,
     githubAppId,
@@ -825,27 +900,24 @@ export function ciBaseVersionCommitBackHelper(
     githubAppPrivateKey,
   );
 
-  return authedContainer
-    .withExec(["sh", "-c", writeGithubAppAskpassCommand()])
-    .withEnvVariable("GIT_ASKPASS", "/usr/local/bin/git-askpass")
-    .withExec([
-      "sh",
-      "-c",
-      [
-        exportGithubAppTokenCommand(),
-        `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
-        `cd /repo`,
-        `git config user.email "ci@sjer.red"`,
-        `git config user.name "CI Bot"`,
-        `if git ls-remote --exit-code --heads origin "${CI_BASE_VERSION_BUMP_BRANCH}" >/dev/null 2>&1; then git fetch origin main:refs/remotes/origin/main "${CI_BASE_VERSION_BUMP_BRANCH}:${CI_BASE_VERSION_BUMP_BRANCH}" && git checkout "${CI_BASE_VERSION_BUMP_BRANCH}" && git rebase origin/main; else git fetch origin main:refs/remotes/origin/main && git checkout -b "${CI_BASE_VERSION_BUMP_BRANCH}" origin/main; fi`,
-        `printf '%s\\n' "${version}" > .buildkite/ci-image/VERSION`,
-        `git add -- .buildkite/ci-image/VERSION`,
-        `if git diff --cached --quiet; then HAS_VERSION_CHANGES=0; echo "No ci-base version changes to commit"; else HAS_VERSION_CHANGES=1; git commit -m "chore: bump ci-base image to ${version}" -m "Auto-Generated: ci-bot"; fi`,
-        `if [ "$HAS_VERSION_CHANGES" = "0" ] && git diff --quiet origin/main...HEAD; then echo "No ci-base version changes and pending branch has no diff"; exit 0; fi`,
-        `git push --force-with-lease -u origin "${CI_BASE_VERSION_BUMP_BRANCH}"`,
-        `PR_NUMBER=$(gh pr list --head "${CI_BASE_VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty'); if [ -z "$PR_NUMBER" ]; then gh pr create --base main --head "${CI_BASE_VERSION_BUMP_BRANCH}" --title "chore: bump ci-base image to ${version}" --body "Auto-generated ci-base version bump"; PR_NUMBER=$(gh pr view "${CI_BASE_VERSION_BUMP_BRANCH}" --json number -q .number); fi; gh pr merge "$PR_NUMBER" --auto --merge`,
-      ].join(" && "),
-    ]);
+  return authedContainer.withExec([
+    "sh",
+    "-c",
+    [
+      mintGithubAppTokenAndSetupGitAuth(),
+      `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
+      `cd /repo`,
+      `git config user.email "ci@sjer.red"`,
+      `git config user.name "CI Bot"`,
+      `if git ls-remote --exit-code --heads origin "${CI_BASE_VERSION_BUMP_BRANCH}" >/dev/null 2>&1; then git fetch origin main:refs/remotes/origin/main "${CI_BASE_VERSION_BUMP_BRANCH}:${CI_BASE_VERSION_BUMP_BRANCH}" && git checkout "${CI_BASE_VERSION_BUMP_BRANCH}" && git rebase origin/main; else git fetch origin main:refs/remotes/origin/main && git checkout -b "${CI_BASE_VERSION_BUMP_BRANCH}" origin/main; fi`,
+      `printf '%s\\n' "${version}" > .buildkite/ci-image/VERSION`,
+      `git add -- .buildkite/ci-image/VERSION`,
+      `if git diff --cached --quiet; then HAS_VERSION_CHANGES=0; echo "No ci-base version changes to commit"; else HAS_VERSION_CHANGES=1; git commit -m "chore: bump ci-base image to ${version}" -m "Auto-Generated: ci-bot"; fi`,
+      `if [ "$HAS_VERSION_CHANGES" = "0" ] && git diff --quiet origin/main...HEAD; then echo "No ci-base version changes and pending branch has no diff"; exit 0; fi`,
+      `git push --force-with-lease -u origin "${CI_BASE_VERSION_BUMP_BRANCH}"`,
+      `PR_NUMBER=$(gh pr list --head "${CI_BASE_VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty'); if [ -z "$PR_NUMBER" ]; then gh pr create --base main --head "${CI_BASE_VERSION_BUMP_BRANCH}" --title "chore: bump ci-base image to ${version}" --body "Auto-generated ci-base version bump"; PR_NUMBER=$(gh pr view "${CI_BASE_VERSION_BUMP_BRANCH}" --json number -q .number); fi; gh pr merge "$PR_NUMBER" --auto --merge`,
+    ].join(" && "),
+  ]);
 }
 
 /**
@@ -891,7 +963,7 @@ export function cooklangVersionCommitBackHelper(
     ]);
   }
 
-  const authedContainer = withGithubAppToken(
+  const authedContainer = withGithubAppCredentials(
     container,
     source,
     githubAppId,
@@ -899,31 +971,28 @@ export function cooklangVersionCommitBackHelper(
     githubAppPrivateKey,
   );
 
-  return authedContainer
-    .withExec(["sh", "-c", writeGithubAppAskpassCommand()])
-    .withEnvVariable("GIT_ASKPASS", "/usr/local/bin/git-askpass")
-    .withExec([
-      "sh",
-      "-c",
-      [
-        exportGithubAppTokenCommand(),
-        `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
-        `cd /repo`,
-        `git config user.email "ci@sjer.red"`,
-        `git config user.name "CI Bot"`,
-        `if git ls-remote --exit-code --heads origin "${COOKLANG_VERSION_BUMP_BRANCH}" >/dev/null 2>&1; then git fetch origin main:refs/remotes/origin/main "${COOKLANG_VERSION_BUMP_BRANCH}:${COOKLANG_VERSION_BUMP_BRANCH}" && git checkout "${COOKLANG_VERSION_BUMP_BRANCH}" && git rebase origin/main; else git fetch origin main:refs/remotes/origin/main && git checkout -b "${COOKLANG_VERSION_BUMP_BRANCH}" origin/main; fi`,
-        `jq --arg v "${version}" '.version = $v' packages/cooklang-for-obsidian/manifest.json > packages/cooklang-for-obsidian/manifest.json.tmp`,
-        `mv packages/cooklang-for-obsidian/manifest.json.tmp packages/cooklang-for-obsidian/manifest.json`,
-        `if [ ! -s packages/cooklang-for-obsidian/versions.json ]; then echo '{}' > packages/cooklang-for-obsidian/versions.json; fi`,
-        `latest_min=$(jq -r 'to_entries | map(select(.key | test("^[0-9]+\\\\.[0-9]+\\\\.[0-9]+$"))) | sort_by(.key | split(".") | map(tonumber)) | (last // {"value": ""}) | .value' packages/cooklang-for-obsidian/versions.json)`,
-        `if [ -z "$latest_min" ] || [ "$latest_min" != "${minAppVersion}" ]; then jq --arg v "${version}" --arg m "${minAppVersion}" '.[$v] = $m' packages/cooklang-for-obsidian/versions.json > packages/cooklang-for-obsidian/versions.json.tmp && mv packages/cooklang-for-obsidian/versions.json.tmp packages/cooklang-for-obsidian/versions.json && git add packages/cooklang-for-obsidian/versions.json; else echo "versions.json compatibility boundary unchanged (${minAppVersion})"; fi`,
-        `git add packages/cooklang-for-obsidian/manifest.json`,
-        `if git diff --cached --quiet; then HAS_CHANGES=0; echo "No cooklang version changes to commit"; else HAS_CHANGES=1; git commit -m "chore(cooklang): bump to v${version}" -m "Auto-Generated: ci-bot"; fi`,
-        `if [ "$HAS_CHANGES" = "0" ] && git diff --quiet origin/main...HEAD; then echo "No cooklang changes and pending branch has no diff"; exit 0; fi`,
-        `git push --force-with-lease -u origin "${COOKLANG_VERSION_BUMP_BRANCH}"`,
-        `PR_NUMBER=$(gh pr list --head "${COOKLANG_VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty'); if [ -z "$PR_NUMBER" ]; then gh pr create --base main --head "${COOKLANG_VERSION_BUMP_BRANCH}" --title "chore(cooklang): bump plugin manifest version" --body "Auto-generated cooklang manifest version bump"; PR_NUMBER=$(gh pr view "${COOKLANG_VERSION_BUMP_BRANCH}" --json number -q .number); fi; gh pr merge "$PR_NUMBER" --auto --merge`,
-      ].join(" && "),
-    ]);
+  return authedContainer.withExec([
+    "sh",
+    "-c",
+    [
+      mintGithubAppTokenAndSetupGitAuth(),
+      `git clone https://github.com/shepherdjerred/monorepo.git /repo`,
+      `cd /repo`,
+      `git config user.email "ci@sjer.red"`,
+      `git config user.name "CI Bot"`,
+      `if git ls-remote --exit-code --heads origin "${COOKLANG_VERSION_BUMP_BRANCH}" >/dev/null 2>&1; then git fetch origin main:refs/remotes/origin/main "${COOKLANG_VERSION_BUMP_BRANCH}:${COOKLANG_VERSION_BUMP_BRANCH}" && git checkout "${COOKLANG_VERSION_BUMP_BRANCH}" && git rebase origin/main; else git fetch origin main:refs/remotes/origin/main && git checkout -b "${COOKLANG_VERSION_BUMP_BRANCH}" origin/main; fi`,
+      `jq --arg v "${version}" '.version = $v' packages/cooklang-for-obsidian/manifest.json > packages/cooklang-for-obsidian/manifest.json.tmp`,
+      `mv packages/cooklang-for-obsidian/manifest.json.tmp packages/cooklang-for-obsidian/manifest.json`,
+      `if [ ! -s packages/cooklang-for-obsidian/versions.json ]; then echo '{}' > packages/cooklang-for-obsidian/versions.json; fi`,
+      `latest_min=$(jq -r 'to_entries | map(select(.key | test("^[0-9]+\\\\.[0-9]+\\\\.[0-9]+$"))) | sort_by(.key | split(".") | map(tonumber)) | (last // {"value": ""}) | .value' packages/cooklang-for-obsidian/versions.json)`,
+      `if [ -z "$latest_min" ] || [ "$latest_min" != "${minAppVersion}" ]; then jq --arg v "${version}" --arg m "${minAppVersion}" '.[$v] = $m' packages/cooklang-for-obsidian/versions.json > packages/cooklang-for-obsidian/versions.json.tmp && mv packages/cooklang-for-obsidian/versions.json.tmp packages/cooklang-for-obsidian/versions.json && git add packages/cooklang-for-obsidian/versions.json; else echo "versions.json compatibility boundary unchanged (${minAppVersion})"; fi`,
+      `git add packages/cooklang-for-obsidian/manifest.json`,
+      `if git diff --cached --quiet; then HAS_CHANGES=0; echo "No cooklang version changes to commit"; else HAS_CHANGES=1; git commit -m "chore(cooklang): bump to v${version}" -m "Auto-Generated: ci-bot"; fi`,
+      `if [ "$HAS_CHANGES" = "0" ] && git diff --quiet origin/main...HEAD; then echo "No cooklang changes and pending branch has no diff"; exit 0; fi`,
+      `git push --force-with-lease -u origin "${COOKLANG_VERSION_BUMP_BRANCH}"`,
+      `PR_NUMBER=$(gh pr list --head "${COOKLANG_VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty'); if [ -z "$PR_NUMBER" ]; then gh pr create --base main --head "${COOKLANG_VERSION_BUMP_BRANCH}" --title "chore(cooklang): bump plugin manifest version" --body "Auto-generated cooklang manifest version bump"; PR_NUMBER=$(gh pr view "${COOKLANG_VERSION_BUMP_BRANCH}" --json number -q .number); fi; gh pr merge "$PR_NUMBER" --auto --merge`,
+    ].join(" && "),
+  ]);
 }
 
 // ---------------------------------------------------------------------------
@@ -960,7 +1029,7 @@ export function releasePleaseHelper(
       "DRYRUN: would run release-please (release-pr + github-release)",
     ]);
   }
-  const authedContainer = withGithubAppToken(
+  const authedContainer = withGithubAppCredentials(
     container,
     source,
     githubAppId,
@@ -972,7 +1041,7 @@ export function releasePleaseHelper(
     "sh",
     "-c",
     [
-      exportGithubAppTokenCommand(),
+      mintGithubAppTokenAndSetupGitAuth({ withAskpass: false }),
       `release-please release-pr --token="$GH_TOKEN" --repo-url=shepherdjerred/monorepo --target-branch=main`,
       `release-please github-release --token="$GH_TOKEN" --repo-url=shepherdjerred/monorepo --target-branch=main`,
     ].join(" && "),

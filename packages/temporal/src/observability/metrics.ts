@@ -123,6 +123,19 @@ export const homelabAuditEmailSentTotal = new Counter({
   registers: [register],
 });
 
+export const haEventBridgeStartFailuresTotal = new Counter({
+  name: "ha_event_bridge_start_failures_total",
+  help: "Home Assistant event bridge startup failures, by reason",
+  labelNames: ["reason"] as const,
+  registers: [register],
+});
+
+export const haEventBridgeConnected = new Gauge({
+  name: "ha_event_bridge_connected",
+  help: "Whether the Home Assistant event bridge is connected (1) or currently failing to start (0)",
+  registers: [register],
+});
+
 // ---------------------------------------------------------------------------
 // generic agent-task workflow metrics
 // ---------------------------------------------------------------------------

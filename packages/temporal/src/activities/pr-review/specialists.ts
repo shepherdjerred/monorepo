@@ -61,7 +61,7 @@ import type {
 } from "./specialists/runner.ts";
 
 const COMPONENT = "pr-review-pipeline";
-export const SPECIALIST_PASS_CONCURRENCY = 3;
+export const SPECIALIST_PASS_CONCURRENCY = 1;
 
 function jsonLog(
   level: "info" | "warning" | "error",

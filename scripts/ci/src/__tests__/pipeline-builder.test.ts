@@ -81,6 +81,32 @@ function collectSteps(steps: unknown[], allSteps: BuildkiteStep[]): void {
   }
 }
 
+function collectKeysAndDeps(
+  steps: unknown[],
+  allKeys: Set<string>,
+  allDeps: string[],
+): void {
+  for (const step of steps) {
+    if (typeof step !== "object" || step === null) continue;
+    if ("key" in step && typeof step.key === "string") {
+      allKeys.add(step.key);
+    }
+    if ("depends_on" in step && typeof step.depends_on === "string") {
+      allDeps.push(step.depends_on);
+    }
+    if ("depends_on" in step && Array.isArray(step.depends_on)) {
+      for (const dep of step.depends_on) {
+        if (typeof dep === "string") {
+          allDeps.push(dep);
+        }
+      }
+    }
+    if ("steps" in step && Array.isArray(step.steps)) {
+      collectKeysAndDeps(step.steps, allKeys, allDeps);
+    }
+  }
+}
+
 function withBuildkitePullRequest<T>(value: string, fn: () => T): T {
   const original = process.env["BUILDKITE_PULL_REQUEST"];
   process.env["BUILDKITE_PULL_REQUEST"] = value;
@@ -483,6 +509,34 @@ describe("buildPipeline", () => {
       }
     });
 
+    it("omits main-only release and deploy graph from pull request builds", () => {
+      const pipeline = withBuildkitePullRequest("123", () =>
+        buildPipeline(fullBuild()),
+      );
+      const groups = pipeline.steps.filter(isGroup);
+      const groupKeys = groups.map((g) => g.key);
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+      const stepKeys = allSteps.map((s) => s.key);
+
+      expect(groupKeys).toContain("build-images");
+      expect(groupKeys).toContain("homelab-tofu-plan");
+      expect(stepKeys).toContain("ci-complete");
+
+      expect(groupKeys).not.toContain("push-images");
+      expect(groupKeys).not.toContain("publish-npm");
+      expect(groupKeys).not.toContain("cooklang-release");
+      expect(groupKeys).not.toContain("deploy-sites");
+      expect(groupKeys).not.toContain("homelab-helm-push");
+      expect(groupKeys).not.toContain("homelab-tofu");
+
+      expect(stepKeys).not.toContain("release-please");
+      expect(stepKeys).not.toContain("deploy-argocd");
+      expect(stepKeys).not.toContain("argocd-health");
+      expect(stepKeys).not.toContain("version-commit-back");
+      expect(stepKeys).not.toContain("build-summary");
+    });
+
     it("includes image build/push, npm, cooklang, and sites groups", () => {
       const pipeline = buildPipeline(fullBuild());
       const groups = pipeline.steps.filter(isGroup);
@@ -800,6 +854,19 @@ describe("buildPipeline", () => {
       collect(pipeline.steps);
 
       const missing = allDeps.filter((d) => !allKeys.has(d));
+      expect(missing).toEqual([]);
+    });
+
+    it("has valid depends_on references in full pull request build", () => {
+      const pipeline = withBuildkitePullRequest("123", () =>
+        buildPipeline(fullBuild()),
+      );
+      const allKeys = new Set<string>();
+      const allDeps: string[] = [];
+
+      collectKeysAndDeps(pipeline.steps, allKeys, allDeps);
+
+      const missing = allDeps.filter((dep) => !allKeys.has(dep));
       expect(missing).toEqual([]);
     });
 

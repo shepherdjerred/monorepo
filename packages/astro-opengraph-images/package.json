@@ -88,5 +88,8 @@
     "bun.lock",
     "CHANGELOG.md"
   ],
-  "patchedDependencies": {}
+  "patchedDependencies": {},
+  "overrides": {
+    "devalue": "5.8.1"
+  }
 }

@@ -210,7 +210,7 @@ function buildDryRunOctokit(
         data: { id: params.comment_id, html_url: "(dry-run)" },
       });
     },
-    getDiff: real.getDiff,
+    listFiles: real.listFiles,
     getContent: real.getContent,
   };
 }

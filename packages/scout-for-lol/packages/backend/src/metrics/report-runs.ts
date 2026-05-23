@@ -20,6 +20,8 @@ export const scheduledReportRunsTotal = new Counter({
   registers: [registry],
 });
 
+// Keep the plural `scheduled_reports_*` families as dashboard-facing aliases
+// while existing singular `scheduled_report_*` consumers migrate.
 export const scheduledReportsRunTotal = new Counter({
   name: "scheduled_reports_run_total",
   help: "Total generic report runs by status, trigger, output format, and source.",
@@ -82,12 +84,5 @@ export const scheduledReportRowsTotal = new Counter({
   name: "scheduled_report_rows_total",
   help: "Total result rows returned by generic report runs.",
   labelNames: ["trigger", "output_format", "system_source"] as const,
-  registers: [registry],
-});
-
-export const scheduledReportBudgetExceededTotal = new Counter({
-  name: "scheduled_report_budget_exceeded_total",
-  help: "Total generic report runs rejected for exceeding a report budget.",
-  labelNames: ["budget"] as const,
   registers: [registry],
 });

@@ -1,6 +1,7 @@
 import { Database } from "bun:sqlite";
 import * as lancedb from "@lancedb/lancedb";
 import { mkdir } from "node:fs/promises";
+import path from "node:path";
 import { z } from "zod";
 import { LANCE_DIR, SQLITE_PATH, RECALL_DIR, EMBEDDING_DIM } from "./config.ts";
 
@@ -34,15 +35,32 @@ export type MetadataRow = {
   indexed_at: string;
 };
 
+export type RecallDbOptions = {
+  readOnly?: boolean;
+};
+
 export class RecallDb {
   readonly sqlite: Database;
+  readonly readOnly: boolean;
+  protected readonly lanceDir: string;
   private lanceDb: lancedb.Connection | null = null;
   private lanceTable: lancedb.Table | null = null;
 
-  constructor(sqlitePath: string = SQLITE_PATH) {
-    this.sqlite = new Database(sqlitePath);
-    this.sqlite.run("PRAGMA journal_mode = WAL;");
-    this.initSchema();
+  constructor(sqlitePath: string = SQLITE_PATH, options: RecallDbOptions = {}) {
+    this.readOnly = options.readOnly ?? false;
+    this.lanceDir =
+      sqlitePath === SQLITE_PATH
+        ? LANCE_DIR
+        : path.join(path.dirname(sqlitePath), "lance");
+    this.sqlite = new Database(sqlitePath, {
+      create: !this.readOnly,
+      readonly: this.readOnly,
+    });
+
+    if (!this.readOnly) {
+      this.sqlite.run("PRAGMA journal_mode = WAL;");
+      this.initSchema();
+    }
   }
 
   private initSchema(): void {
@@ -107,12 +125,19 @@ export class RecallDb {
       return this.lanceTable;
     }
 
-    await mkdir(LANCE_DIR, { recursive: true });
-    this.lanceDb = await lancedb.connect(LANCE_DIR);
+    if (!this.readOnly) {
+      await mkdir(this.lanceDir, { recursive: true });
+    }
+
+    this.lanceDb = await lancedb.connect(this.lanceDir);
 
     const tableNames = await this.lanceDb.tableNames();
     if (tableNames.includes(LANCE_TABLE)) {
       this.lanceTable = await this.lanceDb.openTable(LANCE_TABLE);
+    } else if (this.readOnly) {
+      throw new Error(
+        "Recall vector index is missing; run toolkit recall reindex.",
+      );
     } else {
       // Create with a dummy row that we immediately delete
       // LanceDB requires at least one row to infer schema
@@ -206,14 +231,23 @@ export class RecallDb {
     event: string,
     durationMs: number,
     details: Record<string, unknown>,
-  ): void {
+  ): boolean {
+    if (this.readOnly) {
+      return false;
+    }
+
     this.sqlite.run(
       "INSERT INTO stats (ts, event, duration_ms, details) VALUES (?, ?, ?, ?)",
       [new Date().toISOString(), event, durationMs, JSON.stringify(details)],
     );
+    return true;
   }
 
   purgeOldStats(daysToKeep = 30): number {
+    if (this.readOnly) {
+      throw new Error("Cannot purge stats from a read-only recall database.");
+    }
+
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - daysToKeep);
     const result = this.sqlite.run("DELETE FROM stats WHERE ts < ?", [
@@ -281,6 +315,10 @@ export class RecallDb {
   // Cleanup
 
   async dropAll(): Promise<void> {
+    if (this.readOnly) {
+      throw new Error("Cannot drop a read-only recall database.");
+    }
+
     this.sqlite.run("DELETE FROM metadata");
     this.sqlite.run("DELETE FROM docs_fts");
     this.sqlite.run("DELETE FROM stats");
@@ -299,7 +337,19 @@ export class RecallDb {
   }
 }
 
-export async function createRecallDb(): Promise<RecallDb> {
-  await mkdir(RECALL_DIR, { recursive: true });
-  return new RecallDb();
+export async function createRecallDb(
+  options: RecallDbOptions = {},
+  sqlitePath: string = SQLITE_PATH,
+): Promise<RecallDb> {
+  const recallDir =
+    sqlitePath === SQLITE_PATH ? RECALL_DIR : path.dirname(sqlitePath);
+
+  if (options.readOnly === true && !(await Bun.file(sqlitePath).exists())) {
+    await mkdir(recallDir, { recursive: true });
+    new RecallDb(sqlitePath).close();
+  } else if (options.readOnly !== true) {
+    await mkdir(recallDir, { recursive: true });
+  }
+
+  return new RecallDb(sqlitePath, options);
 }
