@@ -5,10 +5,12 @@ import {
   type RawMatch,
   type RawTimeline,
 } from "@scout-for-lol/data/index.ts";
+import { prisma } from "#src/database/index.ts";
 import { saveTimelineToS3 } from "#src/storage/s3.ts";
 import { fetchMatchTimeline } from "./match-data-fetcher.ts";
 import { createLogger } from "#src/logger.ts";
 import * as Sentry from "@sentry/bun";
+import { recordTimelineForReportStore } from "#src/report-store/live-ingest.ts";
 
 const logger = createLogger("postmatch-match-report-standard");
 
@@ -54,6 +56,11 @@ export async function fetchTimelineIfStandardMatch(
         );
         // Continue processing even if S3 storage fails
       }
+      await recordTimelineForReportStore({
+        prisma,
+        timeline: timelineData,
+        source: "timeline_live",
+      });
     }
     return timelineData;
   } catch (error) {

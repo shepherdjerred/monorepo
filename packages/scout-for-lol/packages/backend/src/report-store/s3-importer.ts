@@ -11,10 +11,10 @@ import {
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
 import {
-  upsertStoredMatchWithFacts,
-  upsertStoredPrematchWithFacts,
-  upsertStoredTimeline,
-} from "#src/report-store/store.ts";
+  recordMatchForReportStore,
+  recordPrematchForReportStore,
+  recordTimelineForReportStore,
+} from "#src/report-store/live-ingest.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
 
 export type ReportStoreS3ImportOptions = {
@@ -260,32 +260,40 @@ async function importKeyOnce(
 
   if (payloadType === "match") {
     const rawMatch = RawMatchSchema.parse(parsedJson);
-    await upsertStoredMatchWithFacts(params.prisma, rawMatch, {
+    await recordMatchForReportStore({
+      prisma: params.prisma,
+      match: rawMatch,
+      source: params.source,
       s3Key: params.key,
       importedFromS3: true,
+      onError: "throw",
     });
     return "imported";
   }
 
   if (payloadType === "timeline") {
     const rawTimeline = RawTimelineSchema.parse(parsedJson);
-    await upsertStoredTimeline(params.prisma, rawTimeline, {
+    await recordTimelineForReportStore({
+      prisma: params.prisma,
+      timeline: rawTimeline,
+      source: params.source,
       s3Key: params.key,
       importedFromS3: true,
+      onError: "throw",
     });
     return "imported";
   }
 
   const rawPrematch = RawCurrentGameInfoSchema.parse(parsedJson);
-  await upsertStoredPrematchWithFacts(
-    params.prisma,
-    rawPrematch,
-    observedAtFromPrematchKey(params.key),
-    {
-      s3Key: params.key,
-      importedFromS3: true,
-    },
-  );
+  await recordPrematchForReportStore({
+    prisma: params.prisma,
+    gameInfo: rawPrematch,
+    observedAt: observedAtFromPrematchKey(params.key),
+    source: params.source,
+    s3Key: params.key,
+    importedFromS3: true,
+    onError: "throw",
+  });
   return "imported";
 }
 
