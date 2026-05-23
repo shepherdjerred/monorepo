@@ -16,7 +16,7 @@ import ProcessStep from "../components/ProcessStep.astro";
 
 const matchImg = "/match.png";
 const loadingScreenImg = "/loading-screen.png";
-const arenaDiscordImg = "/arena-discord.png";
+const arenaLoadingScreenImg = "/arena-loading-screen.png";
 const soloDiscordImg = "/solo-discord.png";
 const leaderboardLpImg = "/leaderboard-lp.png";
 ---
@@ -57,12 +57,12 @@ const leaderboardLpImg = "/leaderboard-lp.png";
           <FeatureCard
             icon="heroicons:eye"
             title="Pre-Match Alerts"
-            description="Know the moment your friends start a game. Scout detects active matches in real-time and sends a notification with champion picks and game mode."
+            description="Know the moment your friends start a game. Scout detects active matches in real-time and sends lane-sorted loading screens with champion picks and game mode."
           />
           <FeatureCard
             icon="heroicons:document-text"
             title="Detailed Post-Match Reports"
-            description="Beautiful, automatically generated post-match reports with KDA, damage, gold, items, and performance statistics. See a preview below!"
+            description="Beautiful, automatically generated post-match reports with champion icons, KDA, damage, gold, items, and performance statistics."
           />
           <FeatureCard
             icon="heroicons:users"
@@ -77,12 +77,12 @@ const leaderboardLpImg = "/leaderboard-lp.png";
           <FeatureCard
             icon="heroicons:chart-bar-square"
             title="Scheduled Reports"
-            description="Turn match history into recurring Discord reports for leaderboards, surrender trends, champion stats, and pairing performance."
+            description="Use /report to turn match history into recurring Discord tables and leaderboards for surrender trends, champion stats, and pairing performance."
           />
           <FeatureCard
             icon="heroicons:bolt"
             title="Arena Mode Support"
-            description="Full support for League's Arena mode with detailed reports for 18-player 3v3 matches, augments, and placements, while legacy duo reports still render."
+            description="Full support for League's Arena mode with beautiful 18-player teams-of-3 screens, detailed post-match reports, augments, and placements."
           />
         </FeatureGrid>
       </div>
@@ -113,7 +113,7 @@ const leaderboardLpImg = "/leaderboard-lp.png";
               />
               <BenefitCard
                 title="Team Overview"
-                description="Clear team compositions with champion portraits and roles for easy identification."
+                description="Champion icons and team compositions make draft and ranked games easy to identify at a glance."
                 icon="heroicons:users"
                 color="blue"
               />
@@ -142,9 +142,9 @@ const leaderboardLpImg = "/leaderboard-lp.png";
           <!-- Pre-Match Loading Screens -->
           <FeatureWithImage
             title="Pre-Match Loading Screens"
-            description="Scout detects when tracked players enter a game and posts a full loading-screen preview to your Discord channel — complete with champion splash art, summoner spells, runes, and live rank badges for every player on both teams."
+            description="Scout detects when tracked players enter a game and posts a full loading-screen preview to your Discord channel, with Summoner's Rift champions sorted by inferred lane instead of raw participant order."
             imageSrc={loadingScreenImg}
-            imageAlt="Pre-match loading screen showing both teams' champion picks, runes, summoner spells, and ranks for a ranked flex game"
+            imageAlt="Pre-match loading screen showing both teams' champion picks in inferred lane order, with runes, summoner spells, and ranks for a ranked flex game"
             imagePosition="right"
             badge={{
               text: "New Feature",
@@ -153,18 +153,18 @@ const leaderboardLpImg = "/leaderboard-lp.png";
             }}
             checklist={[
               "Full 5v5 splash art preview with bans for ranked and draft",
+              "Inferred lane order for top, jungle, mid, bottom, and support",
               "Summoner spells, keystone runes, and live ranks for every player",
-              "ARAM and Arena layouts supported alongside Summoner's Rift",
               "One notification per game, even with multiple tracked players",
             ]}
           />
 
           <!-- Arena Mode Reports -->
           <FeatureWithImage
-            title="Complete Arena Coverage"
-            description="Full support for League's Arena mode with detailed stats for 18-player 3v3 matches, augments tracking, and placement results. Scout automatically detects Arena matches, including CHERRY games that Riot reports as custom, and still renders legacy duo reports."
-            imageSrc={arenaDiscordImg}
-            imageAlt="Arena mode match notification in Discord showing detailed stats, augments, and placements"
+            title="Arena Teams of 3"
+            description="Current Arena gets first-class treatment with beautiful prematch cards for tracked teams of three, plus detailed post-match stats for 18-player matches, augments, and placement results."
+            imageSrc={arenaLoadingScreenImg}
+            imageAlt="Arena prematch loading screen showing three champion cards for a tracked team of three"
             imagePosition="left"
             badge={{
               text: "Arena Mode",
@@ -172,9 +172,10 @@ const leaderboardLpImg = "/leaderboard-lp.png";
               color: "purple",
             }}
             checklist={[
-              "Track all 18 players across six teams of three",
-              "See augment selections and synergies",
-              "Beautiful placement and ranking display",
+              "Track current 18-player Arena across six teams of three",
+              "Render clean prematch cards for tracked Arena teammates",
+              "Keep detailed post-match augments, placements, and stats",
+              "Legacy duo Arena reports still render",
             ]}
           />
 
@@ -199,19 +200,20 @@ const leaderboardLpImg = "/leaderboard-lp.png";
 
           <!-- Leaderboards -->
           <FeatureWithImage
-            title="Custom Leaderboards"
-            description="Create competitions and recurring report posts for your server with flexible criteria and time periods. Track LP gains, most wins, champion mastery, surrender trends, and more."
+            title="Competitions & Scheduled Reports"
+            description="Create competitions and recurring /report posts for your server with flexible criteria and time periods. Track LP gains, most wins, champion mastery, surrender trends, pairings, and more."
             imageSrc={leaderboardLpImg}
-            imageAlt="Server leaderboard showing LP competition rankings"
+            imageAlt="Server leaderboard and recurring report output showing LP competition rankings"
             imagePosition="left"
             badge={{
-              text: "Competitions",
+              text: "Reports",
               icon: "heroicons:trophy",
               color: "yellow",
             }}
             checklist={[
               "Flexible competition criteria (LP, wins, games played)",
-              "Scheduled SQL-style reports for recurring Discord updates",
+              "Scheduled SQL-style /report posts for recurring Discord updates",
+              "Tables and leaderboards backed by stored match history",
               "Support for all game modes including Arena",
               "Use League seasons, custom date ranges, or rolling lookbacks",
             ]}
