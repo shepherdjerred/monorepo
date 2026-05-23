@@ -156,10 +156,9 @@ export function createJellyfinDeployment(
   });
 
   ApiObject.of(deployment).addJsonPatch(
-    JsonPatch.add("/spec/template/spec/containers/0/resources/limits", {
-      cpu: "2000m",
-      memory: "4Gi",
-      "gpu.intel.com/i915": 1,
-    }),
+    JsonPatch.add(
+      "/spec/template/spec/containers/0/resources/limits/gpu.intel.com~1i915",
+      1,
+    ),
   );
 }
