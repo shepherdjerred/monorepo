@@ -130,3 +130,32 @@ those are not real blockers.
   `<prefix>...<suffix>` form. If npm changes that format, the precheck's
   matching logic needs an update.
 - The new token expires 2026-08-20 — set a reminder; rotation is irreducible.
+
+<!-- temporal-agent-task
+{
+  "title": "Verify npm publish CI is still green ahead of NPM_TOKEN expiry",
+  "provider": "claude",
+  "mode": "report-only",
+  "runAt": "2026-08-13T09:00:00-07:00",
+  "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "source": {
+    "docPath": "packages/docs/logs/2026-05-22_npm-token-rotation.md"
+  },
+  "prompt": "The current granular NPM_TOKEN (1Password item rzk3lawpk4yspyyu5rxlz44ssi, NPM_TOKEN field) expires 2026-08-20. Confirm whether (a) the latest `:npm: Publish *` Buildkite jobs on main are still passing the bypass-2FA precheck, and (b) a fresh bypass-2FA replacement has been minted ahead of expiry. Email yes/no with links/evidence; do NOT mint a token yourself."
+}
+-->
+
+<!-- temporal-agent-task
+{
+  "title": "Re-evaluate npm Trusted Publishing for Buildkite",
+  "provider": "claude",
+  "mode": "report-only",
+  "cron": "0 9 1 */3 *",
+  "scheduleId": "npm-trusted-publishing-buildkite-check",
+  "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "source": {
+    "docPath": "packages/docs/logs/2026-05-22_npm-token-rotation.md"
+  },
+  "prompt": "Check whether npm has added Buildkite to the Trusted Publishers OIDC allowlist (https://docs.npmjs.com/trusted-publishers) or whether self-hosted-runner support has landed. If yes, propose a migration that removes the 90-day bypass-2FA token rotation; otherwise email a short status update."
+}
+-->

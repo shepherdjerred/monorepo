@@ -19,7 +19,6 @@ import {
 
 const GITHUB_APP_TOKEN_SCRIPT = "packages/temporal/src/lib/github-app-token.ts";
 const GITHUB_APP_TOKEN_SCRIPT_PATH = "/usr/local/bin/github-app-token.ts";
-const GITHUB_APP_TOKEN_PATH = "/tmp/github-app-token";
 
 /**
  * Inject the github-app-token mint script + the secret env vars needed to
@@ -53,10 +52,18 @@ function withGithubAppCredentials(
  * and export `GIT_ASKPASS` + `GH_TOKEN` for the current shell. Returns a
  * `&&`-chained command suitable for prepending to the caller's git ops.
  *
+ * The minted token lives only in the `GH_TOKEN` environment variable — it is
+ * never persisted to disk. The askpass helper script is plain shell text
+ * (single-quoted in the outer printf so `$GH_TOKEN` stays literal in the
+ * file content), and at git's invocation time the askpass subprocess
+ * inherits `GH_TOKEN` from the parent shell and `printf`s it back. This
+ * keeps the `.dagger/src/**` "no writing tokens to files" rule intact.
+ *
  * Includes a one-line diagnostic so any future "No anonymous write access"
  * or "Bad credentials" failure is debuggable from the CI log without
  * leaking token contents — prints askpass perms/owner/size, GIT_ASKPASS
- * value, and the token file's byte count.
+ * value, and the token's byte length (computed from `$GH_TOKEN`, not a
+ * file).
  *
  * Set `withAskpass=false` for callers that pass the token explicitly
  * (e.g. release-please via `--token`) and don't need git's askpass dance.
@@ -66,20 +73,19 @@ function mintGithubAppTokenAndSetupGitAuth(
 ): string {
   const withAskpass = opts.withAskpass ?? true;
   const steps = [
-    `bun ${GITHUB_APP_TOKEN_SCRIPT_PATH} > ${GITHUB_APP_TOKEN_PATH}`,
-    `test -s ${GITHUB_APP_TOKEN_PATH} || { echo "ERROR: ${GITHUB_APP_TOKEN_PATH} is empty after mint" >&2; exit 1; }`,
-    `export GH_TOKEN="$(cat ${GITHUB_APP_TOKEN_PATH})"`,
+    `export GH_TOKEN="$(bun ${GITHUB_APP_TOKEN_SCRIPT_PATH})"`,
+    `test -n "$GH_TOKEN" || { echo "ERROR: GH_TOKEN is empty after mint" >&2; exit 1; }`,
   ];
   if (withAskpass) {
     steps.push(
-      `printf '#!/bin/sh\\ncase "$1" in\\n  *Username*) printf "%s%s\\\\n" "x-access" "-token" ;;\\n  *) cat ${GITHUB_APP_TOKEN_PATH} ;;\\nesac\\n' > /usr/local/bin/git-askpass`,
+      `printf '#!/bin/sh\\ncase "$1" in\\n  *Username*) printf "%s%s\\\\n" "x-access" "-token" ;;\\n  *) printf "%s\\\\n" "$GH_TOKEN" ;;\\nesac\\n' > /usr/local/bin/git-askpass`,
       `chmod +x /usr/local/bin/git-askpass`,
       `export GIT_ASKPASS=/usr/local/bin/git-askpass`,
-      `echo "git-auth-setup: $(ls -l /usr/local/bin/git-askpass | awk '{print $1, $3, $5}'), GIT_ASKPASS=$GIT_ASKPASS, token-bytes=$(wc -c < ${GITHUB_APP_TOKEN_PATH})"`,
+      `echo "git-auth-setup: $(ls -l /usr/local/bin/git-askpass | awk '{print $1, $3, $5}'), GIT_ASKPASS=$GIT_ASKPASS, token-bytes=$(printf %s \"$GH_TOKEN\" | wc -c)"`,
     );
   } else {
     steps.push(
-      `echo "git-auth-setup: token-bytes=$(wc -c < ${GITHUB_APP_TOKEN_PATH}) (no askpass)"`,
+      `echo "git-auth-setup: token-bytes=$(printf %s \"$GH_TOKEN\" | wc -c) (no askpass)"`,
     );
   }
   return steps.join(" && ");
@@ -342,24 +348,26 @@ export function publishNpmHelper(
     ]);
   }
 
-  // Write .npmrc in project dir and publish in same sh -c so the token is available.
-  // bun publish has no --token flag; env var names with // are invalid.
-  // Ephemeral Dagger container — .npmrc never committed.
+  // Write a STATIC .npmrc whose `_authToken` value is a literal `${NPM_TOKEN}`
+  // — bun substitutes the env var at .npmrc-parse time, so the secret bytes
+  // never touch the filesystem (this avoids the ".dagger/src/** must not write
+  // tokens to files" rule). bun publish has no --token flag, and npm-style
+  // env vars like `NPM_CONFIG_//registry.npmjs.org/:_authToken` contain `/`s
+  // and aren't valid POSIX env var names, so this is the cleanest path.
   //
   // Precheck: if NPM_TOKEN doesn't bypass 2FA, bun publish silently falls into
   // npm's interactive web-auth flow and hangs ~5 minutes per package per build.
-  // Detect this up-front via /-/npm/v1/tokens and fail fast with an actionable
-  // message before bun gets a chance to wait. Skipped when the workspace has
-  // no internet (shouldn't happen in CI), in which case bun publish itself
-  // surfaces the network error.
+  // Detect this up-front via /-/npm/v1/tokens (paginated; some accounts have
+  // dozens of tokens) and fail fast with an actionable message before bun gets
+  // a chance to wait.
   return container
     .withSecretVariable("NPM_TOKEN", npmToken)
     .withExec([
       "sh",
       "-c",
       [
-        `echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc`,
-        `bun -e 'const token=process.env.NPM_TOKEN; if(!token){console.error("NPM_TOKEN is empty"); process.exit(1);} const r=await fetch("https://registry.npmjs.org/-/npm/v1/tokens",{headers:{Authorization:\`Bearer \${token}\`}}); if(!r.ok){console.error(\`npm token introspection failed: HTTP \${r.status} \${r.statusText}\`); process.exit(1);} const data=await r.json(); const me=data.objects?.find(o=>{const [pre,suf]=o.token.split("..."); return token.startsWith(pre)&&token.endsWith(suf);}); if(!me){console.error("Current NPM_TOKEN not found in /-/npm/v1/tokens — token may be revoked or registry response shape changed"); process.exit(1);} if(!me.bypass_2fa){console.error("ERROR: NPM_TOKEN does not bypass 2FA. bun publish will hang on npm interactive web-auth fallback in CI. Rotate to an automation token (npm token create --read-and-write) or a granular token with the 2FA-bypass option enabled."); process.exit(1);} console.log(\`OK: NPM_TOKEN bypasses 2FA (token name: \${me.name})\`);'`,
+        `printf '%s\\n' '//registry.npmjs.org/:_authToken=\${NPM_TOKEN}' > .npmrc`,
+        `bun -e 'const token=process.env.NPM_TOKEN; if(!token){console.error("NPM_TOKEN is empty"); process.exit(1);} let url="https://registry.npmjs.org/-/npm/v1/tokens"; let me=null; let pages=0; while(url&&!me){pages++; const r=await fetch(url,{headers:{Authorization:\`Bearer \${token}\`}}); if(!r.ok){console.error(\`npm token introspection failed (page \${pages}): HTTP \${r.status} \${r.statusText}\`); process.exit(1);} const data=await r.json(); me=data.objects?.find(o=>{const parts=(o.token||"").split("..."); if(parts.length!==2) return false; const [pre,suf]=parts; return token.startsWith(pre)&&token.endsWith(suf);}); url=data.urls?.next?(data.urls.next.startsWith("http")?data.urls.next:\`https://registry.npmjs.org\${data.urls.next}\`):null;} if(!me){console.error(\`Current NPM_TOKEN not found across \${pages} page(s) of /-/npm/v1/tokens — token may be revoked, or the registry truncated/changed its response shape\`); process.exit(1);} if(!me.bypass_2fa){console.error("ERROR: NPM_TOKEN does not bypass 2FA. bun publish will hang on npm interactive web-auth fallback in CI. Rotate to a granular token with bypass-2FA enabled: sign in to npmjs.com with a WebAuthn passkey in the same session (TOTP alone leaves the bypass-2FA checkbox disabled per npm policy since 2026-05), then mint at https://www.npmjs.com/settings/<user>/tokens/new. Classic Automation tokens were retired by npm in 2025."); process.exit(1);} console.log(\`OK: NPM_TOKEN bypasses 2FA (token name: \${me.name}, found on page \${pages})\`);'`,
         `bun publish --access public --tag ${tag} --tolerate-republish`,
       ].join(" && "),
     ]);
