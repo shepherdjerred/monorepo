@@ -28,12 +28,26 @@ The main conclusion is that release creation/upload, git push automation, and Op
 - Fetched/reviewed GitHub documentation for App installation tokens, REST endpoint permissions, releases, packages, container registry authentication, and `gh` token environment behavior.
 - Mapped those findings back to the repo's release, package, PR automation, webhook, and infra token surfaces.
 
-### Remaining At Research Time
+### Remaining
 
 - Change `packages/temporal/src/event-bridge/github-webhook.ts` to use the GitHub App token helper for the draft-skipped status comment.
 - Migrate Cooklang and any active Clauderon release paths to app tokens after confirming the release app permissions.
 - Run a disposable GHCR publish test with an installation token before changing package publishing CI.
 - Verify the exact Terraform/OpenTofu GitHub provider app-auth syntax and create a separately scoped infra app migration plan.
+
+<!-- temporal-agent-task
+{
+  "title": "Validate GitHub App automation research follow-ups",
+  "provider": "claude",
+  "mode": "report-only",
+  "runAt": "2026-05-30T09:00:00-07:00",
+  "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "source": {
+    "docPath": "packages/docs/logs/2026-05-23_github-app-automation-research.md"
+  },
+  "prompt": "Review the GitHub App automation research Remaining section. Report which follow-ups are complete, which still need operator action, and include evidence for GHCR auth and OpenTofu GitHub provider auth."
+}
+-->
 
 ### Caveats
 
@@ -56,6 +70,20 @@ The main conclusion is that release creation/upload, git push automation, and Op
 - Provision or rename the Buildkite/1Password registry secret as `GHCR_TOKEN`.
 - Ensure the reused GitHub App has the required permissions and repository installation coverage before merge-time release/Tofu jobs run.
 - Run a real OpenTofu backend init/plan with S3 backend credentials and real app credentials in the operator environment.
+
+<!-- temporal-agent-task
+{
+  "title": "Recheck GitHub App rollout prerequisites",
+  "provider": "claude",
+  "mode": "report-only",
+  "runAt": "2026-05-31T09:00:00-07:00",
+  "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "source": {
+    "docPath": "packages/docs/logs/2026-05-23_github-app-automation-research.md"
+  },
+  "prompt": "Check the GitHub App automation implementation Remaining section. Report whether GHCR_TOKEN exists for Buildkite registry publishing, whether the reused GitHub App has the required permissions and repo installation coverage, and whether a real OpenTofu backend init/plan has been validated with app credentials."
+}
+-->
 
 ### Caveats
 

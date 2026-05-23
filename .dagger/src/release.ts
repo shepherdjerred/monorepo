@@ -169,7 +169,6 @@ export function tofuApplyHelper(
     .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey)
     .withSecretVariable("GITHUB_APP_ID", githubAppId)
     .withSecretVariable("GITHUB_APP_INSTALLATION_ID", githubAppInstallationId)
-    .withSecretVariable("GITHUB_APP_PRIVATE_KEY", githubAppPrivateKey)
     .withSecretVariable("GITHUB_APP_PEM_FILE", githubAppPrivateKey);
 
   if (cloudflareAccountId != null) {
@@ -219,7 +218,6 @@ export function tofuPlanHelper(
     .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey)
     .withSecretVariable("GITHUB_APP_ID", githubAppId)
     .withSecretVariable("GITHUB_APP_INSTALLATION_ID", githubAppInstallationId)
-    .withSecretVariable("GITHUB_APP_PRIVATE_KEY", githubAppPrivateKey)
     .withSecretVariable("GITHUB_APP_PEM_FILE", githubAppPrivateKey);
 
   if (cloudflareAccountId != null) {

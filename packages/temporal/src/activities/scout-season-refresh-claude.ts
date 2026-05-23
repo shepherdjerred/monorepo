@@ -106,6 +106,7 @@ function buildSubprocessEnv(claudeToken: string): Record<string, string> {
   for (const [key, value] of Object.entries(Bun.env)) {
     if (key === "ANTHROPIC_API_KEY") continue;
     if (key === "GH_TOKEN" || key === "GITHUB_PERSONAL_ACCESS_TOKEN") continue;
+    if (key.startsWith("GITHUB_APP_")) continue;
     if (typeof value === "string") env[key] = value;
   }
   env["CLAUDE_CODE_OAUTH_TOKEN"] = claudeToken;

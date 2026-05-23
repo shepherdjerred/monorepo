@@ -169,7 +169,11 @@ function envForProvider(
     if (provider === "claude" && key === "ANTHROPIC_API_KEY") {
       continue;
     }
-    if (key === "GH_TOKEN" || key === "GITHUB_PERSONAL_ACCESS_TOKEN") {
+    if (
+      key === "GH_TOKEN" ||
+      key === "GITHUB_PERSONAL_ACCESS_TOKEN" ||
+      key.startsWith("GITHUB_APP_")
+    ) {
       continue;
     }
     env[key] = value;

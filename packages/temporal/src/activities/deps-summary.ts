@@ -107,6 +107,17 @@ export type ReleaseNotesResult = {
   failed: FailedFetch[];
 };
 
+type ReleaseNoteFetchResult = {
+  note: ReleaseNote | undefined;
+  authRequired: boolean;
+};
+
+type BatchFetchResult = {
+  change: DependencyChange;
+  note: ReleaseNote | undefined;
+  error: unknown;
+};
+
 const GithubRelease = z.object({
   body: z.string().optional(),
   html_url: z.string().optional(),
@@ -132,12 +143,13 @@ async function tryFetchReleaseNote(
   repo: string,
   version: string,
   headers: Record<string, string>,
-): Promise<ReleaseNote | undefined> {
+): Promise<ReleaseNoteFetchResult> {
   const tagVariants = [
     `v${version}`,
     version,
     `${repo.split("/").pop() ?? ""}-${version}`,
   ];
+  let authRequired = false;
 
   for (const tag of tagVariants) {
     const response = await fetchWithTimeout(
@@ -145,21 +157,27 @@ async function tryFetchReleaseNote(
       { headers },
     );
     if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        authRequired = true;
+      }
       continue;
     }
     const release = GithubRelease.parse(await response.json());
     if (release.body !== undefined && release.body.length > 50) {
       return {
-        dependency: repo,
-        source: "github",
-        version,
-        notes: release.body,
-        url: release.html_url,
+        note: {
+          dependency: repo,
+          source: "github",
+          version,
+          notes: release.body,
+          url: release.html_url,
+        },
+        authRequired,
       };
     }
   }
 
-  return undefined;
+  return { note: undefined, authRequired };
 }
 
 export type DepsSummaryActivities = typeof depsSummaryActivities;
@@ -255,11 +273,10 @@ export const depsSummaryActivities = {
     if (eligible.length === 0) {
       return { notes, failed };
     }
-    const ghToken = await createGitHubAppInstallationToken();
     const headers: Record<string, string> = {
       Accept: "application/vnd.github+json",
-      Authorization: `Bearer ${ghToken.token}`,
     };
+    let authenticatedHeaders: Record<string, string> | undefined;
 
     // Bounded concurrency prevents serial wait times from exceeding the
     // activity's start-to-close timeout when dozens of deps change at once.
@@ -271,15 +288,36 @@ export const depsSummaryActivities = {
         batchStart: i,
       });
       const batch = eligible.slice(i, i + CONCURRENCY);
-      const results = await Promise.all(
-        batch.map(async (change) => {
+      const results: BatchFetchResult[] = await Promise.all(
+        batch.map(async (change): Promise<BatchFetchResult> => {
           try {
-            const note = await tryFetchReleaseNote(
+            const result = await tryFetchReleaseNote(
               change.name,
               change.newVersion,
               headers,
             );
-            return { change, note, error: undefined as unknown };
+            if (result.note !== undefined || !result.authRequired) {
+              return { change, note: result.note, error: undefined };
+            }
+
+            if (authenticatedHeaders === undefined) {
+              const ghToken = await createGitHubAppInstallationToken();
+              authenticatedHeaders = {
+                ...headers,
+                Authorization: `Bearer ${ghToken.token}`,
+              };
+            }
+
+            const authenticatedResult = await tryFetchReleaseNote(
+              change.name,
+              change.newVersion,
+              authenticatedHeaders,
+            );
+            return {
+              change,
+              note: authenticatedResult.note,
+              error: undefined,
+            };
           } catch (error) {
             return { change, note: undefined, error };
           }
