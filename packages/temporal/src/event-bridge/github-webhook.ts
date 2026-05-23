@@ -29,6 +29,7 @@ import {
   type PostReviewStatusInput,
 } from "#activities/pr-review/post-render.ts";
 import { type PostReviewStatusResult } from "#activities/pr-review/post-github.ts";
+import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 
 const COMPONENT = "pr-webhook";
 const DEFAULT_PORT = 9466;
@@ -228,12 +229,8 @@ async function postWebhookStatus(
     return;
   }
 
-  const token = Bun.env["GH_TOKEN"];
-  if (token === undefined || token === "") {
-    throw new Error("GH_TOKEN is required to post webhook review status");
-  }
-
-  const octokit = new Octokit({ auth: token });
+  const tokenResult = await createGitHubAppInstallationToken();
+  const octokit = new Octokit({ auth: tokenResult.token });
   const result: PostReviewStatusResult = await runPostReviewStatus(
     octokit,
     statusInput,

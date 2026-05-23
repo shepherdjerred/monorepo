@@ -4,6 +4,7 @@ import OpenAI from "openai";
 import { z } from "zod/v4";
 import { traceOpenAi } from "@shepherdjerred/llm-observability";
 import { sendPostalEmail, resolvePostalAddresses } from "#shared/postal.ts";
+import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 
 const VERSIONS_FILE_PATH = "packages/homelab/src/cdk8s/src/versions.ts";
 const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
@@ -243,22 +244,22 @@ export const depsSummaryActivities = {
   async fetchReleaseNotes(
     changes: DependencyChange[],
   ): Promise<ReleaseNotesResult> {
-    const ghToken = Bun.env["GH_TOKEN"] ?? "";
     const notes: ReleaseNote[] = [];
     const failed: FailedFetch[] = [];
-    const headers: Record<string, string> = {
-      Accept: "application/vnd.github+json",
-    };
-    if (ghToken !== "") {
-      headers["Authorization"] = `Bearer ${ghToken}`;
-    }
-
     const eligible = changes.filter(
       (change) =>
         change.datasource === "github-releases" ||
         change.datasource === "docker" ||
         change.datasource === "helm",
     );
+    if (eligible.length === 0) {
+      return { notes, failed };
+    }
+    const ghToken = await createGitHubAppInstallationToken();
+    const headers: Record<string, string> = {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${ghToken.token}`,
+    };
 
     // Bounded concurrency prevents serial wait times from exceeding the
     // activity's start-to-close timeout when dozens of deps change at once.

@@ -94,7 +94,6 @@ function secretTokens(): readonly (string | undefined)[] {
   return [
     Bun.env["CLAUDE_CODE_OAUTH_TOKEN"],
     Bun.env["ANTHROPIC_API_KEY"],
-    Bun.env["GH_TOKEN"],
     Bun.env["GITHUB_PERSONAL_ACCESS_TOKEN"],
     Bun.env["GITHUB_APP_PRIVATE_KEY"],
   ];
@@ -106,6 +105,7 @@ function buildSubprocessEnv(claudeToken: string): Record<string, string> {
   const env: Record<string, string> = {};
   for (const [key, value] of Object.entries(Bun.env)) {
     if (key === "ANTHROPIC_API_KEY") continue;
+    if (key === "GH_TOKEN" || key === "GITHUB_PERSONAL_ACCESS_TOKEN") continue;
     if (typeof value === "string") env[key] = value;
   }
   env["CLAUDE_CODE_OAUTH_TOKEN"] = claudeToken;

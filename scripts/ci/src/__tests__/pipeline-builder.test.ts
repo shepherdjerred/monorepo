@@ -134,6 +134,8 @@ describe("buildPipeline", () => {
       expect(push).toBeDefined();
       expect(push?.if).toBe("build.branch == pipeline.default_branch");
       expect(push?.command).toContain("ghcr.io/shepherdjerred/ci-base:");
+      expect(push?.command).toContain("--registry-password env:GHCR_TOKEN");
+      expect(push?.command).not.toContain("env:GH_TOKEN");
       expect(commitBack).toBeDefined();
       expect(commitBack?.depends_on).toBe("push-ci-base");
       expect(commitBack?.concurrency_group).toBe(
@@ -480,6 +482,8 @@ describe("buildPipeline", () => {
       expect(planSteps.length).toBeGreaterThan(0);
       for (const s of planSteps) {
         expect(s.if).toBe("build.branch != pipeline.default_branch");
+        expect(s.command).toContain("--github-app-id env:GITHUB_APP_ID");
+        expect(s.command).not.toContain("TOFU_GITHUB_TOKEN");
       }
     });
 
@@ -493,6 +497,30 @@ describe("buildPipeline", () => {
       expect(groupKeys).toContain("publish-npm");
       expect(groupKeys).toContain("cooklang-release");
       expect(groupKeys).toContain("deploy-sites");
+    });
+
+    it("uses GitHub App auth for release tasks and GHCR_TOKEN only for image pushes", () => {
+      const pipeline = buildPipeline(fullBuild());
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+
+      const releaseSteps = allSteps.filter((s) =>
+        ["cooklang-publish"].includes(s.key),
+      );
+      expect(releaseSteps.length).toBe(1);
+      for (const s of releaseSteps) {
+        expect(s.command).toContain("--github-app-id env:GITHUB_APP_ID");
+        expect(s.command).not.toContain("env:GH_TOKEN");
+      }
+
+      const imagePushSteps = allSteps.filter((s) => s.key.startsWith("push-"));
+      expect(imagePushSteps.length).toBeGreaterThan(0);
+      for (const s of imagePushSteps) {
+        if (s.command.includes("--registry-password")) {
+          expect(s.command).toContain("--registry-password env:GHCR_TOKEN");
+          expect(s.command).not.toContain("--registry-password env:GH_TOKEN");
+        }
+      }
     });
 
     it("includes homelab track", () => {
@@ -605,6 +633,8 @@ describe("buildPipeline", () => {
       for (const s of tofuSteps) {
         expect(s.concurrency).toBe(1);
         expect(s.concurrency_group).toContain("monorepo/tofu-");
+        expect(s.command).toContain("--github-app-id env:GITHUB_APP_ID");
+        expect(s.command).not.toContain("TOFU_GITHUB_TOKEN");
       }
 
       const argoSteps = allSteps.filter((s) =>

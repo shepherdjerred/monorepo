@@ -188,7 +188,7 @@ function imagePushStep(
     `--tags ghcr.io/${img.versionKey}:2.0.0-$BUILDKITE_BUILD_NUMBER`,
     `--tags ghcr.io/${img.versionKey}:latest`,
     `--registry-username shepherdjerred`,
-    `--registry-password env:GH_TOKEN`,
+    `--registry-password env:GHCR_TOKEN`,
   ].join(" ");
 
   const NO_SOURCE_PUSHES = new Set([

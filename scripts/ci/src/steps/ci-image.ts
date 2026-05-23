@@ -62,7 +62,7 @@ export function ciBaseImagePushStep(
     `--tags ghcr.io/shepherdjerred/ci-base:${version}`,
     `--tags ghcr.io/shepherdjerred/ci-base:latest`,
     `--registry-username shepherdjerred`,
-    `--registry-password env:GH_TOKEN`,
+    `--registry-password env:GHCR_TOKEN`,
   ].join(" ");
 
   return {

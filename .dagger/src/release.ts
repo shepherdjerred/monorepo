@@ -150,7 +150,9 @@ export function tofuApplyHelper(
   stack: string,
   awsAccessKeyId: Secret,
   awsSecretAccessKey: Secret,
-  ghToken: Secret,
+  githubAppId: Secret,
+  githubAppInstallationId: Secret,
+  githubAppPrivateKey: Secret,
   cloudflareAccountId: Secret | null = null,
   cloudflareApiToken: Secret | null = null,
   dryrun = false,
@@ -165,9 +167,10 @@ export function tofuApplyHelper(
     )
     .withSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyId)
     .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey)
-    // GitHub provider reads GITHUB_TOKEN; GH CLI reads GH_TOKEN — set both
-    .withSecretVariable("GITHUB_TOKEN", ghToken)
-    .withSecretVariable("GH_TOKEN", ghToken);
+    .withSecretVariable("GITHUB_APP_ID", githubAppId)
+    .withSecretVariable("GITHUB_APP_INSTALLATION_ID", githubAppInstallationId)
+    .withSecretVariable("GITHUB_APP_PRIVATE_KEY", githubAppPrivateKey)
+    .withSecretVariable("GITHUB_APP_PEM_FILE", githubAppPrivateKey);
 
   if (cloudflareAccountId != null) {
     container = container.withSecretVariable(
@@ -197,7 +200,9 @@ export function tofuPlanHelper(
   stack: string,
   awsAccessKeyId: Secret,
   awsSecretAccessKey: Secret,
-  ghToken: Secret,
+  githubAppId: Secret,
+  githubAppInstallationId: Secret,
+  githubAppPrivateKey: Secret,
   cloudflareAccountId: Secret | null = null,
   cloudflareApiToken: Secret | null = null,
   dryrun = false,
@@ -212,9 +217,10 @@ export function tofuPlanHelper(
     )
     .withSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyId)
     .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey)
-    // GitHub provider reads GITHUB_TOKEN; GH CLI reads GH_TOKEN — set both
-    .withSecretVariable("GITHUB_TOKEN", ghToken)
-    .withSecretVariable("GH_TOKEN", ghToken);
+    .withSecretVariable("GITHUB_APP_ID", githubAppId)
+    .withSecretVariable("GITHUB_APP_INSTALLATION_ID", githubAppInstallationId)
+    .withSecretVariable("GITHUB_APP_PRIVATE_KEY", githubAppPrivateKey)
+    .withSecretVariable("GITHUB_APP_PEM_FILE", githubAppPrivateKey);
 
   if (cloudflareAccountId != null) {
     container = container.withSecretVariable(
@@ -687,30 +693,51 @@ function validateGitHubRepoSlug(repo: string, label: string): string {
  * a commit-back step.
  */
 export function cooklangPublishHelper(
-  source: Directory,
-  ghToken: Secret,
+  artifacts: Directory,
+  tokenSource: Directory,
   pluginRepo: string,
+  githubAppId: Secret,
+  githubAppInstallationId: Secret,
+  githubAppPrivateKey: Secret,
   dryrun = false,
 ): Container {
   const cooklangPluginRepo = validateGitHubRepoSlug(pluginRepo, "pluginRepo");
   const container = dag
     .container()
-    .from(ALPINE_IMAGE)
+    .from(BUN_IMAGE)
+    .withExec(["apt-get", "update", "-qq"])
+    .withExec([
+      "apt-get",
+      "install",
+      "-y",
+      "-qq",
+      "--no-install-recommends",
+      "curl",
+      "git",
+      "jq",
+      "ca-certificates",
+    ])
     .withExec([
       "sh",
       "-c",
-      `apk add --no-cache curl git jq && curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
+      `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
     ])
-    .withSecretVariable("GH_TOKEN", ghToken)
     .withWorkdir("/artifacts")
-    .withDirectory("/artifacts", source);
+    .withDirectory("/artifacts", artifacts);
 
   if (dryrun) {
-    return container.withExec([
+    return withGithubAppCredentials(
+      container,
+      tokenSource,
+      githubAppId,
+      githubAppInstallationId,
+      githubAppPrivateKey,
+    ).withExec([
       "sh",
       "-c",
       [
         `set -eu`,
+        mintGithubAppTokenAndSetupGitAuth({ withAskpass: false }),
         `latest=$(gh release list --repo ${cooklangPluginRepo} --limit 50 --json tagName --jq '.[].tagName' | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+$' | head -1)`,
         `base="\${latest:-$(jq -r .version /artifacts/manifest.json)}"`,
         `major=$(echo "$base" | cut -d. -f1)`,
@@ -723,52 +750,53 @@ export function cooklangPublishHelper(
     ]);
   }
 
-  return container
-    .withExec([
-      "sh",
-      "-c",
-      `printf '#!/bin/sh\\necho "$GH_TOKEN"\\n' > /usr/local/bin/git-askpass && chmod +x /usr/local/bin/git-askpass`,
-    ])
-    .withEnvVariable("GIT_ASKPASS", "/usr/local/bin/git-askpass")
-    .withExec([
-      "sh",
-      "-c",
-      [
-        `set -eu`,
-        // Clone plugin repo
-        `git clone https://github.com/${cooklangPluginRepo}.git /repo`,
-        `cd /repo`,
-        `git config user.email "ci@sjer.red"`,
-        `git config user.name "CI Bot"`,
-        // Compute next version: latest semver release tag + 1 patch, fallback to artifacts manifest
-        `latest=$(gh release list --repo ${cooklangPluginRepo} --limit 50 --json tagName --jq '.[].tagName' | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+$' | head -1)`,
-        `base="\${latest:-$(jq -r .version /artifacts/manifest.json)}"`,
-        `major=$(echo "$base" | cut -d. -f1)`,
-        `minor=$(echo "$base" | cut -d. -f2)`,
-        `patch=$(echo "$base" | cut -d. -f3)`,
-        `new="$major.$minor.$((patch + 1))"`,
-        `echo "cooklang plugin: $base -> $new"`,
-        // Rewrite artifacts manifest with new version
-        `jq --arg v "$new" '.version = $v' /artifacts/manifest.json > /artifacts/manifest.json.tmp`,
-        `mv /artifacts/manifest.json.tmp /artifacts/manifest.json`,
-        `min=$(jq -r .minAppVersion /artifacts/manifest.json)`,
-        // Copy artifacts to repo + update versions.json only for compatibility boundary changes
-        `cp /artifacts/main.js /artifacts/manifest.json /artifacts/styles.css /repo/`,
-        `if [ ! -s /repo/versions.json ]; then echo '{}' > /repo/versions.json; fi`,
-        `latest_min=$(jq -r 'to_entries | map(select(.key | test("^[0-9]+\\\\.[0-9]+\\\\.[0-9]+$"))) | sort_by(.key | split(".") | map(tonumber)) | (last // {"value": ""}) | .value' /repo/versions.json)`,
-        `if [ -z "$latest_min" ] || [ "$latest_min" != "$min" ]; then jq --arg v "$new" --arg m "$min" '.[$v] = $m' /repo/versions.json > /repo/versions.json.tmp && mv /repo/versions.json.tmp /repo/versions.json && git -C /repo add versions.json; else echo "versions.json compatibility boundary unchanged ($min)"; fi`,
-        // Commit + push to plugin repo main
-        `git -C /repo add main.js manifest.json styles.css`,
-        `if git -C /repo diff --cached --quiet; then echo "No artifact changes to commit"; else git -C /repo commit -m "release: v$new" -m "Auto-Generated: ci-bot"; git -C /repo push origin HEAD:main; fi`,
-        // Create the GitHub release on the plugin repo (idempotent: skip if tag already exists)
-        `if gh release view "$new" --repo ${cooklangPluginRepo} >/dev/null 2>&1; then echo "Release $new already exists on ${cooklangPluginRepo}, skipping"; else gh release create "$new" /artifacts/main.js /artifacts/manifest.json /artifacts/styles.css --repo ${cooklangPluginRepo} --title "v$new" --generate-notes; fi`,
-        // Last line of stdout = new version, for callers
-        `printf '%s\\n' "$new"`,
-      ].join(" && "),
-    ]);
+  const authedContainer = withGithubAppCredentials(
+    container,
+    tokenSource,
+    githubAppId,
+    githubAppInstallationId,
+    githubAppPrivateKey,
+  );
+
+  return authedContainer.withExec([
+    "sh",
+    "-c",
+    [
+      `set -eu`,
+      mintGithubAppTokenAndSetupGitAuth(),
+      // Clone plugin repo
+      `git clone https://github.com/${cooklangPluginRepo}.git /repo`,
+      `cd /repo`,
+      `git config user.email "ci@sjer.red"`,
+      `git config user.name "CI Bot"`,
+      // Compute next version: latest semver release tag + 1 patch, fallback to artifacts manifest
+      `latest=$(gh release list --repo ${cooklangPluginRepo} --limit 50 --json tagName --jq '.[].tagName' | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+$' | head -1)`,
+      `base="\${latest:-$(jq -r .version /artifacts/manifest.json)}"`,
+      `major=$(echo "$base" | cut -d. -f1)`,
+      `minor=$(echo "$base" | cut -d. -f2)`,
+      `patch=$(echo "$base" | cut -d. -f3)`,
+      `new="$major.$minor.$((patch + 1))"`,
+      `echo "cooklang plugin: $base -> $new"`,
+      // Rewrite artifacts manifest with new version
+      `jq --arg v "$new" '.version = $v' /artifacts/manifest.json > /artifacts/manifest.json.tmp`,
+      `mv /artifacts/manifest.json.tmp /artifacts/manifest.json`,
+      `min=$(jq -r .minAppVersion /artifacts/manifest.json)`,
+      // Copy artifacts to repo + update versions.json only for compatibility boundary changes
+      `cp /artifacts/main.js /artifacts/manifest.json /artifacts/styles.css /repo/`,
+      `if [ ! -s /repo/versions.json ]; then echo '{}' > /repo/versions.json; fi`,
+      `latest_min=$(jq -r 'to_entries | map(select(.key | test("^[0-9]+\\\\.[0-9]+\\\\.[0-9]+$"))) | sort_by(.key | split(".") | map(tonumber)) | (last // {"value": ""}) | .value' /repo/versions.json)`,
+      `if [ -z "$latest_min" ] || [ "$latest_min" != "$min" ]; then jq --arg v "$new" --arg m "$min" '.[$v] = $m' /repo/versions.json > /repo/versions.json.tmp && mv /repo/versions.json.tmp /repo/versions.json && git -C /repo add versions.json; else echo "versions.json compatibility boundary unchanged ($min)"; fi`,
+      // Commit + push to plugin repo main
+      `git -C /repo add main.js manifest.json styles.css`,
+      `if git -C /repo diff --cached --quiet; then echo "No artifact changes to commit"; else git -C /repo commit -m "release: v$new" -m "Auto-Generated: ci-bot"; git -C /repo push origin HEAD:main; fi`,
+      // Create the GitHub release on the plugin repo (idempotent: skip if tag already exists)
+      `if gh release view "$new" --repo ${cooklangPluginRepo} >/dev/null 2>&1; then echo "Release $new already exists on ${cooklangPluginRepo}, skipping"; else gh release create "$new" /artifacts/main.js /artifacts/manifest.json /artifacts/styles.css --repo ${cooklangPluginRepo} --title "v$new" --generate-notes; fi`,
+      // Last line of stdout = new version, for callers
+      `printf '%s\\n' "$new"`,
+    ].join(" && "),
+  ]);
 }
 
-// ---------------------------------------------------------------------------
 // Version commit-back
 // ---------------------------------------------------------------------------
 

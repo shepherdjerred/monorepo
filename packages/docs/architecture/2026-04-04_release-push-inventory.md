@@ -10,11 +10,11 @@ All targets are orchestrated via **Buildkite CI** using **Dagger** as the build 
 
 | Category             | Count | Destination                              | Auth         |
 | -------------------- | ----- | ---------------------------------------- | ------------ |
-| Docker / OCI images  | 9     | `ghcr.io/shepherdjerred/*`               | GH_TOKEN     |
+| Docker / OCI images  | 9     | `ghcr.io/shepherdjerred/*`               | GHCR_TOKEN   |
 | Helm charts          | 26    | ChartMuseum (`chartmuseum.sjer.red`)     | HTTP Basic   |
 | npm packages         | 3     | npm registry                             | NPM_TOKEN    |
 | Static sites (S3)    | 8     | SeaweedFS + Cloudflare R2                | AWS creds    |
-| GitHub releases      | 2     | GitHub API                               | GH_TOKEN     |
+| GitHub releases      | 2     | GitHub API                               | GitHub App   |
 | Git push (automated) | 2     | origin (version commits, release-please) | GitHub App   |
 | OpenTofu apply       | 3     | Cloudflare, GitHub, SeaweedFS            | Multiple     |
 | ArgoCD sync          | 1     | K8s cluster via `argocd.sjer.red`        | ArgoCD token |
@@ -23,6 +23,8 @@ All targets are orchestrated via **Buildkite CI** using **Dagger** as the build 
 
 Tags: `2.0.0-{BUILD_NUMBER}` + `latest`
 Code: `.dagger/src/image.ts`, `scripts/ci/src/steps/images.ts`, `scripts/ci/src/catalog.ts`
+
+Auth exception: GHCR publishing still uses `GHCR_TOKEN` because GitHub's container registry auth path supports PAT classic or the built-in GitHub Actions token, not arbitrary Buildkite-minted GitHub App installation tokens. Remove this exception only after GitHub supports installation tokens for Docker/OCI registry login from external CI.
 
 ### Application images (6)
 
@@ -93,6 +95,8 @@ Method: `aws s3 sync --delete`. Code: `.dagger/src/release.ts`, `scripts/ci/src/
 ## OpenTofu Infrastructure Apply
 
 Code: `packages/homelab/src/tofu/`, `scripts/ci/src/steps/tofu.ts`
+
+GitHub stack auth uses the repo GitHub App via `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`, and `GITHUB_APP_PEM_FILE` / `GITHUB_APP_PRIVATE_KEY`; `TOFU_GITHUB_TOKEN` is not used.
 
 | Stack      | Target       | Resources                                                                                                                                                                                                                     |
 | ---------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

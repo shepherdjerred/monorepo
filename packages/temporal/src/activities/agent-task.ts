@@ -9,6 +9,7 @@ import {
 } from "#observability/metrics.ts";
 import { getTraceContext } from "#observability/tracing.ts";
 import { cleanupWorkdir, provisionWorkdir } from "#lib/pr-review-workdir.ts";
+import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { startOrScheduleAgentTask } from "#lib/agent-task-scheduler.ts";
 import { buildAgentTaskCommand } from "#activities/agent-task-command.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
@@ -137,13 +138,16 @@ function workflowId(): string {
   }
 }
 
-function secretTokens(): readonly (string | undefined)[] {
+function secretTokens(
+  githubAppToken: string | undefined,
+): readonly (string | undefined)[] {
   return [
     Bun.env["CLAUDE_CODE_OAUTH_TOKEN"],
     Bun.env["ANTHROPIC_API_KEY"],
     Bun.env["OPENAI_API_KEY"],
-    Bun.env["GH_TOKEN"],
     Bun.env["GITHUB_PERSONAL_ACCESS_TOKEN"],
+    Bun.env["GITHUB_APP_PRIVATE_KEY"],
+    githubAppToken,
     Bun.env["POSTAL_API_KEY"],
     Bun.env["PAGERDUTY_TOKEN"],
     Bun.env["BUGSINK_TOKEN"],
@@ -153,7 +157,10 @@ function secretTokens(): readonly (string | undefined)[] {
   ];
 }
 
-function envForProvider(provider: AgentTaskProvider): Record<string, string> {
+function envForProvider(
+  provider: AgentTaskProvider,
+  githubAppToken: string,
+): Record<string, string> {
   const env: Record<string, string> = {};
   for (const [key, value] of Object.entries(Bun.env)) {
     if (typeof value !== "string") {
@@ -162,8 +169,12 @@ function envForProvider(provider: AgentTaskProvider): Record<string, string> {
     if (provider === "claude" && key === "ANTHROPIC_API_KEY") {
       continue;
     }
+    if (key === "GH_TOKEN" || key === "GITHUB_PERSONAL_ACCESS_TOKEN") {
+      continue;
+    }
     env[key] = value;
   }
+  env["GH_TOKEN"] = githubAppToken;
   return env;
 }
 
@@ -239,13 +250,14 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
     workdir: input.workdir,
   });
 
+  const githubTokenResult = await createGitHubAppInstallationToken();
   const startMs = Date.now();
   const proc = Bun.spawn(command.args, {
     stdin: "ignore",
     stdout: "pipe",
     stderr: "pipe",
     cwd: input.workdir,
-    env: envForProvider(provider),
+    env: envForProvider(provider, githubTokenResult.token),
   });
   const heartbeat = setInterval(() => {
     safeHeartbeat({ phase: "agent", elapsedMs: Date.now() - startMs });
@@ -256,7 +268,7 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
   try {
     [stdout, , exitCode] = await Promise.all([
       new Response(proc.stdout).text(),
-      pumpStderr(proc.stderr, secretTokens(), provider),
+      pumpStderr(proc.stderr, secretTokens(githubTokenResult.token), provider),
       proc.exited,
     ]);
   } finally {
@@ -314,16 +326,13 @@ async function prepareWorkdir(
 ): Promise<PrepareAgentTaskWorkdirResult> {
   const parsed = AgentTaskInputSchema.parse(input.input);
   const { owner, repo } = splitRepo(parsed.repo.fullName);
-  const token = Bun.env["GH_TOKEN"];
-  if (token === undefined || token === "") {
-    throw new Error("GH_TOKEN is required to clone agent task repositories");
-  }
+  const tokenResult = await createGitHubAppInstallationToken();
   const workdir = await provisionWorkdir({
     workflowId: workflowId(),
     owner,
     repo,
     ref: parsed.repo.ref ?? "main",
-    env: { GH_TOKEN: token },
+    env: { GH_TOKEN: tokenResult.token },
   });
   return { workdir };
 }
