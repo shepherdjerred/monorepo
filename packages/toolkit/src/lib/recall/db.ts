@@ -34,15 +34,27 @@ export type MetadataRow = {
   indexed_at: string;
 };
 
+export type RecallDbOptions = {
+  readOnly?: boolean;
+};
+
 export class RecallDb {
   readonly sqlite: Database;
+  readonly readOnly: boolean;
   private lanceDb: lancedb.Connection | null = null;
   private lanceTable: lancedb.Table | null = null;
 
-  constructor(sqlitePath: string = SQLITE_PATH) {
-    this.sqlite = new Database(sqlitePath);
-    this.sqlite.run("PRAGMA journal_mode = WAL;");
-    this.initSchema();
+  constructor(sqlitePath: string = SQLITE_PATH, options: RecallDbOptions = {}) {
+    this.readOnly = options.readOnly ?? false;
+    this.sqlite = new Database(sqlitePath, {
+      create: !this.readOnly,
+      readonly: this.readOnly,
+    });
+
+    if (!this.readOnly) {
+      this.sqlite.run("PRAGMA journal_mode = WAL;");
+      this.initSchema();
+    }
   }
 
   private initSchema(): void {
@@ -107,12 +119,19 @@ export class RecallDb {
       return this.lanceTable;
     }
 
-    await mkdir(LANCE_DIR, { recursive: true });
+    if (!this.readOnly) {
+      await mkdir(LANCE_DIR, { recursive: true });
+    }
+
     this.lanceDb = await lancedb.connect(LANCE_DIR);
 
     const tableNames = await this.lanceDb.tableNames();
     if (tableNames.includes(LANCE_TABLE)) {
       this.lanceTable = await this.lanceDb.openTable(LANCE_TABLE);
+    } else if (this.readOnly) {
+      throw new Error(
+        "Recall vector index is missing; run toolkit recall reindex.",
+      );
     } else {
       // Create with a dummy row that we immediately delete
       // LanceDB requires at least one row to infer schema
@@ -206,14 +225,23 @@ export class RecallDb {
     event: string,
     durationMs: number,
     details: Record<string, unknown>,
-  ): void {
+  ): boolean {
+    if (this.readOnly) {
+      return false;
+    }
+
     this.sqlite.run(
       "INSERT INTO stats (ts, event, duration_ms, details) VALUES (?, ?, ?, ?)",
       [new Date().toISOString(), event, durationMs, JSON.stringify(details)],
     );
+    return true;
   }
 
   purgeOldStats(daysToKeep = 30): number {
+    if (this.readOnly) {
+      throw new Error("Cannot purge stats from a read-only recall database.");
+    }
+
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - daysToKeep);
     const result = this.sqlite.run("DELETE FROM stats WHERE ts < ?", [
@@ -281,6 +309,10 @@ export class RecallDb {
   // Cleanup
 
   async dropAll(): Promise<void> {
+    if (this.readOnly) {
+      throw new Error("Cannot drop a read-only recall database.");
+    }
+
     this.sqlite.run("DELETE FROM metadata");
     this.sqlite.run("DELETE FROM docs_fts");
     this.sqlite.run("DELETE FROM stats");
@@ -299,7 +331,12 @@ export class RecallDb {
   }
 }
 
-export async function createRecallDb(): Promise<RecallDb> {
-  await mkdir(RECALL_DIR, { recursive: true });
-  return new RecallDb();
+export async function createRecallDb(
+  options: RecallDbOptions = {},
+): Promise<RecallDb> {
+  if (options.readOnly !== true) {
+    await mkdir(RECALL_DIR, { recursive: true });
+  }
+
+  return new RecallDb(SQLITE_PATH, options);
 }

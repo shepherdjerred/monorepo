@@ -72,7 +72,7 @@ async function handleSearch(args: string[]): Promise<void> {
     process.exit(1);
   }
 
-  const db = await createRecallDb();
+  const db = await createRecallDb({ readOnly: true });
   const embedder = new EmbeddingClient();
   const useEmbedder = (await embedder.isAvailable()) ? embedder : null;
 
@@ -234,7 +234,7 @@ async function handleStatus(args: string[]): Promise<void> {
     allowPositionals: true,
   });
 
-  const db = await createRecallDb();
+  const db = await createRecallDb({ readOnly: true });
 
   const docCount = db.getDocCount();
   const chunkCount = db.getChunkCount();
