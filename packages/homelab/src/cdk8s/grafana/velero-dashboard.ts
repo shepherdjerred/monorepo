@@ -406,7 +406,7 @@ This usually means that Prometheus is not successfully scraping metrics from the
       title: "Healthy Schedules",
       description:
         "Velero schedules whose latest backup status is successful. PVC backup labels are not exported by kube-state-metrics in this cluster.",
-      expr: `count(max by (schedule) (velero_backup_last_status{${buildScheduleFilter()}}) == 1)`,
+      expr: `count(max by (schedule) (velero_backup_last_status{${buildScheduleFilter()}}) == 1) or on() vector(0)`,
       legend: "healthy",
       gridPos: { x: 18, y: 37, w: 6, h: 4 },
       unit: "short",

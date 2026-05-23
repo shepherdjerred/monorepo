@@ -63,3 +63,22 @@ Live checks on 2026-05-22 showed Prometheus, Loki, and Tempo datasources healthy
 
 - A full `bun run up` after the final edits timed out while reading unrelated Postal resources from the Kubernetes API; a targeted `kubectl apply -f rendered/apps.k8s.yaml` succeeded afterward and updated the relevant dashboard ConfigMaps.
 - Existing PodSecurity warnings are still emitted for several legacy workloads during apply; they were not introduced by this dashboard work.
+
+## Session Log — 2026-05-23
+
+### Done
+
+- Addressed Greptile's Velero dashboard comment by zero-backing the "Healthy Schedules" stat panel with `or on() vector(0)`.
+- Addressed Greptile's renderer token comment by moving Grafana renderer token configuration to the existing `prometheus-secrets` Secret via `envValueFrom`, wiring both Grafana's `renderer_token` and the image renderer `AUTH_TOKEN` to `GRAFANA_RENDERER_TOKEN`.
+- Added a concealed `GRAFANA_RENDERER_TOKEN` field to the 1Password item backing `prometheus-secrets`.
+- Split Grafana Helm values into `packages/homelab/src/cdk8s/src/resources/argo-applications/grafana-values.ts` to keep `prometheus.ts` under the lint line-count limit.
+
+### Remaining
+
+- Push the follow-up commit to PR #869 and resolve or reply to the two Greptile review threads.
+- Recheck PR CI after the follow-up commit lands.
+
+### Caveats
+
+- The filtered `render` script is not exposed at `packages/homelab`; render was run from `packages/homelab/src/cdk8s`.
+- Parallel homelab verification can race Bun's subpackage installs; rerunning typecheck and test sequentially passed.

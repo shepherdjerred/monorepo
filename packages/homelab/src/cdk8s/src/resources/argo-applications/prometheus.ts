@@ -6,168 +6,18 @@ import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import {
+  createGrafanaValues,
+  type PrometheusValuesWithBlackbox,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/grafana-values.ts";
 import { createPrometheusMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/prometheus.ts";
 import { createSmartctlMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/smartctl.ts";
-import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { createNvmeMetricsMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/nvme-metrics.ts";
 import { createZfsSnapshotsMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/zfs-snapshots.ts";
 import { createZfsZpoolMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/zfs-zpool.ts";
 import { createR2ExporterMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/r2-exporter.ts";
 import { createKubernetesEventExporter } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/kubernetes-event-exporter.ts";
 import { escapeHelmGoTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
-// import { HelmValuesForChart } from "../types/helm/index.js"; // Using 'any' for complex config
-
-const GRAFANA_RENDERER_TOKEN = "homelab-grafana-renderer-v13-jwt-2026-05-22";
-
-type KubePrometheusStackValues = HelmValuesForChart<"kube-prometheus-stack">;
-type GrafanaValues = NonNullable<KubePrometheusStackValues["grafana"]>;
-type GrafanaSidecarValues = NonNullable<GrafanaValues["sidecar"]>;
-type GrafanaDashboardSidecarValues = Omit<
-  NonNullable<GrafanaSidecarValues["dashboards"]>,
-  "labelValue"
-> & {
-  labelValue?: string;
-};
-type GrafanaValuesWithStringDashboardLabel = Omit<GrafanaValues, "sidecar"> & {
-  sidecar?: Omit<GrafanaSidecarValues, "dashboards"> & {
-    dashboards?: GrafanaDashboardSidecarValues;
-  };
-};
-
-// Type extension for blackbox-exporter subchart and Grafana chart schema gaps.
-type PrometheusValuesWithBlackbox = Omit<
-  KubePrometheusStackValues,
-  "grafana"
-> & {
-  grafana?: GrafanaValuesWithStringDashboardLabel;
-  "prometheus-blackbox-exporter"?: {
-    enabled?: boolean;
-    config?: {
-      modules?: Record<
-        string,
-        {
-          prober: string;
-          timeout?: string;
-          http?: {
-            valid_http_versions?: string[];
-            valid_status_codes?: number[];
-            follow_redirects?: boolean;
-            preferred_ip_protocol?: string;
-          };
-        }
-      >;
-    };
-  };
-};
-
-function createGrafanaValues(): NonNullable<
-  PrometheusValuesWithBlackbox["grafana"]
-> {
-  return {
-    // Database configuration via grafana.ini using file providers
-    "grafana.ini": {
-      database: {
-        type: "postgres",
-        host: "grafana-postgresql:5432",
-        name: "grafana",
-        user: "grafana",
-        ssl_mode: "disable",
-        // Password from mounted secret file
-        password: "$__file{/etc/secrets/postgres/password}",
-      },
-      feature_toggles: {
-        provisioning: true,
-        kubernetesDashboards: true,
-        grafanaAdvisor: true,
-      },
-      rendering: {
-        server_url:
-          "http://prometheus-grafana-image-renderer.prometheus:8081/render",
-        callback_url: "http://prometheus-grafana.prometheus:80/",
-        renderer_token: GRAFANA_RENDERER_TOKEN,
-      },
-    },
-    defaultDashboardsEnabled: false,
-    imageRenderer: {
-      enabled: true,
-      serverURL:
-        "http://prometheus-grafana-image-renderer.prometheus:8081/render",
-      renderingCallbackURL: "http://prometheus-grafana.prometheus:80/",
-      env: {
-        HTTP_HOST: "0.0.0.0",
-        XDG_CONFIG_HOME: "/tmp/.chromium",
-        XDG_CACHE_HOME: "/tmp/.chromium",
-      },
-    },
-    // Mount the auto-generated postgres-operator secret
-    extraSecretMounts: [
-      {
-        name: "postgres-secret-mount",
-        secretName:
-          "grafana.grafana-postgresql.credentials.postgresql.acid.zalan.do",
-        defaultMode: 0o440,
-        mountPath: "/etc/secrets/postgres",
-        readOnly: true,
-      },
-    ],
-    persistence: {
-      enabled: true,
-      storageClassName: NVME_STORAGE_CLASS,
-      labels: {
-        "velero.io/backup": "enabled",
-      },
-    },
-    // Deploy Grafana as a StatefulSet instead of Deployment to avoid PVC deadlock
-    // Single-replica StatefulSet handles rolling updates properly with RWO PVCs.
-    useStatefulSet: true,
-    sidecar: {
-      dashboards: {
-        label: "homelab_grafana_dashboard",
-        labelValue: "1",
-        searchNamespace: "ALL",
-        provider: {
-          allowUiUpdates: false,
-        },
-      },
-      datasources: {
-        alertmanager: {
-          handleGrafanaManagedAlerts: true,
-        },
-      },
-    },
-    prune: true,
-    additionalDataSources: [
-      {
-        name: "loki",
-        uid: "loki",
-        editable: false,
-        type: "loki",
-        url: "http://loki-gateway.loki",
-        version: 1,
-      },
-      {
-        name: "tempo",
-        uid: "tempo",
-        editable: false,
-        type: "tempo",
-        url: "http://tempo.tempo.svc:3200",
-        version: 1,
-        jsonData: {
-          tracesToLogsV2: {
-            datasourceUid: "loki",
-            spanStartTimeShift: "-5m",
-            spanEndTimeShift: "5m",
-            tags: [{ key: "service.name", value: "service_name" }],
-            filterByTraceID: true,
-            customQuery: false,
-          },
-          serviceMap: { datasourceUid: "prometheus" },
-          nodeGraph: { enabled: true },
-        },
-      },
-    ],
-  };
-}
 
 export async function createPrometheusApp(chart: Chart) {
   createIngress(chart, "alertmanager-ingress", {
@@ -265,7 +115,7 @@ export async function createPrometheusApp(chart: Chart) {
       // https://github.com/prometheus-operator/kube-prometheus/issues/718
       enabled: false,
     },
-    grafana: createGrafanaValues(),
+    grafana: createGrafanaValues(prometheusSecrets.name),
     nodeExporter: {
       operatingSystems: {
         linux: {
