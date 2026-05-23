@@ -99,6 +99,8 @@ The main conclusion is that release creation/upload, git push automation, and Op
 - Addressed review comments by reducing GitHub App credential exposure in subprocess environments, removing redundant Dagger Tofu secret injection, making dependency release-note fetches mint app tokens only after GitHub auth failures, and documenting Temporal follow-ups.
 - Fixed Buildkite package-scoped frozen-lockfile failures by refreshing `packages/discord-plays-pokemon/bun.lock` and `packages/scout-for-lol/bun.lock`.
 - Verified the Scout package Dagger `generate-and-lint`, `generate-and-typecheck`, and `generate-and-test` calls pass locally after the lockfile refresh.
+- Fixed the Temporal agent-task activity test to provide scoped GitHub App test credentials and a local installation-token response instead of requiring live Buildkite app secrets.
+- Verified the Buildkite-equivalent Temporal Dagger `test` call passes locally after the test credential fix.
 
 ### Remaining
 
