@@ -54,3 +54,23 @@ Reports read SQLite-backed facts for match, pair, competition, and prematch repo
 
 - Full backend tests pass, but test logs still include an existing background usage-metrics query against the default test DB before isolated test DBs are created.
 - Mise emits sandbox tracking warnings for trusted configs during verification; commands still completed successfully.
+
+## Session Log — 2026-05-23
+
+### Done
+
+- Fixed the Buildkite PR pipeline graph in `scripts/ci/src/pipeline-builder.ts` so pull-request builds keep validation/image smoke work but omit main-only release, publish, deploy, commit-back, and summary nodes.
+- Added PR graph regression coverage in `scripts/ci/src/__tests__/pipeline-builder.test.ts`, including dangling `depends_on` validation for full pull-request builds.
+- Made catalog validation compare against tracked `packages/` roots instead of raw local directories so ignored dependency/build directories cannot break local generator tests.
+- Verified with `bun test src/__tests__/pipeline-builder.test.ts`, `bun test`, and `bun run typecheck` in `scripts/ci`.
+
+### Remaining
+
+- Push the CI graph fix and wait for the replacement Buildkite PR build to finish green.
+- Recheck PR mergeability and P3-or-higher review comments after the new head commit is reviewed.
+- Deploy to beta and run the acceptance checks against live beta: `liveMatches > 0`, `livePrematches > 0`, newest `MatchParticipantFact` advances beyond the stale May 20 point, and affected scheduled reports use non-stale data.
+
+### Caveats
+
+- Local git status still reports a fsmonitor IPC warning from the shared worktree metadata; commands complete despite that warning.
+- Two unrelated untracked historical log files exist under `packages/docs/logs/` and were left untouched.
