@@ -41,6 +41,7 @@ import { prReviewCostUsd } from "#observability/pr-review-metrics.ts";
 import { prReviewSpecialistLatencySeconds } from "#observability/metrics.ts";
 import type { PrReviewPipelineInput } from "#shared/schemas.ts";
 import type { Finding } from "#shared/pr-review/finding.ts";
+import { readPositiveIntegerEnv } from "#shared/env.ts";
 import { PASSES_PER_SPECIALIST } from "#lib/diff-slicing.ts";
 import type { BootstrapResult } from "./bootstrap.ts";
 import type { AnnotatedFinding } from "./consensus.ts";
@@ -61,7 +62,10 @@ import type {
 } from "./specialists/runner.ts";
 
 const COMPONENT = "pr-review-pipeline";
-export const SPECIALIST_PASS_CONCURRENCY = 1;
+export const SPECIALIST_PASS_CONCURRENCY = readPositiveIntegerEnv({
+  name: "PR_REVIEW_SPECIALIST_PASS_CONCURRENCY",
+  defaultValue: 1,
+});
 
 function jsonLog(
   level: "info" | "warning" | "error",

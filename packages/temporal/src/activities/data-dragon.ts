@@ -361,10 +361,28 @@ export const dataDragonActivities = {
         ],
         { cwd: repoDir, env: { GH_TOKEN: githubToken }, redactOutput: true },
       );
-      await runCommand(
-        ["gh", "pr", "merge", "--repo", REPO_SLUG, "--auto", "--merge", prUrl],
-        { cwd: repoDir, env: { GH_TOKEN: githubToken }, redactOutput: true },
-      );
+      try {
+        await runCommand(
+          [
+            "gh",
+            "pr",
+            "merge",
+            "--repo",
+            REPO_SLUG,
+            "--auto",
+            "--merge",
+            prUrl,
+          ],
+          { cwd: repoDir, env: { GH_TOKEN: githubToken }, redactOutput: true },
+        );
+      } catch (error: unknown) {
+        jsonLog("warning", "Data Dragon PR auto-merge setup failed", {
+          ...input,
+          branch,
+          prUrl,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
 
       recordRun({
         mode: input.mode,
