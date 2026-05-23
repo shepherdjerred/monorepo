@@ -41,7 +41,11 @@ export type PostReviewInput = {
   changedFiles: PrFileDiff[];
 };
 
-export type PostReviewStatusState = "draft_skipped" | "running" | "failed";
+export type PostReviewStatusState =
+  | "draft_skipped"
+  | "running"
+  | "skipped"
+  | "failed";
 
 export type PostReviewStatusInput = {
   pipeline: PrReviewPipelineInput;
@@ -427,20 +431,31 @@ export function renderStatusCommentBody(
   lines.push(`Commit: \`${input.pipeline.commitSha}\``);
   lines.push("");
 
-  if (input.state === "draft_skipped") {
-    lines.push(
-      "Review skipped: draft PR detected. I will run and post inline comments once the PR is marked ready for review.",
-    );
-  } else if (input.state === "running") {
-    lines.push(
-      "Review running: deterministic checks, specialist review, consensus, verification, and dedupe are in progress.",
-    );
-  } else {
-    lines.push("Review failed before completion.");
-    if (input.reason !== undefined) {
-      lines.push("");
-      lines.push(`Failure: ${input.reason}`);
-    }
+  switch (input.state) {
+    case "draft_skipped":
+      lines.push(
+        "Review skipped: draft PR detected. I will run and post inline comments once the PR is marked ready for review.",
+      );
+      break;
+    case "running":
+      lines.push(
+        "Review running: deterministic checks, specialist review, consensus, verification, and dedupe are in progress.",
+      );
+      break;
+    case "skipped":
+      lines.push("Review skipped before deep analysis.");
+      if (input.reason !== undefined) {
+        lines.push("");
+        lines.push(`Reason: ${input.reason}`);
+      }
+      break;
+    case "failed":
+      lines.push("Review failed before completion.");
+      if (input.reason !== undefined) {
+        lines.push("");
+        lines.push(`Failure: ${input.reason}`);
+      }
+      break;
   }
 
   if (input.workflowId !== undefined) {

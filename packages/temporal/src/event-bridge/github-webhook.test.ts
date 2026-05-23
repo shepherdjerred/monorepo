@@ -1,7 +1,8 @@
 import { describe, expect, it, mock } from "bun:test";
 import { sign } from "@octokit/webhooks-methods";
-import { buildWebhookApp } from "./github-webhook.ts";
+import { buildWebhookApp, postWebhookStatus } from "./github-webhook.ts";
 import type { PrAgentInput } from "#shared/schemas.ts";
+import type { PostReviewOctokit } from "#activities/pr-review/post-github.ts";
 
 const SECRET = "test-webhook-secret-do-not-use-anywhere";
 
@@ -10,6 +11,50 @@ const noopStart = (_input: PrAgentInput): Promise<void> => RESOLVED;
 
 type StartCall = [PrAgentInput];
 type StatusCall = [PrAgentInput, "draft_skipped"];
+
+function makePrInput(): PrAgentInput {
+  return {
+    kind: "review",
+    owner: "shepherdjerred",
+    repo: "monorepo",
+    prNumber: 42,
+    commitSha: "ab".repeat(20),
+    baseRef: "main",
+    headRef: "feature/foo",
+    prTitle: "Add foo support",
+    prAuthor: "alice",
+  };
+}
+
+function makeStatusOctokit(calls: {
+  createdBodies: string[];
+  updateCommentIds: number[];
+}): PostReviewOctokit {
+  return {
+    paginate: {
+      iterator: async function* () {
+        yield { data: [] };
+      },
+    },
+    rest: {
+      issues: {
+        listComments: {},
+        createComment: async (params) => {
+          calls.createdBodies.push(params.body);
+          return { data: { id: 1234 } };
+        },
+        updateComment: async (params) => {
+          calls.updateCommentIds.push(params.comment_id);
+          return { data: { id: params.comment_id } };
+        },
+      },
+      pulls: {
+        listReviewComments: {},
+        createReview: async () => ({ data: { id: 5678 } }),
+      },
+    },
+  };
+}
 
 function makeBaseEvent(
   overrides: Partial<{
@@ -169,6 +214,46 @@ describe("buildWebhookApp", () => {
     }
     expect(call[0].prNumber).toBe(42);
     expect(call[1]).toBe("draft_skipped");
+  });
+
+  it("posts draft-skipped status with a GitHub App installation token", async () => {
+    const previousPostEnabled = Bun.env["PR_REVIEW_POST_ENABLED"];
+    const previousGhToken = Bun.env["GH_TOKEN"];
+    Bun.env["PR_REVIEW_POST_ENABLED"] = "true";
+    Bun.env["GH_TOKEN"] = "";
+    const tokens: string[] = [];
+    const calls: { createdBodies: string[]; updateCommentIds: number[] } = {
+      createdBodies: [],
+      updateCommentIds: [],
+    };
+
+    try {
+      await postWebhookStatus(makePrInput(), "draft_skipped", {
+        createInstallationToken: async () => ({
+          token: "github-app-installation-token",
+          expiresAt: new Date(Date.now() + 60_000),
+        }),
+        createOctokit: (token) => {
+          tokens.push(token);
+          return makeStatusOctokit(calls);
+        },
+      });
+    } finally {
+      if (previousPostEnabled === undefined) {
+        delete Bun.env["PR_REVIEW_POST_ENABLED"];
+      } else {
+        Bun.env["PR_REVIEW_POST_ENABLED"] = previousPostEnabled;
+      }
+      if (previousGhToken === undefined) {
+        delete Bun.env["GH_TOKEN"];
+      } else {
+        Bun.env["GH_TOKEN"] = previousGhToken;
+      }
+    }
+
+    expect(tokens).toEqual(["github-app-installation-token"]);
+    expect(calls.createdBodies).toHaveLength(1);
+    expect(calls.createdBodies[0]).toContain("draft");
   });
 
   it("processes ready_for_review even when draft is true", async () => {

@@ -156,6 +156,21 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           },
         },
         {
+          alert: "TemporalHaEventBridgeDisconnected",
+          annotations: {
+            summary: "Temporal HA event bridge is disconnected",
+            description:
+              "The Temporal worker has not been able to keep the Home Assistant event bridge connected. Check worker logs and ha_event_bridge_start_failures_total for the reason.",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "max(ha_event_bridge_connected) == 0",
+          ),
+          for: "30m",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
           // Catches the "low-volume daily schedule, fails consistently for
           // days, no one notices" pattern — exactly what kept Scout Data
           // Dragon broken silently from 2026-05-02 to 2026-05-08. Existing

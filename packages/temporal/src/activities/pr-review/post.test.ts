@@ -452,6 +452,21 @@ describe("PR review lifecycle status comments", () => {
     expect(failed).toContain("verifier crashed");
   });
 
+  it("renders skipped status with reason and workflow id", () => {
+    const skipped = renderStatusCommentBody(
+      {
+        pipeline: PIPELINE,
+        state: "skipped",
+        reason: "PR touches 241 files, above the deep-review limit",
+        workflowId: WORKFLOW_ID,
+      },
+      markerFor(WORKFLOW_ID),
+    );
+    expect(skipped).toContain("Review skipped before deep analysis");
+    expect(skipped).toContain("above the deep-review limit");
+    expect(skipped).toContain(WORKFLOW_ID);
+  });
+
   it("upserts the stable status comment", async () => {
     const marker = markerFor(WORKFLOW_ID);
     const { octokit, updateCalls } = makeOctokit([

@@ -1,7 +1,10 @@
 import { describe, test, expect } from "bun:test";
 import type { Duration } from "@temporalio/common";
 import { DataDragonWorkflowInputSchema } from "#activities/data-dragon.ts";
-import { SCHEDULES } from "./register-schedules.ts";
+import {
+  SCHEDULES,
+  scheduleRequiresConfigPause,
+} from "./register-schedules.ts";
 
 // ---------------------------------------------------------------------------
 // Maximum total sleep time per workflow type, in milliseconds.
@@ -129,5 +132,35 @@ describe("Scout Data Dragon lane-prior schedule config", () => {
       holdoutSeed: "scout-lane-priors-patch-cadence-v1",
       threshold: 0.95,
     });
+  });
+});
+
+describe("PR review eval schedule config", () => {
+  test("pauses nightly eval when the private fixture repo URL is absent", () => {
+    const schedule = SCHEDULES.find(
+      (candidate) => candidate.id === "pr-review-eval-nightly",
+    );
+    if (schedule === undefined) {
+      throw new Error("Missing pr-review-eval-nightly schedule");
+    }
+    expect(scheduleRequiresConfigPause(schedule, {})).toEqual({
+      paused: true,
+      reason:
+        "Paused because PR_REVIEW_FIXTURES_REPO_URL is not configured on the Temporal worker",
+    });
+  });
+
+  test("does not pause nightly eval when the private fixture repo URL is present", () => {
+    const schedule = SCHEDULES.find(
+      (candidate) => candidate.id === "pr-review-eval-nightly",
+    );
+    if (schedule === undefined) {
+      throw new Error("Missing pr-review-eval-nightly schedule");
+    }
+    expect(
+      scheduleRequiresConfigPause(schedule, {
+        PR_REVIEW_FIXTURES_REPO_URL: "https://github.com/example/private.git",
+      }),
+    ).toEqual({ paused: false, reason: undefined });
   });
 });
