@@ -101,6 +101,8 @@ The main conclusion is that release creation/upload, git push automation, and Op
 - Verified the Scout package Dagger `generate-and-lint`, `generate-and-typecheck`, and `generate-and-test` calls pass locally after the lockfile refresh.
 - Fixed the Temporal agent-task activity test to provide scoped GitHub App test credentials and a local installation-token response instead of requiring live Buildkite app secrets.
 - Verified the Buildkite-equivalent Temporal Dagger `test` call passes locally after the test credential fix.
+- Fixed follow-up Temporal lint/typecheck failures in the test credential scaffolding by using `Bun.env`, restoring only fixed GitHub App env keys, and providing a fully typed fetch stub.
+- Verified `packages/temporal` lint, typecheck, focused token/agent-task tests, and the Buildkite-equivalent Temporal Dagger `lint` call pass locally after the cleanup.
 
 ### Remaining
 
@@ -113,4 +115,5 @@ The main conclusion is that release creation/upload, git push automation, and Op
 ### Caveats
 
 - Local Dagger verification required elevated access to the local OrbStack/Docker socket.
+- The Buildkite-equivalent Temporal Dagger typecheck-with-secrets call could not run in this shell because `HASS_URL`/`HASS_TOKEN` are not present locally; package-local Temporal typecheck passes.
 - The local git fsmonitor daemon reports an IPC warning in this worktree, but git commands still return the expected status/diff data.
