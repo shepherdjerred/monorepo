@@ -17,6 +17,17 @@ packages/birmel/prisma/data/
 # macOS metadata
 .DS_Store
 
+# Editor / vim swap and backup files
+*.swp
+*.swo
+*~
+*.orig
+*.rej
+
+# Per-package VS Code workspace settings (machine-specific paths, personal IDE prefs).
+# Shared workspace recommendations (extensions.json, tasks.json) remain tracked.
+packages/*/.vscode/settings.json
+
 # Playwright test results
 test-results/
 
