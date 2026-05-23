@@ -17,11 +17,25 @@ describe("lanePriorS3Region", () => {
     expect(lanePriorS3Region()).toBe("us-west-2");
   });
 
+  test("trims AWS_REGION before returning it", () => {
+    Bun.env["AWS_REGION"] = " us-west-2 ";
+    Bun.env["S3_REGION"] = "us-east-1";
+
+    expect(lanePriorS3Region()).toBe("us-west-2");
+  });
+
   test("falls back to S3_REGION", () => {
     Bun.env["AWS_REGION"] = undefined;
     Bun.env["S3_REGION"] = "us-east-1";
 
     expect(lanePriorS3Region()).toBe("us-east-1");
+  });
+
+  test("trims S3_REGION before returning it", () => {
+    Bun.env["AWS_REGION"] = undefined;
+    Bun.env["S3_REGION"] = " eu-west-1 ";
+
+    expect(lanePriorS3Region()).toBe("eu-west-1");
   });
 
   test("treats empty AWS_REGION as unset and falls back to S3_REGION", () => {
