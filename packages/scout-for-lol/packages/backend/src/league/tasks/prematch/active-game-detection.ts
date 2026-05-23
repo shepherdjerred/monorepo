@@ -1,5 +1,5 @@
 import type { PlayerConfigEntry } from "@scout-for-lol/data/index.ts";
-import { getAccountsWithState } from "#src/database/index.ts";
+import { getAccountsWithState, prisma } from "#src/database/index.ts";
 import { getActiveGame } from "#src/league/api/spectator.ts";
 import {
   getActiveGames,
@@ -19,6 +19,7 @@ import {
   prematchSubsequentMatchDetectedTotal,
 } from "#src/metrics/index.ts";
 import * as Sentry from "@sentry/bun";
+import { recordPrematchForReportStore } from "#src/report-store/live-ingest.ts";
 
 const logger = createLogger("prematch-active-game-detection");
 
@@ -254,6 +255,13 @@ export async function checkActiveGames(): Promise<void> {
         for (const p of trackedPuuidsInGame) {
           priorGameIdByPuuid.set(p, gameInfo.gameId);
         }
+
+        await recordPrematchForReportStore({
+          prisma,
+          gameInfo,
+          observedAt: new Date(),
+          source: "prematch_live",
+        });
 
         // Send notification
         await sendPrematchNotification(gameInfo, trackedPlayersInGame);

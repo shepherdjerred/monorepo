@@ -262,7 +262,7 @@ export async function upsertStoredPrematchWithFacts(
   const gameStartAt =
     gameInfo.gameStartTime > 0 ? toDate(gameInfo.gameStartTime) : undefined;
   const puuids = participantPuuids(gameInfo);
-  const dedupeKey = `${gameInfo.gameId.toString()}:${observedAt.getTime().toString()}`;
+  const dedupeKey = gameInfo.gameId.toString();
 
   const storedPrematch = await prisma.storedPrematch.upsert({
     where: {
