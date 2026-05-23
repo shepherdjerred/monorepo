@@ -2,6 +2,7 @@ import satori from "satori";
 import type { CompletedMatch } from "@scout-for-lol/data";
 import { Report } from "#src/html/report.tsx";
 import { bunBeaufortFonts, bunSpiegelFonts } from "#src/assets/index.ts";
+import { preloadChampionImages } from "#src/dataDragon/image-cache.ts";
 
 export async function matchToImage(match: CompletedMatch) {
   const svg = await matchToSvg(match);
@@ -10,6 +11,11 @@ export async function matchToImage(match: CompletedMatch) {
 }
 
 export async function matchToSvg(match: CompletedMatch) {
+  await preloadChampionImages([
+    ...match.teams.blue.map((champion) => champion.championName),
+    ...match.teams.red.map((champion) => champion.championName),
+  ]);
+
   const fonts = [...(await bunBeaufortFonts()), ...(await bunSpiegelFonts())];
   const svg = await satori(<Report match={match} />, {
     width: 4760,
@@ -19,7 +25,7 @@ export async function matchToSvg(match: CompletedMatch) {
   return svg;
 }
 
-export async function svgToPng(svg: string) {
+export async function svgToPng(svg: string, options: { crop?: boolean } = {}) {
   // Lazy load resvg only when needed (server-side only)
   const { Resvg } = await import("@resvg/resvg-js");
   const resvg = new Resvg(svg, {
@@ -37,7 +43,7 @@ export async function svgToPng(svg: string) {
 
   // Automatically crop to bounding box to remove transparent background
   const bbox = resvg.getBBox();
-  if (bbox) {
+  if (options.crop !== false && bbox) {
     resvg.cropByBBox(bbox);
   }
 

@@ -12,7 +12,7 @@ export function TeamHeader({ team }: { team: ArenaTeam }) {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: 16,
+        gap: 28,
       }}
     >
       <PlacementBadge placement={team.placement} />

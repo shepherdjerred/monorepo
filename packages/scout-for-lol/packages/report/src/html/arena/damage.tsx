@@ -5,11 +5,13 @@ import { round } from "remeda";
 export function Damage({
   value,
   percent,
+  teamPercent,
   highlight,
   teamSize,
 }: {
   value: number;
   percent: number;
+  teamPercent: number;
   highlight: boolean;
   teamSize: number;
 }) {
@@ -27,6 +29,7 @@ export function Damage({
         style={{
           display: "flex",
           alignItems: "baseline",
+          justifyContent: "center",
           gap: 6,
           color: highlight ? palette.gold.bright : palette.gold[1],
           fontFamily: font.title,
@@ -65,6 +68,7 @@ export function Damage({
       <div
         style={{
           display: "flex",
+          justifyContent: "center",
           fontSize: 11,
           letterSpacing: 2,
           color: palette.grey[1],
@@ -72,7 +76,7 @@ export function Damage({
           fontFamily: font.body,
         }}
       >
-        {round(percent, 0).toString()}% of {sizeWord}
+        {round(teamPercent, 0).toString()}% of {sizeWord}
       </div>
     </div>
   );
