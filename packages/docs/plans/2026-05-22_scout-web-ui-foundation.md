@@ -267,3 +267,43 @@ End-to-end checks the implementation must pass before merge:
 - **POC paths still in tree**: the soundpack/desktop-client `auth.exchangeCode` (Bearer-token model) coexists with the new cookie+JWT web flow. Removing them is a separate plan; for now the two auth shapes live side-by-side in `auth.router.ts` and `context.ts`.
 - **In-memory guild cache**: per-user `fetchUserGuilds` cache is per-pod, 5 min TTL. With a single backend replica this is fine; if we ever scale `replicas: 1 → 2+`, switch to Redis or set replica affinity.
 - **CSRF defense relies on SameSite=Strict + double-submit cookie + Origin check**. Browsers without strict same-site (very old) will still be safe via the explicit Origin verification and CSRF header check.
+
+## Future work
+
+Captured 2026-05-23 after end-to-end local verification (`bun run dev:web`). The web UI foundation works; these are the things we'd build on top once we have appetite.
+
+### Bulk import sources (the original motivating problem)
+
+The whole reason this plan existed was bulk onboarding. The foundation makes each of these a self-contained PR.
+
+| Source                                                      | Verdict from feasibility research | Sketch                                                                                                                                                                                                                                                                                         |
+| ----------------------------------------------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **op.gg / U.GG / Mobalytics URL paste**                     | ✅ Smallest, biggest reach        | Textarea in the web UI accepting any mix of Riot IDs (`name#tag`) and op.gg URLs. Regex-parse URL → Riot ID + region → existing `resolveRiotIdToPuuid()`. Preview table with success/failure before commit; bulk-create via the existing `subscription.add` mutation in a Promise.allSettled.  |
+| **Discord linked Riot account** (`connections` OAuth scope) | ⚠️ Self-claim only                | "Import my linked Riot account" button. Add `connections` to the OAuth scope set, call `GET /users/@me/connections`, find the `riotgames` entry, re-resolve the Riot ID through `account-v1/by-riot-id` (don't trust Discord's name field). Only adds the _operator's_ own account — not bulk. |
+| **LCU friend-list import** (local Discord/LoL client)       | ✅ Viable, power-user             | Small Tauri/Go binary reads the LCU lockfile, hits `localhost:<port>/lol-chat/v1/friends`, dumps a JSON file (each entry contains PUUID directly — no second resolution). User uploads the file to the web UI. Shipping examples: `league-connect`, `ancient-chimes`, `Hextech Friends`.       |
+
+### Web UI capability expansion
+
+- **Roster diff / dry-run mode** — before any bulk import, show what _would_ change (added players, accounts grouped under existing aliases, channel routing).
+- **Audit log UI improvements** — currently a JSON-payload table; build proper action-specific row renderers ("Alice added `Faker#KR1` to #general").
+- **Per-channel routing controls** — drag-and-drop a player between channels in the roster grid instead of going through the move modal.
+- **Notification preferences per player** — opt out of certain match types (ARAM-only, ranked-only, etc.). Schema change needed (`SubscriptionPreference` table).
+- **Search + filter on the roster** — once a guild has 50+ subscriptions, the flat table breaks down. Add column filters and a search box.
+
+### Auth / identity
+
+- **Multi-guild operator UX** — current model gates per guild via Discord Administrator. Consider a richer permission system (read-only, add-only, full-admin) once we have demand.
+- **Real session revocation** — JWTs are stateless today; if we add a revocation list (per-`jti`), rotation becomes graceful. Acceptable for v1 to just force re-login.
+- **RSO (Riot Sign-On)** — needed if we ever want users to _prove_ PUUID ownership (self-service player claim). Gated behind Riot product approval; not v1.
+
+### Platform / ops
+
+- **CI build for `scout-app` image** — backend has a Dagger `buildScoutImageHelper`; the SPA Dockerfile exists but no CI job calls it. `versions.ts` still has `0.0.1-dev` placeholders. Wire a Dagger helper + Buildkite step so `scout-app:beta` and `scout-app:prod` get pushed to GHCR on merge.
+- **Rate limiting on tRPC mutations** — no per-IP limits today; with public web UI this should be added before we go wide.
+- **Replace in-memory guild cache with Redis** once we scale `replicas > 1`.
+- **Metric: `scout_discord_guild_fetch_total`** — would catch a misconfig that blows up the Discord rate limit. Trivial Prometheus counter add.
+
+### Migration off Discord commands
+
+- **Phase-out plan for `/subscription *`** if and when the web UI reaches confidence parity. Audit data already covers both surfaces (Discord-command writes need instrumentation — small follow-up).
+- **Discoverability** — add a `/scout` slash command that links to the web UI with a guild-pre-selected deep link.

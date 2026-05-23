@@ -350,9 +350,12 @@ export async function handleDiscordCallback(
  * Clear the web session cookies and return 204.
  * SPA hits this on logout; subsequent tRPC calls will lack a session.
  */
-export function handleWebLogout(request: Request): Response {
-  const url = new URL(request.url);
-  const isHttps = url.protocol === "https:";
+export function handleWebLogout(_request: Request): Response {
+  // request.url's protocol is `http:` behind Caddy (it terminates TLS),
+  // so we must derive Secure from the configured public origin — same
+  // pattern as the OAuth callback. With Secure mismatched against the
+  // original Set-Cookie, modern browsers can refuse to clear the cookies.
+  const isHttps = getAppOrigin().startsWith("https://");
 
   const headers = new Headers();
   headers.append(
