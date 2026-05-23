@@ -10,6 +10,12 @@ type BlackboxHttpModule = {
   };
 };
 
+// valid_status_codes narrows acceptance to 200, 301, 302 only — a deliberate
+// tightening from the standalone blackbox-exporter default (which previously
+// omitted valid_status_codes and so accepted any 2xx response, including
+// 204/206/etc.). Probes for the static-site fleet only ever serve 200 or a
+// redirect, so unexpected 2xx codes should surface as failures rather than
+// silently passing. This also keeps both blackbox deployments in lockstep.
 export const HTTP_2XX_MODULE: BlackboxHttpModule = {
   prober: "http",
   timeout: "10s",
