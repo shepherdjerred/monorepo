@@ -335,6 +335,7 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
     captureWithContext(error, { provider, durationMs, phase: "parse-output" });
     throw error;
   }
+  agentTaskRunsTotal.inc({ provider, outcome: "success" });
 
   jsonLog("info", "Agent task completed", {
     provider,
@@ -398,10 +399,6 @@ async function sendEmail(
       tag: "agent-task",
     });
     agentTaskEmailSentTotal.inc({ outcome: "success" });
-    agentTaskRunsTotal.inc({
-      provider: input.result.provider,
-      outcome: "success",
-    });
     return {
       subject: result.subject,
       messageId: result.messageId,

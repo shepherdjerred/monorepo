@@ -81,9 +81,7 @@ export async function fetchPrDiff(
     }
   }
 
-  const oversized =
-    files.length > OVERSIZED_SUMMARY_FILE_THRESHOLD ||
-    files.some((file) => file.patch === null);
+  const oversized = files.length > OVERSIZED_SUMMARY_FILE_THRESHOLD;
 
   if (truncated) {
     parts.push(

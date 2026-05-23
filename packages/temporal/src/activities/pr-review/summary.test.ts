@@ -325,6 +325,39 @@ describe("runPrSummary", () => {
     });
     expect(result.durationMs).toBe(6500);
   });
+});
+
+describe("runPrSummary oversized handling", () => {
+  it("does not treat a small binary-file PR as oversized", async () => {
+    const anthropic = buildFakeAnthropic({
+      text: `${SUMMARY_MARKER}\n\nBinary asset update`,
+    });
+    const { octokit, captured } = buildFakeOctokit({
+      files: [
+        {
+          filename: "packages/foo/public/logo.png",
+          status: "modified",
+          additions: 0,
+          deletions: 0,
+          patch: null,
+        },
+      ],
+    });
+
+    const result = await runPrSummary(basePr, {
+      anthropic,
+      octokit,
+      loadRepoConventionsMarkdown: async () => "",
+      now: () => 1000,
+    });
+
+    expect(result.summaryMode).toBe("llm");
+    expect(result.diffTruncated).toBe(false);
+    const first = captured[0];
+    if (first === undefined) throw new Error("missing summary");
+    expect(first.body).toContain("Binary asset update");
+    expect(first.body).not.toContain("Oversized PR summary");
+  });
 
   it("posts a deterministic oversized summary without calling the model", async () => {
     const anthropic = buildFakeAnthropic({
