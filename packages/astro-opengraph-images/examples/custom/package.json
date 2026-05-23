@@ -17,5 +17,9 @@
     "astro-seo": "^1.1.0",
     "react": "19.2.6",
     "typescript": "^6.0.3"
+  },
+  "overrides": {
+    "devalue": "5.8.1",
+    "fast-uri": "3.1.2"
   }
 }

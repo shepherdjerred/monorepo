@@ -18,5 +18,8 @@
     "@typescript-eslint/utils": "^8.59.3",
     "jiti": "^2.7.0"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "overrides": {
+    "js-cookie": "3.0.7"
+  }
 }
