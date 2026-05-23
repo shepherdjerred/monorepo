@@ -52,7 +52,21 @@ export async function hybridSearch(
     const embedMs = performance.now() - embedStart;
 
     const vecStart = performance.now();
-    const vecCandidates = await db.vectorSearch(queryVector, candidateLimit);
+    let vecCandidates: Awaited<ReturnType<RecallDb["vectorSearch"]>>;
+    try {
+      vecCandidates = await db.vectorSearch(queryVector, candidateLimit);
+    } catch (error) {
+      if (mode === "semantic") {
+        throw error;
+      }
+
+      if (verbose) {
+        console.error(
+          `[search] vector search failed, falling back to keyword-only: ${String(error)}`,
+        );
+      }
+      return keywordSearch(db, query, limit, verbose);
+    }
     const vecMs = performance.now() - vecStart;
 
     if (verbose) {

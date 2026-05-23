@@ -36,6 +36,7 @@ export type PrometheusValuesWithBlackbox = Omit<
             valid_status_codes?: number[];
             follow_redirects?: boolean;
             preferred_ip_protocol?: string;
+            fail_if_body_not_matches_regexp?: string[];
           };
         }
       >;

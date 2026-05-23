@@ -36,7 +36,7 @@ A Discord bot that tracks your friends' League of Legends matches. I've learnt a
 
 ## 2023
 
-### [macOS cross compiler](https://github.com/shepherdjerred/monorepo/tree/main/packages/macos-cross-compiler)
+### [macOS cross compiler](https://github.com/shepherdjerred/monorepo/tree/main/archive/macos-cross-compiler)
 
 A C/C++/Fortran/Rust cross-compiler targeting amd64/aarch64 macOS from a Linux host.
 
@@ -71,7 +71,7 @@ In my first two years of college I was running a Minecraft server. I shut it dow
 
 ### 2018/2019 (senior year)
 
-#### [Castle Casters](https://github.com/shepherdjerred/monorepo/tree/main/packages/castle-casters)
+#### [Castle Casters](https://github.com/shepherdjerred/monorepo/tree/main/archive/castle-casters)
 
 A game/game engine I wrote from scratch.
 

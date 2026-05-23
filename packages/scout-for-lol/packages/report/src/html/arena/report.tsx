@@ -3,6 +3,7 @@ import { palette } from "#src/assets/colors.ts";
 import { font } from "#src/assets/index.ts";
 import { PageHeader } from "#src/html/arena/page-header.tsx";
 import { TeamCard } from "#src/html/arena/team-card.tsx";
+import { getArenaTeamCardWidth } from "#src/html/arena/utils.ts";
 
 export function ArenaReport(props: { match: ArenaMatch }) {
   const { match } = props;
@@ -23,7 +24,7 @@ export function ArenaReport(props: { match: ArenaMatch }) {
         flexDirection: "column",
         padding: 48,
         gap: 32,
-        background: palette.blue.gradient.dark.start,
+        backgroundColor: palette.blue.gradient.dark.start,
         color: palette.grey[1],
         fontFamily: font.body,
       }}
@@ -35,12 +36,14 @@ export function ArenaReport(props: { match: ArenaMatch }) {
           gap: 32,
           flex: 1,
           alignItems: "stretch",
+          justifyContent: "center",
         }}
       >
         {sortedTeams.map((team) => (
           <TeamCard
             key={team.teamId}
             team={team}
+            width={getArenaTeamCardWidth(team.players.length)}
             highlightNames={highlightNames}
           />
         ))}

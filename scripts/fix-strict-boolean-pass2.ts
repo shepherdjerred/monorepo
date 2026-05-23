@@ -273,11 +273,7 @@ async function processPackage(pkgPath: string): Promise<number> {
 }
 
 async function main() {
-  const packages = [
-    "packages/birmel",
-    "packages/clauderon/web/frontend",
-    "packages/clauderon/web/client",
-  ];
+  const packages = ["packages/birmel"];
 
   let total = 0;
   for (const pkg of packages) {

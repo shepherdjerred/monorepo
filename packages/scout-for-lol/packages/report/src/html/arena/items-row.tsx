@@ -1,7 +1,7 @@
 import { palette } from "#src/assets/colors.ts";
 import { getItemImage } from "#src/dataDragon/image-cache.ts";
 
-const ITEM_SIZE = 32;
+const ITEM_SIZE = 26;
 
 function isPrismaticItem(itemId: number): boolean {
   return itemId.toString().startsWith("44");
@@ -70,7 +70,7 @@ export function ItemsRow({ items }: { items: number[] }) {
     ...Array.from({ length: 6 - slots.length }).map((): number => 0),
   ];
   return (
-    <div style={{ display: "flex", gap: 4 }}>
+    <div style={{ display: "flex", justifyContent: "center", gap: 3 }}>
       {padded.map((id, idx) => (
         <ItemSlot key={idx} itemId={id} />
       ))}

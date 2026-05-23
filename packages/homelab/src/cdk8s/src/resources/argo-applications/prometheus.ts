@@ -18,6 +18,7 @@ import { createZfsZpoolMonitoring } from "@shepherdjerred/homelab/cdk8s/src/reso
 import { createR2ExporterMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/r2-exporter.ts";
 import { createKubernetesEventExporter } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/kubernetes-event-exporter.ts";
 import { escapeHelmGoTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
+import { BLACKBOX_MODULES } from "@shepherdjerred/homelab/cdk8s/src/misc/blackbox-modules.ts";
 
 export async function createPrometheusApp(chart: Chart) {
   createIngress(chart, "alertmanager-ingress", {
@@ -77,18 +78,7 @@ export async function createPrometheusApp(chart: Chart) {
     "prometheus-blackbox-exporter": {
       enabled: true,
       config: {
-        modules: {
-          http_2xx: {
-            prober: "http",
-            timeout: "10s",
-            http: {
-              valid_http_versions: ["HTTP/1.1", "HTTP/2.0"],
-              valid_status_codes: [200, 301, 302],
-              follow_redirects: true,
-              preferred_ip_protocol: "ip4",
-            },
-          },
-        },
+        modules: BLACKBOX_MODULES,
       },
     },
     // Tune default alert rules that are too sensitive for homelab

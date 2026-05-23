@@ -15,7 +15,6 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   "astro-opengraph-images": ["eslint-config"],
   webring: ["eslint-config"],
   toolkit: ["eslint-config"],
-  "hn-enhancer": ["eslint-config"],
   monarch: ["eslint-config"],
   "cooklang-for-obsidian": ["eslint-config"],
   "cooklang-rich-preview": ["eslint-config"],
@@ -41,17 +40,6 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   homelab: ["eslint-config"],
   "homelab/src/cdk8s": ["eslint-config", "homelab/src/helm-types"],
   "homelab/src/helm-types": ["eslint-config"],
-
-  // Clauderon sub-packages
-  "clauderon/docs": ["eslint-config"],
-  "clauderon/mobile": ["eslint-config"],
-  "clauderon/web/shared": ["eslint-config"],
-  "clauderon/web/client": ["eslint-config", "clauderon/web/shared"],
-  "clauderon/web/frontend": [
-    "eslint-config",
-    "clauderon/web/client",
-    "clauderon/web/shared",
-  ],
 
   // Nested workspace packages (sub-packages are inside parent dir)
   "discord-plays-pokemon": ["eslint-config"],

@@ -72,13 +72,16 @@ Live checks on 2026-05-22 showed Prometheus, Loki, and Tempo datasources healthy
 - Addressed Greptile's renderer token comment by moving Grafana renderer token configuration to the existing `prometheus-secrets` Secret via `envValueFrom`, wiring both Grafana's `renderer_token` and the image renderer `AUTH_TOKEN` to `GRAFANA_RENDERER_TOKEN`.
 - Added a concealed `GRAFANA_RENDERER_TOKEN` field to the 1Password item backing `prometheus-secrets`.
 - Split Grafana Helm values into `packages/homelab/src/cdk8s/src/resources/argo-applications/grafana-values.ts` to keep `prometheus.ts` under the lint line-count limit.
+- Resolved the `origin/main` merge conflicts in Scout scheduled-report dashboard panels and Prometheus Grafana values, preserving the zero-backed four-stat Scout row while taking main's shared `BLACKBOX_MODULES` extraction.
+- Re-ran homelab lint, typecheck, tests, and cdk8s render after the merge resolution.
+- Fixed Scout Data Dragon champion-name normalization for URL-encoded names such as `Nunu%20&%20Willump`, which unblocked Scout report tests after merging `origin/main`.
 
 ### Remaining
 
-- Push the follow-up commit to PR #869 and resolve or reply to the two Greptile review threads.
-- Recheck PR CI after the follow-up commit lands.
+- Push the merge-resolution commit to PR #869 and recheck the post-merge Buildkite build.
 
 ### Caveats
 
 - The filtered `render` script is not exposed at `packages/homelab`; render was run from `packages/homelab/src/cdk8s`.
 - Parallel homelab verification can race Bun's subpackage installs; rerunning typecheck and test sequentially passed.
+- Buildkite polling requires network access; local merge verification passed before pushing the merge-resolution commit.

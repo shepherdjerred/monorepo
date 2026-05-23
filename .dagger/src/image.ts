@@ -432,6 +432,11 @@ export function buildImageHelper(
  * Build the caddy-s3proxy image.
  * Multi-stage Go build: xcaddy builds a custom Caddy binary with the S3 proxy plugin,
  * then copies it into the runtime Caddy Alpine image.
+ *
+ * Uses shepherdjerred/caddy-s3-proxy as a drop-in replacement for the upstream
+ * lindenlab module — keeps the import path so existing Caddyfiles work, but
+ * adds native HEAD support and fixes the 304-on-index regression. See
+ * upstream PR (TBD) tracking the contribution back to lindenlab.
  */
 export function buildCaddyS3ProxyImageHelper(
   version: string = "dev",
@@ -445,7 +450,7 @@ export function buildCaddyS3ProxyImageHelper(
       "xcaddy",
       "build",
       "--with",
-      "github.com/lindenlab/caddy-s3-proxy",
+      "github.com/lindenlab/caddy-s3-proxy=github.com/shepherdjerred/caddy-s3-proxy@v0.5.7-head1",
     ])
     .file("/usr/bin/caddy");
 
