@@ -1,16 +1,15 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
+import { fromError } from "zod-validation-error";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data/index.ts";
-import { prisma } from "#src/database/index.ts";
-import { getErrorMessage } from "#src/utils/errors.ts";
 import { createLogger } from "#src/logger.ts";
-import { fromError } from "zod-validation-error";
+import { addSubscriptionChannel } from "#src/lib/subscription/add-channel.ts";
 
-const logger = createLogger("subscription-add-channel");
+const logger = createLogger("subscription-add-channel-command");
 
 const ArgsSchema = z.object({
   alias: z.string().min(1),
@@ -22,7 +21,7 @@ const ArgsSchema = z.object({
 export async function executeSubscriptionAddChannel(
   interaction: ChatInputCommandInteraction,
 ) {
-  logger.info("🔔 Starting subscription add-channel process");
+  logger.info("🔔 Starting add-channel");
 
   const parseResult = ArgsSchema.safeParse({
     alias: interaction.options.getString("alias"),
@@ -32,80 +31,48 @@ export async function executeSubscriptionAddChannel(
   });
 
   if (!parseResult.success) {
-    logger.error(`❌ Invalid command arguments`);
-    const validationError = fromError(parseResult.error);
     await interaction.reply({
-      content: validationError.toString(),
+      content: fromError(parseResult.error).toString(),
       ephemeral: true,
     });
     return;
   }
 
   const { alias, channel, guildId, userId } = parseResult.data;
-
   await interaction.deferReply({ ephemeral: true });
 
-  try {
-    // Find the player by alias
-    const player = await prisma.player.findUnique({
-      where: {
-        serverId_alias: {
-          serverId: guildId,
-          alias,
-        },
-      },
-      include: {
-        subscriptions: true,
-      },
-    });
+  const result = await addSubscriptionChannel({
+    guildId,
+    alias,
+    channelId: channel,
+    actorDiscordId: userId,
+  });
 
-    if (!player) {
+  switch (result.kind) {
+    case "player-not-found":
       await interaction.editReply({
         content: `❌ **Player not found**\n\nNo player with alias "${alias}" exists in this server.`,
       });
       return;
-    }
-
-    // Check if subscription already exists in this channel
-    const existingSubscription = player.subscriptions.find(
-      (sub) => sub.channelId === channel,
-    );
-
-    if (existingSubscription) {
+    case "already-subscribed":
       await interaction.editReply({
-        content: `ℹ️ **Already subscribed**\n\nPlayer "${alias}" is already subscribed in <#${channel}>.`,
+        content: `ℹ️ **Already subscribed**\n\nPlayer "${alias}" is already subscribed in <#${result.channelId}>.`,
+      });
+      return;
+    case "added": {
+      const existingChannels = result.allChannelIds
+        .filter((id) => id !== channel)
+        .map((id) => `<#${id}>`)
+        .join(", ");
+      await interaction.editReply({
+        content: `✅ **Subscription added**\n\nPlayer "${alias}" will now receive updates in <#${channel}>.\n\n**All subscribed channels:** ${existingChannels.length > 0 ? `${existingChannels}, ` : ""}<#${channel}>`,
       });
       return;
     }
-
-    // Create the new subscription
-    const now = new Date();
-    await prisma.subscription.create({
-      data: {
-        playerId: player.id,
-        channelId: channel,
-        serverId: guildId,
-        creatorDiscordId: userId,
-        createdTime: now,
-        updatedTime: now,
-      },
-    });
-
-    logger.info(
-      `✅ Added subscription for player "${alias}" to channel ${channel}`,
-    );
-
-    const existingChannels = player.subscriptions
-      .map((sub) => `<#${sub.channelId}>`)
-      .join(", ");
-
-    await interaction.editReply({
-      content: `✅ **Subscription added**\n\nPlayer "${alias}" will now receive updates in <#${channel}>.\n\n**All subscribed channels:** ${existingChannels}, <#${channel}>`,
-    });
-  } catch (error) {
-    logger.error(`❌ Error adding subscription:`, error);
-    await interaction.editReply({
-      content: `❌ **Error adding subscription**\n\n${getErrorMessage(error)}`,
-    });
+    case "internal-error":
+      await interaction.editReply({
+        content: `❌ **Error adding subscription**\n\n${result.message}`,
+      });
+      return;
   }
 }
