@@ -1,0 +1,285 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "draft-prematch",
+      "title": "Draft Pre-Match",
+      "group": "Draft",
+      "state": "prematch",
+      "queue": "draft pick",
+      "playerCount": 1,
+      "kind": "s3-image",
+      "imageKey": "prematch/2026/05/01/7838961918/loading-screen.png",
+      "dataKey": "prematch/2026/05/01/7838961918/spectator-data.json"
+    },
+    {
+      "id": "draft-postmatch",
+      "title": "Draft Post-Match",
+      "group": "Draft",
+      "state": "postmatch",
+      "queue": "draft pick",
+      "playerCount": 1,
+      "kind": "s3-image",
+      "imageKey": "games/2026/05/09/EUW1_7848291077/report.png",
+      "dataKey": "games/2026/05/09/EUW1_7848291077/match.json"
+    },
+    {
+      "id": "ranked-solo-1-prematch",
+      "title": "Ranked Solo Pre-Match, One Player",
+      "group": "Ranked Solo",
+      "state": "prematch",
+      "queue": "solo",
+      "playerCount": 1,
+      "kind": "s3-image",
+      "imageKey": "prematch/2026/05/01/3236099094/loading-screen.png",
+      "dataKey": "prematch/2026/05/01/3236099094/spectator-data.json"
+    },
+    {
+      "id": "ranked-solo-1-postmatch",
+      "title": "Ranked Solo Post-Match, One Player",
+      "group": "Ranked Solo",
+      "state": "postmatch",
+      "queue": "solo",
+      "playerCount": 1,
+      "kind": "s3-image",
+      "imageKey": "games/2026/05/05/BR1_3238117495/report.png",
+      "dataKey": "games/2026/05/05/BR1_3238117495/match.json"
+    },
+    {
+      "id": "ranked-solo-2-prematch",
+      "title": "Ranked Solo Pre-Match, Two Players",
+      "group": "Ranked Solo",
+      "state": "prematch",
+      "queue": "solo",
+      "playerCount": 2,
+      "kind": "s3-image",
+      "imageKey": "prematch/2026/05/02/7840568137/loading-screen.png",
+      "dataKey": "prematch/2026/05/02/7840568137/spectator-data.json"
+    },
+    {
+      "id": "ranked-solo-2-postmatch",
+      "title": "Ranked Solo Post-Match, Two Players",
+      "group": "Ranked Solo",
+      "state": "postmatch",
+      "queue": "solo",
+      "playerCount": 2,
+      "kind": "s3-image",
+      "imageKey": "games/2026/05/05/EUW1_7844076957/report.png",
+      "dataKey": "games/2026/05/05/EUW1_7844076957/match.json"
+    },
+    {
+      "id": "ranked-flex-1-prematch",
+      "title": "Ranked Flex Pre-Match, One Player",
+      "group": "Ranked Flex",
+      "state": "prematch",
+      "queue": "flex",
+      "playerCount": 1,
+      "kind": "s3-image",
+      "imageKey": "prematch/2026/05/01/7838530315/loading-screen.png",
+      "dataKey": "prematch/2026/05/01/7838530315/spectator-data.json"
+    },
+    {
+      "id": "ranked-flex-1-postmatch",
+      "title": "Ranked Flex Post-Match, One Player",
+      "group": "Ranked Flex",
+      "state": "postmatch",
+      "queue": "flex",
+      "playerCount": 1,
+      "kind": "s3-image",
+      "imageKey": "games/2026/05/06/EUW1_7844662430/report.png",
+      "dataKey": "games/2026/05/06/EUW1_7844662430/match.json"
+    },
+    {
+      "id": "ranked-flex-2-prematch",
+      "title": "Ranked Flex Pre-Match, Two Players",
+      "group": "Ranked Flex",
+      "state": "prematch",
+      "queue": "flex",
+      "playerCount": 2,
+      "kind": "s3-image",
+      "imageKey": "prematch/2026/05/05/7843871591/loading-screen.png",
+      "dataKey": "prematch/2026/05/05/7843871591/spectator-data.json"
+    },
+    {
+      "id": "ranked-flex-2-postmatch",
+      "title": "Ranked Flex Post-Match, Two Players",
+      "group": "Ranked Flex",
+      "state": "postmatch",
+      "queue": "flex",
+      "playerCount": 2,
+      "kind": "s3-image",
+      "imageKey": "games/2026/05/16/EUW1_7856317368/report.png",
+      "dataKey": "games/2026/05/16/EUW1_7856317368/match.json"
+    },
+    {
+      "id": "ranked-flex-3-prematch",
+      "title": "Ranked Flex Pre-Match, Three Players",
+      "group": "Ranked Flex",
+      "state": "prematch",
+      "queue": "flex",
+      "playerCount": 3,
+      "kind": "s3-image",
+      "imageKey": "prematch/2026/05/03/7841513195/loading-screen.png",
+      "dataKey": "prematch/2026/05/03/7841513195/spectator-data.json"
+    },
+    {
+      "id": "ranked-flex-3-postmatch",
+      "title": "Ranked Flex Post-Match, Three Players",
+      "group": "Ranked Flex",
+      "state": "postmatch",
+      "queue": "flex",
+      "playerCount": 3,
+      "kind": "s3-image",
+      "imageKey": "games/2026/05/10/EUW1_7848919840/report.png",
+      "dataKey": "games/2026/05/10/EUW1_7848919840/match.json"
+    },
+    {
+      "id": "ranked-flex-4-prematch",
+      "title": "Ranked Flex Pre-Match, Four Players",
+      "group": "Ranked Flex",
+      "state": "prematch",
+      "queue": "flex",
+      "playerCount": 4,
+      "kind": "unsupported",
+      "reason": "Ranked Flex does not normally allow four-player parties, and no real supported payload was found."
+    },
+    {
+      "id": "ranked-flex-4-postmatch",
+      "title": "Ranked Flex Post-Match, Four Players",
+      "group": "Ranked Flex",
+      "state": "postmatch",
+      "queue": "flex",
+      "playerCount": 4,
+      "kind": "unsupported",
+      "reason": "Ranked Flex does not normally allow four-player parties, and no real supported payload was found."
+    },
+    {
+      "id": "ranked-flex-5-prematch",
+      "title": "Ranked Flex Pre-Match, Five Players",
+      "group": "Ranked Flex",
+      "state": "prematch",
+      "queue": "flex",
+      "playerCount": 5,
+      "kind": "unsupported",
+      "reason": "No real supported five-player Ranked Flex payload was found in S3."
+    },
+    {
+      "id": "ranked-flex-5-postmatch",
+      "title": "Ranked Flex Post-Match, Five Players",
+      "group": "Ranked Flex",
+      "state": "postmatch",
+      "queue": "flex",
+      "playerCount": 5,
+      "kind": "unsupported",
+      "reason": "No real supported five-player Ranked Flex payload was found in S3."
+    },
+    {
+      "id": "arena-3-prematch",
+      "title": "Arena Pre-Match, Teams of 3",
+      "group": "Arena",
+      "state": "prematch",
+      "queue": "arena",
+      "playerCount": 3,
+      "kind": "unsupported",
+      "reason": "No real arena prematch S3 object was found for 3 tracked player(s)."
+    },
+    {
+      "id": "arena-3-postmatch",
+      "title": "Arena Post-Match, Teams of 3",
+      "group": "Arena",
+      "state": "postmatch",
+      "queue": "arena",
+      "playerCount": 3,
+      "kind": "s3-image",
+      "imageKey": "games/2026/05/07/EUW1_7845790456/report.png",
+      "dataKey": "games/2026/05/07/EUW1_7845790456/match.json"
+    },
+    {
+      "id": "aram-prematch",
+      "title": "ARAM Pre-Match",
+      "group": "ARAM",
+      "state": "prematch",
+      "queue": "aram",
+      "playerCount": 1,
+      "kind": "s3-image",
+      "imageKey": "prematch/2026/05/14/3241274591/loading-screen.png",
+      "dataKey": "prematch/2026/05/14/3241274591/spectator-data.json"
+    },
+    {
+      "id": "aram-postmatch",
+      "title": "ARAM Post-Match",
+      "group": "ARAM",
+      "state": "postmatch",
+      "queue": "aram",
+      "playerCount": 1,
+      "kind": "s3-image",
+      "imageKey": "games/2026/05/14/BR1_3241274591/report.png",
+      "dataKey": "games/2026/05/14/BR1_3241274591/match.json"
+    },
+    {
+      "id": "aram-mayhem-prematch",
+      "title": "ARAM Mayhem Pre-Match",
+      "group": "ARAM Mayhem",
+      "state": "prematch",
+      "queue": "aram mayhem",
+      "playerCount": 1,
+      "kind": "s3-image",
+      "imageKey": "prematch/2026/05/01/150231326/loading-screen.png",
+      "dataKey": "prematch/2026/05/01/150231326/spectator-data.json"
+    },
+    {
+      "id": "aram-mayhem-postmatch",
+      "title": "ARAM Mayhem Post-Match",
+      "group": "ARAM Mayhem",
+      "state": "postmatch",
+      "queue": "aram mayhem",
+      "playerCount": 1,
+      "kind": "unsupported",
+      "reason": "No real aram mayhem postmatch S3 object was found for 1 tracked player(s)."
+    },
+    {
+      "id": "competition-graph",
+      "title": "Competition Progress",
+      "group": "Graphs",
+      "description": "Real leaderboard snapshots rendered as a marketing chart.",
+      "kind": "competition-graph",
+      "snapshotKeys": [
+        "leaderboards/competition-9/snapshots/2026-05-11.json",
+        "leaderboards/competition-9/snapshots/2026-05-12.json",
+        "leaderboards/competition-9/snapshots/2026-05-16.json",
+        "leaderboards/competition-9/snapshots/2026-05-17.json",
+        "leaderboards/competition-9/snapshots/2026-05-18.json",
+        "leaderboards/competition-9/snapshots/2026-05-19.json",
+        "leaderboards/competition-9/snapshots/2026-05-20.json",
+        "leaderboards/competition-9/snapshots/2026-05-21.json",
+        "leaderboards/competition-9/snapshots/2026-05-22.json",
+        "leaderboards/competition-9/snapshots/2026-05-23.json"
+      ],
+      "chartType": "line",
+      "yAxisLabel": "Score"
+    },
+    {
+      "id": "report-graph",
+      "title": "Scheduled Report Damage",
+      "group": "Graphs",
+      "description": "Real match payloads aggregated into a scheduled-report chart.",
+      "kind": "report-graph",
+      "matchKeys": [
+        "games/2026/05/05/BR1_3238117495/match.json",
+        "games/2026/05/05/EUW1_7844076957/match.json",
+        "games/2026/05/05/EUW1_7844082996/match.json",
+        "games/2026/05/05/NA1_5554308050/match.json",
+        "games/2026/05/05/NA1_5554393951/match.json",
+        "games/2026/05/06/BR1_3238272017/match.json",
+        "games/2026/05/06/BR1_3238339892/match.json",
+        "games/2026/05/06/BR1_3238385665/match.json",
+        "games/2026/05/06/BR1_3238401169/match.json",
+        "games/2026/05/06/EUW1_7844238363/match.json",
+        "games/2026/05/06/EUW1_7844249421/match.json",
+        "games/2026/05/06/EUW1_7844291702/match.json"
+      ],
+      "metric": "damage_to_champions",
+      "yAxisLabel": "Damage to Champions"
+    }
+  ]
+}

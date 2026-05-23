@@ -13,6 +13,7 @@ import CTA from "../components/CTA.astro";
 import GalleryItem from "../components/GalleryItem.astro";
 import BenefitCard from "../components/BenefitCard.astro";
 import ProcessStep from "../components/ProcessStep.astro";
+import { generatedScoutShowcaseAssets } from "../data/scout-showcase";
 
 const matchImg = "/match.png";
 const loadingScreenImg = "/loading-screen.png";
@@ -139,6 +140,35 @@ const leaderboardLpImg = "/leaderboard-lp.png";
         />
 
         <div class="space-y-16 mt-16">
+          {
+            generatedScoutShowcaseAssets.length > 0 && (
+              <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+                {generatedScoutShowcaseAssets.map((asset) => (
+                  <figure class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                    <img
+                      src={asset.src}
+                      alt={asset.title}
+                      loading="lazy"
+                      class="aspect-video w-full bg-gray-950 object-contain"
+                    />
+                    <figcaption class="border-t border-gray-200 px-4 py-3 dark:border-gray-700">
+                      <div class="text-sm font-semibold text-gray-900 dark:text-white">
+                        {asset.title}
+                      </div>
+                      <div class="mt-1 text-xs text-gray-600 dark:text-gray-300">
+                        {asset.group}
+                        {asset.state ? ` · ${asset.state}` : ""}
+                        {asset.playerCount
+                          ? ` · ${asset.playerCount.toString()} player${asset.playerCount === 1 ? "" : "s"}`
+                          : ""}
+                      </div>
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            )
+          }
+
           <!-- Pre-Match Loading Screens -->
           <FeatureWithImage
             title="Pre-Match Loading Screens"
