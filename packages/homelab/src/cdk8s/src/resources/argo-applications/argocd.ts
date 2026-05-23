@@ -13,10 +13,18 @@ export function createArgoCdApp(chart: Chart) {
     hosts: ["argocd"],
   });
 
+  // argocd-server defaults to HTTPS-only on its single pod port (8080 with TLS
+  // auto-detection). The Service exposes port 80 → 8080 which returns 307
+  // redirect-to-HTTPS for plain HTTP — and cloudflared's default origin is
+  // http://, producing an infinite 307 loop and breaking the CI ArgoCD health
+  // check. Target HTTPS explicitly; argocd-server uses a self-signed cert, so
+  // skip TLS verification (in-cluster transport is already encrypted by the CNI).
   createCloudflareTunnelBinding(chart, "argocd-cf-tunnel", {
     serviceName: "argocd-server",
     subdomain: "argocd",
     namespace: "argocd",
+    protocol: "https",
+    noTlsVerify: true,
   });
 
   const argoCdValues: HelmValuesForChart<"argo-cd"> = {
