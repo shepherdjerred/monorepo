@@ -38,6 +38,7 @@ Update the Scout for LoL marketing site with a new release/news entry and a ligh
 - Added the May 23, 2026 release entry in `packages/scout-for-lol/packages/frontend/src/data/changelog.tsx`.
 - Refreshed homepage copy in `packages/scout-for-lol/packages/frontend/src/pages/index.astro` for lane-sorted prematch, champion-icon post-match reports, Arena teams of 3, and scheduled `/report` posts.
 - Added `packages/scout-for-lol/packages/frontend/public/arena-loading-screen.png` from the available user-provided Arena screenshot.
+- Removed the now-unused `packages/scout-for-lol/packages/frontend/public/arena-discord.png` asset after replacing it on the homepage.
 - Fixed `packages/scout-for-lol/packages/frontend/src/pages/whatsnew.astro` comments so the frontend Prettier check can parse the page.
 - Trimmed the May 23 changelog copy to remove repetitive prematch/report/Arena detail.
 - Verified frontend typecheck, lint, format, and build.
