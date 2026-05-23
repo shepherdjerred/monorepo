@@ -17,5 +17,10 @@
     "astro": "^6.1.9",
     "@astrojs/check": "^0.9.8",
     "typescript": "^6.0.3"
+  },
+  "overrides": {
+    "devalue": "^5.8.1",
+    "fast-uri": "^3.1.2",
+    "fast-xml-builder": "^1.2.0"
   }
 }

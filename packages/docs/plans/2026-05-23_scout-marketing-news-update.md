@@ -41,7 +41,9 @@ Update the Scout for LoL marketing site with a new release/news entry and a ligh
 - Removed the now-unused `packages/scout-for-lol/packages/frontend/public/arena-discord.png` asset after replacing it on the homepage.
 - Fixed `packages/scout-for-lol/packages/frontend/src/pages/whatsnew.astro` comments so the frontend Prettier check can parse the page.
 - Trimmed the May 23 changelog copy to remove repetitive prematch/report/Arena detail.
+- Updated affected package lockfiles and dependency overrides for the Trivy CVE findings that blocked PR CI.
 - Verified frontend typecheck, lint, format, and build.
+- Verified changed Bun lockfiles with `bun install --frozen-lockfile` where local package setup allowed it, and re-ran Scout frontend typecheck, lint, and build after the dependency updates.
 - Started the Astro dev server and checked `/` plus `/whatsnew` in the in-app browser at desktop and 390px mobile widths.
 
 ### Remaining
@@ -53,3 +55,4 @@ Update the Scout for LoL marketing site with a new release/news entry and a ligh
 - Scout generation required installing root and Scout dependencies in this fresh checkout, plus trusting the root and Scout mise configs.
 - Astro still reports an existing hint in `src/layouts/Layout.astro` about an inline script attribute, but the check exits successfully.
 - Vite build still reports existing chunk/circular re-export warnings unrelated to this copy/image update, but the build exits successfully.
+- The repo Trivy script could not run locally because its installer writes a Linux binary to `/usr/local/bin/trivy` on this macOS arm64 host; Buildkite remains the source of truth for the Trivy gate.

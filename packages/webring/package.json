@@ -68,5 +68,8 @@
     "LICENSE",
     "bun.lock",
     "CHANGELOG.md"
-  ]
+  ],
+  "overrides": {
+    "sanitize-html": "^2.17.4"
+  }
 }
