@@ -26,7 +26,7 @@ packages/birmel/prisma/data/
 
 # Per-package VS Code workspace settings (machine-specific paths, personal IDE prefs).
 # Shared workspace recommendations (extensions.json, tasks.json) remain tracked.
-packages/*/.vscode/settings.json
+packages/**/.vscode/settings.json
 
 # Playwright test results
 test-results/
