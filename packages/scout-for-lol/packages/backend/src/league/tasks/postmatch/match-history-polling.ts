@@ -143,9 +143,9 @@ async function processMatch(
     return;
   }
 
-  for (const { channel } of channels) {
+  for (const { channel, serverId } of channels) {
     try {
-      await send(message, channel);
+      await send(message, channel, DiscordGuildIdSchema.parse(serverId));
     } catch (error) {
       if (error instanceof ChannelSendError && error.permissionError) {
         logger.warn(

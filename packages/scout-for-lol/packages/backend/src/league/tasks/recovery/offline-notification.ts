@@ -1,6 +1,7 @@
 import { prisma } from "#src/database/index.ts";
 import { send } from "#src/league/discord/channel.ts";
 import { createLogger } from "#src/logger.ts";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
 import * as Sentry from "@sentry/bun";
 
 const logger = createLogger("offline-notification");
@@ -9,19 +10,17 @@ export async function sendOfflineNotification(): Promise<void> {
   logger.info("Sending offline recovery notification to subscribed channels");
 
   const subscriptions = await prisma.subscription.findMany({
-    select: { channelId: true },
+    select: { channelId: true, serverId: true },
     distinct: ["channelId"],
   });
 
-  const channelIds = subscriptions.map((s) => s.channelId);
-
-  if (channelIds.length === 0) {
+  if (subscriptions.length === 0) {
     logger.info("No channels to notify about downtime");
     return;
   }
 
   logger.info(
-    `Notifying ${channelIds.length.toString()} channel(s) about downtime recovery`,
+    `Notifying ${subscriptions.length.toString()} channel(s) about downtime recovery`,
   );
 
   const message =
@@ -30,9 +29,9 @@ export async function sendOfflineNotification(): Promise<void> {
   let successCount = 0;
   let failCount = 0;
 
-  for (const channelId of channelIds) {
+  for (const { channelId, serverId } of subscriptions) {
     try {
-      await send(message, channelId);
+      await send(message, channelId, DiscordGuildIdSchema.parse(serverId));
       successCount += 1;
     } catch (error) {
       failCount += 1;

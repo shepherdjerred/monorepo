@@ -41,7 +41,7 @@ export function addScheduledReportRows(
       .unit("short")
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
-      .gridPos({ x: 0, y: 115, w: 6, h: 4 }),
+      .gridPos({ x: 0, y: 115, w: 8, h: 4 }),
   );
 
   builder.withPanel(
@@ -59,7 +59,7 @@ export function addScheduledReportRows(
       .unit("short")
       .colorMode(common.BigValueColorMode.Value)
       .graphMode(common.BigValueGraphMode.Area)
-      .gridPos({ x: 6, y: 115, w: 6, h: 4 }),
+      .gridPos({ x: 8, y: 115, w: 8, h: 4 }),
   );
 
   builder.withPanel(
@@ -85,35 +85,7 @@ export function addScheduledReportRows(
             { value: 1, color: "red" },
           ]),
       )
-      .gridPos({ x: 12, y: 115, w: 6, h: 4 }),
-  );
-
-  builder.withPanel(
-    new stat.PanelBuilder()
-      .title("Budget rejections")
-      .description(
-        "Report executions rejected for exceeding configured budgets",
-      )
-      .datasource(prometheusDatasource)
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            `sum by (environment) (increase(scheduled_report_budget_exceeded_total{${buildFilter()}}[1h]))`,
-          )
-          .legendFormat("{{environment}}"),
-      )
-      .unit("short")
-      .colorMode(common.BigValueColorMode.Value)
-      .graphMode(common.BigValueGraphMode.Area)
-      .thresholds(
-        new dashboard.ThresholdsConfigBuilder()
-          .mode(dashboard.ThresholdsMode.Absolute)
-          .steps([
-            { value: 0, color: "green" },
-            { value: 1, color: "red" },
-          ]),
-      )
-      .gridPos({ x: 18, y: 115, w: 6, h: 4 }),
+      .gridPos({ x: 16, y: 115, w: 8, h: 4 }),
   );
 
   builder.withPanel(

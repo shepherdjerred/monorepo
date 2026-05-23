@@ -607,7 +607,7 @@ export const aiProviderIssueActive = new Gauge({
 
 /**
  * Total number of competition leaderboard chart renders.
- * status: success | error | skipped_too_few_snapshots | skipped_disabled
+ * status: success | error | skipped_too_few_snapshots | skipped_empty_leaderboard | skipped_disabled
  */
 export const leaderboardChartRendersTotal = new Counter({
   name: "leaderboard_chart_renders_total",
@@ -643,7 +643,7 @@ export const leaderboardChartPngBytes = new Histogram({
 
 /**
  * Per-snapshot fetch outcomes when loading historical leaderboard snapshots from S3.
- * status: success | parse_error | missing
+ * status: success | parse_error | missing | error
  */
 export const leaderboardSnapshotFetchTotal = new Counter({
   name: "leaderboard_snapshot_fetch_total",
