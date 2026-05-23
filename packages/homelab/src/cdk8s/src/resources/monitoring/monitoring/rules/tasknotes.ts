@@ -42,19 +42,18 @@ export function getTasknotesRuleGroups(): PrometheusRuleSpecGroups[] {
       ],
     },
     {
-      name: "tasknotes-api",
+      name: "tasknotes-metrics",
       rules: [
         {
-          alert: "TasknotesHighErrorRate",
+          alert: "TasknotesMetricsMissing",
           annotations: {
-            summary: "TaskNotes API error rate is high",
+            summary: "TaskNotes metrics are missing",
             message: escapePrometheusTemplate(
-              "TaskNotes API error rate is {{ $value | humanizePercentage }} (threshold: 5%). Check application logs.",
+              "Prometheus has no tasknotes_uptime_seconds sample. Check the ServiceMonitor and TaskNotes /metrics endpoint.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `sum(rate(tasknotes_http_requests_total{namespace="tasknotes", status=~"5.."}[5m]))
-             / sum(rate(tasknotes_http_requests_total{namespace="tasknotes"}[5m])) > 0.05`,
+            'absent(tasknotes_uptime_seconds{namespace="tasknotes"})',
           ),
           for: "5m",
           labels: {
@@ -62,17 +61,17 @@ export function getTasknotesRuleGroups(): PrometheusRuleSpecGroups[] {
           },
         },
         {
-          alert: "TasknotesHighLatency",
+          alert: "TasknotesContainerRestarted",
           annotations: {
-            summary: "TaskNotes API latency is high",
+            summary: "TaskNotes container restarted recently",
             message: escapePrometheusTemplate(
-              "TaskNotes API p95 latency is {{ $value }}s (threshold: 2s). Performance may be degraded.",
+              "TaskNotes container {{ $labels.container }} restarted {{ $value | humanize }} time(s) in the last 15 minutes. Check logs and pod events.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `histogram_quantile(0.95, sum(rate(tasknotes_http_request_duration_seconds_bucket{namespace="tasknotes"}[5m])) by (le)) > 2`,
+            'sum by (container) (increase(kube_pod_container_status_restarts_total{namespace="tasknotes"}[15m])) > 0',
           ),
-          for: "10m",
+          for: "5m",
           labels: {
             severity: "warning",
           },

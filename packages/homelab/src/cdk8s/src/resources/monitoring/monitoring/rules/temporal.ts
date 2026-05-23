@@ -82,7 +82,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(temporal_worker_scout_data_dragon_runs_total{outcome="failed"}[24h]) > 0',
+            'max_over_time(scout_data_dragon_runs{outcome="failed"}[24h]) > 0',
           ),
           for: "15m",
           labels: {
@@ -98,7 +98,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(temporal_worker_scout_data_dragon_runs_total{outcome="failed",reason=~"git-push-failed|pr-create-failed|pr-merge-failed"}[24h]) > 0',
+            'max_over_time(scout_data_dragon_runs{outcome="failed",reason=~"git-push-failed|pr-create-failed|pr-merge-failed"}[24h]) > 0',
           ),
           for: "15m",
           labels: {
@@ -113,7 +113,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
               "The Scout Data Dragon Temporal schedule has not recorded any run, skip, or failure in the last 36 hours.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "sum(increase(temporal_worker_scout_data_dragon_runs_total[36h])) < 1",
+            "absent_over_time(scout_data_dragon_runs[36h])",
           ),
           for: "30m",
           labels: {
@@ -131,7 +131,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           // cdk8s prefixes the construct id with the chart name. Match as a
           // substring so the regex is robust to either naming.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'absent(up{namespace="temporal",service=~".*temporal-worker-metrics.*"}) or max(up{namespace="temporal",service=~".*temporal-worker-metrics.*"}) == 0',
+            'absent(up{namespace="temporal",service=~".*temporal.*worker.*metrics.*|temporal-worker-app-metrics"}) or max(up{namespace="temporal",service=~".*temporal.*worker.*metrics.*|temporal-worker-app-metrics"}) == 0',
           ),
           for: "15m",
           labels: {
@@ -148,7 +148,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           // Service name is `temporal-temporal-server-metrics-service`. See
           // TemporalWorkerMetricsDown above for the same regex caveat.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'absent(up{namespace="temporal",service=~".*temporal-server-metrics.*"}) or max(up{namespace="temporal",service=~".*temporal-server-metrics.*"}) == 0',
+            'absent(up{namespace="temporal",service=~".*temporal.*server.*metrics.*"}) or max(up{namespace="temporal",service=~".*temporal.*server.*metrics.*"}) == 0',
           ),
           for: "15m",
           labels: {

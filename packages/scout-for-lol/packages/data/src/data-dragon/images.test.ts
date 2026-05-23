@@ -99,6 +99,7 @@ describe("championNameOverrides", () => {
     expect(normalizeChampionName("FIDDLESTICKS")).toBe("Fiddlesticks");
     expect(normalizeChampionName("fiddlesticks")).toBe("Fiddlesticks");
     expect(normalizeChampionName("Nunu & Willump")).toBe("Nunu");
+    expect(normalizeChampionName("Nunu%20&%20Willump")).toBe("Nunu");
     expect(normalizeChampionName("nunu & willump")).toBe("Nunu");
     // No-op for already-canonical names
     expect(normalizeChampionName("Wukong")).toBe("Wukong");
