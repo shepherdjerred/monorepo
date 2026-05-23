@@ -29,7 +29,7 @@ export default {
   computed: {
     src: function () {
       return (
-        "https://www.google.com/maps/embed/v1/place?key=AIzaSyC7jbGr5go1IZesidGWwA3CR8NwDLSsEX8" +
+        "https://www.google.com/maps/embed/v1/place?key=REDACTED_GOOGLE_MAPS_KEY" +
         "&q=place_id:" +
         this.location.placeId
       );
