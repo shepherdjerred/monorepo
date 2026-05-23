@@ -12,6 +12,8 @@ import {
 import { startPrReactionListener } from "./event-bridge/start-pr-reaction-listener.ts";
 import { initializeTracing, shutdownTracing } from "./observability/tracing.ts";
 import {
+  haEventBridgeConnected,
+  haEventBridgeStartFailuresTotal,
   startMetricsServer,
   stopMetricsServer,
 } from "./observability/metrics.ts";
@@ -99,6 +101,20 @@ function formatError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
+function classifyEventBridgeStartFailure(error: unknown): string {
+  const message = formatError(error).toLowerCase();
+  if (message.includes("websocket") || message.includes("web socket")) {
+    return "websocket";
+  }
+  if (message.includes("ha_url") || message.includes("ha_token")) {
+    return "config";
+  }
+  if (message.includes("401") || message.includes("unauthorized")) {
+    return "auth";
+  }
+  return "unknown";
+}
+
 type EventBridgeSupervisorState = {
   closed: boolean;
   currentHandle: EventBridgeHandle | undefined;
@@ -124,14 +140,18 @@ async function runEventBridgeSupervisor(
           return;
         }
         state.currentHandle = handle;
+        haEventBridgeConnected.set(1);
         jsonLog("info", "Event bridge started");
         return;
       } catch (error: unknown) {
         attempt += 1;
-        Sentry.captureException(error);
         const retryDelayMs = Math.min(300_000, 10_000 * attempt);
+        const reason = classifyEventBridgeStartFailure(error);
+        haEventBridgeConnected.set(0);
+        haEventBridgeStartFailuresTotal.inc({ reason });
         jsonLog("error", "Event bridge failed to start; retrying", {
           attempt,
+          reason,
           retryDelayMs,
           error: formatError(error),
         });

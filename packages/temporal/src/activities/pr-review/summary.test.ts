@@ -78,7 +78,14 @@ function buildFakeAnthropic(input: FakeAnthropicInput): AnthropicForSummary {
 }
 
 type FakeOctokitInput = {
-  diff: string;
+  diff?: string;
+  files?: {
+    filename: string;
+    status: string;
+    additions: number;
+    deletions: number;
+    patch?: string | null;
+  }[];
   existingComments?: { id: number; body: string | null }[];
   conventionsB64?: string;
 };
@@ -95,6 +102,15 @@ function buildFakeOctokit(input: FakeOctokitInput): {
 } {
   const existing = input.existingComments ?? [];
   const captured: CapturedComment[] = [];
+  const files = input.files ?? [
+    {
+      filename: "packages/foo/src/index.ts",
+      status: "modified",
+      additions: 1,
+      deletions: 0,
+      patch: input.diff ?? "+ x\n",
+    },
+  ];
 
   const octokit: OctokitForSummary = {
     listComments: async () => ({ data: existing }),
@@ -119,7 +135,10 @@ function buildFakeOctokit(input: FakeOctokitInput): {
       (async function* () {
         yield { data: existing };
       })(),
-    getDiff: async () => ({ data: input.diff }),
+    listFiles: () =>
+      (async function* () {
+        yield { data: files };
+      })(),
     getContent: async () =>
       input.conventionsB64 === undefined
         ? { data: {} }
@@ -229,7 +248,9 @@ describe("runPrSummary", () => {
     });
 
     expect(result.diffTruncated).toBe(true);
-    expect(result.diffBytes).toBe(Buffer.byteLength(hugeDiff, "utf8"));
+    expect(result.diffBytes).toBeGreaterThan(
+      Buffer.byteLength(hugeDiff, "utf8"),
+    );
   });
 
   it("reports cost under $0.10 for typical input sizes (Phase 7 budget)", async () => {
@@ -281,6 +302,7 @@ describe("runPrSummary", () => {
     expect(result.outputTokens).toBe(567);
     expect(result.cacheReadInputTokens).toBe(89);
     expect(result.cacheCreationInputTokens).toBe(12);
+    expect(result.summaryMode).toBe("llm");
   });
 
   it("computes wall-clock duration from the injected clock", async () => {
@@ -304,30 +326,33 @@ describe("runPrSummary", () => {
     expect(result.durationMs).toBe(6500);
   });
 
-  it("throws when the GitHub diff endpoint returns a non-string body", async () => {
+  it("posts a deterministic oversized summary without calling the model", async () => {
     const anthropic = buildFakeAnthropic({
       text: `${SUMMARY_MARKER}\n\nbody`,
     });
-    const octokit: OctokitForSummary = {
-      listComments: async () => ({ data: [] }),
-      createComment: async () => ({ data: { id: 1, html_url: "" } }),
-      updateComment: async () => ({ data: { id: 1, html_url: "" } }),
-      paginateListComments: () =>
-        (async function* () {
-          yield { data: [] };
-        })(),
-      // Return an object instead of a string — should trigger the runtime guard.
-      getDiff: async () => ({ data: { not: "a string" } }),
-      getContent: async () => ({ data: {} }),
-    };
+    const files = Array.from({ length: 205 }, (_, index) => ({
+      filename: `archive/project-${String(index)}/index.ts`,
+      status: "modified",
+      additions: 10,
+      deletions: 1,
+      patch: "@@ -1 +1 @@\n-a\n+b",
+    }));
+    const { octokit, captured } = buildFakeOctokit({ files });
 
-    await expect(
-      runPrSummary(basePr, {
-        anthropic,
-        octokit,
-        loadRepoConventionsMarkdown: async () => "",
-        now: () => 1000,
-      }),
-    ).rejects.toThrow(/Expected diff string/);
+    const result = await runPrSummary(basePr, {
+      anthropic,
+      octokit,
+      loadRepoConventionsMarkdown: async () => "",
+      now: () => 1000,
+    });
+
+    expect(result.summaryMode).toBe("oversized");
+    expect(result.inputTokens).toBe(0);
+    expect(result.diffTruncated).toBe(true);
+    const first = captured[0];
+    if (first === undefined) throw new Error("missing oversized summary");
+    expect(first.body).toContain("Oversized PR summary");
+    expect(first.body).toContain("Changed files: 205");
+    expect(first.body).toContain(SUMMARY_MARKER);
   });
 });
