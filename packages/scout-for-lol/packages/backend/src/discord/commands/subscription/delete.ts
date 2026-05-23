@@ -9,6 +9,7 @@ import {
 import { createLogger } from "#src/logger.ts";
 import { removeSubscription } from "#src/lib/subscription/remove.ts";
 import { prisma } from "#src/database/index.ts";
+import { editReplyOnError } from "#src/discord/commands/subscription/reply-helpers.ts";
 
 const logger = createLogger("subscription-delete-command");
 
@@ -41,17 +42,23 @@ export async function executeSubscriptionDelete(
   const { alias, channel, guildId } = parseResult.data;
   await interaction.deferReply({ ephemeral: true });
 
-  const result = await prisma.$transaction((tx) =>
-    removeSubscription(
-      {
-        guildId,
-        channelId: channel,
-        alias,
-        actorDiscordId: DiscordAccountIdSchema.parse(interaction.user.id),
-      },
-      tx,
-    ),
-  );
+  let result;
+  try {
+    result = await prisma.$transaction((tx) =>
+      removeSubscription(
+        {
+          guildId,
+          channelId: channel,
+          alias,
+          actorDiscordId: DiscordAccountIdSchema.parse(interaction.user.id),
+        },
+        tx,
+      ),
+    );
+  } catch (error) {
+    await editReplyOnError(interaction, "removing subscription", error);
+    return;
+  }
 
   switch (result.kind) {
     case "player-not-found":

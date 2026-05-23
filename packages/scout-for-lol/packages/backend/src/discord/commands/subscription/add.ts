@@ -19,6 +19,7 @@ import type { AddSubscriptionResult } from "#src/lib/subscription/types.ts";
 import { sendWelcomeMatch } from "#src/discord/commands/subscription/welcome-match.ts";
 import { DISCORD_SERVER_INVITE } from "#src/configuration/subscription-limits.ts";
 import { prisma } from "#src/database/index.ts";
+import { editReplyOnError } from "#src/discord/commands/subscription/reply-helpers.ts";
 
 const logger = createLogger("subscription-add-command");
 
@@ -58,20 +59,26 @@ export async function executeSubscriptionAdd(
   const args = parseResult.data;
   await interaction.deferReply({ ephemeral: true });
 
-  const result = await prisma.$transaction((tx) =>
-    addSubscription(
-      {
-        guildId: args.guildId,
-        channelId: args.channel,
-        region: args.region,
-        riotId: args.riotId,
-        alias: args.alias,
-        discordUserId: args.user,
-        creatorDiscordId,
-      },
-      tx,
-    ),
-  );
+  let result;
+  try {
+    result = await prisma.$transaction((tx) =>
+      addSubscription(
+        {
+          guildId: args.guildId,
+          channelId: args.channel,
+          region: args.region,
+          riotId: args.riotId,
+          alias: args.alias,
+          discordUserId: args.user,
+          creatorDiscordId,
+        },
+        tx,
+      ),
+    );
+  } catch (error) {
+    await editReplyOnError(interaction, "creating subscription", error);
+    return;
+  }
 
   await interaction.editReply({
     content: formatAddResult(result, args.riotId, args.alias, args.channel),

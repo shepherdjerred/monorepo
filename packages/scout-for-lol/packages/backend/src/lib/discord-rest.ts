@@ -13,6 +13,10 @@ import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("discord-rest");
 const DISCORD_API_BASE = "https://discord.com/api/v10";
+/** Bound every outbound Discord REST call so a stalled upstream can't
+ * hold an inbound tRPC request open. Discord's own SLA is well under
+ * this; 5s is generous. */
+const DISCORD_FETCH_TIMEOUT_MS = 5000;
 
 const RefreshResponseSchema = z.object({
   access_token: z.string(),
@@ -45,6 +49,30 @@ export function hasAdministrator(permissionsString: string): boolean {
   }
 }
 
+/**
+ * Wrap fetch with a hard timeout. Returns null on fetch failure /
+ * timeout so callers can degrade to an auth-failure path rather than
+ * leaking the error to the tRPC response.
+ */
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  description: string,
+): Promise<Response | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => {
+    controller.abort();
+  }, DISCORD_FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch (error) {
+    logger.warn(`Discord fetch failed: ${description}`, { url, error });
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function refreshUserToken(user: User): Promise<string | null> {
   if (
     user.discordRefreshToken === null ||
@@ -53,23 +81,47 @@ async function refreshUserToken(user: User): Promise<string | null> {
     return null;
   }
 
-  const response = await fetch(`${DISCORD_API_BASE}/oauth2/token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: configuration.applicationId,
-      client_secret: configuration.discordClientSecret,
-      grant_type: "refresh_token",
-      refresh_token: user.discordRefreshToken,
-    }),
-  });
+  const response = await fetchWithTimeout(
+    `${DISCORD_API_BASE}/oauth2/token`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: configuration.applicationId,
+        client_secret: configuration.discordClientSecret,
+        grant_type: "refresh_token",
+        refresh_token: user.discordRefreshToken,
+      }),
+    },
+    "oauth2/token refresh",
+  );
 
+  if (response === null) {
+    logger.warn("Discord refresh-token failed", { status: "fetch-error" });
+    return null;
+  }
   if (!response.ok) {
     logger.warn("Discord refresh-token failed", { status: response.status });
     return null;
   }
 
-  const refreshed = RefreshResponseSchema.parse(await response.json());
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch (error) {
+    logger.warn("Discord refresh-token JSON parse failed", { error });
+    return null;
+  }
+
+  const parsed = RefreshResponseSchema.safeParse(body);
+  if (!parsed.success) {
+    logger.warn("Discord refresh-token schema mismatch", {
+      issues: parsed.error.issues.slice(0, 3),
+    });
+    return null;
+  }
+
+  const refreshed = parsed.data;
   await prisma.user.update({
     where: { discordId: user.discordId },
     data: {
@@ -116,10 +168,16 @@ export async function fetchUserGuilds(user: User): Promise<PartialGuild[]> {
   const token = await getFreshUserAccessToken(user);
   if (token === null) return [];
 
-  const response = await fetch(`${DISCORD_API_BASE}/users/@me/guilds`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await fetchWithTimeout(
+    `${DISCORD_API_BASE}/users/@me/guilds`,
+    { headers: { Authorization: `Bearer ${token}` } },
+    "users/@me/guilds",
+  );
 
+  if (response === null) {
+    logger.warn("Discord /users/@me/guilds failed", { status: "fetch-error" });
+    return [];
+  }
   if (!response.ok) {
     logger.warn("Discord /users/@me/guilds failed", {
       status: response.status,
@@ -127,9 +185,27 @@ export async function fetchUserGuilds(user: User): Promise<PartialGuild[]> {
     return [];
   }
 
-  const guilds = PartialGuildsArraySchema.parse(await response.json());
-  guildsCache.set(user.discordId, { guilds, fetchedAt: Date.now() });
-  return guilds;
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch (error) {
+    logger.warn("Discord guilds JSON parse failed", { error });
+    return [];
+  }
+
+  const parsed = PartialGuildsArraySchema.safeParse(body);
+  if (!parsed.success) {
+    logger.warn("Discord guilds schema mismatch", {
+      issues: parsed.error.issues.slice(0, 3),
+    });
+    return [];
+  }
+
+  guildsCache.set(user.discordId, {
+    guilds: parsed.data,
+    fetchedAt: Date.now(),
+  });
+  return parsed.data;
 }
 
 /**

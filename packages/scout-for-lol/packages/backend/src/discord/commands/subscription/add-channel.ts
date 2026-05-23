@@ -9,6 +9,7 @@ import {
 import { createLogger } from "#src/logger.ts";
 import { addSubscriptionChannel } from "#src/lib/subscription/add-channel.ts";
 import { prisma } from "#src/database/index.ts";
+import { editReplyOnError } from "#src/discord/commands/subscription/reply-helpers.ts";
 
 const logger = createLogger("subscription-add-channel-command");
 
@@ -42,17 +43,23 @@ export async function executeSubscriptionAddChannel(
   const { alias, channel, guildId, userId } = parseResult.data;
   await interaction.deferReply({ ephemeral: true });
 
-  const result = await prisma.$transaction((tx) =>
-    addSubscriptionChannel(
-      {
-        guildId,
-        alias,
-        channelId: channel,
-        actorDiscordId: userId,
-      },
-      tx,
-    ),
-  );
+  let result;
+  try {
+    result = await prisma.$transaction((tx) =>
+      addSubscriptionChannel(
+        {
+          guildId,
+          alias,
+          channelId: channel,
+          actorDiscordId: userId,
+        },
+        tx,
+      ),
+    );
+  } catch (error) {
+    await editReplyOnError(interaction, "adding subscription channel", error);
+    return;
+  }
 
   switch (result.kind) {
     case "player-not-found":

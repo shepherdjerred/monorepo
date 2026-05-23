@@ -9,6 +9,7 @@ import {
 import { createLogger } from "#src/logger.ts";
 import { moveSubscription } from "#src/lib/subscription/move.ts";
 import { prisma } from "#src/database/index.ts";
+import { editReplyOnError } from "#src/discord/commands/subscription/reply-helpers.ts";
 
 const logger = createLogger("subscription-move-command");
 
@@ -52,18 +53,24 @@ export async function executeSubscriptionMove(
 
   await interaction.deferReply({ ephemeral: true });
 
-  const result = await prisma.$transaction((tx) =>
-    moveSubscription(
-      {
-        guildId,
-        alias,
-        fromChannelId: fromChannel,
-        toChannelId: toChannel,
-        actorDiscordId: DiscordAccountIdSchema.parse(interaction.user.id),
-      },
-      tx,
-    ),
-  );
+  let result;
+  try {
+    result = await prisma.$transaction((tx) =>
+      moveSubscription(
+        {
+          guildId,
+          alias,
+          fromChannelId: fromChannel,
+          toChannelId: toChannel,
+          actorDiscordId: DiscordAccountIdSchema.parse(interaction.user.id),
+        },
+        tx,
+      ),
+    );
+  } catch (error) {
+    await editReplyOnError(interaction, "moving subscription", error);
+    return;
+  }
 
   switch (result.kind) {
     case "player-not-found":
