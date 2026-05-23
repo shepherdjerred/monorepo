@@ -62,7 +62,9 @@ Reports read SQLite-backed facts for match, pair, competition, and prematch repo
 - Fixed the Buildkite PR pipeline graph in `scripts/ci/src/pipeline-builder.ts` so pull-request builds keep validation/image smoke work but omit main-only release, publish, deploy, commit-back, and summary nodes.
 - Added PR graph regression coverage in `scripts/ci/src/__tests__/pipeline-builder.test.ts`, including dangling `depends_on` validation for full pull-request builds.
 - Made catalog validation compare against tracked `packages/` roots instead of raw local directories so ignored dependency/build directories cannot break local generator tests.
+- Resolved the remaining Greptile P2 by logging report-store S3 catch-up per-run deltas separately from cumulative resume totals.
 - Verified with `bun test src/__tests__/pipeline-builder.test.ts`, `bun test`, and `bun run typecheck` in `scripts/ci`.
+- Verified the catch-up logging fix with `bun test src/report-store/catch-up.test.ts src/report-store/s3-importer.integration.test.ts` and `bunx tsc --noEmit` in `packages/scout-for-lol/packages/backend`.
 
 ### Remaining
 
