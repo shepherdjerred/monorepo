@@ -403,7 +403,6 @@ export function createTemporalWorkerDeployment(
           key: "AWS_SECRET_ACCESS_KEY",
         }),
         // GitHub
-        GH_TOKEN: EnvValue.fromSecretValue({ secret, key: "GH_TOKEN" }),
         PR_REVIEW_FIXTURES_REPO_URL: EnvValue.fromSecretValue(
           {
             secret,
@@ -423,17 +422,13 @@ export function createTemporalWorkerDeployment(
           secret,
           key: "GITHUB_APP_PRIVATE_KEY",
         }),
-        // GitHub webhook ingest (pr-review / pr-summary). The pr-agent activity
-        // shells out to `claude -p` with the GitHub MCP server; the MCP server
-        // reads GITHUB_PERSONAL_ACCESS_TOKEN from its env. CLAUDE_CODE_OAUTH_TOKEN
-        // is the auth used by the claude CLI itself.
+        // GitHub webhook ingest (pr-review / pr-summary). GitHub API, clone,
+        // push, and comment operations mint short-lived installation tokens
+        // from the app credentials above. CLAUDE_CODE_OAUTH_TOKEN is the auth
+        // used by the claude CLI itself.
         GITHUB_WEBHOOK_SECRET: EnvValue.fromSecretValue({
           secret,
           key: "GITHUB_WEBHOOK_SECRET",
-        }),
-        GITHUB_PERSONAL_ACCESS_TOKEN: EnvValue.fromSecretValue({
-          secret,
-          key: "GITHUB_PERSONAL_ACCESS_TOKEN",
         }),
         // Anthropic: OAuth → legacy `claude -p`, API key → SDK pr-summary.
         // Sole auth for both legacy `claude -p` and the new SDK-based bot.
