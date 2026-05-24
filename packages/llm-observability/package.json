@@ -68,6 +68,6 @@
     "@types/bun": "^1.2.0",
     "msw": "^2.6.0",
     "openai": "^6.34.0",
-    "typescript": "^5.7.0"
+    "typescript": "^6.0.0"
   }
 }
