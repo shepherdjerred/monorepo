@@ -70,6 +70,20 @@ describe("retry config", () => {
 });
 
 describe("version commit-back", () => {
+  function requireHelperSource(releaseSource: string, helperName: string) {
+    const start = releaseSource.indexOf(`export function ${helperName}(`);
+    if (start === -1) {
+      throw new Error(`Missing helper ${helperName}`);
+    }
+
+    const nextHelper = releaseSource.indexOf("\n/**", start + 1);
+    if (nextHelper === -1) {
+      return releaseSource.slice(start);
+    }
+
+    return releaseSource.slice(start, nextHelper);
+  }
+
   it("uses a stable pending branch", () => {
     const releaseSource = readFileSync(`${daggerSrc}/release.ts`, "utf-8");
     expect(releaseSource).toContain(
@@ -82,6 +96,36 @@ describe("version commit-back", () => {
     const releaseSource = readFileSync(`${daggerSrc}/release.ts`, "utf-8");
     expect(releaseSource).not.toContain("gh pr close");
     expect(releaseSource).not.toContain("Superseded by");
+  });
+
+  it("uses GitHub App write auth and fail-fast PR commands", () => {
+    const releaseSource = readFileSync(`${daggerSrc}/release.ts`, "utf-8");
+    const helpers = [
+      "versionCommitBackHelper",
+      "ciBaseVersionCommitBackHelper",
+      "cooklangVersionCommitBackHelper",
+    ];
+
+    expect(releaseSource).toContain(
+      "const MONOREPO_WRITE_URL = `https://git@github.com/${MONOREPO_REPO}.git`",
+    );
+    expect(releaseSource).toContain(
+      String.raw`printf '#!/bin/sh\\nprintf "%s\\\\n" "$GH_TOKEN"\\n'`,
+    );
+    expect(releaseSource).not.toContain(["x-access", "-token"].join(""));
+
+    for (const helper of helpers) {
+      const helperSource = requireHelperSource(releaseSource, helper);
+
+      expect(helperSource).toContain("`set -eu`");
+      expect(helperSource).toContain("`export GIT_TERMINAL_PROMPT=0`");
+      expect(helperSource).toContain("`git clone ${MONOREPO_WRITE_URL} /repo`");
+      expect(helperSource).toContain("gh pr list --repo ${MONOREPO_REPO}");
+      expect(helperSource).toContain("gh pr create --repo ${MONOREPO_REPO}");
+      expect(helperSource).toContain("gh pr view --repo ${MONOREPO_REPO}");
+      expect(helperSource).toContain("gh pr merge --repo ${MONOREPO_REPO}");
+      expect(helperSource).toContain(`test -n "$PR_NUMBER"`);
+    }
   });
 });
 
