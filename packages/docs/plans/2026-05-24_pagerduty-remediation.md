@@ -70,3 +70,15 @@ Partially Complete
 - `bun test src/activities/data-dragon-lane-priors.test.ts`
 - `bun run typecheck` in `packages/temporal`
 - Targeted `bunx eslint` on the changed Homelab and Temporal files.
+
+## Conclusion
+
+The remediation reduced live Prometheus PVC usage by deleting the approved
+`zfspv-pool-nvme/pvc-08c23bab-9a81-4206-b98a-6eac907eacb3@monthly-backup-20260401050007`
+snapshot, added desired-state backup exclusions to prevent recurring snapshot
+pressure, fixed the `HomeAssistantEntitiesUnavailable` annotation regex, and
+made Data Dragon lane-prior subprocesses receive an explicit S3 region. The
+code changes are pending normal PR merge and ArgoCD/GitOps deployment. After
+merge, monitor Data Dragon lane-prior runs, confirm the `PVCStorageHigh` alert
+stays clear, and resolve PagerDuty incident `Q3N6SLKHZ22Y69` manually if it
+does not auto-resolve.
