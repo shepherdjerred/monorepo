@@ -156,3 +156,7 @@ Fix implemented:
 
 - Checkpoint reuse is intentionally strict: prompt, transaction IDs/order, model, batch size, or web-search setting changes cause reclassification and therefore re-spend.
 - The `mise` verification commands emitted a sandbox warning about tracking config symlink creation, but the commands completed successfully after trusting the worktree.
+
+### Written Summary
+
+This session completed Tier 2 checkpoint recovery for paid Monarch classification previews, including strict checkpoint keys, atomic checkpoint persistence, resume logging, usage accounting, and focused tests. Follow-up PR review fixes tightened concurrent checkpoint writes, request/session timeouts, CLI path normalization, and cache-write failure behavior. Remaining work is limited to a small paid API preview to validate checkpoint creation against live Tier 2 classification; Tier 3 checkpointing remains intentionally deferred.

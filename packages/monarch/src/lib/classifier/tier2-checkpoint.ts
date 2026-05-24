@@ -72,6 +72,11 @@ export type Tier2CheckpointStore = {
   size: () => number;
 };
 
+type WriteLock = {
+  promise: Promise<void>;
+  release: () => void;
+};
+
 function hashString(value: string): string {
   return createHash("sha256").update(value).digest("hex");
 }
@@ -116,6 +121,17 @@ async function writeCheckpoint(
   await rename(tempPath, filePath);
 }
 
+function createWriteLock(): WriteLock {
+  let release: (() => void) | undefined;
+  const promise = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  if (release === undefined) {
+    throw new Error("Failed to create Tier 2 checkpoint write lock");
+  }
+  return { promise, release };
+}
+
 export async function loadTier2Checkpoint(
   filePath: string,
 ): Promise<Tier2CheckpointStore> {
@@ -127,21 +143,32 @@ export async function loadTier2Checkpoint(
     checkpoint = Tier2CheckpointFileSchema.parse(raw);
   }
 
+  let writeQueue: Promise<void> = Promise.resolve();
+
   return {
     path: filePath,
     get(key: string): Tier2CheckpointBatch | undefined {
       return checkpoint.batches[key];
     },
     async set(key: string, entry: Tier2CheckpointBatch): Promise<void> {
-      checkpoint = {
-        ...checkpoint,
-        updatedAt: new Date().toISOString(),
-        batches: {
-          ...checkpoint.batches,
-          [key]: entry,
-        },
-      };
-      await writeCheckpoint(filePath, checkpoint);
+      const previousWrite = writeQueue;
+      const currentWrite = createWriteLock();
+      writeQueue = currentWrite.promise;
+
+      await previousWrite;
+      try {
+        checkpoint = {
+          ...checkpoint,
+          updatedAt: new Date().toISOString(),
+          batches: {
+            ...checkpoint.batches,
+            [key]: entry,
+          },
+        };
+        await writeCheckpoint(filePath, checkpoint);
+      } finally {
+        currentWrite.release();
+      }
     },
     size(): number {
       return Object.keys(checkpoint.batches).length;

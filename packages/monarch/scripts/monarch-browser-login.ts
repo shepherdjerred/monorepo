@@ -2,6 +2,8 @@ import { chromium, type Browser } from "playwright";
 import { saveMonarchSession } from "../src/lib/monarch/session.ts";
 
 const APP_URL = "https://app.monarch.com/login";
+const GRAPHQL_HOSTNAME = "api.monarch.com";
+const SESSION_WAIT_TIMEOUT_MS = 10 * 60 * 1000;
 
 type CapturedHeaders = {
   origin?: string;
@@ -32,7 +34,7 @@ const savedSession = new Promise<void>((resolve, reject) => {
 page.on("request", async (request) => {
   if (saved || saving) return;
   if (request.method() !== "POST") return;
-  if (request.url() !== "https://api.monarch.com/graphql") return;
+  if (!isGraphQlRequestUrl(request.url())) return;
 
   saving = true;
   const headers = request.headers();
@@ -72,9 +74,48 @@ page.on("request", async (request) => {
 
 await page.goto(APP_URL);
 try {
-  await savedSession;
+  await withTimeout(
+    savedSession,
+    SESSION_WAIT_TIMEOUT_MS,
+    `Timed out waiting for a Monarch GraphQL session after ${String(SESSION_WAIT_TIMEOUT_MS)}ms`,
+  );
 } finally {
   await browser.close();
+}
+
+function isGraphQlRequestUrl(rawUrl: string): boolean {
+  try {
+    const url = new URL(rawUrl);
+    return (
+      url.hostname === GRAPHQL_HOSTNAME &&
+      (url.pathname === "/graphql" || url.pathname === "/graphql/")
+    );
+  } catch {
+    return false;
+  }
+}
+
+function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  timeoutMessage: string,
+): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error(timeoutMessage));
+    }, timeoutMs);
+
+    void promise.then(
+      (value) => {
+        clearTimeout(timeout);
+        resolve(value);
+      },
+      (error: unknown) => {
+        clearTimeout(timeout);
+        reject(error instanceof Error ? error : new Error(String(error)));
+      },
+    );
+  });
 }
 
 function pickHeaders(headers: Record<string, string>): CapturedHeaders {

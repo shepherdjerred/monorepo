@@ -5,6 +5,7 @@ import {
   autoDetectAppleMailDir,
   deriveCheckpointPath,
   resolveAppleMailDir,
+  resolveCheckpointFile,
 } from "./config.ts";
 
 describe("autoDetectAppleMailDir", () => {
@@ -106,6 +107,20 @@ describe("deriveCheckpointPath", () => {
   test("appends checkpoint suffix for non-json output paths", () => {
     expect(deriveCheckpointPath("/tmp/monarch-output")).toBe(
       "/tmp/monarch-output.checkpoint.json",
+    );
+  });
+});
+
+describe("resolveCheckpointFile", () => {
+  test("prefers an explicit checkpoint path", () => {
+    expect(
+      resolveCheckpointFile("/tmp/custom.checkpoint.json", "/tmp/output.json"),
+    ).toBe("/tmp/custom.checkpoint.json");
+  });
+
+  test("treats an empty checkpoint path as unset", () => {
+    expect(resolveCheckpointFile("", "/tmp/output.json")).toBe(
+      "/tmp/output.checkpoint.json",
     );
   });
 });

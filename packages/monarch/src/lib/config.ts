@@ -109,8 +109,10 @@ export function getConfig(): Config {
     skipCostco: values["skip-costco"],
     skipResearch: values["skip-research"],
     output: values.output,
-    checkpointFile:
-      values["checkpoint-file"] ?? deriveCheckpointPath(values.output),
+    checkpointFile: resolveCheckpointFile(
+      values["checkpoint-file"],
+      values.output,
+    ),
     rebuildKb: values["rebuild-kb"],
     skipEnrich: values["skip-enrich"],
     suggest: values.suggest,
@@ -125,6 +127,16 @@ export function deriveCheckpointPath(
     return `${outputPath.slice(0, -".json".length)}.checkpoint.json`;
   }
   return `${outputPath}.checkpoint.json`;
+}
+
+export function resolveCheckpointFile(
+  checkpointFile: string | undefined,
+  outputPath: string | undefined,
+): string | undefined {
+  if (checkpointFile !== undefined && checkpointFile !== "") {
+    return checkpointFile;
+  }
+  return deriveCheckpointPath(outputPath);
 }
 
 export function autoDetectAppleMailDir(

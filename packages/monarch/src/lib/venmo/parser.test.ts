@@ -99,4 +99,16 @@ Phones,1234567890
     expect(transactions).toHaveLength(1);
     expect(transactions[0]?.note).toBe("Dinner, drinks, and tip");
   });
+
+  test("returns parsed transactions when cache write fails", async () => {
+    const tmpPath = await writeTempCSV("test-venmo8.csv", SAMPLE_CSV);
+    const unwritableCacheFile = path.join(tempDir, "missing-dir", "venmo.json");
+
+    const transactions = await parseVenmoCSV(tmpPath, {
+      cacheFile: unwritableCacheFile,
+    });
+
+    expect(transactions).toHaveLength(2);
+    expect(transactions[0]?.id).toBe("4276717296868096443");
+  });
 });

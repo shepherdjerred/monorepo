@@ -102,6 +102,11 @@ export async function parseVenmoCSV(
 
   log.info(`Parsed ${String(transactions.length)} Venmo payment transactions`);
 
-  await Bun.write(cacheFile, JSON.stringify(transactions, undefined, 2));
+  try {
+    await Bun.write(cacheFile, JSON.stringify(transactions, undefined, 2));
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    log.warn(`Failed to write Venmo cache (${cacheFile}): ${message}`);
+  }
   return transactions;
 }

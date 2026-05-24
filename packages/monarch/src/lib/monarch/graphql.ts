@@ -8,6 +8,7 @@ import {
 const GQL_ENDPOINT = "https://api.monarch.com/graphql";
 const APP_ORIGIN = "https://app.monarch.com";
 const DEFAULT_CLIENT_VERSION = "2025.05";
+const DEFAULT_GQL_TIMEOUT_MS = 30_000;
 
 const GraphQlErrorSchema = z.looseObject({
   message: z.string().optional(),
@@ -24,6 +25,10 @@ function formatGraphQlErrors(errors: z.infer<typeof GraphQlErrorSchema>[]) {
   return errors
     .map((error) => error.message ?? JSON.stringify(error))
     .join("; ");
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof Error && error.name === "AbortError";
 }
 
 export async function gqlRequest<T extends z.ZodType>(
@@ -61,11 +66,31 @@ export async function gqlRequest<T extends z.ZodType>(
     headers["User-Agent"] = userAgent;
   }
 
-  const response = await fetch(GQL_ENDPOINT, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ operationName, query, variables }),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => {
+    controller.abort();
+  }, DEFAULT_GQL_TIMEOUT_MS);
+
+  let response: Response;
+  try {
+    response = await fetch(GQL_ENDPOINT, {
+      method: "POST",
+      signal: controller.signal,
+      headers,
+      body: JSON.stringify({ operationName, query, variables }),
+    });
+  } catch (error: unknown) {
+    if (isAbortError(error)) {
+      throw new Error(
+        `Monarch GraphQL ${operationName} timed out after ${String(DEFAULT_GQL_TIMEOUT_MS)}ms`,
+        { cause: error },
+      );
+    }
+    if (error instanceof Error) throw error;
+    throw new Error(String(error), { cause: error });
+  } finally {
+    clearTimeout(timeout);
+  }
 
   const text = await response.text();
   if (!response.ok) {
