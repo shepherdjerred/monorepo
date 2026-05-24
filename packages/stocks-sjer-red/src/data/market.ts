@@ -147,12 +147,10 @@ async function load(): Promise<Quote[]> {
     const cached = await readCache();
     if (cached) return cached;
   }
+
+  let fresh: Quote[];
   try {
-    const fresh = await Promise.all(
-      SYMBOLS.map((s) => fetchOne(s.symbol, s.name)),
-    );
-    await writeCache(fresh);
-    return fresh;
+    fresh = await Promise.all(SYMBOLS.map((s) => fetchOne(s.symbol, s.name)));
   } catch (err) {
     const stale = await readCache();
     if (stale) {
@@ -162,6 +160,24 @@ async function load(): Promise<Quote[]> {
       );
       return stale;
     }
-    throw err;
+    // No cache and no network: degrade gracefully so the build still ships.
+    // A cold CI runner with Yahoo unreachable shouldn't kill the whole site.
+    console.warn(
+      "[market] fetch failed and no cache available; rendering empty ticker tape:",
+      err instanceof Error ? err.message : String(err),
+    );
+    return [];
   }
+
+  // writeCache is best-effort: a failed write (full disk, read-only .cache,
+  // permission error on CI) must not discard the valid quotes we just fetched.
+  try {
+    await writeCache(fresh);
+  } catch (err) {
+    console.warn(
+      "[market] cache write failed:",
+      err instanceof Error ? err.message : String(err),
+    );
+  }
+  return fresh;
 }
