@@ -12,11 +12,17 @@ export class ClusterTunnel extends CompatApiObject {
     kind: "ClusterTunnel",
   };
 
-  public static manifest(props: ClusterTunnelProps = {}): Record<string, unknown> {
+  public static manifest(
+    props: ClusterTunnelProps = {},
+  ): Record<string, unknown> {
     return manifestFor(ClusterTunnel.GVK, props);
   }
 
-  public constructor(scope: Construct, id: string, props: ClusterTunnelProps = {}) {
+  public constructor(
+    scope: Construct,
+    id: string,
+    props: ClusterTunnelProps = {},
+  ) {
     super(scope, id, ClusterTunnel.GVK, props);
   }
 }

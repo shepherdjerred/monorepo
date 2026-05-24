@@ -1,6 +1,10 @@
 // Generated-compatible minimal bindings for the Prometheus Operator resources
 // used by this package.
-import { ApiObject, type ApiObjectMetadata, type GroupVersionKind } from "cdk8s";
+import {
+  ApiObject,
+  type ApiObjectMetadata,
+  type GroupVersionKind,
+} from "cdk8s";
 import type { Construct } from "constructs";
 
 type JsonObject = Record<string, unknown>;
