@@ -1,6 +1,5 @@
 import { Chart, JsonPatch } from "cdk8s";
 import { Construct } from "constructs";
-import { createHash } from "node:crypto";
 import {
   ConfigMap,
   Deployment,
@@ -33,9 +32,9 @@ export type StaticSiteProbeConfig = {
  * before proxying — e.g. publicly exposing `/api/healthz` while the backend
  * only serves `/healthz`.
  *
- * Ordering note: `generateCaddyfile` sorts entries with `rewriteTo` first so
- * more-specific paths (typically health endpoints) emit before broader
- * prefixes that would otherwise shadow them in `handle` matching order.
+ * Ordering: `generateCaddyfile` sorts entries by `path` length descending so
+ * longer/narrower paths (e.g. `/api/healthz`) emit before broader prefixes
+ * (e.g. `/api/*`) that would otherwise shadow them in `handle` matching order.
  */
 export type StaticSiteReverseProxy = {
   path: string;
@@ -101,14 +100,12 @@ export function generateCaddyfile(props: CaddyfileGeneratorProps): string {
       : `http://${site.hostname}`;
 
     // `handle` blocks evaluate in registration order, not by specificity.
-    // Entries with `rewriteTo` are typically narrow paths (e.g.
-    // `/api/healthz`) that must emit before a broader prefix (e.g. `/api/*`)
-    // that would otherwise shadow them.
-    const proxies = (site.reverseProxies ?? []).toSorted((a, b) => {
-      const aSpecific = a.rewriteTo === undefined ? 1 : 0;
-      const bSpecific = b.rewriteTo === undefined ? 1 : 0;
-      return aSpecific - bSpecific;
-    });
+    // Sort by literal path length descending so longer/narrower paths
+    // (e.g. `/api/healthz`, 12 chars) emit before broader prefixes
+    // (e.g. `/api/*`, 6 chars) that would otherwise shadow them.
+    const proxies = (site.reverseProxies ?? []).toSorted(
+      (a, b) => b.path.length - a.path.length,
+    );
     const proxyBlocks = proxies
       .map((proxy) => {
         const rewriteLine =
@@ -143,10 +140,27 @@ ${renderS3Proxy(spa.fallbackPath)}
       )
       .join("\n\n");
 
+    // Caddy's `redir` directive has a lower ordinal than `handle`, so without
+    // an exclusion the trailing-slash redirect would 301 paths like
+    // `/api/healthz` to `/api/healthz/` BEFORE any `handle` block fires —
+    // shadowing the proxy rewrite and breaking blackbox probes. Exclude every
+    // path owned by a `handle` block from the redirect matcher.
+    const exclusionPaths = [
+      ...proxies.map((p) => p.path),
+      ...(site.spaFallbacks ?? []).map((s) => s.pathPrefix),
+    ];
+    const noTrailingSlashMatcher =
+      exclusionPaths.length === 0
+        ? `\t@noTrailingSlash path_regexp ^/[^.]*[^/]$`
+        : `\t@noTrailingSlash {
+\t\tpath_regexp ^/[^.]*[^/]$
+\t\tnot path ${exclusionPaths.join(" ")}
+\t}`;
+
     blocks.push(`${address} {
 	# Redirect directory-style paths to include trailing slash
 	# Matches paths like /foo/bar but not /foo/bar/ or /foo/bar.html
-	@noTrailingSlash path_regexp ^/[^.]*[^/]$
+${noTrailingSlashMatcher}
 	redir @noTrailingSlash {uri}/ 301
 ${proxyBlocks ? `\n${proxyBlocks}\n` : ""}${spaBlocks ? `\n${spaBlocks}\n` : ""}
 	handle {
@@ -212,7 +226,7 @@ export class S3StaticSites extends Construct {
     // propagates ConfigMap volume updates, but Caddy won't re-read its
     // Caddyfile without a SIGUSR1 or pod restart, and the cluster doesn't
     // run a config-reloader controller.
-    const caddyfileHash = createHash("sha256")
+    const caddyfileHash = new Bun.CryptoHasher("sha256")
       .update(caddyfile)
       .digest("hex")
       .slice(0, 12);

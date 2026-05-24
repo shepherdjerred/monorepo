@@ -47,7 +47,7 @@ image-build pipeline entry was never added.
 
 - Identified the two failing pods in `scout-beta` / `scout-prod`.
 - Confirmed `ghcr.io/shepherdjerred/scout-app` doesn't exist on ghcr.io (404 via gh api; `NAME_UNKNOWN` anonymously).
-- Traced the `0.0.1-dev` placeholder to [versions.ts:120,122](packages/homelab/src/cdk8s/src/versions.ts:120) and confirmed no CI step in [catalog.ts](scripts/ci/src/catalog.ts) builds/pushes `scout-app`.
+- Traced the `0.0.1-dev` placeholder to [versions.ts:120,122](../../homelab/src/cdk8s/src/versions.ts) and confirmed no CI step in [catalog.ts](../../../scripts/ci/src/catalog.ts) builds/pushes `scout-app`.
 - Identified `8747bf4d3` as the commit that introduced the deployment without wiring up the build.
 
 ### Remaining

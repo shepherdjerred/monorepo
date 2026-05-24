@@ -18,7 +18,6 @@
  */
 
 import { $ } from "bun";
-import { cpSync, existsSync, rmSync, statSync } from "node:fs";
 
 await $`bun run --filter='./packages/frontend' build`;
 await $`bun run --filter='./packages/app' build`;
@@ -28,31 +27,31 @@ const frontendDist = "packages/frontend/dist";
 const target = `${frontendDist}/app`;
 
 const appIndex = `${appDist}/index.html`;
-if (!existsSync(appIndex)) {
+const appIndexFile = Bun.file(appIndex);
+if (!(await appIndexFile.exists())) {
   throw new Error(
     `SPA build did not produce ${appIndex} — refusing to copy or sync`,
   );
 }
-const appIndexSize = statSync(appIndex).size;
-if (appIndexSize < 100) {
+if (appIndexFile.size < 100) {
   throw new Error(
-    `SPA index.html is suspiciously small (${String(appIndexSize)} bytes) — refusing to ship`,
+    `SPA index.html is suspiciously small (${String(appIndexFile.size)} bytes) — refusing to ship`,
   );
 }
 
 const frontendIndex = `${frontendDist}/index.html`;
-if (!existsSync(frontendIndex)) {
+if (!(await Bun.file(frontendIndex).exists())) {
   throw new Error(
     `Astro build did not produce ${frontendIndex} — refusing to copy or sync`,
   );
 }
 
-rmSync(target, { recursive: true, force: true });
-cpSync(appDist, target, { recursive: true });
+await $`rm -rf ${target}`;
+await $`cp -R ${appDist} ${target}`;
 
 const copiedIndex = `${target}/index.html`;
-if (!existsSync(copiedIndex)) {
-  throw new Error(`copy failed: ${copiedIndex} missing after cpSync`);
+if (!(await Bun.file(copiedIndex).exists())) {
+  throw new Error(`copy failed: ${copiedIndex} missing after copy`);
 }
 
 console.log(
