@@ -49,7 +49,7 @@ export const PYTHON_IMAGE =
 // Base image for obsidian-headless container (uses Node, not Bun, due to native better-sqlite3 addon).
 // renovate: datasource=docker depName=node
 export const OBSIDIAN_HEADLESS_BASE_IMAGE =
-  "node:24-slim@sha256:24dc26ef1e3c3690f27ebc4136c9c186c3133b25563ae4d7f0692e4d1fe5db0e";
+  "node:24-slim@sha256:242549cd46785b480c832479a730f4f2a20865d61ea2e404fdb2a5c3d3b73ecf";
 // renovate: datasource=docker depName=alpine/helm
 export const HELM_IMAGE =
   "alpine/helm:4.1.4@sha256:8edcaedab4d9864886b7f443d55731be87d4b5ec7dca714c24551455707a8aac";
