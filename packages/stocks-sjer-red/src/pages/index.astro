@@ -1,0 +1,210 @@
+---
+import Layout from "@layouts/Layout.astro";
+import StockChart from "@components/StockChart.astro";
+import Sparkline from "@components/Sparkline.astro";
+import {
+  portfolio,
+  portfolioCurrentTotal,
+  portfolioCostBasis,
+  portfolioHistory,
+  currentPrice,
+  avgPurchasePrice,
+  quantity,
+  lineTotal,
+  pctChange,
+  formatUsd,
+  formatUsdCents,
+  formatPct,
+} from "@data/load";
+
+const portfolioCurrent = portfolioCurrentTotal();
+const portfolioStart = portfolioCostBasis();
+const portfolioPct = pctChange(portfolioStart, portfolioCurrent);
+const portfolioGain = portfolioCurrent - portfolioStart;
+const portfolioIsUp = portfolioPct >= 0;
+
+const history = portfolioHistory();
+const chartHistory = history.map((p) => ({ date: p.date, price: p.value }));
+
+const rows = portfolio.components
+  .map((c) => {
+    const cur = currentPrice(c);
+    const start = avgPurchasePrice(c);
+    const pct = pctChange(start, cur);
+    const total = lineTotal(c);
+    return { c, cur, start, qty: quantity(c), pct, total };
+  })
+  .sort((a, b) => b.total - a.total);
+---
+
+<Layout title="Homelab - sjer.red">
+  <section
+    class="border border-[var(--color-line)] bg-[var(--color-panel)] p-6 mb-6"
+  >
+    <div class="flex flex-wrap items-baseline justify-between gap-3 mb-2">
+      <div>
+        <div
+          class="text-[var(--color-muted)] text-xs uppercase tracking-widest mb-1 flex items-baseline gap-2 flex-wrap"
+        >
+          <span>{portfolio.buildName}</span>
+          {
+            portfolio.buildUrl && (
+              <a
+                href={portfolio.buildUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-[var(--color-muted)] hover:text-[var(--color-amber)] normal-case"
+              >
+                · view build on PCPartPicker →
+              </a>
+            )
+          }
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-bold tabular-nums">
+          {formatUsd(portfolioCurrent)}
+        </h1>
+      </div>
+      <div
+        class="text-right"
+        style={`color: ${portfolioIsUp ? "var(--color-up)" : "var(--color-down)"}`}
+      >
+        <div class="text-2xl font-semibold tabular-nums">
+          <span>{portfolioIsUp ? "+" : ""}{formatUsd(portfolioGain)}</span>
+          <span>({formatPct(portfolioPct)})</span>
+        </div>
+        <div class="text-[var(--color-muted)] text-xs uppercase tracking-wider">
+          Since {chartHistory[0]?.date ?? "—"}
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6">
+      <StockChart
+        history={chartHistory}
+        width={1100}
+        height={300}
+        ariaLabel="Portfolio total value over time"
+      />
+    </div>
+
+    <div
+      class="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-2 mt-6 pt-4 border-t border-[var(--color-line)] text-sm tabular-nums"
+    >
+      <div>
+        <div
+          class="text-[var(--color-muted)] text-xs uppercase tracking-wider"
+          title="Sum of what you paid for each unit at the time of purchase."
+        >
+          Cost basis
+        </div>
+        <div>{formatUsd(portfolioStart)}</div>
+      </div>
+      <div>
+        <div
+          class="text-[var(--color-muted)] text-xs uppercase tracking-wider"
+          title="Current market value of everything you own."
+        >
+          Mark
+        </div>
+        <div>{formatUsd(portfolioCurrent)}</div>
+      </div>
+      <div>
+        <div class="text-[var(--color-muted)] text-xs uppercase tracking-wider">
+          P&amp;L
+        </div>
+        <div
+          style={`color: ${portfolioIsUp ? "var(--color-up)" : "var(--color-down)"}`}
+        >
+          {portfolioIsUp ? "+" : ""}{formatUsd(portfolioGain)}
+        </div>
+      </div>
+      <div>
+        <div class="text-[var(--color-muted)] text-xs uppercase tracking-wider">
+          Positions
+        </div>
+        <div>{portfolio.components.length}</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="border border-[var(--color-line)] bg-[var(--color-panel)]">
+    <table class="w-full text-sm tabular-nums">
+      <thead>
+        <tr
+          class="text-[var(--color-muted)] text-xs uppercase tracking-wider border-b border-[var(--color-line)]"
+        >
+          <th class="text-left px-4 py-3 font-normal" colspan="2">Position</th>
+          <th class="text-right px-4 py-3 font-normal">Qty</th>
+          <th class="text-right px-4 py-3 font-normal hidden sm:table-cell">
+            Unit
+          </th>
+          <th class="text-right px-4 py-3 font-normal">Line</th>
+          <th
+            class="text-right px-4 py-3 font-normal"
+            title="Change since weighted-average purchase price."
+          >
+            Chg %
+          </th>
+          <th class="text-right px-4 py-3 font-normal hidden lg:table-cell"
+            >Trend</th
+          >
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map(({ c, cur, qty, pct, total }) => {
+            const isUp = pct >= 0;
+            const color = isUp ? "var(--color-up)" : "var(--color-down)";
+            return (
+              <tr class="border-b border-[var(--color-line)] last:border-0 hover:bg-black/40 transition-colors">
+                <td class="pl-4 py-3 w-12">
+                  <a href={`/${c.slug}/`} class="block">
+                    {c.imageUrl ? (
+                      <img
+                        src={c.imageUrl}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        class="row-thumb"
+                      />
+                    ) : (
+                      <div class="row-thumb row-thumb-placeholder">
+                        {c.category}
+                      </div>
+                    )}
+                  </a>
+                </td>
+                <td class="px-4 py-3">
+                  <a href={`/${c.slug}/`} class="block">
+                    <div class="font-medium">{c.name}</div>
+                    <div class="text-[var(--color-muted)] text-xs">
+                      {c.manufacturer} · {c.partNumber}
+                    </div>
+                  </a>
+                </td>
+                <td class="px-4 py-3 text-right">{qty}</td>
+                <td class="px-4 py-3 text-right hidden sm:table-cell">
+                  {formatUsdCents(cur)}
+                </td>
+                <td class="px-4 py-3 text-right font-semibold">
+                  {formatUsd(total)}
+                </td>
+                <td class="px-4 py-3 text-right" style={`color: ${color}`}>
+                  {formatPct(pct)}
+                </td>
+                <td class="px-4 py-3 hidden lg:table-cell">
+                  <a href={`/${c.slug}/`}>
+                    <Sparkline
+                      history={c.history}
+                      ariaLabel={`${c.name} trend sparkline`}
+                    />
+                  </a>
+                </td>
+              </tr>
+            );
+          })
+        }
+      </tbody>
+    </table>
+  </section>
+</Layout>
