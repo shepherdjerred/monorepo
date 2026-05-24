@@ -23,13 +23,30 @@ const stamp = now.toLocaleString("en-US", {
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" style="background:#0a0a0a;color:#d4d4d4">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0a0a0a" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
+    <style is:inline>
+      :root {
+        color-scheme: dark;
+      }
+      html,
+      body {
+        background: #0a0a0a;
+        color: #d4d4d4;
+        margin: 0;
+        font-family:
+          "IBM Plex Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+      }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap"

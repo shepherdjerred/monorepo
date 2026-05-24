@@ -143,6 +143,14 @@ export const DEPLOY_SITES: DeploySite[] = [
     distDir: "packages/cooklang-rich-preview/dist",
   },
   {
+    bucket: "stocks-sjer-red",
+    name: "stocks-sjer-red",
+    url: "https://stocks.sjer.red",
+    buildDir: "packages/stocks-sjer-red",
+    buildCmd: "bun run astro build",
+    distDir: "packages/stocks-sjer-red/dist",
+  },
+  {
     bucket: "scout-frontend",
     name: "scout-for-lol frontend",
     url: "https://scout-for-lol.com",
@@ -256,6 +264,7 @@ export const PACKAGE_TO_SITE: Record<string, string> = {
   webring: "webring",
   "cooklang-rich-preview": "cook",
   "scout-for-lol": "scout-frontend",
+  "stocks-sjer-red": "stocks-sjer-red",
   "better-skill-capped": "better-skill-capped",
   // discord-plays-pokemon docs deployed via dedicated mkdocs step, not deploy-site
 };

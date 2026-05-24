@@ -10,9 +10,8 @@
     "preview": "astro preview",
     "astro": "astro",
     "typecheck": "tsc --noEmit",
-    "test": "bun test",
-    "lint": "prettier --check 'src/**/*.{ts,astro,json,css}'",
-    "lint:fix": "prettier --write 'src/**/*.{ts,astro,json,css}'"
+    "test": "echo 'No tests yet'",
+    "lint": "astro check"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.8",

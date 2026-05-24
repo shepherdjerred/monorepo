@@ -15,6 +15,7 @@ export const staticSites: StaticSiteConfig[] = [
   { hostname: "clauderon.com", bucket: "clauderon" },
   { hostname: "ts-mc.net", bucket: "ts-mc" },
   { hostname: "cook.sjer.red", bucket: "cook" },
+  { hostname: "stocks.sjer.red", bucket: "stocks-sjer-red" },
 ];
 
 export const S3_ENDPOINT = "https://seaweedfs.sjer.red";
