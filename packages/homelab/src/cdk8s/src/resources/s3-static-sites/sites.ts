@@ -10,7 +10,54 @@ export const staticSites: StaticSiteConfig[] = [
   { hostname: "webring.sjer.red", bucket: "webring" },
   { hostname: "resume.sjer.red", bucket: "resume" },
   { hostname: "discord-plays-pokemon.com", bucket: "dpp-docs" },
-  { hostname: "scout-for-lol.com", bucket: "scout-frontend" },
+  {
+    hostname: "scout-for-lol.com",
+    bucket: "scout-frontend",
+    reverseProxies: [
+      {
+        path: "/api/healthz",
+        upstream: "scout-service-prod.scout-prod.svc.cluster.local:3000",
+        rewriteTo: "/healthz",
+      },
+      {
+        path: "/trpc*",
+        upstream: "scout-service-prod.scout-prod.svc.cluster.local:3000",
+      },
+      {
+        path: "/api/*",
+        upstream: "scout-service-prod.scout-prod.svc.cluster.local:3000",
+      },
+    ],
+    probes: [
+      { endpoint: "app", path: "/app/", module: "http_2xx" },
+      { endpoint: "healthz", path: "/api/healthz", module: "http_2xx" },
+    ],
+    spaFallbacks: [{ pathPrefix: "/app/*", fallbackPath: "/app/index.html" }],
+  },
+  {
+    hostname: "scout-for-lol-beta.sjer.red",
+    bucket: "scout-frontend-beta",
+    reverseProxies: [
+      {
+        path: "/api/healthz",
+        upstream: "scout-service-beta.scout-beta.svc.cluster.local:3000",
+        rewriteTo: "/healthz",
+      },
+      {
+        path: "/trpc*",
+        upstream: "scout-service-beta.scout-beta.svc.cluster.local:3000",
+      },
+      {
+        path: "/api/*",
+        upstream: "scout-service-beta.scout-beta.svc.cluster.local:3000",
+      },
+    ],
+    probes: [
+      { endpoint: "app", path: "/app/", module: "http_2xx" },
+      { endpoint: "healthz", path: "/api/healthz", module: "http_2xx" },
+    ],
+    spaFallbacks: [{ pathPrefix: "/app/*", fallbackPath: "/app/index.html" }],
+  },
   { hostname: "better-skill-capped.com", bucket: "better-skill-capped" },
   { hostname: "clauderon.com", bucket: "clauderon" },
   { hostname: "ts-mc.net", bucket: "ts-mc" },
