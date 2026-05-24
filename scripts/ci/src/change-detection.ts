@@ -197,6 +197,7 @@ function errorMessage(e: unknown): string {
 type BuildkiteJob = {
   type?: string;
   name?: string;
+  command?: string;
   state?: string;
   step_key?: string;
   soft_failed?: boolean;
@@ -218,16 +219,19 @@ type BuildRejectionReason =
 
 const ACCEPTABLE_BUILD_STATES = new Set(["passed", "failed"]);
 const EXEMPT_FAILED_STEP_KEYS = new Set(["argocd-health"]);
+const EXEMPT_FAILED_JOB_STATES = new Set(["failed", "timed_out", "broken"]);
+const PIPELINE_UPLOAD_COMMAND = "buildkite-agent pipeline upload";
+const PIPELINE_GENERATE_COMMAND = ".buildkite/scripts/generate-pipeline.sh";
 
 function isScriptJob(job: BuildkiteJob): boolean {
   return job.type === "script";
 }
 
 function isAllowedFailedJob(job: BuildkiteJob): boolean {
-  if (job.state !== "failed") return false;
+  if (job.soft_failed === true) return true;
+  if (!EXEMPT_FAILED_JOB_STATES.has(job.state ?? "")) return false;
   return (
-    job.soft_failed === true ||
-    (job.step_key !== undefined && EXEMPT_FAILED_STEP_KEYS.has(job.step_key))
+    job.step_key !== undefined && EXEMPT_FAILED_STEP_KEYS.has(job.step_key)
   );
 }
 
@@ -237,8 +241,16 @@ function isCleanScriptJob(job: BuildkiteJob): boolean {
 
 function hasPipelineBootstrapJobs(scriptJobs: BuildkiteJob[]): boolean {
   return (
-    scriptJobs.some((job) => job.name === ":pipeline: Upload pipeline") &&
-    scriptJobs.some((job) => job.name === ":pipeline: Generate Pipeline")
+    scriptJobs.some(
+      (job) =>
+        job.command === PIPELINE_UPLOAD_COMMAND ||
+        job.name === ":pipeline: Upload pipeline",
+    ) &&
+    scriptJobs.some(
+      (job) =>
+        job.command === PIPELINE_GENERATE_COMMAND ||
+        job.name === ":pipeline: Generate Pipeline",
+    )
   );
 }
 
@@ -263,6 +275,9 @@ function parseBuildkiteJob(value: unknown): BuildkiteJob | null {
   }
   if ("name" in value && typeof value.name === "string") {
     job.name = value.name;
+  }
+  if ("command" in value && typeof value.command === "string") {
+    job.command = value.command;
   }
   if ("state" in value && typeof value.state === "string") {
     job.state = value.state;
