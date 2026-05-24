@@ -14,7 +14,7 @@ export const BUN_IMAGE =
   "oven/bun:1.3.14@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4";
 // renovate: datasource=docker depName=rust
 export const RUST_IMAGE =
-  "rust:1.95.0-bookworm@sha256:503651ea31e66ecb74623beabde781059a5978df1595a9e8ed03974d5fec1bf0";
+  "rust:1.95.0-bookworm@sha256:6258907abe69656e41cd992e0b705cdcfabcbbe3db374f92ed2d47121282d4a1";
 // renovate: datasource=docker depName=golang
 export const GO_IMAGE =
   "golang:1.26.3-bookworm@sha256:252599aeb51ad60b83e4d8821802068127c528c707cb7dd7afd93be057c6011c";
