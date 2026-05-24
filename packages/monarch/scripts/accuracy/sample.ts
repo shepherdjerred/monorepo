@@ -95,12 +95,7 @@ console.log(
 );
 
 // Fetch categories from Monarch API
-const monarchToken = Bun.env["MONARCH_TOKEN"];
-if (monarchToken === undefined || monarchToken === "") {
-  console.error("MONARCH_TOKEN environment variable is required");
-  process.exit(1);
-}
-initMonarch(monarchToken);
+await initMonarch();
 
 console.log("Fetching categories from Monarch...");
 const categories = await fetchCategories();

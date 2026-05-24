@@ -8,7 +8,8 @@
   },
   "scripts": {
     "build": "true",
-    "login": "bun run scripts/monarch-login.ts",
+    "login": "bun run scripts/monarch-browser-login.ts",
+    "login:password": "bun run scripts/monarch-login.ts",
     "login:browser": "bun run scripts/monarch-browser-login.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
@@ -16,7 +17,6 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.1",
-    "monarch-money-api": "^0.0.7",
     "pdfjs-dist": "^5.6.205",
     "playwright": "^1.60.0",
     "zod": "^4.4.3"
@@ -29,8 +29,5 @@
     "typescript": "^6.0.3"
   },
   "author": "Jerred Shepherd",
-  "license": "GPL-3.0",
-  "patchedDependencies": {
-    "monarch-money-api@0.0.5": "patches/monarch-money-api@0.0.5.patch"
-  }
+  "license": "GPL-3.0"
 }

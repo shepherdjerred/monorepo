@@ -1,5 +1,6 @@
 export type UsageSummary = {
   calls: number;
+  cachedCalls: number;
   inputTokens: number;
   outputTokens: number;
   estimatedCost: number;
@@ -7,6 +8,7 @@ export type UsageSummary = {
 
 type UsageTracker = {
   record: (inputTokens: number, outputTokens: number) => void;
+  recordCached: (inputTokens: number, outputTokens: number) => void;
   getSummary: () => UsageSummary;
 };
 
@@ -20,6 +22,7 @@ const DEFAULT_PRICING = { input: 3 / 1_000_000, output: 15 / 1_000_000 };
 export function createUsageTracker(model: string): UsageTracker {
   const pricing = PRICING[model] ?? DEFAULT_PRICING;
   let calls = 0;
+  let cachedCalls = 0;
   let totalInput = 0;
   let totalOutput = 0;
 
@@ -29,9 +32,15 @@ export function createUsageTracker(model: string): UsageTracker {
       totalInput += inputTokens;
       totalOutput += outputTokens;
     },
+    recordCached(inputTokens: number, outputTokens: number): void {
+      cachedCalls++;
+      totalInput += inputTokens;
+      totalOutput += outputTokens;
+    },
     getSummary(): UsageSummary {
       return {
         calls,
+        cachedCalls,
         inputTokens: totalInput,
         outputTokens: totalOutput,
         estimatedCost:

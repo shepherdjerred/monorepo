@@ -1,4 +1,5 @@
 .env
+.monarch-session.json
 data/
 scripts/accuracy/dataset.json
 scripts/accuracy/tool-output.json

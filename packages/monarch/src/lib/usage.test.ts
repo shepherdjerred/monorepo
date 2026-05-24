@@ -6,6 +6,7 @@ describe("createUsageTracker", () => {
     const tracker = createUsageTracker("claude-sonnet-4-6");
     const summary = tracker.getSummary();
     expect(summary.calls).toBe(0);
+    expect(summary.cachedCalls).toBe(0);
     expect(summary.inputTokens).toBe(0);
     expect(summary.outputTokens).toBe(0);
     expect(summary.estimatedCost).toBe(0);
@@ -17,6 +18,18 @@ describe("createUsageTracker", () => {
     tracker.record(2000, 300);
     const summary = tracker.getSummary();
     expect(summary.calls).toBe(2);
+    expect(summary.cachedCalls).toBe(0);
+    expect(summary.inputTokens).toBe(3000);
+    expect(summary.outputTokens).toBe(800);
+  });
+
+  test("tracks recovered calls separately while preserving token totals", () => {
+    const tracker = createUsageTracker("claude-sonnet-4-6");
+    tracker.record(1000, 500);
+    tracker.recordCached(2000, 300);
+    const summary = tracker.getSummary();
+    expect(summary.calls).toBe(1);
+    expect(summary.cachedCalls).toBe(1);
     expect(summary.inputTokens).toBe(3000);
     expect(summary.outputTokens).toBe(800);
   });
