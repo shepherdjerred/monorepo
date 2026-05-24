@@ -6,7 +6,12 @@ export function seedProviderIssueMetrics(metrics: {
   errorsTotal: Counter<ProviderIssueLabel>;
   issueActive: Gauge<ProviderIssueLabel>;
 }): void {
-  for (const kind of ["quota", "rate_limit"] as const) {
+  for (const kind of [
+    "quota",
+    "rate_limit",
+    "budget_exceeded",
+    "context_limit",
+  ] as const) {
     const labels = {
       app: "scout-for-lol",
       provider: "openai",

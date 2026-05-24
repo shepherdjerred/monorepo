@@ -124,14 +124,12 @@ export const DEFAULT_TIMELINE_SUMMARY_MODEL: ModelConfig = {
 /**
  * Default model config for timeline chunk summary (Stage 1a - chunked)
  *
- * Uses gpt-5.4-mini for each 10-minute chunk. The raw timeline data can be
- * very large for action-packed games (50+ stats per player per frame,
- * detailed event data), so we set a higher maxTokens to ensure output
- * generation doesn't fail due to context limits.
+ * Uses gpt-5.4-mini for each 10-minute chunk. Chunk outputs are intentionally
+ * concise because the aggregate stage reads every chunk summary.
  */
 export const DEFAULT_TIMELINE_CHUNK_MODEL: ModelConfig = {
   model: "gpt-5.4-mini",
-  maxTokens: 32_000,
+  maxTokens: 2000,
   temperature: 0.3,
 };
 

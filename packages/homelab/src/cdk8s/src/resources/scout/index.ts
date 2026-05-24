@@ -149,6 +149,8 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         ? "https://scout-for-lol.com"
         : "https://scout-for-lol-beta.sjer.red",
     ),
+    OPENAI_HOURLY_TOKEN_BUDGET: EnvValue.fromValue("2000000"),
+    OPENAI_DAILY_TOKEN_BUDGET: EnvValue.fromValue("20000000"),
   };
 
   // Add AI secrets only for beta stage

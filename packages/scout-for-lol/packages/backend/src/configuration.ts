@@ -71,11 +71,11 @@ export default {
   geminiApiKey: getOptionalEnvVar("GEMINI_API_KEY"),
   openaiHourlyTokenBudget: env
     .get("OPENAI_HOURLY_TOKEN_BUDGET")
-    .default("1000000")
+    .default("2000000")
     .asIntPositive(),
   openaiDailyTokenBudget: env
     .get("OPENAI_DAILY_TOKEN_BUDGET")
-    .default("10000000")
+    .default("20000000")
     .asIntPositive(),
 };
 

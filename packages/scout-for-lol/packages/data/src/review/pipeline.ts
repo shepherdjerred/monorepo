@@ -6,8 +6,8 @@
  * with traces for observability.
  *
  * Pipeline stages:
- * 1a. Timeline Summary - Summarize raw timeline JSON to text (parallel with 1b)
- * 1b. Match Summary - Summarize raw match JSON to text (parallel with 1a)
+ * 1a. Timeline Summary - Summarize raw timeline JSON to text
+ * 1b. Match Summary - Summarize raw match JSON to text
  * 2.  Review Text - Generate review using personality (uses 1a + 1b text)
  * 3.  Image Description - Generate image prompt from review text
  * 4.  Image Generation - Generate image using Gemini
@@ -194,11 +194,12 @@ async function runMatchSummary(
   });
 }
 
-async function runStage1Parallel(ctx: Stage1Context): Promise<Stage1Result> {
-  const [timelineResult, matchResult] = await Promise.all([
-    runTimelineSummary(ctx),
-    runMatchSummary(ctx),
-  ]);
+async function runStage1Sequential(ctx: Stage1Context): Promise<Stage1Result> {
+  const timelineResult = await runTimelineSummary(ctx);
+  if (ctx.input.stages.matchSummary.enabled) {
+    ctx.reportProgress("match-summary");
+  }
+  const matchResult = await runMatchSummary(ctx);
 
   const result: Stage1Result = {};
 
@@ -352,7 +353,7 @@ export async function generateFullMatchReview(
   const totalStages = countEnabledStages(stages, hasGemini);
   const reportProgress = createProgressReporter(onProgress, totalStages);
 
-  // Stage 1: Parallel Summarization (using raw data)
+  // Stage 1: Summarization (using raw data)
   // Progress is now reported within the stage functions for chunked processing
   const stage1Ctx: Stage1Context = {
     input,
@@ -363,12 +364,7 @@ export async function generateFullMatchReview(
     reportProgress,
   };
 
-  // For match summary (runs in parallel with timeline), report progress if timeline is disabled
-  if (!stages.timelineSummary.enabled && stages.matchSummary.enabled) {
-    reportProgress("match-summary");
-  }
-
-  const stage1Result = await runStage1Parallel(stage1Ctx);
+  const stage1Result = await runStage1Sequential(stage1Ctx);
 
   // Stage 2: Review Text
   reportProgress("review-text");

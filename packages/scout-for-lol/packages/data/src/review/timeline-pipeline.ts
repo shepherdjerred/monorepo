@@ -1,7 +1,7 @@
 /**
  * Timeline summary processing for the review pipeline
  *
- * Handles chunked timeline processing with parallel execution and aggregation.
+ * Handles chunked timeline processing and aggregation.
  * Extracted from pipeline.ts to reduce file size.
  */
 
@@ -64,7 +64,7 @@ export type TimelineSummaryParams = {
  * Run timeline summary with chunked processing for large timelines
  *
  * For games with 1 or fewer chunks (short games), uses the original non-chunked approach.
- * For longer games, splits into 10-minute chunks, processes in parallel, and aggregates.
+ * For longer games, splits into 10-minute chunks, processes sequentially, and aggregates.
  */
 export async function runTimelineSummaryWithChunks(
   params: TimelineSummaryParams,
@@ -98,32 +98,24 @@ export async function runTimelineSummaryWithChunks(
     return { text: result.text, trace: result.trace };
   }
 
-  // Process chunks in parallel
+  // Process chunks sequentially so token-budget checks observe each completed call.
   const chunkTraces: TimelineChunkTrace[] = [];
   const chunkSummaries: string[] = [];
 
-  // Report progress for chunk processing (all chunks processed in parallel)
   reportProgress("timeline-chunk", {
     chunkTotal: chunks.length,
-    customMessage: `Processing ${chunks.length.toString()} timeline chunks in parallel...`,
+    customMessage: `Processing ${chunks.length.toString()} timeline chunks sequentially...`,
   });
 
-  const chunkResults = await Promise.all(
-    chunks.map(async (chunk) => {
-      const enrichedChunk = enrichTimelineChunk(chunk, rawMatch);
-      const result = await generateTimelineChunkSummary({
-        enrichedChunk,
-        client,
-        model: DEFAULT_TIMELINE_CHUNK_MODEL,
-        systemPrompt: TIMELINE_CHUNK_SYSTEM_PROMPT,
-        userPrompt: TIMELINE_CHUNK_USER_PROMPT,
-      });
-      return { chunk, result };
-    }),
-  );
-
-  // Collect results in order
-  for (const { chunk, result } of chunkResults) {
+  for (const chunk of chunks) {
+    const enrichedChunk = enrichTimelineChunk(chunk, rawMatch);
+    const result = await generateTimelineChunkSummary({
+      enrichedChunk,
+      client,
+      model: DEFAULT_TIMELINE_CHUNK_MODEL,
+      systemPrompt: TIMELINE_CHUNK_SYSTEM_PROMPT,
+      userPrompt: TIMELINE_CHUNK_USER_PROMPT,
+    });
     chunkTraces.push({
       chunkIndex: chunk.chunkIndex,
       timeRange: chunk.timeRange,
