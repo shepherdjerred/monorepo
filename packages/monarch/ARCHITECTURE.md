@@ -94,7 +94,7 @@ Three output modes:
 - **`--output <path>`**: Save changes as JSON
 - **`--apply`**: Apply via Monarch API with optional `--interactive` per-transaction approval
 
-Mutations use `monarch-money-api` with retry logic (3 attempts, exponential backoff) and 500ms throttle between API calls.
+Mutations use the local Monarch GraphQL client with cookie/CSRF session authentication, retry logic (3 attempts, exponential backoff), and a 500ms throttle between API calls.
 
 ## Module Map
 

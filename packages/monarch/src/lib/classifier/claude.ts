@@ -191,11 +191,22 @@ export async function callClaudeAndParse<T>(
   prompt: string,
   schema: z.ZodType<T>,
 ): Promise<T> {
+  const { result } = await callClaudeAndParseWithUsage(prompt, schema);
+  return result;
+}
+
+export async function callClaudeAndParseWithUsage<T>(
+  prompt: string,
+  schema: z.ZodType<T>,
+): Promise<{ result: T; usage: ClaudeResponse["usage"] }> {
   const maxRetries = 2;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const { text } = await callClaude(prompt);
-      return schema.parse(parseJsonResponse(text));
+      const response = await callClaude(prompt);
+      return {
+        result: schema.parse(parseJsonResponse(response.text)),
+        usage: response.usage,
+      };
     } catch (error: unknown) {
       if (isParseRetryable(error) && attempt < maxRetries) {
         const delay = jitteredDelay(2000 * 2 ** attempt);

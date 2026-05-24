@@ -182,6 +182,9 @@ function formatNumber(n: number): string {
 export function displayUsageSummary(summary: UsageSummary): void {
   console.log("\n=== API Usage ===\n");
   console.log(`  Claude API calls:    ${String(summary.calls)}`);
+  if (summary.cachedCalls > 0) {
+    console.log(`  Recovered calls:     ${String(summary.cachedCalls)}`);
+  }
   console.log(`  Input tokens:        ${formatNumber(summary.inputTokens)}`);
   console.log(`  Output tokens:       ${formatNumber(summary.outputTokens)}`);
   console.log(`  Estimated cost:      $${summary.estimatedCost.toFixed(4)}`);

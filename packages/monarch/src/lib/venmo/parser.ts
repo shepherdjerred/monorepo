@@ -59,8 +59,10 @@ function parseAmount(raw: string): number {
 
 export async function parseVenmoCSV(
   csvPath: string,
+  options: { cacheFile?: string | undefined } = {},
 ): Promise<VenmoTransaction[]> {
-  const cached = Bun.file(CACHE_FILE);
+  const cacheFile = options.cacheFile ?? CACHE_FILE;
+  const cached = Bun.file(cacheFile);
   if (await cached.exists()) {
     log.info("Using cached Venmo data");
     const data: unknown = await cached.json();
@@ -100,6 +102,6 @@ export async function parseVenmoCSV(
 
   log.info(`Parsed ${String(transactions.length)} Venmo payment transactions`);
 
-  await Bun.write(CACHE_FILE, JSON.stringify(transactions, undefined, 2));
+  await Bun.write(cacheFile, JSON.stringify(transactions, undefined, 2));
   return transactions;
 }
