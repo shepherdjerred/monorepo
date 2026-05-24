@@ -1,7 +1,7 @@
 import { type ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { prisma } from "#src/database/index.ts";
 import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
+import { listSubscriptions } from "#src/lib/subscription/list.ts";
 
 export async function executeSubscriptionList(
   interaction: ChatInputCommandInteraction,
@@ -17,20 +17,9 @@ export async function executeSubscriptionList(
   }
 
   const guildId = DiscordGuildIdSchema.parse(interaction.guildId);
-
-  // Defer reply immediately to avoid Discord's 3-second timeout
   await interaction.deferReply({ ephemeral: true });
 
-  const subscriptions = await prisma.subscription.findMany({
-    where: { serverId: guildId },
-    include: {
-      player: {
-        include: {
-          accounts: true,
-        },
-      },
-    },
-  });
+  const subscriptions = await listSubscriptions({ guildId });
 
   if (subscriptions.length === 0) {
     await interaction.editReply({
@@ -41,32 +30,29 @@ export async function executeSubscriptionList(
     return;
   }
 
-  // Group subscriptions by channel
-  const subscriptionsByChannel: Record<string, typeof subscriptions> =
-    subscriptions.reduce<Record<string, typeof subscriptions>>((acc, sub) => {
-      const channelId = sub.channelId;
-      acc[channelId] ??= [];
-      acc[channelId].push(sub);
-      return acc;
-    }, {});
+  const subscriptionsByChannel = subscriptions.reduce<
+    Record<string, typeof subscriptions>
+  >((acc, sub) => {
+    const bucket = acc[sub.channelId] ?? [];
+    bucket.push(sub);
+    acc[sub.channelId] = bucket;
+    return acc;
+  }, {});
 
   const embed = new EmbedBuilder()
     .setTitle("🔔 Server Subscriptions")
-    .setColor(0xeb_45_9e) // Pink color
+    .setColor(0xeb_45_9e)
     .setDescription(
       `Found **${subscriptions.length.toString()}** subscription${subscriptions.length === 1 ? "" : "s"} across **${Object.keys(subscriptionsByChannel).length.toString()}** channel${Object.keys(subscriptionsByChannel).length === 1 ? "" : "s"}`,
     );
 
-  // Add fields for each channel
   for (const [channelId, channelSubs] of Object.entries(
     subscriptionsByChannel,
   )) {
     const playerList = channelSubs
       .map((sub) => {
-        const player = sub.player;
-        const displayName = player.alias;
-        const accountCount = player.accounts.length;
-        return `• ${displayName} (${accountCount.toString()} account${accountCount === 1 ? "" : "s"})`;
+        const accountCount = sub.player.accounts.length;
+        return `• ${sub.player.alias} (${accountCount.toString()} account${accountCount === 1 ? "" : "s"})`;
       })
       .join("\n");
 
@@ -81,7 +67,5 @@ export async function executeSubscriptionList(
     text: "Use /subscription add to add more subscriptions",
   });
 
-  await interaction.editReply({
-    embeds: [embed],
-  });
+  await interaction.editReply({ embeds: [embed] });
 }

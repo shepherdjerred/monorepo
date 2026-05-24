@@ -5,19 +5,47 @@ import { createLogger } from "#src/logger.ts";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { appRouter } from "#src/trpc/router/index.ts";
 import { createContext } from "#src/trpc/context.ts";
+import {
+  handleDiscordCallback,
+  handleDiscordStart,
+  handleWebLogout,
+} from "#src/trpc/auth-web.ts";
 
 const logger = createLogger("http-server");
 
 logger.info("🌐 Initializing HTTP server");
 
 /**
- * CORS headers for API responses
+ * CORS headers for API responses.
+ * For credentialed (cookie) requests browsers reject `*` — we echo the
+ * configured web origin when the request Origin matches it, and fall
+ * back to `*` for unauthenticated public endpoints / dev clients.
  */
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-CSRF-Token",
 };
+
+function corsHeadersFor(request: Request): Record<string, string> {
+  const origin = request.headers.get("Origin");
+  const allowedOrigin = configuration.webAppOrigin;
+  if (
+    origin !== null &&
+    allowedOrigin !== undefined &&
+    origin === allowedOrigin
+  ) {
+    return {
+      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers":
+        "Content-Type, Authorization, X-CSRF-Token",
+      "Access-Control-Allow-Credentials": "true",
+      Vary: "Origin",
+    };
+  }
+  return corsHeaders;
+}
 
 const applicationStartTime = Date.now();
 
@@ -106,7 +134,7 @@ const server = Bun.serve({
     if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
-        headers: corsHeaders,
+        headers: corsHeadersFor(request),
       });
     }
 
@@ -155,6 +183,41 @@ const server = Bun.serve({
       }
     }
 
+    // Web auth: kick off Discord OAuth (sets the state cookie + 302)
+    if (url.pathname === "/api/auth/discord/start") {
+      try {
+        return handleDiscordStart(request);
+      } catch (error) {
+        logger.error("❌ OAuth start error:", error);
+        Sentry.captureException(error, { tags: { source: "auth-web-start" } });
+        return new Response("OAuth start failed", {
+          status: 500,
+          headers: { "Content-Type": "text/plain" },
+        });
+      }
+    }
+
+    // Web auth: Discord OAuth callback
+    if (url.pathname === "/api/auth/discord/callback") {
+      try {
+        return await handleDiscordCallback(request);
+      } catch (error) {
+        logger.error("❌ OAuth callback error:", error);
+        Sentry.captureException(error, {
+          tags: { source: "auth-web-callback" },
+        });
+        return new Response("OAuth callback failed", {
+          status: 500,
+          headers: { "Content-Type": "text/plain" },
+        });
+      }
+    }
+
+    // Web auth: logout
+    if (url.pathname === "/api/auth/logout" && request.method === "POST") {
+      return handleWebLogout(request);
+    }
+
     // tRPC API endpoint
     if (url.pathname.startsWith("/trpc")) {
       try {
@@ -175,7 +238,7 @@ const server = Bun.serve({
 
         // Add CORS headers to tRPC response
         const headers = new Headers(response.headers);
-        Object.entries(corsHeaders).forEach(([key, value]) => {
+        Object.entries(corsHeadersFor(request)).forEach(([key, value]) => {
           headers.set(key, value);
         });
 

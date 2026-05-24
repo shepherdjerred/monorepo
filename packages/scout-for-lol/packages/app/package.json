@@ -1,0 +1,33 @@
+{
+  "name": "@scout-for-lol/app",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "bunx tsc --noEmit",
+    "lint": "bunx eslint src"
+  },
+  "imports": {
+    "#src/*": "./src/*"
+  },
+  "dependencies": {
+    "@scout-for-lol/backend": "file:../backend",
+    "@scout-for-lol/data": "file:../data",
+    "@tanstack/react-query": "^5.62.0",
+    "@trpc/client": "^11.17.0",
+    "@trpc/tanstack-react-query": "^11.17.0",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "react-router-dom": "^7.7.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.7.2",
+    "vite": "^7.0.0"
+  }
+}

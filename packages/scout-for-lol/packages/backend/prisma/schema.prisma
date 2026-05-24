@@ -568,3 +568,22 @@ model MatchAiAttempt {
   matchId     String   @id // Riot match ID, e.g. EUW1_7843083474
   attemptedAt DateTime @default(now())
 }
+
+// Web-UI initiated subscription changes. Every mutation through the web UI
+// records a row so we can audit who added/removed what from outside Discord.
+model AuditLog {
+  id              Int      @id @default(autoincrement())
+  createdAt       DateTime @default(now())
+  actorDiscordId  String
+  serverId        String
+  action          String   // AuditAction enum value
+  targetChannelId String?
+  targetPlayerId  Int?
+  targetAccountId Int?
+  payload         String   // JSON-encoded before/after snapshot
+  ipAddress       String?
+  userAgent       String?
+
+  @@index([serverId, createdAt])
+  @@index([actorDiscordId, createdAt])
+}

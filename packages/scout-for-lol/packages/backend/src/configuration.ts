@@ -58,6 +58,11 @@ export default {
   discordToken: getRequiredEnvVar("DISCORD_TOKEN"),
   applicationId: getRequiredEnvVar("APPLICATION_ID"),
   discordClientSecret: getOptionalEnvVar("DISCORD_CLIENT_SECRET"),
+  jwtSigningSecret: getOptionalEnvVar("JWT_SIGNING_SECRET"),
+  webAppOrigin: getOptionalEnvVar(
+    "WEB_APP_ORIGIN",
+    "https://scout-for-lol.com",
+  ),
   riotApiToken: getRequiredEnvVar("RIOT_API_KEY"),
   databaseUrl: getRequiredEnvVar("DATABASE_URL"),
   port: env.get("PORT").default("3000").asPortNumber(),
