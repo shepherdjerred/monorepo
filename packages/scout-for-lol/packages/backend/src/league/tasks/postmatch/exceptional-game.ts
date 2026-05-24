@@ -143,7 +143,7 @@ export function isExceptionalGame(
   durationInSeconds: number,
 ): ExceptionalGameResult {
   // Get the tracked players' participant data from the raw match
-  const trackedPuuids = new Set(
+  const trackedPuuids = new Set<string>(
     playersInMatch.map((p) => p.league.leagueAccount.puuid),
   );
   const trackedParticipants = matchData.info.participants

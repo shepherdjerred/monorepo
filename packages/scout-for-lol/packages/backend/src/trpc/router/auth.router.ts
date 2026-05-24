@@ -6,7 +6,12 @@
 
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { router, publicProcedure, protectedProcedure } from "#src/trpc/trpc.ts";
+import {
+  router,
+  publicProcedure,
+  protectedProcedure,
+  webProcedure,
+} from "#src/trpc/trpc.ts";
 import { prisma } from "#src/database/index.ts";
 import { generateApiToken } from "#src/trpc/context.ts";
 import { createLogger } from "#src/logger.ts";
@@ -299,6 +304,19 @@ export const authRouter = router({
    * Get current user info
    */
   me: protectedProcedure.query(({ ctx }) => {
+    return {
+      discordId: ctx.user.discordId,
+      username: ctx.user.discordUsername,
+      avatar: ctx.user.discordAvatar,
+      createdAt: ctx.user.createdAt,
+    };
+  }),
+
+  /**
+   * Get the currently signed-in web user (from scout_session cookie).
+   * Returns 401 if not signed in.
+   */
+  meWeb: webProcedure.query(({ ctx }) => {
     return {
       discordId: ctx.user.discordId,
       username: ctx.user.discordUsername,

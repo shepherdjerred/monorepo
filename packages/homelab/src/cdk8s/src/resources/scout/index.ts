@@ -128,6 +128,27 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     }),
     ENVIRONMENT: EnvValue.fromValue(stage),
     DATABASE_URL: EnvValue.fromValue("file:/data/db.sqlite"),
+    JWT_SIGNING_SECRET: EnvValue.fromSecretValue({
+      secret: Secret.fromSecretName(
+        chart,
+        "jwt-signing-secret",
+        onePasswordItem.name,
+      ),
+      key: "JWT_SIGNING_SECRET",
+    }),
+    DISCORD_CLIENT_SECRET: EnvValue.fromSecretValue({
+      secret: Secret.fromSecretName(
+        chart,
+        "discord-client-secret",
+        onePasswordItem.name,
+      ),
+      key: "DISCORD_CLIENT_SECRET",
+    }),
+    WEB_APP_ORIGIN: EnvValue.fromValue(
+      stage === "prod"
+        ? "https://scout-for-lol.com"
+        : "https://scout-for-lol-beta.sjer.red",
+    ),
   };
 
   // Add AI secrets only for beta stage

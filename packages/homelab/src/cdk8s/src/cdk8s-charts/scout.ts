@@ -1,6 +1,7 @@
 import { Chart } from "cdk8s";
 import type { App } from "cdk8s";
 import { createScoutDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/index.ts";
+import { createScoutAppDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/app.ts";
 import { Namespace } from "cdk8s-plus-31";
 import {
   KubeNetworkPolicy,
@@ -22,8 +23,12 @@ export function createScoutChart(app: App, stage: Stage) {
   });
 
   createScoutDeployment(chart, stage);
+  createScoutAppDeployment(chart, stage);
 
-  // NetworkPolicy: Allow ingress from Prometheus only (internal Discord bot, no external ingress)
+  // NetworkPolicy: Allow ingress from Prometheus (scrapes scout-backend
+  // metrics on :3000), in-namespace pods (scout-app → scout-backend on
+  // :3000 for /trpc + /api proxying), and Cloudflare Tunnel pods (the
+  // CF Tunnel binding routes scout-for-lol.com → scout-app on :80).
   new KubeNetworkPolicy(chart, "scout-ingress-netpol", {
     metadata: { name: "scout-ingress-netpol" },
     spec: {
@@ -35,6 +40,14 @@ export function createScoutChart(app: App, stage: Stage) {
             {
               namespaceSelector: {
                 matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+              },
+            },
+            { podSelector: {} },
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "cloudflare-operator-system",
+                },
               },
             },
           ],
