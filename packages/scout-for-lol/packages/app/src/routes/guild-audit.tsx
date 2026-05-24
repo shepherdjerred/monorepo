@@ -1,6 +1,15 @@
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { Button } from "#src/components/ui/button.tsx";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "#src/components/ui/table.tsx";
 
 export function GuildAudit() {
   const { guildId } = useParams();
@@ -13,54 +22,78 @@ export function GuildAudit() {
     ),
   );
 
-  if (guildId === undefined) return <p>Missing guild id</p>;
+  if (guildId === undefined) {
+    return (
+      <Shell>
+        <p className="text-sm text-destructive">Missing guild id</p>
+      </Shell>
+    );
+  }
 
   return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <h2>Audit log</h2>
-        <Link to={`/g/${guildId}`}>← Subscriptions</Link>
+    <Shell>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold tracking-tight">Audit log</h2>
+        <Button asChild variant="ghost" size="sm">
+          <Link to={`/g/${guildId}`}>← Subscriptions</Link>
+        </Button>
       </div>
 
-      {isLoading && <p>Loading…</p>}
+      {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {error && (
-        <p style={{ color: "crimson" }}>Failed to load: {error.message}</p>
+        <p className="text-sm text-destructive">
+          Failed to load: {error.message}
+        </p>
       )}
 
-      {data && data.length === 0 && <p>No audit entries yet.</p>}
+      {data && data.length === 0 && (
+        <p className="text-sm text-muted-foreground">No audit entries yet.</p>
+      )}
 
       {data && data.length > 0 && (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ textAlign: "left", borderBottom: "1px solid #ddd" }}>
-              <th style={{ padding: "0.5rem" }}>When</th>
-              <th style={{ padding: "0.5rem" }}>Actor</th>
-              <th style={{ padding: "0.5rem" }}>Action</th>
-              <th style={{ padding: "0.5rem" }}>Channel</th>
-              <th style={{ padding: "0.5rem" }}>Details</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row) => (
-              <tr key={row.id} style={{ borderBottom: "1px solid #f0f0f0" }}>
-                <td style={{ padding: "0.5rem" }}>
-                  {new Date(row.createdAt).toLocaleString()}
-                </td>
-                <td style={{ padding: "0.5rem" }}>{row.actorDiscordId}</td>
-                <td style={{ padding: "0.5rem" }}>{row.action}</td>
-                <td style={{ padding: "0.5rem" }}>
-                  {row.targetChannelId ?? "—"}
-                </td>
-                <td style={{ padding: "0.5rem" }}>
-                  <pre style={{ margin: 0, fontSize: "0.8em" }}>
-                    {JSON.stringify(row.payload, null, 2)}
-                  </pre>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="rounded-md border border-border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>When</TableHead>
+                <TableHead>Actor</TableHead>
+                <TableHead>Action</TableHead>
+                <TableHead>Channel</TableHead>
+                <TableHead>Details</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.map((row) => (
+                <TableRow key={row.id}>
+                  <TableCell className="whitespace-nowrap text-muted-foreground">
+                    {new Date(row.createdAt).toLocaleString()}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {row.actorDiscordId}
+                  </TableCell>
+                  <TableCell className="font-medium">{row.action}</TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {row.targetChannelId ?? "—"}
+                  </TableCell>
+                  <TableCell>
+                    <pre className="m-0 max-w-md overflow-x-auto rounded-sm bg-muted p-2 text-xs">
+                      {JSON.stringify(row.payload, null, 2)}
+                    </pre>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
+    </Shell>
+  );
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mx-auto max-w-6xl space-y-4 px-4 py-8 sm:py-12">
+      {children}
     </div>
   );
 }
