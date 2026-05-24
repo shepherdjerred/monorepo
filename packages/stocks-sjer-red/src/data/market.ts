@@ -62,6 +62,7 @@ async function fetchOne(symbol: string, name: string): Promise<Quote> {
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
       Accept: "application/json",
     },
+    signal: AbortSignal.timeout(10_000),
   });
   if (!res.ok) {
     throw new Error(`yahoo ${symbol} HTTP ${String(res.status)}`);
@@ -131,7 +132,13 @@ async function isCacheFresh(): Promise<boolean> {
 let inflight: Promise<Quote[]> | null = null;
 
 export function fetchQuotes(): Promise<Quote[]> {
-  inflight ??= load();
+  inflight ??= load().catch((err: unknown) => {
+    // Clear the cached rejection so the next call retries; without this,
+    // a single failed load would poison every subsequent fetchQuotes()
+    // call for the lifetime of the process.
+    inflight = null;
+    throw err;
+  });
   return inflight;
 }
 
