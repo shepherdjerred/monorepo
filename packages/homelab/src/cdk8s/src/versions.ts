@@ -69,7 +69,7 @@ const versions = {
     "4.0.17@sha256:0b5c4803f92456fb9b65bae8375716ea120b4ea17b3cced7da32b63f0085782b",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "timothyjmiller/cloudflare-ddns":
-    "latest@sha256:73edef388bab61c5a1df8171d5f3a0bd6b398e24e4baec752d63e1cd4044ecea",
+    "latest@sha256:37c99677e997710c1bbe9d74c93f2e3b8de3457a5ca6e28643e251b38ed05311",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "cloudflare/cloudflared":
     "2026.5.0@sha256:59bab8d3aceec09bf6bdb07d6beca0225ca5cd7ab79436a87ea97978fe1dc4f9",
