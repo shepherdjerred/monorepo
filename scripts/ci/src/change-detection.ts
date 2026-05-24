@@ -17,13 +17,6 @@ const REPO_ROOT = execSync("git rev-parse --show-toplevel", {
   encoding: "utf-8",
 }).trim();
 
-/**
- * Minimum number of test steps a build must have to qualify as a valid base for diffing.
- * Uses ":test_tube:" job names (individual script steps) since Buildkite's API does not
- * expose group containers — ":dagger_knife:" group labels never appear in .jobs[].
- */
-const MIN_GREEN_STEPS = 1;
-
 /** Files that, if changed, trigger a full build. */
 const INFRA_FILES = new Set([
   "bun.lock",
@@ -187,7 +180,7 @@ function classifyRenovateFiles(changedFiles: string[]): RenovateClassification {
 }
 
 // ---------------------------------------------------------------------------
-// Buildkite API: find last green build
+// Buildkite API: find last successful base build
 // ---------------------------------------------------------------------------
 
 type ExecResult = { stdout: string; exitCode: number };
@@ -201,7 +194,135 @@ function errorMessage(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
 
-async function getLastGreenCommit(fetchFn: FetchFn = fetch): Promise<string> {
+type BuildkiteJob = {
+  type?: string;
+  name?: string;
+  state?: string;
+  step_key?: string;
+  soft_failed?: boolean;
+};
+
+type BuildkiteBuild = {
+  number?: number;
+  state?: string;
+  blocked?: boolean;
+  commit?: string;
+  jobs?: BuildkiteJob[];
+};
+
+type BuildRejectionReason =
+  | "blocked"
+  | "incomplete"
+  | "missing-jobs"
+  | "hard-failed-jobs";
+
+const ACCEPTABLE_BUILD_STATES = new Set(["passed", "failed"]);
+const EXEMPT_FAILED_STEP_KEYS = new Set(["argocd-health"]);
+
+function isScriptJob(job: BuildkiteJob): boolean {
+  return job.type === "script";
+}
+
+function isAllowedFailedJob(job: BuildkiteJob): boolean {
+  if (job.state !== "failed") return false;
+  return (
+    job.soft_failed === true ||
+    (job.step_key !== undefined && EXEMPT_FAILED_STEP_KEYS.has(job.step_key))
+  );
+}
+
+function isCleanScriptJob(job: BuildkiteJob): boolean {
+  return job.state === "passed" || isAllowedFailedJob(job);
+}
+
+function hasPipelineBootstrapJobs(scriptJobs: BuildkiteJob[]): boolean {
+  return (
+    scriptJobs.some((job) => job.name === ":pipeline: Upload pipeline") &&
+    scriptJobs.some((job) => job.name === ":pipeline: Generate Pipeline")
+  );
+}
+
+function getBuildRejectionReason(
+  build: BuildkiteBuild,
+): BuildRejectionReason | null {
+  if (build.blocked === true) return "blocked";
+  if (!ACCEPTABLE_BUILD_STATES.has(build.state ?? "")) return "incomplete";
+
+  const scriptJobs = (build.jobs ?? []).filter(isScriptJob);
+  if (!hasPipelineBootstrapJobs(scriptJobs)) return "missing-jobs";
+
+  return scriptJobs.every(isCleanScriptJob) ? null : "hard-failed-jobs";
+}
+
+function parseBuildkiteJob(value: unknown): BuildkiteJob | null {
+  if (typeof value !== "object" || value === null) return null;
+
+  const job: BuildkiteJob = {};
+  if ("type" in value && typeof value.type === "string") {
+    job.type = value.type;
+  }
+  if ("name" in value && typeof value.name === "string") {
+    job.name = value.name;
+  }
+  if ("state" in value && typeof value.state === "string") {
+    job.state = value.state;
+  }
+  if ("step_key" in value && typeof value.step_key === "string") {
+    job.step_key = value.step_key;
+  }
+  if ("soft_failed" in value && typeof value.soft_failed === "boolean") {
+    job.soft_failed = value.soft_failed;
+  }
+
+  return job;
+}
+
+function parseBuildkiteBuild(value: unknown): BuildkiteBuild | null {
+  if (typeof value !== "object" || value === null) return null;
+
+  const build: BuildkiteBuild = {};
+  if ("number" in value && typeof value.number === "number") {
+    build.number = value.number;
+  }
+  if ("state" in value && typeof value.state === "string") {
+    build.state = value.state;
+  }
+  if ("blocked" in value && typeof value.blocked === "boolean") {
+    build.blocked = value.blocked;
+  }
+  if ("commit" in value && typeof value.commit === "string") {
+    build.commit = value.commit;
+  }
+  if ("jobs" in value && Array.isArray(value.jobs)) {
+    const jobs: BuildkiteJob[] = [];
+    for (const job of value.jobs) {
+      const parsedJob = parseBuildkiteJob(job);
+      if (parsedJob !== null) {
+        jobs.push(parsedJob);
+      }
+    }
+    build.jobs = jobs;
+  }
+
+  return build;
+}
+
+function parseBuildkiteBuilds(value: unknown): BuildkiteBuild[] {
+  if (!Array.isArray(value)) return [];
+
+  const builds: BuildkiteBuild[] = [];
+  for (const build of value) {
+    const parsedBuild = parseBuildkiteBuild(build);
+    if (parsedBuild !== null) {
+      builds.push(parsedBuild);
+    }
+  }
+  return builds;
+}
+
+async function getLastSuccessfulCommit(
+  fetchFn: FetchFn = fetch,
+): Promise<string> {
   const token = process.env["BUILDKITE_API_TOKEN"];
   if (!token) {
     throw new Error(
@@ -222,7 +343,7 @@ async function getLastGreenCommit(fetchFn: FetchFn = fetch): Promise<string> {
   const url =
     `https://api.buildkite.com/v2/organizations/${org}` +
     `/pipelines/${pipeline}/builds` +
-    `?branch=main&state=passed&per_page=25`;
+    `?branch=main&per_page=100`;
 
   let resp: Response;
   try {
@@ -244,40 +365,39 @@ async function getLastGreenCommit(fetchFn: FetchFn = fetch): Promise<string> {
     throw new Error(`Buildkite API failed with HTTP ${resp.status}`);
   }
 
-  const builds = (await resp.json()) as Array<{
-    number?: number;
-    commit?: string;
-    jobs?: Array<{ name?: string }>;
-  }>;
+  const builds = parseBuildkiteBuilds(await resp.json());
+  const skipped = new Map<BuildRejectionReason, number>();
 
   for (const build of builds) {
     if (String(build.number) === currentBuild) continue;
 
-    const jobs = build.jobs ?? [];
-    const qualifyingJobs = jobs.filter((j) =>
-      (j.name ?? "").includes(":test_tube:"),
-    );
-
-    if (qualifyingJobs.length >= MIN_GREEN_STEPS) {
-      const commit = build.commit ?? "";
-      if (!commit) {
-        throw new Error(
-          `Build #${build.number} qualified as green but did not include a commit SHA`,
-        );
-      }
-      console.error(
-        `Last green build: #${build.number} (${qualifyingJobs.length} test jobs, commit ${commit.slice(0, 10)})`,
-      );
-      return commit;
+    const rejectionReason = getBuildRejectionReason(build);
+    if (rejectionReason !== null) {
+      skipped.set(rejectionReason, (skipped.get(rejectionReason) ?? 0) + 1);
+      console.error(`Build #${build.number} skipped: ${rejectionReason}`);
+      continue;
     }
 
+    const commit = build.commit ?? "";
+    if (!commit) {
+      throw new Error(
+        `Build #${build.number} qualified as successful but did not include a commit SHA`,
+      );
+    }
+
+    const scriptJobCount = (build.jobs ?? []).filter(isScriptJob).length;
     console.error(
-      `Build #${build.number} skipped: only ${qualifyingJobs.length} test jobs (need ${MIN_GREEN_STEPS})`,
+      `Last successful base build: #${build.number} (${scriptJobCount} script jobs, commit ${commit.slice(0, 10)})`,
     );
+    return commit;
   }
 
+  const reasonSummary = [...skipped]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([reason, count]) => `${reason}: ${count}`)
+    .join(", ");
   throw new Error(
-    "No qualifying green main build found; cannot scope this build safely",
+    `No qualifying successful main build found; cannot scope this build safely${reasonSummary ? ` (${reasonSummary})` : ""}`,
   );
 }
 
@@ -364,7 +484,7 @@ async function getBaseRevision(execFn: ExecFn = exec): Promise<string> {
   }
 
   if (branch === "main") {
-    return getLastGreenCommit();
+    return getLastSuccessfulCommit();
   }
 
   // Feature branch without PR
@@ -719,7 +839,8 @@ export {
   classifyRenovateFiles as _classifyRenovateFiles,
   checkCiImageChanges as _checkCiImageChanges,
   checkCiImageVersionChanges as _checkCiImageVersionChanges,
-  getLastGreenCommit as _getLastGreenCommit,
+  getBuildRejectionReason as _getBuildRejectionReason,
+  getLastSuccessfulCommit as _getLastSuccessfulCommit,
   getBaseRevision as _getBaseRevision,
   getChangedFiles as _getChangedFiles,
   NON_JS_PACKAGES as _NON_JS_PACKAGES,

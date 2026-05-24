@@ -13,7 +13,8 @@ import {
   _checkCiImageVersionChanges,
   _getBaseRevision,
   _getChangedFiles,
-  _getLastGreenCommit,
+  _getBuildRejectionReason,
+  _getLastSuccessfulCommit,
   _NON_JS_PACKAGES,
   _JS_TS_PACKAGES,
 } from "../change-detection.ts";
@@ -21,6 +22,17 @@ import { ALL_PACKAGES } from "../catalog.ts";
 
 type ExecResult = { stdout: string; exitCode: number };
 type ExecFn = (cmd: string[]) => Promise<ExecResult>;
+
+function buildkiteBootstrapJobs(): Array<{
+  type: string;
+  state: string;
+  name: string;
+}> {
+  return [
+    { type: "script", state: "passed", name: ":pipeline: Upload pipeline" },
+    { type: "script", state: "passed", name: ":pipeline: Generate Pipeline" },
+  ];
+}
 
 function restoreEnv(originalEnv: NodeJS.ProcessEnv, keys: string[]): void {
   for (const key of keys) {
@@ -501,7 +513,7 @@ describe("fail-fast base detection", () => {
   });
 
   it("requires BUILDKITE_API_TOKEN for main-branch Buildkite API detection", async () => {
-    await expect(_getLastGreenCommit()).rejects.toThrow(
+    await expect(_getLastSuccessfulCommit()).rejects.toThrow(
       "BUILDKITE_API_TOKEN is required",
     );
   });
@@ -512,7 +524,7 @@ describe("fail-fast base detection", () => {
       throw new Error("fetch should not be called");
     };
 
-    await expect(_getLastGreenCommit(fetchFn)).rejects.toThrow(
+    await expect(_getLastSuccessfulCommit(fetchFn)).rejects.toThrow(
       "BUILDKITE_API_TOKEN is required",
     );
   });
@@ -521,7 +533,7 @@ describe("fail-fast base detection", () => {
     process.env["BUILDKITE_API_TOKEN"] = "api-token";
     const fetchFn = async () => new Response("", { status: 401 });
 
-    await expect(_getLastGreenCommit(fetchFn)).rejects.toThrow(
+    await expect(_getLastSuccessfulCommit(fetchFn)).rejects.toThrow(
       "read_builds scope",
     );
   });
@@ -530,7 +542,7 @@ describe("fail-fast base detection", () => {
     process.env["BUILDKITE_API_TOKEN"] = "api-token";
     const fetchFn = async () => new Response("", { status: 500 });
 
-    await expect(_getLastGreenCommit(fetchFn)).rejects.toThrow("HTTP 500");
+    await expect(_getLastSuccessfulCommit(fetchFn)).rejects.toThrow("HTTP 500");
   });
 
   it("rejects Buildkite API request failures", async () => {
@@ -539,12 +551,12 @@ describe("fail-fast base detection", () => {
       throw new Error("timeout");
     };
 
-    await expect(_getLastGreenCommit(fetchFn)).rejects.toThrow(
+    await expect(_getLastSuccessfulCommit(fetchFn)).rejects.toThrow(
       "Buildkite API request failed: timeout",
     );
   });
 
-  it("rejects when no qualifying green main build exists", async () => {
+  it("rejects when no qualifying successful main build exists", async () => {
     process.env["BUILDKITE_API_TOKEN"] = "api-token";
     const fetchFn = async () =>
       new Response(
@@ -552,18 +564,27 @@ describe("fail-fast base detection", () => {
           {
             number: 99,
             commit: "abc123",
-            jobs: [{ name: ":eslint: Lint" }],
+            state: "failed",
+            jobs: [
+              ...buildkiteBootstrapJobs(),
+              {
+                type: "script",
+                state: "failed",
+                step_key: "lint-birmel",
+                name: ":eslint: Lint",
+              },
+            ],
           },
         ]),
         { status: 200 },
       );
 
-    await expect(_getLastGreenCommit(fetchFn)).rejects.toThrow(
-      "No qualifying green main build found",
+    await expect(_getLastSuccessfulCommit(fetchFn)).rejects.toThrow(
+      "No qualifying successful main build found",
     );
   });
 
-  it("returns the first qualifying previous green build commit", async () => {
+  it("returns the first qualifying successful build even with zero test jobs", async () => {
     process.env["BUILDKITE_API_TOKEN"] = "api-token";
     const fetchFn = async () =>
       new Response(
@@ -571,18 +592,152 @@ describe("fail-fast base detection", () => {
           {
             number: 100,
             commit: "current",
-            jobs: [{ name: ":test_tube: Test" }],
+            state: "passed",
+            jobs: buildkiteBootstrapJobs(),
           },
           {
             number: 99,
             commit: "abc123def456",
-            jobs: [{ name: ":test_tube: Test" }],
+            state: "passed",
+            jobs: [
+              ...buildkiteBootstrapJobs(),
+              {
+                type: "script",
+                state: "passed",
+                step_key: "lockfile-check",
+                name: ":lock: Lockfile Check",
+              },
+              {
+                type: "script",
+                state: "passed",
+                step_key: "ci-complete",
+                name: ":white_check_mark: CI Complete",
+              },
+            ],
           },
         ]),
         { status: 200 },
       );
 
-    await expect(_getLastGreenCommit(fetchFn)).resolves.toBe("abc123def456");
+    await expect(_getLastSuccessfulCommit(fetchFn)).resolves.toBe(
+      "abc123def456",
+    );
+  });
+
+  it("skips canceled, skipped, running, and scheduled builds", async () => {
+    process.env["BUILDKITE_API_TOKEN"] = "api-token";
+    const fetchFn = async () =>
+      new Response(
+        JSON.stringify([
+          {
+            number: 99,
+            commit: "canceled",
+            state: "canceled",
+            jobs: buildkiteBootstrapJobs(),
+          },
+          {
+            number: 98,
+            commit: "skipped",
+            state: "skipped",
+            jobs: buildkiteBootstrapJobs(),
+          },
+          {
+            number: 97,
+            commit: "running",
+            state: "running",
+            jobs: buildkiteBootstrapJobs(),
+          },
+          {
+            number: 96,
+            commit: "scheduled",
+            state: "scheduled",
+            jobs: buildkiteBootstrapJobs(),
+          },
+          {
+            number: 95,
+            commit: "good-base",
+            state: "passed",
+            jobs: buildkiteBootstrapJobs(),
+          },
+        ]),
+        { status: 200 },
+      );
+
+    await expect(_getLastSuccessfulCommit(fetchFn)).resolves.toBe("good-base");
+  });
+
+  it("rejects hard-failed non-exempt jobs", () => {
+    expect(
+      _getBuildRejectionReason({
+        number: 99,
+        state: "failed",
+        jobs: [
+          ...buildkiteBootstrapJobs(),
+          {
+            type: "script",
+            state: "failed",
+            step_key: "deploy-argocd",
+            name: ":argocd: Sync ArgoCD",
+          },
+        ],
+      }),
+    ).toBe("hard-failed-jobs");
+  });
+
+  it("accepts failed soft-fail jobs", () => {
+    expect(
+      _getBuildRejectionReason({
+        number: 99,
+        state: "passed",
+        jobs: [
+          ...buildkiteBootstrapJobs(),
+          {
+            type: "script",
+            state: "failed",
+            step_key: "knip-check",
+            name: ":scissors: Knip",
+            soft_failed: true,
+          },
+        ],
+      }),
+    ).toBeNull();
+  });
+
+  it("rejects canceled soft-fail jobs", () => {
+    expect(
+      _getBuildRejectionReason({
+        number: 99,
+        state: "failed",
+        jobs: [
+          ...buildkiteBootstrapJobs(),
+          {
+            type: "script",
+            state: "canceled",
+            step_key: "knip-check",
+            name: ":scissors: Knip",
+            soft_failed: true,
+          },
+        ],
+      }),
+    ).toBe("hard-failed-jobs");
+  });
+
+  it("accepts failed argocd-health jobs", () => {
+    expect(
+      _getBuildRejectionReason({
+        number: 99,
+        state: "failed",
+        jobs: [
+          ...buildkiteBootstrapJobs(),
+          {
+            type: "script",
+            state: "failed",
+            step_key: "argocd-health",
+            name: ":heart: Wait for ArgoCD Healthy (apps)",
+          },
+        ],
+      }),
+    ).toBeNull();
   });
 
   it("rejects when merge-base cannot be computed", async () => {
