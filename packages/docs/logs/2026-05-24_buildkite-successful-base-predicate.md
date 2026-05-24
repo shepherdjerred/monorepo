@@ -41,3 +41,11 @@ hard-failed non-exempt builds.
   has no local flat ESLint config.
 - `scripts/ci` package dependencies were installed with
   `bun install --frozen-lockfile` so `@types/bun` was available for typecheck.
+
+## Closing Summary
+
+The Buildkite base predicate now selects the newest qualifying successful
+`main` build by inspecting job states instead of relying on test-job presence.
+The implementation preserves soft-fail and `argocd-health` exceptions while
+rejecting incomplete, blocked, and hard-failed builds, with focused tests
+covering the expected acceptance and rejection cases.

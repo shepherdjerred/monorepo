@@ -245,7 +245,7 @@ function hasPipelineBootstrapJobs(scriptJobs: BuildkiteJob[]): boolean {
 function getBuildRejectionReason(
   build: BuildkiteBuild,
 ): BuildRejectionReason | null {
-  if (build.blocked === true) return "blocked";
+  if (build.blocked === true || build.state === "blocked") return "blocked";
   if (!ACCEPTABLE_BUILD_STATES.has(build.state ?? "")) return "incomplete";
 
   const scriptJobs = (build.jobs ?? []).filter(isScriptJob);

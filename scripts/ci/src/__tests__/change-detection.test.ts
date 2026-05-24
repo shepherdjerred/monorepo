@@ -624,7 +624,7 @@ describe("fail-fast base detection", () => {
     );
   });
 
-  it("skips canceled, skipped, running, and scheduled builds", async () => {
+  it("skips canceled, skipped, running, scheduled, and blocked builds", async () => {
     process.env["BUILDKITE_API_TOKEN"] = "api-token";
     const fetchFn = async () =>
       new Response(
@@ -655,6 +655,12 @@ describe("fail-fast base detection", () => {
           },
           {
             number: 95,
+            commit: "blocked",
+            state: "blocked",
+            jobs: buildkiteBootstrapJobs(),
+          },
+          {
+            number: 94,
             commit: "good-base",
             state: "passed",
             jobs: buildkiteBootstrapJobs(),
