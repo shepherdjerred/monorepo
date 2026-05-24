@@ -2,7 +2,11 @@ import type { CompletedMatch } from "@scout-for-lol/data";
 
 export type Grade = "S+" | "S" | "A" | "B" | "C" | "D";
 
-export function computeKda(kills: number, deaths: number, assists: number) {
+export function computeKda(
+  kills: number,
+  deaths: number,
+  assists: number,
+): number {
   if (deaths === 0) {
     return kills + assists;
   }

@@ -12,6 +12,11 @@ import {
   heroPlayer,
 } from "#src/html/shared/grade.ts";
 import { SquadRow } from "#src/html/ranked-banner/squad-row.tsx";
+import {
+  formatDuration,
+  queueLabel,
+  winningTeamOf,
+} from "#src/html/shared/format.ts";
 
 export const BANNER_WIDTH = 4760;
 export const BANNER_HEIGHT = 1500;
@@ -57,17 +62,6 @@ function CornerBracket({ corner }: { corner: "tl" | "tr" | "bl" | "br" }) {
   );
 }
 
-function formatDuration(seconds: number) {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m.toString()}min ${s.toString()}s`;
-}
-
-function queueLabel(queueType: CompletedMatch["queueType"]): string {
-  if (queueType === "flex") return "RANKED FLEX";
-  return "RANKED SOLO";
-}
-
 function teamKills(team: CompletedMatch["teams"]["blue"]): number {
   return sumBy(team, (c) => c.kills);
 }
@@ -94,6 +88,7 @@ export function RankedBannerReport({ match }: { match: CompletedMatch }) {
   const rankAfter = hero.rankAfterMatch;
   const titleColor =
     heroOutcome === "Victory" ? palette.gold[4] : palette.teams.red;
+  const winningTeam = winningTeamOf(hero);
 
   return (
     <div
@@ -340,15 +335,23 @@ export function RankedBannerReport({ match }: { match: CompletedMatch }) {
             <span style={{ display: "flex" }}>SCOUT</span>
           </div>
           <div style={{ display: "flex", gap: "2rem", alignItems: "center" }}>
-            <span style={{ display: "flex" }}>
+            <span
+              style={{
+                display: "flex",
+                color:
+                  winningTeam === "blue" ? palette.gold[1] : palette.grey[1],
+                fontWeight: winningTeam === "blue" ? 700 : 400,
+              }}
+            >
               TEAM 1 {teamLine(match.teams.blue)}
             </span>
             <span style={{ display: "flex", color: palette.grey[2] }}>—</span>
             <span
               style={{
                 display: "flex",
-                color: palette.gold[1],
-                fontWeight: 700,
+                color:
+                  winningTeam === "red" ? palette.gold[1] : palette.grey[1],
+                fontWeight: winningTeam === "red" ? 700 : 400,
               }}
             >
               TEAM 2 {teamLine(match.teams.red)}

@@ -1,4 +1,4 @@
-import { leaguePointsDelta } from "@scout-for-lol/data";
+import { divisionToString, leaguePointsDelta } from "@scout-for-lol/data";
 import type { CompletedMatch } from "@scout-for-lol/data";
 import { palette } from "#src/assets/colors.ts";
 import { font } from "#src/assets/index.ts";
@@ -12,20 +12,14 @@ import {
   gradeFromKda,
   heroPlayer,
 } from "#src/html/shared/grade.ts";
+import {
+  formatDuration,
+  queueLabel,
+  winningTeamOf,
+} from "#src/html/shared/format.ts";
 
 export const SQUARE_WIDTH = 4760;
 export const SQUARE_HEIGHT = 4760;
-
-function formatDuration(seconds: number) {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m.toString()}min ${s.toString()}s`;
-}
-
-function queueLabel(queueType: CompletedMatch["queueType"]): string {
-  if (queueType === "flex") return "RANKED FLEX";
-  return "RANKED SOLO";
-}
 
 function squadCardWidth(playerCount: number): string {
   return `${(100 / playerCount - 1.5).toString()}%`;
@@ -34,11 +28,9 @@ function squadCardWidth(playerCount: number): string {
 function HeroCard({
   player,
   isWin,
-  winningTeam,
 }: {
   player: CompletedMatch["players"][number];
   isWin: boolean;
-  winningTeam: "blue" | "red";
 }) {
   const {
     kills,
@@ -51,7 +43,7 @@ function HeroCard({
   } = player.champion;
   const kda = computeKda(kills, deaths, assists);
   const grade = gradeFromKda(kda);
-  const teamLabel = winningTeam === "blue" ? "Team 1" : "Team 2";
+  const teamLabel = player.team === "blue" ? "Team 1" : "Team 2";
   const damageK = (damage / 1000).toFixed(1);
 
   return (
@@ -139,11 +131,7 @@ export function RankedSquareReport({ match }: { match: CompletedMatch }) {
   const isSolo = match.players.length === 1;
   const mvpIndex = findMvpIndex(match.players);
   const rankAfter = hero.rankAfterMatch;
-  const winningTeam: "blue" | "red" = isWin
-    ? hero.team
-    : hero.team === "blue"
-      ? "red"
-      : "blue";
+  const winningTeam = winningTeamOf(hero);
   const titleColor = isWin ? palette.gold[4] : palette.teams.red;
 
   const wins = match.players.filter((p) => p.outcome === "Victory").length;
@@ -249,13 +237,7 @@ export function RankedSquareReport({ match }: { match: CompletedMatch }) {
                   display: "flex",
                 }}
               >
-                {rankAfter.division === 1
-                  ? "I"
-                  : rankAfter.division === 2
-                    ? "II"
-                    : rankAfter.division === 3
-                      ? "III"
-                      : "IV"}
+                {divisionToString(rankAfter.division)}
               </span>
             </div>
           )}
@@ -314,7 +296,7 @@ export function RankedSquareReport({ match }: { match: CompletedMatch }) {
         }}
       >
         {isSolo ? (
-          <HeroCard player={hero} isWin={isWin} winningTeam={winningTeam} />
+          <HeroCard player={hero} isWin={isWin} />
         ) : (
           <div
             style={{

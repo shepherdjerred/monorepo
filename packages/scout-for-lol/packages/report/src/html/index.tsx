@@ -34,7 +34,7 @@ export type MatchRenderOptions = {
 export async function matchToImage(
   match: CompletedMatch,
   options: MatchRenderOptions = {},
-) {
+): Promise<Buffer> {
   const svg = await matchToSvg(match, options);
   const png = await svgToPng(svg);
   return png;
@@ -43,7 +43,7 @@ export async function matchToImage(
 export async function matchToSvg(
   match: CompletedMatch,
   options: MatchRenderOptions = {},
-) {
+): Promise<string> {
   await preloadChampionImages([
     ...match.teams.blue.map((champion) => champion.championName),
     ...match.teams.red.map((champion) => champion.championName),
@@ -79,7 +79,10 @@ export async function matchToSvg(
   });
 }
 
-export async function svgToPng(svg: string, options: { crop?: boolean } = {}) {
+export async function svgToPng(
+  svg: string,
+  options: { crop?: boolean } = {},
+): Promise<Buffer> {
   // Lazy load resvg only when needed (server-side only)
   const { Resvg } = await import("@resvg/resvg-js");
   const resvg = new Resvg(svg, {
