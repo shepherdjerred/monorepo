@@ -27,10 +27,21 @@ function buildkiteBootstrapJobs(): Array<{
   type: string;
   state: string;
   name: string;
+  command: string;
 }> {
   return [
-    { type: "script", state: "passed", name: ":pipeline: Upload pipeline" },
-    { type: "script", state: "passed", name: ":pipeline: Generate Pipeline" },
+    {
+      type: "script",
+      state: "passed",
+      name: ":pipeline: Upload pipeline",
+      command: "buildkite-agent pipeline upload",
+    },
+    {
+      type: "script",
+      state: "passed",
+      name: ":pipeline: Generate Pipeline",
+      command: ".buildkite/scripts/generate-pipeline.sh",
+    },
   ];
 }
 
@@ -624,6 +635,29 @@ describe("fail-fast base detection", () => {
     );
   });
 
+  it("recognizes pipeline bootstrap jobs by stable command when labels change", () => {
+    expect(
+      _getBuildRejectionReason({
+        number: 99,
+        state: "passed",
+        jobs: [
+          {
+            type: "script",
+            state: "passed",
+            name: ":pipeline: Upload Pipeline",
+            command: "buildkite-agent pipeline upload",
+          },
+          {
+            type: "script",
+            state: "passed",
+            name: ":pipeline: Generate pipeline",
+            command: ".buildkite/scripts/generate-pipeline.sh",
+          },
+        ],
+      }),
+    ).toBeNull();
+  });
+
   it("skips canceled, skipped, running, scheduled, and blocked builds", async () => {
     process.env["BUILDKITE_API_TOKEN"] = "api-token";
     const fetchFn = async () =>
@@ -709,7 +743,7 @@ describe("fail-fast base detection", () => {
     ).toBeNull();
   });
 
-  it("rejects canceled soft-fail jobs", () => {
+  it("accepts timed-out soft-fail jobs", () => {
     expect(
       _getBuildRejectionReason({
         number: 99,
@@ -718,14 +752,14 @@ describe("fail-fast base detection", () => {
           ...buildkiteBootstrapJobs(),
           {
             type: "script",
-            state: "canceled",
+            state: "timed_out",
             step_key: "knip-check",
             name: ":scissors: Knip",
             soft_failed: true,
           },
         ],
       }),
-    ).toBe("hard-failed-jobs");
+    ).toBeNull();
   });
 
   it("accepts failed argocd-health jobs", () => {
@@ -738,6 +772,24 @@ describe("fail-fast base detection", () => {
           {
             type: "script",
             state: "failed",
+            step_key: "argocd-health",
+            name: ":heart: Wait for ArgoCD Healthy (apps)",
+          },
+        ],
+      }),
+    ).toBeNull();
+  });
+
+  it("accepts timed-out argocd-health jobs", () => {
+    expect(
+      _getBuildRejectionReason({
+        number: 99,
+        state: "failed",
+        jobs: [
+          ...buildkiteBootstrapJobs(),
+          {
+            type: "script",
+            state: "timed_out",
             step_key: "argocd-health",
             name: ":heart: Wait for ArgoCD Healthy (apps)",
           },
