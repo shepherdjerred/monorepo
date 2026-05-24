@@ -64,6 +64,7 @@ Findings:
 - Addressed CodeRabbit's major review finding by removing `>/dev/null 2>&1` hidden-stderr handling from the commit-back branch probes and the cooklang release existence probe.
 - Added commit-back hygiene test coverage to reject `>/dev/null 2>&1` in the hardened helpers.
 - Re-verified `bun run scripts/check-dagger-hygiene.ts`, `cd scripts/ci && bun run test`, and `cd scripts/ci && bun run typecheck`.
+- Addressed Greptile's P2 finding by using the next exported function as the helper-source delimiter instead of the next JSDoc block.
 
 ### Remaining
 

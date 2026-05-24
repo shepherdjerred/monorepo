@@ -76,7 +76,7 @@ describe("version commit-back", () => {
       throw new Error(`Missing helper ${helperName}`);
     }
 
-    const nextHelper = releaseSource.indexOf("\n/**", start + 1);
+    const nextHelper = releaseSource.indexOf("\nexport function ", start + 1);
     if (nextHelper === -1) {
       return releaseSource.slice(start);
     }
