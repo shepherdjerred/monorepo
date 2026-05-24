@@ -61,6 +61,31 @@ describe("loadTier2Checkpoint", () => {
     }
   });
 
+  test("preserves all entries written concurrently", async () => {
+    const dir = await makeTempDir();
+    const checkpointPath = path.join(dir, "tier2.checkpoint.json");
+    try {
+      const store = await loadTier2Checkpoint(checkpointPath);
+      const entries = Array.from({ length: 10 }, (_, index) => {
+        const transactionId = `txn-${String(index)}`;
+        return {
+          key: `batch-key-${String(index)}`,
+          entry: checkpointBatch(transactionId),
+        };
+      });
+
+      await Promise.all(entries.map(({ key, entry }) => store.set(key, entry)));
+
+      const reloaded = await loadTier2Checkpoint(checkpointPath);
+      expect(reloaded.size()).toBe(entries.length);
+      for (const { key, entry } of entries) {
+        expect(reloaded.get(key)?.transactionIds).toEqual(entry.transactionIds);
+      }
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
   test("rejects malformed checkpoint data", async () => {
     const dir = await makeTempDir();
     const checkpointPath = path.join(dir, "bad.checkpoint.json");
@@ -116,4 +141,29 @@ describe("getTier2BatchKey", () => {
 
 async function makeTempDir(): Promise<string> {
   return mkdtemp(path.join(tmpdir(), "monarch-tier2-checkpoint-test-"));
+}
+
+function checkpointBatch(transactionId: string) {
+  return buildTier2CheckpointBatch({
+    transactionIds: [transactionId],
+    model: "claude-sonnet-4-6",
+    batchSize: 25,
+    promptHash: getTier2PromptHash(`prompt-${transactionId}`),
+    changes: [
+      {
+        transactionId,
+        transactionDate: "2026-05-23",
+        merchantName: "OpenAI",
+        amount: -20,
+        currentCategory: "Shopping",
+        currentCategoryId: "cat-shopping",
+        proposedCategory: "Software",
+        proposedCategoryId: "cat-software",
+        confidence: "high",
+        type: "recategorize",
+        tier: 2,
+      },
+    ],
+    usage: { inputTokens: 100, outputTokens: 20 },
+  });
 }
