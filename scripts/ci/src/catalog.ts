@@ -159,7 +159,8 @@ export const DEPLOY_SITES: DeploySite[] = [
     buildDir: "packages/scout-for-lol",
     buildCmd: "bun run scripts/build-bucket.ts",
     distDir: "packages/scout-for-lol/packages/frontend/dist",
-    buildEnvVars: ["PUBLIC_PINTEREST_TAG_ID", "PUBLIC_REDDIT_PIXEL_ID"],
+    // Analytics pixels intentionally omitted for beta — beta traffic must
+    // not inflate prod Pinterest/Reddit conversion data.
     workspaceDeps: "packages/frontend,packages/app",
   },
   {

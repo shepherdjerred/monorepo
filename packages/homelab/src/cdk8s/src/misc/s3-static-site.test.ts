@@ -353,6 +353,70 @@ describe("generateCaddyfile reverseProxies", () => {
     expect(caddyfile).not.toContain("reverse_proxy");
     expect(caddyfile).toContain("s3proxy {");
   });
+
+  it("sorts entries by path length descending — narrow paths without rewriteTo also win", () => {
+    // Regression: previously the sort used `rewriteTo !== undefined` as a
+    // specificity proxy. A narrow path without rewriteTo would NOT win over
+    // a broader prefix. Now sorts by literal path length descending.
+    const caddyfile = generateCaddyfile({
+      sites: [
+        {
+          hostname: "app.test",
+          bucket: "app",
+          reverseProxies: [
+            // Intentionally in the wrong order — generator must reorder
+            { path: "/api/*", upstream: "backend.app.svc:3000" },
+            // Narrow path WITHOUT rewriteTo — must still come first
+            { path: "/api/status", upstream: "backend.app.svc:3000" },
+          ],
+        },
+      ],
+      s3Endpoint: "https://s3.example.test",
+    });
+    const statusIdx = caddyfile.indexOf("handle /api/status");
+    const apiIdx = caddyfile.indexOf("handle /api/* {");
+    expect(statusIdx).toBeGreaterThan(-1);
+    expect(apiIdx).toBeGreaterThan(-1);
+    expect(statusIdx).toBeLessThan(apiIdx);
+  });
+
+  it("excludes reverse-proxy and spa-fallback paths from the @noTrailingSlash redirect matcher", () => {
+    // Regression: without this exclusion, `redir` fires before any `handle`
+    // block (redir has a lower Caddy directive ordinal), 301-ing
+    // /api/healthz → /api/healthz/ and bypassing the rewrite-to-/healthz
+    // transform on the way to the backend.
+    const caddyfile = generateCaddyfile({
+      sites: [
+        {
+          hostname: "app.test",
+          bucket: "app",
+          reverseProxies: [
+            {
+              path: "/api/healthz",
+              upstream: "backend.app.svc:3000",
+              rewriteTo: "/healthz",
+            },
+            { path: "/api/*", upstream: "backend.app.svc:3000" },
+          ],
+          spaFallbacks: [
+            { pathPrefix: "/app/*", fallbackPath: "/app/index.html" },
+          ],
+        },
+      ],
+      s3Endpoint: "https://s3.example.test",
+    });
+    expect(caddyfile).toContain("@noTrailingSlash {");
+    expect(caddyfile).toContain("not path /api/healthz /api/* /app/*");
+  });
+
+  it("emits the bare path_regexp matcher when a site has no proxies or fallbacks", () => {
+    const caddyfile = generateCaddyfile({
+      sites: [{ hostname: "static.test", bucket: "static" }],
+      s3Endpoint: "https://s3.example.test",
+    });
+    expect(caddyfile).toContain("@noTrailingSlash path_regexp ^/[^.]*[^/]$");
+    expect(caddyfile).not.toContain("not path");
+  });
 });
 
 const DeploymentSchema = z.object({
