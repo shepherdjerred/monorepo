@@ -17,7 +17,7 @@ export const RUST_IMAGE =
   "rust:1.95.0-bookworm@sha256:503651ea31e66ecb74623beabde781059a5978df1595a9e8ed03974d5fec1bf0";
 // renovate: datasource=docker depName=golang
 export const GO_IMAGE =
-  "golang:1.26.3-bookworm@sha256:252599aeb51ad60b83e4d8821802068127c528c707cb7dd7afd93be057c6011c";
+  "golang:1.26.3-bookworm@sha256:386d475a660466863d9f8c766fec64d7fdad3edac2c6a05020c09534d71edb4b";
 // renovate: datasource=docker depName=mcr.microsoft.com/playwright
 export const PLAYWRIGHT_IMAGE =
   "mcr.microsoft.com/playwright:v1.60.0-noble@sha256:9bd26ad900bb5e0f4dee75839e957a89ae89c2b7ab1e76050e559790e946b948";
