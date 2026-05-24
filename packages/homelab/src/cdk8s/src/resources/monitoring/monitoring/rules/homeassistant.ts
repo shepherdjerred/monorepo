@@ -22,7 +22,7 @@ const ignoredUnavailableEntities = [
   "tts.home_assistant_cloud",
 ];
 
-const ignoredUnavailableEntityDomainPattern = String.raw`^(${ignoredUnavailableEntityDomains.join("|")})\\..*`;
+const ignoredUnavailableEntityDomainPattern = String.raw`^(${ignoredUnavailableEntityDomains.join("|")})[.].*`;
 
 const unavailableEntitiesAnnotationQuery = `homeassistant_entity_available{entity!~"${ignoredUnavailableEntityDomainPattern}",${ignoredUnavailableEntities.map((entity) => `entity!="${entity}"`).join(",")}} == 0`;
 
