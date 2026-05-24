@@ -294,6 +294,7 @@ export const ALL_PACKAGES: string[] = [
   "scout-for-lol",
   "sjer.red",
   "starlight-karma-bot",
+  "stocks-sjer-red",
   "tasknotes-server",
   "tasknotes-types",
   "temporal",
