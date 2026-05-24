@@ -28,7 +28,7 @@ describe("updateLanePriors", () => {
 
     await updateLanePriors({
       repoDir: "/tmp/repo",
-      rawConfig: config,
+      rawConfig: { ...config, awsRegion: "us-east-1" },
       runCommand: async (command, options) => {
         calls.push({ command, cwd: options.cwd, env: options.env });
         return "";
