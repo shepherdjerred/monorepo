@@ -12,7 +12,7 @@
 # `docker build -f packages/scout-for-lol/packages/app/Dockerfile
 # packages/scout-for-lol` still works for local validation.
 
-FROM oven/bun:1.3 AS build
+FROM oven/bun:1.3@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4 AS build
 WORKDIR /work
 
 # Copy workspace manifests + lockfile so bun install can resolve every
@@ -30,7 +30,7 @@ COPY packages/data ./packages/data
 COPY packages/backend ./packages/backend
 RUN bun run --cwd packages/app build
 
-FROM caddy:2.10-alpine
+FROM caddy:2.10-alpine@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d
 COPY --from=build /work/packages/app/dist /var/www/app
 # Caddyfile injected at runtime via ConfigMap mount → /etc/caddy/Caddyfile.
 # /data and /config are emptyDir volumes injected by k8s at runtime (the
