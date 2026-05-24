@@ -88,7 +88,10 @@ describe("runCommand", () => {
     const statusOutput = ` M ${IMAGE_PATH}\n`;
 
     await expect(
-      runCommand(["printf", statusOutput], { cwd: ".", trimStdout: false }),
+      runCommand(["printf", "%s", statusOutput], {
+        cwd: ".",
+        trimStdout: false,
+      }),
     ).resolves.toBe(statusOutput);
   });
 });

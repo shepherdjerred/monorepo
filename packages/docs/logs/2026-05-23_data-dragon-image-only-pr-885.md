@@ -82,3 +82,19 @@ Verification:
 
 - The `bun` shim required `MISE_TRUSTED_CONFIG_PATHS=/Users/jerred/.codex/worktrees/4df5/monorepo/.mise.toml` in this sandbox because the worktree's `.mise.toml` is not trusted.
 - `git status` and diff commands emitted `error: daemon terminated` from the local git/fsmonitor setup, but still returned the requested status/diff data and exit code 0.
+
+## PR Follow-Up — 2026-05-23
+
+### Done
+
+- Opened PR #914 from `codex/data-dragon-image-only-suppression`.
+- Addressed Greptile's P2 review finding by changing the `printf` regression test to pass the output via `printf "%s"` instead of using the status output as the format string.
+- Re-ran `cd packages/temporal && bun test src/activities/data-dragon.test.ts`, `bun run typecheck`, and `bun run lint`.
+
+### Remaining
+
+- Continue monitoring PR #914 until Buildkite is green, mergeability stays clean, and no P3-or-higher review comments remain.
+
+### Caveats
+
+- Buildkite build 2817 was still queued at the time this follow-up was added.
