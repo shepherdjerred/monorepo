@@ -19,6 +19,7 @@ export const LanePriorUpdateConfigSchema = z.strictObject({
   holdoutSeed: z.string().min(1),
   threshold: z.number().min(0).max(1),
   awsProfile: z.string().min(1).optional(),
+  awsRegion: z.string().min(1).optional(),
   endpointUrl: z.url().optional(),
 });
 
@@ -39,6 +40,19 @@ export function queueIdCsv(queueIds: readonly number[]): string {
 
 function optionalFlag(name: string, value: string | undefined): string[] {
   return value === undefined ? [] : [name, value];
+}
+
+export function lanePriorAwsRegion(
+  config: LanePriorUpdateConfig,
+  env: Record<string, string | undefined> = Bun.env,
+): string {
+  return (
+    config.awsRegion ??
+    env["AWS_REGION"] ??
+    env["AWS_DEFAULT_REGION"] ??
+    env["S3_REGION"] ??
+    "us-east-1"
+  );
 }
 
 export function lanePriorPrBodyLines(
@@ -63,6 +77,12 @@ export async function updateLanePriors(input: {
   const config = LanePriorUpdateConfigSchema.parse(input.rawConfig);
   const endpointUrl = config.endpointUrl ?? Bun.env["S3_ENDPOINT"];
   const queueIds = queueIdCsv(config.queueIds);
+  const awsRegion = lanePriorAwsRegion(config);
+  const commandEnv = {
+    AWS_REGION: awsRegion,
+    AWS_DEFAULT_REGION: awsRegion,
+    ENVIRONMENT: undefined,
+  };
 
   await input.runCommand(
     [
@@ -84,7 +104,7 @@ export async function updateLanePriors(input: {
       ...optionalFlag("--aws-profile", config.awsProfile),
       ...optionalFlag("--endpoint-url", endpointUrl),
     ],
-    { cwd: `${input.repoDir}/${SCOUT_ROOT}` },
+    { cwd: `${input.repoDir}/${SCOUT_ROOT}`, env: commandEnv },
   );
 
   await input.runCommand(
@@ -115,6 +135,6 @@ export async function updateLanePriors(input: {
       ...optionalFlag("--aws-profile", config.awsProfile),
       ...optionalFlag("--endpoint-url", endpointUrl),
     ],
-    { cwd: `${input.repoDir}/${SCOUT_ROOT}` },
+    { cwd: `${input.repoDir}/${SCOUT_ROOT}`, env: commandEnv },
   );
 }
