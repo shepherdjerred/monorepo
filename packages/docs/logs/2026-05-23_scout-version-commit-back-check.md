@@ -55,3 +55,21 @@ Findings:
 
 - The implementation hardens GitHub App PR creation/failure semantics only; it does not fix the separate `GHCR_TOKEN` image-push failure seen in build 2760.
 - `mise` emitted a sandbox warning about tracking trusted config under `~/.local/state/mise`, but the requested checks completed.
+
+## Session Log -- 2026-05-23 PR Follow-Up
+
+### Done
+
+- Opened PR #907 from `codex/fix-version-commit-back-auth`.
+- Addressed CodeRabbit's major review finding by removing `>/dev/null 2>&1` hidden-stderr handling from the commit-back branch probes and the cooklang release existence probe.
+- Added commit-back hygiene test coverage to reject `>/dev/null 2>&1` in the hardened helpers.
+- Re-verified `bun run scripts/check-dagger-hygiene.ts`, `cd scripts/ci && bun run test`, and `cd scripts/ci && bun run typecheck`.
+
+### Remaining
+
+- Wait for Buildkite PR CI to finish.
+- Confirm PR #907 has no merge conflicts and no remaining P3-or-higher review comments after the follow-up commit.
+
+### Caveats
+
+- Further direct `bk` polling was temporarily blocked by the local sandbox reviewer usage limit, so PR status polling continued via the GitHub app commit status APIs until escalation is available again.
