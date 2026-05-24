@@ -1,0 +1,209 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0a0a0a;
+  --color-panel: #111111;
+  --color-line: #1f1f1f;
+  --color-text: #d4d4d4;
+  --color-muted: #6b6b6b;
+  --color-up: #00ff88;
+  --color-down: #ff3b3b;
+  --color-amber: #ffb000;
+  --font-mono:
+    "IBM Plex Mono", "JetBrains Mono", "Menlo", "Consolas", monospace;
+}
+
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-feature-settings:
+    "tnum" 1,
+    "zero" 1;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--color-amber);
+}
+
+/* ------------------------------------------------------------------ */
+/* Live ticker tape                                                    */
+/* ------------------------------------------------------------------ */
+.ticker-tape {
+  overflow: hidden;
+  border-bottom: 1px solid var(--color-line);
+  background: #000;
+  position: relative;
+}
+
+.ticker-tape::before,
+.ticker-tape::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 48px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.ticker-tape::before {
+  left: 0;
+  background: linear-gradient(to right, #000, transparent);
+}
+
+.ticker-tape::after {
+  right: 0;
+  background: linear-gradient(to left, #000, transparent);
+}
+
+.ticker-track {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: ticker-scroll 80s linear infinite;
+  will-change: transform;
+}
+
+.ticker-tape:hover .ticker-track {
+  animation-play-state: paused;
+}
+
+@keyframes ticker-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.ticker-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.8125rem;
+  border-right: 1px solid var(--color-line);
+}
+
+.ticker-item .ticker-sym {
+  color: var(--color-amber);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------ */
+/* Tick flash on price update                                          */
+/* ------------------------------------------------------------------ */
+@keyframes flash-up {
+  0% {
+    background-color: rgba(0, 255, 136, 0.35);
+    box-shadow: inset 0 0 0 1px rgba(0, 255, 136, 0.8);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: inset 0 0 0 1px transparent;
+  }
+}
+
+@keyframes flash-down {
+  0% {
+    background-color: rgba(255, 59, 59, 0.35);
+    box-shadow: inset 0 0 0 1px rgba(255, 59, 59, 0.8);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: inset 0 0 0 1px transparent;
+  }
+}
+
+.flash-up {
+  animation: flash-up 700ms ease-out;
+}
+
+.flash-down {
+  animation: flash-down 700ms ease-out;
+}
+
+/* ------------------------------------------------------------------ */
+/* Chart hover crosshair + tooltip                                     */
+/* ------------------------------------------------------------------ */
+.chart-wrap {
+  position: relative;
+}
+
+.chart-svg.chart-interactive {
+  cursor: crosshair;
+}
+
+.chart-overlay {
+  opacity: 0;
+  transition: opacity 80ms ease-out;
+  pointer-events: none;
+}
+
+.chart-hover .chart-overlay {
+  opacity: 1;
+}
+
+.chart-tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: var(--color-bg);
+  border: 1px solid var(--color-line);
+  padding: 0.375rem 0.625rem;
+  font-size: 0.75rem;
+  line-height: 1.25;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 80ms ease-out;
+  z-index: 4;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.chart-hover .chart-tooltip {
+  opacity: 1;
+}
+
+.chart-tooltip-date {
+  color: var(--color-muted);
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 0.125rem;
+}
+
+.chart-tooltip-price {
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------ */
+/* LIVE indicator pulse                                                */
+/* ------------------------------------------------------------------ */
+.live-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-up);
+  box-shadow: 0 0 6px var(--color-up);
+  animation: live-pulse 1.4s ease-in-out infinite;
+  vertical-align: middle;
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+}

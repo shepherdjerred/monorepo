@@ -1,0 +1,333 @@
+---
+import type { PricePoint } from "@data/schema";
+
+interface Props {
+  history: readonly PricePoint[];
+  width?: number;
+  height?: number;
+  showAxis?: boolean;
+  interactive?: boolean;
+  ariaLabel: string;
+}
+
+const {
+  history,
+  width = 800,
+  height = 280,
+  showAxis = true,
+  interactive = true,
+  ariaLabel,
+} = Astro.props;
+
+const sorted = [...history].sort((a, b) => a.date.localeCompare(b.date));
+const first = sorted[0];
+const last = sorted.at(-1);
+if (!first || !last) {
+  throw new Error(`StockChart requires history; got ${String(sorted.length)}`);
+}
+
+const padL = showAxis ? 56 : 4;
+const padR = 8;
+const padT = 8;
+const padB = showAxis ? 28 : 4;
+
+const plotW = width - padL - padR;
+const plotH = height - padT - padB;
+
+const min = Math.min(...sorted.map((p) => p.price));
+const max = Math.max(...sorted.map((p) => p.price));
+const pad = (max - min) * 0.08 || max * 0.08 || 1;
+const yMin = Math.max(0, min - pad);
+const yMax = max + pad;
+
+const xs = sorted.map((p) => new Date(p.date + "T00:00:00Z").getTime());
+const tMin = xs[0]!;
+const tMax = xs[xs.length - 1]!;
+const tSpan = tMax - tMin || 1;
+
+const xFor = (t: number): number => padL + ((t - tMin) / tSpan) * plotW;
+const yFor = (price: number): number =>
+  padT + plotH - ((price - yMin) / (yMax - yMin)) * plotH;
+
+const points = sorted.map((p, i) => ({
+  x: xFor(xs[i]!),
+  y: yFor(p.price),
+  date: p.date,
+  price: p.price,
+}));
+
+const linePath = points
+  .map((pt, i) => `${i === 0 ? "M" : "L"}${pt.x.toFixed(2)} ${pt.y.toFixed(2)}`)
+  .join(" ");
+
+const areaPath =
+  linePath +
+  ` L${points[points.length - 1]!.x.toFixed(2)} ${(padT + plotH).toFixed(2)}` +
+  ` L${points[0]!.x.toFixed(2)} ${(padT + plotH).toFixed(2)} Z`;
+
+const isUp = last.price >= first.price;
+const stroke = isUp ? "var(--color-up)" : "var(--color-down)";
+const fill = isUp ? "rgba(0, 255, 136, 0.10)" : "rgba(255, 59, 59, 0.10)";
+
+const yTicks = 4;
+const yTickValues = Array.from({ length: yTicks + 1 }, (_, i) => {
+  return yMin + ((yMax - yMin) * i) / yTicks;
+});
+
+function fmtTick(n: number): string {
+  if (n >= 1000) return "$" + Math.round(n).toLocaleString("en-US");
+  if (n >= 100) return "$" + n.toFixed(0);
+  return "$" + n.toFixed(2);
+}
+
+function fmtMonth(iso: string): string {
+  const d = new Date(iso + "T00:00:00Z");
+  return d.toLocaleString("en-US", {
+    month: "short",
+    year: "2-digit",
+    timeZone: "UTC",
+  });
+}
+
+const pointsJson = JSON.stringify(
+  points.map((p) => ({
+    x: Number(p.x.toFixed(2)),
+    y: Number(p.y.toFixed(2)),
+    date: p.date,
+    price: p.price,
+  })),
+);
+---
+
+<div class={interactive ? "chart-wrap" : "chart-wrap-static"}>
+  <svg
+    viewBox={`0 0 ${String(width)} ${String(height)}`}
+    preserveAspectRatio="none"
+    role="img"
+    aria-label={ariaLabel}
+    class={interactive
+      ? "chart-svg chart-interactive block w-full h-auto"
+      : "chart-svg block w-full h-auto"}
+    data-points={interactive ? pointsJson : undefined}
+    data-stroke={interactive ? stroke : undefined}
+  >
+    {
+      showAxis && (
+        <g>
+          {yTickValues.map((v) => (
+            <g>
+              <line
+                x1={padL}
+                x2={width - padR}
+                y1={yFor(v)}
+                y2={yFor(v)}
+                stroke="var(--color-line)"
+                stroke-width="1"
+                shape-rendering="crispEdges"
+              />
+              <text
+                x={padL - 6}
+                y={yFor(v) + 4}
+                text-anchor="end"
+                fill="var(--color-muted)"
+                font-size="11"
+                font-family="var(--font-mono)"
+              >
+                {fmtTick(v)}
+              </text>
+            </g>
+          ))}
+          <text
+            x={padL}
+            y={height - 8}
+            fill="var(--color-muted)"
+            font-size="11"
+            font-family="var(--font-mono)"
+            text-anchor="start"
+          >
+            {fmtMonth(first.date)}
+          </text>
+          <text
+            x={width - padR}
+            y={height - 8}
+            fill="var(--color-muted)"
+            font-size="11"
+            font-family="var(--font-mono)"
+            text-anchor="end"
+          >
+            {fmtMonth(last.date)}
+          </text>
+        </g>
+      )
+    }
+
+    <path d={areaPath} fill={fill} stroke="none"></path>
+    <path
+      d={linePath}
+      fill="none"
+      stroke={stroke}
+      stroke-width="1.75"
+      stroke-linejoin="round"
+      stroke-linecap="round"></path>
+
+    {
+      interactive && (
+        <g class="chart-overlay">
+          <line
+            class="chart-crosshair"
+            x1="0"
+            x2="0"
+            y1={padT}
+            y2={padT + plotH}
+            stroke="var(--color-muted)"
+            stroke-width="1"
+            stroke-dasharray="3 3"
+          />
+          <circle class="chart-marker" cx="0" cy="0" r="4" fill={stroke} />
+        </g>
+      )
+    }
+  </svg>
+
+  {
+    interactive && (
+      <div class="chart-tooltip" role="status" aria-live="polite">
+        <div class="chart-tooltip-date" />
+        <div class="chart-tooltip-price tabular-nums" />
+      </div>
+    )
+  }
+</div>
+
+<script>
+  interface Point {
+    x: number;
+    y: number;
+    date: string;
+    price: number;
+  }
+
+  function fmtPrice(n: number): string {
+    return n.toLocaleString("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  }
+
+  function fmtDate(iso: string): string {
+    const d = new Date(iso + "T00:00:00Z");
+    return d.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+  }
+
+  function initChart(svg: SVGSVGElement): void {
+    if (svg.dataset.chartInit === "1") return;
+    svg.dataset.chartInit = "1";
+
+    const raw = svg.dataset.points;
+    if (raw === undefined || raw === "") return;
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length < 2) return;
+    const points: Point[] = parsed.filter(
+      (p): p is Point =>
+        typeof p === "object" &&
+        p !== null &&
+        typeof (p as Point).x === "number" &&
+        typeof (p as Point).y === "number" &&
+        typeof (p as Point).date === "string" &&
+        typeof (p as Point).price === "number",
+    );
+    if (points.length < 2) return;
+
+    const wrap = svg.closest<HTMLElement>(".chart-wrap");
+    if (!wrap) return;
+
+    const crosshair = svg.querySelector<SVGLineElement>(".chart-crosshair");
+    const marker = svg.querySelector<SVGCircleElement>(".chart-marker");
+    const tooltip = wrap.querySelector<HTMLElement>(".chart-tooltip");
+    const ttDate = wrap.querySelector<HTMLElement>(".chart-tooltip-date");
+    const ttPrice = wrap.querySelector<HTMLElement>(".chart-tooltip-price");
+    if (!crosshair || !marker || !tooltip || !ttDate || !ttPrice) return;
+
+    const vb = svg.viewBox.baseVal;
+
+    const move = (clientX: number): void => {
+      const rect = svg.getBoundingClientRect();
+      const ratio = (clientX - rect.left) / rect.width;
+      const svgX = ratio * vb.width;
+
+      let nearest = points[0]!;
+      let minDist = Math.abs(svgX - nearest.x);
+      for (const p of points) {
+        const d = Math.abs(svgX - p.x);
+        if (d < minDist) {
+          minDist = d;
+          nearest = p;
+        }
+      }
+
+      const xStr = String(nearest.x);
+      crosshair.setAttribute("x1", xStr);
+      crosshair.setAttribute("x2", xStr);
+      marker.setAttribute("cx", xStr);
+      marker.setAttribute("cy", String(nearest.y));
+      wrap.classList.add("chart-hover");
+
+      // position tooltip in CSS pixels relative to the wrap, near the marker
+      const cssX = (nearest.x / vb.width) * rect.width;
+      const cssY = (nearest.y / vb.height) * rect.height;
+      ttDate.textContent = fmtDate(nearest.date);
+      ttPrice.textContent = fmtPrice(nearest.price);
+      ttPrice.style.color = svg.dataset.stroke ?? "";
+
+      // clamp tooltip inside wrap
+      const wrapRect = wrap.getBoundingClientRect();
+      const ttRect = tooltip.getBoundingClientRect();
+      const offset = 12;
+      let left = cssX + offset;
+      if (left + ttRect.width > wrapRect.width - 4) {
+        left = cssX - ttRect.width - offset;
+      }
+      let top = cssY - ttRect.height - offset;
+      if (top < 4) top = cssY + offset;
+      tooltip.style.left = `${String(Math.max(4, left))}px`;
+      tooltip.style.top = `${String(top)}px`;
+    };
+
+    svg.addEventListener("mousemove", (e) => {
+      move(e.clientX);
+    });
+    svg.addEventListener("mouseleave", () => {
+      wrap.classList.remove("chart-hover");
+    });
+    svg.addEventListener(
+      "touchmove",
+      (e) => {
+        const t = e.touches[0];
+        if (t) move(t.clientX);
+      },
+      { passive: true },
+    );
+    svg.addEventListener("touchend", () => {
+      wrap.classList.remove("chart-hover");
+    });
+  }
+
+  function initAll(): void {
+    document
+      .querySelectorAll<SVGSVGElement>("svg.chart-interactive")
+      .forEach(initChart);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initAll);
+  } else {
+    initAll();
+  }
+</script>

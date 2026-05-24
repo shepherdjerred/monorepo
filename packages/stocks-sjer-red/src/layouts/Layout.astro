@@ -1,0 +1,74 @@
+---
+import "@styles/global.css";
+import TickerTape from "@components/TickerTape.astro";
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = "Personal hardware portfolio. Long PC parts." } =
+  Astro.props;
+const now = new Date();
+const stamp = now.toLocaleString("en-US", {
+  timeZone: "America/Los_Angeles",
+  year: "numeric",
+  month: "short",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: false,
+});
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap"
+    />
+  </head>
+  <body class="min-h-screen">
+    <TickerTape />
+
+    <header
+      class="border-b border-[var(--color-line)] px-4 sm:px-8 py-3 flex items-center justify-between gap-3"
+    >
+      <a href="/" class="flex items-baseline gap-3">
+        <span class="text-[var(--color-amber)] font-bold tracking-wider"
+          >STOCKS.SJER.RED</span
+        >
+      </a>
+      <div class="flex items-center gap-3 text-xs tabular-nums">
+        <span class="flex items-center gap-1.5 text-[var(--color-up)]">
+          <span class="live-dot"></span>
+          <span class="uppercase tracking-wider">Live</span>
+        </span>
+        <span class="text-[var(--color-muted)]" data-live-clock>{stamp} PT</span
+        >
+      </div>
+    </header>
+
+    <div
+      class="border-b border-[var(--color-line)] bg-[var(--color-panel)] px-4 sm:px-8 py-2 text-xs text-[var(--color-muted)] italic"
+    >
+      Real-time updates are obviously fake. There isn't any day trading for
+      SSDs/RAM (yet).
+    </div>
+
+    <main class="px-4 sm:px-8 py-6 max-w-7xl mx-auto">
+      <slot />
+    </main>
+
+    <script>
+      import "../scripts/live.ts";
+    </script>
+  </body>
+</html>
