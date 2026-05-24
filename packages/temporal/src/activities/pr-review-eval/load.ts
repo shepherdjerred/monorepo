@@ -12,9 +12,9 @@
  * `eval_runs.fixture_commit_sha`).
  *
  * Auth: the fixtures repo is private. The temporal-worker pod mounts
- * `PR_REVIEW_FIXTURES_REPO_URL` and `GH_TOKEN` via 1Password Connect. Clone
- * authenticates via `GIT_ASKPASS` — never embeds the token in the URL (per
- * AGENTS.md / data-dragon.ts precedent).
+ * `PR_REVIEW_FIXTURES_REPO_URL` and GitHub App credentials via 1Password
+ * Connect. Clone authenticates via `GIT_ASKPASS` with a short-lived
+ * installation token — never embeds the token in the URL.
  */
 import {
   mkdtemp,
@@ -30,6 +30,7 @@ import { Context } from "@temporalio/activity";
 import { simpleGit } from "simple-git";
 import { withSpan } from "#observability/tracing.ts";
 import { FixtureSchema, type Fixture } from "#shared/pr-review/eval-fixture.ts";
+import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 
 const FIXTURES_REPO_URL_ENV = "PR_REVIEW_FIXTURES_REPO_URL";
 const COMPONENT = "pr-review-eval";
@@ -101,12 +102,7 @@ async function loadFixtureCorpusImpl(
     "prReviewEval.loadFixtureCorpus",
     { "fixtures.pin": input.pin },
     async () => {
-      const ghToken = Bun.env["GH_TOKEN"];
-      if (ghToken === undefined || ghToken === "") {
-        throw new Error(
-          "GH_TOKEN missing — required to clone the private fixtures repo",
-        );
-      }
+      const ghToken = await createGitHubAppInstallationToken();
       const fixturesRepoUrl = Bun.env[FIXTURES_REPO_URL_ENV]?.trim();
       if (fixturesRepoUrl === undefined || fixturesRepoUrl === "") {
         throw new Error(
@@ -119,7 +115,7 @@ async function loadFixtureCorpusImpl(
       );
       const askpass = await writeGitAskpass(scratch);
       const gitEnv = {
-        GH_TOKEN: ghToken,
+        GH_TOKEN: ghToken.token,
         GIT_ASKPASS: askpass,
         GIT_TERMINAL_PROMPT: "0",
       };

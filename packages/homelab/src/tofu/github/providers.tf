@@ -11,5 +11,5 @@ terraform {
 
 provider "github" {
   owner = "shepherdjerred"
-  # Authenticated via GH_TOKEN environment variable
+  app_auth {}
 }

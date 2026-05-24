@@ -17,6 +17,7 @@ import {
   startMetricsServer,
   stopMetricsServer,
 } from "./observability/metrics.ts";
+import { readPositiveIntegerEnv } from "./shared/env.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
@@ -209,6 +210,11 @@ async function main(): Promise<void> {
 
   jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.DEFAULT });
 
+  const prReviewMaxConcurrentActivities = readPositiveIntegerEnv({
+    name: "PR_REVIEW_WORKER_MAX_CONCURRENT_ACTIVITIES",
+    defaultValue: 1,
+  });
+
   // Second worker on the pr-review task queue. Same workflow bundle and
   // activity surface, but isolated from the DEFAULT queue so the
   // long-running multi-specialist LLM activities can't head-of-line block
@@ -219,9 +225,13 @@ async function main(): Promise<void> {
     taskQueue: TASK_QUEUES.PR_REVIEW,
     workflowsPath,
     activities,
+    maxConcurrentActivityTaskExecutions: prReviewMaxConcurrentActivities,
   });
 
-  jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.PR_REVIEW });
+  jsonLog("info", "Worker created", {
+    taskQueue: TASK_QUEUES.PR_REVIEW,
+    maxConcurrentActivityTaskExecutions: prReviewMaxConcurrentActivities,
+  });
 
   // Third worker on the pr-summary task queue. Isolated from PR_REVIEW so a
   // stuck specialist activity (e.g. specialist runner waiting on Anthropic

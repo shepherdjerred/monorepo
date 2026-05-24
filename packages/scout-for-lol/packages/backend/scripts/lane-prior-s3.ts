@@ -14,10 +14,24 @@ export const LanePriorS3ConfigSchema = z.strictObject({
   endDate: DateOnlySchema,
   queueIds: z.array(z.number().int().positive()).min(1),
   awsProfile: z.string().min(1).optional(),
-  endpointUrl: z.string().url().optional(),
+  endpointUrl: z.url().optional(),
 });
 
 export type LanePriorS3Config = z.infer<typeof LanePriorS3ConfigSchema>;
+
+export function lanePriorS3Region(): string {
+  const awsRegion = Bun.env["AWS_REGION"]?.trim();
+  if (awsRegion !== undefined && awsRegion !== "") {
+    return awsRegion;
+  }
+
+  const s3Region = Bun.env["S3_REGION"]?.trim();
+  if (s3Region !== undefined && s3Region !== "") {
+    return s3Region;
+  }
+
+  return "us-east-1";
+}
 
 function dateToPrefix(date: Date): string {
   const year = date.getUTCFullYear().toString().padStart(4, "0");
@@ -55,6 +69,7 @@ function createClient(config: LanePriorS3Config): S3Client {
   }
   return new S3Client({
     forcePathStyle: true,
+    region: lanePriorS3Region(),
     ...(config.endpointUrl === undefined
       ? {}
       : { endpoint: config.endpointUrl }),

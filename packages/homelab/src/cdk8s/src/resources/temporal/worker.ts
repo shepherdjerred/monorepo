@@ -382,6 +382,8 @@ export function createTemporalWorkerDeployment(
         S3_ENDPOINT: EnvValue.fromSecretValue({ secret, key: "S3_ENDPOINT" }),
         S3_KEY: EnvValue.fromValue("data/manifest.json"),
         S3_REGION: EnvValue.fromValue("us-east-1"),
+        AWS_REGION: EnvValue.fromValue("us-east-1"),
+        AWS_DEFAULT_REGION: EnvValue.fromValue("us-east-1"),
         S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
         ...llmArchiveEnvVars(),
         HOMELAB_AUDIT_ARCHIVE_BUCKET: EnvValue.fromSecretValue(
@@ -401,7 +403,6 @@ export function createTemporalWorkerDeployment(
           key: "AWS_SECRET_ACCESS_KEY",
         }),
         // GitHub
-        GH_TOKEN: EnvValue.fromSecretValue({ secret, key: "GH_TOKEN" }),
         PR_REVIEW_FIXTURES_REPO_URL: EnvValue.fromSecretValue(
           {
             secret,
@@ -421,17 +422,13 @@ export function createTemporalWorkerDeployment(
           secret,
           key: "GITHUB_APP_PRIVATE_KEY",
         }),
-        // GitHub webhook ingest (pr-review / pr-summary). The pr-agent activity
-        // shells out to `claude -p` with the GitHub MCP server; the MCP server
-        // reads GITHUB_PERSONAL_ACCESS_TOKEN from its env. CLAUDE_CODE_OAUTH_TOKEN
-        // is the auth used by the claude CLI itself.
+        // GitHub webhook ingest (pr-review / pr-summary). GitHub API, clone,
+        // push, and comment operations mint short-lived installation tokens
+        // from the app credentials above. CLAUDE_CODE_OAUTH_TOKEN is the auth
+        // used by the claude CLI itself.
         GITHUB_WEBHOOK_SECRET: EnvValue.fromSecretValue({
           secret,
           key: "GITHUB_WEBHOOK_SECRET",
-        }),
-        GITHUB_PERSONAL_ACCESS_TOKEN: EnvValue.fromSecretValue({
-          secret,
-          key: "GITHUB_PERSONAL_ACCESS_TOKEN",
         }),
         // Anthropic: OAuth → legacy `claude -p`, API key → SDK pr-summary.
         // Sole auth for both legacy `claude -p` and the new SDK-based bot.
@@ -452,6 +449,8 @@ export function createTemporalWorkerDeployment(
         // runtime — see packages/temporal/src/activities/pr-review/post.ts
         // `isPostEnabled`.
         PR_REVIEW_POST_ENABLED: EnvValue.fromValue("true"),
+        PR_REVIEW_SPECIALIST_PASS_CONCURRENCY: EnvValue.fromValue("1"),
+        PR_REVIEW_WORKER_MAX_CONCURRENT_ACTIVITIES: EnvValue.fromValue("1"),
         GITHUB_WEBHOOK_PORT: EnvValue.fromValue("9466"),
         AGENT_TASK_API_PORT: EnvValue.fromValue("9467"),
         AGENT_TASK_API_TOKEN: EnvValue.fromSecretValue({
