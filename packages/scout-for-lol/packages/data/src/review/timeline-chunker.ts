@@ -1,7 +1,7 @@
 /**
  * Timeline chunking utilities
  *
- * Splits raw timeline data into time-based chunks for parallel processing.
+ * Splits raw timeline data into time-based chunks for bounded processing.
  * This helps avoid token limits when processing long games.
  */
 

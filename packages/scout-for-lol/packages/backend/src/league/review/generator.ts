@@ -34,6 +34,12 @@ import {
 } from "#src/alerts/provider-metrics.ts";
 
 const logger = createLogger("generator");
+const OPENAI_MATCH_REVIEW_PROVIDER_ISSUE_KINDS = [
+  "quota",
+  "rate_limit",
+  "budget_exceeded",
+  "context_limit",
+] as const;
 
 /**
  * Metadata about the generated review
@@ -76,6 +82,17 @@ function reportOpenAIProviderIssue(
     `OpenAI provider issue while generating AI review for ${context.matchId}: ${providerIssueKind}`,
   );
   return true;
+}
+
+function resolveOpenAIProviderIssues(): void {
+  for (const kind of OPENAI_MATCH_REVIEW_PROVIDER_ISSUE_KINDS) {
+    resolveProviderIssue({
+      app: "scout-for-lol",
+      provider: "openai",
+      kind,
+      source: "match_review",
+    });
+  }
 }
 
 /**
@@ -216,18 +233,7 @@ export async function generateMatchReview(
     return undefined;
   }
 
-  resolveProviderIssue({
-    app: "scout-for-lol",
-    provider: "openai",
-    kind: "quota",
-    source: "match_review",
-  });
-  resolveProviderIssue({
-    app: "scout-for-lol",
-    provider: "openai",
-    kind: "rate_limit",
-    source: "match_review",
-  });
+  resolveOpenAIProviderIssues();
 
   // Save traces to S3 (fire and forget, don't block return)
   void (async () => {
