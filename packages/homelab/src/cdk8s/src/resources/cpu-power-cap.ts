@@ -1,29 +1,45 @@
 import type { Chart } from "cdk8s";
-import { Duration } from "cdk8s";
+import { Duration, Size } from "cdk8s";
 import {
+  Cpu,
   DaemonSet,
   Namespace,
+  Node,
+  NodeLabelQuery,
   Probe,
   ServiceAccount,
   Volume,
 } from "cdk8s-plus-31";
+import { z } from "zod";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
-export type CpuPowerCapOptions = {
-  /**
-   * Sustained ("PL1") package power limit in watts — the long-term ceiling
-   * the cooling system must dissipate continuously.
-   */
-  pl1Watts: number;
-  /**
-   * Short-burst ("PL2" / MTP) package power limit in watts. The CPU may draw
-   * up to this for the brief PL2 time window (~28 s default) before being
-   * clamped back to PL1. Must be >= pl1Watts.
-   */
-  pl2Watts: number;
-};
+const CpuPowerCapOptionsSchema = z
+  .object({
+    /**
+     * Sustained ("PL1") package power limit in watts — the long-term ceiling
+     * the cooling system must dissipate continuously.
+     */
+    pl1Watts: z.number().positive(),
+    /**
+     * Short-burst ("PL2" / MTP) package power limit in watts. The CPU may
+     * draw up to this for the brief PL2 time window (~28 s default) before
+     * being clamped back to PL1. Must be >= pl1Watts.
+     */
+    pl2Watts: z.number().positive(),
+  })
+  .refine((value) => value.pl2Watts >= value.pl1Watts, {
+    message: "pl2Watts must be >= pl1Watts",
+    path: ["pl2Watts"],
+  });
+
+export type CpuPowerCapOptions = z.input<typeof CpuPowerCapOptionsSchema>;
 
 const NAMESPACE = "node-tuning";
+// The 95 W / 140 W limits are calibrated for the i9-13900K in this host. If
+// another node ever joins the cluster the limits would be wrong for it, and
+// the DaemonSet would CrashLoopBackOff there anyway because non-Intel hosts
+// lack /sys/class/powercap/intel-rapl:0. Pin to torvalds explicitly.
+const TARGET_NODE_HOSTNAME = "torvalds";
 
 /**
  * Caps Intel RAPL package power limits (PL1/PL2) on every node via a
@@ -49,13 +65,7 @@ const NAMESPACE = "node-tuning";
  * CrashLoopBackOff with a visible error.
  */
 export function createCpuPowerCap(chart: Chart, options: CpuPowerCapOptions) {
-  const { pl1Watts, pl2Watts } = options;
-
-  if (pl2Watts < pl1Watts) {
-    throw new Error(
-      `cpu-power-cap: pl2Watts (${String(pl2Watts)}) must be >= pl1Watts (${String(pl1Watts)})`,
-    );
-  }
+  const { pl1Watts, pl2Watts } = CpuPowerCapOptionsSchema.parse(options);
 
   const namespace = new Namespace(chart, "node-tuning-namespace", {
     metadata: {
@@ -101,6 +111,12 @@ export function createCpuPowerCap(chart: Chart, options: CpuPowerCapOptions) {
       fsGroup: 0,
     },
   });
+
+  daemonSet.scheduling.attract(
+    Node.labeled(
+      NodeLabelQuery.is("kubernetes.io/hostname", TARGET_NODE_HOSTNAME),
+    ),
+  );
 
   const pl1Uw = String(pl1Watts * 1_000_000);
   const pl2Uw = String(pl2Watts * 1_000_000);
@@ -154,7 +170,7 @@ done
       [
         "sh",
         "-c",
-        `actual=$(cat ${raplPath}/constraint_0_power_limit_uw) && [ "$actual" = "${pl1Uw}" ]`,
+        `actual_pl1=$(cat ${raplPath}/constraint_0_power_limit_uw) && [ "$actual_pl1" = "${pl1Uw}" ] && actual_pl2=$(cat ${raplPath}/constraint_1_power_limit_uw) && [ "$actual_pl2" = "${pl2Uw}" ]`,
       ],
       {
         initialDelaySeconds: Duration.seconds(30),
@@ -162,6 +178,16 @@ done
         failureThreshold: 3,
       },
     ),
+    resources: {
+      cpu: {
+        request: Cpu.millis(10),
+        limit: Cpu.millis(100),
+      },
+      memory: {
+        request: Size.mebibytes(16),
+        limit: Size.mebibytes(64),
+      },
+    },
     securityContext: {
       privileged: true,
       allowPrivilegeEscalation: true,
