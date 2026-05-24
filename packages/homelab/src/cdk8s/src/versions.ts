@@ -115,11 +115,6 @@ const versions = {
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
   "shepherdjerred/scout-for-lol/prod":
     "2.0.0-2473@sha256:121e746e3dc37acb292c2fa80fbf21a51d3bac3f035c7f5891d5302f37673612",
-  // Scout web UI (React SPA + Caddy reverse-proxy front).
-  // not managed by renovate — beta updated by version-commit-back
-  "shepherdjerred/scout-app/beta": "0.0.1-dev",
-  // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-app
-  "shepherdjerred/scout-app/prod": "0.0.1-dev",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
     "2.0.0-2635@sha256:ce981f48c236dd7f4ee94163cc4236ef0639d1c07fd405135678ae3dbd8faeff",

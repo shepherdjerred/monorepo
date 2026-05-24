@@ -104,11 +104,13 @@ export async function validateCatalog(): Promise<void> {
 
   // 6. PACKAGE_TO_SITE values must match a DEPLOY_SITES bucket
   const siteBuckets = new Set(DEPLOY_SITES.map((s) => s.bucket));
-  for (const [pkg, bucket] of Object.entries(PACKAGE_TO_SITE)) {
-    if (!siteBuckets.has(bucket)) {
-      errors.push(
-        `PACKAGE_TO_SITE maps "${pkg}" to bucket "${bucket}" but no DEPLOY_SITES entry has that bucket.`,
-      );
+  for (const [pkg, buckets] of Object.entries(PACKAGE_TO_SITE)) {
+    for (const bucket of buckets) {
+      if (!siteBuckets.has(bucket)) {
+        errors.push(
+          `PACKAGE_TO_SITE maps "${pkg}" to bucket "${bucket}" but no DEPLOY_SITES entry has that bucket.`,
+        );
+      }
     }
   }
 

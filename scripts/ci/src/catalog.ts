@@ -152,12 +152,24 @@ export const DEPLOY_SITES: DeploySite[] = [
   },
   {
     bucket: "scout-frontend",
-    name: "scout-for-lol frontend",
+    name: "scout-for-lol frontend + app (prod)",
     url: "https://scout-for-lol.com",
     buildDir: "packages/scout-for-lol",
-    buildCmd: "bun run --filter='./packages/frontend' build",
+    buildCmd: "bun run scripts/build-bucket.ts",
     distDir: "packages/scout-for-lol/packages/frontend/dist",
     buildEnvVars: ["PUBLIC_PINTEREST_TAG_ID", "PUBLIC_REDDIT_PIXEL_ID"],
+    workspaceDeps: "packages/frontend,packages/app",
+  },
+  {
+    bucket: "scout-frontend-beta",
+    name: "scout-for-lol frontend + app (beta)",
+    url: "https://scout-for-lol-beta.sjer.red",
+    buildDir: "packages/scout-for-lol",
+    buildCmd: "bun run scripts/build-bucket.ts",
+    distDir: "packages/scout-for-lol/packages/frontend/dist",
+    // Analytics pixels intentionally omitted for beta — beta traffic must
+    // not inflate prod Pinterest/Reddit conversion data.
+    workspaceDeps: "packages/frontend,packages/app",
   },
   {
     bucket: "better-skill-capped",
@@ -258,14 +270,21 @@ export const HELM_CHARTS: string[] = [
 // Package-to-site mapping (for change detection)
 // ---------------------------------------------------------------------------
 
-export const PACKAGE_TO_SITE: Record<string, string> = {
-  "sjer.red": "sjer-red",
-  resume: "resume",
-  webring: "webring",
-  "cooklang-rich-preview": "cook",
-  "scout-for-lol": "scout-frontend",
-  "stocks-sjer-red": "stocks-sjer-red",
-  "better-skill-capped": "better-skill-capped",
+/**
+ * Maps a workspace package name to the deploy buckets its changes should trigger.
+ *
+ * Most packages fan out to a single bucket. `scout-for-lol` fans out to both
+ * prod and beta buckets because the merged Astro + SPA build is deployed to
+ * both stages on every main merge.
+ */
+export const PACKAGE_TO_SITE: Record<string, string[]> = {
+  "sjer.red": ["sjer-red"],
+  resume: ["resume"],
+  webring: ["webring"],
+  "cooklang-rich-preview": ["cook"],
+  "scout-for-lol": ["scout-frontend", "scout-frontend-beta"],
+  "stocks-sjer-red": ["stocks-sjer-red"],
+  "better-skill-capped": ["better-skill-capped"],
   // discord-plays-pokemon docs deployed via dedicated mkdocs step, not deploy-site
 };
 

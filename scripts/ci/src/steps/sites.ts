@@ -156,8 +156,10 @@ export function filterSites(
   if (buildAll) return DEPLOY_SITES;
   const siteBuckets = new Set<string>();
   for (const pkg of affectedSitePackages) {
-    const bucket = PACKAGE_TO_SITE[pkg];
-    if (bucket) siteBuckets.add(bucket);
+    const buckets = PACKAGE_TO_SITE[pkg];
+    if (buckets) {
+      for (const bucket of buckets) siteBuckets.add(bucket);
+    }
   }
   return DEPLOY_SITES.filter((s) => siteBuckets.has(s.bucket));
 }

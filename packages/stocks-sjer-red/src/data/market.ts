@@ -82,12 +82,26 @@ async function fetchOne(symbol: string, name: string): Promise<Quote> {
   };
 }
 
+function isFileNotFound(err: unknown): boolean {
+  return (
+    err instanceof Error &&
+    "code" in err &&
+    (err as NodeJS.ErrnoException).code === "ENOENT"
+  );
+}
+
 async function readCache(): Promise<Quote[] | null> {
   try {
     const raw = await readFile(CACHE_PATH, "utf-8");
     const parsed = CacheSchema.parse(JSON.parse(raw));
     return parsed.quotes;
-  } catch {
+  } catch (err) {
+    if (!isFileNotFound(err)) {
+      console.warn(
+        "[market] cache read error:",
+        err instanceof Error ? err.message : String(err),
+      );
+    }
     return null;
   }
 }
@@ -103,7 +117,13 @@ async function isCacheFresh(): Promise<boolean> {
     const raw = await readFile(CACHE_PATH, "utf-8");
     const parsed = CacheSchema.parse(JSON.parse(raw));
     return Date.now() - Date.parse(parsed.fetchedAt) < TTL_MS;
-  } catch {
+  } catch (err) {
+    if (!isFileNotFound(err)) {
+      console.warn(
+        "[market] cache freshness check error:",
+        err instanceof Error ? err.message : String(err),
+      );
+    }
     return false;
   }
 }
