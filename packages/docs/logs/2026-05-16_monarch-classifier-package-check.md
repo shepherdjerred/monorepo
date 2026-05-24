@@ -137,6 +137,7 @@ Fix implemented:
 - Changed Tier 2 classification to skip checkpointed batches, save successful batches as they complete, and preserve fulfilled sibling batches before rethrowing failures.
 - Added recovered-call accounting to the API usage summary.
 - Added checkpoint and Tier 2 resume tests for missing/malformed checkpoints, strict key invalidation, prompt-change re-spend, skip-on-resume, and partial concurrent failure recovery.
+- Addressed PR review findings by reporting every failed Tier 2 batch in a concurrent chunk and ensuring the Monarch browser-login script always closes Chromium when session saving fails.
 - Isolated Venmo parser tests to temporary cache files so package tests no longer write to the real `~/.monarch-cache`.
 - Updated the Monarch README with `--checkpoint-file`, corrected the default model string, and documented automatic checkpoint behavior.
 - Verified in `packages/monarch`:
@@ -144,6 +145,7 @@ Fix implemented:
   - `bun run typecheck`
   - `bunx eslint .`
   - `bun test`
+  - `bunx eslint .` after the PR review fixes
 
 ### Remaining
 

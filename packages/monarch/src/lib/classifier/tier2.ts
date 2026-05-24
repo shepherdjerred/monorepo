@@ -451,12 +451,12 @@ export async function classifyTier2(
       ),
     );
 
-    let firstFailure: unknown;
+    const failures: unknown[] = [];
     for (const result of results) {
       if (result.status === "fulfilled") {
         changes.push(...result.value.changes);
-      } else if (firstFailure === undefined) {
-        firstFailure = result.reason;
+      } else {
+        failures.push(result.reason);
       }
     }
 
@@ -465,9 +465,22 @@ export async function classifyTier2(
       .reduce((sum, work) => sum + work.batch.length, 0);
     log.progress(completed, transactions.length, "tier 2 classified");
 
-    if (firstFailure !== undefined) {
-      if (firstFailure instanceof Error) throw firstFailure;
-      throw new Error(describeThrownValue(firstFailure));
+    if (failures.length === 1) {
+      const failure = failures[0];
+      if (failure instanceof Error) throw failure;
+      throw new Error(describeThrownValue(failure));
+    }
+
+    if (failures.length > 1) {
+      const failureDescriptions = failures
+        .map(
+          (failure, index) =>
+            `${String(index + 1)}. ${describeThrownValue(failure)}`,
+        )
+        .join("\n");
+      throw new Error(
+        `Tier 2 classification failed for ${String(failures.length)} batches:\n${failureDescriptions}`,
+      );
     }
   }
 
