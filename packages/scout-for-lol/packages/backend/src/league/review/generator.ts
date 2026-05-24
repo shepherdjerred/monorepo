@@ -29,17 +29,12 @@ import {
 import { createLogger } from "#src/logger.ts";
 import {
   classifyOpenAIProviderIssue,
+  PROVIDER_ISSUE_KINDS,
   recordProviderIssue,
   resolveProviderIssue,
 } from "#src/alerts/provider-metrics.ts";
 
 const logger = createLogger("generator");
-const OPENAI_MATCH_REVIEW_PROVIDER_ISSUE_KINDS = [
-  "quota",
-  "rate_limit",
-  "budget_exceeded",
-  "context_limit",
-] as const;
 
 /**
  * Metadata about the generated review
@@ -85,7 +80,7 @@ function reportOpenAIProviderIssue(
 }
 
 function resolveOpenAIProviderIssues(): void {
-  for (const kind of OPENAI_MATCH_REVIEW_PROVIDER_ISSUE_KINDS) {
+  for (const kind of PROVIDER_ISSUE_KINDS) {
     resolveProviderIssue({
       app: "scout-for-lol",
       provider: "openai",

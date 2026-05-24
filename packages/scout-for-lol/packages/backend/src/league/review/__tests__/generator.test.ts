@@ -12,7 +12,11 @@ import {
 
 import { testAccountId, testPuuid } from "#src/testing/test-ids.ts";
 import { aiProviderIssueActive } from "#src/metrics/index.ts";
-import { resolveProviderIssue } from "#src/alerts/provider-metrics.ts";
+import {
+  PROVIDER_ISSUE_KINDS,
+  resolveProviderIssue,
+  type ProviderIssueKind,
+} from "#src/alerts/provider-metrics.ts";
 
 let openaiClient: OpenAIClient | undefined;
 let geminiClient: unknown;
@@ -85,13 +89,6 @@ const MINIMAL_RAW_TIMELINE: RawTimeline = RawTimelineSchema.parse({
   },
 });
 
-const OPENAI_MATCH_REVIEW_PROVIDER_ISSUE_KINDS = [
-  "quota",
-  "rate_limit",
-  "budget_exceeded",
-  "context_limit",
-] as const;
-
 function buildThrowingOpenAIClient(error: unknown): OpenAIClient {
   return {
     chat: {
@@ -105,7 +102,7 @@ function buildThrowingOpenAIClient(error: unknown): OpenAIClient {
 }
 
 async function getProviderIssueActiveValue(
-  kind: (typeof OPENAI_MATCH_REVIEW_PROVIDER_ISSUE_KINDS)[number],
+  kind: ProviderIssueKind,
 ): Promise<number | undefined> {
   const metric = await aiProviderIssueActive.get();
   return metric.values.find((value) => {
@@ -124,7 +121,7 @@ beforeEach(() => {
   capturedExceptionInputs.length = 0;
   savedPipelineArtifacts.length = 0;
   captureException.mockClear();
-  for (const kind of OPENAI_MATCH_REVIEW_PROVIDER_ISSUE_KINDS) {
+  for (const kind of PROVIDER_ISSUE_KINDS) {
     resolveProviderIssue({
       app: "scout-for-lol",
       provider: "openai",
