@@ -166,6 +166,49 @@ describe("classifyTier2 checkpoint recovery", () => {
       await rm(dir, { recursive: true, force: true });
     }
   });
+
+  test("reports every failed batch in a concurrent chunk", async () => {
+    const dir = await makeTempDir();
+    const checkpointPath = path.join(dir, "tier2.checkpoint.json");
+    try {
+      const transactions = [
+        enrichedTransaction("txn-1", "Fail One"),
+        enrichedTransaction("txn-2", "Fail Two"),
+        enrichedTransaction("txn-3", "Fail Three"),
+      ];
+      const classifier: Tier2Classifier = async (prompt) => {
+        if (prompt.includes("Fail One")) throw new Error("first failure");
+        if (prompt.includes("Fail Two")) throw new Error("second failure");
+        if (prompt.includes("Fail Three")) throw new Error("third failure");
+        return softwareClassification();
+      };
+
+      let thrown: unknown;
+      try {
+        await classifyTier2({
+          definitions,
+          transactions,
+          batchSize: 1,
+          checkpointFile: checkpointPath,
+          classifier,
+        });
+      } catch (error: unknown) {
+        thrown = error;
+      }
+
+      if (!(thrown instanceof Error)) {
+        throw new Error("Expected classifyTier2 to throw an Error");
+      }
+      expect(thrown.message).toContain(
+        "Tier 2 classification failed for 3 batches",
+      );
+      expect(thrown.message).toContain("1. first failure");
+      expect(thrown.message).toContain("2. second failure");
+      expect(thrown.message).toContain("3. third failure");
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 function softwareClassification(): ReturnType<Tier2Classifier> {

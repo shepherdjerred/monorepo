@@ -71,8 +71,11 @@ page.on("request", async (request) => {
 });
 
 await page.goto(APP_URL);
-await savedSession;
-await browser.close();
+try {
+  await savedSession;
+} finally {
+  await browser.close();
+}
 
 function pickHeaders(headers: Record<string, string>): CapturedHeaders {
   return {
