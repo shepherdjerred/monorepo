@@ -64,8 +64,8 @@ export function parseGitStatusLine(line: string): GitStatusEntry | undefined {
   if (line === "") {
     return undefined;
   }
-  if (line.length < 4) {
-    throw new Error(`Unexpected git status line: ${line}`);
+  if (line.length < 4 || line[2] !== " ") {
+    throw new Error(`Unexpected git status line: ${JSON.stringify(line)}`);
   }
 
   const statusCode = line.slice(0, 2);
@@ -123,12 +123,22 @@ function isModifiedArenaVisualSnapshot(change: GitStatusEntry): boolean {
   );
 }
 
-export function shouldCreateDataDragonPr(changes: GitStatusEntry[]): boolean {
-  return changes.some(
-    (change) =>
-      !isModifiedRasterImageAsset(change) &&
-      !isModifiedArenaVisualSnapshot(change),
+export function isSuppressibleDataDragonPrChange(
+  change: GitStatusEntry,
+): boolean {
+  return (
+    isModifiedRasterImageAsset(change) || isModifiedArenaVisualSnapshot(change)
   );
+}
+
+export function nonSuppressibleDataDragonPrChanges(
+  changes: GitStatusEntry[],
+): GitStatusEntry[] {
+  return changes.filter((change) => !isSuppressibleDataDragonPrChange(change));
+}
+
+export function shouldCreateDataDragonPr(changes: GitStatusEntry[]): boolean {
+  return nonSuppressibleDataDragonPrChanges(changes).length > 0;
 }
 
 function escapeHtml(value: string): string {

@@ -5,6 +5,7 @@ import {
   shouldCreateDataDragonPr,
   type GitStatusEntry,
 } from "./data-dragon-diff.ts";
+import { runCommand } from "./data-dragon-shell.ts";
 import type { DataDragonUpdateInput } from "./data-dragon.ts";
 
 function parseStatusLines(lines: string[]): GitStatusEntry[] {
@@ -15,6 +16,17 @@ function parseStatusLines(lines: string[]): GitStatusEntry[] {
     }
     return parsed;
   });
+}
+
+function parseStatusOutput(output: string): GitStatusEntry[] {
+  const entries: GitStatusEntry[] = [];
+  for (const line of output.split("\n")) {
+    const parsed = parseGitStatusLine(line);
+    if (parsed !== undefined) {
+      entries.push(parsed);
+    }
+  }
+  return entries;
 }
 
 const IMAGE_PATH =
@@ -63,9 +75,47 @@ describe("parseGitStatusLine", () => {
       kind: "renamed",
     });
   });
+
+  test("rejects trimmed porcelain lines", () => {
+    expect(() => parseGitStatusLine(`M ${IMAGE_PATH}`)).toThrow(
+      "Unexpected git status line",
+    );
+  });
+});
+
+describe("runCommand", () => {
+  test("preserves leading status whitespace when requested", async () => {
+    const statusOutput = ` M ${IMAGE_PATH}\n`;
+
+    await expect(
+      runCommand(["printf", statusOutput], { cwd: ".", trimStdout: false }),
+    ).resolves.toBe(statusOutput);
+  });
 });
 
 describe("shouldCreateDataDragonPr", () => {
+  test("skips modified existing images when first porcelain line starts with status-space", () => {
+    const changes = parseStatusOutput(
+      [` M ${IMAGE_PATH}`, ` M ${ARENA_SVG_SNAPSHOT}`, ""].join("\n"),
+    );
+
+    expect(changes).toEqual([
+      {
+        statusCode: " M",
+        path: IMAGE_PATH,
+        previousPath: undefined,
+        kind: "modified",
+      },
+      {
+        statusCode: " M",
+        path: ARENA_SVG_SNAPSHOT,
+        previousPath: undefined,
+        kind: "modified",
+      },
+    ]);
+    expect(shouldCreateDataDragonPr(changes)).toBe(false);
+  });
+
   test("skips modified existing raster images", () => {
     const changes = parseStatusLines([
       ` M ${IMAGE_PATH}`,
