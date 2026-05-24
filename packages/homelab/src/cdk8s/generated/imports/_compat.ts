@@ -1,4 +1,8 @@
-import { ApiObject, type ApiObjectMetadata, type GroupVersionKind } from "cdk8s";
+import {
+  ApiObject,
+  type ApiObjectMetadata,
+  type GroupVersionKind,
+} from "cdk8s";
 import type { Construct } from "constructs";
 
 export interface CompatProps {
