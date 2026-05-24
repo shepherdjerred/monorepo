@@ -114,3 +114,20 @@ Verification:
 ### Caveats
 
 - Full `bun run test` cannot pass inside the sandbox because Temporal's ephemeral test server and `Bun.serve({ port: 0 })` are blocked by sandbox permissions. The same command passed outside the sandbox.
+
+## Session Log — 2026-05-24 PR Completion
+
+### Done
+
+- Pushed the CI fix commit `c3a65527ca25f34014b9d87acbefc5ebadc0f6b5` to `codex/data-dragon-image-only-suppression`.
+- Confirmed Buildkite build 2836 passed, including `docker-build-temporal-worker`, `quality-gate`, and `ci-complete`.
+- Confirmed PR #914 is mergeable and the merge-conflict check is green.
+- Confirmed both review threads on PR #914 are resolved, leaving no unresolved P3-or-higher comments.
+
+### Remaining
+
+- No requested PR monitoring work remains.
+
+### Caveats
+
+- Soft Buildkite failures were intentionally not treated as blockers per request; build 2836 ended in the passed state.
