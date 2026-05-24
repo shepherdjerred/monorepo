@@ -5,6 +5,7 @@ import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { resolvePostalAddresses, sendPostalEmail } from "#shared/postal.ts";
 import {
   buildImageOnlySkipEmailContent,
+  nonSuppressibleDataDragonPrChanges,
   parseGitStatusLine,
   shouldCreateDataDragonPr,
   type GitStatusEntry,
@@ -132,7 +133,7 @@ async function writeGitAskpass(tempDir: string): Promise<string> {
 async function changedFiles(repoDir: string): Promise<GitStatusEntry[]> {
   const status = await runCommand(
     ["git", "status", "--porcelain", "--", ...GENERATED_PATHS],
-    { cwd: repoDir },
+    { cwd: repoDir, trimStdout: false },
   );
   return status
     .split("\n")
@@ -307,6 +308,15 @@ export const dataDragonActivities = {
           emailMessageId: emailResult.messageId,
         };
       }
+
+      const nonSuppressibleChanges =
+        nonSuppressibleDataDragonPrChanges(changes);
+      jsonLog("info", "Data Dragon update includes non-image changes", {
+        ...input,
+        changedFiles: files.length,
+        nonSuppressibleFiles: nonSuppressibleChanges.length,
+        nonSuppressibleExamples: nonSuppressibleChanges.slice(0, 20),
+      });
 
       const branch = branchName(input.latestVersion, id);
       const title = `chore: update Scout Data Dragon to ${input.latestVersion}`;

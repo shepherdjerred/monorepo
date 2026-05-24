@@ -4,6 +4,7 @@ export async function runCommand(
     cwd: string;
     env?: Record<string, string | undefined>;
     redactOutput?: boolean;
+    trimStdout?: boolean;
   },
 ): Promise<string> {
   const clearedEnvKeys = new Set(
@@ -46,5 +47,5 @@ export async function runCommand(
     );
   }
 
-  return stdout.trim();
+  return options.trimStdout === false ? stdout : stdout.trim();
 }
