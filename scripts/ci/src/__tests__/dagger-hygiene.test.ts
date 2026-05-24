@@ -125,6 +125,7 @@ describe("version commit-back", () => {
       expect(helperSource).toContain("gh pr view --repo ${MONOREPO_REPO}");
       expect(helperSource).toContain("gh pr merge --repo ${MONOREPO_REPO}");
       expect(helperSource).toContain(`test -n "$PR_NUMBER"`);
+      expect(helperSource).not.toContain(">/dev/null 2>&1");
     }
   });
 });
