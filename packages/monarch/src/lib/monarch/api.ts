@@ -12,6 +12,7 @@ const PayloadErrorSchema = z.object({
   message: z.string(),
   code: z.string(),
 });
+export type PayloadError = z.infer<typeof PayloadErrorSchema>;
 
 const CategorySchema = z.object({
   id: z.string(),

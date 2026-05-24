@@ -11,6 +11,7 @@ import {
   updateTransaction,
   updateTransactionSplits,
 } from "./api.ts";
+import type { PayloadError } from "./api.ts";
 
 const TxnCacheSchema = z.object({
   cachedAt: z.string(),
@@ -130,12 +131,37 @@ async function withRetry<T>(
   throw new Error("unreachable");
 }
 
+function formatPayloadErrors(errors: PayloadError[]): string {
+  return errors
+    .map((error) => {
+      const fieldErrors = error.fieldErrors.flatMap((fieldError) =>
+        fieldError.messages.map((message) => `${fieldError.field}: ${message}`),
+      );
+      const details =
+        fieldErrors.length === 0 ? "" : ` (${fieldErrors.join("; ")})`;
+      return `${error.code}: ${error.message}${details}`;
+    })
+    .join("; ");
+}
+
+function assertNoPayloadErrors(
+  label: string,
+  errors: PayloadError[] | null,
+): void {
+  if (errors === null || errors.length === 0) return;
+  throw new Error(`${label} failed: ${formatPayloadErrors(errors)}`);
+}
+
 export async function applyCategory(
   transactionId: string,
   categoryId: string,
 ): Promise<void> {
   const result = await withRetry(`updateTransaction(${transactionId})`, () =>
     updateTransaction({ transactionId, categoryId }),
+  );
+  assertNoPayloadErrors(
+    `updateTransaction(${transactionId})`,
+    result.updateTransaction.errors,
   );
   const actualCategoryId = result.updateTransaction.transaction.category.id;
   if (actualCategoryId !== categoryId) {
@@ -147,9 +173,16 @@ export async function applyCategory(
 }
 
 export async function flagForReview(transactionId: string): Promise<void> {
-  await withRetry(`flagForReview(${transactionId})`, () =>
+  const result = await withRetry(`flagForReview(${transactionId})`, () =>
     updateTransaction({ transactionId, needsReview: true }),
   );
+  assertNoPayloadErrors(
+    `flagForReview(${transactionId})`,
+    result.updateTransaction.errors,
+  );
+  if (!result.updateTransaction.transaction.needsReview) {
+    throw new Error(`Flag for review may have failed for ${transactionId}`);
+  }
   await sleep(500);
 }
 
@@ -167,31 +200,25 @@ export async function applySplits(
     updateTransactionSplits(transactionId, splits),
   );
   const rawErrors = result.updateTransactionSplit.errors;
-  if (rawErrors === null || rawErrors.length === 0) {
-    const txn = result.updateTransactionSplit.transaction;
-    log.debug(
-      `Split applied: ${String(txn.splitTransactions.length)} sub-transactions created`,
-    );
+  assertNoPayloadErrors(`applySplits(${transactionId})`, rawErrors);
+  const txn = result.updateTransactionSplit.transaction;
+  log.debug(
+    `Split applied: ${String(txn.splitTransactions.length)} sub-transactions created`,
+  );
 
-    // Apply date overrides on sub-transactions
-    const subTxns: { id: string }[] = txn.splitTransactions;
-    for (const [i, split] of splits.entries()) {
-      const subTxn = subTxns[i];
-      if (split.date !== undefined && split.date !== "" && subTxn) {
-        const subId = subTxn.id;
-        const dateOverride = split.date;
-        log.debug(`  Moving sub-transaction ${subId} to ${dateOverride}`);
-        await withRetry(`updateDate(${subId})`, () =>
-          updateTransaction({ transactionId: subId, date: dateOverride }),
-        );
-        await sleep(500);
-      }
+  // Apply date overrides on sub-transactions
+  const subTxns: { id: string }[] = txn.splitTransactions;
+  for (const [i, split] of splits.entries()) {
+    const subTxn = subTxns[i];
+    if (split.date !== undefined && split.date !== "" && subTxn) {
+      const subId = subTxn.id;
+      const dateOverride = split.date;
+      log.debug(`  Moving sub-transaction ${subId} to ${dateOverride}`);
+      await withRetry(`updateDate(${subId})`, () =>
+        updateTransaction({ transactionId: subId, date: dateOverride }),
+      );
+      await sleep(500);
     }
-  } else {
-    log.error(
-      `Split failed for ${transactionId}: ${JSON.stringify(rawErrors)}`,
-    );
-    log.debug(`Split data: ${JSON.stringify(splits)}`);
   }
   await sleep(500);
 }
