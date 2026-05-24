@@ -302,21 +302,32 @@ export class BetaService { run(): void {} }`,
     expect(names.has("BetaService")).toBe(true);
   });
 
-  it("warm cache (same commitSha) is faster than cold", async () => {
+  it("warm cache (same commitSha) reuses cached entries", async () => {
     const sha = `test-${String(Date.now())}-cache`;
     const cold = await buildSymbolIndex({
       repoRoot: tmpRepo,
       commitSha: sha,
     });
+    const addedAfterCold = "addedAfterColdCache";
+    await Bun.write(
+      path.join(tmpRepo, "packages/alpha/src/cache-marker.ts"),
+      `export function ${addedAfterCold}(): string { return "cached"; }`,
+    );
     const warm = await buildSymbolIndex({
       repoRoot: tmpRepo,
       commitSha: sha,
     });
-    // Warm hit reads a single JSON file; cold walks the FS and parses files.
-    // Use a generous bound — strict timing is flaky in CI.
-    expect(warm.buildMs).toBeLessThan(cold.buildMs);
-    // Both should produce the same symbol counts.
+
+    // Same-SHA lookups must come from the cache, not from the mutated tree.
     expect(warm.byName.size).toBe(cold.byName.size);
+    expect(lookupSymbol(warm, addedAfterCold)).toHaveLength(0);
+
+    const rebuilt = await buildSymbolIndex({
+      repoRoot: tmpRepo,
+      commitSha: `${sha}-rebuilt`,
+      forceRebuild: true,
+    });
+    expect(lookupSymbol(rebuilt, addedAfterCold)).toHaveLength(1);
   });
 
   it("forceRebuild bypasses the cache", async () => {

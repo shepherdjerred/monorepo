@@ -98,3 +98,19 @@ Verification:
 ### Caveats
 
 - Buildkite build 2817 was still queued at the time this follow-up was added.
+
+## PR Follow-Up — 2026-05-24
+
+### Done
+
+- Investigated the hard Buildkite failure on build 2825's Temporal test job.
+- Fixed the flaky `buildSymbolIndex > warm cache (same commitSha) is faster than cold` assertion in `packages/temporal/src/lib/symbol-index.test.ts` by replacing timing comparison with deterministic cache-reuse behavior.
+- Verified `packages/temporal` with `bun run typecheck`, `bun run lint`, targeted `bun test src/lib/symbol-index.test.ts`, and full `bun run test` outside the sandbox.
+
+### Remaining
+
+- Push the CI fix and continue monitoring PR #914 until Buildkite is green, mergeability stays clean, and no P3-or-higher review comments remain.
+
+### Caveats
+
+- Full `bun run test` cannot pass inside the sandbox because Temporal's ephemeral test server and `Bun.serve({ port: 0 })` are blocked by sandbox permissions. The same command passed outside the sandbox.
