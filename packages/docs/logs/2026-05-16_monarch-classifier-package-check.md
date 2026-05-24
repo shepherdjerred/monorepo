@@ -143,9 +143,9 @@ Fix implemented:
 - Verified in `packages/monarch`:
   - `bun test src/lib/classifier`
   - `bun run typecheck`
-  - `bunx eslint .`
+  - `bunx eslint . --fix`
   - `bun test`
-  - `bunx eslint .` after the PR review fixes
+  - `bunx eslint . --fix` after the PR review fixes
 
 ### Remaining
 
