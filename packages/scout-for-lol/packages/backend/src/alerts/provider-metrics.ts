@@ -5,12 +5,13 @@ import {
 } from "#src/metrics/index.ts";
 
 const ProviderSchema = z.enum(["openai", "gemini"]);
-const ProviderIssueKindSchema = z.enum([
+export const PROVIDER_ISSUE_KINDS = [
   "quota",
   "rate_limit",
   "budget_exceeded",
   "context_limit",
-]);
+] as const;
+const ProviderIssueKindSchema = z.enum(PROVIDER_ISSUE_KINDS);
 
 export type ProviderIssueKind = z.infer<typeof ProviderIssueKindSchema>;
 
@@ -74,7 +75,8 @@ function isContextLimitIssue(status: number | undefined, lowerMessage: string) {
     (lowerMessage.includes("input tokens exceed") ||
       lowerMessage.includes("configured limit") ||
       lowerMessage.includes("context length") ||
-      lowerMessage.includes("token limit"))
+      lowerMessage.includes("context token limit") ||
+      lowerMessage.includes("input token limit"))
   );
 }
 
@@ -117,7 +119,6 @@ export function classifyOpenAIProviderIssue(
   const nestedError = providerError?.error;
   const lowerMessage = [
     errorMessage(error),
-    providerError?.name,
     providerError?.message,
     providerError?.code,
     providerError?.type,

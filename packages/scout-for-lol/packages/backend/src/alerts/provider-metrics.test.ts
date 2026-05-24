@@ -54,6 +54,16 @@ describe("classifyOpenAIProviderIssue", () => {
     expect(issue).toBe("context_limit");
   });
 
+  test("does not classify unrelated token-limit validation errors as context issues", () => {
+    const issue = classifyOpenAIProviderIssue({
+      status: 400,
+      message: "max_completion_tokens exceeds the output token limit.",
+      type: "invalid_request_error",
+    });
+
+    expect(issue).toBeNull();
+  });
+
   test("ignores unrelated errors", () => {
     const issue = classifyOpenAIProviderIssue(new Error("connection reset"));
 
