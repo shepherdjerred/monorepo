@@ -72,6 +72,7 @@ export async function gqlRequest<T extends z.ZodType>(
   }, DEFAULT_GQL_TIMEOUT_MS);
 
   let response: Response;
+  let text: string;
   try {
     response = await fetch(GQL_ENDPOINT, {
       method: "POST",
@@ -79,6 +80,7 @@ export async function gqlRequest<T extends z.ZodType>(
       headers,
       body: JSON.stringify({ operationName, query, variables }),
     });
+    text = await response.text();
   } catch (error: unknown) {
     if (isAbortError(error)) {
       throw new Error(
@@ -92,7 +94,6 @@ export async function gqlRequest<T extends z.ZodType>(
     clearTimeout(timeout);
   }
 
-  const text = await response.text();
   if (!response.ok) {
     throw new Error(
       `Monarch GraphQL ${operationName} failed: HTTP ${String(response.status)} ${response.statusText}: ${text}`,

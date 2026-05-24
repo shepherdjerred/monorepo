@@ -214,9 +214,17 @@ export async function applySplits(
       const subId = subTxn.id;
       const dateOverride = split.date;
       log.debug(`  Moving sub-transaction ${subId} to ${dateOverride}`);
-      await withRetry(`updateDate(${subId})`, () =>
-        updateTransaction({ transactionId: subId, date: dateOverride }),
-      );
+      await withRetry(`updateDate(${subId})`, async () => {
+        const updateDateResult = await updateTransaction({
+          transactionId: subId,
+          date: dateOverride,
+        });
+        assertNoPayloadErrors(
+          `updateDate(${subId})`,
+          updateDateResult.updateTransaction.errors,
+        );
+        return updateDateResult;
+      });
       await sleep(500);
     }
   }
