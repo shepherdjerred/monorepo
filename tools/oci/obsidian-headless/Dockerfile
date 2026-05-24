@@ -1,4 +1,4 @@
-FROM node:24-slim@sha256:24dc26ef1e3c3690f27ebc4136c9c186c3133b25563ae4d7f0692e4d1fe5db0e
+FROM node:24-slim@sha256:242549cd46785b480c832479a730f4f2a20865d61ea2e404fdb2a5c3d3b73ecf
 # renovate: datasource=npm depName=obsidian-headless
 ARG OBSIDIAN_HEADLESS_VERSION=0.0.8
 RUN npm install -g "obsidian-headless@${OBSIDIAN_HEADLESS_VERSION}"
