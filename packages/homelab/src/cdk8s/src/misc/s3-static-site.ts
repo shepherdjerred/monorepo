@@ -1,5 +1,6 @@
 import { Chart, JsonPatch } from "cdk8s";
 import { Construct } from "constructs";
+import { createHash } from "node:crypto";
 import {
   ConfigMap,
   Deployment,
@@ -24,12 +25,46 @@ export type StaticSiteProbeConfig = {
   module?: string;
 };
 
+/**
+ * Caddy reverse-proxy rule for a site. Used to route specific paths to an
+ * in-cluster backend instead of falling through to the s3proxy bucket.
+ *
+ * When `rewriteTo` is set, Caddy rewrites the request path to that value
+ * before proxying — e.g. publicly exposing `/api/healthz` while the backend
+ * only serves `/healthz`.
+ *
+ * Ordering note: `generateCaddyfile` sorts entries with `rewriteTo` first so
+ * more-specific paths (typically health endpoints) emit before broader
+ * prefixes that would otherwise shadow them in `handle` matching order.
+ */
+export type StaticSiteReverseProxy = {
+  path: string;
+  upstream: string;
+  rewriteTo?: string;
+};
+
+/**
+ * SPA-style fallback for client-side routing. When requests under
+ * `pathPrefix` would 404 against the bucket, serve `fallbackPath` instead so
+ * the SPA's router can handle the URL.
+ *
+ * Without this, deep links like `/app/g/123/audit` (handled client-side by
+ * React Router) would 404 on hard-refresh because the bucket has no object
+ * at that key.
+ */
+export type StaticSiteSpaFallback = {
+  pathPrefix: string;
+  fallbackPath: string;
+};
+
 export type StaticSiteConfig = {
   hostname: string;
   bucket: string;
   indexFile?: string;
   notFoundPage?: string;
   probes?: StaticSiteProbeConfig[];
+  reverseProxies?: StaticSiteReverseProxy[];
+  spaFallbacks?: StaticSiteSpaFallback[];
 };
 
 export type S3StaticSitesProps = {
@@ -65,19 +100,57 @@ export function generateCaddyfile(props: CaddyfileGeneratorProps): string {
       ? site.hostname
       : `http://${site.hostname}`;
 
+    // `handle` blocks evaluate in registration order, not by specificity.
+    // Entries with `rewriteTo` are typically narrow paths (e.g.
+    // `/api/healthz`) that must emit before a broader prefix (e.g. `/api/*`)
+    // that would otherwise shadow them.
+    const proxies = (site.reverseProxies ?? []).toSorted((a, b) => {
+      const aSpecific = a.rewriteTo === undefined ? 1 : 0;
+      const bSpecific = b.rewriteTo === undefined ? 1 : 0;
+      return aSpecific - bSpecific;
+    });
+    const proxyBlocks = proxies
+      .map((proxy) => {
+        const rewriteLine =
+          proxy.rewriteTo === undefined
+            ? ""
+            : `\t\trewrite * ${proxy.rewriteTo}\n`;
+        return `\thandle ${proxy.path} {
+${rewriteLine}\t\treverse_proxy ${proxy.upstream} {
+\t\t\tlb_policy round_robin
+\t\t\tlb_try_duration 5s
+\t\t}
+\t}`;
+      })
+      .join("\n\n");
+
+    const region = `{$S3_REGION:${props.s3Region ?? "us-east-1"}}`;
+    const endpoint = `{$S3_ENDPOINT:${props.s3Endpoint}}`;
+    const renderS3Proxy = (notFound: string): string => `\t\ts3proxy {
+\t\t\tbucket ${site.bucket}
+\t\t\tregion ${region}
+\t\t\tindex ${indexFile}
+\t\t\terrors 404 ${notFound}
+\t\t\tendpoint ${endpoint}
+\t\t\tforce_path_style
+\t\t}`;
+
+    const spaBlocks = (site.spaFallbacks ?? [])
+      .map(
+        (spa) => `\thandle ${spa.pathPrefix} {
+${renderS3Proxy(spa.fallbackPath)}
+\t}`,
+      )
+      .join("\n\n");
+
     blocks.push(`${address} {
 	# Redirect directory-style paths to include trailing slash
 	# Matches paths like /foo/bar but not /foo/bar/ or /foo/bar.html
 	@noTrailingSlash path_regexp ^/[^.]*[^/]$
 	redir @noTrailingSlash {uri}/ 301
-
-	s3proxy {
-		bucket ${site.bucket}
-		region {$S3_REGION:${props.s3Region ?? "us-east-1"}}
-		index ${indexFile}
-		errors 404 ${notFoundPage}
-		endpoint {$S3_ENDPOINT:${props.s3Endpoint}}
-		force_path_style
+${proxyBlocks ? `\n${proxyBlocks}\n` : ""}${spaBlocks ? `\n${spaBlocks}\n` : ""}
+	handle {
+${renderS3Proxy(notFoundPage)}
 	}
 }
 `);
@@ -135,6 +208,14 @@ export class S3StaticSites extends Construct {
     const namespace = chart.namespace;
 
     const caddyfile = generateCaddyfile(props);
+    // Pod-template annotation so ConfigMap changes trigger a rollout. K8s
+    // propagates ConfigMap volume updates, but Caddy won't re-read its
+    // Caddyfile without a SIGUSR1 or pod restart, and the cluster doesn't
+    // run a config-reloader controller.
+    const caddyfileHash = createHash("sha256")
+      .update(caddyfile)
+      .digest("hex")
+      .slice(0, 12);
 
     const configMap = new ConfigMap(this, "caddyfile", {
       metadata: {
@@ -220,6 +301,8 @@ export class S3StaticSites extends Construct {
       ],
     );
     ApiObject.of(deployment).addJsonPatch(envFromPatch);
+
+    deployment.podMetadata.addAnnotation("caddyfile-hash", caddyfileHash);
 
     this.deployment = deployment;
 

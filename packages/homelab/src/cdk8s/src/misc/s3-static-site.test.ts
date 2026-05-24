@@ -198,4 +198,206 @@ describe("generateCaddyfile", () => {
     expect(custom).toContain("https://secure.test {");
     expect(custom).not.toContain("http://https://secure.test");
   });
+
+  describe("spaFallbacks", () => {
+    it("emits a per-prefix s3proxy with overridden 404 fallback", () => {
+      const caddyfile = generateCaddyfile({
+        sites: [
+          {
+            hostname: "spa.test",
+            bucket: "spa",
+            spaFallbacks: [
+              { pathPrefix: "/app/*", fallbackPath: "/app/index.html" },
+            ],
+          },
+        ],
+        s3Endpoint: "https://s3.example.test",
+      });
+      expect(caddyfile).toContain("handle /app/* {");
+      // Inside the /app/* handle: s3proxy with /app/index.html fallback
+      expect(caddyfile).toContain("errors 404 /app/index.html");
+      // Fall-through site-wide s3proxy keeps default 404 page
+      expect(caddyfile).toContain("errors 404 404.html");
+    });
+
+    it("renders /app/* spa fallback BEFORE the catch-all handle", () => {
+      const caddyfile = generateCaddyfile({
+        sites: [
+          {
+            hostname: "spa.test",
+            bucket: "spa",
+            spaFallbacks: [
+              { pathPrefix: "/app/*", fallbackPath: "/app/index.html" },
+            ],
+          },
+        ],
+        s3Endpoint: "https://s3.example.test",
+      });
+      const spaIdx = caddyfile.indexOf("handle /app/*");
+      const fallthroughIdx = caddyfile.indexOf("\thandle {");
+      expect(spaIdx).toBeGreaterThan(-1);
+      expect(fallthroughIdx).toBeGreaterThan(-1);
+      expect(spaIdx).toBeLessThan(fallthroughIdx);
+    });
+  });
+});
+
+describe("generateCaddyfile reverseProxies", () => {
+  it("emits a handle block per reverse-proxy entry", () => {
+    const caddyfile = generateCaddyfile({
+      sites: [
+        {
+          hostname: "app.test",
+          bucket: "app",
+          reverseProxies: [
+            { path: "/trpc*", upstream: "backend.app.svc:3000" },
+            { path: "/api/*", upstream: "backend.app.svc:3000" },
+          ],
+        },
+      ],
+      s3Endpoint: "https://s3.example.test",
+    });
+    expect(caddyfile).toContain("handle /trpc* {");
+    expect(caddyfile).toContain("handle /api/* {");
+    expect(caddyfile).toContain("reverse_proxy backend.app.svc:3000");
+  });
+
+  it("includes lb_policy + lb_try_duration so backend rollouts don't 502", () => {
+    const caddyfile = generateCaddyfile({
+      sites: [
+        {
+          hostname: "app.test",
+          bucket: "app",
+          reverseProxies: [
+            { path: "/api/*", upstream: "backend.app.svc:3000" },
+          ],
+        },
+      ],
+      s3Endpoint: "https://s3.example.test",
+    });
+    expect(caddyfile).toContain("lb_policy round_robin");
+    expect(caddyfile).toContain("lb_try_duration 5s");
+  });
+
+  it("emits a rewrite directive when rewriteTo is set", () => {
+    const caddyfile = generateCaddyfile({
+      sites: [
+        {
+          hostname: "app.test",
+          bucket: "app",
+          reverseProxies: [
+            {
+              path: "/api/healthz",
+              upstream: "backend.app.svc:3000",
+              rewriteTo: "/healthz",
+            },
+          ],
+        },
+      ],
+      s3Endpoint: "https://s3.example.test",
+    });
+    expect(caddyfile).toContain("handle /api/healthz {");
+    expect(caddyfile).toContain("rewrite * /healthz");
+  });
+
+  it("emits rewriteTo entries before non-rewriting entries so /api/healthz isn't shadowed by /api/*", () => {
+    const caddyfile = generateCaddyfile({
+      sites: [
+        {
+          hostname: "app.test",
+          bucket: "app",
+          reverseProxies: [
+            // Intentionally in the wrong order — generator must reorder
+            { path: "/api/*", upstream: "backend.app.svc:3000" },
+            {
+              path: "/api/healthz",
+              upstream: "backend.app.svc:3000",
+              rewriteTo: "/healthz",
+            },
+          ],
+        },
+      ],
+      s3Endpoint: "https://s3.example.test",
+    });
+    const healthzIdx = caddyfile.indexOf("handle /api/healthz");
+    const apiIdx = caddyfile.indexOf("handle /api/* {");
+    expect(healthzIdx).toBeGreaterThan(-1);
+    expect(apiIdx).toBeGreaterThan(-1);
+    expect(healthzIdx).toBeLessThan(apiIdx);
+  });
+
+  it("keeps the fall-through s3proxy block after handle blocks", () => {
+    const caddyfile = generateCaddyfile({
+      sites: [
+        {
+          hostname: "app.test",
+          bucket: "app",
+          reverseProxies: [
+            { path: "/api/*", upstream: "backend.app.svc:3000" },
+          ],
+        },
+      ],
+      s3Endpoint: "https://s3.example.test",
+    });
+    const handleIdx = caddyfile.indexOf("handle /api/*");
+    const s3Idx = caddyfile.indexOf("s3proxy {");
+    expect(handleIdx).toBeGreaterThan(-1);
+    expect(s3Idx).toBeGreaterThan(handleIdx);
+  });
+
+  it("does not emit handle blocks for sites without reverseProxies", () => {
+    const caddyfile = generateCaddyfile({
+      sites: [{ hostname: "static.test", bucket: "static" }],
+      s3Endpoint: "https://s3.example.test",
+    });
+    expect(caddyfile).not.toContain("reverse_proxy");
+    expect(caddyfile).toContain("s3proxy {");
+  });
+});
+
+const DeploymentSchema = z.object({
+  kind: z.literal("Deployment"),
+  spec: z.object({
+    template: z.object({
+      metadata: z.object({
+        annotations: z.record(z.string(), z.string()).optional(),
+      }),
+    }),
+  }),
+});
+
+function synthAnnotation(
+  sites: { hostname: string; bucket: string }[],
+): string | undefined {
+  const app = new App();
+  const chart = new Chart(app, "test", { namespace: "s3-static-sites" });
+  new S3StaticSites(chart, "s3-static-sites", {
+    credentialsSecretName: "seaweedfs-s3-credentials",
+    s3Endpoint: "https://seaweedfs.sjer.red",
+    sites,
+  });
+  const docs = parseDocuments(app.synthYaml());
+  for (const doc of docs) {
+    const parsed = DeploymentSchema.safeParse(doc);
+    if (parsed.success) {
+      return parsed.data.spec.template.metadata.annotations?.["caddyfile-hash"];
+    }
+  }
+  return undefined;
+}
+
+describe("S3StaticSites pod-template hash annotation", () => {
+  test("renders a caddyfile-hash annotation on the pod template", () => {
+    const hash = synthAnnotation([{ hostname: "a.test", bucket: "a" }]);
+    expect(hash).toBeDefined();
+    expect(hash).toMatch(/^[0-9a-f]{12}$/);
+  });
+
+  test("hash changes when the site list changes (forces pod rollout)", () => {
+    const a = synthAnnotation([{ hostname: "a.test", bucket: "a" }]);
+    const b = synthAnnotation([{ hostname: "b.test", bucket: "b" }]);
+    expect(a).toBeDefined();
+    expect(b).toBeDefined();
+    expect(a).not.toBe(b);
+  });
 });
