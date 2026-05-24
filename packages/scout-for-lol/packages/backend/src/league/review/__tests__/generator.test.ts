@@ -13,10 +13,10 @@ import {
 import { testAccountId, testPuuid } from "#src/testing/test-ids.ts";
 import { aiProviderIssueActive } from "#src/metrics/index.ts";
 import {
-  PROVIDER_ISSUE_KINDS,
   resolveProviderIssue,
   type ProviderIssueKind,
 } from "#src/alerts/provider-metrics.ts";
+import { PROVIDER_ISSUE_KINDS } from "#src/alerts/provider-issue-kinds.ts";
 
 let openaiClient: OpenAIClient | undefined;
 let geminiClient: unknown;
