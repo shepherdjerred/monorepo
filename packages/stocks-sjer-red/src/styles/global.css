@@ -33,104 +33,6 @@ a:hover {
 }
 
 /* ------------------------------------------------------------------ */
-/* Live ticker tape                                                    */
-/* ------------------------------------------------------------------ */
-.ticker-tape {
-  overflow: hidden;
-  border-bottom: 1px solid var(--color-line);
-  background: #000;
-  position: relative;
-}
-
-.ticker-tape::before,
-.ticker-tape::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 48px;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.ticker-tape::before {
-  left: 0;
-  background: linear-gradient(to right, #000, transparent);
-}
-
-.ticker-tape::after {
-  right: 0;
-  background: linear-gradient(to left, #000, transparent);
-}
-
-.ticker-track {
-  display: inline-flex;
-  white-space: nowrap;
-  animation: ticker-scroll 80s linear infinite;
-  will-change: transform;
-}
-
-.ticker-tape:hover .ticker-track {
-  animation-play-state: paused;
-}
-
-@keyframes ticker-scroll {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-.ticker-item {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  padding: 0.5rem 1.25rem;
-  font-size: 0.8125rem;
-  border-right: 1px solid var(--color-line);
-}
-
-.ticker-item .ticker-sym {
-  color: var(--color-amber);
-  font-weight: 600;
-}
-
-/* ------------------------------------------------------------------ */
-/* Tick flash on price update                                          */
-/* ------------------------------------------------------------------ */
-@keyframes flash-up {
-  0% {
-    background-color: rgba(0, 255, 136, 0.35);
-    box-shadow: inset 0 0 0 1px rgba(0, 255, 136, 0.8);
-  }
-  100% {
-    background-color: transparent;
-    box-shadow: inset 0 0 0 1px transparent;
-  }
-}
-
-@keyframes flash-down {
-  0% {
-    background-color: rgba(255, 59, 59, 0.35);
-    box-shadow: inset 0 0 0 1px rgba(255, 59, 59, 0.8);
-  }
-  100% {
-    background-color: transparent;
-    box-shadow: inset 0 0 0 1px transparent;
-  }
-}
-
-.flash-up {
-  animation: flash-up 700ms ease-out;
-}
-
-.flash-down {
-  animation: flash-down 700ms ease-out;
-}
-
-/* ------------------------------------------------------------------ */
 /* Chart hover crosshair + tooltip                                     */
 /* ------------------------------------------------------------------ */
 .chart-wrap {
@@ -183,27 +85,83 @@ a:hover {
 }
 
 /* ------------------------------------------------------------------ */
-/* LIVE indicator pulse                                                */
+/* Row product thumbnail                                               */
 /* ------------------------------------------------------------------ */
-.live-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--color-up);
-  box-shadow: 0 0 6px var(--color-up);
-  animation: live-pulse 1.4s ease-in-out infinite;
+.row-thumb {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  background: #111;
+  border: 1px solid var(--color-line);
+  border-radius: 4px;
+  display: block;
+}
+
+.row-thumb-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.55rem;
+  color: var(--color-muted);
+  letter-spacing: 0.05em;
+}
+
+.detail-hero-image {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  background: #111;
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Info tooltip button                                                 */
+/* ------------------------------------------------------------------ */
+.info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--color-muted);
+  cursor: help;
+  position: relative;
   vertical-align: middle;
 }
 
-@keyframes live-pulse {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.35;
-    transform: scale(0.85);
-  }
+.info-icon:hover,
+.info-icon:focus-visible {
+  color: var(--color-amber);
+}
+
+.info-icon::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-bg);
+  border: 1px solid var(--color-line);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--color-text);
+  white-space: normal;
+  width: max-content;
+  max-width: 280px;
+  text-transform: none;
+  letter-spacing: normal;
+  line-height: 1.4;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease-out;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  z-index: 10;
+}
+
+.info-icon:hover::after,
+.info-icon:focus-visible::after {
+  opacity: 1;
 }

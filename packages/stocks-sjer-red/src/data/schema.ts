@@ -17,7 +17,6 @@ export const PurchaseSchema = z.object({
 
 export const ComponentSchema = z.object({
   slug: z.string().regex(/^[a-z0-9-]+$/),
-  ticker: z.string().regex(/^[A-Z0-9]{2,6}$/),
   name: z.string().min(1),
   category: z.enum([
     "CPU",
@@ -34,7 +33,8 @@ export const ComponentSchema = z.object({
   manufacturer: z.string().min(1),
   partNumber: z.string().min(1),
   purchases: z.array(PurchaseSchema).min(1),
-  pcppUrl: z.url().optional(),
+  imageUrl: z.string().min(1).optional(),
+  productUrl: z.url().optional(),
   history: z.array(PricePointSchema).min(2),
 });
 

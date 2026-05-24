@@ -37,7 +37,7 @@ const rows = portfolio.components
   .sort((a, b) => b.total - a.total);
 ---
 
-<Layout title="stocks.sjer.red — long PC parts">
+<Layout title="Homelab - sjer.red">
   <section
     class="border border-[var(--color-line)] bg-[var(--color-panel)] p-6 mb-6"
   >
@@ -60,23 +60,17 @@ const rows = portfolio.components
             )
           }
         </div>
-        <h1
-          class="text-3xl sm:text-4xl font-bold tabular-nums"
-          data-portfolio-mark
-        >
+        <h1 class="text-3xl sm:text-4xl font-bold tabular-nums">
           {formatUsd(portfolioCurrent)}
         </h1>
       </div>
       <div
         class="text-right"
-        data-portfolio-pnl-block
         style={`color: ${portfolioIsUp ? "var(--color-up)" : "var(--color-down)"}`}
       >
         <div class="text-2xl font-semibold tabular-nums">
-          <span data-portfolio-pnl
-            >{portfolioIsUp ? "+" : ""}{formatUsd(portfolioGain)}</span
-          >
-          <span data-portfolio-pct>({formatPct(portfolioPct)})</span>
+          <span>{portfolioIsUp ? "+" : ""}{formatUsd(portfolioGain)}</span>
+          <span>({formatPct(portfolioPct)})</span>
         </div>
         <div class="text-[var(--color-muted)] text-xs uppercase tracking-wider">
           Since {chartHistory[0]?.date ?? "—"}
@@ -97,28 +91,31 @@ const rows = portfolio.components
       class="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-2 mt-6 pt-4 border-t border-[var(--color-line)] text-sm tabular-nums"
     >
       <div>
-        <div class="text-[var(--color-muted)] text-xs uppercase tracking-wider">
+        <div
+          class="text-[var(--color-muted)] text-xs uppercase tracking-wider"
+          title="Sum of what you paid for each unit at the time of purchase."
+        >
           Cost basis
         </div>
         <div>{formatUsd(portfolioStart)}</div>
       </div>
       <div>
-        <div class="text-[var(--color-muted)] text-xs uppercase tracking-wider">
+        <div
+          class="text-[var(--color-muted)] text-xs uppercase tracking-wider"
+          title="Current market value of everything you own."
+        >
           Mark
         </div>
-        <div data-portfolio-mark>{formatUsd(portfolioCurrent)}</div>
+        <div>{formatUsd(portfolioCurrent)}</div>
       </div>
       <div>
         <div class="text-[var(--color-muted)] text-xs uppercase tracking-wider">
           P&amp;L
         </div>
         <div
-          data-portfolio-pnl-value
           style={`color: ${portfolioIsUp ? "var(--color-up)" : "var(--color-down)"}`}
         >
-          <span data-portfolio-pnl
-            >{portfolioIsUp ? "+" : ""}{formatUsd(portfolioGain)}</span
-          >
+          {portfolioIsUp ? "+" : ""}{formatUsd(portfolioGain)}
         </div>
       </div>
       <div>
@@ -136,16 +133,18 @@ const rows = portfolio.components
         <tr
           class="text-[var(--color-muted)] text-xs uppercase tracking-wider border-b border-[var(--color-line)]"
         >
-          <th class="text-left px-4 py-3 font-normal">Ticker</th>
-          <th class="text-left px-4 py-3 font-normal hidden md:table-cell">
-            Name
-          </th>
+          <th class="text-left px-4 py-3 font-normal" colspan="2">Position</th>
           <th class="text-right px-4 py-3 font-normal">Qty</th>
           <th class="text-right px-4 py-3 font-normal hidden sm:table-cell">
             Unit
           </th>
           <th class="text-right px-4 py-3 font-normal">Line</th>
-          <th class="text-right px-4 py-3 font-normal">Chg %</th>
+          <th
+            class="text-right px-4 py-3 font-normal"
+            title="Change since weighted-average purchase price."
+          >
+            Chg %
+          </th>
           <th class="text-right px-4 py-3 font-normal hidden lg:table-cell"
             >Trend</th
           >
@@ -153,54 +152,51 @@ const rows = portfolio.components
       </thead>
       <tbody>
         {
-          rows.map(({ c, cur, start, qty, pct, total }) => {
+          rows.map(({ c, cur, qty, pct, total }) => {
             const isUp = pct >= 0;
             const color = isUp ? "var(--color-up)" : "var(--color-down)";
             return (
-              <tr
-                class="border-b border-[var(--color-line)] last:border-0 hover:bg-black/40 transition-colors"
-                data-position={c.ticker}
-                data-base-price={cur}
-                data-start-price={start}
-                data-qty={qty}
-              >
-                <td class="px-4 py-3">
+              <tr class="border-b border-[var(--color-line)] last:border-0 hover:bg-black/40 transition-colors">
+                <td class="pl-4 py-3 w-12">
                   <a href={`/${c.slug}/`} class="block">
-                    <div class="text-[var(--color-amber)] font-semibold">
-                      {c.ticker}
-                    </div>
-                    <div class="text-[var(--color-muted)] text-xs">
-                      {c.category}
-                    </div>
+                    {c.imageUrl ? (
+                      <img
+                        src={c.imageUrl}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        class="row-thumb"
+                      />
+                    ) : (
+                      <div class="row-thumb row-thumb-placeholder">
+                        {c.category}
+                      </div>
+                    )}
                   </a>
                 </td>
-                <td class="px-4 py-3 hidden md:table-cell">
+                <td class="px-4 py-3">
                   <a href={`/${c.slug}/`} class="block">
-                    {c.name}
+                    <div class="font-medium">{c.name}</div>
+                    <div class="text-[var(--color-muted)] text-xs">
+                      {c.manufacturer} · {c.partNumber}
+                    </div>
                   </a>
                 </td>
                 <td class="px-4 py-3 text-right">{qty}</td>
-                <td
-                  class="px-4 py-3 text-right hidden sm:table-cell"
-                  data-price
-                >
+                <td class="px-4 py-3 text-right hidden sm:table-cell">
                   {formatUsdCents(cur)}
                 </td>
-                <td class="px-4 py-3 text-right font-semibold" data-line>
+                <td class="px-4 py-3 text-right font-semibold">
                   {formatUsd(total)}
                 </td>
-                <td
-                  class="px-4 py-3 text-right"
-                  data-chg
-                  style={`color: ${color}`}
-                >
+                <td class="px-4 py-3 text-right" style={`color: ${color}`}>
                   {formatPct(pct)}
                 </td>
                 <td class="px-4 py-3 hidden lg:table-cell">
                   <a href={`/${c.slug}/`}>
                     <Sparkline
                       history={c.history}
-                      ariaLabel={`${c.ticker} trend sparkline`}
+                      ariaLabel={`${c.name} trend sparkline`}
                     />
                   </a>
                 </td>
@@ -210,12 +206,5 @@ const rows = portfolio.components
         }
       </tbody>
     </table>
-  </section>
-
-  <section class="mt-6 text-xs text-[var(--color-muted)]">
-    <p>
-      Updated {portfolio.updatedAt}. {portfolio.components.length} positions. Chg
-      % is vs. weighted-average purchase price. Click a ticker for full price history.
-    </p>
   </section>
 </Layout>
