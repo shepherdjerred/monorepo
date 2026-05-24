@@ -161,3 +161,25 @@ Fix implemented:
 ### Written Summary
 
 This session completed Tier 2 checkpoint recovery for paid Monarch classification previews, including strict checkpoint keys, atomic checkpoint persistence, resume logging, usage accounting, and focused tests. Follow-up PR review fixes tightened concurrent checkpoint writes, request/session timeouts, CLI path normalization, and cache-write failure behavior. Remaining work is limited to a small paid API preview to validate checkpoint creation against live Tier 2 classification; Tier 3 checkpointing remains intentionally deferred.
+
+## Session Log — 2026-05-24
+
+### Done
+
+- Continued the PR review loop for `codex/monarch-tier2-checkpoints`.
+- Addressed new CodeRabbit major comments:
+  - `packages/monarch/src/lib/monarch/client.ts` now checks split date update payload errors inside the retry path.
+  - `packages/monarch/src/lib/monarch/graphql.ts` now keeps the GraphQL abort timeout active until the response body is fully read.
+- Verified in `packages/monarch`:
+  - `bun test src/lib/monarch`
+  - `bun run typecheck`
+  - `bun test`
+  - `bunx eslint . --fix`
+
+### Remaining
+
+- Continue the PR loop until Buildkite is green, mergeability is clean, and no unresolved P3-or-higher review comments remain.
+
+### Caveats
+
+- Buildkite was still queued/running while these fixes were made; no hard Buildkite failure had surfaced at the time of this log entry.
