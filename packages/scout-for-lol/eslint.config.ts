@@ -13,6 +13,7 @@ const config = [
       ],
     },
     tsconfigPaths: [
+      "./packages/app/tsconfig.json",
       "./packages/backend/tsconfig.json",
       "./packages/data/tsconfig.json",
       "./packages/report/tsconfig.json",
@@ -174,6 +175,16 @@ const config = [
       "packages/frontend/src/components/ui/**",
       "packages/frontend/src/components/review-tool/ui/**",
     ],
+    rules: { "custom-rules/no-shadcn-theme-tokens": "off" },
+  },
+  // The web UI app (`packages/app/`) is a Vite SPA with its own design tokens
+  // defined in `app/src/styles/global.css` `:root` / `.dark`. The shadcn-style
+  // tokens (`bg-card`, `text-foreground`, ...) are LIVE CSS here — not the dead
+  // remnants of a half-finished v3→v4 migration the marketing-site rule was
+  // written to police. Keep the rule firing on `packages/frontend/`; disable it
+  // for `packages/app/`.
+  {
+    files: ["packages/app/**/*.ts", "packages/app/**/*.tsx"],
     rules: { "custom-rules/no-shadcn-theme-tokens": "off" },
   },
   // IndexedDB uses .onerror/.onsuccess as standard API pattern

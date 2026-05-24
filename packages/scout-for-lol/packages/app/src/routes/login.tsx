@@ -1,4 +1,5 @@
 import { useSearchParams } from "react-router-dom";
+import { Button } from "#src/components/ui/button.tsx";
 
 /**
  * The "Sign in with Discord" anchor points at the backend's
@@ -14,33 +15,22 @@ export function Login() {
   const startUrl = `/api/auth/discord/start?returnTo=${encodeURIComponent(returnTo)}`;
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "grid",
-        placeItems: "center",
-        padding: "2rem",
-      }}
-    >
-      <div style={{ maxWidth: 420, textAlign: "center" }}>
-        <h1>Scout for LoL</h1>
-        <p>Sign in with Discord to manage your guild&apos;s subscriptions.</p>
+    <div className="grid min-h-screen place-items-center p-8">
+      <div className="w-full max-w-sm space-y-6 text-center">
+        <div className="space-y-2">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Scout for LoL
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Sign in with Discord to manage your guild&apos;s subscriptions.
+          </p>
+        </div>
         {error !== null && (
-          <p style={{ color: "crimson" }}>{describeError(error)}</p>
+          <p className="text-sm text-destructive">{describeError(error)}</p>
         )}
-        <a
-          href={startUrl}
-          style={{
-            display: "inline-block",
-            padding: "0.75rem 1.5rem",
-            background: "#5865F2",
-            color: "white",
-            textDecoration: "none",
-            borderRadius: 6,
-          }}
-        >
-          Sign in with Discord
-        </a>
+        <Button asChild size="lg" className="w-full">
+          <a href={startUrl}>Sign in with Discord</a>
+        </Button>
       </div>
     </div>
   );

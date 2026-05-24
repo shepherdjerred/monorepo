@@ -3,6 +3,15 @@ import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { AddSubscriptionDialog } from "#src/components/add-subscription-dialog.tsx";
+import { Button } from "#src/components/ui/button.tsx";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "#src/components/ui/table.tsx";
 
 export function GuildSubscriptions() {
   const { guildId } = useParams();
@@ -32,123 +41,136 @@ export function GuildSubscriptions() {
     }),
   );
 
-  if (guildId === undefined) return <p>Missing guild id</p>;
+  if (guildId === undefined) {
+    return (
+      <Shell>
+        <p className="text-sm text-destructive">Missing guild id</p>
+      </Shell>
+    );
+  }
 
   return (
-    <div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "baseline",
-        }}
-      >
-        <h2>Subscriptions</h2>
-        <div>
-          <Link to={`/g/${guildId}/audit`} style={{ marginRight: "1rem" }}>
-            Audit log
-          </Link>
-          <button
+    <Shell>
+      <div className="flex items-baseline justify-between">
+        <h2 className="text-xl font-semibold tracking-tight">Subscriptions</h2>
+        <div className="flex items-center gap-2">
+          <Button asChild variant="ghost" size="sm">
+            <Link to={`/g/${guildId}/audit`}>Audit log</Link>
+          </Button>
+          <Button
             type="button"
+            size="sm"
             onClick={() => {
               setAddOpen(true);
             }}
           >
             + Add subscription
-          </button>
+          </Button>
         </div>
       </div>
 
-      {subsQuery.isLoading && <p>Loading subscriptions…</p>}
+      {subsQuery.isLoading && (
+        <p className="text-sm text-muted-foreground">Loading subscriptions…</p>
+      )}
       {subsQuery.error && (
-        <p style={{ color: "crimson" }}>
+        <p className="text-sm text-destructive">
           Failed to load: {subsQuery.error.message}
         </p>
       )}
       {removeMutation.error && (
-        <p style={{ color: "crimson" }}>
+        <p className="text-sm text-destructive">
           Failed to remove: {removeMutation.error.message}
         </p>
       )}
 
       {subsQuery.data && subsQuery.data.length === 0 && (
-        <p>
+        <p className="text-sm text-muted-foreground">
           No subscriptions yet — click &quot;Add subscription&quot; to get
           started.
         </p>
       )}
 
       {subsQuery.data && subsQuery.data.length > 0 && (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ textAlign: "left", borderBottom: "1px solid #ddd" }}>
-              <th style={{ padding: "0.5rem" }}>Alias</th>
-              <th style={{ padding: "0.5rem" }}>Accounts</th>
-              <th style={{ padding: "0.5rem" }}>Channel</th>
-              <th style={{ padding: "0.5rem" }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {subsQuery.data.map((sub) => {
-              const channel = channelsQuery.data?.find(
-                (c) => c.id === sub.channelId,
-              );
-              return (
-                <tr
-                  key={sub.subscriptionId}
-                  style={{ borderBottom: "1px solid #f0f0f0" }}
-                >
-                  <td style={{ padding: "0.5rem" }}>{sub.player.alias}</td>
-                  <td style={{ padding: "0.5rem" }}>
-                    {sub.player.accounts
-                      .map((a) => `${a.alias} (${a.region})`)
-                      .join(", ")}
-                  </td>
-                  <td style={{ padding: "0.5rem" }}>
-                    {channel === undefined ? sub.channelId : `#${channel.name}`}
-                  </td>
-                  <td style={{ padding: "0.5rem" }}>
-                    <button
-                      type="button"
-                      disabled={removeMutation.isPending}
-                      onClick={() => {
-                        if (
-                          !globalThis.confirm(
-                            `Remove "${sub.player.alias}" from this channel?`,
-                          )
-                        ) {
-                          return;
-                        }
-                        removeMutation.mutate({
-                          guildId,
-                          channelId: sub.channelId,
-                          alias: sub.player.alias,
-                        });
-                      }}
-                    >
-                      Remove
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <div className="rounded-md border border-border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Alias</TableHead>
+                <TableHead>Accounts</TableHead>
+                <TableHead>Channel</TableHead>
+                <TableHead className="w-1" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {subsQuery.data.map((sub) => {
+                const channel = channelsQuery.data?.find(
+                  (c) => c.id === sub.channelId,
+                );
+                return (
+                  <TableRow key={sub.subscriptionId}>
+                    <TableCell className="font-medium">
+                      {sub.player.alias}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {sub.player.accounts
+                        .map((a) => `${a.alias} (${a.region})`)
+                        .join(", ")}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {channel === undefined
+                        ? sub.channelId
+                        : `#${channel.name}`}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={removeMutation.isPending}
+                        onClick={() => {
+                          if (
+                            !globalThis.confirm(
+                              `Remove "${sub.player.alias}" from this channel?`,
+                            )
+                          ) {
+                            return;
+                          }
+                          removeMutation.mutate({
+                            guildId,
+                            channelId: sub.channelId,
+                            alias: sub.player.alias,
+                          });
+                        }}
+                      >
+                        Remove
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       )}
 
-      {isAddOpen && (
-        <AddSubscriptionDialog
-          guildId={guildId}
-          channels={channelsQuery.data ?? []}
-          onClose={() => {
-            setAddOpen(false);
-          }}
-          onAdded={() => {
-            void queryClient.invalidateQueries({ queryKey: subsKey });
-            setAddOpen(false);
-          }}
-        />
-      )}
+      <AddSubscriptionDialog
+        guildId={guildId}
+        channels={channelsQuery.data ?? []}
+        open={isAddOpen}
+        onOpenChange={setAddOpen}
+        onAdded={() => {
+          void queryClient.invalidateQueries({ queryKey: subsKey });
+          setAddOpen(false);
+        }}
+      />
+    </Shell>
+  );
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mx-auto max-w-4xl space-y-4 px-4 py-8 sm:py-12">
+      {children}
     </div>
   );
 }
