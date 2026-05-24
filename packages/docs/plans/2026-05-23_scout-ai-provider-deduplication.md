@@ -54,13 +54,14 @@ Route expected Scout OpenAI operational failures through metrics, alerts, and da
 - Ran `cd packages/homelab && bun run test` and `cd packages/homelab && bun run typecheck` successfully after dependencies were installed.
 - Addressed Greptile P2 comments by exporting one shared `PROVIDER_ISSUE_KINDS` tuple, using it in production/test metric reset and seeding paths, preserving explicit `OpenAIBudgetExceeded` name classification, and narrowing the context-limit fallback matcher.
 - Verified the follow-up with `cd packages/scout-for-lol && bun run --filter='./packages/backend' test`, `cd packages/scout-for-lol && bun run typecheck`, and `cd packages/scout-for-lol && bun run lint`.
+- Addressed CodeRabbit's docs status comment by changing this plan status to `Partially Complete`.
+- Confirmed Buildkite build 2845 passed for PR #919 on `1dfad130bf76be10fc578c1dfff1320fde5b19b0`.
+- Confirmed PR #919 is mergeable and has no unresolved P3-or-higher review threads.
 
 ### Remaining
 
-- Wait for Buildkite on the pushed PR branch to finish.
-- Re-check PR comments after the follow-up commit and resolve any new P3-or-higher findings.
 - After deploy, re-query Bugsink and resolve existing duplicate Scout AI budget/context-limit issues once metrics confirm the replacement path is active.
 
 ### Caveats
 
-- CodeRabbit could not review the PR because the organization was out of available review capacity/credits.
+- The deterministic `pr-review-bot` status comment failed before completion without posting actionable review comments.
