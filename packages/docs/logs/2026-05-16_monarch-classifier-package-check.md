@@ -183,3 +183,7 @@ This session completed Tier 2 checkpoint recovery for paid Monarch classificatio
 ### Caveats
 
 - Buildkite was still queued/running while these fixes were made; no hard Buildkite failure had surfaced at the time of this log entry.
+
+### Written Summary
+
+This session continued the PR review loop for `codex/monarch-tier2-checkpoints`, landed follow-up fixes for split date payload-error handling and GraphQL timeout behavior, and re-ran package verification commands (`bun test src/lib/monarch`, `bun run typecheck`, `bun test`, `bunx eslint . --fix`). Remaining work is to complete the review loop once Buildkite, mergeability, and review-thread checks are fully green.
