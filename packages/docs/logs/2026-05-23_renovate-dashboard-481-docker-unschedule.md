@@ -57,3 +57,24 @@ that were under "Awaiting Schedule".
   Grafana target, `13.0.1`.
 - The direct commits bypassed PR CI and landed unsigned because they were written
   through the GitHub contents API.
+
+## Session Log — 2026-05-23 Kubernetes Revert
+
+### Done
+
+- Confirmed #789 changed only `packages/homelab/src/cdk8s/src/versions.ts`.
+- Reverted the accidental Kubernetes upgrade on `main` with commit
+  `6582969b77a2cabeae90852861fa5901993b2371`.
+- Verified `versions["kubernetes/kubernetes"]` is back to `v1.36.0`.
+- Verified there are no open Renovate PRs after the revert.
+
+### Remaining
+
+- None for removing the Kubernetes upgrade from `main`.
+
+### Caveats
+
+- #789 remains a merged PR in GitHub history, but its code change has been
+  reverted on `main`.
+- Renovate may propose the Kubernetes update again later unless its rule or
+  dashboard state is changed.
