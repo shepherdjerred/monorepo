@@ -43,6 +43,7 @@ Partially Complete
 - Updated `packages/homelab/src/cdk8s/src/resources/argo-applications/prometheus.ts` so the Prometheus PVC desired state includes both `velero.io/backup: disabled` and `velero.io/exclude-from-backup: "true"`.
 - Updated `packages/temporal/src/activities/data-dragon-lane-priors.ts` to support optional `awsRegion`, derive a deterministic region fallback, pass `AWS_REGION` and `AWS_DEFAULT_REGION` to both lane-prior subprocesses, and clear inherited `ENVIRONMENT`.
 - Expanded `packages/temporal/src/activities/data-dragon-lane-priors.test.ts` for region/env propagation and fallback order.
+- Updated the Temporal lane-prior test setup to pass an explicit `awsRegion`, avoiding dependence on the test runner's ambient AWS region environment.
 - Deleted the live Prometheus ZFS snapshot `zfspv-pool-nvme/pvc-08c23bab-9a81-4206-b98a-6eac907eacb3@monthly-backup-20260401050007` after approval.
 - Verified ZFS `usedbysnapshots` dropped from `126040267264` to `47183690752`, and Prometheus PVC usage dropped from `93.38%` to `61.04%`.
 - Verified the live `PVCStorageHigh` alert for the Prometheus PVC was no longer firing.
