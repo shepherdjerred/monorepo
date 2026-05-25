@@ -76,7 +76,7 @@ Not addressed in this session. Site is just `bun run build` → `dist/`. The `st
 - The user's actual build may include alternate parts seen in the screenshots (Arctic Liquid Freezer III Pro 240 instead of Noctua NH-D12L; Noctua NF-A12x15 instead of F12 PWM). Build list preserved as-is per user's explicit case correction only.
 - Each component's `pcppUrl` was inferred from the part name + part number conventions — should be verified.
 
-## Session Log — 2026-05-24
+## Session Log — 2026-05-24 Mobile Layout
 
 ### Done
 
@@ -140,7 +140,7 @@ Not addressed in this session. Site is just `bun run build` → `dist/`. The `st
 - The "+$8,762 P&L" is on paper only; user has not actually sold any RAM at the spike
 - Building with `astro check` will fail loudly if anyone introduces bad JSON
 
-## Session Log — 2026-05-24
+## Session Log — 2026-05-24 Chart Interaction
 
 ### Done
 
@@ -159,7 +159,7 @@ Not addressed in this session. Site is just `bun run build` → `dist/`. The `st
 - The package still has no real test suite; `bun run test` currently prints `No tests yet`.
 - I used the installed Bun binary directly because invoking the mise shim tried to persist repo trust outside the sandbox.
 
-## Session Log — 2026-05-24
+## Session Log — 2026-05-24 Image Background
 
 ### Done
 

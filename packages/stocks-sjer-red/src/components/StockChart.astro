@@ -296,7 +296,10 @@ const pointsJson = JSON.stringify(
       if (hideTimer !== undefined) window.clearTimeout(hideTimer);
 
       const rect = svg.getBoundingClientRect();
-      const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+      const ratio = Math.min(
+        1,
+        Math.max(0, (clientX - rect.left) / rect.width),
+      );
       const svgX = ratio * vb.width;
 
       let nearest = points[0]!;
@@ -350,6 +353,7 @@ const pointsJson = JSON.stringify(
 
     svg.addEventListener("pointerdown", (e) => {
       if (e.pointerType === "touch" || e.pointerType === "pen") {
+        if (activeTouchPointer !== undefined) return;
         activeTouchPointer = e.pointerId;
         svg.setPointerCapture(e.pointerId);
         showAt(e.clientX, "touch");
