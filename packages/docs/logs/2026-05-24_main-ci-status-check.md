@@ -202,3 +202,28 @@ After PR #934 merged, Buildkite build `2932` ran on `main` at merge commit `54d5
 ### Caveats
 
 - This follows the current Buildkite secret shape. Rotating `TOFU_GITHUB_TOKEN` to a fine-grained PAT or GitHub App token would let the validator be tightened again later.
+
+## Post-Merge Follow-Up 5 - 2026-05-25
+
+After PR #935 merged, Buildkite build `2940` ran on `main` at merge commit `b53db3d7f90fefc73839442cd84935927337d8f7`. The quality gate, Cloudflare DNS apply, GitHub Config apply, SeaweedFS apply, and `ci-complete` all passed. The build was then canceled by a generated cooklang version bump commit.
+
+Subsequent main builds `2944` and `2950` were generated cooklang metadata bumps (`chore(cooklang): bump to v1.0.10` and `v1.0.11`). Build `2944` also passed the hard release gates before being canceled by the next generated bump. The pattern showed the cooklang commit-back path still triggered the cooklang publish step on its own generated metadata commit.
+
+## Session Log - 2026-05-25 Follow-Up 5
+
+### Done
+
+- Rechecked main Buildkite builds after PR #935 merged and confirmed the GitHub OpenTofu token fix reached a passing `tofu-github` apply.
+- Identified the remaining main instability as a cooklang publish/commit-back loop rather than a hard failure in the OpenTofu release track.
+- Updated `scripts/ci/src/change-detection.ts` to fast-track generated cooklang version metadata commits and skip the cooklang release pipeline for those commits.
+- Added regression coverage in `scripts/ci/src/__tests__/change-detection.test.ts`.
+- Verified with `cd scripts/ci && bun run test` and `cd scripts/ci && bun run typecheck`.
+
+### Remaining
+
+- Open a follow-up PR, verify CI, merge it, then recheck `main` to confirm the cooklang generated commit no longer republishes itself.
+
+### Caveats
+
+- Build `2950` was still running at the time of the fix branch creation, with jobs reserved and no hard failures reported yet.
+- Direct `bunx eslint ... --fix` is not a valid check for `scripts/ci` because that directory has no flat ESLint config; the package-level verification is test and typecheck.
