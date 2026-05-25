@@ -4,6 +4,7 @@
   --color-bg: #0a0a0a;
   --color-panel: #111111;
   --color-line: #1f1f1f;
+  --color-product-bg: #2b2f36;
   --color-text: #d4d4d4;
   --color-muted: #6b6b6b;
   --color-up: #00ff88;
@@ -41,6 +42,12 @@ a:hover {
 
 .chart-svg.chart-interactive {
   cursor: crosshair;
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chart-hit-area {
+  pointer-events: all;
 }
 
 .chart-overlay {
@@ -51,6 +58,10 @@ a:hover {
 
 .chart-hover .chart-overlay {
   opacity: 1;
+}
+
+.chart-touching .chart-crosshair {
+  stroke: var(--color-amber);
 }
 
 .chart-tooltip {
@@ -72,6 +83,11 @@ a:hover {
   opacity: 1;
 }
 
+.chart-touching .chart-tooltip {
+  border-color: color-mix(in srgb, var(--color-amber) 45%, var(--color-line));
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.7);
+}
+
 .chart-tooltip-date {
   color: var(--color-muted);
   font-size: 0.6875rem;
@@ -84,6 +100,18 @@ a:hover {
   font-weight: 600;
 }
 
+@media (pointer: coarse) {
+  .chart-svg.chart-interactive {
+    cursor: default;
+  }
+
+  .chart-tooltip {
+    padding: 0.5rem 0.75rem;
+    text-align: center;
+    min-width: 8rem;
+  }
+}
+
 /* ------------------------------------------------------------------ */
 /* Row product thumbnail                                               */
 /* ------------------------------------------------------------------ */
@@ -91,7 +119,7 @@ a:hover {
   width: 40px;
   height: 40px;
   object-fit: contain;
-  background: #111;
+  background: var(--color-product-bg);
   border: 1px solid var(--color-line);
   border-radius: 4px;
   display: block;
@@ -107,13 +135,67 @@ a:hover {
 }
 
 .detail-hero-image {
-  width: 96px;
-  height: 96px;
+  width: 72px;
+  height: 72px;
   object-fit: contain;
-  background: #111;
+  background: var(--color-product-bg);
   border: 1px solid var(--color-line);
   border-radius: 6px;
   flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .detail-hero-image {
+    width: 96px;
+    height: 96px;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Mobile position cards                                               */
+/* ------------------------------------------------------------------ */
+.mobile-position-row {
+  display: block;
+  padding: 1rem;
+}
+
+.mobile-position-main {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.mobile-position-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.625rem 1rem;
+  margin-top: 0.875rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-line);
+  font-size: 0.8125rem;
+  line-height: 1.25;
+  text-align: left;
+}
+
+@media (min-width: 360px) {
+  .mobile-position-metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+    text-align: right;
+  }
+
+  .mobile-position-metrics > div:first-child {
+    text-align: left;
+  }
+}
+
+.mobile-metric-label {
+  margin-bottom: 0.125rem;
+  color: var(--color-muted);
+  font-size: 0.625rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 /* ------------------------------------------------------------------ */

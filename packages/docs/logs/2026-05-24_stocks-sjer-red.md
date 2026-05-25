@@ -139,3 +139,63 @@ Not addressed in this session. Site is just `bun run build` → `dist/`. The `st
 - Don't trust the price-history numbers to the dollar — they're chart-pixel reads
 - The "+$8,762 P&L" is on paper only; user has not actually sold any RAM at the spike
 - Building with `astro check` will fail loudly if anyone introduces bad JSON
+
+## Session Log — 2026-05-24
+
+### Done
+
+- Fixed the mobile index layout in `packages/stocks-sjer-red/src/pages/index.astro` by replacing the cramped phone table with tappable position cards below the `sm` breakpoint.
+- Updated `packages/stocks-sjer-red/src/styles/global.css` with responsive mobile-card metric grids, including a two-column layout for narrow 320px phones and four columns for wider phones.
+- Fixed the per-position detail hero in `packages/stocks-sjer-red/src/pages/[slug]/index.astro` so the image/title block and price block stack cleanly on phones instead of squeezing the title into a vertical column.
+- Verified in the in-app browser at 320px, 375px, and desktop widths; mobile pages now report no horizontal document overflow.
+- Ran `bun run build`, `bun run test`, and `bun run lint` in `packages/stocks-sjer-red`.
+
+### Remaining
+
+- None for the requested mobile cleanup.
+
+### Caveats
+
+- The package still has no real test suite; `bun run test` currently prints `No tests yet`.
+- I used the installed Bun binary directly because invoking the mise shim tried to persist repo trust outside the sandbox.
+
+## Session Log — 2026-05-24
+
+### Done
+
+- Improved phone chart interactions in `packages/stocks-sjer-red/src/components/StockChart.astro` by switching from mouse/touch split handlers to pointer-aware interaction.
+- Added a full plot-area hit rectangle so the chart responds across the graph surface, not only near rendered SVG paths.
+- Added mobile-specific behavior: larger marker, amber crosshair while touching, docked tooltip placement inside the chart, and short tooltip persistence after lifting a finger.
+- Updated `packages/stocks-sjer-red/src/styles/global.css` with chart touch-action, tap-highlight removal, touch tooltip styling, and hit-area pointer behavior.
+- Verified the portfolio chart at a 375px phone viewport in the in-app browser; tooltip stayed inside the chart and the page had no horizontal overflow.
+- Ran `bun run build`, `bun run lint`, and `bun run test` in `packages/stocks-sjer-red`.
+
+### Remaining
+
+- None for the requested chart interaction polish.
+
+### Caveats
+
+- Browser verification exercised the rendered phone viewport and desktop pointer path; the touch-specific path is implemented with standard pointer events, but the in-app browser does not expose a true coarse-pointer touchscreen.
+- The package still has no real test suite; `bun run test` currently prints `No tests yet`.
+
+## Session Log — 2026-05-24
+
+### Done
+
+- Localized all product thumbnails for `packages/stocks-sjer-red` so the portfolio no longer depends on remote PCPartPicker/Amazon image URLs.
+- Removed connected near-white backgrounds from the product thumbnails with ImageMagick, preserving product-internal white details by using corner flood-fill transparency instead of global white deletion.
+- Stored processed transparent PNGs under `packages/stocks-sjer-red/public/images/` and moved original source downloads to `packages/stocks-sjer-red/src/assets/product-image-sources/`.
+- Updated `packages/stocks-sjer-red/src/data/components.json` to reference local cutout assets.
+- Added `--color-product-bg` in `packages/stocks-sjer-red/src/styles/global.css` and applied it to thumbnail/detail image frames for a gray product backdrop.
+- Verified mobile index, desktop index, and mobile detail views in the in-app browser; images loaded from local paths and no horizontal overflow was introduced.
+- Ran `bun run build`, `bun run lint`, and `bun run test` in `packages/stocks-sjer-red`.
+
+### Remaining
+
+- None for the requested image-background pass.
+
+### Caveats
+
+- The source thumbnails remain in the repo for future reprocessing, but they are outside `public/` and are not served by the site.
+- `bun run test` still only prints `No tests yet`.
