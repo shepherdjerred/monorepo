@@ -885,7 +885,7 @@ export function versionCommitBackHelper(
       `PR_NUMBER=$(gh pr list --repo ${MONOREPO_REPO} --head "${VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty')`,
       `if [ -z "$PR_NUMBER" ]; then gh pr create --repo ${MONOREPO_REPO} --base main --head "${VERSION_BUMP_BRANCH}" --title "chore: bump pending image versions" --body "Auto-generated version bump"; PR_NUMBER=$(gh pr view --repo ${MONOREPO_REPO} "${VERSION_BUMP_BRANCH}" --json number -q .number); fi`,
       `test -n "$PR_NUMBER" || { echo "ERROR: version commit-back PR number is empty" >&2; exit 1; }`,
-      `gh pr merge --repo ${MONOREPO_REPO} "$PR_NUMBER" --auto --merge`,
+      `gh pr merge --repo ${MONOREPO_REPO} "$PR_NUMBER" --auto --squash`,
     ].join(" && "),
   ]);
 }
@@ -944,7 +944,7 @@ export function ciBaseVersionCommitBackHelper(
       `PR_NUMBER=$(gh pr list --repo ${MONOREPO_REPO} --head "${CI_BASE_VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty')`,
       `if [ -z "$PR_NUMBER" ]; then gh pr create --repo ${MONOREPO_REPO} --base main --head "${CI_BASE_VERSION_BUMP_BRANCH}" --title "chore: bump ci-base image to ${version}" --body "Auto-generated ci-base version bump"; PR_NUMBER=$(gh pr view --repo ${MONOREPO_REPO} "${CI_BASE_VERSION_BUMP_BRANCH}" --json number -q .number); fi`,
       `test -n "$PR_NUMBER" || { echo "ERROR: ci-base version commit-back PR number is empty" >&2; exit 1; }`,
-      `gh pr merge --repo ${MONOREPO_REPO} "$PR_NUMBER" --auto --merge`,
+      `gh pr merge --repo ${MONOREPO_REPO} "$PR_NUMBER" --auto --squash`,
     ].join(" && "),
   ]);
 }
@@ -1014,7 +1014,7 @@ export function cooklangVersionCommitBackHelper(
       `PR_NUMBER=$(gh pr list --repo ${MONOREPO_REPO} --head "${COOKLANG_VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty')`,
       `if [ -z "$PR_NUMBER" ]; then gh pr create --repo ${MONOREPO_REPO} --base main --head "${COOKLANG_VERSION_BUMP_BRANCH}" --title "chore(cooklang): bump plugin manifest version" --body "Auto-generated cooklang manifest version bump"; PR_NUMBER=$(gh pr view --repo ${MONOREPO_REPO} "${COOKLANG_VERSION_BUMP_BRANCH}" --json number -q .number); fi`,
       `test -n "$PR_NUMBER" || { echo "ERROR: cooklang version commit-back PR number is empty" >&2; exit 1; }`,
-      `gh pr merge --repo ${MONOREPO_REPO} "$PR_NUMBER" --auto --merge`,
+      `gh pr merge --repo ${MONOREPO_REPO} "$PR_NUMBER" --auto --squash`,
     ].join(" && "),
   ]);
 }

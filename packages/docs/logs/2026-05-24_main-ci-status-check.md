@@ -1,6 +1,6 @@
 ## Status
 
-Complete
+Partially Complete
 
 # Main CI Status Check
 
@@ -125,3 +125,31 @@ After PR #926 merged, Buildkite build `2904` ran on `main` at commit `1d3f273c5f
 ### Caveats
 
 - Full local `tofu validate` is blocked by local provider cache/plugin issues for the GitHub provider and missing cached AWS provider for SeaweedFS, so the local OpenTofu verification was limited to formatting and focused HCL review.
+
+## Post-Merge Follow-Up 2 - 2026-05-24
+
+After PR #927 merged, Buildkite build `2913` ran on `main` at merge commit `f9e74d6445de252fc53c23272f1bcb946349ac05` and still had two hard failures:
+
+- `cooklang-publish` successfully published `cooklang-for-obsidian` version `1.0.8` and opened monorepo PR #930, then failed because the commit-back helper requested `gh pr merge --auto --merge`; this repository rejects merge commits.
+- `deploy-scout-frontend-beta` built successfully with the beta placeholder public env vars, then failed during SeaweedFS sync because `scout-frontend-beta` did not exist yet. The bucket is now managed by OpenTofu, but the deploy step could run before the same release build applied the SeaweedFS bucket stack.
+
+## Session Log - 2026-05-24 Follow-Up 2
+
+### Done
+
+- Rechecked main Buildkite build `2913` and filtered to hard failures only.
+- Updated all Dagger commit-back helpers in `.dagger/src/release.ts` to request squash auto-merge instead of merge-commit auto-merge.
+- Updated `scripts/ci/src/steps/sites.ts` and `scripts/ci/src/pipeline-builder.ts` so release site deploys wait for `tofu-seaweedfs` when the same main pipeline includes the SeaweedFS OpenTofu apply.
+- Added regression coverage in `scripts/ci/src/__tests__/dagger-hygiene.test.ts` and `scripts/ci/src/__tests__/pipeline-builder.test.ts`.
+- Verified with `bun run --filter='./scripts/ci' test`, `bun run --filter='./scripts/ci' typecheck`, `.dagger` TypeScript typecheck, Dagger hygiene, suppression checks, Prettier check, and `git diff --check`.
+- Opened PR #932 from `codex/fix-main-release-followup`, addressed the Greptile P2 test-coverage comment with an additional partial homelab + site release regression test, and resolved the review thread.
+- Verified PR #932 with Buildkite build `2921`, which passed all 125 script jobs.
+
+### Remaining
+
+- After PR #932 merges, recheck the next `main` build for hard failures.
+
+### Caveats
+
+- Direct root `bunx eslint ... --fix` is not a valid lint entry point in this repo because the root has no flat `eslint.config.*`; the package has test/typecheck scripts but no lint script.
+- PR #932 is green and mergeable, but the final proof for `main` is still the next live main Buildkite run after merge because both original failures were release-only behavior.
