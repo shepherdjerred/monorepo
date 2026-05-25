@@ -291,15 +291,6 @@ resource "cloudflare_dns_record" "sjer_red_cname_stocks" {
   proxied = true
 }
 
-resource "cloudflare_dns_record" "sjer_red_cname_temporal" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "temporal"
-  type    = "CNAME"
-  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
-  proxied = true
-}
-
 resource "cloudflare_dns_record" "sjer_red_cname_trmnl" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
@@ -641,7 +632,7 @@ resource "cloudflare_dns_record" "sjer_red_spf" {
   ttl     = 1
   name    = "sjer.red"
   type    = "TXT"
-  content = "v=spf1 include:spf.messagingengine.com ~all"
+  content = "v=spf1 include:spf.messagingengine.com -all"
 }
 
 resource "cloudflare_dns_record" "sjer_red_dmarc" {
@@ -649,7 +640,7 @@ resource "cloudflare_dns_record" "sjer_red_dmarc" {
   ttl     = 1
   name    = "_dmarc"
   type    = "TXT"
-  content = "v=DMARC1; p=quarantine; rua=mailto:dmarc@sjer.red"
+  content = "v=DMARC1; p=reject; rua=mailto:dmarc@sjer.red; ruf=mailto:dmarc@sjer.red; fo=1"
 }
 
 # DMARC aggregate report authorization for external domains (RFC 7489 §7.1)
@@ -722,7 +713,7 @@ resource "cloudflare_dns_record" "sjer_red_spf_rp" {
   ttl     = 1
   name    = "rp"
   type    = "TXT"
-  content = "v=spf1 include:spf.messagingengine.com ~all"
+  content = "v=spf1 include:spf.messagingengine.com -all"
 }
 
 # Postal DKIM keys
@@ -762,4 +753,107 @@ resource "cloudflare_dns_record" "sjer_red_acme_syncthing" {
 # DNSSEC
 resource "cloudflare_zone_dnssec" "sjer_red" {
   zone_id = cloudflare_zone.sjer_red.id
+}
+
+# ── CAA: authorize CAs Cloudflare may use to issue certs for this zone ─────
+resource "cloudflare_dns_record" "sjer_red_caa_issue_letsencrypt" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "sjer.red"
+  type    = "CAA"
+  data = {
+    flags = 0
+    tag   = "issue"
+    value = "letsencrypt.org"
+  }
+}
+
+resource "cloudflare_dns_record" "sjer_red_caa_issue_google_trust_services" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "sjer.red"
+  type    = "CAA"
+  data = {
+    flags = 0
+    tag   = "issue"
+    value = "pki.goog; cansignhttpexchanges=yes"
+  }
+}
+
+resource "cloudflare_dns_record" "sjer_red_caa_issue_sectigo" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "sjer.red"
+  type    = "CAA"
+  data = {
+    flags = 0
+    tag   = "issue"
+    value = "sectigo.com"
+  }
+}
+
+resource "cloudflare_dns_record" "sjer_red_caa_issue_ssl_com" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "sjer.red"
+  type    = "CAA"
+  data = {
+    flags = 0
+    tag   = "issue"
+    value = "ssl.com"
+  }
+}
+
+resource "cloudflare_dns_record" "sjer_red_caa_issuewild_none" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "sjer.red"
+  type    = "CAA"
+  data = {
+    flags = 0
+    tag   = "issuewild"
+    value = ";"
+  }
+}
+
+resource "cloudflare_dns_record" "sjer_red_caa_iodef" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "sjer.red"
+  type    = "CAA"
+  data = {
+    flags = 0
+    tag   = "iodef"
+    value = "mailto:dmarc@sjer.red"
+  }
+}
+
+# ── Edge hardening: min TLS 1.2 + HSTS (1-day rollback window) ──────────────
+resource "cloudflare_zone_setting" "sjer_red_min_tls_version" {
+  zone_id    = cloudflare_zone.sjer_red.id
+  setting_id = "min_tls_version"
+  value      = "1.2"
+}
+
+resource "cloudflare_zone_setting" "sjer_red_security_header" {
+  zone_id    = cloudflare_zone.sjer_red.id
+  setting_id = "security_header"
+  value = {
+    strict_transport_security = {
+      enabled            = true
+      max_age            = 86400
+      include_subdomains = true
+      nosniff            = true
+      preload            = false
+    }
+  }
+}
+
+# ── TLSRPT: ask senders to report STARTTLS failures ─────────────────────────
+resource "cloudflare_dns_record" "sjer_red_tlsrpt" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "_smtp._tls"
+  type    = "TXT"
+  content = "v=TLSRPTv1; rua=mailto:dmarc@sjer.red"
 }
