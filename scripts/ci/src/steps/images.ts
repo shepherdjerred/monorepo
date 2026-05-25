@@ -230,7 +230,8 @@ function imagePushStep(
   }
 
   const cmd = [
-    'export GHCR_TOKEN="$${GHCR_TOKEN:-$${GH_TOKEN:-}}"',
+    `if [ -z "$$GHCR_TOKEN" ] && [ -n "$$GH_TOKEN" ]; then echo "WARNING: GHCR_TOKEN unset, falling back to GH_TOKEN for GHCR push" >&2; fi`,
+    '&& export GHCR_TOKEN="$${GHCR_TOKEN:-$${GH_TOKEN:-}}"',
     `&& if [ -z "$$GHCR_TOKEN" ]; then echo "ERROR: GHCR_TOKEN is empty and GH_TOKEN fallback is unavailable" >&2; exit 1; fi`,
     // $$ escapes survive Buildkite interpolation so bash sees $DIGEST at runtime.
     // Dagger outputs ANSI escape codes even with DAGGER_PROGRESS=dots/plain,
