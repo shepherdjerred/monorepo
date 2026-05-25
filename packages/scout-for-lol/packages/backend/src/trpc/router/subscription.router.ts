@@ -18,7 +18,10 @@ import {
   DiscordAccountIdSchema,
 } from "@scout-for-lol/data";
 import { router, webProcedure, webMutationProcedure } from "#src/trpc/trpc.ts";
-import { assertGuildAdmin } from "#src/trpc/guild-guard.ts";
+import {
+  assertChannelInGuild,
+  assertGuildAdmin,
+} from "#src/trpc/guild-guard.ts";
 import { prisma } from "#src/database/index.ts";
 import {
   addSubscription,
@@ -90,6 +93,10 @@ export const subscriptionRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+      assertChannelInGuild({
+        guildId: input.guildId,
+        channelId: input.channelId,
+      });
       const actorDiscordId = ctx.user.discordId;
 
       // Riot lookup runs OUTSIDE the transaction — Prisma's 5s tx
@@ -219,6 +226,10 @@ export const subscriptionRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+      assertChannelInGuild({
+        guildId: input.guildId,
+        channelId: input.channelId,
+      });
       const actorDiscordId = ctx.user.discordId;
 
       return prisma.$transaction(async (tx) => {
@@ -262,6 +273,14 @@ export const subscriptionRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+      assertChannelInGuild({
+        guildId: input.guildId,
+        channelId: input.fromChannelId,
+      });
+      assertChannelInGuild({
+        guildId: input.guildId,
+        channelId: input.toChannelId,
+      });
       const actorDiscordId = ctx.user.discordId;
 
       if (input.fromChannelId === input.toChannelId) {
