@@ -5,7 +5,7 @@ variable "cloudflare_account_id" {
 }
 
 variable "github_token" {
-  description = "GitHub token used by the GitHub provider for repository and ruleset management"
+  description = "Fine-grained GitHub token used by the GitHub provider for repository and ruleset management; classic broad-scope tokens are not allowed"
   type        = string
   sensitive   = true
 }

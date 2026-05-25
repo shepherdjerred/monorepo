@@ -95,18 +95,28 @@ export const NPM_PACKAGES: NpmPackage[] = [
 // Static site deploys
 // ---------------------------------------------------------------------------
 
-export interface DeploySite {
+interface DeploySiteBase {
   bucket: string;
   name: string;
   url: string;
   buildDir: string;
   buildCmd: string;
   distDir: string;
-  buildEnvVars?: string[];
-  buildEnvPlaceholders?: Readonly<Record<string, string>>;
   needsPlaywright?: boolean;
   workspaceDeps?: string;
 }
+
+type DeploySiteBuildEnv =
+  | {
+      buildEnvVars?: string[];
+      buildEnvPlaceholders?: never;
+    }
+  | {
+      buildEnvVars?: never;
+      buildEnvPlaceholders?: Readonly<Record<string, string>>;
+    };
+
+export type DeploySite = DeploySiteBase & DeploySiteBuildEnv;
 
 export const DEPLOY_SITES: DeploySite[] = [
   {

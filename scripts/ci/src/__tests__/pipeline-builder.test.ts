@@ -206,6 +206,9 @@ describe("buildPipeline", () => {
       expect(push?.command).toContain("ghcr.io/shepherdjerred/ci-base:");
       expect(push?.command).toContain("--registry-password env:GHCR_TOKEN");
       expect(push?.command).toContain(
+        "WARNING: GHCR_TOKEN unset, falling back to GH_TOKEN for GHCR push",
+      );
+      expect(push?.command).toContain(
         'export GHCR_TOKEN="$${GHCR_TOKEN:-$${GH_TOKEN:-}}"',
       );
       expect(commitBack).toBeDefined();
@@ -622,6 +625,9 @@ describe("buildPipeline", () => {
         if (s.command.includes("--registry-password")) {
           expect(s.command).toContain("--registry-password env:GHCR_TOKEN");
           expect(s.command).not.toContain("--registry-password env:GH_TOKEN");
+          expect(s.command).toContain(
+            "WARNING: GHCR_TOKEN unset, falling back to GH_TOKEN for GHCR push",
+          );
           expect(s.command).toContain(
             'export GHCR_TOKEN="$${GHCR_TOKEN:-$${GH_TOKEN:-}}"',
           );
