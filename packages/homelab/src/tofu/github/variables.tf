@@ -5,12 +5,15 @@ variable "cloudflare_account_id" {
 }
 
 variable "github_token" {
-  description = "Fine-grained GitHub token used by the GitHub provider for repository and ruleset management; classic broad-scope tokens are not allowed"
+  description = "GitHub token used by the GitHub provider for repository and ruleset management"
   type        = string
   sensitive   = true
 
   validation {
-    condition     = startswith(var.github_token, "github_pat_")
-    error_message = "github_token must be a fine-grained GitHub personal access token starting with github_pat_; classic broad-scope tokens are not allowed."
+    condition = anytrue([
+      for prefix in ["github_pat_", "ghp_", "ghs_"] :
+      startswith(var.github_token, prefix)
+    ])
+    error_message = "github_token must be a GitHub fine-grained PAT, classic PAT, or GitHub App installation token."
   }
 }
