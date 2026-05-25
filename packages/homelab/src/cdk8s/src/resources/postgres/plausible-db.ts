@@ -70,11 +70,10 @@ export function createPlausiblePostgreSQLDatabase(chart: Chart) {
           locale: "en_US.utf8",
           "data-checksums": "true",
         },
-        pgHba: [
-          "host plausible_db plausible all md5",
-          "host replication standby all md5",
+        pg_hba: [
+          "hostssl plausible_db plausible all md5",
+          "hostssl replication standby all md5",
           "local all all trust",
-          "host all all all md5",
         ],
         slots: {},
       },

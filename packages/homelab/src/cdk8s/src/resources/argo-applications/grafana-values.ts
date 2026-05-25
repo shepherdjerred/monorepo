@@ -54,7 +54,7 @@ export function createGrafanaValues(
         host: "grafana-postgresql:5432",
         name: "grafana",
         user: "grafana",
-        ssl_mode: "disable",
+        ssl_mode: "require",
         password: "$__file{/etc/secrets/postgres/password}",
       },
       feature_toggles: {

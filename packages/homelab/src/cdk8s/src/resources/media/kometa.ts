@@ -64,7 +64,7 @@ export function createKometaCronJob(chart: Chart) {
 
   const kometaCredentials = new OnePasswordItem(chart, "kometa-credentials", {
     spec: {
-      itemPath: vaultItemPath("kometa-credentials"),
+      itemPath: vaultItemPath("gjrl6xqfupvhwnhgmjsncokiou"),
     },
   });
 
