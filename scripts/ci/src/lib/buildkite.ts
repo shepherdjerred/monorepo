@@ -43,6 +43,8 @@ export const GITHUB_APP_SECRET_ARGS = [
   "--github-app-private-key env:GITHUB_APP_PRIVATE_KEY",
 ].join(" ");
 
+export const TOFU_GITHUB_TOKEN_ARG = "--github-token env:TOFU_GITHUB_TOKEN";
+
 /** Dagger environment variables for CI steps. */
 export const DAGGER_ENV: Record<string, string> = {
   DAGGER_NO_NAG: "1",

@@ -230,10 +230,12 @@ function imagePushStep(
   }
 
   const cmd = [
+    'export GHCR_TOKEN="$${GHCR_TOKEN:-$${GH_TOKEN:-}}"',
+    `&& if [ -z "$$GHCR_TOKEN" ]; then echo "ERROR: GHCR_TOKEN is empty and GH_TOKEN fallback is unavailable" >&2; exit 1; fi`,
     // $$ escapes survive Buildkite interpolation so bash sees $DIGEST at runtime.
     // Dagger outputs ANSI escape codes even with DAGGER_PROGRESS=dots/plain,
     // so we strip them before grepping for the sha256 digest.
-    `RAW=$$(dagger call ${pushCall})`,
+    `&& RAW=$$(dagger call ${pushCall})`,
     `&& CLEAN=$$(printf '%s' "$$RAW" | sed 's/\\x1b\\[[0-9;]*[a-zA-Z]//g' | tr -d '\\r')`,
     `&& DIGEST=$$(echo "$$CLEAN" | grep -oE 'sha256:[a-f0-9]+' | head -1)`,
     `&& if [ -z "$$DIGEST" ]; then echo "ERROR: empty digest for ${img.name} — raw output was: $$RAW" >&2; exit 1; fi`,
