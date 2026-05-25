@@ -182,3 +182,23 @@ After PR #932 merged, Buildkite build `2925` ran on `main` at merge commit `e475
 ### Summary
 
 Buildkite build `2925` exposed two remaining release-only issues after PR #932 merged: GitHub token validation rejected the live token prefix, and commit-back helpers requested squash auto-merge even though squash is disabled. PR #934 fixes both issues, and PR build `2930` is green; the remaining proof is the next hard `main` run after PR #934 merges.
+
+## Post-Merge Follow-Up 4 - 2026-05-25
+
+After PR #934 merged, Buildkite build `2932` ran on `main` at merge commit `54d5bec7ff2959851bb3bf5fe32f6afe5b10dbb4`. The quality gate, SeaweedFS apply, and Cloudflare DNS apply passed, but `tofu-github` still failed before provider operations because the live `TOFU_GITHUB_TOKEN` uses the classic PAT prefix (`ghp_`), which the GitHub stack validator still rejected.
+
+## Session Log - 2026-05-25 Follow-Up 4
+
+### Done
+
+- Rechecked main Buildkite build `2932` and pulled the failed `tofu-github` job log.
+- Updated `packages/homelab/src/tofu/github/variables.tf` so the GitHub token guardrail accepts the live classic PAT prefix (`ghp_`) in addition to `github_pat_`, `ghs_`, and `ghu_`.
+- Updated `packages/homelab/src/tofu/README.md` to document the accepted GitHub token types.
+
+### Remaining
+
+- Open a follow-up PR, verify CI, merge it, then recheck the next `main` Buildkite run.
+
+### Caveats
+
+- This follows the current Buildkite secret shape. Rotating `TOFU_GITHUB_TOKEN` to a fine-grained PAT or GitHub App token would let the validator be tightened again later.
