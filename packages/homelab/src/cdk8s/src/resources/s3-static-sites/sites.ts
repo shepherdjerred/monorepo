@@ -35,7 +35,7 @@ export const staticSites: StaticSiteConfig[] = [
     spaFallbacks: [{ pathPrefix: "/app/*", fallbackPath: "/app/index.html" }],
   },
   {
-    hostname: "scout-for-lol-beta.sjer.red",
+    hostname: "beta.scout-for-lol.com",
     bucket: "scout-frontend-beta",
     reverseProxies: [
       {

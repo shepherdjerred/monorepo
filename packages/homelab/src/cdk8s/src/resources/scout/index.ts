@@ -147,7 +147,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     WEB_APP_ORIGIN: EnvValue.fromValue(
       stage === "prod"
         ? "https://scout-for-lol.com"
-        : "https://scout-for-lol-beta.sjer.red",
+        : "https://beta.scout-for-lol.com",
     ),
     OPENAI_HOURLY_TOKEN_BUDGET: EnvValue.fromValue("2000000"),
     OPENAI_DAILY_TOKEN_BUDGET: EnvValue.fromValue("20000000"),

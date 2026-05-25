@@ -199,26 +199,6 @@ resource "cloudflare_dns_record" "sjer_red_cname_resume" {
   proxied = true
 }
 
-resource "cloudflare_dns_record" "sjer_red_cname_scout_for_lol_com" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "scout-for-lol.com"
-  type    = "CNAME"
-  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
-  proxied = true
-}
-
-# scout-for-lol-beta.sjer.red routes to the scout-app beta deployment via the
-# same Cloudflare Tunnel. See packages/homelab/src/cdk8s/src/resources/scout/app.ts.
-resource "cloudflare_dns_record" "sjer_red_cname_scout_for_lol_beta" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "scout-for-lol-beta"
-  type    = "CNAME"
-  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
-  proxied = true
-}
-
 resource "cloudflare_dns_record" "sjer_red_cname_seaweedfs" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
