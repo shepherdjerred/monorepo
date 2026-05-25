@@ -88,14 +88,6 @@ export function createGrafanaValues(
         XDG_CONFIG_HOME: "/tmp/.chromium",
         XDG_CACHE_HOME: "/tmp/.chromium",
       },
-      envValueFrom: {
-        AUTH_TOKEN: {
-          secretKeyRef: {
-            name: rendererSecretName,
-            key: GRAFANA_RENDERER_TOKEN_KEY,
-          },
-        },
-      },
     },
     extraSecretMounts: [
       {

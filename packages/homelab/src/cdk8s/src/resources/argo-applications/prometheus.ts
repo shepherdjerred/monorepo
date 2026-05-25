@@ -35,6 +35,13 @@ export async function createPrometheusApp(chart: Chart) {
     hosts: ["prometheus"],
   });
 
+  createIngress(chart, "grafana-ingress", {
+    namespace: "prometheus",
+    service: "prometheus-grafana",
+    port: 80,
+    hosts: ["grafana"],
+  });
+
   const alertmanagerSecrets = new OnePasswordItem(
     chart,
     "alertmanager-secrets-onepassword",
