@@ -49,6 +49,7 @@ Checked live Kubernetes pod status for context `admin@torvalds` on May 25, 2026.
 - Updated `packages/homelab/src/cdk8s/src/resources/media/kometa.ts` so `media-kometa-credentials` references the stable 1Password item ID instead of the name-based `kometa-credentials` lookup.
 - Verified generated `packages/homelab/src/cdk8s/dist/media.k8s.yaml` renders `vaults/v64ocnykdqju4ui6j6pua56xw4/items/gjrl6xqfupvhwnhgmjsncokiou` and keeps the `TMDB_API_KEY` secret key mapping.
 - Re-ran `bun run --filter='./packages/homelab' typecheck`, `bun run --filter='./packages/homelab' test`, and `cd packages/homelab && bunx eslint . --fix`; all passed.
+- Addressed PR review feedback by documenting why Temporal disables TLS hostname verification and aligning Plausible, Grafana, and Temporal Postgres auth rules with `scram-sha-256`.
 
 ### Remaining
 
