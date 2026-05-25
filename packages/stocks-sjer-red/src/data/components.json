@@ -115,7 +115,7 @@
           "price": 461.37
         }
       ],
-      "imageUrl": "https://cdna.pcpartpicker.com/static/forever/images/product/c9117c605854e9387e57cd69ebca2415.256p.jpg",
+      "imageUrl": "/images/intel-i9-14900k.png",
       "productUrl": "https://pcpartpicker.com/product/ZLjRsY/intel-core-i9-14900k-32-ghz-24-core-processor-bx8071514900k"
     },
     {
@@ -165,7 +165,7 @@
           "price": 70.49
         }
       ],
-      "imageUrl": "https://cdna.pcpartpicker.com/static/forever/images/product/8c1a0efcef96c3455d3ecd2bdc4a4fa7.256p.jpg",
+      "imageUrl": "/images/arctic-liquid-freezer-iii-pro-240.png",
       "productUrl": "https://pcpartpicker.com/product/zn8Pxr/arctic-liquid-freezer-iii-pro-77-cfm-liquid-cpu-cooler-acfre00178a"
     },
     {
@@ -275,7 +275,7 @@
           "price": 19.5
         }
       ],
-      "imageUrl": "https://cdna.pcpartpicker.com/static/forever/images/product/043742a8a65ba42c83b9a3ba5a3c2d47.256p.jpg",
+      "imageUrl": "/images/noctua-nt-h1.png",
       "productUrl": "https://pcpartpicker.com/product/sX4gXL/noctua-thermal-paste-nth1"
     },
     {
@@ -385,7 +385,7 @@
           "price": 179.99
         }
       ],
-      "imageUrl": "https://cdna.pcpartpicker.com/static/forever/images/product/2f02443c6f86de9cd54a2c119f40bbe3.256p.jpg",
+      "imageUrl": "/images/asus-q670m-c-csm.png",
       "productUrl": "https://pcpartpicker.com/product/N7BG3C/asus-pro-q670m-c-csm-micro-atx-lga1700-motherboard-pro-q670m-c-csm"
     },
     {
@@ -504,7 +504,7 @@
           "price": 1029
         }
       ],
-      "imageUrl": "https://cdna.pcpartpicker.com/static/forever/images/product/fe414d3559a9bbb2e092ba5374f6e1ed.256p.jpg",
+      "imageUrl": "/images/corsair-vengeance-ddr5-6400.png",
       "productUrl": "https://pcpartpicker.com/product/pnQKHx/corsair-vengeance-64-gb-2-x-32-gb-ddr5-6400-cl32-memory-cmk64gx5m2b6400c32"
     },
     {
@@ -618,7 +618,7 @@
           "price": 1399
         }
       ],
-      "imageUrl": "https://cdna.pcpartpicker.com/static/forever/images/product/2c576ecaedba7428ac231ac4f1e12a4d.256p.jpg",
+      "imageUrl": "/images/samsung-870-evo-4tb.png",
       "productUrl": "https://pcpartpicker.com/product/RBD7YJ/samsung-870-evo-4-tb-25-solid-state-drive-mz-77e4t0bam"
     },
     {
@@ -737,7 +737,7 @@
           "price": 823.99
         }
       ],
-      "imageUrl": "https://cdna.pcpartpicker.com/static/forever/images/product/1f3a70baa047ae18e1af31b89a344d2b.256p.jpg",
+      "imageUrl": "/images/samsung-990-pro-4tb.png",
       "productUrl": "https://pcpartpicker.com/product/VWxRsY/samsung-990-pro-heatsink-4-tb-m2-2280-pcie-40-x4-nvme-solid-state-drive-mz-v9p4t0cw"
     },
     {
@@ -817,7 +817,7 @@
           "price": 185
         }
       ],
-      "imageUrl": "https://m.media-amazon.com/images/I/41XA+O8OFNL.jpg",
+      "imageUrl": "/images/corsair-sf750.png",
       "productUrl": "https://pcpartpicker.com/product/nJrmP6/corsair-sf750-2018-750-w-80-platinum-certified-fully-modular-sfx-power-supply-cp-9020186-na"
     },
     {

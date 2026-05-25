@@ -127,7 +127,74 @@ const rows = portfolio.components
     </div>
   </section>
 
-  <section class="border border-[var(--color-line)] bg-[var(--color-panel)]">
+  <section
+    class="border border-[var(--color-line)] bg-[var(--color-panel)] sm:hidden"
+    aria-label="Positions"
+  >
+    <div
+      class="px-4 py-3 text-[var(--color-muted)] text-xs uppercase tracking-wider border-b border-[var(--color-line)]"
+    >
+      Positions
+    </div>
+    <div class="divide-y divide-[var(--color-line)]">
+      {
+        rows.map(({ c, cur, qty, pct, total }) => {
+          const isUp = pct >= 0;
+          const color = isUp ? "var(--color-up)" : "var(--color-down)";
+          return (
+            <a
+              href={`/${c.slug}/`}
+              class="mobile-position-row hover:bg-black/40 transition-colors"
+            >
+              <div class="mobile-position-main">
+                {c.imageUrl ? (
+                  <img
+                    src={c.imageUrl}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    class="row-thumb"
+                  />
+                ) : (
+                  <div class="row-thumb row-thumb-placeholder">
+                    {c.category}
+                  </div>
+                )}
+                <div class="min-w-0">
+                  <div class="font-medium leading-snug">{c.name}</div>
+                  <div class="text-[var(--color-muted)] text-xs break-words">
+                    {c.manufacturer} · {c.partNumber}
+                  </div>
+                </div>
+              </div>
+              <div class="mobile-position-metrics">
+                <div>
+                  <div class="mobile-metric-label">Qty</div>
+                  <div>{qty}</div>
+                </div>
+                <div>
+                  <div class="mobile-metric-label">Unit</div>
+                  <div>{formatUsdCents(cur)}</div>
+                </div>
+                <div>
+                  <div class="mobile-metric-label">Line</div>
+                  <div class="font-semibold">{formatUsd(total)}</div>
+                </div>
+                <div>
+                  <div class="mobile-metric-label">Chg</div>
+                  <div style={`color: ${color}`}>{formatPct(pct)}</div>
+                </div>
+              </div>
+            </a>
+          );
+        })
+      }
+    </div>
+  </section>
+
+  <section
+    class="hidden sm:block border border-[var(--color-line)] bg-[var(--color-panel)]"
+  >
     <table class="w-full text-sm tabular-nums">
       <thead>
         <tr

@@ -161,6 +161,19 @@ const pointsJson = JSON.stringify(
       )
     }
 
+    {
+      interactive && (
+        <rect
+          class="chart-hit-area"
+          x={padL}
+          y={padT}
+          width={plotW}
+          height={plotH}
+          fill="transparent"
+        />
+      )
+    }
+
     <path d={areaPath} fill={fill} stroke="none"></path>
     <path
       d={linePath}
@@ -207,6 +220,24 @@ const pointsJson = JSON.stringify(
     price: number;
   }
 
+  type InteractionMode = "hover" | "touch";
+
+  function isPoint(value: unknown): value is Point {
+    if (typeof value !== "object" || value === null) return false;
+
+    const x = Reflect.get(value, "x");
+    const y = Reflect.get(value, "y");
+    const date = Reflect.get(value, "date");
+    const price = Reflect.get(value, "price");
+
+    return (
+      typeof x === "number" &&
+      typeof y === "number" &&
+      typeof date === "string" &&
+      typeof price === "number"
+    );
+  }
+
   function fmtPrice(n: number): string {
     return n.toLocaleString("en-US", {
       style: "currency",
@@ -234,15 +265,7 @@ const pointsJson = JSON.stringify(
     if (raw === undefined || raw === "") return;
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed) || parsed.length < 2) return;
-    const points: Point[] = parsed.filter(
-      (p): p is Point =>
-        typeof p === "object" &&
-        p !== null &&
-        typeof (p as Point).x === "number" &&
-        typeof (p as Point).y === "number" &&
-        typeof (p as Point).date === "string" &&
-        typeof (p as Point).price === "number",
-    );
+    const points: Point[] = parsed.filter(isPoint);
     if (points.length < 2) return;
 
     const wrap = svg.closest<HTMLElement>(".chart-wrap");
@@ -256,10 +279,24 @@ const pointsJson = JSON.stringify(
     if (!crosshair || !marker || !tooltip || !ttDate || !ttPrice) return;
 
     const vb = svg.viewBox.baseVal;
+    const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
+    let activeTouchPointer: number | undefined;
+    let hideTimer: number | undefined;
 
-    const move = (clientX: number): void => {
+    const hide = (): void => {
+      wrap.classList.remove("chart-hover", "chart-touching");
+    };
+
+    const scheduleHide = (): void => {
+      if (hideTimer !== undefined) window.clearTimeout(hideTimer);
+      hideTimer = window.setTimeout(hide, 1200);
+    };
+
+    const showAt = (clientX: number, mode: InteractionMode): void => {
+      if (hideTimer !== undefined) window.clearTimeout(hideTimer);
+
       const rect = svg.getBoundingClientRect();
-      const ratio = (clientX - rect.left) / rect.width;
+      const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
       const svgX = ratio * vb.width;
 
       let nearest = points[0]!;
@@ -277,45 +314,73 @@ const pointsJson = JSON.stringify(
       crosshair.setAttribute("x2", xStr);
       marker.setAttribute("cx", xStr);
       marker.setAttribute("cy", String(nearest.y));
+      marker.setAttribute("r", mode === "touch" || coarsePointer ? "5.5" : "4");
       wrap.classList.add("chart-hover");
+      wrap.classList.toggle("chart-touching", mode === "touch");
 
-      // position tooltip in CSS pixels relative to the wrap, near the marker
       const cssX = (nearest.x / vb.width) * rect.width;
       const cssY = (nearest.y / vb.height) * rect.height;
       ttDate.textContent = fmtDate(nearest.date);
       ttPrice.textContent = fmtPrice(nearest.price);
       ttPrice.style.color = svg.dataset.stroke ?? "";
 
-      // clamp tooltip inside wrap
-      const wrapRect = wrap.getBoundingClientRect();
-      const ttRect = tooltip.getBoundingClientRect();
-      const offset = 12;
-      let left = cssX + offset;
-      if (left + ttRect.width > wrapRect.width - 4) {
-        left = cssX - ttRect.width - offset;
+      const ttWidth = tooltip.offsetWidth;
+      const ttHeight = tooltip.offsetHeight;
+      const offset = mode === "touch" || coarsePointer ? 10 : 12;
+
+      if (mode === "touch" || coarsePointer) {
+        const top =
+          cssY > rect.height * 0.45
+            ? offset
+            : Math.max(offset, rect.height - ttHeight - offset);
+        tooltip.style.left = `${String(Math.max(4, (rect.width - ttWidth) / 2))}px`;
+        tooltip.style.top = `${String(top)}px`;
+        return;
       }
-      let top = cssY - ttRect.height - offset;
+
+      let left = cssX + offset;
+      if (left + ttWidth > rect.width - 4) {
+        left = cssX - ttWidth - offset;
+      }
+      let top = cssY - ttHeight - offset;
       if (top < 4) top = cssY + offset;
       tooltip.style.left = `${String(Math.max(4, left))}px`;
       tooltip.style.top = `${String(top)}px`;
     };
 
-    svg.addEventListener("mousemove", (e) => {
-      move(e.clientX);
+    svg.addEventListener("pointerdown", (e) => {
+      if (e.pointerType === "touch" || e.pointerType === "pen") {
+        activeTouchPointer = e.pointerId;
+        svg.setPointerCapture(e.pointerId);
+        showAt(e.clientX, "touch");
+      }
     });
-    svg.addEventListener("mouseleave", () => {
-      wrap.classList.remove("chart-hover");
+
+    svg.addEventListener("pointermove", (e) => {
+      if (e.pointerType === "touch" || e.pointerType === "pen") {
+        if (activeTouchPointer !== e.pointerId) return;
+        showAt(e.clientX, "touch");
+        return;
+      }
+      showAt(e.clientX, "hover");
     });
-    svg.addEventListener(
-      "touchmove",
-      (e) => {
-        const t = e.touches[0];
-        if (t) move(t.clientX);
-      },
-      { passive: true },
-    );
-    svg.addEventListener("touchend", () => {
-      wrap.classList.remove("chart-hover");
+
+    svg.addEventListener("pointerleave", (e) => {
+      if (e.pointerType === "touch" || e.pointerType === "pen") return;
+      hide();
+    });
+
+    svg.addEventListener("pointerup", (e) => {
+      if (activeTouchPointer !== e.pointerId) return;
+      activeTouchPointer = undefined;
+      svg.releasePointerCapture(e.pointerId);
+      scheduleHide();
+    });
+
+    svg.addEventListener("pointercancel", (e) => {
+      if (activeTouchPointer !== e.pointerId) return;
+      activeTouchPointer = undefined;
+      hide();
     });
   }
 
