@@ -84,6 +84,15 @@ export async function createAppsChart(app: App) {
     },
   });
 
+  new Namespace(chart, "prometheus-namespace", {
+    metadata: {
+      name: "prometheus",
+      labels: {
+        "pod-security.kubernetes.io/enforce": "privileged",
+      },
+    },
+  });
+
   createAppsApp(chart);
   createOpenEBSApp(chart);
   createOnePasswordApp(chart);

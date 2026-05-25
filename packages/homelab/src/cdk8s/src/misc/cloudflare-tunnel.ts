@@ -59,7 +59,7 @@ export function createCloudflareTunnelBinding(
     tunnelRef: {
       kind: TunnelBindingTunnelRefKind.CLUSTER_TUNNEL,
       name: "homelab-tunnel",
-      disableDnsUpdates: props.disableDnsUpdates ?? true,
+      disableDNSUpdates: props.disableDnsUpdates ?? true,
     },
   });
 }
