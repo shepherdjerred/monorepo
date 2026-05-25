@@ -30,7 +30,7 @@ Each subdirectory is an independent root module with its own state.
 - OpenTofu >= 1.6.0 (`mise` manages this automatically)
 - Environment variables:
   - `CLOUDFLARE_API_TOKEN` - Cloudflare API token
-  - `TF_VAR_github_token` - GitHub token for repository and ruleset management; accepts fine-grained PATs, classic PATs, or GitHub App installation tokens
+  - `TF_VAR_github_token` - GitHub token for repository and ruleset management; accepts fine-grained PATs or GitHub App installation tokens
   - `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` - S3 credentials for SeaweedFS state backend
   - `TF_VAR_cloudflare_account_id` - Cloudflare account ID
 

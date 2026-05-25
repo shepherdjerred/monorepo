@@ -11,9 +11,9 @@ variable "github_token" {
 
   validation {
     condition = anytrue([
-      for prefix in ["github_pat_", "ghp_", "ghs_"] :
+      for prefix in ["github_pat_", "ghs_"] :
       startswith(var.github_token, prefix)
     ])
-    error_message = "github_token must be a GitHub fine-grained PAT, classic PAT, or GitHub App installation token."
+    error_message = "github_token must be a GitHub fine-grained PAT (github_pat_) or GitHub App installation token (ghs_); classic broad-scope PATs are not allowed."
   }
 }
