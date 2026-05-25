@@ -153,3 +153,32 @@ After PR #927 merged, Buildkite build `2913` ran on `main` at merge commit `f9e7
 
 - Direct root `bunx eslint ... --fix` is not a valid lint entry point in this repo because the root has no flat `eslint.config.*`; the package has test/typecheck scripts but no lint script.
 - PR #932 is green and mergeable, but the final proof for `main` is still the next live main Buildkite run after merge because both original failures were release-only behavior.
+
+## Post-Merge Follow-Up 3 - 2026-05-25
+
+After PR #932 merged, Buildkite build `2925` ran on `main` at merge commit `e475c4cfa953b27832d12e2f16db77507a104340` and still had three hard failures:
+
+- `tofu-github` failed before provider operations because `TOFU_GITHUB_TOKEN` did not match the OpenTofu token-prefix validation. The guard accepted fine-grained PATs (`github_pat_`) and GitHub App installation tokens (`ghs_`), but not GitHub App user-to-server tokens (`ghu_`).
+- `cooklang-publish` and `version-commit-back` both opened or refreshed their pending PR branches, then failed at `gh pr merge --auto --squash` because this repository has squash merging disabled.
+- `deploy-argocd` and `argocd-health` were dependency-failed after `tofu-github`.
+
+## Session Log - 2026-05-25 Follow-Up 3
+
+### Done
+
+- Rechecked main Buildkite build `2925` and pulled logs for `tofu-github`, `cooklang-publish`, and `version-commit-back`.
+- Updated `.dagger/src/release.ts` commit-back helpers to request rebase auto-merge, matching the repository settings (`allow_rebase_merge: true`, `allow_squash_merge: false`).
+- Updated `packages/homelab/src/tofu/github/variables.tf` so the GitHub token guardrail accepts `ghu_` GitHub App user tokens while still rejecting classic broad-scope `ghp_` PATs.
+- Opened PR #934 and verified Buildkite PR build `2930` passed, including `terraform-plan-github-config`.
+
+### Remaining
+
+- After that PR merges, recheck the next `main` build for hard failures.
+
+### Caveats
+
+- Local `tofu validate` is still blocked by the local GitHub provider plugin handshake issue, even after `tofu init -backend=false -upgrade`; focused OpenTofu verification is limited to `tofu fmt -check` until CI exercises the provider in Linux.
+
+### Summary
+
+Buildkite build `2925` exposed two remaining release-only issues after PR #932 merged: GitHub token validation rejected the live token prefix, and commit-back helpers requested squash auto-merge even though squash is disabled. PR #934 fixes both issues, and PR build `2930` is green; the remaining proof is the next hard `main` run after PR #934 merges.

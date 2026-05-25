@@ -124,10 +124,13 @@ describe("version commit-back", () => {
       expect(helperSource).toContain("gh pr create --repo ${MONOREPO_REPO}");
       expect(helperSource).toContain("gh pr view --repo ${MONOREPO_REPO}");
       expect(helperSource).toContain(
-        'gh pr merge --repo ${MONOREPO_REPO} "$PR_NUMBER" --auto --squash',
+        'gh pr merge --repo ${MONOREPO_REPO} "$PR_NUMBER" --auto --rebase',
       );
       expect(helperSource).not.toContain(
         'gh pr merge --repo ${MONOREPO_REPO} "$PR_NUMBER" --auto --merge',
+      );
+      expect(helperSource).not.toContain(
+        'gh pr merge --repo ${MONOREPO_REPO} "$PR_NUMBER" --auto --squash',
       );
       expect(helperSource).toContain(`test -n "$PR_NUMBER"`);
       expect(helperSource).not.toContain(">/dev/null 2>&1");
