@@ -2,7 +2,11 @@ import { describe, expect, it, test } from "bun:test";
 import { App, Chart } from "cdk8s";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
-import { generateCaddyfile, S3StaticSites } from "./s3-static-site.ts";
+import {
+  generateCaddyfile,
+  renderHeaderBlock,
+  S3StaticSites,
+} from "./s3-static-site.ts";
 
 const ProbeSchema = z.object({
   apiVersion: z.literal("monitoring.coreos.com/v1"),
@@ -449,6 +453,70 @@ function synthAnnotation(
   }
   return undefined;
 }
+
+describe("response headers", () => {
+  it("renders defense-in-depth defaults plus -Server in every site block", () => {
+    const out = generateCaddyfile({
+      sites: [{ hostname: "static.test", bucket: "static" }],
+      s3Endpoint: "https://s3.example.test",
+    });
+    expect(out).toContain(`Strict-Transport-Security "max-age=31536000"`);
+    expect(out).toContain(`X-Content-Type-Options "nosniff"`);
+    expect(out).toContain(`X-Frame-Options "DENY"`);
+    expect(out).toContain(`Referrer-Policy "strict-origin-when-cross-origin"`);
+    expect(out).toContain(
+      `Permissions-Policy "camera=(), microphone=(), geolocation=(), interest-cohort=()"`,
+    );
+    expect(out).toContain("-Server");
+  });
+
+  it("renders the header block BEFORE the redirect/handle directives", () => {
+    const out = generateCaddyfile({
+      sites: [{ hostname: "static.test", bucket: "static" }],
+      s3Endpoint: "https://s3.example.test",
+    });
+    const headerIdx = out.indexOf("header {");
+    const redirIdx = out.indexOf("redir @noTrailingSlash");
+    expect(headerIdx).toBeGreaterThan(-1);
+    expect(redirIdx).toBeGreaterThan(headerIdx);
+  });
+
+  it("lets a site override a default header value", () => {
+    const block = renderHeaderBlock({
+      "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+    });
+    expect(block).toContain(
+      `Strict-Transport-Security "max-age=31536000; includeSubDomains"`,
+    );
+    expect(block).not.toContain(
+      `Strict-Transport-Security "max-age=31536000"\n`,
+    );
+  });
+
+  it("lets a site add a non-default header (e.g. CSP)", () => {
+    const block = renderHeaderBlock({
+      "Content-Security-Policy": "default-src 'self'",
+    });
+    expect(block).toContain(`Content-Security-Policy "default-src 'self'"`);
+    // Defaults still present.
+    expect(block).toContain(`X-Frame-Options "DENY"`);
+  });
+
+  it("lets a site delete a default header by setting it to null", () => {
+    const block = renderHeaderBlock({ "X-Frame-Options": null });
+    expect(block).toContain("-X-Frame-Options");
+    expect(block).not.toContain(`X-Frame-Options "DENY"`);
+  });
+
+  it("escapes backslashes and double quotes in header values", () => {
+    const block = renderHeaderBlock({
+      "X-Test-Header": String.raw`value with "quote" and \backslash`,
+    });
+    expect(block).toContain(
+      String.raw`X-Test-Header "value with \"quote\" and \\backslash"`,
+    );
+  });
+});
 
 describe("S3StaticSites pod-template hash annotation", () => {
   test("renders a caddyfile-hash annotation on the pod template", () => {

@@ -64,7 +64,76 @@ export type StaticSiteConfig = {
   probes?: StaticSiteProbeConfig[];
   reverseProxies?: StaticSiteReverseProxy[];
   spaFallbacks?: StaticSiteSpaFallback[];
+  /**
+   * Per-site response-header overrides. Merged on top of `defaultResponseHeaders`
+   * (which apply to every site). Set a value to override; set to `null` to delete
+   * a default (rendered as `-HeaderName` in the Caddyfile).
+   *
+   * The merged set is rendered as a single `header { ... }` block at the top of
+   * the site, which Caddy applies to all responses — including those proxied
+   * through `reverseProxies` upstreams.
+   */
+  responseHeaders?: Record<string, string | null>;
 };
+
+/**
+ * Defense-in-depth response headers applied to every site. CSP is intentionally
+ * NOT here — it's per-app because each app has different image hosts, inline
+ * script needs, etc. Sites that need CSP set it via `responseHeaders`.
+ *
+ * HSTS deliberately uses `max-age=31536000` WITHOUT `includeSubDomains` or
+ * `preload` as the default — a misconfigured subdomain could otherwise become
+ * permanently unreachable from browsers. Sites that want broader HSTS scope opt
+ * in via `responseHeaders`.
+ */
+export const defaultResponseHeaders: Record<string, string> = {
+  "Strict-Transport-Security": "max-age=31536000",
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Permissions-Policy":
+    "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+};
+
+/**
+ * Render the merged-and-per-site Caddyfile `header { ... }` block for one site.
+ * Returns an empty string when there are no headers to set (currently never
+ * happens because `defaultResponseHeaders` is non-empty).
+ *
+ * Caddy's `header` directive with an unprefixed name uses Set semantics — it
+ * overwrites any upstream-provided value. `null` overrides emit a `-Name`
+ * delete directive instead.
+ */
+export function renderHeaderBlock(
+  overrides: Record<string, string | null> | undefined,
+): string {
+  const merged = new Map<string, string | null>();
+  for (const [name, value] of Object.entries(defaultResponseHeaders)) {
+    merged.set(name, value);
+  }
+  for (const [name, value] of Object.entries(overrides ?? {})) {
+    merged.set(name, value);
+  }
+
+  const lines: string[] = [];
+  for (const [name, value] of merged) {
+    if (value === null) {
+      lines.push(`\t\t-${name}`);
+    } else {
+      // Caddy requires quoting whenever the value contains spaces or special
+      // chars. Always quote to keep the rendering deterministic.
+      const escaped = value
+        .replaceAll(`\\`, `\\\\`)
+        .replaceAll(`"`, String.raw`\"`);
+      lines.push(`\t\t${name} "${escaped}"`);
+    }
+  }
+  // Strip Caddy's own Server header so we don't advertise the proxy.
+  lines.push(`\t\t-Server`);
+
+  if (lines.length === 0) return "";
+  return `\theader {\n${lines.join("\n")}\n\t}`;
+}
 
 export type S3StaticSitesProps = {
   sites: StaticSiteConfig[];
@@ -157,8 +226,10 @@ ${renderS3Proxy(spa.fallbackPath)}
 \t\tnot path ${exclusionPaths.join(" ")}
 \t}`;
 
+    const headerBlock = renderHeaderBlock(site.responseHeaders);
+
     blocks.push(`${address} {
-	# Redirect directory-style paths to include trailing slash
+${headerBlock ? `${headerBlock}\n\n` : ""}\t# Redirect directory-style paths to include trailing slash
 	# Matches paths like /foo/bar but not /foo/bar/ or /foo/bar.html
 ${noTrailingSlashMatcher}
 	redir @noTrailingSlash {uri}/ 301
