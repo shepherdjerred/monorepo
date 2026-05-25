@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import type { Client } from "@temporalio/client";
 import * as Sentry from "@sentry/bun";
 import { Hono } from "hono";
@@ -41,6 +42,21 @@ function bearerToken(header: string | undefined): string | undefined {
   return header.slice(prefix.length);
 }
 
+function bearerMatches(
+  presented: string | undefined,
+  expected: string,
+): boolean {
+  if (presented === undefined) {
+    return false;
+  }
+  const a = Buffer.from(presented);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length) {
+    return false;
+  }
+  return timingSafeEqual(a, b);
+}
+
 export function buildAgentTaskApiApp(
   token: string,
   client: Client,
@@ -51,7 +67,7 @@ export function buildAgentTaskApiApp(
   app.get("/healthz", (c) => c.text("ok\n"));
 
   app.post("/agent-tasks", async (c) => {
-    if (bearerToken(c.req.header("authorization")) !== token) {
+    if (!bearerMatches(bearerToken(c.req.header("authorization")), token)) {
       jsonLog("warning", "Rejected unauthorized agent task request");
       return c.text("unauthorized\n", 401);
     }

@@ -1,6 +1,6 @@
 resource "cloudflare_zone" "glitter_boys_com" {
   account = { id = var.cloudflare_account_id }
-  name       = "glitter-boys.com"
+  name    = "glitter-boys.com"
 }
 
 # Fly.io app CNAMEs
@@ -50,4 +50,98 @@ resource "cloudflare_dns_record" "glitter_boys_com_dkim_wildcard" {
 # DNSSEC
 resource "cloudflare_zone_dnssec" "glitter_boys_com" {
   zone_id = cloudflare_zone.glitter_boys_com.id
+}
+
+# ── CAA: authorize CAs Cloudflare may use to issue certs for this zone ─────
+resource "cloudflare_dns_record" "glitter_boys_com_caa_issue_letsencrypt" {
+  zone_id = cloudflare_zone.glitter_boys_com.id
+  ttl     = 1
+  name    = "glitter-boys.com"
+  type    = "CAA"
+  data = {
+    flags = 0
+    tag   = "issue"
+    value = "letsencrypt.org"
+  }
+}
+
+resource "cloudflare_dns_record" "glitter_boys_com_caa_issue_google_trust_services" {
+  zone_id = cloudflare_zone.glitter_boys_com.id
+  ttl     = 1
+  name    = "glitter-boys.com"
+  type    = "CAA"
+  data = {
+    flags = 0
+    tag   = "issue"
+    value = "pki.goog; cansignhttpexchanges=yes"
+  }
+}
+
+resource "cloudflare_dns_record" "glitter_boys_com_caa_issue_sectigo" {
+  zone_id = cloudflare_zone.glitter_boys_com.id
+  ttl     = 1
+  name    = "glitter-boys.com"
+  type    = "CAA"
+  data = {
+    flags = 0
+    tag   = "issue"
+    value = "sectigo.com"
+  }
+}
+
+resource "cloudflare_dns_record" "glitter_boys_com_caa_issue_ssl_com" {
+  zone_id = cloudflare_zone.glitter_boys_com.id
+  ttl     = 1
+  name    = "glitter-boys.com"
+  type    = "CAA"
+  data = {
+    flags = 0
+    tag   = "issue"
+    value = "ssl.com"
+  }
+}
+
+resource "cloudflare_dns_record" "glitter_boys_com_caa_issuewild_none" {
+  zone_id = cloudflare_zone.glitter_boys_com.id
+  ttl     = 1
+  name    = "glitter-boys.com"
+  type    = "CAA"
+  data = {
+    flags = 0
+    tag   = "issuewild"
+    value = ";"
+  }
+}
+
+resource "cloudflare_dns_record" "glitter_boys_com_caa_iodef" {
+  zone_id = cloudflare_zone.glitter_boys_com.id
+  ttl     = 1
+  name    = "glitter-boys.com"
+  type    = "CAA"
+  data = {
+    flags = 0
+    tag   = "iodef"
+    value = "mailto:dmarc@sjer.red"
+  }
+}
+
+# ── Edge hardening: min TLS 1.2 + HSTS (1-day rollback window) ──────────────
+resource "cloudflare_zone_setting" "glitter_boys_com_min_tls_version" {
+  zone_id    = cloudflare_zone.glitter_boys_com.id
+  setting_id = "min_tls_version"
+  value      = "1.2"
+}
+
+resource "cloudflare_zone_setting" "glitter_boys_com_security_header" {
+  zone_id    = cloudflare_zone.glitter_boys_com.id
+  setting_id = "security_header"
+  value = {
+    strict_transport_security = {
+      enabled            = true
+      max_age            = 86400
+      include_subdomains = true
+      nosniff            = true
+      preload            = false
+    }
+  }
 }

@@ -85,6 +85,28 @@ describe("buildAgentTaskApiApp", () => {
     expect(start).not.toHaveBeenCalled();
   });
 
+  it("rejects a wrong-but-same-length bearer token", async () => {
+    const start = mock(
+      async (
+        _client: Client,
+        _input: AgentTaskInput,
+      ): Promise<AgentTaskStartResult> => ({
+        kind: "workflow",
+        workflowId: "agent-task-test",
+        runId: "run-id",
+      }),
+    );
+    const app = buildAgentTaskApiApp(TOKEN, fakeClient(), start);
+
+    const wrongSameLength = "x".repeat(TOKEN.length);
+    expect(wrongSameLength.length).toBe(TOKEN.length);
+    const res = await postAgentTask(app, validInput(), wrongSameLength);
+
+    expect(res.status).toBe(401);
+    expect(await res.text()).toBe("unauthorized\n");
+    expect(start).not.toHaveBeenCalled();
+  });
+
   it("schedules authenticated agent task creation", async () => {
     const start = mock(
       async (
