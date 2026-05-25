@@ -194,7 +194,7 @@ pointing at its own bucket and own backend Service:
   ],
 },
 {
-  hostname: "scout-for-lol-beta.sjer.red",
+  hostname: "beta.scout-for-lol.com",
   bucket: "scout-frontend-beta",
   reverseProxies: [
     { path: "/api/healthz", upstream: "scout-service-beta.scout-beta.svc.cluster.local:3000", rewriteTo: "/healthz" },
@@ -251,7 +251,7 @@ entry with two entries (prod + beta), both running the merged build:
 {
   bucket: "scout-frontend-beta",
   name: "scout-for-lol frontend + app (beta)",
-  url: "https://scout-for-lol-beta.sjer.red",
+  url: "https://beta.scout-for-lol.com",
   buildDir: "packages/scout-for-lol",
   buildCmd: "bun run scripts/build-bucket.ts",
   distDir: "packages/scout-for-lol/packages/frontend/dist",
@@ -318,7 +318,7 @@ Run in order; each must succeed before the next.
 5. **After merge → ArgoCD sync** (verify both stages):
    - `kubectl get pods -n scout-{beta,prod}` — no more `scout-app-*` pods, backend pods still Running.
    - `kubectl rollout status deploy/s3-static-sites -n s3-static-sites` — rolled with new hash annotation.
-   - For each hostname (`scout-for-lol.com`, `scout-for-lol-beta.sjer.red`):
+   - For each hostname (`scout-for-lol.com`, `beta.scout-for-lol.com`):
      - `curl -I https://<host>/` → 200, Astro homepage.
      - `curl -I https://<host>/app/` → 200, SPA index.
      - `curl https://<host>/api/healthz` → 200 from the correct backend.
@@ -376,7 +376,7 @@ Total: 3 probes × 2 stages = 6 new blackbox monitors.
 ### Remaining
 
 - **One-time operator step (pre-merge)**: create the SeaweedFS bucket: `op run --env-file=.env -- aws --endpoint-url=https://seaweedfs.sjer.red s3 mb s3://scout-frontend-beta`. Without this, the beta deploy step's `aws s3 sync` will fail with `NoSuchBucket` on first run.
-- **Post-merge verification (manual)**: After ArgoCD sync, run the curls listed in the Verify section of this plan against both `scout-for-lol.com` and `scout-for-lol-beta.sjer.red`. Confirm Discord OAuth still works end-to-end on prod (cookie set, redirect, SPA session active).
+- **Post-merge verification (manual)**: After ArgoCD sync, run the curls listed in the Verify section of this plan against both `scout-for-lol.com` and `beta.scout-for-lol.com`. Confirm Discord OAuth still works end-to-end on prod (cookie set, redirect, SPA session active).
 - **Astro `/app/*` dead code**: Astro's `src/pages/app/*.astro` (8 files) prerenders pages that are no longer reachable (Vite SPA owns /app/). Worth deleting in a follow-up to avoid confusion; out of scope for this PR.
 
 ### Caveats

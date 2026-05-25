@@ -174,7 +174,7 @@ export const DEPLOY_SITES: DeploySite[] = [
   {
     bucket: "scout-frontend-beta",
     name: "scout-for-lol frontend + app (beta)",
-    url: "https://scout-for-lol-beta.sjer.red",
+    url: "https://beta.scout-for-lol.com",
     buildDir: "packages/scout-for-lol",
     buildCmd: "bun run scripts/build-bucket.ts",
     distDir: "packages/scout-for-lol/packages/frontend/dist",
