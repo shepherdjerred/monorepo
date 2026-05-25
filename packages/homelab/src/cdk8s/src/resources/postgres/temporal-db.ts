@@ -38,6 +38,8 @@ export function createTemporalPostgreSQLDatabase(chart: Chart) {
           max_wal_size: "2GB",
           log_statement: "none",
           log_min_duration_statement: "1000",
+          // Keep pg_hba auth and generated role password hashes aligned.
+          password_encryption: "scram-sha-256",
         },
       },
       volume: {
@@ -75,10 +77,10 @@ export function createTemporalPostgreSQLDatabase(chart: Chart) {
           "data-checksums": "true",
         },
         pg_hba: [
-          "hostssl temporal temporal all md5",
-          "hostssl temporal_visibility temporal all md5",
-          "hostssl pr_review_eval pr_review_eval all md5",
-          "hostssl replication standby all md5",
+          "hostssl temporal temporal all scram-sha-256",
+          "hostssl temporal_visibility temporal all scram-sha-256",
+          "hostssl pr_review_eval pr_review_eval all scram-sha-256",
+          "hostssl replication standby all scram-sha-256",
           "local all all trust",
         ],
         slots: {},

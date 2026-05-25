@@ -42,6 +42,8 @@ export function createPlausiblePostgreSQLDatabase(chart: Chart) {
           max_wal_size: "2GB",
           log_statement: "none",
           log_min_duration_statement: "1000",
+          // Keep pg_hba auth and generated role password hashes aligned.
+          password_encryption: "scram-sha-256",
         },
       },
       volume: {
@@ -71,8 +73,8 @@ export function createPlausiblePostgreSQLDatabase(chart: Chart) {
           "data-checksums": "true",
         },
         pg_hba: [
-          "hostssl plausible_db plausible all md5",
-          "hostssl replication standby all md5",
+          "hostssl plausible_db plausible all scram-sha-256",
+          "hostssl replication standby all scram-sha-256",
           "local all all trust",
         ],
         slots: {},
