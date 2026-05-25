@@ -191,7 +191,7 @@ const versions = {
     "latest@sha256:aafc772384232497bed875e1eb66b4d3e54ba1ebc86e2e185a6dc1dbc48182ef",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "library/busybox":
-    "latest@sha256:32015ee641bfecc97161986c9d24957068175444f66fbcbe08a664b6cf5c1c2e",
+    "latest@sha256:fd8d9aa63ba2f0982b5304e1ee8d3b90a210bc1ffb5314d980eb6962f1a9715d",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "library/alpine":
     "latest@sha256:5b10f432ef3da1b8d4c7eb6c487f2f5a8f096bc91145e68878dd4a5019afde11",
