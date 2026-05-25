@@ -181,7 +181,10 @@ export function tofuApplyHelper(
     .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey);
 
   if (githubToken != null) {
-    container = container.withSecretVariable("TF_VAR_github_token", githubToken);
+    container = container.withSecretVariable(
+      "TF_VAR_github_token",
+      githubToken,
+    );
   }
 
   if (cloudflareAccountId != null) {
@@ -229,7 +232,10 @@ export function tofuPlanHelper(
     .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey);
 
   if (githubToken != null) {
-    container = container.withSecretVariable("TF_VAR_github_token", githubToken);
+    container = container.withSecretVariable(
+      "TF_VAR_github_token",
+      githubToken,
+    );
   }
 
   if (cloudflareAccountId != null) {
@@ -826,12 +832,11 @@ export function versionCommitBackHelper(
     "git",
     "curl",
     "ca-certificates",
-  ])
-    .withExec([
-      "sh",
-      "-c",
-      `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
-    ]);
+  ]).withExec([
+    "sh",
+    "-c",
+    `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
+  ]);
 
   if (dryrun) {
     return container.withExec([
@@ -901,12 +906,11 @@ export function ciBaseVersionCommitBackHelper(
     "git",
     "curl",
     "ca-certificates",
-  ])
-    .withExec([
-      "sh",
-      "-c",
-      `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
-    ]);
+  ]).withExec([
+    "sh",
+    "-c",
+    `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
+  ]);
 
   if (dryrun) {
     return container.withExec([
@@ -968,12 +972,11 @@ export function cooklangVersionCommitBackHelper(
     "curl",
     "ca-certificates",
     "jq",
-  ])
-    .withExec([
-      "sh",
-      "-c",
-      `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
-    ]);
+  ]).withExec([
+    "sh",
+    "-c",
+    `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
+  ]);
 
   if (dryrun) {
     return container.withExec([
