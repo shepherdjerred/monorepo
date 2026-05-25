@@ -20,7 +20,7 @@ import {
 const GITHUB_APP_TOKEN_SCRIPT = "packages/temporal/src/lib/github-app-token.ts";
 const GITHUB_APP_TOKEN_SCRIPT_PATH = "/usr/local/bin/github-app-token.ts";
 const MONOREPO_REPO = "shepherdjerred/monorepo";
-const MONOREPO_WRITE_URL = `https://git@github.com/${MONOREPO_REPO}.git`;
+const MONOREPO_WRITE_URL = `https://github.com/${MONOREPO_REPO}.git`;
 
 function withAptPackages(container: Container, packages: string[]): Container {
   const packageList = packages.join(" ");
@@ -63,15 +63,12 @@ function withGithubAppCredentials(
  * and export `GIT_ASKPASS` + `GH_TOKEN` for the current shell. Returns a
  * `&&`-chained command suitable for prepending to the caller's git ops.
  *
- * The minted token lives only in the `GH_TOKEN` environment variable — it is
- * never persisted to disk. The askpass helper script is plain shell text
- * (single-quoted in the outer printf so `$GH_TOKEN` stays literal in the
- * file content), and at git's invocation time the askpass subprocess inherits
- * `GH_TOKEN` from the parent shell and `printf`s it back as the password.
- * Git callers must use an HTTPS URL with an explicit username, e.g.
- * `https://git@github.com/owner/repo.git`, so git never prompts for a
- * username. This keeps the `.dagger/src/**` "no writing tokens to files"
- * rule intact.
+ * The minted token lives only in the `GH_TOKEN` environment variable; it is
+ * never persisted to disk. The askpass helper script is plain shell text, and
+ * at git's invocation time the askpass subprocess inherits `GH_TOKEN` from the
+ * parent shell. It returns GitHub's expected token username for username
+ * prompts and `GH_TOKEN` for password prompts. Git callers should use plain
+ * HTTPS URLs so credentials never appear in URLs.
  *
  * Includes a one-line diagnostic so any future "No anonymous write access"
  * or "Bad credentials" failure is debuggable from the CI log without
@@ -92,7 +89,7 @@ function mintGithubAppTokenAndSetupGitAuth(
   ];
   if (withAskpass) {
     steps.push(
-      `printf '#!/bin/sh\\nprintf "%s\\\\n" "$GH_TOKEN"\\n' > /usr/local/bin/git-askpass`,
+      `printf '%s\\n' '#!/bin/sh' 'case "$1" in' '  *Username*) printf "%s%s%s\\\\n" "x-access" "-" "token" ;;' '  *) printf "%s\\\\n" "$GH_TOKEN" ;;' 'esac' > /usr/local/bin/git-askpass`,
       `chmod +x /usr/local/bin/git-askpass`,
       `export GIT_ASKPASS=/usr/local/bin/git-askpass`,
       `echo "git-auth-setup: $(ls -l /usr/local/bin/git-askpass | awk '{print $1, $3, $5}'), GIT_ASKPASS=$GIT_ASKPASS, token-bytes=$(printf %s \"$GH_TOKEN\" | wc -c)"`,
@@ -779,7 +776,7 @@ export function cooklangPublishHelper(
       `export GIT_TERMINAL_PROMPT=0`,
       mintGithubAppTokenAndSetupGitAuth(),
       // Clone plugin repo
-      `git clone https://git@github.com/${cooklangPluginRepo}.git /repo`,
+      `git clone https://github.com/${cooklangPluginRepo}.git /repo`,
       `cd /repo`,
       `git config user.email "ci@sjer.red"`,
       `git config user.name "CI Bot"`,

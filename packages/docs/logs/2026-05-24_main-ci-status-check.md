@@ -77,7 +77,7 @@ E: Unable to fetch some archives, maybe run apt-get update or try with --fix-mis
   - `deploy-scout-frontend-beta` injects placeholder public ad IDs in the build command;
   - `tofu-github` passes `--github-token env:TOFU_GITHUB_TOKEN`.
 
-## Session Log - 2026-05-24
+## Post-Merge Session Log - 2026-05-24
 
 ### Done
 
@@ -99,3 +99,29 @@ E: Unable to fetch some archives, maybe run apt-get update or try with --fix-mis
 ### Summary
 
 Buildkite build `2897` on `main` failed across image pushes, Cooklang publish, Scout beta deploy, and the GitHub OpenTofu apply. This session traced those failures to missing CI secrets, required public build-time Scout env vars, GitHub App permission limits, and stale Debian package indexes, then implemented the corresponding CI, Dagger, and OpenTofu fixes with focused local verification.
+
+## Post-Merge Follow-Up
+
+After PR #926 merged, Buildkite build `2904` ran on `main` at commit `1d3f273c5f1b76e94ef60f55dadcd2f4222be376` and still had three hard failures:
+
+- `deploy-scout-frontend-beta` reached the S3 upload step, then failed because the `scout-frontend-beta` bucket did not exist in the SeaweedFS OpenTofu bucket stack.
+- `cooklang-publish` minted a GitHub App token, but the generated askpass helper returned blank credentials because the outer shell `printf` consumed the inner `%s` placeholders.
+- `tofu-github` rejected the live CI GitHub token because the OpenTofu variable validation only accepted fine-grained PATs.
+
+## Session Log - 2026-05-24
+
+### Done
+
+- Rechecked post-merge Buildkite build `2904` and filtered to hard failures only.
+- Added the missing `scout-frontend-beta` SeaweedFS bucket in `packages/homelab/src/tofu/seaweedfs/buckets.tf`.
+- Updated the Dagger GitHub App askpass helper in `.dagger/src/release.ts` to return GitHub's expected HTTPS token username for username prompts and the minted token for password prompts, using plain HTTPS clone URLs.
+- Relaxed `packages/homelab/src/tofu/github/variables.tf` and its README entry so the GitHub provider accepts the token classes CI uses.
+- Verified with Dagger hygiene, suppression checks, Dagger TypeScript typecheck, Dagger unit tests, targeted OpenTofu formatting checks, and an askpass smoke test.
+
+### Remaining
+
+- Land the follow-up PR and let Buildkite rerun main to verify the three post-merge failures are gone.
+
+### Caveats
+
+- Full local `tofu validate` is blocked by local provider cache/plugin issues for the GitHub provider and missing cached AWS provider for SeaweedFS, so the local OpenTofu verification was limited to formatting and focused HCL review.

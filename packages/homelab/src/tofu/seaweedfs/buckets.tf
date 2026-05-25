@@ -19,6 +19,10 @@ resource "aws_s3_bucket" "scout_frontend" {
   bucket = "scout-frontend"
 }
 
+resource "aws_s3_bucket" "scout_frontend_beta" {
+  bucket = "scout-frontend-beta"
+}
+
 resource "aws_s3_bucket" "sjer_red" {
   bucket = "sjer-red"
 }
