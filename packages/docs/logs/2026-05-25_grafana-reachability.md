@@ -65,3 +65,26 @@ Investigated why `https://grafana.tailnet-1a49.ts.net` was unreachable on 2026-0
 - Live mutation so far was limited to disabling auto-sync on `apps`, `prometheus`, `prometheus-adapter`, and `grafana-db`.
 - The same-day earlier log showed Grafana crash-looping on Postgres TLS before the prune; the current outage is now stronger: the whole target namespace and Grafana ingress are absent.
 - A manual ChartMuseum push would require credential access. The attempted cluster-secret inspection was rejected by the sandbox reviewer, so the safe publish path is Git/Buildkite unless the operator explicitly approves credentialed manual publishing.
+
+## Session Log - 2026-05-25 Recovery
+
+### Done
+
+- Merged PR #949 after Buildkite PR build #2972 passed.
+- Let Buildkite main build #2973 publish the fixed `apps` chart, then explicitly synced `apps` to chart revision `2.0.0-2973`.
+- Deleted the stale `v1beta1.metrics.k8s.io` APIService so the terminating `prometheus` namespace could finalize.
+- Recreated the `prometheus` namespace and pre-bound the four retained PVs to their original PVC names before syncing workloads.
+- Restored `apps-grafana-ingress`, `apps-prometheus-ingress`, `apps-alertmanager-ingress`, Prometheus rules/dashboards, and monitoring sidecar workloads.
+- Repaired Grafana PostgreSQL credentials after namespace deletion recreated the operator secret while the retained database volume kept the old password.
+- Synced `prometheus-adapter` to recreate `v1beta1.metrics.k8s.io`; the APIService is available again.
+- Confirmed Grafana is reachable: `curl -I https://grafana.tailnet-1a49.ts.net/login` returned `HTTP/2 200`.
+
+### Remaining
+
+- Publish the follow-up `grafana-db` chart fix for the Postgres operator `pg_hba` rule so Argo does not revert the live repair.
+- Re-check Buildkite #2973 after version commit-back/build summary finish.
+
+### Caveats
+
+- The live PostgreSQL repair aligned generated secrets to retained database roles without printing secret values.
+- `apps` was manually synced to `2.0.0-2973` because the Buildkite sync initially left Argo on the stale chart revision.
