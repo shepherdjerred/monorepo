@@ -32,11 +32,18 @@ function shellQuote(value: string): string {
 }
 
 function dryrunBuildEnvPrefix(buildEnvVars: string[]): string {
+  return buildEnvPrefix(buildEnvVars, DRYRUN_BUILD_ENV_VALUES);
+}
+
+function buildEnvPrefix(
+  buildEnvVars: string[],
+  values: Readonly<Record<string, string>>,
+): string {
   return buildEnvVars
     .map((name) => {
-      const value = DRYRUN_BUILD_ENV_VALUES[name];
+      const value = values[name];
       if (value === undefined) {
-        throw new Error(`Missing dry-run build env placeholder for ${name}`);
+        throw new Error(`Missing build env placeholder for ${name}`);
       }
       return `${name}=${shellQuote(value)}`;
     })
@@ -52,9 +59,12 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
   const depFlags = deps
     .flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`])
     .join(" ");
-  const buildEnvVars = site.buildEnvVars ?? [];
+  const buildEnvVars =
+    site.buildEnvVars ?? Object.keys(site.buildEnvPlaceholders ?? {});
+  const hasBuildEnvPlaceholders = site.buildEnvPlaceholders !== undefined;
   const useDryrunBuildEnv = isDryrunBuild() && buildEnvVars.length > 0;
-  const buildEnvFlags = useDryrunBuildEnv
+  const usePlaceholderBuildEnv = hasBuildEnvPlaceholders || useDryrunBuildEnv;
+  const buildEnvFlags = usePlaceholderBuildEnv
     ? ""
     : buildEnvVars
         .flatMap((name) => [
@@ -62,8 +72,12 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
           `--build-env-values env:${name}`,
         ])
         .join(" ");
-  const buildCmd = useDryrunBuildEnv
-    ? `${dryrunBuildEnvPrefix(buildEnvVars)} ${site.buildCmd}`
+  const placeholderBuildEnvPrefix =
+    site.buildEnvPlaceholders !== undefined
+      ? buildEnvPrefix(buildEnvVars, site.buildEnvPlaceholders)
+      : dryrunBuildEnvPrefix(buildEnvVars);
+  const buildCmd = usePlaceholderBuildEnv
+    ? `${placeholderBuildEnvPrefix} ${site.buildCmd}`
     : site.buildCmd;
 
   // Compute dist subdir relative to package dir

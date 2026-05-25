@@ -205,7 +205,9 @@ describe("buildPipeline", () => {
       expect(push?.if).toBe("build.branch == pipeline.default_branch");
       expect(push?.command).toContain("ghcr.io/shepherdjerred/ci-base:");
       expect(push?.command).toContain("--registry-password env:GHCR_TOKEN");
-      expect(push?.command).not.toContain("env:GH_TOKEN");
+      expect(push?.command).toContain(
+        'export GHCR_TOKEN="$${GHCR_TOKEN:-$${GH_TOKEN:-}}"',
+      );
       expect(commitBack).toBeDefined();
       expect(commitBack?.depends_on).toBe("push-ci-base");
       expect(commitBack?.concurrency_group).toBe(
@@ -552,8 +554,11 @@ describe("buildPipeline", () => {
       expect(planSteps.length).toBeGreaterThan(0);
       for (const s of planSteps) {
         expect(s.if).toBe("build.branch != pipeline.default_branch");
-        expect(s.command).toContain("--github-app-id env:GITHUB_APP_ID");
-        expect(s.command).not.toContain("TOFU_GITHUB_TOKEN");
+        if (s.key === "tofu-plan-github") {
+          expect(s.command).toContain("--github-token env:TOFU_GITHUB_TOKEN");
+        } else {
+          expect(s.command).not.toContain("TOFU_GITHUB_TOKEN");
+        }
       }
     });
 
@@ -597,7 +602,7 @@ describe("buildPipeline", () => {
       expect(groupKeys).toContain("deploy-sites");
     });
 
-    it("uses GitHub App auth for release tasks and GHCR_TOKEN only for image pushes", () => {
+    it("uses GitHub App auth for release tasks and GHCR_TOKEN for image pushes with GH_TOKEN fallback", () => {
       const pipeline = buildPipeline(fullBuild());
       const allSteps: BuildkiteStep[] = [];
       collectSteps(pipeline.steps, allSteps);
@@ -617,6 +622,9 @@ describe("buildPipeline", () => {
         if (s.command.includes("--registry-password")) {
           expect(s.command).toContain("--registry-password env:GHCR_TOKEN");
           expect(s.command).not.toContain("--registry-password env:GH_TOKEN");
+          expect(s.command).toContain(
+            'export GHCR_TOKEN="$${GHCR_TOKEN:-$${GH_TOKEN:-}}"',
+          );
         }
       }
     });
@@ -668,6 +676,32 @@ describe("buildPipeline", () => {
       );
       expect(scoutDeploy?.command).toContain(
         "PUBLIC_REDDIT_PIXEL_ID='dev-reddit-pixel-id'",
+      );
+    });
+
+    it("uses non-tracking Scout marketing placeholders for beta deploy builds", () => {
+      const pipeline = withBuildkiteBranchContext("main", "main", () =>
+        buildPipeline(fullBuild()),
+      );
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+
+      const scoutBetaDeploy = allSteps.find(
+        (s) => s.key === "deploy-scout-frontend-beta",
+      );
+
+      expect(scoutBetaDeploy).toBeDefined();
+      expect(scoutBetaDeploy?.command).not.toContain(
+        "--build-env-values env:PUBLIC_PINTEREST_TAG_ID",
+      );
+      expect(scoutBetaDeploy?.command).not.toContain(
+        "--build-env-values env:PUBLIC_REDDIT_PIXEL_ID",
+      );
+      expect(scoutBetaDeploy?.command).toContain(
+        "PUBLIC_PINTEREST_TAG_ID='beta-placeholder-pinterest-tag-id'",
+      );
+      expect(scoutBetaDeploy?.command).toContain(
+        "PUBLIC_REDDIT_PIXEL_ID='beta-placeholder-reddit-pixel-id'",
       );
     });
 
@@ -781,8 +815,11 @@ describe("buildPipeline", () => {
       for (const s of tofuSteps) {
         expect(s.concurrency).toBe(1);
         expect(s.concurrency_group).toContain("monorepo/tofu-");
-        expect(s.command).toContain("--github-app-id env:GITHUB_APP_ID");
-        expect(s.command).not.toContain("TOFU_GITHUB_TOKEN");
+        if (s.key === "tofu-github") {
+          expect(s.command).toContain("--github-token env:TOFU_GITHUB_TOKEN");
+        } else {
+          expect(s.command).not.toContain("TOFU_GITHUB_TOKEN");
+        }
       }
 
       const argoSteps = allSteps.filter((s) =>

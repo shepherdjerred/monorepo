@@ -22,6 +22,15 @@ const GITHUB_APP_TOKEN_SCRIPT_PATH = "/usr/local/bin/github-app-token.ts";
 const MONOREPO_REPO = "shepherdjerred/monorepo";
 const MONOREPO_WRITE_URL = `https://git@github.com/${MONOREPO_REPO}.git`;
 
+function withAptPackages(container: Container, packages: string[]): Container {
+  const packageList = packages.join(" ");
+  return container.withExec([
+    "sh",
+    "-c",
+    `apt-get update -qq && apt-get install -y -qq --no-install-recommends ${packageList} && rm -rf /var/lib/apt/lists/*`,
+  ]);
+}
+
 /**
  * Inject the github-app-token mint script + the secret env vars needed to
  * run it. The actual mint happens inline in each caller's withExec via
@@ -155,9 +164,7 @@ export function tofuApplyHelper(
   stack: string,
   awsAccessKeyId: Secret,
   awsSecretAccessKey: Secret,
-  githubAppId: Secret,
-  githubAppInstallationId: Secret,
-  githubAppPrivateKey: Secret,
+  githubToken: Secret | null = null,
   cloudflareAccountId: Secret | null = null,
   cloudflareApiToken: Secret | null = null,
   dryrun = false,
@@ -171,10 +178,11 @@ export function tofuApplyHelper(
       source.directory(`packages/homelab/src/tofu/${stack}`),
     )
     .withSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyId)
-    .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey)
-    .withSecretVariable("GITHUB_APP_ID", githubAppId)
-    .withSecretVariable("GITHUB_APP_INSTALLATION_ID", githubAppInstallationId)
-    .withSecretVariable("GITHUB_APP_PEM_FILE", githubAppPrivateKey);
+    .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey);
+
+  if (githubToken != null) {
+    container = container.withSecretVariable("TF_VAR_github_token", githubToken);
+  }
 
   if (cloudflareAccountId != null) {
     container = container.withSecretVariable(
@@ -204,9 +212,7 @@ export function tofuPlanHelper(
   stack: string,
   awsAccessKeyId: Secret,
   awsSecretAccessKey: Secret,
-  githubAppId: Secret,
-  githubAppInstallationId: Secret,
-  githubAppPrivateKey: Secret,
+  githubToken: Secret | null = null,
   cloudflareAccountId: Secret | null = null,
   cloudflareApiToken: Secret | null = null,
   dryrun = false,
@@ -220,10 +226,11 @@ export function tofuPlanHelper(
       source.directory(`packages/homelab/src/tofu/${stack}`),
     )
     .withSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyId)
-    .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey)
-    .withSecretVariable("GITHUB_APP_ID", githubAppId)
-    .withSecretVariable("GITHUB_APP_INSTALLATION_ID", githubAppInstallationId)
-    .withSecretVariable("GITHUB_APP_PEM_FILE", githubAppPrivateKey);
+    .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey);
+
+  if (githubToken != null) {
+    container = container.withSecretVariable("TF_VAR_github_token", githubToken);
+  }
 
   if (cloudflareAccountId != null) {
     container = container.withSecretVariable(
@@ -411,18 +418,7 @@ export function deploySiteHelper(
     );
   }
 
-  let container = dag
-    .container()
-    .from(BUN_IMAGE)
-    .withExec(["apt-get", "update", "-qq"])
-    .withExec([
-      "apt-get",
-      "install",
-      "-y",
-      "-qq",
-      "--no-install-recommends",
-      "awscli",
-    ])
+  let container = withAptPackages(dag.container().from(BUN_IMAGE), ["awscli"])
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
     .withWorkdir(`/workspace/packages/${pkg}`)
     .withDirectory(`/workspace/packages/${pkg}`, pkgDir, {
@@ -722,21 +718,12 @@ export function cooklangPublishHelper(
   dryrun = false,
 ): Container {
   const cooklangPluginRepo = validateGitHubRepoSlug(pluginRepo, "pluginRepo");
-  const container = dag
-    .container()
-    .from(BUN_IMAGE)
-    .withExec(["apt-get", "update", "-qq"])
-    .withExec([
-      "apt-get",
-      "install",
-      "-y",
-      "-qq",
-      "--no-install-recommends",
-      "curl",
-      "git",
-      "jq",
-      "ca-certificates",
-    ])
+  const container = withAptPackages(dag.container().from(BUN_IMAGE), [
+    "curl",
+    "git",
+    "jq",
+    "ca-certificates",
+  ])
     .withExec([
       "sh",
       "-c",
@@ -835,20 +822,11 @@ export function versionCommitBackHelper(
   githubAppPrivateKey: Secret,
   dryrun = false,
 ): Container {
-  const container = dag
-    .container()
-    .from(BUN_IMAGE)
-    .withExec(["apt-get", "update", "-qq"])
-    .withExec([
-      "apt-get",
-      "install",
-      "-y",
-      "-qq",
-      "--no-install-recommends",
-      "git",
-      "curl",
-      "ca-certificates",
-    ])
+  const container = withAptPackages(dag.container().from(BUN_IMAGE), [
+    "git",
+    "curl",
+    "ca-certificates",
+  ])
     .withExec([
       "sh",
       "-c",
@@ -919,20 +897,11 @@ export function ciBaseVersionCommitBackHelper(
   githubAppPrivateKey: Secret,
   dryrun = false,
 ): Container {
-  const container = dag
-    .container()
-    .from(BUN_IMAGE)
-    .withExec(["apt-get", "update", "-qq"])
-    .withExec([
-      "apt-get",
-      "install",
-      "-y",
-      "-qq",
-      "--no-install-recommends",
-      "git",
-      "curl",
-      "ca-certificates",
-    ])
+  const container = withAptPackages(dag.container().from(BUN_IMAGE), [
+    "git",
+    "curl",
+    "ca-certificates",
+  ])
     .withExec([
       "sh",
       "-c",
@@ -994,21 +963,12 @@ export function cooklangVersionCommitBackHelper(
   githubAppPrivateKey: Secret,
   dryrun = false,
 ): Container {
-  const container = dag
-    .container()
-    .from(BUN_IMAGE)
-    .withExec(["apt-get", "update", "-qq"])
-    .withExec([
-      "apt-get",
-      "install",
-      "-y",
-      "-qq",
-      "--no-install-recommends",
-      "git",
-      "curl",
-      "ca-certificates",
-      "jq",
-    ])
+  const container = withAptPackages(dag.container().from(BUN_IMAGE), [
+    "git",
+    "curl",
+    "ca-certificates",
+    "jq",
+  ])
     .withExec([
       "sh",
       "-c",
@@ -1071,18 +1031,7 @@ export function releasePleaseHelper(
   githubAppPrivateKey: Secret,
   dryrun = false,
 ): Container {
-  const container = dag
-    .container()
-    .from(BUN_IMAGE)
-    .withExec(["apt-get", "update", "-qq"])
-    .withExec([
-      "apt-get",
-      "install",
-      "-y",
-      "-qq",
-      "--no-install-recommends",
-      "git",
-    ])
+  const container = withAptPackages(dag.container().from(BUN_IMAGE), ["git"])
     .withExec(["bun", "add", "-g", `release-please@${RELEASE_PLEASE_VERSION}`])
     .withWorkdir("/workspace")
     .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES });

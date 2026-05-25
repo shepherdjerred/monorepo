@@ -103,6 +103,7 @@ export interface DeploySite {
   buildCmd: string;
   distDir: string;
   buildEnvVars?: string[];
+  buildEnvPlaceholders?: Readonly<Record<string, string>>;
   needsPlaywright?: boolean;
   workspaceDeps?: string;
 }
@@ -169,6 +170,10 @@ export const DEPLOY_SITES: DeploySite[] = [
     distDir: "packages/scout-for-lol/packages/frontend/dist",
     // Analytics pixels intentionally omitted for beta — beta traffic must
     // not inflate prod Pinterest/Reddit conversion data.
+    buildEnvPlaceholders: {
+      PUBLIC_PINTEREST_TAG_ID: "beta-placeholder-pinterest-tag-id",
+      PUBLIC_REDDIT_PIXEL_ID: "beta-placeholder-reddit-pixel-id",
+    },
     workspaceDeps: "packages/frontend,packages/app",
   },
   {

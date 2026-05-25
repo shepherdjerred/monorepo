@@ -6,7 +6,7 @@ import {
   RETRY,
   DAGGER_ENV,
   DRYRUN_FLAG,
-  GITHUB_APP_SECRET_ARGS,
+  TOFU_GITHUB_TOKEN_ARG,
 } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
@@ -29,7 +29,7 @@ function tofuStackStep(stack: string, homelabPkgKey?: string): BuildkiteStep {
         `dagger call tofu-apply --source . --stack ${stack}`,
         `--aws-access-key-id env:SEAWEEDFS_ACCESS_KEY_ID`,
         `--aws-secret-access-key env:SEAWEEDFS_SECRET_ACCESS_KEY`,
-        GITHUB_APP_SECRET_ARGS,
+        stack === "github" ? TOFU_GITHUB_TOKEN_ARG : "",
         `--cloudflare-account-id env:CLOUDFLARE_ACCOUNT_ID`,
         stack === "cloudflare"
           ? `--cloudflare-api-token env:CLOUDFLARE_API_TOKEN`
@@ -64,7 +64,7 @@ function tofuPlanStep(stack: string): BuildkiteStep {
         `dagger call tofu-plan --source . --stack ${stack}`,
         `--aws-access-key-id env:SEAWEEDFS_ACCESS_KEY_ID`,
         `--aws-secret-access-key env:SEAWEEDFS_SECRET_ACCESS_KEY`,
-        GITHUB_APP_SECRET_ARGS,
+        stack === "github" ? TOFU_GITHUB_TOKEN_ARG : "",
         `--cloudflare-account-id env:CLOUDFLARE_ACCOUNT_ID`,
         stack === "cloudflare"
           ? `--cloudflare-api-token env:CLOUDFLARE_API_TOKEN`

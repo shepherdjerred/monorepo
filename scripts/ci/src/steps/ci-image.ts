@@ -70,7 +70,11 @@ export function ciBaseImagePushStep(
     key: "push-ci-base",
     if: MAIN_ONLY,
     depends_on: "build-ci-base",
-    command: `dagger call push-ci-base-image --context ./.buildkite/ci-image ${tagFlags}`,
+    command: [
+      'export GHCR_TOKEN="$${GHCR_TOKEN:-$${GH_TOKEN:-}}"',
+      `&& if [ -z "$$GHCR_TOKEN" ]; then echo "ERROR: GHCR_TOKEN is empty and GH_TOKEN fallback is unavailable" >&2; exit 1; fi`,
+      `&& dagger call push-ci-base-image --context ./.buildkite/ci-image ${tagFlags}`,
+    ].join(" "),
     timeout_in_minutes: 15,
     priority: 1,
     retry: RETRY,
