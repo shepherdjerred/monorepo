@@ -17,16 +17,18 @@ logger.info("🌐 Initializing HTTP server");
 
 /**
  * CORS headers for API responses.
- * For credentialed (cookie) requests browsers reject `*` — we echo the
- * configured web origin when the request Origin matches it, and fall
- * back to `*` for unauthenticated public endpoints / dev clients.
+ *
+ * We only emit CORS headers when the request's `Origin` matches the
+ * configured web-app origin (i.e. the SPA). For every other caller — Tauri
+ * desktop clients, server-to-server traffic, or anything cross-origin — we
+ * return no CORS headers at all. Browsers refuse the response, which is
+ * what we want for cross-origin browser callers; non-browser clients
+ * ignore CORS entirely.
+ *
+ * `Authorization` is intentionally NOT in `Access-Control-Allow-Headers`:
+ * the SPA uses cookies + X-CSRF-Token, and the desktop client isn't a
+ * browser. Add it back deliberately if a future browser flow needs Bearer.
  */
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-CSRF-Token",
-};
-
 function corsHeadersFor(request: Request): Record<string, string> {
   const origin = request.headers.get("Origin");
   const allowedOrigin = configuration.webAppOrigin;
@@ -38,21 +40,21 @@ function corsHeadersFor(request: Request): Record<string, string> {
     return {
       "Access-Control-Allow-Origin": origin,
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers":
-        "Content-Type, Authorization, X-CSRF-Token",
+      "Access-Control-Allow-Headers": "Content-Type, X-CSRF-Token",
       "Access-Control-Allow-Credentials": "true",
       Vary: "Origin",
     };
   }
-  return corsHeaders;
+  return {};
 }
 
 const applicationStartTime = Date.now();
 
-function handleLivez(): Response {
+function handleLivez(request: Request): Response {
   const { lastSuccessTimestamp, lastAttemptTimestamp } = getRiotApiHealth();
   const now = Date.now();
   const uptimeMs = now - applicationStartTime;
+  const cors = corsHeadersFor(request);
 
   // Grace period: first 5 minutes after startup, always healthy
   const startupGracePeriodMs = 5 * 60 * 1000;
@@ -61,7 +63,7 @@ function handleLivez(): Response {
       { healthy: true, reason: "startup-grace-period", uptimeMs },
       {
         status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+        headers: { "Content-Type": "application/json", ...cors },
       },
     );
   }
@@ -86,15 +88,16 @@ function handleLivez(): Response {
     },
     {
       status: healthy ? 200 : 503,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
+      headers: { "Content-Type": "application/json", ...cors },
     },
   );
 }
 
-function handleHealthz(): Response {
+function handleHealthz(request: Request): Response {
   const { lastSuccessTimestamp, lastAttemptTimestamp } = getRiotApiHealth();
   const now = Date.now();
   const uptimeSeconds = (now - applicationStartTime) / 1000;
+  const cors = corsHeadersFor(request);
 
   // Unhealthy if: API attempts exist in last 10 minutes AND last success was >5 minutes ago
   const tenMinutesMs = 10 * 60 * 1000;
@@ -116,7 +119,7 @@ function handleHealthz(): Response {
     },
     {
       status: healthy ? 200 : 503,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
+      headers: { "Content-Type": "application/json", ...cors },
     },
   );
 }
@@ -144,19 +147,19 @@ const server = Bun.serve({
         status: 200,
         headers: {
           "Content-Type": "text/plain",
-          ...corsHeaders,
+          ...corsHeadersFor(request),
         },
       });
     }
 
     // Liveness probe - restarts pod on sustained API failure
     if (url.pathname === "/livez") {
-      return handleLivez();
+      return handleLivez(request);
     }
 
     // Readiness probe - checks Riot API health
     if (url.pathname === "/healthz") {
-      return handleHealthz();
+      return handleHealthz(request);
     }
 
     // Metrics endpoint for Prometheus
@@ -256,7 +259,7 @@ const server = Bun.serve({
           status: 500,
           headers: {
             "Content-Type": "text/plain",
-            ...corsHeaders,
+            ...corsHeadersFor(request),
           },
         });
       }
@@ -267,7 +270,7 @@ const server = Bun.serve({
       status: 404,
       headers: {
         "Content-Type": "text/plain",
-        ...corsHeaders,
+        ...corsHeadersFor(request),
       },
     });
   },
