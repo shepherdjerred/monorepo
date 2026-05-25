@@ -72,10 +72,11 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
           `--build-env-values env:${name}`,
         ])
         .join(" ");
-  const placeholderBuildEnvPrefix =
-    site.buildEnvPlaceholders !== undefined
+  const placeholderBuildEnvPrefix = usePlaceholderBuildEnv
+    ? site.buildEnvPlaceholders !== undefined
       ? buildEnvPrefix(buildEnvVars, site.buildEnvPlaceholders)
-      : dryrunBuildEnvPrefix(buildEnvVars);
+      : dryrunBuildEnvPrefix(buildEnvVars)
+    : "";
   const buildCmd = usePlaceholderBuildEnv
     ? `${placeholderBuildEnvPrefix} ${site.buildCmd}`
     : site.buildCmd;

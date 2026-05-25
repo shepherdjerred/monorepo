@@ -95,3 +95,7 @@ E: Unable to fetch some archives, maybe run apt-get update or try with --fix-mis
 
 - Local checks passed, but the final proof is a live Buildkite main build because the failing surfaces are CI secrets and external APIs.
 - `dagger develop` required access to the local Docker/OrbStack socket to regenerate the gitignored `.dagger/sdk`.
+
+### Summary
+
+Buildkite build `2897` on `main` failed across image pushes, Cooklang publish, Scout beta deploy, and the GitHub OpenTofu apply. This session traced those failures to missing CI secrets, required public build-time Scout env vars, GitHub App permission limits, and stale Debian package indexes, then implemented the corresponding CI, Dagger, and OpenTofu fixes with focused local verification.
