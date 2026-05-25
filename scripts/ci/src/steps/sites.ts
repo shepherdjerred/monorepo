@@ -119,6 +119,7 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
 export function deploySitesGroup(
   sites: DeploySite[],
   pkgKeyMap?: Map<string, string>,
+  extraDependsOn: string[] = [],
 ): BuildkiteGroup {
   return {
     group: ":ship: Deploy Sites",
@@ -127,7 +128,7 @@ export function deploySitesGroup(
       // Resolve the package name from the build dir (e.g. "packages/sjer.red" → "sjer.red")
       const pkg = s.buildDir.replace("packages/", "").split("/")[0] ?? "";
       const pkgKey = pkgKeyMap?.get(pkg);
-      const deps = ["quality-gate"];
+      const deps = ["quality-gate", ...extraDependsOn];
       if (pkgKey) deps.push(pkgKey);
       return deploySiteStep(s, deps);
     }),

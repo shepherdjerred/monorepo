@@ -107,10 +107,10 @@ describe("version commit-back", () => {
     ];
 
     expect(releaseSource).toContain(
-      "const MONOREPO_WRITE_URL = `https://git@github.com/${MONOREPO_REPO}.git`",
+      "const MONOREPO_WRITE_URL = `https://github.com/${MONOREPO_REPO}.git`",
     );
     expect(releaseSource).toContain(
-      String.raw`printf '#!/bin/sh\\nprintf "%s\\\\n" "$GH_TOKEN"\\n'`,
+      String.raw`printf '%s\\n' '#!/bin/sh' 'case "$1" in'`,
     );
     expect(releaseSource).not.toContain(["x-access", "-token"].join(""));
 
@@ -123,7 +123,12 @@ describe("version commit-back", () => {
       expect(helperSource).toContain("gh pr list --repo ${MONOREPO_REPO}");
       expect(helperSource).toContain("gh pr create --repo ${MONOREPO_REPO}");
       expect(helperSource).toContain("gh pr view --repo ${MONOREPO_REPO}");
-      expect(helperSource).toContain("gh pr merge --repo ${MONOREPO_REPO}");
+      expect(helperSource).toContain(
+        'gh pr merge --repo ${MONOREPO_REPO} "$PR_NUMBER" --auto --squash',
+      );
+      expect(helperSource).not.toContain(
+        'gh pr merge --repo ${MONOREPO_REPO} "$PR_NUMBER" --auto --merge',
+      );
       expect(helperSource).toContain(`test -n "$PR_NUMBER"`);
       expect(helperSource).not.toContain(">/dev/null 2>&1");
     }

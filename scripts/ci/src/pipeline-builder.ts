@@ -294,7 +294,9 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
         affected.hasSitePackages,
         affected.buildAll,
       );
-      steps.push(deploySitesGroup(sitesToDeploy, pkgKeyMap));
+      const siteDeployDeps =
+        affected.buildAll || affected.homelabChanged ? ["tofu-seaweedfs"] : [];
+      steps.push(deploySitesGroup(sitesToDeploy, pkgKeyMap, siteDeployDeps));
     }
 
     // --- MkDocs deploy (discord-plays-pokemon docs, needs Python not Bun) ---

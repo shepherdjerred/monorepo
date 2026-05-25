@@ -723,6 +723,40 @@ describe("buildPipeline", () => {
       expect(groupKeys).toContain("homelab-tofu");
     });
 
+    it("waits for SeaweedFS bucket reconciliation before deploying sites", () => {
+      const pipeline = buildPipeline(fullBuild());
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+
+      const scoutBetaDeploy = allSteps.find(
+        (s) => s.key === "deploy-scout-frontend-beta",
+      );
+
+      expect(scoutBetaDeploy).toBeDefined();
+      expect(scoutBetaDeploy?.depends_on).toContain("tofu-seaweedfs");
+    });
+
+    it("waits for SeaweedFS bucket reconciliation for partial homelab + site releases", () => {
+      const affected = emptyAffected();
+      affected.packages.add("homelab");
+      affected.packages.add("scout-for-lol");
+      affected.homelabChanged = true;
+      affected.hasSitePackages.add("scout-for-lol");
+
+      const pipeline = buildPipeline(affected);
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+
+      const tofuSeaweedfs = allSteps.find((s) => s.key === "tofu-seaweedfs");
+      const scoutBetaDeploy = allSteps.find(
+        (s) => s.key === "deploy-scout-frontend-beta",
+      );
+
+      expect(tofuSeaweedfs).toBeDefined();
+      expect(scoutBetaDeploy).toBeDefined();
+      expect(scoutBetaDeploy?.depends_on).toContain("tofu-seaweedfs");
+    });
+
     it("includes version commit-back", () => {
       const pipeline = buildPipeline(fullBuild());
       const steps = pipeline.steps.filter(isStep);
