@@ -92,6 +92,7 @@ export function createPlausibleDeployment(
           "plausible-postgresql:5432",
           "plausible_db",
           "/db-url/url",
+          "ssl=true",
         ),
       ],
       securityContext: {

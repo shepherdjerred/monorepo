@@ -74,13 +74,12 @@ export function createTemporalPostgreSQLDatabase(chart: Chart) {
           locale: "en_US.utf8",
           "data-checksums": "true",
         },
-        pgHba: [
-          "host temporal temporal all md5",
-          "host temporal_visibility temporal all md5",
-          "host pr_review_eval pr_review_eval all md5",
-          "host replication standby all md5",
+        pg_hba: [
+          "hostssl temporal temporal all md5",
+          "hostssl temporal_visibility temporal all md5",
+          "hostssl pr_review_eval pr_review_eval all md5",
+          "hostssl replication standby all md5",
           "local all all trust",
-          "host all all all md5",
         ],
         slots: {},
       },

@@ -70,12 +70,11 @@ export function createGrafanaPostgreSQLDatabase(chart: Chart) {
           locale: "en_US.utf8",
           "data-checksums": "true",
         },
-        pgHba: [
+        pg_hba: [
           // Allow connections from within the cluster
-          "host grafana grafana all md5",
-          "host replication standby all md5",
+          "hostssl grafana grafana all md5",
+          "hostssl replication standby all md5",
           "local all all trust",
-          "host all all all md5",
         ],
         slots: {},
       },

@@ -41,7 +41,7 @@ export function createBugsinkPostgreSQLDatabase(chart: Chart) {
           max_wal_size: "2GB",
           log_statement: "none",
           log_min_duration_statement: "1000",
-          // Must match pgHba auth method — prevents hash format mismatch after cluster restore
+          // Must match pg_hba auth method — prevents hash format mismatch after cluster restore
           password_encryption: "scram-sha-256",
         },
       },
@@ -71,7 +71,7 @@ export function createBugsinkPostgreSQLDatabase(chart: Chart) {
           locale: "en_US.utf8",
           "data-checksums": "true",
         },
-        pgHba: [
+        pg_hba: [
           // Local connections for postgres superuser (required for Patroni management)
           "local all postgres peer",
           "local all all peer",

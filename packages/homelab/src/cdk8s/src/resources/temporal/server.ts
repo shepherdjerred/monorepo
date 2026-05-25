@@ -88,6 +88,10 @@ export function createTemporalServerDeployment(
         POSTGRES_SEEDS: EnvValue.fromValue("temporal-postgresql"),
         DBNAME: EnvValue.fromValue("temporal"),
         VISIBILITY_DBNAME: EnvValue.fromValue("temporal_visibility"),
+        POSTGRES_TLS_ENABLED: EnvValue.fromValue("true"),
+        POSTGRES_TLS_DISABLE_HOST_VERIFICATION: EnvValue.fromValue("true"),
+        SQL_TLS_ENABLED: EnvValue.fromValue("true"),
+        SQL_TLS_DISABLE_HOST_VERIFICATION: EnvValue.fromValue("true"),
 
         // All-in-one mode: run all 4 services in one process
         SERVICES: EnvValue.fromValue("frontend,history,matching,worker"),
