@@ -73,11 +73,10 @@ export function createGrafanaPostgreSQLDatabase(chart: Chart) {
           "data-checksums": "true",
         },
         pg_hba: [
-          // Allow the postgres-operator to manage roles from its controller pod.
-          "hostssl all postgres all scram-sha-256",
+          // Allow connections from within the cluster
+          "hostssl postgres postgres all md5",
           "hostssl grafana grafana all scram-sha-256",
           "hostssl replication standby all scram-sha-256",
-          "host all postgres all scram-sha-256",
           "local all all trust",
         ],
         slots: {},
