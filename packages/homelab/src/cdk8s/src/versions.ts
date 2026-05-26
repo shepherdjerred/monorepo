@@ -216,7 +216,7 @@ const versions = {
   // Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3
   // not managed by renovate
   "shepherdjerred/caddy-s3proxy":
-    "2.0.0-2977@sha256:db67e0c1a04f8158344631f3ed1f472cbfd887e66fb9d7ffee94670c95514543",
+    "2.0.0-2991@sha256:317e8e147546e38fcf4008a32060aace6c36153e9a513f26ebb1739918648dc1",
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
@@ -224,7 +224,7 @@ const versions = {
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
-    "2.0.0-2977@sha256:78fc65fb95fc049b301ebc91cd37cbf16b1c380fe7ad4d0cc647b1f07a20cce0",
+    "2.0.0-2991@sha256:199ecc2f8b3ea3c350fdbd7f739e6951852c24c15b011169de4624f8f9d1a74e",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "temporalio/auto-setup":
     "1.29.6@sha256:1263120feed69d82e4ca23b8ca6f1d702c3029fe70714e382966d0192318eab6",
