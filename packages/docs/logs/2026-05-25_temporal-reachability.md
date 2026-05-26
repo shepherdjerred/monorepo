@@ -114,3 +114,26 @@ The likely root cause is an auth-method migration mismatch: `pg_hba` now require
 - No 1Password item was updated. The database credentials involved here are Zalando postgres-operator generated Kubernetes Secrets.
 - `prometheus` remains automated and healthy; its Grafana Postgres CR was repaired live and should be made durable by the source/chart change.
 - The earlier remediation note described rehashing the `postgres` superuser to SCRAM. That worked temporarily, but Spilo later reset the superuser hash to MD5 during pod rolls; the durable fix is the final `hostssl postgres postgres all md5` rule plus SCRAM for app roles.
+
+## Session Log — 2026-05-26 Reverted Live Patch Recovery
+
+### Done
+
+- Confirmed Plausible and Temporal were down because ArgoCD had re-enabled automated sync and applied stale chart revisions `2.0.0-2979` through `2.0.0-2985`, reverting the live Postgres `pg_hba` rules.
+- Paused automated sync on `argocd/apps`, `argocd/plausible`, and `argocd/temporal`.
+- Reapplied live `pg_hba` repairs for `plausible-postgresql` and `temporal-postgresql`.
+- Re-aligned Plausible `standby`/`plausible` and Temporal `standby`/`temporal`/`pr_review_eval` role hashes to the existing Zalando postgres-operator Secrets.
+- Restarted Plausible, Temporal server, and Temporal worker pods after database auth was fixed.
+- Verified Plausible endpoint returned, Plausible Tailscale URL returned HTTP 200, Temporal server endpoint returned, Temporal UI Tailscale URL returned HTTP 200, and `temporal operator cluster health` returned `SERVING`.
+- Verified recent postgres-operator reconciliation for Plausible and Temporal completed without auth or `pg_hba` errors.
+
+### Remaining
+
+- Merge and publish PR #955 so chart `2.0.0-*` includes the durable `pg_hba` rules.
+- Re-enable ArgoCD automated sync on `apps`, `plausible`, and `temporal` after the fixed chart is available.
+
+### Caveats
+
+- Live cluster state is intentionally manual drift until PR #955 is published.
+- No 1Password item was updated; database credentials remain Zalando postgres-operator generated Kubernetes Secrets.
+- `argocd/temporal` still shows the previous operation phase as `Failed`, but health is green and auto-sync is paused.
