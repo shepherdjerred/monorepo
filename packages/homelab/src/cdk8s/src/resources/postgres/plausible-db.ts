@@ -73,6 +73,8 @@ export function createPlausiblePostgreSQLDatabase(chart: Chart) {
           "data-checksums": "true",
         },
         pg_hba: [
+          "hostssl postgres postgres all md5",
+          "hostssl postgres plausible all scram-sha-256",
           "hostssl plausible_db plausible all scram-sha-256",
           "hostssl replication standby all scram-sha-256",
           "local all all trust",

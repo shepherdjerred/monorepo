@@ -77,6 +77,8 @@ export function createTemporalPostgreSQLDatabase(chart: Chart) {
           "data-checksums": "true",
         },
         pg_hba: [
+          "hostssl postgres postgres all md5",
+          "hostssl postgres temporal all scram-sha-256",
           "hostssl temporal temporal all scram-sha-256",
           "hostssl temporal_visibility temporal all scram-sha-256",
           "hostssl pr_review_eval pr_review_eval all scram-sha-256",
