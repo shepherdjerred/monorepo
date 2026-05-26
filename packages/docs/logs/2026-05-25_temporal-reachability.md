@@ -137,3 +137,28 @@ The likely root cause is an auth-method migration mismatch: `pg_hba` now require
 - Live cluster state is intentionally manual drift until PR #955 is published.
 - No 1Password item was updated; database credentials remain Zalando postgres-operator generated Kubernetes Secrets.
 - `argocd/temporal` still shows the previous operation phase as `Failed`, but health is green and auto-sync is paused.
+
+## Session Log — 2026-05-26 PR Merge Conflict Repair
+
+### Done
+
+- Confirmed PR #955 was marked unmergeable after `main` advanced.
+- Rebased `codex/fix-postgres-pg-hba` onto `origin/main`.
+- Resolved the conflict in `packages/homelab/src/cdk8s/src/resources/postgres/grafana-db.ts` by keeping the final live-tested auth shape: `postgres -> postgres` uses `md5`; Grafana and replication roles use `scram-sha-256`.
+- Verified the branch now merges cleanly with `origin/main`.
+- Pushed the rebased branch with `--force-with-lease`.
+- Confirmed GitHub reports PR #955 as mergeable and `toolkit pr health` reports no merge conflicts.
+- Verification passed:
+  - `bun run --filter='./packages/homelab' typecheck`
+  - `bun run --filter='./packages/homelab' test`
+  - `bun run --filter='./packages/homelab' lint`
+
+### Remaining
+
+- Wait for Buildkite/PR CI to report; `toolkit pr health` currently shows no CI checks found yet.
+- Move PR #955 out of draft when ready for review/merge.
+- After the fixed chart is published, re-enable ArgoCD automated sync on `apps`, `plausible`, and `temporal`.
+
+### Caveats
+
+- The first lint attempt raced with the parallel test command because both scripts run nested `bun install`; rerunning lint by itself passed.
