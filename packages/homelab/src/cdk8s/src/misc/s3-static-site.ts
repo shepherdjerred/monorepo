@@ -9,10 +9,7 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
-import {
-  TunnelBinding,
-  TunnelBindingTunnelRefKind,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/networking.cfargotunnel.com.ts";
+import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { withCommonProps } from "./common.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ApiObject } from "cdk8s";
@@ -400,25 +397,18 @@ export class S3StaticSites extends Construct {
     });
 
     for (const site of props.sites) {
-      // DNS is managed by OpenTofu — disable cloudflare-operator DNS updates
-      new TunnelBinding(this, `tunnel-${hostnameSlug(site.hostname)}`, {
-        metadata: {
+      // DNS is managed by OpenTofu — operator must not touch DNS records.
+      // @tunnel-dns-coverage:hostnames-from ../resources/s3-static-sites/sites.ts
+      createCloudflareTunnelBinding(
+        this,
+        `tunnel-${hostnameSlug(site.hostname)}`,
+        {
+          serviceName: this.service.name,
           namespace,
-        },
-        subjects: [
-          {
-            name: this.service.name,
-            spec: {
-              fqdn: site.hostname,
-            },
-          },
-        ],
-        tunnelRef: {
-          kind: TunnelBindingTunnelRefKind.CLUSTER_TUNNEL,
-          name: "homelab-tunnel",
+          fqdn: site.hostname,
           disableDnsUpdates: true,
         },
-      });
+      );
 
       for (const probe of probeConfigs(site)) {
         const nameSuffix =

@@ -40,6 +40,12 @@ const TUNNEL_BINDING_REGEX =
   /createCloudflareTunnelBinding\s*\(\s*[A-Za-z_$][\w$.]*\s*,\s*["'`][^"'`]+["'`]\s*,\s*\{([\s\S]*?)\}\s*\)/g;
 const SUBDOMAIN_REGEX = /\bsubdomain\s*:\s*["'`]([^"'`]+)["'`]/;
 const FQDN_REGEX = /\bfqdn\s*:\s*["'`]([^"'`]+)["'`]/;
+// Directive used by call sites whose fqdn comes from a loop variable. Points
+// the checker at a sibling file containing the literal hostname list. Example:
+//   // @tunnel-dns-coverage:hostnames-from ../resources/s3-static-sites/sites.ts
+const HOSTNAMES_FROM_DIRECTIVE =
+  /\/\/\s*@tunnel-dns-coverage:hostnames-from\s+(\S+)/;
+const HOSTNAME_LITERAL_REGEX = /\bhostname\s*:\s*["'`]([^"'`]+)["'`]/g;
 
 const ZONE_REGEX =
   /resource\s+"cloudflare_zone"\s+"([^"]+)"\s*\{[\s\S]*?name\s*=\s*"([^"]+)"/g;
@@ -140,9 +146,29 @@ async function collectTunnelBindings(): Promise<TunnelBinding[]> {
           source: "fqdn",
         });
       } else {
-        throw new Error(
-          `${abs}:${String(line)}: createCloudflareTunnelBinding without subdomain or fqdn — cannot extract hostname`,
-        );
+        // Non-literal fqdn (e.g. `fqdn: site.hostname` inside a loop). Look for
+        // a `// @tunnel-dns-coverage:hostnames-from <path>` directive in the
+        // same file; load the referenced file and pull `hostname: "..."`
+        // literals from it. One binding per hostname.
+        const directive = HOSTNAMES_FROM_DIRECTIVE.exec(text);
+        if (directive === null || directive[1] === undefined) {
+          throw new Error(
+            `${abs}:${String(line)}: createCloudflareTunnelBinding without subdomain or fqdn — cannot extract hostname (add a "// @tunnel-dns-coverage:hostnames-from <path>" directive if the fqdn is dynamic)`,
+          );
+        }
+        const sourcePath = path.resolve(path.dirname(abs), directive[1]);
+        const sourceText = await Bun.file(sourcePath).text();
+        for (const hostnameMatch of sourceText.matchAll(
+          HOSTNAME_LITERAL_REGEX,
+        )) {
+          if (hostnameMatch[1] === undefined) continue;
+          bindings.push({
+            file: abs,
+            line,
+            fqdn: hostnameMatch[1],
+            source: "fqdn",
+          });
+        }
       }
     }
   }
