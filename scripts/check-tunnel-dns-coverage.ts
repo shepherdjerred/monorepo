@@ -146,14 +146,25 @@ async function collectTunnelBindings(): Promise<TunnelBinding[]> {
           source: "fqdn",
         });
       } else {
-        // Non-literal fqdn (e.g. `fqdn: site.hostname` inside a loop). Look for
-        // a `// @tunnel-dns-coverage:hostnames-from <path>` directive in the
-        // same file; load the referenced file and pull `hostname: "..."`
-        // literals from it. One binding per hostname.
-        const directive = HOSTNAMES_FROM_DIRECTIVE.exec(text);
+        // Non-literal fqdn (e.g. `fqdn: site.hostname` inside a loop). The
+        // call site MUST be preceded (within the prior ~5 lines) by a
+        // `// @tunnel-dns-coverage:hostnames-from <path>` directive that
+        // points at a file containing `hostname: "..."` literals. Scoping the
+        // search to the lines just above the call avoids cross-contamination
+        // if a future file ever has two such loops with different sources.
+        const PRECEDING_LINES = 5;
+        const lineStarts: number[] = [0];
+        for (let i = 0; i < text.length; i += 1) {
+          if (text[i] === "\n") lineStarts.push(i + 1);
+        }
+        const callLine = line - 1;
+        const windowStart =
+          lineStarts[Math.max(0, callLine - PRECEDING_LINES)] ?? 0;
+        const window = text.slice(windowStart, offset);
+        const directive = HOSTNAMES_FROM_DIRECTIVE.exec(window);
         if (directive === null || directive[1] === undefined) {
           throw new Error(
-            `${abs}:${String(line)}: createCloudflareTunnelBinding without subdomain or fqdn — cannot extract hostname (add a "// @tunnel-dns-coverage:hostnames-from <path>" directive if the fqdn is dynamic)`,
+            `${abs}:${String(line)}: createCloudflareTunnelBinding without subdomain or fqdn — cannot extract hostname (add a "// @tunnel-dns-coverage:hostnames-from <path>" directive in the ${String(PRECEDING_LINES)} lines immediately above this call if the fqdn is dynamic)`,
           );
         }
         const sourcePath = path.resolve(path.dirname(abs), directive[1]);
