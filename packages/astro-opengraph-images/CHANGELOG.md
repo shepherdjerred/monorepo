@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.17.0](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.16.1...astro-opengraph-images-v1.17.0) (2026-05-27)
+
+
+### Features
+
+* **root:** ship 2026-05-09 batch — homelab audit, Renovate coverage, doc discipline, trmnl-dashboard ([13c9f35](https://github.com/shepherdjerred/monorepo/commit/13c9f35d915735aea147e18c9581239dc557d7d2))
+
+
+### Bug Fixes
+
+* **root:** refresh stale workspace lockfiles + scout button lint ([09d88b7](https://github.com/shepherdjerred/monorepo/commit/09d88b7eafe746ffc587c6c7eaa77c56ae188606))
+* **root:** resolve trivy dependency findings ([078bb6c](https://github.com/shepherdjerred/monorepo/commit/078bb6c248d044caf99c239266f179528b9113c9))
+
 ## [1.16.1](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.16.0...astro-opengraph-images-v1.16.1) (2026-04-23)
 
 
