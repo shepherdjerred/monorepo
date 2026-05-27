@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.2.1...helm-types-v1.3.0) (2026-05-27)
+
+
+### Features
+
+* **temporal:** add agent task scheduler ([93346d2](https://github.com/shepherdjerred/monorepo/commit/93346d2a93865962a9ea1752e443aa5a25884de5))
+
+
+### Bug Fixes
+
+* **root:** use cloneable monorepo URLs ([02a3c55](https://github.com/shepherdjerred/monorepo/commit/02a3c55932bc8a267cff74c44c76f75634dcfcf0))
+
 ## [1.2.1](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.2.0...helm-types-v1.2.1) (2026-04-22)
 
 

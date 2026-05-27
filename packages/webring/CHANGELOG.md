@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0](https://github.com/shepherdjerred/monorepo/compare/webring-v1.6.1...webring-v1.7.0) (2026-05-27)
+
+
+### Features
+
+* **root:** ship 2026-05-09 batch — homelab audit, Renovate coverage, doc discipline, trmnl-dashboard ([13c9f35](https://github.com/shepherdjerred/monorepo/commit/13c9f35d915735aea147e18c9581239dc557d7d2))
+
+
+### Bug Fixes
+
+* **root:** refresh stale workspace lockfiles + scout button lint ([09d88b7](https://github.com/shepherdjerred/monorepo/commit/09d88b7eafe746ffc587c6c7eaa77c56ae188606))
+* **root:** resolve trivy dependency findings ([078bb6c](https://github.com/shepherdjerred/monorepo/commit/078bb6c248d044caf99c239266f179528b9113c9))
+* **webring:** use os-assigned test port ([3120bac](https://github.com/shepherdjerred/monorepo/commit/3120bac813e5a07580864a22f2d7f455e40bb661))
+
 ## [1.6.1](https://github.com/shepherdjerred/monorepo/compare/webring-v1.6.0...webring-v1.6.1) (2026-04-23)
 
 
