@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.11.1",
   "data": {
     "Amumu": {
       "id": "Amumu",
@@ -488,14 +488,14 @@
           "id": "BandageToss",
           "name": "Bandage Toss",
           "description": "Amumu tosses a sticky bandage at a target, stunning and damaging the target while he pulls himself to them.",
-          "tooltip": "Amumu launches a bandage, pulling himself to the first enemy hit, <status>Stunning</status> them for {{ e2 }} second, and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br />This Ability has 2 charges.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Amumu launches a bandage, pulling himself to the first enemy hit, <status>Stunning</status> them for {{ stunduration }} second, and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br />This Ability has 2 charges.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
               "Recharge Time"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"
             ]
           },
@@ -768,7 +768,7 @@
           "id": "Tantrum",
           "name": "Tantrum",
           "description": "Permanently reduces the physical damage Amumu would take. Amumu can unleash his rage, dealing damage to surrounding enemies. Each time Amumu is hit, the cooldown on Tantrum is reduced.",
-          "tooltip": "<spellPassive>Passive:</spellPassive> Amumu takes {{ damagereduction }} reduced physical damage. Additionally, when Amumu is hit by an Attack, this Ability's Cooldown is reduced by {{ e3 }} seconds.<br /><br /><spellActive>Active:</spellActive> Amumu throws a tantrum, dealing <magicDamage>{{ tantrumdamage }} magic damage</magicDamage> to nearby enemies.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Amumu takes {{ damagereduction }} reduced physical damage. Additionally, when Amumu is hit by an Attack, this Ability's Cooldown is reduced by {{ cdronhit }} seconds.<br /><br /><spellActive>Active:</spellActive> Amumu throws a tantrum, dealing <magicDamage>{{ tantrumdamage }} magic damage</magicDamage> to nearby enemies.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage Reduced",
@@ -776,9 +776,9 @@
               "Damage"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
+              "{{ basedamagereduction }} -> {{ basedamagereductionNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ e2 }} -> {{ e2NL }}"
+              "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 5,

@@ -359,7 +359,7 @@
     },
     "1206": {
       "name": "Mid Lane Quest Reward",
-      "description": "<mainText><stats></stats><br><br><font color = '#00FF00'>Rewards</font><br>• Upgrade boots to tier 3<br>• +6% bonus Attack Damage and Ability Power</mainText>",
+      "description": "<mainText><stats></stats><br><br><font color = '#00FF00'>Rewards</font><br>• Upgrade boots to tier 3<br>• +8% bonus Attack Damage and Ability Power</mainText>",
       "plaintext": "",
       "stats": {}
     },
@@ -1276,7 +1276,7 @@
     },
     "3071": {
       "name": "Black Cleaver",
-      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>400</attention> Health<br><attention>20</attention> Ability Haste</stats><br><br><passive>Carve</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> to champions reduces their <scaleArmor>Armor by 6%</scaleArmor> for 6 seconds. (stacks 5 times).<br><br><passive>Fervor</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> grants <speed>20 Move Speed</speed> for 2 seconds.</mainText>",
+      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>400</attention> Health<br><attention>20</attention> Ability Haste</stats><br><br><passive>Carve</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> to champions reduces the target's <scaleArmor>Armor by 6%</scaleArmor> for 6 seconds. (stacks 5 times).<br><br><passive>Fervor</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> grants <speed>20 Move Speed</speed> for 2 seconds.</mainText>",
       "plaintext": "Dealing physical damage to enemy champions reduces their Armor",
       "stats": {
         "FlatHPPoolMod": 400,
@@ -1294,7 +1294,7 @@
     },
     "3073": {
       "name": "Experimental Hexplate",
-      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>20%</attention> Attack Speed<br><attention>450</attention> Health</stats><br><br><passive>Hexcharged</passive><br>Gain 30 Ultimate Ability Haste.<br><br><passive>Overdrive</passive><br>After casting your Ultimate, gain <attackSpeed>50% Attack Speed</attackSpeed> and <speed>20% Move Speed</speed> for 8 seconds. </mainText>",
+      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>20%</attention> Attack Speed<br><attention>450</attention> Health</stats><br><br><passive>Hexcharged</passive><br>Gain 30 Ultimate Ability Haste.<br><br><passive>Overdrive</passive><br>After casting your Ultimate, gain <attackSpeed>% Attack Speed</attackSpeed> and <speed>% Move Speed</speed> for 8 seconds. </mainText>",
       "plaintext": "Increases maximum Mana as Mana is spent",
       "stats": {
         "FlatHPPoolMod": 450,
@@ -1364,7 +1364,7 @@
     },
     "3084": {
       "name": "Heartsteel",
-      "description": "<mainText><stats><attention>900</attention> Health<br><attention>100%</attention> Base Health Regen</stats><br><br><passive>Colossal Consumption</passive> (0s) per target<br>If an enemy champion is nearby for a few seconds, your next Attack against them deals <physicalDamage>70 plus 6%</physicalDamage> of your max Health as <physicalDamage>bonus physical damage</physicalDamage> and grants <scaleHealth>8%</scaleHealth> of the damage as <scaleHealth>max Health.</scaleHealth><br><br><passive>Goliath</passive><br>For each <scaleHealth>1000 max Health</scaleHealth>, gain 3% increased size, up to 30%. </mainText>",
+      "description": "<mainText><stats><attention>900</attention> Health<br><attention>100%</attention> Base Health Regen</stats><br><br><passive>Colossal Consumption</passive> (0s) per target<br>If an enemy champion is nearby for a few seconds, your next Attack against them deals <physicalDamage>70 plus 6%</physicalDamage> of your max Health as <physicalDamage>bonus physical damage</physicalDamage> and grants <scaleHealth>10%</scaleHealth> of the damage as <scaleHealth>max Health.</scaleHealth><br><br><passive>Goliath</passive><br>For each <scaleHealth>1000 max Health</scaleHealth>, gain 3% increased size, up to 30%. </mainText>",
       "plaintext": "Restores Health on kill or assist",
       "stats": {
         "FlatHPPoolMod": 900
@@ -1392,11 +1392,11 @@
     },
     "3087": {
       "name": "Statikk Shiv",
-      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>45</attention> Ability Power<br><attention>30%</attention> Attack Speed<br><attention>4%</attention> Move Speed</stats><br><br><passive>Electrospark</passive><br>Your <keyword>Energized Attacks</keyword> fire chain lightning, applying <OnHit>On-Hit</OnHit> effects and dealing <magicDamage>magic damage</magicDamage> to nearby targets.<br><br><passive>Electroshock</passive> <br>Basic Attacks grant extra <keyword>Energized</keyword> stacks.</mainText>",
+      "description": "<mainText><stats><attention>45</attention> Attack Damage<br><attention>45</attention> Ability Power<br><attention>30%</attention> Attack Speed<br><attention>4%</attention> Move Speed</stats><br><br><passive>Electrospark</passive><br>Your <keyword>Energized Attacks</keyword> fire chain lightning, applying <OnHit>On-Hit</OnHit> effects and dealing <magicDamage>magic damage</magicDamage> to nearby targets.<br><br><passive>Electroshock</passive> <br>Basic Attacks grant extra <keyword>Energized</keyword> stacks.</mainText>",
       "plaintext": "Movement builds charges that release chain lightning on basic attack",
       "stats": {
         "FlatMagicDamageMod": 45,
-        "FlatPhysicalDamageMod": 40,
+        "FlatPhysicalDamageMod": 45,
         "PercentAttackSpeedMod": 0.3,
         "PercentMovementSpeedMod": 0.04
       }
@@ -1493,7 +1493,7 @@
     },
     "3109": {
       "name": "Knight's Vow",
-      "description": "<mainText><stats><attention>200</attention> Health<br><attention>40</attention> Armor<br><attention>10</attention> Ability Haste<br><attention>100%</attention> Base Health Regen</stats><br><br><passive>Sacrifice</passive><br>While near your <attention>Worthy</attention> ally, take 12% of the damage they receive and <healing>heal for 10%</healing> of the damage they deal to champions.<active>Pledge</active> (0s)<br>Designate an ally as <attention>Worthy</attention>.</mainText>",
+      "description": "<mainText><stats><attention>200</attention> Health<br><attention>40</attention> Armor<br><attention>10</attention> Ability Haste<br><attention>100%</attention> Base Health Regen</stats><br><br><passive>Sacrifice</passive><br>While near your <attention>Worthy</attention> ally, take 14% of the damage they receive and <healing>heal for 12%</healing> of the damage they deal to champions.<active>Pledge</active> (0s)<br>Designate an ally as <attention>Worthy</attention>.</mainText>",
       "plaintext": "Partner with an ally to protect each other",
       "stats": {
         "FlatHPPoolMod": 200,
@@ -1911,12 +1911,12 @@
     },
     "3190": {
       "name": "Locket of the Iron Solari",
-      "description": "<mainText><stats><attention>200</attention> Health<br><attention>25</attention> Armor<br><attention>25</attention> Magic Resist<br><attention>10</attention> Ability Haste</stats><br><br><active>Devotion</active><br>Grant nearby allies a <shield>290 - 360 Shield</shield> that decays over 2.5 seconds.</mainText>",
+      "description": "<mainText><stats><attention>200</attention> Health<br><attention>30</attention> Armor<br><attention>30</attention> Magic Resist<br><attention>10</attention> Ability Haste</stats><br><br><active>Devotion</active><br>Grant nearby allies a <shield>290 - 360 Shield</shield> that decays over 2.5 seconds.</mainText>",
       "plaintext": "Activate to shield nearby allies from damage",
       "stats": {
-        "FlatSpellBlockMod": 25,
+        "FlatSpellBlockMod": 30,
         "FlatHPPoolMod": 200,
-        "FlatArmorMod": 25
+        "FlatArmorMod": 30
       }
     },
     "3193": {
@@ -2325,15 +2325,15 @@
     },
     "4005": {
       "name": "Imperial Mandate",
-      "description": "<mainText><stats><attention>60</attention> Ability Power<br><attention>20</attention> Ability Haste<br><attention>125%</attention> Base Mana Regen</stats><br><br><passive>Coordinated Fire</passive> (0s) per target<br><keyword>Slowing</keyword> or <keyword>Immobilizing</keyword> an enemy champion marks them for 5 seconds. Ally champion damage detonates the mark, dealing <magicDamage>magic damage equal to 10% of current health</magicDamage>. </mainText>",
+      "description": "<mainText><stats><attention>65</attention> Ability Power<br><attention>15</attention> Ability Haste<br><attention>150%</attention> Base Mana Regen</stats><br><br><passive>Control</passive><br>Gain 15 Ability Haste for your abilities with <keyword>Immobilizing</keyword> effects.<br><br><passive>Command</passive><br>On <keyword>Immobilizing</keyword> an enemy champion, mark them as 6% <Keyword>Vulnerable</Keyword> for 4 seconds.<br></mainText>",
       "plaintext": "Defer damage until later.",
       "stats": {
-        "FlatMagicDamageMod": 60
+        "FlatMagicDamageMod": 65
       }
     },
     "4010": {
       "name": "Bloodletter's Curse",
-      "description": "<mainText><stats><attention>60</attention> Ability Power<br><attention>350</attention> Health<br><attention>15</attention> Ability Haste</stats><br><br><passive>Vile Decay</passive><br>Dealing <magicDamage>magic damage</magicDamage> with abilities or passives to champions reduces their <scaleMR>Magic Resist by 7.5%</scaleMR> for 6 seconds, up to 30%.</mainText>",
+      "description": "<mainText><stats><attention>60</attention> Ability Power<br><attention>350</attention> Health<br><attention>15</attention> Ability Haste</stats><br><br><passive>Vile Decay</passive><br>Dealing <magicDamage>magic damage</magicDamage> with abilities or passives to champions reduces their <scaleMR>Magic Resist by 7.5%</scaleMR> for 6 seconds. (Stacks 4 times).</mainText>",
       "plaintext": "Grant Spell Shield after damaging an enemy with an ability",
       "stats": {
         "FlatHPPoolMod": 350,
@@ -2389,7 +2389,7 @@
     },
     "4016": {
       "name": "Wordless Promise",
-      "description": "<mainText><stats><attention>50</attention> Ability Power<br><attention>25%</attention> Heal and Shield Power<br><attention>25</attention> Ability Haste</stats><br><br><passive>Promise</passive><br>Gain 20% of your <attention>Promised</attention> <scaleAP>ally's Ability Power</scaleAP>, and grant your <attention>Promised</attention> ally 20% of your Ability Haste.<br><br><active>ACTIVE</active> (0s)<br><active>Promise</active><br>Make a <attention>Promise</attention> to an ally.</mainText>",
+      "description": "<mainText><stats><attention>50</attention> Ability Power<br><attention>15%</attention> Heal and Shield Power<br><attention>25</attention> Ability Haste</stats><br><br><passive>Promise</passive><br>Gain 15% of your <attention>Promised</attention> <scaleAP>ally's Ability Power</scaleAP>, and grant your <attention>Promised</attention> ally 15% of your Ability Haste.<br><br><active>ACTIVE</active> (0s)<br><active>Promise</active><br>Make a <attention>Promise</attention> to an ally.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 50
@@ -2644,7 +2644,7 @@
     },
     "6620": {
       "name": "Echoes of Helia",
-      "description": "<mainText><stats><attention>35</attention> Ability Power<br><attention>200</attention> Health<br><attention>20</attention> Ability Haste<br><attention>125%</attention> Base Mana Regen</stats><br><br><passive>Soul Siphon</passive><br>Gain 35% of pre-mitigation damage dealt to champions as Soul Charges. Healing or Shielding an ally consumes all <passive>Soul Charges</passive> to restore <healing>Health</healing>.</mainText>",
+      "description": "<mainText><stats><attention>35</attention> Ability Power<br><attention>200</attention> Health<br><attention>20</attention> Ability Haste<br><attention>125%</attention> Base Mana Regen</stats><br><br><passive>Soul Siphon</passive><br>Gain 30% of pre-mitigation damage dealt to champions as Soul Charges. Healing or Shielding an ally consumes all <passive>Soul Charges</passive> to restore <healing>Health</healing>.</mainText>",
       "plaintext": "Damage low-health enemies to trigger a cursed explosion, dealing damage and slowing nearby foes",
       "stats": {
         "FlatHPPoolMod": 200,
@@ -2958,7 +2958,7 @@
     },
     "8010": {
       "name": "Bloodletter's Curse",
-      "description": "<mainText><stats><attention>65</attention> Ability Power<br><attention>400</attention> Health<br><attention>15</attention> Ability Haste</stats><br><br><passive>Vile Decay</passive><br>Dealing <magicDamage>magic damage</magicDamage> with abilities or passives to champions reduces their <scaleMR>Magic Resist by 7.5%</scaleMR> for 6 seconds, up to 30%.</mainText>",
+      "description": "<mainText><stats><attention>65</attention> Ability Power<br><attention>400</attention> Health<br><attention>15</attention> Ability Haste</stats><br><br><passive>Vile Decay</passive><br>Dealing <magicDamage>magic damage</magicDamage> with abilities or passives to champions reduces their <scaleMR>Magic Resist by 7.5%</scaleMR> for 6 seconds. (Stacks 4 times).</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 400,
@@ -3594,11 +3594,11 @@
     },
     "222523": {
       "name": "Hexoptics C44",
-      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Magnification</passive><br>Deal up to 10% increased damage with Attacks, based on how far away the enemy is (max damage at 500 range).<br><br><passive>Arcane Aim</passive><br>When a champion that you damaged within 3 seconds dies, gain 150 additional attack range for 10 seconds. </mainText>",
+      "description": "<mainText><stats><attention>55</attention> Attack Damage<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Magnification</passive><br>Deal up to 10% increased damage with Attacks, based on how far away the enemy is (max damage at 500 range).<br><br><passive>Arcane Aim</passive><br>When a champion that you damaged within 3 seconds dies, gain 150 additional attack range for 15 seconds. </mainText>",
       "plaintext": "",
       "stats": {
         "FlatCritChanceMod": 0.25,
-        "FlatPhysicalDamageMod": 50
+        "FlatPhysicalDamageMod": 55
       }
     },
     "222524": {
@@ -3735,11 +3735,11 @@
     },
     "223031": {
       "name": "Infinity Edge",
-      "description": "<mainText><stats><attention>55</attention> Attack Damage<br><attention>25%</attention> Critical Strike Chance<br><attention>40%</attention> Critical Strike Damage</stats><br><br></mainText>",
+      "description": "<mainText><stats><attention>75</attention> Attack Damage<br><attention>25%</attention> Critical Strike Chance<br><attention>30%</attention> Critical Strike Damage</stats><br><br></mainText>",
       "plaintext": "",
       "stats": {
         "FlatCritChanceMod": 0.25,
-        "FlatPhysicalDamageMod": 55
+        "FlatPhysicalDamageMod": 75
       }
     },
     "223032": {
@@ -3877,7 +3877,7 @@
     },
     "223071": {
       "name": "Black Cleaver",
-      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>350</attention> Health<br><attention>20</attention> Ability Haste</stats><br><br><passive>Carve</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> to champions applies a stack of <scaleArmor>6% Armor reduction</scaleArmor> for 6 seconds, up to <scaleArmor>30% Armor reduction</scaleArmor>.<br><br><passive>Fervor</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> grants <speed>20 Move Speed</speed> for 2 seconds.</mainText>",
+      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>350</attention> Health<br><attention>20</attention> Ability Haste</stats><br><br><passive>Carve</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> to champions reduces the target's <scaleArmor>Armor by 6%</scaleArmor> for 6 seconds. (Stacks 5 times).<br><br><passive>Fervor</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> grants <speed>20 Move Speed</speed> for 2 seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 350,
@@ -3895,7 +3895,7 @@
     },
     "223073": {
       "name": "Experimental Hexplate",
-      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>30%</attention> Attack Speed<br><attention>450</attention> Health</stats><br><br><passive>Hexcharged</passive><br>Gain 30 Ultimate Ability Haste.<br><br><passive>Overdrive</passive><br>After casting your Ultimate, gain <attackSpeed>50% Attack Speed</attackSpeed> and <speed>20% Move Speed</speed> for 8 seconds. </mainText>",
+      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>30%</attention> Attack Speed<br><attention>450</attention> Health</stats><br><br><passive>Hexcharged</passive><br>Gain 30 Ultimate Ability Haste.<br><br><passive>Overdrive</passive><br>After casting your Ultimate, gain <attackSpeed>% Attack Speed</attackSpeed> and <speed>% Move Speed</speed> for 8 seconds. </mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 450,
@@ -3951,11 +3951,11 @@
     },
     "223087": {
       "name": "Statikk Shiv",
-      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>45</attention> Ability Power<br><attention>30%</attention> Attack Speed<br><attention>4%</attention> Move Speed</stats><br><br><passive>Electrospark</passive><br>Your <keyword>Energized Attacks</keyword> fire chain lightning, applying <OnHit>On-Hit</OnHit> effects and dealing <magicDamage>magic damage</magicDamage> to up to <attention></attention> targets.<br><br><passive>Electroshock</passive> <br>Basic Attacks grant extra <keyword>Energized</keyword> stacks.</mainText>",
+      "description": "<mainText><stats><attention>45</attention> Attack Damage<br><attention>45</attention> Ability Power<br><attention>30%</attention> Attack Speed<br><attention>4%</attention> Move Speed</stats><br><br><passive>Electrospark</passive><br>Your <keyword>Energized Attacks</keyword> fire chain lightning, applying <OnHit>On-Hit</OnHit> effects and dealing <magicDamage>magic damage</magicDamage> to up to <attention></attention> targets.<br><br><passive>Electroshock</passive> <br>Basic Attacks grant extra <keyword>Energized</keyword> stacks.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 45,
-        "FlatPhysicalDamageMod": 40,
+        "FlatPhysicalDamageMod": 45,
         "PercentAttackSpeedMod": 0.3,
         "PercentMovementSpeedMod": 0.04
       }
@@ -3970,10 +3970,10 @@
     },
     "223091": {
       "name": "Wit's End",
-      "description": "<mainText><stats><attention>50%</attention> Attack Speed<br><attention>40</attention> Magic Resist<br><attention>20%</attention> Tenacity</stats><br><br><br><li><passive>Fray:</passive> Attacks apply magic damage On-Hit and grant Move Speed.</mainText>",
+      "description": "<mainText><stats><attention>50%</attention> Attack Speed<br><attention>45</attention> Magic Resist<br><attention>20%</attention> Tenacity</stats><br><br><br><li><passive>Fray:</passive> Attacks apply magic damage On-Hit and grant Move Speed.</mainText>",
       "plaintext": "",
       "stats": {
-        "FlatSpellBlockMod": 40,
+        "FlatSpellBlockMod": 45,
         "PercentAttackSpeedMod": 0.5
       }
     },
@@ -3989,7 +3989,7 @@
     },
     "223095": {
       "name": "Stormrazor",
-      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>20%</attention> Attack Speed<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Energized</passive><br>Moving and Attacking generates an <keyword>Energized Attack</keyword>.<br><br><passive>Bolt</passive><br>Your <keyword>Energized Attack</keyword> applies <magicDamage> bonus magic damage</magicDamage> and grants <speed>45% Move Speed</speed> for 1.5s.<br><br><buffedStat>Energized stacks twice as fast in Arena.</buffedStat><br></mainText>",
+      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>20%</attention> Attack Speed<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Energized</passive><br>Moving and Attacking generates an <keyword>Energized Attack</keyword>.<br><br><passive>Bolt</passive><br>Your <keyword>Energized Attack</keyword> applies <magicDamage> bonus magic damage</magicDamage> and grants <speed>45% Move Speed</speed> for 2s.<br><br><buffedStat>Energized stacks twice as fast in Arena.</buffedStat><br></mainText>",
       "plaintext": "",
       "stats": {
         "FlatCritChanceMod": 0.25,
@@ -4026,7 +4026,7 @@
     },
     "223107": {
       "name": "Redemption",
-      "description": "<mainText><stats><attention>30</attention> Ability Power<br><attention>15</attention> Ability Haste<br><attention>100%</attention> Base Mana Regen<br><attention>16%</attention> Heal and Shield Power</stats><br><br><br><br><active>ACTIVE</active> (0s)<br><active>Intervention</active><br>Target an area within. After 2.5 seconds, call down a beam of light to restore Health to allies and damage enemy champions.</mainText>",
+      "description": "<mainText><stats><attention>30</attention> Ability Power<br><attention>15</attention> Ability Haste<br><attention>100%</attention> Base Mana Regen<br><attention>12%</attention> Heal and Shield Power</stats><br><br><br><br><active>ACTIVE</active> (0s)<br><active>Intervention</active><br>Target an area within. After 2.5 seconds, call down a beam of light to restore Health to allies and damage enemy champions.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 30
@@ -4034,7 +4034,7 @@
     },
     "223109": {
       "name": "Knight's Vow",
-      "description": "<mainText><stats><attention>400</attention> Health<br><attention>50</attention> Armor<br><attention>15</attention> Ability Haste</stats><br><br><passive>Sacrifice</passive><br>While near your <attention>Worthy</attention> ally, take 12% of the damage they receive and <healing>heal for 10% of the damage they deal</healing> to Champions.<br><br><active>ACTIVE</active> (0s)<br><active>Pledge</active><br>Designate an ally who is <attention>Worthy</attention>.</mainText>",
+      "description": "<mainText><stats><attention>400</attention> Health<br><attention>50</attention> Armor<br><attention>15</attention> Ability Haste</stats><br><br><passive>Sacrifice</passive><br>While near your <attention>Worthy</attention> ally, take 12% of the damage they receive and <healing>heal for 12% of the damage they deal</healing> to Champions.<br><br><active>ACTIVE</active> (0s)<br><active>Pledge</active><br>Designate an ally who is <attention>Worthy</attention>.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 400,
@@ -4305,7 +4305,7 @@
     },
     "223222": {
       "name": "Mikael's Blessing",
-      "description": "<mainText><stats><attention>400</attention> Health<br><attention>100%</attention> Base Mana Regen<br><attention>16%</attention> Heal and Shield Power</stats><br><br><active>ACTIVE</active> (0s)<br><active>Purify</active><br>Restore Health and Remove all crowd control debuffs (except <status>Knockups</status> and <status>Suppression</status>) from an ally champion.</mainText>",
+      "description": "<mainText><stats><attention>400</attention> Health<br><attention>100%</attention> Base Mana Regen<br><attention>12%</attention> Heal and Shield Power</stats><br><br><active>ACTIVE</active> (0s)<br><active>Purify</active><br>Restore Health and Remove all crowd control debuffs (except <status>Knockups</status> and <status>Suppression</status>) from an ally champion.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 400
@@ -4313,11 +4313,11 @@
     },
     "223302": {
       "name": "Terminus",
-      "description": "<mainText><stats><attention>30</attention> Attack Damage<br><attention>25%</attention> Attack Speed</stats><br><br><passive>Shadow</passive><br>Attacks deal <magicDamage>30 bonus magic damage</magicDamage> <OnHit>On-Hit</OnHit>.<br><br><passive>Juxtaposition</passive><br>Alternate between <keywordMajor>Light</keywordMajor> and <keywordMajor>Dark</keywordMajor> Attacks against champions: <li><keywordMajor>Light</keywordMajor> Attacks grant <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> for 5s. <li><keywordMajor>Dark</keywordMajor> Attacks grant 8% <scaleArmor>Armor Penetration</scaleArmor> and <scaleMR>Magic Penetration</scaleMR> for 5s. </mainText>",
+      "description": "<mainText><stats><attention>30</attention> Attack Damage<br><attention>40%</attention> Attack Speed</stats><br><br><passive>Shadow</passive><br>Attacks deal <magicDamage>30 bonus magic damage</magicDamage> <OnHit>On-Hit</OnHit>.<br><br><passive>Juxtaposition</passive><br>Alternate between <keywordMajor>Light</keywordMajor> and <keywordMajor>Dark</keywordMajor> Attacks against champions: <li><keywordMajor>Light</keywordMajor> Attacks grant <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> for 5s. <li><keywordMajor>Dark</keywordMajor> Attacks grant 8% <scaleArmor>Armor Penetration</scaleArmor> and <scaleMR>Magic Penetration</scaleMR> for 5s. </mainText>",
       "plaintext": "",
       "stats": {
         "FlatPhysicalDamageMod": 30,
-        "PercentAttackSpeedMod": 0.25
+        "PercentAttackSpeedMod": 0.4
       }
     },
     "223504": {
@@ -4545,7 +4545,7 @@
     },
     "226621": {
       "name": "Dawncore",
-      "description": "<mainText><stats><attention>45</attention> Ability Power<br><attention>16%</attention> Heal and Shield Power<br><attention>200%</attention> Base Mana Regen</stats><br><br><passive>First Light</passive><br>Gain <healing>3% Heal and Shield Power</healing> and <scaleAP>10 Ability Power</scaleAP> per <scaleMana>100% Base Mana Regen</scaleMana>.</mainText>",
+      "description": "<mainText><stats><attention>45</attention> Ability Power<br><attention>12%</attention> Heal and Shield Power<br><attention>200%</attention> Base Mana Regen</stats><br><br><passive>First Light</passive><br>Gain <healing>3% Heal and Shield Power</healing> and <scaleAP>10 Ability Power</scaleAP> per <scaleMana>100% Base Mana Regen</scaleMana>.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 45
@@ -4618,11 +4618,11 @@
       }
     },
     "226660": {
-      "name": "Bami's Cinder",
-      "description": "<mainText><stats><attention>150</attention> Health<br><attention>5</attention> Ability Haste</stats><br><br><passive>Immolate</passive><br>After taking or dealing damage, deal <magicDamage>magic damage</magicDamage> to nearby enemies for 3 seconds.</mainText>",
+      "name": "",
+      "description": "<mainText><stats><attention>550</attention> Health<br><attention>5</attention> Ability Haste</stats><br><br><passive>Immolate</passive><br>After taking or dealing damage, deal <magicDamage>magic damage</magicDamage> to nearby enemies for 3 seconds.</mainText>",
       "plaintext": "",
       "stats": {
-        "FlatHPPoolMod": 150
+        "FlatHPPoolMod": 550
       }
     },
     "226662": {
@@ -4676,10 +4676,10 @@
     },
     "226672": {
       "name": "Kraken Slayer",
-      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>35%</attention> Attack Speed<br><attention>7%</attention> Move Speed</stats><br><br><passive>Bring It Down</passive><br>Every third Attack deals <physicalDamage>bonus physical damage</physicalDamage> <OnHit>On-Hit</OnHit>, increased based on their missing Health.</mainText>",
+      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>35%</attention> Attack Speed<br><attention>7%</attention> Move Speed</stats><br><br><passive>Bring It Down</passive><br>Every third Attack deals <physicalDamage>bonus physical damage</physicalDamage> <OnHit>On-Hit</OnHit>, increased based on their missing Health.</mainText>",
       "plaintext": "",
       "stats": {
-        "FlatPhysicalDamageMod": 40,
+        "FlatPhysicalDamageMod": 50,
         "PercentAttackSpeedMod": 0.35,
         "PercentMovementSpeedMod": 0.07
       }
@@ -4831,7 +4831,7 @@
     },
     "228005": {
       "name": "Obsidian Cleaver",
-      "description": "<mainText><stats><ornnBonus>70</ornnBonus> Attack Damage<br><ornnBonus>700</ornnBonus> Health<br><ornnBonus>40</ornnBonus> Ability Haste</stats><br><br><passive>Carve</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> to champions reduces their <scaleArmor>Armor by 7%</scaleArmor> for 0.1 seconds. (stacks 5 times).<br><br><passive>Fervor</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> grants <speed>20 Move Speed</speed> for 2 seconds.</mainText>",
+      "description": "<mainText><stats><ornnBonus>70</ornnBonus> Attack Damage<br><ornnBonus>700</ornnBonus> Health<br><ornnBonus>40</ornnBonus> Ability Haste</stats><br><br><passive>Carve</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> to champions reduces the target's <scaleArmor>Armor by 500%</scaleArmor> for 0.1 seconds. (stacks 5 times).<br><br><passive>Fervor</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> grants <speed>20 Move Speed</speed> for 2 seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 700,
@@ -4988,7 +4988,7 @@
     },
     "323109": {
       "name": "Knight's Vow",
-      "description": "<mainText><stats><attention>300</attention> Health<br><attention>50</attention> Armor<br><attention>10</attention> Ability Haste<br><attention>150%</attention> Base Health Regen</stats><br><br><passive>Sacrifice</passive><br>While near your <attention>Worthy</attention> ally, take 12% of the damage they receive and <healing>heal for 10%</healing> of the damage they deal to champions.<active>Pledge</active> (0s)<br>Designate an ally as <attention>Worthy</attention>.</mainText>",
+      "description": "<mainText><stats><attention>300</attention> Health<br><attention>50</attention> Armor<br><attention>10</attention> Ability Haste<br><attention>150%</attention> Base Health Regen</stats><br><br><passive>Sacrifice</passive><br>While near your <attention>Worthy</attention> ally, take 14% of the damage they receive and <healing>heal for 12%</healing> of the damage they deal to champions.<active>Pledge</active> (0s)<br>Designate an ally as <attention>Worthy</attention>.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 300,
@@ -5051,7 +5051,7 @@
     },
     "324005": {
       "name": "Imperial Mandate",
-      "description": "<mainText><stats><attention>65</attention> Ability Power<br><attention>20</attention> Ability Haste<br><attention>150%</attention> Base Mana Regen</stats><br><br><passive>Coordinated Fire</passive> (0s) per target<br><keyword>Slowing</keyword> or <keyword>Immobilizing</keyword> an enemy champion marks them for 5 seconds. Ally champion damage detonates the mark, dealing <magicDamage>magic damage equal to 10% of current health</magicDamage>. </mainText>",
+      "description": "<mainText><stats><attention>65</attention> Ability Power<br><attention>15</attention> Ability Haste<br><attention>150%</attention> Base Mana Regen</stats><br><br><passive>Control</passive><br>Gain 15 Ability Haste for your abilities with <keyword>Immobilizing</keyword> effects.<br><br><passive>Command</passive><br>On <keyword>Immobilizing</keyword> an enemy champion, mark them as 6% <Keyword>Vulnerable</Keyword> for 4 seconds.<br></mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 65
@@ -5076,7 +5076,7 @@
     },
     "326620": {
       "name": "Echoes of Helia",
-      "description": "<mainText><stats><attention>35</attention> Ability Power<br><attention>250</attention> Health<br><attention>20</attention> Ability Haste<br><attention>150%</attention> Base Mana Regen</stats><br><br><passive>Soul Siphon</passive><br>Gain 35% of pre-mitigation damage dealt to champions as Soul Charges. Healing or Shielding an ally consumes all <passive>Soul Charges</passive> to restore <healing>Health</healing>.</mainText>",
+      "description": "<mainText><stats><attention>35</attention> Ability Power<br><attention>250</attention> Health<br><attention>20</attention> Ability Haste<br><attention>150%</attention> Base Mana Regen</stats><br><br><passive>Soul Siphon</passive><br>Gain 30% of pre-mitigation damage dealt to champions as Soul Charges. Healing or Shielding an ally consumes all <passive>Soul Charges</passive> to restore <healing>Health</healing>.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 250,
@@ -5220,12 +5220,12 @@
     },
     "443081": {
       "name": "Hexbolt Companion",
-      "description": "<mainText><stats><attention>75%</attention> Attack Speed<br><attention>500</attention> Health<br><attention>4%</attention> Move Speed</stats><br><br><passive>Covering Fire</passive><br>Every 10 seconds, <keywordMajor>Autocast</keywordMajor> fires a bolt towards a nearby target, dealing <physicalDamage> physical damage</physicalDamage> and applying <OnHit>On-Hit</OnHit> effects.<br><br><passive>Energized</passive><br>Moving and Attacking generates an <keyword>Energized Attack</keyword>.<br><br><passive>Unload</passive><br>Your <keyword>Energized Attacks</keyword> trigger your <keywordMajor>Autocast</keywordMajor> effects.</mainText>",
+      "description": "<mainText><stats><attention>70</attention> Attack Damage<br><attention>50%</attention> Attack Speed<br><attention>6%</attention> Move Speed</stats><br><br><passive>Covering Fire</passive><br>Every 10 seconds, <keywordMajor>Autocast</keywordMajor> fires a bolt towards a nearby target, dealing <physicalDamage> physical damage</physicalDamage> and applying <OnHit>On-Hit</OnHit> effects.<br><br><passive>Energized</passive><br>Moving and Attacking generates an <keyword>Energized Attack</keyword>.<br><br><passive>Unload</passive><br>Your <keyword>Energized Attacks</keyword> trigger your <keywordMajor>Autocast</keywordMajor> effects.</mainText>",
       "plaintext": "",
       "stats": {
-        "FlatHPPoolMod": 500,
-        "PercentAttackSpeedMod": 0.75,
-        "PercentMovementSpeedMod": 0.04
+        "FlatPhysicalDamageMod": 70,
+        "PercentAttackSpeedMod": 0.5,
+        "PercentMovementSpeedMod": 0.06
       }
     },
     "443083": {
@@ -5509,10 +5509,10 @@
     },
     "447120": {
       "name": "Diamond-Tipped Spear",
-      "description": "<mainText><stats><attention>75</attention> Adaptive Force<br><attention>30%</attention> Attack Speed</stats><br><br><passive>Reach Weapon</passive><br>Increase your attack range by 75.<br><br><passive>Sweet Spot</passive><br>Deal up to 30% increased damage with Attacks and 50% with Abilities based on how far your target is from you. Damage caps at 700 units. </mainText>",
+      "description": "<mainText><stats><attention>75</attention> Adaptive Force<br><attention>40%</attention> Attack Speed</stats><br><br><passive>Reach Weapon</passive><br>Increase your attack range by 75.<br><br><passive>Sweet Spot</passive><br>Deal up to 30% increased damage with Attacks and 50% with Abilities based on how far your target is from you. Damage caps at 700 units. </mainText>",
       "plaintext": "",
       "stats": {
-        "PercentAttackSpeedMod": 0.3
+        "PercentAttackSpeedMod": 0.4
       }
     },
     "447121": {

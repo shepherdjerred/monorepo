@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.11.1",
   "data": {
     "Illaoi": {
       "id": "Illaoi",
@@ -270,6 +270,68 @@
           "name": "Battle Bear Illaoi (Nightwire)",
           "chromas": false,
           "parentSkin": 27
+        },
+        {
+          "id": "420037",
+          "num": 37,
+          "name": "Pasta Maker Illaoi",
+          "chromas": true
+        },
+        {
+          "id": "420038",
+          "num": 38,
+          "name": "Pasta Maker Illaoi (Ruby)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "420039",
+          "num": 39,
+          "name": "Pasta Maker Illaoi (Sapphire)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "420040",
+          "num": 40,
+          "name": "Pasta Maker Illaoi (Amethyst)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "420041",
+          "num": 41,
+          "name": "Pasta Maker Illaoi (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "420042",
+          "num": 42,
+          "name": "Pasta Maker Illaoi (Emerald)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "420043",
+          "num": 43,
+          "name": "Pasta Maker Illaoi (Catseye)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "420044",
+          "num": 44,
+          "name": "Pasta Maker Illaoi (Pearl)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "420045",
+          "num": 45,
+          "name": "Pasta Maker Illaoi (Obsidian)",
+          "chromas": false,
+          "parentSkin": 37
         }
       ],
       "lore": "Illaoi's powerful physique is dwarfed only by her indomitable faith. As the prophet of the Great Kraken, she uses a huge, golden idol to rip her foes' spirits from their bodies and shatter their perception of reality. All who challenge the “Truth Bearer of Nagakabouros” soon discover Illaoi never battles alone—the god of the Serpent Isles fights by her side.",

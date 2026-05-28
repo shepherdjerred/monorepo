@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.11.1",
   "data": {
     "Riven": {
       "id": "Riven",
@@ -702,14 +702,14 @@
           "id": "RivenMartyr",
           "name": "Ki Burst",
           "description": "Riven emits a Ki Burst, damaging and stunning nearby enemies.",
-          "tooltip": "Riven's sword emits a burst of runic energy, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>Stunning</status> for {{ e5 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Riven's sword emits a burst of runic energy, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>Stunning</status> for {{ stunduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
               "Cooldown"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -850,7 +850,7 @@
               "Cooldown"
             ],
             "effect": [
-              "{{ e2 }} -> {{ e2NL }}",
+              "{{ shieldamount }} -> {{ shieldamountNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
