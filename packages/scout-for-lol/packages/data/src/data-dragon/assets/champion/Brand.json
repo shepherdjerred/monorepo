@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.11.1",
   "data": {
     "Brand": {
       "id": "Brand",
@@ -406,7 +406,7 @@
         "mp": 469,
         "mpperlevel": 21,
         "movespeed": 340,
-        "armor": 27,
+        "armor": 24,
         "armorperlevel": 4.2,
         "spellblock": 30,
         "spellblockperlevel": 1.3,
