@@ -108,3 +108,22 @@ Revert the changes to `.dagger/src/release.ts`, `scripts/ci/src/steps/release.ts
 - 20-min step timeout assumes a refine subprocess of ≤10 min on Opus. If consistently slower, bump again or downgrade model.
 - The agent fresh-clones the repo into `/tmp/monorepo` (depth 500) rather than using `/workspace`, because `SOURCE_EXCLUDES` strips `.git`. Network egress cost: ~50–200 MB per run.
 - `--dangerously-skip-permissions` is set on the claude invocation, which is acceptable here because the prompt is fixed and code-reviewed (no user input gets injected). Re-evaluate if the prompt ever becomes dynamic.
+
+## Session Log — 2026-05-29
+
+### Done
+
+- Addressed the open greptile review comment on PR #963 (`.dagger/src/release.ts:1098`): removed the redundant `--permission-mode acceptEdits` flag from the `claude -p` invocation. `--dangerously-skip-permissions` fully overrides `--permission-mode`, so the flag was dead config that misleadingly implied the agent was scoped to file edits.
+- Added a call-site comment documenting *why* `--dangerously-skip-permissions` is required (the agent runs arbitrary `git`/`gh` Bash commands non-interactively) and what actually bounds its write access (the fixed code-reviewed prompt + the GitHub App token's repo scope). This makes the broader half of greptile's P2 concern explicit at the code, not just in this plan's caveats.
+- Verified `bun scripts/check-dagger-hygiene.ts` → no violations. (Full `bunx tsc --noEmit` in `.dagger/` isn't reproducible here — the generated `@dagger.io/dagger` SDK requires the Dagger engine — but the change is a pure edit to a shell-command string and cannot introduce a type error.)
+- Committed as `986c3351e` and pushed to `feat/refine-release-notes-in-ci`.
+
+### Remaining
+
+- The other half of greptile's comment (unrestricted write access guarded only by the prompt) is an accepted architectural trade-off, not a code defect — greptile's own summary frames it that way. No further code change; the new comment documents it.
+- Reply to / resolve the greptile review thread on GitHub — couldn't be done from this session (no API token exposed to the shell, `gh` not installed).
+- The pre-existing blocker still stands: add `CLAUDE_CODE_OAUTH_TOKEN` to the 1Password item before the first post-merge run.
+
+### Caveats
+
+- The push succeeded via the OS credential manager, but that credential is not retrievable as a bearer token in this shell, so GitHub API actions (posting comments, resolving threads) had to be left to the user.
