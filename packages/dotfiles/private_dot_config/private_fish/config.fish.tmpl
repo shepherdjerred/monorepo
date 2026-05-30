@@ -38,6 +38,13 @@ set -gx EDITOR nvim
 set -gx LANG en_US.UTF-8
 set -gx RIPGREP_CONFIG_PATH ~/.config/ripgrep/ripgreprc
 
+# PinchTab: point the CLI at the same config the launchd daemon uses. The
+# daemon's plist pins PINCHTAB_CONFIG to this path; without it the CLI falls
+# back to ~/.pinchtab/config.json and the tokens diverge → 401 bad_token.
+{{ if eq .chezmoi.os "darwin" -}}
+set -gx PINCHTAB_CONFIG "$HOME/Library/Application Support/pinchtab/config.json"
+{{ end -}}
+
 set -gx CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS "1"
 
 # CLI tool credentials (via 1Password) - only set if op CLI is available
