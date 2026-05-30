@@ -46,7 +46,10 @@ export function createBugsinkPostgreSQLDatabase(chart: Chart) {
         },
       },
       volume: {
-        size: "8Gi", // Sufficient for homelab error volume
+        // 32Gi: live DB is only ~1-2Gi, but Postgres block-churn makes the
+        // retained Velero ZFS snapshots (~26/dataset) balloon to ~7Gi. The
+        // original 8Gi filled to 0B (snapshots + data), wedging writes (2026-05).
+        size: "32Gi",
         storageClass: "zfs-ssd",
       },
       users: {
