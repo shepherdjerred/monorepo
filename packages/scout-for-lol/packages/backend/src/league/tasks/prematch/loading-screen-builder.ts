@@ -31,7 +31,6 @@ import {
   resolveChampionKey,
 } from "#src/utils/champion.ts";
 import { getRankByPuuid } from "#src/league/model/rank.ts";
-import { resolveSkinNum } from "#src/league/tasks/prematch/skin-resolver.ts";
 import { createLogger } from "#src/logger.ts";
 import { match } from "ts-pattern";
 
@@ -39,6 +38,7 @@ const logger = createLogger("prematch-loading-screen-builder");
 
 const RANKED_SOLO_QUEUE_ID = 420;
 const RANKED_FLEX_QUEUE_ID = 440;
+const DEFAULT_LOADING_SCREEN_SKIN_NUM = 0;
 
 export class RecoverableLoadingScreenDataError extends Error {
   constructor(message: string) {
@@ -122,13 +122,12 @@ function resolveTeam(
  * Convert a spectator API participant to a loading screen participant.
  * Ranks are fetched separately and injected afterward.
  */
-async function buildParticipant(
+function buildParticipant(
   participant: RawCurrentGameParticipant,
   context: BuildParticipantContext,
-): Promise<BaseBuiltParticipant> {
+): BaseBuiltParticipant {
   const championName = resolveChampionKey(participant.championId);
   const championDisplayName = getChampionDisplayName(participant.championId);
-  const skinNum = await resolveSkinNum(participant, championName);
 
   const puuid =
     participant.puuid === null
@@ -141,7 +140,7 @@ async function buildParticipant(
     championId: LoadingScreenChampionIdSchema.parse(participant.championId),
     championName,
     championDisplayName,
-    skinNum,
+    skinNum: DEFAULT_LOADING_SCREEN_SKIN_NUM,
     team: resolveTeam(participant, context.layout),
     spell1Id: SummonerSpellIdSchema.parse(participant.spell1Id),
     spell2Id: SummonerSpellIdSchema.parse(participant.spell2Id),
@@ -298,13 +297,11 @@ export async function buildLoadingScreenData(
   }
 
   // Build base participant data (without ranks)
-  const baseParticipants = await Promise.all(
-    gameInfo.participants.map((p) =>
-      buildParticipant(p, {
-        trackedPuuids,
-        layout,
-      }),
-    ),
+  const baseParticipants = gameInfo.participants.map((p) =>
+    buildParticipant(p, {
+      trackedPuuids,
+      layout,
+    }),
   );
 
   // Fetch ranks for all participants in parallel
