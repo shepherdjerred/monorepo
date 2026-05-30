@@ -35,9 +35,11 @@ type Zone = {
 };
 
 // Match call sites only: createCloudflareTunnelBinding(<chart>, "<id>", { ... }).
-// The opening `{` we want is the one immediately after the second comma.
+// The opening `{` we want is the one immediately after the second comma. A
+// trailing comma after the object argument (`}, )`, as Prettier emits when the
+// arg list wraps) is tolerated so such call sites aren't silently skipped.
 const TUNNEL_BINDING_REGEX =
-  /createCloudflareTunnelBinding\s*\(\s*[A-Za-z_$][\w$.]*\s*,\s*["'`][^"'`]+["'`]\s*,\s*\{([\s\S]*?)\}\s*\)/g;
+  /createCloudflareTunnelBinding\s*\(\s*[A-Za-z_$][\w$.]*\s*,\s*["'`][^"'`]+["'`]\s*,\s*\{([\s\S]*?)\}\s*,?\s*\)/g;
 const SUBDOMAIN_REGEX = /\bsubdomain\s*:\s*["'`]([^"'`]+)["'`]/;
 const FQDN_REGEX = /\bfqdn\s*:\s*["'`]([^"'`]+)["'`]/;
 // Directive used by call sites whose fqdn comes from a loop variable. Points
