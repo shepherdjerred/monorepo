@@ -319,9 +319,11 @@ themes {
 }
 
 // Choose the theme that is specified in the themes section.
-// Default: default
+// theme_dark/theme_light auto-switch via CSI 2031 in zellij 0.44+ on terminals
+// that report appearance (Ghostty, kitty, contour).
 //
-theme "catppuccin-mocha"
+theme_dark "catppuccin-mocha"
+theme_light "catppuccin-latte"
 
 // The name of the default layout to load on startup
 // Default: "default"
