@@ -6,9 +6,9 @@ import {
   markerFor,
   parseFindingMarker,
   renderCommentBody,
-  renderStatusCommentBody,
   type PostReviewInput,
 } from "./post-render.ts";
+import { renderStatusCommentBody } from "./post-status-render.ts";
 import type { PostReviewOctokit } from "./post-github.ts";
 import { isPostEnabled, runPostReview, runPostReviewStatus } from "./post.ts";
 import type { Finding } from "#shared/pr-review/finding.ts";
@@ -505,7 +505,7 @@ describe("inline PR review comments", () => {
   it("skips unanchored findings and keeps them for the top-level status body", () => {
     const built = buildInlineReviewComments({
       pipeline: PIPELINE,
-      findings: [{ ...SAMPLE_FINDING, lineStart: 200, lineEnd: 200 }],
+      findings: [{ ...VERIFIED_FINDING, lineStart: 200, lineEnd: 200 }],
       changedFiles: [PATCHED_FILE],
       existingMarkers: new Set<string>(),
     });
@@ -516,14 +516,25 @@ describe("inline PR review comments", () => {
   it("skips duplicate inline markers for the same commit", () => {
     const built = buildInlineReviewComments({
       pipeline: PIPELINE,
-      findings: [SAMPLE_FINDING],
+      findings: [VERIFIED_FINDING],
       changedFiles: [PATCHED_FILE],
       existingMarkers: new Set<string>([
-        inlineFindingMarker(SAMPLE_FINDING, PIPELINE.commitSha),
+        inlineFindingMarker(VERIFIED_FINDING, PIPELINE.commitSha),
       ]),
     });
     expect(built.comments.length).toBe(0);
     expect(built.summary.skippedDuplicate).toBe(1);
+  });
+
+  it("skips inline comments for findings that did not pass verification", () => {
+    const built = buildInlineReviewComments({
+      pipeline: PIPELINE,
+      findings: [SAMPLE_FINDING],
+      changedFiles: [PATCHED_FILE],
+      existingMarkers: new Set<string>(),
+    });
+    expect(built.comments.length).toBe(0);
+    expect(built.summary.skippedUnverified).toBe(1);
   });
 
   it("submits inline review comments before updating the status summary", async () => {
@@ -553,7 +564,7 @@ describe("inline PR review comments", () => {
   it("keeps the status comment when inline review submission fails", async () => {
     const input: PostReviewInput = {
       pipeline: PIPELINE,
-      findings: [SAMPLE_FINDING],
+      findings: [VERIFIED_FINDING],
       changedFiles: [PATCHED_FILE],
     };
     const { octokit, createCalls } = makeOctokit([], {
@@ -589,8 +600,27 @@ const SAMPLE_FINDING: Finding = {
   confidence: 0.8,
 };
 
-const SUGGESTION_FINDING: Finding = {
+const VERIFIED_FINDING: Finding = {
   ...SAMPLE_FINDING,
+  verifier: "grep",
+  verifierTarget: {
+    kind: "grep",
+    pattern: "db.query",
+    isLiteral: true,
+    pathGlob: "packages/foo/src/api.ts",
+    mustMatch: true,
+  },
+  verification: {
+    status: "verified",
+    verifier: "grep",
+    exitCode: 0,
+    outputExcerpt: "db.query",
+    durationMs: 10,
+  },
+};
+
+const SUGGESTION_FINDING: Finding = {
+  ...VERIFIED_FINDING,
   id: "f-suggestion",
   lineStart: 40,
   lineEnd: 40,

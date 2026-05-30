@@ -164,6 +164,55 @@ describe("voteOnFindings — cross-specialist agreement", () => {
   });
 });
 
+describe("voteOnFindings — high-confidence verifier-backed singleton", () => {
+  it("keeps a single high-confidence finding so verification can decide it", () => {
+    const result = voteOnFindings({
+      annotated: [
+        annotate(
+          {
+            ...mkFinding({
+              id: "high-confidence",
+              file: "release.ts",
+              lineStart: 25,
+              confidence: 0.95,
+            }),
+            verifier: "grep",
+            verifierTarget: {
+              kind: "grep",
+              pattern: "dangerously-skip-permissions",
+              isLiteral: true,
+              pathGlob: "release.ts",
+              mustMatch: true,
+            },
+          },
+          "security",
+          0,
+        ),
+      ],
+    });
+    expect(result).toHaveLength(1);
+    expect(result[0]?.id).toBe("high-confidence");
+  });
+
+  it("still drops a single high-confidence finding that has no verifier", () => {
+    const result = voteOnFindings({
+      annotated: [
+        annotate(
+          mkFinding({
+            id: "unsupported",
+            file: "release.ts",
+            lineStart: 25,
+            confidence: 0.95,
+          }),
+          "security",
+          0,
+        ),
+      ],
+    });
+    expect(result).toEqual([]);
+  });
+});
+
 describe("voteOnFindings — line-tolerance bucketing", () => {
   it("clusters findings within the same 7-line bucket", () => {
     // Lines 14, 16, 18 all fall in bucket floor(line/7)*7 = 14.

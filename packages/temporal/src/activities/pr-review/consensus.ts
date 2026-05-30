@@ -13,9 +13,14 @@
  * A cluster is kept iff EITHER:
  *   (a) ≥2 of N randomized passes within a single specialist produced it
  *       (within-specialist agreement), OR
- *   (b) ≥2 distinct specialist kinds produced it (cross-specialist agreement).
+ *   (b) ≥2 distinct specialist kinds produced it (cross-specialist agreement),
+ *       OR
+ *   (c) a verifier-backed high-confidence finding needs empirical verification.
  *
  * Where N = `PASSES_PER_SPECIALIST` (currently 3, so ≥2/3 is the threshold).
+ * Rule (c) prevents consensus from starving plausible single-pass findings
+ * before the verification stage can prove or contradict them; inline posting
+ * still requires `verification.status === "verified"` downstream.
  *
  * # Why the cluster key is kind-agnostic
  *
@@ -76,6 +81,7 @@ const SEVERITY_ORDER: Record<FindingSeverity, number> = {
   warning: 1,
   critical: 2,
 };
+const SINGLE_SPECIALIST_HIGH_CONFIDENCE_THRESHOLD = 0.9;
 
 /**
  * One annotated finding entering the consensus activity. Every raw output
@@ -110,6 +116,14 @@ function jsonLog(
       activity: "consensusVote",
       ...fields,
     }),
+  );
+}
+
+function isVerifierBackedHighConfidenceFinding(finding: Finding): boolean {
+  return (
+    finding.confidence >= SINGLE_SPECIALIST_HIGH_CONFIDENCE_THRESHOLD &&
+    finding.verifier !== "none" &&
+    finding.verifierTarget !== undefined
   );
 }
 
@@ -167,7 +181,10 @@ export function voteOnFindings(input: ConsensusInput): Finding[] {
 
     const keptByWithin = maxWithinSpecialist >= withinThreshold;
     const keptByAcross = distinctSpecialists >= 2;
-    if (!keptByWithin && !keptByAcross) {
+    const keptByHighConfidence = members.some((m) =>
+      isVerifierBackedHighConfidenceFinding(m.annotated.finding),
+    );
+    if (!keptByWithin && !keptByAcross && !keptByHighConfidence) {
       // dropped — fail the cluster
       for (const _m of members) {
         prReviewConsensusFindingsTotal.inc({ outcome: "dropped" });
@@ -215,6 +232,7 @@ export function voteOnFindings(input: ConsensusInput): Finding[] {
       kindsObserved: [...kindsObserved],
       reasonWithin: keptByWithin,
       reasonAcross: keptByAcross,
+      reasonHighConfidence: keptByHighConfidence,
     });
   }
 

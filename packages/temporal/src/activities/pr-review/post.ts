@@ -11,11 +11,13 @@ import {
   buildInlineReviewComments,
   markerFor,
   renderCommentBody,
-  renderStatusCommentBody,
   STATUS_COMMENT_MARKER,
   type PostReviewInput,
-  type PostReviewStatusInput,
 } from "./post-render.ts";
+import {
+  renderStatusCommentBody,
+  type PostReviewStatusInput,
+} from "./post-status-render.ts";
 import {
   postInlineReview,
   upsertStatusComment,
@@ -38,6 +40,8 @@ export type PostReviewResult = {
   inlineCommentsSkippedUnanchored: number;
   /** Number of findings skipped because an inline marker already existed for this commit. */
   inlineCommentsSkippedDuplicate: number;
+  /** Number of findings skipped because they did not pass empirical verification. */
+  inlineCommentsSkippedUnverified: number;
   /** Whether inline review submission failed after payload construction. */
   inlineCommentsFailed: boolean;
 };
@@ -142,6 +146,7 @@ export async function runPostReview(
       inlineCommentsPosted: inline.summary.posted,
       inlineCommentsSkippedUnanchored: inline.summary.skippedUnanchored,
       inlineCommentsSkippedDuplicate: inline.summary.skippedDuplicate,
+      inlineCommentsSkippedUnverified: inline.summary.skippedUnverified,
       inlineCommentsFailed: inline.summary.failed,
     });
     return {
@@ -151,6 +156,7 @@ export async function runPostReview(
       inlineCommentsPosted: inline.summary.posted,
       inlineCommentsSkippedUnanchored: inline.summary.skippedUnanchored,
       inlineCommentsSkippedDuplicate: inline.summary.skippedDuplicate,
+      inlineCommentsSkippedUnverified: inline.summary.skippedUnverified,
       inlineCommentsFailed: inline.summary.failed,
     };
   } catch (error: unknown) {
@@ -263,9 +269,10 @@ async function postReviewImpl(
             workflowId,
             bodyBytes: body.length,
             inlineCommentsWouldPost: inline.summary.posted,
-            inlineCommentsWouldSkipUnanchored: inline.summary.skippedUnanchored,
-            inlineCommentsWouldSkipWithoutSuggestion:
-              inline.summary.skippedWithoutSuggestion,
+          inlineCommentsWouldSkipUnanchored: inline.summary.skippedUnanchored,
+          inlineCommentsWouldSkipUnverified: inline.summary.skippedUnverified,
+          inlineCommentsWouldSkipWithoutSuggestion:
+            inline.summary.skippedWithoutSuggestion,
           },
         );
         return {
@@ -275,6 +282,7 @@ async function postReviewImpl(
           inlineCommentsPosted: inline.summary.posted,
           inlineCommentsSkippedUnanchored: inline.summary.skippedUnanchored,
           inlineCommentsSkippedDuplicate: inline.summary.skippedDuplicate,
+          inlineCommentsSkippedUnverified: inline.summary.skippedUnverified,
           inlineCommentsFailed: false,
         };
       }

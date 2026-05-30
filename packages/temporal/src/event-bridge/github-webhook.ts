@@ -24,10 +24,12 @@ import {
   runPostReviewStatus,
 } from "#activities/pr-review/post.ts";
 import {
-  renderStatusCommentBody,
   STATUS_COMMENT_MARKER,
-  type PostReviewStatusInput,
 } from "#activities/pr-review/post-render.ts";
+import {
+  renderStatusCommentBody,
+  type PostReviewStatusInput,
+} from "#activities/pr-review/post-status-render.ts";
 import {
   type PostReviewOctokit,
   type PostReviewStatusResult,
