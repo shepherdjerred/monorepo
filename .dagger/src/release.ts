@@ -1095,7 +1095,14 @@ export function releasePleaseHelper(
       // the agent's behavior. It exits 0 with a status envelope when there
       // is no open release PR, no bumped packages, or nothing to refine.
       `REFINE_PROMPT="$(cat /workspace/.dagger/prompts/refine-release-please.md)"`,
-      `claude -p "$REFINE_PROMPT" --output-format json --allowed-tools Bash,Read,Edit,Write,Grep,Glob --permission-mode acceptEdits --dangerously-skip-permissions --max-turns 80 --model claude-opus-4-7`,
+      // The agent must run arbitrary `git`/`gh` Bash commands non-interactively,
+      // so it runs with --dangerously-skip-permissions. That flag fully overrides
+      // --permission-mode, so we don't pass acceptEdits (it would be dead config
+      // that misleads readers into thinking the agent is scoped to file edits).
+      // The agent's write access is therefore bounded only by the fixed,
+      // code-reviewed prompt at .dagger/prompts/refine-release-please.md and the
+      // GitHub App token's repo scope — re-evaluate if the prompt becomes dynamic.
+      `claude -p "$REFINE_PROMPT" --output-format json --allowed-tools Bash,Read,Edit,Write,Grep,Glob --dangerously-skip-permissions --max-turns 80 --model claude-opus-4-7`,
       `release-please github-release --token="$GH_TOKEN" --repo-url=${MONOREPO_REPO} --target-branch=main`,
     ].join(" && "),
   ]);
