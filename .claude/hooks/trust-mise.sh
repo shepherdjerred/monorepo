@@ -29,4 +29,4 @@ while IFS= read -r cfg; do
   mise trust --yes --quiet "$cfg"
 done < <(find "$dir" \
   \( -name node_modules -o -name .git -o -name archive -o -name dist -o -name build -o -name target \) -prune \
-  -o \( -name mise.toml -o -name .mise.toml \) -print)
+  -o -type f \( -name mise.toml -o -name .mise.toml \) -print)
