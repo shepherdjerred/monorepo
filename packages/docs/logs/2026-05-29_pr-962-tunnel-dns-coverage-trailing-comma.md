@@ -29,7 +29,7 @@ comment explaining why.
 ## Verification
 
 - `bun scripts/check-tunnel-dns-coverage.ts` → `✓ all 30 TunnelBindings have
-  matching cloudflare_dns_record entries` (no regression — same count).
+matching cloudflare_dns_record entries` (no regression — same count).
 - Standalone regex test confirmed both the current `});` form and the
   trailing-comma `},\n)` form now match; the latter would have failed before.
 
