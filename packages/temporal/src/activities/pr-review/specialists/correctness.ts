@@ -21,13 +21,13 @@ const COMPONENT = "pr-review-pipeline";
  * live here so the parity-baseline test can assert them verbatim.
  *
  * Per the `claude-api` skill:
- * - `claude-opus-4-7` is mandatory for SOTA review quality.
- * - `thinking: { type: "adaptive" }` is the only on-mode on Opus 4.7.
+ * - `claude-opus-4-8` is mandatory for SOTA review quality.
+ * - `thinking: { type: "adaptive" }` is the only on-mode on Opus 4.8.
  * - `effort: "high"` is the minimum recommended for intelligence-sensitive
  *   work. (The SDK at this version doesn't yet expose `"xhigh"` — switch
  *   when @anthropic-ai/sdk ≥ 0.95.)
  */
-export const CORRECTNESS_MODEL = "claude-opus-4-7";
+export const CORRECTNESS_MODEL = "claude-opus-4-8";
 export const CORRECTNESS_EFFORT: "low" | "medium" | "high" | "max" = "high";
 export const CORRECTNESS_MAX_TOKENS = 16_000;
 
