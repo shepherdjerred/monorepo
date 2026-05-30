@@ -213,7 +213,7 @@ Examples:
 ```
 run_once_before_install-packages.sh          # Run once before apply
 run_onchange_after_reload-config.sh.tmpl     # Run after apply when changed
-run_after_sync-theme.sh.tmpl                 # Run every apply, after files
+run_after_set-shell-defaults.sh.tmpl         # Run every apply, after files
 ```
 
 ### Environment Variables

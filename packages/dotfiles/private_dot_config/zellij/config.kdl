@@ -321,7 +321,7 @@ themes {
 // Choose the theme that is specified in the themes section.
 // Default: default
 //
-theme "catppuccin-mocha"
+theme "catppuccin-latte"
 
 // The name of the default layout to load on startup
 // Default: "default"
