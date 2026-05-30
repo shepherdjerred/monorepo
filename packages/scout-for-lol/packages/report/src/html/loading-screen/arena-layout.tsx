@@ -17,22 +17,9 @@ export function ArenaLayout({ data }: { data: ArenaLoadingScreenData }) {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: "22px",
         width: "100%",
       }}
     >
-      <span
-        style={{
-          fontSize: "24px",
-          fontFamily: font.title,
-          fontWeight: 700,
-          color: palette.gold[2],
-          textTransform: "uppercase",
-          letterSpacing: "1px",
-        }}
-      >
-        Champions Played
-      </span>
       {trackedParticipants.length > 0 ? (
         <div
           style={{
