@@ -24,7 +24,10 @@ async function hasLoadingScreenAssets(): Promise<boolean> {
 
 const currentDir = new URL(".", import.meta.url).pathname;
 
-const FIXTURE_PATHS = [`${currentDir}testdata/ranked-flex-5v5.json`];
+const FIXTURE_PATHS = [
+  `${currentDir}testdata/ranked-flex-5v5.json`,
+  `${currentDir}testdata/arena-3v3.json`,
+];
 
 for (const path of FIXTURE_PATHS) {
   const fileNameOrUndefined = path.split("/").pop();

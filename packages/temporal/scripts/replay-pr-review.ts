@@ -269,7 +269,7 @@ async function runLegacyBaseline(
   }
 
   process.stderr.write(
-    "Invoking legacy correctnessReviewer baseline (Anthropic SDK, claude-opus-4-7, effort=high)...\n",
+    "Invoking legacy correctnessReviewer baseline (Anthropic SDK, claude-opus-4-8, effort=high)...\n",
   );
   const client = makeCorrectnessClient(new Anthropic({ apiKey: anthropicKey }));
   const result = await runCorrectnessReviewer(client, {

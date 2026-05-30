@@ -44,10 +44,10 @@
  * input — consensus is the activity that promises to populate it. PostReview
  * relies on it being present.
  *
- * # Opus 4.7 model swap from the plan
+ * # Opus 4.8 model swap from the plan
  *
- * The plan text says "Opus 4.7 specialists (24K thinking budget)". `budget_tokens`
- * is REMOVED on `claude-opus-4-7` (a 4.6-era field; sending it returns 400).
+ * The plan text says "Opus 4.8 specialists (24K thinking budget)". `budget_tokens`
+ * is REMOVED on `claude-opus-4-8` (a 4.6-era field; sending it returns 400).
  * The current canonical depth knob is `thinking: { type: "adaptive" }` +
  * `output_config: { effort: "high" | "max" }`. The specialists implement
  * the plan's intent via effort tiers; the consensus activity itself doesn't

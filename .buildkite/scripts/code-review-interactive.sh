@@ -53,7 +53,7 @@ fi
 # Run Claude CLI directly
 RESPONSE=$(claude --print \
   --dangerously-skip-permissions \
-  --model claude-opus-4-6 \
+  --model claude-opus-4-8 \
   --max-turns 35 \
   "Respond to this comment on PR #${PR_NUMBER} in shepherdjerred/monorepo:
 
