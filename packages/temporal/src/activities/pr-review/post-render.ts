@@ -20,6 +20,7 @@ const DEFAULT_INLINE_SUMMARY: InlinePostSummary = {
   posted: 0,
   skippedUnanchored: 0,
   skippedDuplicate: 0,
+  skippedUnverified: 0,
   skippedWithoutSuggestion: 0,
   failed: false,
 };
@@ -39,28 +40,25 @@ export type PostReviewInput = {
   pipeline: PrReviewPipelineInput;
   findings: Finding[];
   changedFiles: PrFileDiff[];
-};
-
-export type PostReviewStatusState =
-  | "draft_skipped"
-  | "running"
-  | "skipped"
-  | "failed";
-
-export type PostReviewStatusInput = {
-  pipeline: PrReviewPipelineInput;
-  state: PostReviewStatusState;
-  reason?: string;
-  workflowId?: string;
+  stageCounts?: PostReviewStageCounts;
 };
 
 export type InlinePostSummary = {
   posted: number;
   skippedUnanchored: number;
   skippedDuplicate: number;
+  skippedUnverified: number;
   skippedWithoutSuggestion: number;
   failed: boolean;
   failureMessage?: string;
+};
+
+export type PostReviewStageCounts = {
+  deterministicFindings: number;
+  specialistFindings: number;
+  consensusFindings: number;
+  verifiedFindings: number;
+  dedupedFindings: number;
 };
 
 export type InlineReviewComment = {
@@ -235,12 +233,18 @@ export function buildInlineReviewComments(input: {
   const comments: InlineReviewComment[] = [];
   let skippedUnanchored = 0;
   let skippedDuplicate = 0;
+  let skippedUnverified = 0;
   let skippedWithoutSuggestion = 0;
 
   for (const finding of input.findings) {
     const marker = inlineFindingMarker(finding, input.pipeline.commitSha);
     if (input.existingMarkers.has(marker)) {
       skippedDuplicate += 1;
+      continue;
+    }
+
+    if (finding.verification?.status !== "verified") {
+      skippedUnverified += 1;
       continue;
     }
 
@@ -279,6 +283,7 @@ export function buildInlineReviewComments(input: {
       posted: comments.length,
       skippedUnanchored,
       skippedDuplicate,
+      skippedUnverified,
       skippedWithoutSuggestion,
       failed: false,
     },
@@ -350,13 +355,32 @@ export function renderCommentBody(
   lines.push("");
 
   if (input.findings.length === 0) {
-    lines.push(EMPTY_FINDINGS_BODY);
-    lines.push("");
-    lines.push(renderInlineSummary(summary));
-    lines.push("");
+    appendNoFindingsLines(lines, input, summary);
     return lines.join("\n");
   }
 
+  appendFindingSummaryLines(lines, input, summary);
+  appendFindingsBySeverity(lines, input.findings);
+  return lines.join("\n");
+}
+
+function appendNoFindingsLines(
+  lines: string[],
+  input: PostReviewInput,
+  summary: InlinePostSummary,
+): void {
+  lines.push(EMPTY_FINDINGS_BODY);
+  lines.push("");
+  lines.push(renderInlineSummary(summary));
+  appendStageCountsIfNoInline(lines, input, summary);
+  lines.push("");
+}
+
+function appendFindingSummaryLines(
+  lines: string[],
+  input: PostReviewInput,
+  summary: InlinePostSummary,
+): void {
   lines.push(
     `Found ${String(input.findings.length)} issue${input.findings.length === 1 ? "" : "s"}. Posted ${String(summary.posted)} inline comment${summary.posted === 1 ? "" : "s"}.`,
   );
@@ -372,16 +396,28 @@ export function renderCommentBody(
       `${String(summary.skippedUnanchored)} finding${summary.skippedUnanchored === 1 ? "" : "s"} could not be anchored to the current PR diff and is listed here only.`,
     );
   }
+  if (summary.skippedUnverified > 0) {
+    lines.push("");
+    lines.push(
+      `${String(summary.skippedUnverified)} finding${summary.skippedUnverified === 1 ? "" : "s"} did not pass empirical verification and is listed here only.`,
+    );
+  }
   if (summary.skippedWithoutSuggestion > 0) {
     lines.push("");
     lines.push(
       `${String(summary.skippedWithoutSuggestion)} suggested fix${summary.skippedWithoutSuggestion === 1 ? "" : "es"} could not be safely rendered as a GitHub suggestion block.`,
     );
   }
+  appendStageCountsIfNoInline(lines, input, summary);
   lines.push("");
+}
 
+function appendFindingsBySeverity(
+  lines: string[],
+  findings: readonly Finding[],
+): void {
   const bySeverity = new Map<Finding["severity"], Finding[]>();
-  for (const finding of input.findings) {
+  for (const finding of findings) {
     const bucket = bySeverity.get(finding.severity);
     if (bucket === undefined) {
       bySeverity.set(finding.severity, [finding]);
@@ -400,8 +436,16 @@ export function renderCommentBody(
       lines.push("");
     }
   }
+}
 
-  return lines.join("\n");
+function appendStageCountsIfNoInline(
+  lines: string[],
+  input: PostReviewInput,
+  summary: InlinePostSummary,
+): void {
+  if (summary.posted > 0 || input.stageCounts === undefined) return;
+  lines.push("");
+  lines.push(renderStageCounts(input.stageCounts));
 }
 
 function renderInlineSummary(summary: InlinePostSummary): string {
@@ -412,56 +456,18 @@ function renderInlineSummary(summary: InlinePostSummary): string {
     `Inline comments: ${String(summary.posted)} posted`,
     `${String(summary.skippedUnanchored)} unanchored`,
     `${String(summary.skippedDuplicate)} duplicate`,
+    `${String(summary.skippedUnverified)} unverified`,
     `${String(summary.skippedWithoutSuggestion)} suggestions skipped`,
   ].join("; ");
 }
 
-export function renderStatusCommentBody(
-  input: PostReviewStatusInput,
-  marker: string,
-): string {
-  const lines: string[] = [];
-  lines.push(marker);
-  lines.push("");
-  lines.push(
-    "**pr-review-bot** (deterministic checks + multi-specialist review)",
-  );
-  lines.push("");
-  lines.push(`PR: #${String(input.pipeline.prNumber)}`);
-  lines.push(`Commit: \`${input.pipeline.commitSha}\``);
-  lines.push("");
-
-  switch (input.state) {
-    case "draft_skipped":
-      lines.push(
-        "Review skipped: draft PR detected. I will run and post inline comments once the PR is marked ready for review.",
-      );
-      break;
-    case "running":
-      lines.push(
-        "Review running: deterministic checks, specialist review, consensus, verification, and dedupe are in progress.",
-      );
-      break;
-    case "skipped":
-      lines.push("Review skipped before deep analysis.");
-      if (input.reason !== undefined) {
-        lines.push("");
-        lines.push(`Reason: ${input.reason}`);
-      }
-      break;
-    case "failed":
-      lines.push("Review failed before completion.");
-      if (input.reason !== undefined) {
-        lines.push("");
-        lines.push(`Failure: ${input.reason}`);
-      }
-      break;
-  }
-
-  if (input.workflowId !== undefined) {
-    lines.push("");
-    lines.push(`Workflow: \`${input.workflowId}\``);
-  }
-  lines.push("");
-  return lines.join("\n");
+function renderStageCounts(stageCounts: PostReviewStageCounts): string {
+  return [
+    "Stage counts:",
+    `${String(stageCounts.deterministicFindings)} deterministic`,
+    `${String(stageCounts.specialistFindings)} specialist`,
+    `${String(stageCounts.consensusFindings)} consensus`,
+    `${String(stageCounts.verifiedFindings)} verified`,
+    `${String(stageCounts.dedupedFindings)} deduped`,
+  ].join(" ");
 }
