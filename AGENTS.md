@@ -175,34 +175,24 @@ Always verify changes:
 2. `bun run test` - Test failures
 3. `bunx eslint . --fix` - Lint issues (in relevant package)
 
-## Parallel Work — Prefer Dissociated Clones
+## Parallel Work — Use Worktrees
 
-When starting parallel feature work, hot-fixing while another change is in progress, or running multiple Claude agents in this repo concurrently, **prefer dissociated clones over `git worktree`**. Worktrees share `refs/stash` and the reflog across checkouts, which causes collisions during merges and multi-agent work. Dissociated clones give each checkout its own stash, reflog, and gc — at the cost of a per-clone setup run.
+When starting parallel feature work, hot-fixing while another change is in progress, or running multiple Claude agents in this repo concurrently, use `git worktree` to get an isolated working directory per branch.
 
 ```bash
-# Create an isolated working clone (own stash, own reflog, no network needed)
-git clone --shared --dissociate \
-  /Users/jerred/git/monorepo \
-  ~/git/monorepo-<feature-slug>
+# Create an isolated worktree on a new branch off main
+git worktree add .claude/worktrees/<feature-slug> -b feature/<slug> origin/main
 
-cd ~/git/monorepo-<feature-slug>
+cd .claude/worktrees/<feature-slug>
 
-# Re-point origin from the local source path to the real remote.
-# Without this, `git push` would push to the local source, not GitHub.
-git remote set-url origin <remote-url>
-git fetch origin --prune
-
-# Branch from the real origin/main
-git switch -c feature/<slug> origin/main
-
-# REQUIRED before any build/test in the new clone — runs codegen, shared builds, deps.
+# REQUIRED before any build/test in the new worktree — runs codegen, shared builds, deps.
 # Without this, builds fail with cryptic missing-module / missing-generated-file errors.
 bun run scripts/setup.ts
 ```
 
-After PR merge: `rm -rf ~/git/monorepo-<feature-slug>` and `git branch -d feature/<slug>` in the main checkout. See the `dissociated-clone-workflow` skill for the full workflow, including helper scripts.
+After PR merge: `git worktree remove .claude/worktrees/<feature-slug>` and `git branch -d feature/<slug>` from the main checkout. Run `git worktree prune` to clean up stale entries.
 
-**Cost trade-off**: each clone is ~600 MB for `.git` plus ~20 GB after `bun run scripts/setup.ts`. Worth it for isolated parallel work or multi-agent runs; not worth it for trivial single-file edits — those stay in the main checkout.
+See the `worktree-workflow` skill for the full workflow. Trivial single-file edits don't need a worktree — those stay in the main checkout.
 
 ## Package Notes
 
