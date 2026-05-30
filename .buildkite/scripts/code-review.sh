@@ -32,7 +32,7 @@ echo "+++ :robot_face: Running code review"
 # Run Claude CLI directly for PR review
 claude --print \
   --dangerously-skip-permissions \
-  --model claude-opus-4-6 \
+  --model claude-opus-4-8 \
   --max-turns 35 \
   "Review PR #${BUILDKITE_PULL_REQUEST} on branch ${BUILDKITE_PULL_REQUEST_BASE_BRANCH} (head SHA: ${BUILDKITE_COMMIT}).
 

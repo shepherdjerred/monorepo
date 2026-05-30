@@ -14,7 +14,7 @@ describe("prReviewEmitMetrics", () => {
       status: "posted",
       startedAtMs: STARTED_AT_MS,
       costs: [
-        { model: "claude-opus-4-7", usd: 2.5 },
+        { model: "claude-opus-4-8", usd: 2.5 },
         { model: "claude-sonnet-4-6", usd: 0.3 },
       ],
       stageDrops: {
@@ -33,7 +33,7 @@ describe("prReviewEmitMetrics", () => {
     expect(exposition).toMatch(/pr_review_count_total\{[^}]*status="posted"/);
     expect(exposition).toMatch(/pr_review_latency_seconds_count\{.*\}\s+\d/);
     expect(exposition).toMatch(
-      /pr_review_cost_usd_count\{[^}]*model="claude-opus-4-7"/,
+      /pr_review_cost_usd_count\{[^}]*model="claude-opus-4-8"/,
     );
     expect(exposition).toMatch(/pr_review_consensus_drop_rate\{.*\} 0\.4/);
     expect(exposition).toMatch(/pr_review_verification_drop_rate\{.*\} 0\.33/);

@@ -40,7 +40,7 @@ const COMPONENT = "homelab-audit";
 
 const HEARTBEAT_INTERVAL_MS = 10_000;
 
-const DEFAULT_MODEL = "claude-opus-4-7";
+const DEFAULT_MODEL = "claude-opus-4-8";
 const DEFAULT_MAX_TURNS = 80;
 
 // Audit hits a wide tool surface (kubectl, talosctl, toolkit, tofu, gh) so we

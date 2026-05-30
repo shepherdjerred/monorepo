@@ -59,7 +59,7 @@ export function resetAnthropicProviderErrorReporterForTests(): void {
 }
 
 /**
- * Effort tier per the `claude-api` skill. Opus 4.7 + adaptive thinking
+ * Effort tier per the `claude-api` skill. Opus 4.8 + adaptive thinking
  * replaces the plan's deprecated `budget_tokens: 24000` — depth is
  * controlled here. The SDK at the current pinned version exposes
  * `"low" | "medium" | "high" | "max"`; swap in `"xhigh"` (added in 4.7) once
@@ -79,7 +79,7 @@ export type SpecialistConfig = {
   readonly kind: FindingKind;
   /** Pinned Anthropic model id. */
   readonly model: string;
-  /** Effort tier (Opus 4.7 adaptive thinking depth). */
+  /** Effort tier (Opus 4.8 adaptive thinking depth). */
   readonly effort: SpecialistEffort;
   /** Output cap. Each specialist's findings array is small; 16k is generous. */
   readonly maxTokens: number;
