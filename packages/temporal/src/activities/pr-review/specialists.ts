@@ -7,15 +7,15 @@
  * Each pass's findings are annotated with the producing specialist and
  * pass index so the downstream `consensus` activity can vote.
  *
- * # Plan deviation: Opus 4.7 thinking
+ * # Plan deviation: Opus 4.8 thinking
  *
  * The plan literally says "24K thinking budget" for Opus specialists, which
- * was a 4.6-era spec. `budget_tokens` is REMOVED on `claude-opus-4-7` —
+ * was a 4.6-era spec. `budget_tokens` is REMOVED on `claude-opus-4-8` —
  * sending it returns 400. The canonical depth knob is now
  * `thinking: { type: "adaptive" }` + `output_config: { effort: ... }`.
  * Specialists implement the plan's intent via effort tiers:
- *   - correctness, security: effort=high (Opus 4.7)
- *   - perf:                  effort=high (Opus 4.7)
+ *   - correctness, security: effort=high (Opus 4.8)
+ *   - perf:                  effort=high (Opus 4.8)
  *   - convention, deps:      effort=medium (Sonnet 4.6)
  * The PR description documents this deviation in detail.
  *

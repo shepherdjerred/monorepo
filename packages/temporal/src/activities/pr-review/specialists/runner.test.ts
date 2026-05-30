@@ -62,7 +62,7 @@ const CONTEXT: PrReviewContext = {
 const CFG: SpecialistConfig = {
   id: "security",
   kind: "security",
-  model: "claude-opus-4-7",
+  model: "claude-opus-4-8",
   effort: "high",
   maxTokens: 16_000,
   systemPrompt: "security system prompt",
@@ -428,7 +428,7 @@ describe("runSpecialistPass", () => {
     expect(parseCalls).toHaveLength(1);
     const call = parseCalls[0];
     if (call === undefined) throw new Error("expected one parse call");
-    expect(call.model).toBe("claude-opus-4-7");
+    expect(call.model).toBe("claude-opus-4-8");
     expect(call.thinking).toEqual({ type: "adaptive" });
     expect(call.output_config.effort).toBe("high");
     expect(call.system[0]?.text).toBe("security system prompt");
