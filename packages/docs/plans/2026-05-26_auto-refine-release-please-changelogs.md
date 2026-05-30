@@ -114,7 +114,7 @@ Revert the changes to `.dagger/src/release.ts`, `scripts/ci/src/steps/release.ts
 ### Done
 
 - Addressed the open greptile review comment on PR #963 (`.dagger/src/release.ts:1098`): removed the redundant `--permission-mode acceptEdits` flag from the `claude -p` invocation. `--dangerously-skip-permissions` fully overrides `--permission-mode`, so the flag was dead config that misleadingly implied the agent was scoped to file edits.
-- Added a call-site comment documenting *why* `--dangerously-skip-permissions` is required (the agent runs arbitrary `git`/`gh` Bash commands non-interactively) and what actually bounds its write access (the fixed code-reviewed prompt + the GitHub App token's repo scope). This makes the broader half of greptile's P2 concern explicit at the code, not just in this plan's caveats.
+- Added a call-site comment documenting _why_ `--dangerously-skip-permissions` is required (the agent runs arbitrary `git`/`gh` Bash commands non-interactively) and what actually bounds its write access (the fixed code-reviewed prompt + the GitHub App token's repo scope). This makes the broader half of greptile's P2 concern explicit at the code, not just in this plan's caveats.
 - Verified `bun scripts/check-dagger-hygiene.ts` → no violations. (Full `bunx tsc --noEmit` in `.dagger/` isn't reproducible here — the generated `@dagger.io/dagger` SDK requires the Dagger engine — but the change is a pure edit to a shell-command string and cannot introduce a type error.)
 - Committed as `986c3351e` and pushed to `feat/refine-release-notes-in-ci`.
 
