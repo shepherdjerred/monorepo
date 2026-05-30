@@ -3,6 +3,10 @@ import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { AddSubscriptionDialog } from "#src/components/add-subscription-dialog.tsx";
+import {
+  SubscriptionChannelDialog,
+  type SubscriptionChannelAction,
+} from "#src/components/subscription-channel-dialog.tsx";
 import { Button } from "#src/components/ui/button.tsx";
 import {
   Table,
@@ -18,6 +22,10 @@ export function GuildSubscriptions() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [isAddOpen, setAddOpen] = useState(false);
+  const [channelAction, setChannelAction] =
+    useState<SubscriptionChannelAction | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const safeGuildId = guildId ?? "";
   const subsKey = trpc.subscription.list.queryKey({ guildId: safeGuildId });
@@ -35,28 +43,43 @@ export function GuildSubscriptions() {
   );
   const removeMutation = useMutation(
     trpc.subscription.remove.mutationOptions({
-      onSuccess: () => {
-        void queryClient.invalidateQueries({ queryKey: subsKey });
+      onSuccess: (result) => {
+        switch (result.kind) {
+          case "removed":
+            setMessage("Subscription removed.");
+            setError(null);
+            void queryClient.invalidateQueries({ queryKey: subsKey });
+            return;
+          case "player-not-found":
+            setError("Player not found.");
+            return;
+          case "not-subscribed-in-channel":
+            setError("Player is not subscribed in that channel.");
+            return;
+          case "internal-error":
+            setError(result.message);
+            return;
+        }
+      },
+      onError: (err) => {
+        setError(err.message);
       },
     }),
   );
 
   if (guildId === undefined) {
     return (
-      <Shell>
+      <div>
         <p className="text-sm text-destructive">Missing guild id</p>
-      </Shell>
+      </div>
     );
   }
 
   return (
-    <Shell>
+    <div className="space-y-4">
       <div className="flex items-baseline justify-between">
         <h2 className="text-xl font-semibold tracking-tight">Subscriptions</h2>
         <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm">
-            <Link to={`/g/${guildId}/audit`}>Audit log</Link>
-          </Button>
           <Button
             type="button"
             size="sm"
@@ -81,6 +104,10 @@ export function GuildSubscriptions() {
         <p className="text-sm text-destructive">
           Failed to remove: {removeMutation.error.message}
         </p>
+      )}
+      {error !== null && <p className="text-sm text-destructive">{error}</p>}
+      {message !== null && (
+        <p className="text-sm text-muted-foreground">{message}</p>
       )}
 
       {subsQuery.data && subsQuery.data.length === 0 && (
@@ -109,7 +136,12 @@ export function GuildSubscriptions() {
                 return (
                   <TableRow key={sub.subscriptionId}>
                     <TableCell className="font-medium">
-                      {sub.player.alias}
+                      <Link
+                        className="hover:underline"
+                        to={`/g/${guildId}/players/${encodeURIComponent(sub.player.alias)}`}
+                      >
+                        {sub.player.alias}
+                      </Link>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {sub.player.accounts
@@ -122,28 +154,57 @@ export function GuildSubscriptions() {
                         : `#${channel.name}`}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        disabled={removeMutation.isPending}
-                        onClick={() => {
-                          if (
-                            !globalThis.confirm(
-                              `Remove "${sub.player.alias}" from this channel?`,
-                            )
-                          ) {
-                            return;
-                          }
-                          removeMutation.mutate({
-                            guildId,
-                            channelId: sub.channelId,
-                            alias: sub.player.alias,
-                          });
-                        }}
-                      >
-                        Remove
-                      </Button>
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setChannelAction({
+                              kind: "add-channel",
+                              alias: sub.player.alias,
+                            });
+                          }}
+                        >
+                          Add channel
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setChannelAction({
+                              kind: "move",
+                              alias: sub.player.alias,
+                              fromChannelId: sub.channelId,
+                            });
+                          }}
+                        >
+                          Move
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          disabled={removeMutation.isPending}
+                          onClick={() => {
+                            if (
+                              !globalThis.confirm(
+                                `Remove "${sub.player.alias}" from this channel?`,
+                              )
+                            ) {
+                              return;
+                            }
+                            removeMutation.mutate({
+                              guildId,
+                              channelId: sub.channelId,
+                              alias: sub.player.alias,
+                            });
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
@@ -163,14 +224,20 @@ export function GuildSubscriptions() {
           setAddOpen(false);
         }}
       />
-    </Shell>
-  );
-}
-
-function Shell({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="mx-auto max-w-4xl space-y-4 px-4 py-8 sm:py-12">
-      {children}
+      <SubscriptionChannelDialog
+        guildId={guildId}
+        channels={channelsQuery.data ?? []}
+        action={channelAction}
+        onOpenChange={(open) => {
+          if (!open) setChannelAction(null);
+        }}
+        onDone={(nextMessage) => {
+          setMessage(nextMessage);
+          setError(null);
+          setChannelAction(null);
+          void queryClient.invalidateQueries({ queryKey: subsKey });
+        }}
+      />
     </div>
   );
 }

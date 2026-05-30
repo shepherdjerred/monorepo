@@ -3,6 +3,10 @@ import { Login } from "#src/routes/login.tsx";
 import { GuildPicker } from "#src/routes/guild-picker.tsx";
 import { GuildSubscriptions } from "#src/routes/guild-subscriptions.tsx";
 import { GuildAudit } from "#src/routes/guild-audit.tsx";
+import { GuildWorkspace } from "#src/routes/guild-workspace.tsx";
+import { PlayerList } from "#src/routes/player-list.tsx";
+import { PlayerDetail } from "#src/routes/player-detail.tsx";
+import { AdminTools } from "#src/routes/admin-tools.tsx";
 import { RequireSession } from "#src/routes/require-session.tsx";
 import { ThemeToggle } from "#src/components/ui/theme-toggle.tsx";
 
@@ -16,8 +20,14 @@ export function App() {
         <Route path="/login" element={<Login />} />
         <Route element={<RequireSession />}>
           <Route path="/" element={<GuildPicker />} />
-          <Route path="/g/:guildId" element={<GuildSubscriptions />} />
-          <Route path="/g/:guildId/audit" element={<GuildAudit />} />
+          <Route path="/g/:guildId" element={<GuildWorkspace />}>
+            <Route index element={<Navigate to="subscriptions" replace />} />
+            <Route path="subscriptions" element={<GuildSubscriptions />} />
+            <Route path="players" element={<PlayerList />} />
+            <Route path="players/:alias" element={<PlayerDetail />} />
+            <Route path="admin" element={<AdminTools />} />
+            <Route path="audit" element={<GuildAudit />} />
+          </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -1,7 +1,6 @@
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
-import { Button } from "#src/components/ui/button.tsx";
 import {
   Table,
   TableBody,
@@ -24,20 +23,15 @@ export function GuildAudit() {
 
   if (guildId === undefined) {
     return (
-      <Shell>
+      <div>
         <p className="text-sm text-destructive">Missing guild id</p>
-      </Shell>
+      </div>
     );
   }
 
   return (
-    <Shell>
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold tracking-tight">Audit log</h2>
-        <Button asChild variant="ghost" size="sm">
-          <Link to={`/g/${guildId}`}>← Subscriptions</Link>
-        </Button>
-      </div>
+    <div className="space-y-4">
+      <h2 className="text-xl font-semibold tracking-tight">Audit log</h2>
 
       {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {error && (
@@ -59,6 +53,8 @@ export function GuildAudit() {
                 <TableHead>Actor</TableHead>
                 <TableHead>Action</TableHead>
                 <TableHead>Channel</TableHead>
+                <TableHead>Player</TableHead>
+                <TableHead>Account</TableHead>
                 <TableHead>Details</TableHead>
               </TableRow>
             </TableHeader>
@@ -75,6 +71,12 @@ export function GuildAudit() {
                   <TableCell className="font-mono text-xs text-muted-foreground">
                     {row.targetChannelId ?? "—"}
                   </TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {row.targetPlayerId ?? "—"}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {row.targetAccountId ?? "—"}
+                  </TableCell>
                   <TableCell>
                     <pre className="m-0 max-w-md overflow-x-auto rounded-sm bg-muted p-2 text-xs">
                       {JSON.stringify(row.payload, null, 2)}
@@ -86,14 +88,6 @@ export function GuildAudit() {
           </Table>
         </div>
       )}
-    </Shell>
-  );
-}
-
-function Shell({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="mx-auto max-w-6xl space-y-4 px-4 py-8 sm:py-12">
-      {children}
     </div>
   );
 }
