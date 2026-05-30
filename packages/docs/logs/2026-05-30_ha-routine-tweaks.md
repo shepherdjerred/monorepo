@@ -9,12 +9,12 @@ Adjustments to the four Temporal-driven Home Assistant routines in
 
 ## Changes
 
-| Routine | Change | Files |
-| --- | --- | --- |
-| Morning — early | Removed `goodMorningEarly`; the 60-min bathroom heat cycle now runs inside `goodMorningWakeUp`. The separate pre-wake schedules (weekday 7 AM / weekend 8 AM) were deleted. | `good-morning.ts`, `index.ts`, `register-schedules.ts`, `register-schedules.test.ts` |
-| Morning — wake up | Starts the heat cycle first (set 30°C), runs the wake media/scene, then holds `MORNING_HEAT_DURATION` (60 min) and turns heat off. Added `media_player.shuffle_set { shuffle: true }` after `play_media` so the wake favorite (FV:2/5) shuffles. Wake schedule timeout bumped 30 → 75 min. | `good-morning.ts`, `register-schedules.ts`, `register-schedules.test.ts` |
-| Morning — get up | Dropped `media_player.entryway` from the multi-room join; only `media_player.main_bathroom` joins the bedroom now. | `good-morning.ts` |
-| Coming home | `welcomeHome` now fires on **every** arrival (not just first-into-empty-house). Always unlocks the door + turns on lights (living-room scene + entryway/front-door when dark). The "Welcome back" notification and vacuum-docking are gated behind a new `firstArrival` arg (true only when the house was otherwise empty). | `welcome-home.ts`, `index.ts`, `event-bridge/triggers.ts` |
+| Routine           | Change                                                                                                                                                                                                                                                                                                                      | Files                                                                                |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Morning — early   | Removed `goodMorningEarly`; the 60-min bathroom heat cycle now runs inside `goodMorningWakeUp`. The separate pre-wake schedules (weekday 7 AM / weekend 8 AM) were deleted.                                                                                                                                                 | `good-morning.ts`, `index.ts`, `register-schedules.ts`, `register-schedules.test.ts` |
+| Morning — wake up | Starts the heat cycle first (set 30°C), runs the wake media/scene, then holds `MORNING_HEAT_DURATION` (60 min) and turns heat off. Added `media_player.shuffle_set { shuffle: true }` after `play_media` so the wake favorite (FV:2/5) shuffles. Wake schedule timeout bumped 30 → 75 min.                                  | `good-morning.ts`, `register-schedules.ts`, `register-schedules.test.ts`             |
+| Morning — get up  | Dropped `media_player.entryway` from the multi-room join; only `media_player.main_bathroom` joins the bedroom now.                                                                                                                                                                                                          | `good-morning.ts`                                                                    |
+| Coming home       | `welcomeHome` now fires on **every** arrival (not just first-into-empty-house). Always unlocks the door + turns on lights (living-room scene + entryway/front-door when dark). The "Welcome back" notification and vacuum-docking are gated behind a new `firstArrival` arg (true only when the house was otherwise empty). | `welcome-home.ts`, `index.ts`, `event-bridge/triggers.ts`                            |
 
 ## Verification
 
@@ -69,7 +69,7 @@ AirPlayed from the iPhone, triggered by a **Hue button**.
 
 - Heat now starts at **wake time** and runs ~60 min, rather than pre-heating
   before wake as the old `early` routine did. The bathroom will be warming up
-  *as* you wake rather than already warm.
+  _as_ you wake rather than already warm.
 - A fresh worktree/clone needs `bun run scripts/setup.ts` (or per-package
   `bun install`) before typecheck/test — `@shepherdjerred/llm-observability` and
   its deps weren't installed here and broke `tsc` + two unrelated test files
