@@ -73,6 +73,7 @@ const notificationCalls: {
   gameId: number;
   trackedPlayers: PlayerConfigEntry[];
 }[] = [];
+const reportStoreCalls: { gameId: number }[] = [];
 
 // Mocks target leaf functions only — checkActiveGames imports each of
 // these names directly. We deliberately do NOT spread the real module:
@@ -87,6 +88,7 @@ const notificationCalls: {
 // test file mocks — otherwise sibling tests that ran first leave a partial
 // mock in place that hides exports our SUT needs.
 await mock.module("#src/database/index.ts", () => ({
+  prisma: {},
   getAccountsWithState: () => Promise.resolve(mockAccounts),
   getChannelsSubscribedToPlayers: () => Promise.resolve([]),
 }));
@@ -124,6 +126,17 @@ await mock.module(
   }),
 );
 
+await mock.module("#src/report-store/live-ingest.ts", () => ({
+  recordPrematchForReportStore: ({
+    gameInfo,
+  }: {
+    gameInfo: RawCurrentGameInfo;
+  }) => {
+    reportStoreCalls.push({ gameId: gameInfo.gameId });
+    return Promise.resolve();
+  },
+}));
+
 // Import AFTER mocks so the function under test wires up to the mocked deps
 const { checkActiveGames } =
   await import("#src/league/tasks/prematch/active-game-detection.ts");
@@ -135,6 +148,7 @@ describe("checkActiveGames — subsequent-match polling", () => {
     mockSpectatorResponses = new Map();
     upsertCalls.length = 0;
     notificationCalls.length = 0;
+    reportStoreCalls.length = 0;
   });
 
   test("polls a player who has a non-expired ActiveGame row and detects a NEW gameId", async () => {
@@ -162,6 +176,7 @@ describe("checkActiveGames — subsequent-match polling", () => {
     // no notification. Post-fix: P1 is polled, G2 is detected, both fire.
     expect(upsertCalls).toHaveLength(1);
     expect(upsertCalls[0]).toEqual({ gameId: G2, puuids: [P1] });
+    expect(reportStoreCalls).toEqual([{ gameId: G2 }]);
     expect(notificationCalls).toHaveLength(1);
     expect(notificationCalls[0]?.gameId).toBe(G2);
   });
@@ -187,6 +202,7 @@ describe("checkActiveGames — subsequent-match polling", () => {
 
     // gameId-based dedup at line 181 must prevent a duplicate notification
     expect(upsertCalls).toHaveLength(0);
+    expect(reportStoreCalls).toHaveLength(0);
     expect(notificationCalls).toHaveLength(0);
   });
 });
