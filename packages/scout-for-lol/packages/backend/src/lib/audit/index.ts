@@ -14,6 +14,14 @@ export const AuditActionSchema = z.enum([
   "SUBSCRIPTION_ADD_CHANNEL",
   "SUBSCRIPTION_MOVE",
   "PLAYER_CREATE",
+  "PLAYER_RENAME",
+  "PLAYER_DELETE",
+  "PLAYER_MERGE",
+  "PLAYER_LINK_DISCORD",
+  "PLAYER_UNLINK_DISCORD",
+  "ACCOUNT_ADD",
+  "ACCOUNT_DELETE",
+  "ACCOUNT_TRANSFER",
 ]);
 export type AuditAction = z.infer<typeof AuditActionSchema>;
 

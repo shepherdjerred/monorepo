@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { RiotIdSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
+import type { RegionValue } from "#src/lib/regions.ts";
 import { Button } from "#src/components/ui/button.tsx";
+import { RegionSelect } from "#src/components/region-select.tsx";
 import {
   Dialog,
   DialogContent,
@@ -30,27 +32,6 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   onAdded: () => void;
 };
-
-// Mirror of RegionSchema in @scout-for-lol/data; duplicated here so the
-// dialog doesn't have to import the brand-checking schema. Keep in sync.
-const REGIONS = [
-  { value: "AMERICA_NORTH", label: "NA" },
-  { value: "EU_WEST", label: "EUW" },
-  { value: "EU_EAST", label: "EUNE" },
-  { value: "KOREA", label: "KR" },
-  { value: "JAPAN", label: "JP" },
-  { value: "BRAZIL", label: "BR" },
-  { value: "LAT_NORTH", label: "LAN" },
-  { value: "LAT_SOUTH", label: "LAS" },
-  { value: "OCEANIA", label: "OCE" },
-  { value: "TURKEY", label: "TR" },
-  { value: "RUSSIA", label: "RU" },
-  { value: "VIETNAM", label: "VN" },
-  { value: "TAIWAN", label: "TW" },
-  { value: "SINGAPORE", label: "SG" },
-  { value: "PBE", label: "PBE" },
-] as const;
-type RegionValue = (typeof REGIONS)[number]["value"];
 
 export function AddSubscriptionDialog(props: Props) {
   const trpc = useTRPC();
@@ -148,27 +129,11 @@ export function AddSubscriptionDialog(props: Props) {
 
           <div className="space-y-2">
             <Label htmlFor="add-sub-region">Region</Label>
-            <Select
+            <RegionSelect
+              id="add-sub-region"
               value={region}
-              onValueChange={(next) => {
-                const match = REGIONS.find((r) => r.value === next);
-                if (match !== undefined) {
-                  setRegion(match.value);
-                }
-              }}
-              required
-            >
-              <SelectTrigger id="add-sub-region">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {REGIONS.map((r) => (
-                  <SelectItem key={r.value} value={r.value}>
-                    {r.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onValueChange={setRegion}
+            />
           </div>
 
           <div className="space-y-2">
