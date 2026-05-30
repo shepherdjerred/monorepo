@@ -21,7 +21,7 @@ import {
 
 const matchImg = "/match.png";
 const loadingScreenImg = "/loading-screen.png";
-const arenaDiscordImg = "/arena-discord.png";
+const arenaReportImg = "/generated/scout-showcase/arena-3-postmatch.png";
 const soloDiscordImg = "/solo-discord.png";
 const leaderboardLpImg = "/leaderboard-lp.png";
 ---
@@ -199,8 +199,8 @@ const leaderboardLpImg = "/leaderboard-lp.png";
           <FeatureWithImage
             title="Complete Arena Coverage"
             description="Full support for League's Arena mode with detailed stats for 18-player 3v3 matches, augments tracking, and placement results. Scout automatically detects Arena matches, including CHERRY games that Riot reports as custom, and still renders legacy duo reports."
-            imageSrc={arenaDiscordImg}
-            imageAlt="Arena mode match notification in Discord showing detailed stats, augments, and placements"
+            imageSrc={arenaReportImg}
+            imageAlt="Current Arena post-match report showing team placements, augments, KDA, damage, gold, and items"
             imagePosition="left"
             badge={{
               text: "Arena Mode",
@@ -208,7 +208,7 @@ const leaderboardLpImg = "/leaderboard-lp.png";
               color: "purple",
             }}
             checklist={[
-              "Track all 18 players across six teams of three",
+              "Render six-team Arena reports with placement results",
               "See augment selections and synergies",
               "Beautiful placement and ranking display",
             ]}
