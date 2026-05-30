@@ -1,0 +1,6 @@
+#!/bin/bash
+{{ if eq .chezmoi.os "darwin" -}}
+if [ -x "$HOME/bin/sync-theme.sh" ]; then
+    "$HOME/bin/sync-theme.sh"
+fi
+{{ end -}}

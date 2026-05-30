@@ -1,0 +1,13 @@
+#!/bin/bash
+set -euo pipefail
+{{ if eq .chezmoi.os "darwin" -}}
+# {{ include "Library/LaunchAgents/com.jerred.dark-notify.plist" | sha256sum }}
+PLIST="$HOME/Library/LaunchAgents/com.jerred.dark-notify.plist"
+if [ -f "$PLIST" ] && command -v dark-notify >/dev/null; then
+    GUI_DOMAIN="gui/$(id -u)"
+    if launchctl list | grep -q com.jerred.dark-notify; then
+        launchctl bootout "$GUI_DOMAIN" "$PLIST"
+    fi
+    launchctl bootstrap "$GUI_DOMAIN" "$PLIST"
+fi
+{{ end -}}

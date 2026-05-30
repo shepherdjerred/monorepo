@@ -19,3 +19,11 @@ CLAUDE.md
 .claude.json
 Library/Application Support/Claude/claude_desktop_config.json
 .codex/**
+
+{{- if eq .chezmoi.os "darwin" }}
+# Active theme files are symlinks managed by sync-theme.sh — chezmoi installs
+# per-flavor source files (eza/theme-{latte,mocha}.yml, ov/config-{latte,mocha}.yaml)
+# but the live symlink (.yml / .yaml without flavor suffix) is owned by the script.
+.config/ov/config.yaml
+Library/Application Support/eza/theme.yml
+{{- end }}
