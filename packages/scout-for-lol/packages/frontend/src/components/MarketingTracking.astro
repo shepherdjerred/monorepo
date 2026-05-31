@@ -10,33 +10,6 @@ const discordInstallClickEvent = DISCORD_INSTALL_CLICK_EVENT;
   is:inline
   define:vars={{ pinterestTagId, redditPixelId, discordInstallClickEvent }}
 >
-  var consentStorageKey = "scout-marketing-consent";
-  var consentGrantedValue = "granted";
-  var consentDeniedValue = "denied";
-  var consentBannerId = "scout-marketing-consent-banner";
-  var consentSettingsId = "scout-marketing-consent-settings";
-
-  function readMarketingConsent() {
-    try {
-      return window.localStorage.getItem(consentStorageKey);
-    } catch (error) {
-      console.error("Unable to read Scout marketing consent state", error);
-      return consentDeniedValue;
-    }
-  }
-
-  function writeMarketingConsent(value) {
-    try {
-      window.localStorage.setItem(consentStorageKey, value);
-    } catch (error) {
-      console.error("Unable to store Scout marketing consent state", error);
-    }
-  }
-
-  function hasMarketingConsent() {
-    return readMarketingConsent() === consentGrantedValue;
-  }
-
   function insertBeforeFirstScript(script) {
     var firstScript = document.getElementsByTagName("script")[0];
     if (firstScript.parentNode) {
@@ -89,131 +62,18 @@ const discordInstallClickEvent = DISCORD_INSTALL_CLICK_EVENT;
   }
 
   function loadMarketingPixels() {
-    if (!hasMarketingConsent()) {
-      return;
-    }
-
     loadPinterestPixel();
     loadRedditPixel();
   }
 
-  function removeElementById(id) {
-    var existingElement = document.getElementById(id);
-    if (existingElement) {
-      existingElement.remove();
-    }
-  }
-
-  function styleConsentButton(button, background, color, borderColor) {
-    button.style.border = "1px solid " + borderColor;
-    button.style.borderRadius = "6px";
-    button.style.background = background;
-    button.style.color = color;
-    button.style.font = "inherit";
-    button.style.fontWeight = "600";
-    button.style.padding = "0.5rem 0.75rem";
-    button.style.cursor = "pointer";
-  }
-
-  function renderConsentSettingsButton() {
-    if (document.getElementById(consentSettingsId)) {
-      return;
-    }
-
-    var button = document.createElement("button");
-    button.id = consentSettingsId;
-    button.type = "button";
-    button.textContent = "Cookie settings";
-    button.style.position = "fixed";
-    button.style.left = "1rem";
-    button.style.bottom = "1rem";
-    button.style.zIndex = "50";
-    button.style.border = "1px solid #d1d5db";
-    button.style.borderRadius = "6px";
-    button.style.background = "#ffffff";
-    button.style.color = "#111827";
-    button.style.font = "inherit";
-    button.style.fontSize = "0.875rem";
-    button.style.padding = "0.5rem 0.75rem";
-    button.style.boxShadow = "0 10px 15px -3px rgba(0, 0, 0, 0.1)";
-    button.style.cursor = "pointer";
-    button.addEventListener("click", renderConsentBanner);
-    document.body.append(button);
-  }
-
-  function renderConsentBanner() {
-    removeElementById(consentBannerId);
-
-    var banner = document.createElement("section");
-    banner.id = consentBannerId;
-    banner.setAttribute("role", "dialog");
-    banner.setAttribute("aria-label", "Marketing cookie settings");
-    banner.style.position = "fixed";
-    banner.style.left = "1rem";
-    banner.style.right = "1rem";
-    banner.style.bottom = "1rem";
-    banner.style.zIndex = "60";
-    banner.style.margin = "0 auto";
-    banner.style.maxWidth = "48rem";
-    banner.style.border = "1px solid #d1d5db";
-    banner.style.borderRadius = "8px";
-    banner.style.background = "#ffffff";
-    banner.style.color = "#111827";
-    banner.style.boxShadow = "0 20px 25px -5px rgba(0, 0, 0, 0.1)";
-    banner.style.padding = "1rem";
-
-    var copy = document.createElement("p");
-    copy.textContent =
-      "Scout uses Pinterest and Reddit pixels to measure ad visits and Add to Discord clicks. These marketing pixels stay off unless you allow them.";
-    copy.style.margin = "0 0 0.75rem";
-    copy.style.fontSize = "0.875rem";
-    copy.style.lineHeight = "1.5";
-
-    var actions = document.createElement("div");
-    actions.style.display = "flex";
-    actions.style.flexWrap = "wrap";
-    actions.style.gap = "0.5rem";
-
-    var allowButton = document.createElement("button");
-    allowButton.type = "button";
-    allowButton.textContent = "Allow";
-    styleConsentButton(allowButton, "#4f46e5", "#ffffff", "#4f46e5");
-    allowButton.addEventListener("click", function () {
-      writeMarketingConsent(consentGrantedValue);
-      removeElementById(consentBannerId);
-      renderConsentSettingsButton();
-      loadMarketingPixels();
-    });
-
-    var declineButton = document.createElement("button");
-    declineButton.type = "button";
-    declineButton.textContent = "Do not sell or share";
-    styleConsentButton(declineButton, "#ffffff", "#111827", "#d1d5db");
-    declineButton.addEventListener("click", function () {
-      writeMarketingConsent(consentDeniedValue);
-      removeElementById(consentBannerId);
-      renderConsentSettingsButton();
-    });
-
-    actions.append(allowButton, declineButton);
-    banner.append(copy, actions);
-    document.body.append(banner);
-  }
-
-  function initializeMarketingConsent() {
-    if (readMarketingConsent() === null) {
-      renderConsentBanner();
-    } else {
-      renderConsentSettingsButton();
-    }
-
+  function initializeMarketingTracking() {
     loadMarketingPixels();
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initializeMarketingConsent);
+    document.addEventListener("DOMContentLoaded", initializeMarketingTracking);
   } else {
-    initializeMarketingConsent();
+    initializeMarketingTracking();
   }
 
   document.addEventListener(
@@ -261,7 +121,7 @@ const discordInstallClickEvent = DISCORD_INSTALL_CLICK_EVENT;
         });
       }
 
-      if (hasMarketingConsent() && typeof window.pintrk === "function") {
+      if (typeof window.pintrk === "function") {
         window.pintrk("track", "Lead", {
           cta_location: ctaLocation,
           event_id: eventId,
@@ -269,7 +129,7 @@ const discordInstallClickEvent = DISCORD_INSTALL_CLICK_EVENT;
         });
       }
 
-      if (hasMarketingConsent() && typeof window.rdt === "function") {
+      if (typeof window.rdt === "function") {
         window.rdt("track", "Lead", {
           conversionId: eventId,
           cta_location: ctaLocation,

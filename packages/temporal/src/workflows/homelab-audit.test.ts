@@ -61,7 +61,7 @@ function makeActivities(opts: {
           durationMs: 1234,
           numTurns: 5,
           totalCostUsd: 0.42,
-          model: "claude-opus-4-7",
+          model: "claude-opus-4-8",
         };
       },
       archiveHomelabAuditBody: async (input: unknown) => {

@@ -14,6 +14,22 @@ description: |
 - **Tab ID**: opaque string returned by API. Never construct them.
 - **Shorthand routes** (`pinchtab nav`, `pinchtab eval`, `pinchtab snap`): proxy to the **default/first instance**. Do NOT use when targeting a non-default profile.
 
+## Authentication
+
+The server requires a bearer token (`Authorization: Bearer <token>`) for all protected routes.
+
+- **Where the token lives:** at `.server.token` inside the config file selected by the `PINCHTAB_CONFIG` env var. If `PINCHTAB_CONFIG` is unset, the CLI defaults to `~/.pinchtab/config.json`; the launchd daemon pins it to `~/Library/Application Support/pinchtab/config.json` via its plist. **These can be two different files** — if their tokens drift you get `401 bad_token` from the CLI while the daemon itself is fine. On this machine `PINCHTAB_CONFIG` is exported in fish config to the Library path so the CLI, daemon, and install script all share one config.
+- **CLI auth:** shorthand commands (`pinchtab nav`, `pinchtab health`, …) read the token from that config file. Setting `PINCHTAB_TOKEN` in the environment **overrides** the config-file token — handy for a one-off call, but if it's the only thing making the CLI work, you're masking a config split (fix the split instead).
+- **Diagnose a 401:** `pinchtab config` prints the exact file + token it's using. Compare `.server.token` across the candidate config files and curl each against the server:
+
+```bash
+pinchtab config            # shows the config file + token currently in use
+T=$(jq -r .server.token "$HOME/Library/Application Support/pinchtab/config.json")
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost:9867/instances -H "Authorization: Bearer $T"
+```
+
+- **REST/curl** works with an explicit `Authorization: Bearer <token>` header regardless of `PINCHTAB_CONFIG`.
+
 ## Critical: Multi-Instance Routing
 
 **Shorthand CLI commands route to the default instance.** When working with a non-default profile:
@@ -68,8 +84,8 @@ curl -s -X POST http://localhost:9867/instances/start \
 curl -s -X POST http://localhost:9867/instances/<id>/stop \
   -H "Authorization: Bearer $TOKEN"
 
-# Get auth token
-jq -r .server.token "$HOME/Library/Application Support/pinchtab/config.json"
+# Get auth token (from the config file PINCHTAB_CONFIG selects; default below)
+jq -r .server.token "${PINCHTAB_CONFIG:-$HOME/.pinchtab/config.json}"
 ```
 
 ### Shorthand Commands (default instance only)
@@ -146,7 +162,7 @@ Auth: `Authorization: Bearer <token>`
 
 ## Config Reference
 
-Config location: `~/Library/Application Support/pinchtab/config.json`
+Config location: the file `PINCHTAB_CONFIG` points at — default `~/.pinchtab/config.json`, but the daemon (and this machine's fish config) pin it to `~/Library/Application Support/pinchtab/config.json`. See the Authentication section above.
 
 Key settings:
 

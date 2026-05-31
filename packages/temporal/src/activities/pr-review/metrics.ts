@@ -17,7 +17,7 @@ const COMPONENT = "pr-review-pipeline";
 /**
  * Per-model spend recorded by the specialist activities (Anthropic SDK usage
  * + Anthropic public pricing). `model` is the canonical model id used in
- * dashboards (e.g. "claude-opus-4-7", "claude-sonnet-4-6").
+ * dashboards (e.g. "claude-opus-4-8", "claude-sonnet-4-6").
  */
 export type CostPerModel = { readonly model: string; readonly usd: number };
 

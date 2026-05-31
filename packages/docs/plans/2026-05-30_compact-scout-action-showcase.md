@@ -37,6 +37,7 @@ Compact the Scout marketing page's "See Scout in Action" section so it highlight
 - Follow-up revision: added a lightweight click-to-enlarge lightbox for the three preview images.
 - Follow-up revision: narrowed and capped the on-page preview thumbnails while keeping the lightbox image large.
 - PR follow-up: addressed automated P2 review feedback by preventing hidden lightbox image eager loading and trapping Tab focus in the lightbox.
+- PR follow-up: merged `origin/main`, resolved the Scout homepage conflict by keeping the compact three-image lightbox showcase, and re-verified typecheck, lint, and build.
 
 ### Remaining
 

@@ -9,8 +9,7 @@ import {
 
 const BEDROOM_MEDIA = "media_player.bedroom" as const;
 const MAIN_BATHROOM_MEDIA = "media_player.main_bathroom" as const;
-const ENTRYWAY_MEDIA = "media_player.entryway" as const;
-const EXTRA_MEDIA_PLAYERS = [MAIN_BATHROOM_MEDIA, ENTRYWAY_MEDIA] as const;
+const EXTRA_MEDIA_PLAYERS = [MAIN_BATHROOM_MEDIA] as const;
 const BEDROOM_DIMMED = "scene.bedroom_dimmed" as const;
 const BEDROOM_BRIGHT = "scene.bedroom_bright" as const;
 const MASTER_BATHROOM_HEAT = "climate.master_bathroom" as const;
@@ -24,33 +23,20 @@ const WAKE_MEDIA = {
   media_content_type: "favorite_item_id",
 };
 
-export async function goodMorningEarly(): Promise<void> {
-  if (!(await anyoneHome())) {
-    console.warn("good_morning_early: no one home, skipping");
-    await setOutcome("skipped", "no-one-home");
-    return;
-  }
-
-  await callService("climate", "set_temperature", {
-    entity_id: MASTER_BATHROOM_HEAT,
-    temperature: MORNING_HEAT_TEMP_C,
-    hvac_mode: "heat",
-  });
-
-  await sleep(MORNING_HEAT_DURATION);
-
-  await callService("climate", "turn_off", {
-    entity_id: MASTER_BATHROOM_HEAT,
-  });
-  await setOutcome("executed", "heat-cycle-complete");
-}
-
 export async function goodMorningWakeUp(): Promise<void> {
   if (!(await anyoneHome())) {
     console.warn("good_morning_wake_up: no one home, skipping");
     await setOutcome("skipped", "no-one-home");
     return;
   }
+
+  // Start the bathroom heat cycle first so it warms while the wake routine
+  // plays; it's turned off at the end after MORNING_HEAT_DURATION.
+  await callService("climate", "set_temperature", {
+    entity_id: MASTER_BATHROOM_HEAT,
+    temperature: MORNING_HEAT_TEMP_C,
+    hvac_mode: "heat",
+  });
 
   await sendNotification("Good Morning", "Good Morning! Time to wake up.");
 
@@ -65,11 +51,21 @@ export async function goodMorningWakeUp(): Promise<void> {
     entity_id: BEDROOM_MEDIA,
     media: WAKE_MEDIA,
   });
+  await callService("media_player", "shuffle_set", {
+    entity_id: BEDROOM_MEDIA,
+    shuffle: true,
+  });
   await volumeUpBy(BEDROOM_MEDIA, 3, 5);
 
   await callService("scene", "turn_on", {
     entity_id: BEDROOM_DIMMED,
     transition: 3,
+  });
+
+  // Hold the heat for the remainder of the cycle, then turn it off.
+  await sleep(MORNING_HEAT_DURATION);
+  await callService("climate", "turn_off", {
+    entity_id: MASTER_BATHROOM_HEAT,
   });
   await setOutcome("executed", "wake-routine-complete");
 }

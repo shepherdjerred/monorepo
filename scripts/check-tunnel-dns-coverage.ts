@@ -35,11 +35,19 @@ type Zone = {
 };
 
 // Match call sites only: createCloudflareTunnelBinding(<chart>, "<id>", { ... }).
-// The opening `{` we want is the one immediately after the second comma.
+// The opening `{` we want is the one immediately after the second comma. A
+// trailing comma after the object argument (`}, )`, as Prettier emits when the
+// arg list wraps) is tolerated so such call sites aren't silently skipped.
 const TUNNEL_BINDING_REGEX =
-  /createCloudflareTunnelBinding\s*\(\s*[A-Za-z_$][\w$.]*\s*,\s*["'`][^"'`]+["'`]\s*,\s*\{([\s\S]*?)\}\s*\)/g;
+  /createCloudflareTunnelBinding\s*\(\s*[A-Za-z_$][\w$.]*\s*,\s*["'`][^"'`]+["'`]\s*,\s*\{([\s\S]*?)\}\s*,?\s*\)/g;
 const SUBDOMAIN_REGEX = /\bsubdomain\s*:\s*["'`]([^"'`]+)["'`]/;
 const FQDN_REGEX = /\bfqdn\s*:\s*["'`]([^"'`]+)["'`]/;
+// Directive used by call sites whose fqdn comes from a loop variable. Points
+// the checker at a sibling file containing the literal hostname list. Example:
+//   // @tunnel-dns-coverage:hostnames-from ../resources/s3-static-sites/sites.ts
+const HOSTNAMES_FROM_DIRECTIVE =
+  /\/\/\s*@tunnel-dns-coverage:hostnames-from\s+(\S+)/;
+const HOSTNAME_LITERAL_REGEX = /\bhostname\s*:\s*["'`]([^"'`]+)["'`]/g;
 
 const ZONE_REGEX =
   /resource\s+"cloudflare_zone"\s+"([^"]+)"\s*\{[\s\S]*?name\s*=\s*"([^"]+)"/g;
@@ -140,9 +148,40 @@ async function collectTunnelBindings(): Promise<TunnelBinding[]> {
           source: "fqdn",
         });
       } else {
-        throw new Error(
-          `${abs}:${String(line)}: createCloudflareTunnelBinding without subdomain or fqdn — cannot extract hostname`,
-        );
+        // Non-literal fqdn (e.g. `fqdn: site.hostname` inside a loop). The
+        // call site MUST be preceded (within the prior ~5 lines) by a
+        // `// @tunnel-dns-coverage:hostnames-from <path>` directive that
+        // points at a file containing `hostname: "..."` literals. Scoping the
+        // search to the lines just above the call avoids cross-contamination
+        // if a future file ever has two such loops with different sources.
+        const PRECEDING_LINES = 5;
+        const lineStarts: number[] = [0];
+        for (let i = 0; i < text.length; i += 1) {
+          if (text[i] === "\n") lineStarts.push(i + 1);
+        }
+        const callLine = line - 1;
+        const windowStart =
+          lineStarts[Math.max(0, callLine - PRECEDING_LINES)] ?? 0;
+        const window = text.slice(windowStart, offset);
+        const directive = HOSTNAMES_FROM_DIRECTIVE.exec(window);
+        if (directive === null || directive[1] === undefined) {
+          throw new Error(
+            `${abs}:${String(line)}: createCloudflareTunnelBinding without subdomain or fqdn — cannot extract hostname (add a "// @tunnel-dns-coverage:hostnames-from <path>" directive in the ${String(PRECEDING_LINES)} lines immediately above this call if the fqdn is dynamic)`,
+          );
+        }
+        const sourcePath = path.resolve(path.dirname(abs), directive[1]);
+        const sourceText = await Bun.file(sourcePath).text();
+        for (const hostnameMatch of sourceText.matchAll(
+          HOSTNAME_LITERAL_REGEX,
+        )) {
+          if (hostnameMatch[1] === undefined) continue;
+          bindings.push({
+            file: abs,
+            line,
+            fqdn: hostnameMatch[1],
+            source: "fqdn",
+          });
+        }
       }
     }
   }

@@ -1113,13 +1113,14 @@ export class Monorepo {
     ).stdout();
   }
 
-  /** Run release-please to create release PRs and GitHub releases */
+  /** Run release-please to create release PRs and GitHub releases, then refine the auto-generated CHANGELOGs via a Claude agent */
   @func({ cache: "never" })
   async releasePlease(
     source: Directory,
     githubAppId: Secret,
     githubAppInstallationId: Secret,
     githubAppPrivateKey: Secret,
+    claudeOauthToken: Secret,
     dryrun = false,
   ): Promise<string> {
     return releasePleaseHelper(
@@ -1127,6 +1128,7 @@ export class Monorepo {
       githubAppId,
       githubAppInstallationId,
       githubAppPrivateKey,
+      claudeOauthToken,
       dryrun,
     ).stdout();
   }

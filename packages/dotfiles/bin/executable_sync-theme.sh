@@ -1,38 +1,70 @@
 #!/bin/bash
 set -euo pipefail
 
-# Detect mode
-MODE=$(defaults read -g AppleInterfaceStyle 2>/dev/null || echo "Light")
-[[ "$MODE" == "Dark" ]] && M=mocha || M=latte
-THEME_MODE=$([[ "$MODE" == "Dark" ]] && echo dark || echo light)
+# Detect macOS appearance via AppleScript (avoids `defaults read` writing to
+# stderr when AppleInterfaceStyle is unset in Light mode).
+DARK=$(osascript -e 'tell application "System Events" to tell appearance preferences to return dark mode')
+if [[ "$DARK" == "true" ]]; then
+    M=mocha
+    THEME_MODE=dark
+else
+    M=latte
+    THEME_MODE=light
+fi
 
-# Zellij — only the `theme "..."` selector line; never the four block declarations
-sed -E -i '' "s/^theme \"catppuccin-(latte|frappe|macchiato|mocha)\"/theme \"catppuccin-$M\"/" ~/.config/zellij/config.kdl
+# btop (sed only the color_theme = "..." line)
+if [[ -f ~/.config/btop/btop.conf ]]; then
+    sed -E -i '' "s/^color_theme = \"catppuccin_(latte|frappe|macchiato|mocha)\"/color_theme = \"catppuccin_$M\"/" ~/.config/btop/btop.conf
+    if pgrep -q btop; then pkill -USR2 btop; fi
+fi
 
-# btop (only the color_theme = "..." line)
-sed -E -i '' "s/^color_theme = \"catppuccin_(latte|frappe|macchiato|mocha)\"/color_theme = \"catppuccin_$M\"/" ~/.config/btop/btop.conf
-if pgrep -q btop; then pkill -USR2 btop; fi
+# starship (sed only the top-level palette = line)
+if [[ -f ~/.config/starship.toml ]]; then
+    sed -E -i '' "s/^palette = \"catppuccin_(latte|frappe|macchiato|mocha)\"/palette = \"catppuccin_$M\"/" ~/.config/starship.toml
+fi
 
-# starship (only change the palette = line, not the section headers)
-sed -E -i '' "s/^palette = \"catppuccin_(latte|frappe|macchiato|mocha)\"/palette = \"catppuccin_$M\"/" ~/.config/starship.toml
-
-# Atuin (only the [theme] name = "..." line)
-sed -E -i '' "s/^name = \"catppuccin-(latte|frappe|macchiato|mocha)\"/name = \"catppuccin-$M\"/" ~/.config/atuin/config.toml
+# Atuin (sed only the [theme] name = "..." line)
+if [[ -f ~/.config/atuin/config.toml ]]; then
+    sed -E -i '' "s/^name = \"catppuccin-(latte|frappe|macchiato|mocha)\"/name = \"catppuccin-$M\"/" ~/.config/atuin/config.toml
+fi
 
 # eza (macOS - symlink theme file)
 EZA_DIR=~/Library/"Application Support"/eza
-[[ -d "$EZA_DIR" ]] && ln -sf "$EZA_DIR/theme-$M.yml" "$EZA_DIR/theme.yml"
+if [[ -d "$EZA_DIR" && -f "$EZA_DIR/theme-$M.yml" ]]; then
+    ln -sf "theme-$M.yml" "$EZA_DIR/theme.yml"
+fi
 
 # ov (symlink config file)
 OV_DIR=~/.config/ov
-[[ -d "$OV_DIR" ]] && ln -sf "$OV_DIR/config-$M.yaml" "$OV_DIR/config.yaml"
+if [[ -d "$OV_DIR" && -f "$OV_DIR/config-$M.yaml" ]]; then
+    ln -sf "config-$M.yaml" "$OV_DIR/config.yaml"
+fi
 
-# fzf + difftastic + jq + LS_COLORS (fish env vars)
-THEME_DIR=~/.config/fish/conf.d
-[[ -f "$THEME_DIR/theme-env-$M.fish" ]] && ln -sf "theme-env-$M.fish" "$THEME_DIR/theme-env.fish"
+# fish env vars (FZF, DFT_BACKGROUND, JQ_COLORS, LS_COLORS) — rewrite theme-env.fish
+THEME_ENV=~/.config/fish/conf.d/theme-env.fish
+if [[ -d "$(dirname "$THEME_ENV")" ]]; then
+    case "$M" in
+        latte)
+            cat > "$THEME_ENV" <<'EOF'
+set -gx FZF_DEFAULT_OPTS "--color=bg+:ccd0da,bg:eff1f5,spinner:dc8a78,hl:d20f39,fg:4c4f69,header:d20f39,info:8839ef,pointer:dc8a78,marker:7287fd,fg+:4c4f69,prompt:8839ef,hl+:d20f39,selected-bg:bcc0cc"
+set -gx DFT_BACKGROUND light
+set -gx JQ_COLORS "0;90:0;31:0;32:0;33:0;32:0;34:0;34:1;35"
+set -gx LS_COLORS (vivid generate catppuccin-latte)
+EOF
+            ;;
+        mocha)
+            cat > "$THEME_ENV" <<'EOF'
+set -gx FZF_DEFAULT_OPTS "--color=bg+:313244,bg:1e1e2e,spinner:f5e0dc,hl:f38ba8,fg:cdd6f4,header:f38ba8,info:cba6f7,pointer:f5e0dc,marker:b4befe,fg+:cdd6f4,prompt:cba6f7,hl+:f38ba8,selected-bg:45475a"
+set -gx DFT_BACKGROUND dark
+set -gx JQ_COLORS "2;37:0;31:0;32:0;33:0;32:0;34:0;34:1;35"
+set -gx LS_COLORS (vivid generate catppuccin-mocha)
+EOF
+            ;;
+    esac
+fi
 
-# Git config (difft + delta) — write to include file to avoid clobbering chezmoi-managed .gitconfig
-cat > ~/.gitconfig-theme << EOF
+# Git delta + difft — written to ~/.gitconfig-theme, included from chezmoi-managed .gitconfig
+cat > ~/.gitconfig-theme <<EOF
 [diff]
   external = difft --background=$THEME_MODE
 [difftool "difftastic"]
@@ -41,24 +73,4 @@ cat > ~/.gitconfig-theme << EOF
   features = catppuccin-$M
 EOF
 
-# Claude Code (settings.json)
-CLAUDE_SETTINGS=~/.claude/settings.json
-if [[ -f "$CLAUDE_SETTINGS" ]] && command -v jq &>/dev/null; then
-  TMP=$(mktemp)
-  jq --arg t "$THEME_MODE" '.theme = $t' "$CLAUDE_SETTINGS" > "$TMP" && mv "$TMP" "$CLAUDE_SETTINGS"
-fi
-
-# Claude Code (.claude.json)
-CLAUDE_JSON=~/.claude.json
-if [[ -f "$CLAUDE_JSON" ]] && command -v jq &>/dev/null; then
-  TMP=$(mktemp)
-  jq --arg t "$THEME_MODE" '.theme = $t' "$CLAUDE_JSON" > "$TMP" && mv "$TMP" "$CLAUDE_JSON"
-fi
-
-# Gemini CLI
-GEMINI=~/.gemini/settings.json
-if [[ -f "$GEMINI" ]] && command -v jq &>/dev/null; then
-  THEME=$([[ "$M" == "mocha" ]] && echo "GitHub" || echo "GitHub Light")
-  TMP=$(mktemp)
-  jq --arg t "$THEME" '.ui.theme = $t' "$GEMINI" > "$TMP" && mv "$TMP" "$GEMINI"
-fi
+# Claude Code uses theme = "auto" natively — no sync needed.
