@@ -44,3 +44,20 @@ Replay attempts for PR #962 and #963 were blocked before cloning or review execu
 ### Caveats
 
 - Local replay attempts failed with `GITHUB_APP_ID is required for GitHub App authentication`, so live PR stage counts were not captured in this environment.
+
+## Session Log — 2026-05-31
+
+### Done
+
+- Opened PR #993 from `codex/pr-review-inline-comment-starvation`.
+- Fixed the Buildkite Prettier failure by formatting `packages/temporal/src/activities/pr-review/post.ts`, `packages/temporal/src/event-bridge/github-webhook.ts`, and `packages/temporal/src/workflows/pr-review/index.ts`.
+- Addressed Greptile P2 feedback in `packages/temporal/src/activities/pr-review/post-render.ts` by renaming the rendered stage-count label from `verified` to `post-verify` and counting unverified findings before duplicate marker checks.
+- Verified the review-comment fix with `bun test packages/temporal/src/activities/pr-review/post.test.ts` and `cd packages/temporal && bun run lint`.
+
+### Remaining
+
+- Re-run Buildkite and automated review checks after the P2 fix commit lands.
+
+### Caveats
+
+- Buildkite soft failures are intentionally ignored for the PR readiness gate per operator instruction.
