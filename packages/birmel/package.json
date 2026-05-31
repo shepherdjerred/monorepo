@@ -16,6 +16,8 @@
     "build": "true",
     "generate": "bun run scripts/generate-prisma.ts",
     "test": "bun --env-file=.env.test run generate && bun --env-file=.env.test test",
+    "test:e2e:music": "bun run e2e/music-playback.ts",
+    "test:e2e:youtube-stream": "bun run e2e/youtube-stream-resource.ts",
     "typecheck": "bun run generate && tsc --noEmit",
     "lint": "bun run generate && eslint ."
   },
