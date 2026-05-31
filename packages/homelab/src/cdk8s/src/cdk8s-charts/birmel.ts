@@ -84,10 +84,16 @@ export function createBirmelChart(app: App) {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
           ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }],
         },
-        // Discord voice traffic uses negotiated UDP ports for audio media.
+        // Discord voice media negotiates UDP ports in the high ephemeral range.
         {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
-          ports: [{ protocol: "UDP" }],
+          ports: [
+            {
+              port: IntOrString.fromNumber(50_000),
+              endPort: 65_535,
+              protocol: "UDP",
+            },
+          ],
         },
       ],
     },
