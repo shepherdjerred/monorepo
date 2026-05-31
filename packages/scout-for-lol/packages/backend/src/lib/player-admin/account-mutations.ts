@@ -14,10 +14,10 @@ import {
   AliasSchema,
   assertAdmin,
   conflict,
+  getPlayerOrThrow,
   isUniqueConstraintError,
   notFound,
   RiotAccountInput,
-  getPlayerOrThrow,
   type WebCtx,
 } from "#src/lib/player-admin/shared.ts";
 
@@ -122,16 +122,21 @@ export async function addAccount(ctx: WebCtx, input: AddAccountInputData) {
 export async function deleteAccount(ctx: WebCtx, input: RiotAccountInputData) {
   await assertAdmin(ctx, input.guildId);
   const puuid = await resolvePuuidOrThrow(input);
-  const account = await prisma.account.findUnique({
-    where: { serverId_puuid: { serverId: input.guildId, puuid } },
-    include: { player: { include: { accounts: true } } },
-  });
-  if (account === null) throw notFound("Account was not found");
-  if (account.player.accounts.length === 1) {
-    throw conflict("Cannot remove the last account from a player");
-  }
 
-  await prisma.$transaction(async (tx) => {
+  const deleted = await prisma.$transaction(async (tx) => {
+    const account = await tx.account.findUnique({
+      where: { serverId_puuid: { serverId: input.guildId, puuid } },
+      include: { player: true },
+    });
+    if (account === null) throw notFound("Account was not found");
+
+    const sourceAccountCount = await tx.account.count({
+      where: { playerId: account.player.id },
+    });
+    if (sourceAccountCount === 1) {
+      throw conflict("Cannot remove the last account from a player");
+    }
+
     await tx.account.delete({ where: { id: account.id } });
     await tx.player.update({
       where: { id: account.player.id },
@@ -154,8 +159,12 @@ export async function deleteAccount(ctx: WebCtx, input: RiotAccountInputData) {
       },
       tx,
     );
+    return { accountId: account.id, playerAlias: account.player.alias };
   });
-  return { deletedAccountId: account.id, playerAlias: account.player.alias };
+  return {
+    deletedAccountId: deleted.accountId,
+    playerAlias: deleted.playerAlias,
+  };
 }
 
 export async function transferAccount(
@@ -164,24 +173,37 @@ export async function transferAccount(
 ) {
   await assertAdmin(ctx, input.guildId);
   const puuid = await resolvePuuidOrThrow(input);
-  const account = await prisma.account.findUnique({
-    where: { serverId_puuid: { serverId: input.guildId, puuid } },
-    include: { player: { include: { accounts: true } } },
-  });
-  if (account === null) throw notFound("Account was not found");
-  const targetPlayer = await getPlayerOrThrow({
-    guildId: input.guildId,
-    alias: input.toPlayerAlias,
-  });
-  if (account.player.id === targetPlayer.id) {
-    throw conflict("Account is already attached to that player");
-  }
-  if (account.player.accounts.length === 1) {
-    throw conflict("Cannot transfer the last account from a player");
-  }
 
   const now = new Date();
-  await prisma.$transaction(async (tx) => {
+  const transferred = await prisma.$transaction(async (tx) => {
+    const account = await tx.account.findUnique({
+      where: { serverId_puuid: { serverId: input.guildId, puuid } },
+      include: { player: true },
+    });
+    if (account === null) throw notFound("Account was not found");
+
+    const targetPlayer = await tx.player.findUnique({
+      where: {
+        serverId_alias: {
+          serverId: input.guildId,
+          alias: input.toPlayerAlias,
+        },
+      },
+    });
+    if (targetPlayer === null) {
+      throw notFound(`Player "${input.toPlayerAlias}" was not found`);
+    }
+    if (account.player.id === targetPlayer.id) {
+      throw conflict("Account is already attached to that player");
+    }
+
+    const sourceAccountCount = await tx.account.count({
+      where: { playerId: account.player.id },
+    });
+    if (sourceAccountCount === 1) {
+      throw conflict("Cannot transfer the last account from a player");
+    }
+
     await tx.account.update({
       where: { id: account.id },
       data: { playerId: targetPlayer.id, updatedTime: now },
@@ -207,10 +229,11 @@ export async function transferAccount(
       },
       tx,
     );
+    return {
+      accountId: account.id,
+      fromPlayerAlias: account.player.alias,
+      toPlayerAlias: targetPlayer.alias,
+    };
   });
-  return {
-    accountId: account.id,
-    fromPlayerAlias: account.player.alias,
-    toPlayerAlias: targetPlayer.alias,
-  };
+  return transferred;
 }
