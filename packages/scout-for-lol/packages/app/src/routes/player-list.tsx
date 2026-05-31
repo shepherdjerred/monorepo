@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import { Input } from "#src/components/ui/input.tsx";
@@ -37,9 +37,10 @@ export function PlayerList() {
       ? { guildId: safeGuildId, query: trimmedSearch, limit: 50 }
       : { guildId: safeGuildId, limit: 50 };
 
-  const playersQuery = useQuery(
-    trpc.player.listPlayers.queryOptions(listInput, {
+  const playersQuery = useInfiniteQuery(
+    trpc.player.listPlayers.infiniteQueryOptions(listInput, {
       enabled: guildId !== undefined,
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
     }),
   );
   const currentPlayerQuery = useQuery(
@@ -58,6 +59,8 @@ export function PlayerList() {
   if (guildId === undefined) {
     return <p className="text-sm text-destructive">Missing guild id</p>;
   }
+
+  const players = playersQuery.data?.pages.flatMap((page) => page.items) ?? [];
 
   return (
     <div className="space-y-4">
@@ -111,11 +114,11 @@ export function PlayerList() {
         </p>
       )}
 
-      {playersQuery.data && playersQuery.data.items.length === 0 && (
+      {playersQuery.data && players.length === 0 && (
         <p className="text-sm text-muted-foreground">No players found.</p>
       )}
 
-      {playersQuery.data && playersQuery.data.items.length > 0 && (
+      {playersQuery.data && players.length > 0 && (
         <div className="rounded-md border border-border">
           <Table>
             <TableHeader>
@@ -128,7 +131,7 @@ export function PlayerList() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {playersQuery.data.items.map((player) => (
+              {players.map((player) => (
                 <TableRow key={player.id}>
                   <TableCell className="font-medium">
                     <Link
@@ -159,6 +162,19 @@ export function PlayerList() {
             </TableBody>
           </Table>
         </div>
+      )}
+
+      {playersQuery.hasNextPage && (
+        <Button
+          type="button"
+          variant="outline"
+          disabled={playersQuery.isFetchingNextPage}
+          onClick={() => {
+            void playersQuery.fetchNextPage();
+          }}
+        >
+          {playersQuery.isFetchingNextPage ? "Loading..." : "Load more"}
+        </Button>
       )}
     </div>
   );

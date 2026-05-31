@@ -14,6 +14,7 @@ import {
   AliasSchema,
   assertAdmin,
   conflict,
+  isUniqueConstraintError,
   notFound,
   RiotAccountInput,
   getPlayerOrThrow,
@@ -50,48 +51,58 @@ export async function addAccount(ctx: WebCtx, input: AddAccountInputData) {
     alias: input.playerAlias,
   });
   const puuid = await resolvePuuidOrThrow(input);
-  const existing = await prisma.account.findUnique({
-    where: { serverId_puuid: { serverId: input.guildId, puuid } },
-    include: { player: true },
-  });
-  if (existing !== null) {
-    throw conflict(`Account is already attached to "${existing.player.alias}"`);
-  }
 
   const now = new Date();
   const accountAlias = `${input.riotId.game_name}#${input.riotId.tag_line}`;
-  const created = await prisma.$transaction(async (tx) => {
-    const account = await tx.account.create({
-      data: {
-        alias: accountAlias,
-        puuid,
-        region: input.region,
-        playerId: player.id,
-        serverId: input.guildId,
-        creatorDiscordId: ctx.user.discordId,
-        createdTime: now,
-        updatedTime: now,
-      },
-    });
-    await recordAudit(
-      {
-        action: "ACCOUNT_ADD",
-        actorDiscordId: ctx.user.discordId,
-        serverId: input.guildId,
-        targetPlayerId: player.id,
-        targetAccountId: account.id,
-        payload: {
-          playerAlias: player.alias,
-          accountAlias,
+  const created = await prisma
+    .$transaction(async (tx) => {
+      const existing = await tx.account.findUnique({
+        where: { serverId_puuid: { serverId: input.guildId, puuid } },
+        include: { player: true },
+      });
+      if (existing !== null) {
+        throw conflict(
+          `Account is already attached to "${existing.player.alias}"`,
+        );
+      }
+
+      const account = await tx.account.create({
+        data: {
+          alias: accountAlias,
+          puuid,
           region: input.region,
+          playerId: player.id,
+          serverId: input.guildId,
+          creatorDiscordId: ctx.user.discordId,
+          createdTime: now,
+          updatedTime: now,
         },
-        ipAddress: ctx.webSession.ipAddress,
-        userAgent: ctx.webSession.userAgent,
-      },
-      tx,
-    );
-    return account;
-  });
+      });
+      await recordAudit(
+        {
+          action: "ACCOUNT_ADD",
+          actorDiscordId: ctx.user.discordId,
+          serverId: input.guildId,
+          targetPlayerId: player.id,
+          targetAccountId: account.id,
+          payload: {
+            playerAlias: player.alias,
+            accountAlias,
+            region: input.region,
+          },
+          ipAddress: ctx.webSession.ipAddress,
+          userAgent: ctx.webSession.userAgent,
+        },
+        tx,
+      );
+      return account;
+    })
+    .catch((error: unknown) => {
+      if (isUniqueConstraintError(error)) {
+        throw conflict("Account is already attached to another player");
+      }
+      throw error;
+    });
 
   const playerConfigEntry: PlayerConfigEntry = {
     alias: player.alias,
