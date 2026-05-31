@@ -67,3 +67,21 @@ The generated SQLite database contains the migrated schema plus seeded `Season` 
 ### Caveats
 
 - No new verification commands were needed for this explanation; it is based on the implementation inspected earlier in this session.
+
+## Session Log — 2026-05-31 PR Follow-up
+
+### Done
+
+- Opened PR #1000 for the Scout template freshness guard.
+- Addressed Greptile's P2 stale-message feedback by documenting libsql/SQLite lockfile updates as a possible byte-drift cause.
+- Addressed Greptile's P1 subprocess-exit feedback by removing the unsafe `result.exitCode.toString()` call.
+- Addressed Greptile's P1 cleanup feedback by moving the stale-template `process.exit(1)` path after temp-directory cleanup.
+- Re-ran focused verification after each code fix and pushed the resulting commits.
+
+### Remaining
+
+- Continue monitoring the latest PR head until Buildkite is green, the PR remains mergeable, and no P3-or-higher review comments remain unresolved.
+
+### Caveats
+
+- Buildkite soft failures are intentionally not treated as blocking for this PR-readiness loop.
