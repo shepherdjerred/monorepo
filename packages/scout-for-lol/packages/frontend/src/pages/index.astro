@@ -204,8 +204,8 @@ const initialShowcasePreview = showcasePreviews.at(0);
                 Close
               </button>
               <img
-                src={initialShowcasePreview.src}
                 alt=""
+                loading="lazy"
                 class="max-h-[88vh] max-w-[95vw] rounded-md shadow-2xl"
                 data-scout-lightbox-image
               />
@@ -227,6 +227,11 @@ const initialShowcasePreview = showcasePreviews.at(0);
         "[data-scout-lightbox-trigger]",
       );
       let previousFocus: HTMLElement | null = null;
+
+      const isLightboxOpen = () =>
+        lightbox instanceof HTMLElement &&
+        lightbox.classList.contains("flex") &&
+        !lightbox.classList.contains("hidden");
 
       const closeLightbox = () => {
         if (!(lightbox instanceof HTMLElement)) {
@@ -294,7 +299,23 @@ const initialShowcasePreview = showcasePreviews.at(0);
       document.addEventListener("keydown", (event) => {
         if (event.key === "Escape") {
           closeLightbox();
+          return;
         }
+
+        if (event.key !== "Tab" || !isLightboxOpen()) {
+          return;
+        }
+
+        const closeButton = lightbox?.querySelector(
+          "[data-scout-lightbox-close]",
+        );
+
+        if (!(closeButton instanceof HTMLButtonElement)) {
+          return;
+        }
+
+        event.preventDefault();
+        closeButton.focus();
       });
     </script>
 
