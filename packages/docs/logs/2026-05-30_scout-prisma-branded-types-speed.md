@@ -73,7 +73,8 @@ generated `index.d.ts` in the benchmark. The replacement transforms the same
 - Ran `bun test scripts/brand-prisma-types.test.ts`.
 - Ran `bun run typecheck` in
   `packages/scout-for-lol/packages/backend`.
-- Push the follow-up commit and recheck PR #992.
+- Pushed follow-up commit `d120e099f` and rechecked PR #992; Buildkite build
+  #3094 passed all hard checks.
 
 ### Remaining
 
