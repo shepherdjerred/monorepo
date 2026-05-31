@@ -27,17 +27,22 @@ type TransformResult = {
   readonly count: number;
 };
 
+type BrandPrismaTypesResult = TransformResult & {
+  readonly importedTypes: readonly string[];
+};
+
 type BrandPrismaTypesOptions = {
   readonly inputDir: string;
   readonly outputDir: string;
 };
 
-const BRANDED_TYPES_TO_IMPORT = new Set<string>();
+type TransformContext = {
+  readonly brandedTypesToImport: Set<string>;
+};
 
 export async function brandPrismaTypes(
   options?: BrandPrismaTypesOptions,
-): Promise<TransformResult> {
-  BRANDED_TYPES_TO_IMPORT.clear();
+): Promise<BrandPrismaTypesResult> {
   const resolvedOptions = options ?? {
     inputDir: INPUT_DIR,
     outputDir: OUTPUT_DIR,
@@ -57,37 +62,47 @@ export async function brandPrismaTypes(
 
   logger.info(`Save completed: ${outputPath}`);
   logger.info(`Transformed ${result.count.toString()} properties`);
-  logger.info(`Added imports: ${[...BRANDED_TYPES_TO_IMPORT].join(", ")}`);
+  logger.info(`Added imports: ${result.importedTypes.join(", ")}`);
   logger.info("Prisma types successfully branded.");
 
   return result;
 }
 
-export function brandPrismaTypesText(inputText: string): TransformResult {
-  BRANDED_TYPES_TO_IMPORT.clear();
-
+export function brandPrismaTypesText(
+  inputText: string,
+): BrandPrismaTypesResult {
+  const context: TransformContext = {
+    brandedTypesToImport: new Set<string>(),
+  };
   let text = inputText;
   let transformCount = 0;
 
-  const payloadResult = transformPayloadTypes(text);
+  const payloadResult = transformPayloadTypes(text, context);
   text = payloadResult.text;
   transformCount += payloadResult.count;
 
-  const simpleTypeResult = transformSimpleTypeAliases(text);
+  const simpleTypeResult = transformSimpleTypeAliases(text, context);
   text = simpleTypeResult.text;
   transformCount += simpleTypeResult.count;
 
-  const fieldRefsResult = transformFieldRefsInterfaces(text);
+  const fieldRefsResult = transformFieldRefsInterfaces(text, context);
   text = fieldRefsResult.text;
   transformCount += fieldRefsResult.count;
 
   text = instantiatePayloadReferences(text);
-  text = insertBrandImports(text);
+  text = insertBrandImports(text, context.brandedTypesToImport);
 
-  return { text, count: transformCount };
+  return {
+    text,
+    count: transformCount,
+    importedTypes: [...context.brandedTypesToImport].toSorted(),
+  };
 }
 
-function transformPayloadTypes(text: string): TransformResult {
+function transformPayloadTypes(
+  text: string,
+  context: TransformContext,
+): TransformResult {
   return transformNamedBlocks(
     text,
     /export type \$(\w+)Payload<[^>]+>\s*=\s*\{/g,
@@ -100,7 +115,11 @@ function transformPayloadTypes(text: string): TransformResult {
         return { text: block, count: 0 };
       }
 
-      const transformed = transformFieldLines(scalarsContent, modelName);
+      const transformed = transformFieldLines(
+        scalarsContent,
+        modelName,
+        context,
+      );
       if (transformed.count === 0) {
         return { text: block, count: 0 };
       }
@@ -113,7 +132,10 @@ function transformPayloadTypes(text: string): TransformResult {
   );
 }
 
-function transformSimpleTypeAliases(text: string): TransformResult {
+function transformSimpleTypeAliases(
+  text: string,
+  context: TransformContext,
+): TransformResult {
   return transformNamedBlocks(
     text,
     /export type (\w+(?:WhereUniqueInput|WhereInput|Create\w*Input|Update\w*Input|MinAggregateOutputType|MaxAggregateOutputType|GroupByOutputType))\s*=\s*\{/g,
@@ -123,16 +145,19 @@ function transformSimpleTypeAliases(text: string): TransformResult {
         return { text: block, count: 0 };
       }
 
-      return transformFieldLines(block, modelName);
+      return transformFieldLines(block, modelName, context);
     },
   );
 }
 
-function transformFieldRefsInterfaces(text: string): TransformResult {
+function transformFieldRefsInterfaces(
+  text: string,
+  context: TransformContext,
+): TransformResult {
   return transformNamedBlocks(
     text,
     /interface (\w+)FieldRefs\s*\{/g,
-    (block, modelName) => transformFieldRefLines(block, modelName),
+    (block, modelName) => transformFieldRefLines(block, modelName, context),
   );
 }
 
@@ -208,6 +233,7 @@ function findBalancedBraceRange(
 function transformFieldLines(
   content: string,
   modelName: string,
+  context: TransformContext,
 ): TransformResult {
   let count = 0;
   const text = content.replaceAll(
@@ -228,7 +254,7 @@ function transformFieldLines(
         return line;
       }
 
-      BRANDED_TYPES_TO_IMPORT.add(brandedType);
+      context.brandedTypesToImport.add(brandedType);
       count++;
       const optionalMarker = line.includes("?:") ? "?" : "";
       return `${indentation}${fieldName}${optionalMarker}: ${transformedType}`;
@@ -253,6 +279,7 @@ function replacePrimitiveType(
 function transformFieldRefLines(
   content: string,
   modelName: string,
+  context: TransformContext,
 ): TransformResult {
   let count = 0;
   const text = content.replaceAll(
@@ -263,7 +290,7 @@ function transformFieldRefLines(
         return line;
       }
 
-      BRANDED_TYPES_TO_IMPORT.add(brandedType);
+      context.brandedTypesToImport.add(brandedType);
       count++;
       return `${prefix}${fieldName}: FieldRef<"${modelName}", ${brandedType}>`;
     },
@@ -319,12 +346,15 @@ function instantiatePayloadReferences(text: string): string {
     );
 }
 
-function insertBrandImports(text: string): string {
-  if (BRANDED_TYPES_TO_IMPORT.size === 0) {
+function insertBrandImports(
+  text: string,
+  brandedTypesToImport: ReadonlySet<string>,
+): string {
+  if (brandedTypesToImport.size === 0) {
     return text;
   }
 
-  const importLine = `import { ${[...BRANDED_TYPES_TO_IMPORT].toSorted().join(", ")} } from "@scout-for-lol/data";\n`;
+  const importLine = `import { ${[...brandedTypesToImport].toSorted().join(", ")} } from "@scout-for-lol/data";\n`;
   const existingImportPattern =
     /import(?:\s+type)?\s+\{[^}]+\}\s+from "@scout-for-lol\/data";\n/;
 

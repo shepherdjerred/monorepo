@@ -190,6 +190,34 @@ describe("brand-prisma-types", () => {
     expect(outputText).toContain("sourceCompetitionId: CompetitionId | null");
   });
 
+  test("does not leak imports between text transform calls", () => {
+    const playerResult = brandPrismaTypesText(PRISMA_DECLARATION_FIXTURE);
+    const reportOnlyFixture = `export namespace Prisma {
+  export type $ReportPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Report"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      outputFormat: string
+    }, ExtArgs["result"]["report"]>
+    composites: {}
+  }
+}
+`;
+
+    const reportResult = brandPrismaTypesText(reportOnlyFixture);
+
+    expect(playerResult.importedTypes).toContain("PlayerId");
+    expect(reportResult.importedTypes).toEqual([
+      "ReportId",
+      "ReportOutputFormat",
+    ]);
+    expect(reportResult.text).toContain(
+      'import { ReportId, ReportOutputFormat } from "@scout-for-lol/data";',
+    );
+    expect(reportResult.text).not.toContain("PlayerId");
+  });
+
   test("keeps large generated declarations under the speed budget", () => {
     const largeFixture = PRISMA_DECLARATION_FIXTURE.repeat(
       SPEED_FIXTURE_REPEAT_COUNT,

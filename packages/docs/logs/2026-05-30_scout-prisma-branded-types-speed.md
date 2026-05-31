@@ -53,3 +53,32 @@ generated `index.d.ts` in the benchmark. The replacement transforms the same
 
 - `scripts/branded-types.test.ts` is compile-time only, so Bun reports 0 runtime
   tests; `bun run typecheck` is the meaningful assertion for that file.
+
+## Session Log — 2026-05-31
+
+### Done
+
+- Opened PR #992 for branch `codex/scout-prisma-brand-tests`.
+- Monitored Buildkite build #3087 to completion; all hard checks passed, with
+  only a soft-failed Trivy scan.
+- Addressed a Greptile P2 by making
+  `packages/scout-for-lol/packages/backend/scripts/brand-prisma-types.ts`
+  collect branded imports in per-call transform state instead of module-level
+  mutable state.
+- Added a regression assertion to
+  `packages/scout-for-lol/packages/backend/scripts/brand-prisma-types.test.ts`
+  proving imports do not leak between text transform calls.
+- Ran
+  `bunx eslint scripts/brand-prisma-types.ts scripts/brand-prisma-types.test.ts --fix --no-ignore`.
+- Ran `bun test scripts/brand-prisma-types.test.ts`.
+- Ran `bun run typecheck` in
+  `packages/scout-for-lol/packages/backend`.
+- Push the follow-up commit and recheck PR #992.
+
+### Remaining
+
+- None.
+
+### Caveats
+
+- Buildkite soft failures are intentionally ignored for this PR-readiness loop.
