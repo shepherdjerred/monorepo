@@ -136,13 +136,13 @@ function avatarColor(color: string): string {
   return /^#[\da-f]{6}$/i.test(color) ? color : "#5865f2";
 }
 
-function avatarImageDataUri(color: string): string {
-  const fill = avatarColor(color);
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><defs><linearGradient id="g" x1="5" x2="35" y1="3" y2="37" gradientUnits="userSpaceOnUse"><stop stop-color="${fill}"/><stop offset="1" stop-color="#111827"/></linearGradient></defs><circle cx="20" cy="20" r="20" fill="url(#g)"/><circle cx="27" cy="10" r="10" fill="#ffffff" opacity=".18"/><circle cx="20" cy="16" r="7" fill="#f2f3f5"/><path d="M7 39c2.2-9 6.5-13.5 13-13.5S30.8 30 33 39" fill="#f2f3f5"/></svg>`;
-  return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
+function avatarLabel(label: string): string {
+  return label.trim().slice(0, 2).toUpperCase() || "S";
 }
 
-function MessageAvatar(props: { backgroundColor: string }) {
+function MessageAvatar(props: { backgroundColor: string; label: string }) {
+  const backgroundColor = avatarColor(props.backgroundColor);
+
   return (
     <div
       style={{
@@ -160,20 +160,16 @@ function MessageAvatar(props: { backgroundColor: string }) {
           width: AVATAR_SIZE,
           height: AVATAR_SIZE,
           borderRadius: AVATAR_SIZE / 2,
-          overflow: "hidden",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor,
+          color: "#ffffff",
+          fontSize: 18,
+          fontWeight: 800,
+          lineHeight: 1,
         }}
       >
-        <img
-          alt=""
-          src={avatarImageDataUri(props.backgroundColor)}
-          width={AVATAR_SIZE}
-          height={AVATAR_SIZE}
-          style={{
-            width: AVATAR_SIZE,
-            height: AVATAR_SIZE,
-            borderRadius: AVATAR_SIZE / 2,
-          }}
-        />
+        {avatarLabel(props.label)}
       </div>
     </div>
   );
@@ -195,7 +191,10 @@ function ChatMessageRow(props: { message: DiscordChatMessage }) {
           : { timestamp: props.message.timestamp })}
         paddingTop={4}
       />
-      <MessageAvatar backgroundColor={props.message.avatarColor ?? "#5865f2"} />
+      <MessageAvatar
+        backgroundColor={props.message.avatarColor ?? "#5865f2"}
+        label={props.message.avatarText ?? props.message.author}
+      />
       <div
         style={{
           display: "flex",
@@ -254,7 +253,10 @@ function BotMessageRow(props: {
       }}
     >
       <TimestampColumn timestamp={props.timestamp} />
-      <MessageAvatar backgroundColor={props.botAvatarColor} />
+      <MessageAvatar
+        backgroundColor={props.botAvatarColor}
+        label={props.botAvatarText}
+      />
       <div
         style={{
           display: "flex",
@@ -413,7 +415,7 @@ export async function discordScreenshotToSvg(
       appNameColor={options.appNameColor ?? "#f2f3f5"}
       botMessage={options.botMessage}
       botAvatarText={options.botAvatarText ?? "S"}
-      botAvatarColor={options.botAvatarColor ?? "#5765f2"}
+      botAvatarColor={options.botAvatarColor ?? "#5865f2"}
       chatMessagesBeforeEmbed={options.chatMessagesBeforeEmbed ?? []}
       chatMessagesAfterEmbed={options.chatMessagesAfterEmbed ?? []}
     />,

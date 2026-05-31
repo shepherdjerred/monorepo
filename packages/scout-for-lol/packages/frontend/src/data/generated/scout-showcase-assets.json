@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-31T06:34:27.778Z",
+  "generatedAt": "2026-05-31T07:29:26.984Z",
   "assets": [
     {
       "id": "draft-prematch",
@@ -299,7 +299,7 @@
       "status": "generated",
       "fileName": "arena-discord.png",
       "src": "/generated/scout-showcase/arena-discord.png",
-      "byteLength": 234642
+      "byteLength": 232185
     },
     {
       "id": "aram-prematch",

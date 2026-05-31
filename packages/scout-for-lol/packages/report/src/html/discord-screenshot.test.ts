@@ -88,14 +88,14 @@ describe("discord screenshot renderer", () => {
           authorColor: "#ffd400",
           avatarText: "J",
           avatarColor: "#475569",
-          content: "test",
+          content: "we take those",
         },
         {
           author: "Jerred",
           authorColor: "#ffd400",
           avatarText: "J",
           avatarColor: "#475569",
-          content: "hey",
+          content: "damage chart checks out",
         },
       ],
     });

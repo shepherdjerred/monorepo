@@ -63,3 +63,22 @@ Implemented a deterministic Discord-style marketing showcase image for the Scout
 - Local frontend build requires `PUBLIC_PINTEREST_TAG_ID` and `PUBLIC_REDDIT_PIXEL_ID`; verification used dummy local values.
 - Running the full marketing showcase generator also refreshed the existing generated `report-graph.png` asset and its byte length in the generated asset index.
 - With the tall Arena report image, after-embed chat messages are rendered after the embed but fall below the fixed `1280x820` screenshot viewport.
+
+## Session Log — 2026-05-31
+
+### Done
+
+- Merged `origin/main` into `codex/scout-discord-showcase` and resolved the marketing page image conflict by keeping the generated `arena-discord` asset lookup.
+- Fixed Greptile's P1 finding by replacing placeholder `test` / `hey` production manifest chat copy with intentional Discord chat text.
+- Fixed the Discord default avatar color typo from `#5765f2` to `#5865f2`.
+- Updated circular avatars to render configured `avatarText` / `botAvatarText` as native Satori text inside the avatar circle.
+- Regenerated `packages/scout-for-lol/packages/frontend/public/generated/scout-showcase/arena-discord.png` and the generated asset index.
+- Verified report renderer typecheck, targeted Discord renderer tests, backend manifest tests, frontend typecheck, frontend lint, and frontend build.
+
+### Remaining
+
+- Wait for PR #999 CI and review bots to finish after the P1 fix is pushed.
+
+### Caveats
+
+- Local merge-commit hooks required trusting the Scout and Homelab mise configs and installing package-local dependencies for Homelab and the shared ESLint config before hooks could resolve TypeScript ESLint config dependencies.
