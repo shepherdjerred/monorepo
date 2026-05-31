@@ -127,6 +127,15 @@ function isVerifierBackedHighConfidenceFinding(finding: Finding): boolean {
   );
 }
 
+function pickRepresentative(findings: Finding[]): Finding | undefined {
+  return findings.toSorted((a, b) => {
+    const sevDiff = SEVERITY_ORDER[b.severity] - SEVERITY_ORDER[a.severity];
+    if (sevDiff !== 0) return sevDiff;
+    if (b.confidence !== a.confidence) return b.confidence - a.confidence;
+    return a.id.localeCompare(b.id);
+  })[0];
+}
+
 /**
  * Pure implementation — no spans, no metrics, no I/O. Used by tests
  * directly. The Temporal activity wraps this with the span / metric emission.
@@ -181,9 +190,12 @@ export function voteOnFindings(input: ConsensusInput): Finding[] {
 
     const keptByWithin = maxWithinSpecialist >= withinThreshold;
     const keptByAcross = distinctSpecialists >= 2;
-    const keptByHighConfidence = members.some((m) =>
-      isVerifierBackedHighConfidenceFinding(m.annotated.finding),
-    );
+    const highConfidenceFindings = members
+      .map((m) => m.annotated.finding)
+      .filter((finding) => isVerifierBackedHighConfidenceFinding(finding));
+    const keptByHighConfidence = highConfidenceFindings.length > 0;
+    const keptOnlyByHighConfidence =
+      !keptByWithin && !keptByAcross && keptByHighConfidence;
     if (!keptByWithin && !keptByAcross && !keptByHighConfidence) {
       // dropped — fail the cluster
       for (const _m of members) {
@@ -193,18 +205,17 @@ export function voteOnFindings(input: ConsensusInput): Finding[] {
     }
 
     // Pick a representative: highest severity → highest confidence →
-    // lowest `id`. `toSorted` keeps the input array immutable.
-    const sorted = members
-      .map((m) => m.annotated.finding)
-      .toSorted((a, b) => {
-        const sevDiff = SEVERITY_ORDER[b.severity] - SEVERITY_ORDER[a.severity];
-        if (sevDiff !== 0) return sevDiff;
-        if (b.confidence !== a.confidence) return b.confidence - a.confidence;
-        return a.id.localeCompare(b.id);
-      });
-    const rep = sorted[0];
+    // lowest `id`. If the high-confidence verifier-backed rule is the only
+    // reason a cluster survived, restrict representative selection to the
+    // findings that can actually be verified downstream.
+    const representativeCandidates = keptOnlyByHighConfidence
+      ? highConfidenceFindings
+      : members.map((m) => m.annotated.finding);
+    const rep = pickRepresentative(representativeCandidates);
     if (rep === undefined) {
-      // unreachable: a cluster has at least one member by construction
+      // unreachable: a kept high-confidence cluster has at least one
+      // high-confidence member, and other kept clusters have at least one
+      // member by construction.
       continue;
     }
 

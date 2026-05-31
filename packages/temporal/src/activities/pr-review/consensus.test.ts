@@ -211,6 +211,48 @@ describe("voteOnFindings — high-confidence verifier-backed singleton", () => {
     });
     expect(result).toEqual([]);
   });
+
+  it("selects a verifier-backed representative when high confidence is the only keep reason", () => {
+    const result = voteOnFindings({
+      annotated: [
+        annotate(
+          mkFinding({
+            id: "critical-unverifiable",
+            file: "release.ts",
+            lineStart: 25,
+            severity: "critical",
+            confidence: 0.99,
+          }),
+          "security",
+          0,
+        ),
+        annotate(
+          {
+            ...mkFinding({
+              id: "warning-verifier-backed",
+              file: "release.ts",
+              lineStart: 26,
+              severity: "warning",
+              confidence: 0.95,
+            }),
+            verifier: "grep",
+            verifierTarget: {
+              kind: "grep",
+              pattern: "dangerously-skip-permissions",
+              isLiteral: true,
+              pathGlob: "release.ts",
+              mustMatch: true,
+            },
+          },
+          "security",
+          0,
+        ),
+      ],
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.id).toBe("warning-verifier-backed");
+  });
 });
 
 describe("voteOnFindings — line-tolerance bucketing", () => {
