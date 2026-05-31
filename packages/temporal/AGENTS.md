@@ -161,7 +161,7 @@ The `runPrSummaryPipeline` activity (`src/activities/pr-review/summary.ts`) talk
 
 **Shadow-mode auth caveat** — the worker pod has both `CLAUDE_CODE_OAUTH_TOKEN` (subscription, used by `claude -p`) and `ANTHROPIC_API_KEY` (used by the SDK summary). When both are set, the legacy CLI prefers the API key and bills direct-API credits instead of the subscription. We accept this for the ~2-week shadow window (Phase 12 of the SOTA plan); Phase 13 retires the CLI path and the conflict goes away.
 
-**Models** — legacy review uses `claude-opus-4-7` (max-turns 30), legacy summary uses `claude-haiku-4-5-20251001` (max-turns 10), SDK summary uses `claude-haiku-4-5` via the official SDK with streaming.
+**Models** — legacy review uses `claude-opus-4-8` (max-turns 30), legacy summary uses `claude-haiku-4-5-20251001` (max-turns 10), SDK summary uses `claude-haiku-4-5` via the official SDK with streaming.
 
 ## HA presence (welcomeHome / leavingHome) — debounce model
 

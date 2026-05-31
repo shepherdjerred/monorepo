@@ -3,7 +3,7 @@
  * miss — injection, authn/authz gaps, secret handling, deserialization,
  * SSRF/path traversal, race conditions in security-critical code.
  *
- * Model: Opus 4.7 + adaptive thinking + effort=high (the SDK at this
+ * Model: Opus 4.8 + adaptive thinking + effort=high (the SDK at this
  * version doesn't yet expose `"xhigh"`; upgrade to `"xhigh"` once the type
  * lands).
  */
@@ -21,7 +21,7 @@ import {
   type SpecialistRunResult,
 } from "./runner.ts";
 
-export const SECURITY_MODEL = "claude-opus-4-7";
+export const SECURITY_MODEL = "claude-opus-4-8";
 export const SECURITY_EFFORT = "high" as const;
 export const SECURITY_MAX_TOKENS = 16_000;
 const MAX_FILES_IN_PROMPT = 150;

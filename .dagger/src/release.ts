@@ -1023,23 +1023,63 @@ export function cooklangVersionCommitBackHelper(
 // Release-please
 // ---------------------------------------------------------------------------
 
-/** Run release-please to create release PRs and GitHub releases. */
+/**
+ * Run release-please to create release PRs and GitHub releases, then run a
+ * Claude agent to refine the auto-generated CHANGELOGs to a library-consumer
+ * view.
+ *
+ * Pipeline order is intentional: release-pr → refine → github-release.
+ * The refine step targets the just-created PR; github-release is a no-op
+ * while a release PR is open (it only fires on merge), so its position
+ * relative to refine doesn't matter functionally.
+ */
 export function releasePleaseHelper(
   source: Directory,
   githubAppId: Secret,
   githubAppInstallationId: Secret,
   githubAppPrivateKey: Secret,
+  claudeOauthToken: Secret,
   dryrun = false,
 ): Container {
-  const container = withAptPackages(dag.container().from(BUN_IMAGE), ["git"])
+  // BUN_INSTALL=/usr/local forces `bun add -g` to drop binaries (claude,
+  // release-please) into /usr/local/bin where everything in PATH can find them
+  // even when the container runs as a non-root user.
+  const container = withAptPackages(dag.container().from(BUN_IMAGE), [
+    "git",
+    "ca-certificates",
+    "curl",
+  ])
+    .withExec([
+      "sh",
+      "-c",
+      `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
+    ])
+    .withEnvVariable("BUN_INSTALL", "/usr/local")
     .withExec(["bun", "add", "-g", `release-please@${RELEASE_PLEASE_VERSION}`])
+    .withExec([
+      "bun",
+      "add",
+      "-g",
+      `@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}`,
+    ])
+    .withExec(["claude", "--version"])
+    // This container runs as root (the gh download, apt packages, the
+    // `> /usr/local/bin/git-askpass` write in mintGithubAppTokenAndSetupGitAuth,
+    // and the root-owned /workspace mount all depend on it), but recent Claude
+    // Code releases refuse `--dangerously-skip-permissions` under uid 0 with
+    // "cannot be used with root/sudo privileges for security reasons". IS_SANDBOX=1
+    // is Claude Code's documented escape hatch for trusted, ephemeral automation
+    // containers: this one runs a fixed, code-reviewed prompt
+    // (.dagger/prompts/refine-release-please.md) scoped only by the GitHub App
+    // token, which is exactly the sandbox case the flag is meant for.
+    .withEnvVariable("IS_SANDBOX", "1")
     .withWorkdir("/workspace")
     .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES });
 
   if (dryrun) {
     return container.withExec([
       "echo",
-      "DRYRUN: would run release-please (release-pr + github-release)",
+      "DRYRUN: would run release-please (release-pr + refine + github-release)",
     ]);
   }
   const authedContainer = withGithubAppCredentials(
@@ -1048,15 +1088,32 @@ export function releasePleaseHelper(
     githubAppId,
     githubAppInstallationId,
     githubAppPrivateKey,
-  );
+  ).withSecretVariable("CLAUDE_CODE_OAUTH_TOKEN", claudeOauthToken);
 
   return authedContainer.withExec([
     "sh",
     "-c",
     [
-      mintGithubAppTokenAndSetupGitAuth({ withAskpass: false }),
-      `release-please release-pr --token="$GH_TOKEN" --repo-url=shepherdjerred/monorepo --target-branch=main`,
-      `release-please github-release --token="$GH_TOKEN" --repo-url=shepherdjerred/monorepo --target-branch=main`,
+      // Mint a fresh GH App installation token. withAskpass=true is required
+      // here (was false for the old release-please-only pipeline) because the
+      // refine agent runs `git clone` + `git push` over HTTPS and needs git's
+      // askpass dance to inject credentials.
+      mintGithubAppTokenAndSetupGitAuth({ withAskpass: true }),
+      `release-please release-pr --token="$GH_TOKEN" --repo-url=${MONOREPO_REPO} --target-branch=main`,
+      // Refine the just-generated CHANGELOGs. The prompt at
+      // .dagger/prompts/refine-release-please.md is the source of truth for
+      // the agent's behavior. It exits 0 with a status envelope when there
+      // is no open release PR, no bumped packages, or nothing to refine.
+      `REFINE_PROMPT="$(cat /workspace/.dagger/prompts/refine-release-please.md)"`,
+      // The agent must run arbitrary `git`/`gh` Bash commands non-interactively,
+      // so it runs with --dangerously-skip-permissions. That flag fully overrides
+      // --permission-mode, so we don't pass acceptEdits (it would be dead config
+      // that misleads readers into thinking the agent is scoped to file edits).
+      // The agent's write access is therefore bounded only by the fixed,
+      // code-reviewed prompt at .dagger/prompts/refine-release-please.md and the
+      // GitHub App token's repo scope — re-evaluate if the prompt becomes dynamic.
+      `claude -p "$REFINE_PROMPT" --output-format json --allowed-tools Bash,Read,Edit,Write,Grep,Glob --dangerously-skip-permissions --max-turns 80 --model claude-opus-4-7`,
+      `release-please github-release --token="$GH_TOKEN" --repo-url=${MONOREPO_REPO} --target-branch=main`,
     ].join(" && "),
   ]);
 }

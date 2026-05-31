@@ -247,25 +247,15 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Run vacuum if no one is home (5 PM)",
   },
   {
-    id: "good-morning-weekday-early",
-    workflowType: "goodMorningEarly",
-    args: [],
-    cronExpression: "0 7 * * 1-5",
-    taskQueue: TASK_QUEUES.DEFAULT,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    // goodMorningEarly does a 60-minute sleep (MORNING_HEAT_DURATION); needs > 60m + slack
-    workflowExecutionTimeout: "75 minutes",
-    memo: "Good morning pre-wake (weekdays 7 AM)",
-  },
-  {
     id: "good-morning-weekday-wake",
     workflowType: "goodMorningWakeUp",
     args: [],
     cronExpression: "0 8 * * 1-5",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "30 minutes",
-    memo: "Good morning wake-up (weekdays 8 AM)",
+    // goodMorningWakeUp now runs the 60-minute heat cycle (MORNING_HEAT_DURATION); needs > 60m + slack
+    workflowExecutionTimeout: "75 minutes",
+    memo: "Good morning wake-up + bathroom heat (weekdays 8 AM)",
   },
   {
     id: "good-morning-weekday-up",
@@ -278,25 +268,15 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Good morning get-up (weekdays 8:15 AM)",
   },
   {
-    id: "good-morning-weekend-early",
-    workflowType: "goodMorningEarly",
-    args: [],
-    cronExpression: "0 8 * * 0,6",
-    taskQueue: TASK_QUEUES.DEFAULT,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    // goodMorningEarly does a 60-minute sleep (MORNING_HEAT_DURATION); needs > 60m + slack
-    workflowExecutionTimeout: "75 minutes",
-    memo: "Good morning pre-wake (weekends 8 AM)",
-  },
-  {
     id: "good-morning-weekend-wake",
     workflowType: "goodMorningWakeUp",
     args: [],
     cronExpression: "0 9 * * 0,6",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "30 minutes",
-    memo: "Good morning wake-up (weekends 9 AM)",
+    // goodMorningWakeUp now runs the 60-minute heat cycle (MORNING_HEAT_DURATION); needs > 60m + slack
+    workflowExecutionTimeout: "75 minutes",
+    memo: "Good morning wake-up + bathroom heat (weekends 9 AM)",
   },
   {
     id: "good-morning-weekend-up",

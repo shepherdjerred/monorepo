@@ -1,5 +1,5 @@
 import type { Chart } from "cdk8s";
-import { ClusterTunnel } from "@shepherdjerred/homelab/cdk8s/generated/imports/networking.cfargotunnel.com.ts";
+import { ClusterTunnel } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-types/cfargotunnel.ts";
 import { CLOUDFLARE_TUNNEL_SECRET_NAME } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 
 export function createCloudflareTunnelCRD(chart: Chart) {
@@ -17,10 +17,9 @@ export function createCloudflareTunnelCRD(chart: Chart) {
     },
     spec: {
       cloudflare: {
+        // newTunnel mode: operator owns the credential lifecycle, so the
+        // CLOUDFLARE_TUNNEL_CREDENTIAL_* key-name overrides don't apply.
         secret: CLOUDFLARE_TUNNEL_SECRET_NAME,
-        // cloudflareApiToken defaults to "CLOUDFLARE_API_TOKEN" which matches the 1Password field
-        // cloudflareTunnelCredentialSecret must be set to match the 1Password field name "credential"
-        cloudflareTunnelCredentialSecret: "credential",
         accountId: "48948ed6cd40d73e34d27f0cc10e595f",
         domain: "sjer.red",
       },

@@ -13,6 +13,7 @@ const RuleSchema = z.object({
 const ResourceSchema = z.object({
   kind: z.string(),
   metadata: z.object({ name: z.string().optional() }).optional(),
+  data: z.record(z.string(), z.string()).optional(),
   rules: z.array(RuleSchema).optional(),
 });
 
@@ -47,6 +48,22 @@ describe("temporal homelab audit tooling", () => {
     expect(yaml).toContain("name: HOMELAB_AUDIT_ARCHIVE_BUCKET");
     expect(yaml).toContain("name: HOMELAB_AUDIT_ARCHIVE_PREFIX");
     expect(yaml).toContain("value: homelab-audits");
+  });
+
+  it("enables Temporal worker observability dynamic config with v1.29 key casing", async () => {
+    const resources = parseResources(await synthesizeApp());
+    const dynamicConfig = resources.find(
+      (resource) =>
+        resource.kind === "ConfigMap" &&
+        resource.metadata?.name === "temporal-dynamic-config",
+    );
+
+    expect(dynamicConfig).toBeDefined();
+    const configYaml = dynamicConfig?.data?.["dynamic-config.yaml"] ?? "";
+    expect(configYaml).toContain("frontend.WorkerHeartbeatsEnabled:");
+    expect(configYaml).toContain("frontend.ListWorkersEnabled:");
+    expect(configYaml).toContain("  - value: true");
+    expect(configYaml).not.toContain("frontend.workerHeartbeatsEnabled:");
   });
 
   it("keeps the audit ClusterRole read-only and includes Tailscale CRDs", async () => {
