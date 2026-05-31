@@ -40,6 +40,10 @@ export async function renamePlayer(ctx: WebCtx, input: RenamePlayerInputData) {
   if (input.currentAlias === input.newAlias) {
     throw conflict("The new alias is the same as the current alias");
   }
+  await getPlayerOrThrow({
+    guildId: input.guildId,
+    alias: input.currentAlias,
+  });
   const now = new Date();
   try {
     return await prisma.$transaction(async (tx) => {

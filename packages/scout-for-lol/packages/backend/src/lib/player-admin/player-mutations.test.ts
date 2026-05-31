@@ -69,6 +69,17 @@ describe("player admin mutations", () => {
     ]);
   });
 
+  test("rename reports not found when the current alias does not exist", async () => {
+    await expect(
+      renamePlayer(ctx, {
+        guildId,
+        currentAlias: "Missing",
+        newAlias: "After",
+      }),
+    ).rejects.toThrow('Player "Missing" was not found');
+    expect(await prisma.auditLog.count()).toBe(0);
+  });
+
   test("links and unlinks Discord with audit rows", async () => {
     const player = await createPlayer("Discordless");
     const discordUserId = testAccountId("9903");
