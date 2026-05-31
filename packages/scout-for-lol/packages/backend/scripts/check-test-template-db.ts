@@ -40,6 +40,7 @@ function getBunExecutable(): string {
 
 const tempDir = mkdtempSync(join(tmpdir(), "scout-test-template-"));
 const generatedTemplatePath = join(tempDir, "template.db");
+let templateIsStale = false;
 
 try {
   const result = Bun.spawnSync({
@@ -75,10 +76,14 @@ try {
         `Committed: ${committedTemplatePath}`,
       ].join("\n"),
     );
-    process.exit(1);
+    templateIsStale = true;
+  } else {
+    console.log("Scout test template database is up-to-date.");
   }
-
-  console.log("Scout test template database is up-to-date.");
 } finally {
   rmSync(tempDir, { force: true, recursive: true });
+}
+
+if (templateIsStale) {
+  process.exit(1);
 }
