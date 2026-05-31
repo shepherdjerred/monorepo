@@ -52,7 +52,9 @@ Replay attempts for PR #962 and #963 were blocked before cloning or review execu
 - Opened PR #993 from `codex/pr-review-inline-comment-starvation`.
 - Fixed the Buildkite Prettier failure by formatting `packages/temporal/src/activities/pr-review/post.ts`, `packages/temporal/src/event-bridge/github-webhook.ts`, and `packages/temporal/src/workflows/pr-review/index.ts`.
 - Addressed Greptile P2 feedback in `packages/temporal/src/activities/pr-review/post-render.ts` by renaming the rendered stage-count label from `verified` to `post-verify` and counting unverified findings before duplicate marker checks.
-- Verified the review-comment fix with `bun test packages/temporal/src/activities/pr-review/post.test.ts` and `cd packages/temporal && bun run lint`.
+- Addressed Greptile consensus feedback in `packages/temporal/src/activities/pr-review/consensus.ts` by requiring high-confidence-only clusters to select a verifier-backed representative.
+- Added a regression in `packages/temporal/src/activities/pr-review/consensus.test.ts` for mixed verifier-backed and unverifiable findings in the same high-confidence-only cluster.
+- Verified the latest fixes with `bun test packages/temporal/src/activities/pr-review/post.test.ts`, `bun test packages/temporal/src/activities/pr-review/consensus.test.ts`, `cd packages/temporal && bun test src/activities/pr-review src/workflows/pr-review`, `cd packages/temporal && bun run typecheck`, and `cd packages/temporal && bun run lint`.
 
 ### Remaining
 
