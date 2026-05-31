@@ -49,3 +49,26 @@ Add an hourly Temporal sweep that inspects all active PagerDuty incidents and un
 - `cd packages/temporal && bun run typecheck`
 - `cd packages/temporal && bun run test`
 - `cd packages/temporal && bun run lint -- --no-cache`
+
+## Session Log -- 2026-05-31
+
+### Done
+
+- Opened PR #997 for `codex/temporal-alert-remediation-fanout`.
+- Marked the PR ready for review so automated review comments could run.
+- Addressed Greptile P1/P2 feedback by preserving successful child outcomes when cleanup fails, moving duplicated JSON-array parsing to `packages/temporal/src/shared/json.ts`, and replacing fixed child batches with a sliding concurrency pool.
+- Added regression coverage for cleanup failure after a successful `pr-created` child result.
+
+### Remaining
+
+- Continue monitoring PR #997 until Buildkite is green, there are no merge conflicts, and no unresolved P3-or-higher comments remain.
+
+### Caveats
+
+- Buildkite soft failures are intentionally ignored for the PR readiness gate.
+
+### Verification
+
+- `cd packages/temporal && bun run typecheck`
+- `cd packages/temporal && bun run lint -- --no-cache`
+- `cd packages/temporal && bun test src/workflows/alert-remediation.test.ts src/activities/alert-remediation.test.ts src/activities/alert-remediation-command.test.ts src/shared/alert-remediation.test.ts`
