@@ -87,3 +87,32 @@ The missing Kubernetes piece was egress for Discord voice media. The existing Bi
 - The smaller E2E proves YouTube stream extraction can produce the Discord audio resource format locally; it does not prove the bot can join a Discord voice channel from Kubernetes.
 - YouTubeJS still logs signature decipher warnings during extractor activation, but the yt-dlp-backed stream path successfully produced a Discord Opus packet.
 - The targeted homelab CDK8s test could not be run locally because `packages/homelab/mise.toml` is not trusted in this checkout.
+
+## PR Follow-up -- 2026-05-31
+
+### Done
+
+- Created branch `codex/birmel-youtube-music-e2e`, committed the Birmel YouTube stream E2E and homelab NetworkPolicy changes, pushed it, and opened PR #998.
+- Addressed Greptile P1/P2 review findings:
+  - Renamed the local yt-dlp child-process handle in `packages/birmel/src/music/extractors.ts` so it no longer shadows the runtime `process` global.
+  - Adjusted yt-dlp stream cleanup so normal consumer shutdown is quiet while real yt-dlp failures can still be logged.
+  - Restricted Birmel Discord voice egress in `packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts` to UDP ports 50000-65535 instead of all UDP ports.
+  - Updated `packages/homelab/src/cdk8s/src/birmel-network-policy.test.ts` to assert the bounded UDP range.
+- Verified the follow-up fixes with:
+  - `cd packages/birmel && bun run lint`
+  - `cd packages/birmel && bun run typecheck`
+  - `cd packages/birmel && bun run test`
+  - `cd packages/birmel && BIRMEL_E2E_YOUTUBE_QUERY='lofi hip hop radio' bun run test:e2e:youtube-stream`
+  - `cd packages/homelab/src/cdk8s && bun test src/birmel-network-policy.test.ts`
+  - `cd packages/homelab/src/cdk8s && bun run typecheck`
+  - `cd packages/homelab && bunx eslint --fix src/cdk8s/src/birmel-network-policy.test.ts src/cdk8s/src/cdk8s-charts/birmel.ts`
+
+### Remaining
+
+- Push the follow-up commit and wait for Buildkite plus review bots to rerun on the new head commit.
+- Run the heavier live Discord voice E2E with real guild, text channel, and voice channel IDs: `bun run test:e2e:music`.
+
+### Caveats
+
+- Buildkite PR build #3106 had a Trivy soft failure, which is intentionally not considered blocking for this PR loop.
+- GitHub CLI authentication is invalid in this checkout, so PR creation and review inspection used the GitHub connector instead.

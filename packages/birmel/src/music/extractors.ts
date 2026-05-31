@@ -25,11 +25,11 @@ function extractYouTubeVideoId(url: string): string {
 }
 
 async function logYoutubeDlFailure(
-  process: YoutubeDlProcess,
+  ytDlpProcess: YoutubeDlProcess,
   wasStoppedByCleanup: () => boolean,
 ): Promise<void> {
   try {
-    await process;
+    await ytDlpProcess;
   } catch (error: unknown) {
     if (wasStoppedByCleanup()) {
       return;
@@ -38,9 +38,13 @@ async function logYoutubeDlFailure(
   }
 }
 
+function hasYoutubeDlProcessExited(ytDlpProcess: YoutubeDlProcess): boolean {
+  return ytDlpProcess.exitCode != null || ytDlpProcess.signalCode != null;
+}
+
 function createYoutubeDlStream(track: Track): Promise<Readable> {
   const videoId = extractYouTubeVideoId(track.url);
-  const process = youtubeDl.exec(`https://youtu.be/${videoId}`, {
+  const ytDlpProcess = youtubeDl.exec(`https://youtu.be/${videoId}`, {
     format: track.live ? "best[height<=360]" : "bestaudio",
     ignoreConfig: true,
     jsRuntimes: "node",
@@ -50,23 +54,37 @@ function createYoutubeDlStream(track: Track): Promise<Readable> {
     output: "-",
   });
   let stoppedByCleanup = false;
-  void logYoutubeDlFailure(process, () => stoppedByCleanup);
+  void logYoutubeDlFailure(ytDlpProcess, () => stoppedByCleanup);
 
-  const stream = process.stdout;
+  const stream = ytDlpProcess.stdout;
   if (stream == null) {
     throw new Error("yt-dlp did not expose stdout for the stream");
   }
 
   const killProcess = (): void => {
-    if (!process.killed) {
-      stoppedByCleanup = true;
-      process.kill();
+    if (!ytDlpProcess.killed) {
+      ytDlpProcess.kill();
     }
   };
 
-  stream.on("close", killProcess);
-  stream.on("end", killProcess);
-  stream.on("error", killProcess);
+  const stopAfterConsumerCleanup = (): void => {
+    if (stream.readableEnded || hasYoutubeDlProcessExited(ytDlpProcess)) {
+      return;
+    }
+
+    if (!ytDlpProcess.killed) {
+      stoppedByCleanup = true;
+      ytDlpProcess.kill();
+    }
+  };
+
+  const stopAfterStreamError = (): void => {
+    stoppedByCleanup = true;
+    killProcess();
+  };
+
+  stream.on("close", stopAfterConsumerCleanup);
+  stream.on("error", stopAfterStreamError);
 
   return Promise.resolve(stream);
 }

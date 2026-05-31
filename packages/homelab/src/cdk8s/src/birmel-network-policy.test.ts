@@ -31,6 +31,7 @@ const NetworkPolicySchema = z.object({
                   .object({
                     protocol: z.string().optional(),
                     port: z.unknown().optional(),
+                    endPort: z.number().optional(),
                   })
                   .loose(),
               )
@@ -81,7 +82,10 @@ describe("birmel NetworkPolicy", () => {
           (peer) => peer.ipBlock?.cidr === "0.0.0.0/0",
         );
         const allowsUdp = (rule.ports ?? []).some(
-          (port) => port.protocol === "UDP" && port.port === undefined,
+          (port) =>
+            port.protocol === "UDP" &&
+            port.port === 50_000 &&
+            port.endPort === 65_535,
         );
 
         return allowsExternal && allowsUdp;
