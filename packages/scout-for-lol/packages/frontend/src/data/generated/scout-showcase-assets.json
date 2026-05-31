@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-23T02:35:30.586Z",
+  "generatedAt": "2026-05-31T06:34:27.778Z",
   "assets": [
     {
       "id": "draft-prematch",
@@ -284,6 +284,24 @@
       "byteLength": 506922
     },
     {
+      "id": "arena-discord",
+      "title": "Arena Discord Screenshot",
+      "group": "Arena",
+      "description": "Discord message preview for a generated Arena post-match report.",
+      "state": "postmatch",
+      "queue": "arena",
+      "playerCount": 3,
+      "sourceKeys": [
+        "games/2026/05/07/EUW1_7845790456/report.png",
+        "games/2026/05/07/EUW1_7845790456/match.json"
+      ],
+      "kind": "discord-screenshot",
+      "status": "generated",
+      "fileName": "arena-discord.png",
+      "src": "/generated/scout-showcase/arena-discord.png",
+      "byteLength": 234642
+    },
+    {
       "id": "aram-prematch",
       "title": "ARAM Pre-Match",
       "group": "ARAM",
@@ -392,7 +410,7 @@
       "status": "generated",
       "fileName": "report-graph.png",
       "src": "/generated/scout-showcase/report-graph.png",
-      "byteLength": 78001
+      "byteLength": 77916
     }
   ]
 }

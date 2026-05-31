@@ -195,6 +195,52 @@
       "dataKey": "games/2026/05/07/EUW1_7845790456/match.json"
     },
     {
+      "id": "arena-discord",
+      "title": "Arena Discord Screenshot",
+      "group": "Arena",
+      "description": "Discord message preview for a generated Arena post-match report.",
+      "state": "postmatch",
+      "queue": "arena",
+      "playerCount": 3,
+      "kind": "discord-screenshot",
+      "imageKey": "games/2026/05/07/EUW1_7845790456/report.png",
+      "dataKey": "games/2026/05/07/EUW1_7845790456/match.json",
+      "timestamp": "5:23 AM",
+      "appName": "Scout for LoL",
+      "appNameColor": "#ff5a1f",
+      "botMessage": "posted an Arena recap",
+      "botAvatarText": "S",
+      "botAvatarColor": "#1f2937",
+      "embedImageWidth": 940,
+      "chatMessagesBeforeEmbed": [
+        {
+          "timestamp": "5:22 AM",
+          "author": "rangedtop",
+          "authorColor": "#23a559",
+          "avatarText": "R",
+          "avatarColor": "#23a559",
+          "content": "drop the arena recap"
+        }
+      ],
+      "chatMessagesAfterEmbed": [
+        {
+          "timestamp": "5:24 AM",
+          "author": "Jerred",
+          "authorColor": "#ffd400",
+          "avatarText": "J",
+          "avatarColor": "#475569",
+          "content": "test"
+        },
+        {
+          "author": "Jerred",
+          "authorColor": "#ffd400",
+          "avatarText": "J",
+          "avatarColor": "#475569",
+          "content": "hey"
+        }
+      ]
+    },
+    {
       "id": "aram-prematch",
       "title": "ARAM Pre-Match",
       "group": "ARAM",

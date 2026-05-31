@@ -13,6 +13,7 @@ import {
 } from "@scout-for-lol/data";
 import {
   competitionChartToImage,
+  discordScreenshotToImage,
   type CompetitionChartProps,
 } from "@scout-for-lol/report";
 import { createS3Client } from "#src/storage/s3-client.ts";
@@ -133,6 +134,37 @@ async function generateS3Image(
     client: ctx.client,
     bucket: ctx.bucket,
     key: entry.imageKey,
+  });
+  return {
+    fileName: safeFileName(entry.id, "png"),
+    bytes,
+    sourceKeys:
+      entry.dataKey === undefined
+        ? [entry.imageKey]
+        : [entry.imageKey, entry.dataKey],
+  };
+}
+
+async function generateDiscordScreenshot(
+  entry: Extract<ShowcaseEntry, { kind: "discord-screenshot" }>,
+  ctx: GenerateEntryContext,
+): Promise<GeneratedImage> {
+  if (entry.dataKey !== undefined) {
+    await validateDataKey({
+      entry,
+      bucket: ctx.bucket,
+      client: ctx.client,
+      key: entry.dataKey,
+    });
+  }
+  const embeddedImageBytes = await readS3ObjectBytes({
+    client: ctx.client,
+    bucket: ctx.bucket,
+    key: entry.imageKey,
+  });
+  const bytes = await discordScreenshotToImage({
+    embeddedImageBytes,
+    ...entry,
   });
   return {
     fileName: safeFileName(entry.id, "png"),
@@ -370,6 +402,8 @@ async function generateImageForEntry(
   switch (entry.kind) {
     case "s3-image":
       return await generateS3Image(entry, ctx);
+    case "discord-screenshot":
+      return await generateDiscordScreenshot(entry, ctx);
     case "competition-graph":
       return await generateCompetitionGraph(entry, ctx);
     case "report-graph":

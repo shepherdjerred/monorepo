@@ -13,7 +13,10 @@ import CTA from "../components/CTA.astro";
 import GalleryItem from "../components/GalleryItem.astro";
 import BenefitCard from "../components/BenefitCard.astro";
 import ProcessStep from "../components/ProcessStep.astro";
-import { generatedScoutShowcaseAssets } from "../data/scout-showcase";
+import {
+  generatedScoutShowcaseAssets,
+  getGeneratedScoutShowcaseAssetSrc,
+} from "../data/scout-showcase";
 import {
   DISCORD_INSTALL_CLICK_EVENT,
   DISCORD_INVITE_URL,
@@ -21,7 +24,7 @@ import {
 
 const matchImg = "/match.png";
 const loadingScreenImg = "/loading-screen.png";
-const arenaDiscordImg = "/arena-discord.png";
+const arenaDiscordImg = getGeneratedScoutShowcaseAssetSrc("arena-discord");
 const soloDiscordImg = "/solo-discord.png";
 const leaderboardLpImg = "/leaderboard-lp.png";
 ---
