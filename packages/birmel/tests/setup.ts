@@ -133,7 +133,7 @@ void mock.module("discord.js", () => ({
 void mock.module("discord-player", () => ({
   Player: class MockPlayer {
     extractors = {
-      register: () => Promise.resolve(),
+      register: () => Promise.resolve({}),
     };
     events = {
       on() {
