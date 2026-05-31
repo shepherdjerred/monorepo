@@ -237,14 +237,14 @@ export function buildInlineReviewComments(input: {
   let skippedWithoutSuggestion = 0;
 
   for (const finding of input.findings) {
-    const marker = inlineFindingMarker(finding, input.pipeline.commitSha);
-    if (input.existingMarkers.has(marker)) {
-      skippedDuplicate += 1;
+    if (finding.verification?.status !== "verified") {
+      skippedUnverified += 1;
       continue;
     }
 
-    if (finding.verification?.status !== "verified") {
-      skippedUnverified += 1;
+    const marker = inlineFindingMarker(finding, input.pipeline.commitSha);
+    if (input.existingMarkers.has(marker)) {
+      skippedDuplicate += 1;
       continue;
     }
 
@@ -467,7 +467,7 @@ function renderStageCounts(stageCounts: PostReviewStageCounts): string {
     `${String(stageCounts.deterministicFindings)} deterministic`,
     `${String(stageCounts.specialistFindings)} specialist`,
     `${String(stageCounts.consensusFindings)} consensus`,
-    `${String(stageCounts.verifiedFindings)} verified`,
+    `${String(stageCounts.verifiedFindings)} post-verify`,
     `${String(stageCounts.dedupedFindings)} deduped`,
   ].join(" ");
 }
