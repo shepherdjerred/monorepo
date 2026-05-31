@@ -322,6 +322,16 @@ pre-commit:
             glob: "packages/scout-for-lol/**/*.{ts,tsx}"
             run: bun run --cwd packages/backend db:generate && bun run typecheck && bun run test
 
+          - name: scout-test-template-check
+            root: "packages/scout-for-lol/packages/backend/"
+            glob:
+              - "packages/scout-for-lol/packages/backend/prisma/migrations/**"
+              - "packages/scout-for-lol/packages/backend/scripts/generate-test-template-db.ts"
+              - "packages/scout-for-lol/packages/backend/scripts/check-test-template-db.ts"
+              - "packages/scout-for-lol/packages/backend/src/testing/template.db"
+              - "packages/scout-for-lol/packages/data/src/seasons.ts"
+            run: bunx --trust prisma generate && bun run check:test-template
+
           - name: discord-plays-pokemon-typecheck
             root: "packages/discord-plays-pokemon/"
             glob: "packages/discord-plays-pokemon/**/*.{ts,tsx}"
