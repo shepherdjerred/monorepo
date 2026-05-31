@@ -94,7 +94,9 @@ export type PrReviewPipelineResult = {
   inlineCommentsFailed: boolean;
 };
 
-function countDistinctFindingIds(findings: readonly AnnotatedFinding[]): number {
+function countDistinctFindingIds(
+  findings: readonly AnnotatedFinding[],
+): number {
   return new Set(findings.map((finding) => finding.finding.id)).size;
 }
 

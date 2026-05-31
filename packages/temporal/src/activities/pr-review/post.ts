@@ -269,10 +269,10 @@ async function postReviewImpl(
             workflowId,
             bodyBytes: body.length,
             inlineCommentsWouldPost: inline.summary.posted,
-          inlineCommentsWouldSkipUnanchored: inline.summary.skippedUnanchored,
-          inlineCommentsWouldSkipUnverified: inline.summary.skippedUnverified,
-          inlineCommentsWouldSkipWithoutSuggestion:
-            inline.summary.skippedWithoutSuggestion,
+            inlineCommentsWouldSkipUnanchored: inline.summary.skippedUnanchored,
+            inlineCommentsWouldSkipUnverified: inline.summary.skippedUnverified,
+            inlineCommentsWouldSkipWithoutSuggestion:
+              inline.summary.skippedWithoutSuggestion,
           },
         );
         return {
