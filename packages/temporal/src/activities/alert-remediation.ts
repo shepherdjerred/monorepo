@@ -3,6 +3,7 @@ import { z } from "zod/v4";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { cleanupWorkdir, provisionWorkdir } from "#lib/pr-review-workdir.ts";
 import { parseClaudeResultMessage } from "#shared/claude-result.ts";
+import { parseJsonArray } from "#shared/json.ts";
 import { renderAuditMarkdownToHtml } from "#shared/markdown-to-html.ts";
 import { resolvePostalAddresses, sendPostalEmail } from "#shared/postal.ts";
 import { redactSecrets } from "#shared/redact.ts";
@@ -94,21 +95,6 @@ function jsonLog(
       ...fields,
     }),
   );
-}
-
-function parseJsonArray<T>(
-  raw: string,
-  schema: z.ZodType<T>,
-  label: string,
-): T[] {
-  try {
-    return z.array(schema).parse(JSON.parse(raw));
-  } catch (error: unknown) {
-    throw new Error(
-      `Failed to parse ${label}: ${error instanceof Error ? error.message : String(error)}`,
-      { cause: error },
-    );
-  }
 }
 
 async function collectAlerts(

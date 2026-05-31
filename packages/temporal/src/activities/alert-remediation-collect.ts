@@ -7,6 +7,7 @@ import {
   type AlertRemediationSweepInput,
   type NormalizedAlert,
 } from "#shared/alert-remediation.ts";
+import { parseJsonArray } from "#shared/json.ts";
 import {
   defaultAlertRemediationDeps,
   type AlertRemediationDeps,
@@ -53,21 +54,6 @@ const BugsinkIssueCliSchema = z
 
 function detailsFrom(value: unknown): Record<string, unknown> {
   return typeof value === "object" && value !== null ? { ...value } : {};
-}
-
-function parseJsonArray<T>(
-  raw: string,
-  schema: z.ZodType<T>,
-  label: string,
-): T[] {
-  try {
-    return z.array(schema).parse(JSON.parse(raw));
-  } catch (error: unknown) {
-    throw new Error(
-      `Failed to parse ${label}: ${error instanceof Error ? error.message : String(error)}`,
-      { cause: error },
-    );
-  }
 }
 
 function alertUrl(sourceUrl: string | undefined): string | undefined {

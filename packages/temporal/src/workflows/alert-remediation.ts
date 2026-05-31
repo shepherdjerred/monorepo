@@ -71,6 +71,44 @@ function failedResult(
   };
 }
 
+function cleanupFailureMessage(error: unknown): string {
+  return `Cleanup failed after agent completion: ${
+    error instanceof Error ? error.message : String(error)
+  }`;
+}
+
+function resultWithCleanupFailure(
+  result: AlertRemediationChildResult,
+  error: unknown,
+): AlertRemediationChildResult {
+  const message = cleanupFailureMessage(error);
+  return {
+    ...result,
+    reason: `${result.reason}\n\n${message}`,
+    markdown: `${result.markdown}\n\n${message}`,
+  };
+}
+
+type CleanupResult =
+  | {
+      ok: true;
+    }
+  | {
+      ok: false;
+      error: unknown;
+    };
+
+async function cleanupWorkdir(workdir: {
+  workdir: string;
+}): Promise<CleanupResult> {
+  try {
+    await workdirActivities.cleanupAlertRemediationWorkdir(workdir);
+    return { ok: true };
+  } catch (error: unknown) {
+    return { ok: false, error };
+  }
+}
+
 function alreadyCoveredResult(
   input: AlertRemediationChildInput,
   pr: FindExistingAlertRemediationPrResult,
@@ -107,12 +145,27 @@ export async function alertRemediationChildWorkflow(
       input,
     });
     try {
-      return await agentActivities.runAlertRemediationAgent({
+      const result = await agentActivities.runAlertRemediationAgent({
         input,
         workdir: workdir.workdir,
       });
-    } finally {
-      await workdirActivities.cleanupAlertRemediationWorkdir(workdir);
+      const cleanupResult = await cleanupWorkdir(workdir);
+      if (!cleanupResult.ok) {
+        return resultWithCleanupFailure(result, cleanupResult.error);
+      }
+      return result;
+    } catch (error: unknown) {
+      const cleanupResult = await cleanupWorkdir(workdir);
+      if (!cleanupResult.ok) {
+        return failedResult(
+          input,
+          new Error(
+            `${error instanceof Error ? error.message : String(error)}; ${cleanupFailureMessage(cleanupResult.error)}`,
+            { cause: error },
+          ),
+        );
+      }
+      throw error;
     }
   } catch (error: unknown) {
     return failedResult(input, error);
@@ -157,10 +210,20 @@ async function runChildrenWithLimit(
   concurrency: number,
 ): Promise<AlertRemediationChildResult[]> {
   const results: AlertRemediationChildResult[] = [];
-  for (let index = 0; index < inputs.length; index += concurrency) {
-    const batch = inputs.slice(index, index + concurrency);
-    results.push(...(await Promise.all(batch.map((input) => runChild(input)))));
-  }
+  let nextIndex = 0;
+  const workerCount = Math.min(concurrency, inputs.length);
+  const workers = Array.from({ length: workerCount }, async () => {
+    while (nextIndex < inputs.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      const input = inputs.at(index);
+      if (input === undefined) {
+        throw new Error(`Missing child input at index ${String(index)}`);
+      }
+      results[index] = await runChild(input);
+    }
+  });
+  await Promise.all(workers);
   return results;
 }
 

@@ -175,7 +175,73 @@ describe("alertRemediationSweepWorkflow", () => {
     expect(emailCalls).toBe(1);
     expect(result.emailSent).toBe(true);
   }, 60_000);
+});
 
+describe("alertRemediationChildWorkflow cleanup", () => {
+  it("preserves successful agent outcomes when cleanup fails", async () => {
+    const worker = await Worker.create({
+      connection: testEnv.nativeConnection,
+      taskQueue: TASK_QUEUE,
+      workflowsPath: new URL("index.ts", import.meta.url).pathname,
+      activities: {
+        collectAlertRemediationAlerts: async () => ({
+          alerts: [alert("pagerduty:cleanup")],
+          failures: [],
+        }),
+        findExistingAlertRemediationPr: async () => ({ found: false }),
+        prepareAlertRemediationWorkdir: async () => ({
+          workdir: "/tmp/alert-remediation-test",
+        }),
+        runAlertRemediationAgent:
+          async (): Promise<AlertRemediationChildResult> => ({
+            source: "pagerduty",
+            fingerprint: "pagerduty:cleanup",
+            title: "Alert pagerduty:cleanup",
+            outcome: "pr-created",
+            decision: "created draft PR",
+            reason: "Straightforward repository fix.",
+            markdown: "Opened draft PR.",
+            prUrl: "https://github.com/shepherdjerred/monorepo/pull/123",
+            branchName: "alert-remediation/pagerduty/cleanup",
+            verificationCommands: ["bun test"],
+          }),
+        cleanupAlertRemediationWorkdir: async () => {
+          throw new Error("simulated cleanup failure");
+        },
+        sendAlertRemediationSweepEmail: async () => ({
+          sent: true,
+          subject: "x",
+          messageId: "m",
+        }),
+      },
+    });
+
+    const result = await worker.runUntil(
+      testEnv.client.workflow.execute(alertRemediationSweepWorkflow, {
+        args: [
+          {
+            repo: { fullName: "shepherdjerred/monorepo", ref: "main" },
+            provider: "claude",
+            concurrency: 3,
+            maxTurns: 20,
+          },
+        ],
+        taskQueue: TASK_QUEUE,
+        workflowId: "alert-remediation-sweep-cleanup-failure",
+      }),
+    );
+
+    expect(result.outcomes[0]?.outcome).toBe("pr-created");
+    expect(result.outcomes[0]?.prUrl).toBe(
+      "https://github.com/shepherdjerred/monorepo/pull/123",
+    );
+    expect(result.outcomes[0]?.reason).toContain(
+      "Cleanup failed after agent completion",
+    );
+  }, 60_000);
+});
+
+describe("alertRemediationSweepWorkflow existing PRs", () => {
   it("skips agent work when an open remediation PR already exists", async () => {
     let agentCalls = 0;
     const worker = await Worker.create({
