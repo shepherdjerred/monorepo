@@ -52,7 +52,7 @@ try {
 
   if (result.exitCode !== 0) {
     throw new Error(
-      `Failed to generate test template database for freshness check (exit ${result.exitCode.toString()})`,
+      `Failed to generate test template database for freshness check (exit ${result.exitCode})`,
     );
   }
 
