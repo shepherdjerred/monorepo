@@ -1063,6 +1063,16 @@ export function releasePleaseHelper(
       `@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}`,
     ])
     .withExec(["claude", "--version"])
+    // This container runs as root (the gh download, apt packages, the
+    // `> /usr/local/bin/git-askpass` write in mintGithubAppTokenAndSetupGitAuth,
+    // and the root-owned /workspace mount all depend on it), but recent Claude
+    // Code releases refuse `--dangerously-skip-permissions` under uid 0 with
+    // "cannot be used with root/sudo privileges for security reasons". IS_SANDBOX=1
+    // is Claude Code's documented escape hatch for trusted, ephemeral automation
+    // containers: this one runs a fixed, code-reviewed prompt
+    // (.dagger/prompts/refine-release-please.md) scoped only by the GitHub App
+    // token, which is exactly the sandbox case the flag is meant for.
+    .withEnvVariable("IS_SANDBOX", "1")
     .withWorkdir("/workspace")
     .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES });
 

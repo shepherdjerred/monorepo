@@ -6,7 +6,6 @@ import { generateDependencySummary as _generateDependencySummary } from "./deps-
 import { runDnsAudit as _runDnsAudit } from "./dns-audit.ts";
 import { syncGolinks as _syncGolinks } from "./golink-sync.ts";
 import {
-  goodMorningEarly as _goodMorningEarly,
   goodMorningGetUp as _goodMorningGetUp,
   goodMorningWakeUp as _goodMorningWakeUp,
 } from "./ha/good-morning.ts";
@@ -67,10 +66,6 @@ export async function syncGolinks(): Promise<void> {
   return _syncGolinks();
 }
 
-export async function goodMorningEarly(): Promise<void> {
-  return _goodMorningEarly();
-}
-
 export async function goodMorningWakeUp(): Promise<void> {
   return _goodMorningWakeUp();
 }
@@ -83,8 +78,8 @@ export async function goodNight(): Promise<void> {
   return _goodNight();
 }
 
-export async function welcomeHome(): Promise<void> {
-  return _welcomeHome();
+export async function welcomeHome(firstArrival = true): Promise<void> {
+  return _welcomeHome(firstArrival);
 }
 
 export async function leavingHome(): Promise<void> {

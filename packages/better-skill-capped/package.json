@@ -19,7 +19,7 @@
     "@fortawesome/free-solid-svg-icons": "^7.2.0",
     "@fortawesome/react-fontawesome": "^3.3.1",
     "@sentry/react": "^10.49.0",
-    "axios": "^1.15.2",
+    "axios": "^1.16.0",
     "bulma": "^1.0.4",
     "classnames": "^2.5.1",
     "fuse.js": "^7.3.0",

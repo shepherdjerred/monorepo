@@ -27,7 +27,7 @@ const versions = {
     "latest@sha256:e6647a94d553bf3f7c95c53fc6d9da5785e6c278d9002e99ea32abdb5e3c513a",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "itzg/minecraft-server":
-    "2026.5.3-java21@sha256:e755f588bf61bb5ff79b5ad78df29cc0ad7a17297ec7005a8ba99300c7ff1ad2",
+    "2026.5.4-java21@sha256:0c461abea3f54be906efab6c3e8f1dd568d32d58547474af3405c4813d2217c4",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=loose
   "plexinc/pms-docker":
     "1.43.1.10611-1e34174b1-amd64@sha256:7fe30c0ca399103535e6a5b10207aa2b72d053c652763ee2ce69d082db797d74",
@@ -111,22 +111,22 @@ const versions = {
   openebs: "4.4.0",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/scout-for-lol/beta":
-    "2.0.0-3016@sha256:d0a8bfb58bbcdb844e4821a87734cd0f9103d8ce5ccbc55de7ce8d3e49a9c60a",
+    "2.0.0-3079@sha256:a15b2cc903b0f06ae09bfcdf197b705fe652635a1e242827d20ec1b8b25f16ef",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
   "shepherdjerred/scout-for-lol/prod":
     "2.0.0-2985@sha256:8b66f27b0daaff642a2ac838e838e8f8ccd64a21e2f9e09fb69730c1bbf8ff36",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
-    "2.0.0-2970@sha256:89b85d616852f61f17a5201378d0adb812b68d1255ddbe221a6f31670b9c36c2",
+    "2.0.0-3079@sha256:1f7302efa22d36a54eac5a35a79480ea070bc00a4050981f30b301354525b188",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/starlight-karma-bot
   "shepherdjerred/starlight-karma-bot/prod":
     "2.0.0-2970@sha256:89b85d616852f61f17a5201378d0adb812b68d1255ddbe221a6f31670b9c36c2",
   // not managed by renovate
   "shepherdjerred/birmel":
-    "2.0.0-2970@sha256:9c09723e422b7e4bcc9ec7fcf6947480531cc8aab6b69412f4e4d6b3583ac82a",
+    "2.0.0-3079@sha256:5a559ee6774483aa8a40ad5d24bb7ca948a81534bc7b1043a7a5e50472b1ccf3",
   // not managed by renovate
   "shepherdjerred/discord-plays-pokemon":
-    "2.0.0-2995@sha256:faa27891174920add15ecee57edfaa1eda05e3f76f28311abc782b349091ced5",
+    "2.0.0-3079@sha256:ed7e2ba4fa0eb2eb7f0153526e4188d333e716b07159ee1b5092f502769fe318",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "freshrss/freshrss":
     "1.29.0@sha256:cca8988d05cd449e1c6c69405971b1e6fc2c2116ceeb45c9fa3fc33837997a75",
@@ -216,15 +216,15 @@ const versions = {
   // Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3
   // not managed by renovate
   "shepherdjerred/caddy-s3proxy":
-    "2.0.0-3021@sha256:39da2fb4cbd321ea65a89a55b94152945b615a7287b98f2549524c4e074a8b0d",
+    "2.0.0-3079@sha256:bc1f9486ec6dcff39e011fe5386129e4038d955e9d7e741821ffbf275e01efc7",
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
-    "2.0.0-2970@sha256:e978f98a6d1370c73c1bfd1d2c8b8686d57df2183407747315652e895e9a665d",
+    "2.0.0-3079@sha256:29380fa088ff750976765e8993cd372ecf76170941bac4903303a7a587cdb6ff",
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
-    "2.0.0-3021@sha256:ee8137d6eb5027b2e7e0a9ae2a74e2ff291494e38a7bf2ef6692547b57b06746",
+    "2.0.0-3079@sha256:57e9f9f53aac72cadf042d6e19e45cf256df6fdd2815f379fd30251e8460a6d8",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "temporalio/auto-setup":
     "1.29.6@sha256:1263120feed69d82e4ca23b8ca6f1d702c3029fe70714e382966d0192318eab6",
@@ -237,11 +237,11 @@ const versions = {
   // Custom temporal-worker image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/temporal-worker":
-    "2.0.0-2985@sha256:f26de0ed659d4a1f342b787c828433a12fb3b098ea8f16555ac62f85fff73842",
+    "2.0.0-3079@sha256:d441eede43e6ab721c64a03ea581d4dab3050e4fa6f8f03612288b09c30b5149",
   // Custom TRMNL dashboard image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/trmnl-dashboard":
-    "2.0.0-2970@sha256:7acb602590a8312af01586e1c572648ec3433f1b31cb2cef1fc66022a49be1c6",
+    "2.0.0-3079@sha256:a7e8a4b4dd4b7302e457c6af9a2dfea8eb03a95a558f2cff33a7d62b9d46ebd3",
 };
 
 /**

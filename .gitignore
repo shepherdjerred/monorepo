@@ -38,8 +38,12 @@ test-results/
 packages/dpp/
 
 # Claude Code local session files (root level only)
-/.claude/
+# Ignore everything under .claude/ except the checked-in project config + hooks.
+/.claude/*
 !/.claude/settings.json
+!/.claude/hooks/
+/.claude/hooks/*
+!/.claude/hooks/trust-mise.sh
 /.claude.json
 /.claude.json.*
 

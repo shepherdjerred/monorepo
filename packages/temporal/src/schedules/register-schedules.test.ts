@@ -23,10 +23,8 @@ const ONE_MINUTE = 60 * 1000;
 const ONE_HOUR = 60 * ONE_MINUTE;
 
 const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
-  // good-morning.ts: MORNING_HEAT_DURATION = 60 minutes
-  goodMorningEarly: 60 * ONE_MINUTE,
-  // wake-up: ~5+2 sec + 4 × 5-second volume steps = ~30 seconds, well under 1m
-  goodMorningWakeUp: ONE_MINUTE,
+  // wake-up: ~30 sec of media ramp + MORNING_HEAT_DURATION (60 minutes) heat hold
+  goodMorningWakeUp: 60 * ONE_MINUTE,
   // get-up: ~5 sec sleep between volume ramps; <1m total
   goodMorningGetUp: ONE_MINUTE,
   // run-vacuum: verifyState delaySeconds=180 + 3 inter-attempt retry sleeps.

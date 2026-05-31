@@ -60,7 +60,7 @@ immediate relief, then reconciled the cdk8s source so ArgoCD stays Synced:
 
 ### Caveats
 
-- scout `db.sqlite` will keep growing — expansion only defers the problem. Needs a retention/`VACUUM` strategy (follow-up).
+- scout `db.sqlite` root cause (investigated 2026-05-30): **`StoredMatchTimeline` is 7.4 GB = 88% of the 8.6 GB DB** (10,958 raw Riot timelines, ~700 KB avg, max 1.9 MB); `StoredMatch` adds 851 MB. It wasn't organic growth — a `prod-live-report-store-catch-up` S3 backfill ran 2026-05-26 → 05-30 (scanned 44,475 S3 objects, imported 22,818; 9,339 timelines on 05-27 alone, `status=COMPLETE` 17:45). 99.5% of rows have `importedFromS3=1` + an `s3Key`, so the local copy is **redundant with S3/SeaweedFS**. Backfill is done so acute growth stopped, but `freelist=0` → won't shrink without deleting rows + `VACUUM`. Fix options: (1) stop persisting timeline `rawJson` locally, read from S3 on demand (~7.4 GB win); (2) prune/retain `StoredMatchTimeline`/`StoredMatch` beyond N days then `VACUUM`; (3) scope the catch-up import to not hydrate timelines locally.
 - bugsink snapshot overhead (~7G) scales with DB churn; 32Gi gives ~24G headroom but watch if the DB grows materially.
 - `VeleroLargePVCMayImpactBackups` remains noisy (can't see exclusion labels) — candidate for tuning.
 - ArgoCD autosync is OFF on these apps; the out-of-band expansion will not be reverted, but the GitOps source is only authoritative after PR #966 merges.
