@@ -114,6 +114,22 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Daily homelab health audit email via generic report-only agent task (Claude -> Postal)",
   },
   {
+    id: "alert-remediation-hourly",
+    workflowType: "alertRemediationSweepWorkflow",
+    args: [
+      {
+        repo: { fullName: "shepherdjerred/monorepo", ref: "main" },
+        provider: "claude",
+        concurrency: 3,
+      },
+    ],
+    cronExpression: "0 * * * *",
+    taskQueue: TASK_QUEUES.AGENT_TASK,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "2 hours",
+    memo: "Hourly PagerDuty/Bugsink alert remediation fan-out. Child workflows may create draft PRs for straightforward repo-only fixes.",
+  },
+  {
     id: "scout-data-dragon-version-check",
     workflowType: "runScoutDataDragonVersionCheck",
     args: [SCOUT_LANE_PRIOR_UPDATE_CONFIG],
