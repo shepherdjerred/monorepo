@@ -4,6 +4,7 @@ import {
   assertAdmin,
   GuildIdInput,
   getPlayerOrThrow,
+  playerDetailInclude,
   type PlayerLookupInput,
   type WebCtx,
 } from "#src/lib/player-admin/shared.ts";
@@ -150,11 +151,8 @@ export async function getCurrentLinkedPlayer(
   await assertAdmin(ctx, input.guildId);
   const player = await prisma.player.findFirst({
     where: { serverId: input.guildId, discordId: ctx.user.discordId },
+    include: playerDetailInclude,
   });
   if (player === null) return null;
-  const detailed = await getPlayerOrThrow({
-    guildId: input.guildId,
-    alias: player.alias,
-  });
-  return serializePlayerDetail(detailed);
+  return serializePlayerDetail(player);
 }

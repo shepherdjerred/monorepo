@@ -8,6 +8,7 @@ import {
   assertAdmin,
   conflict,
   getPlayerOrThrow,
+  isUniqueConstraintError,
   type PlayerLookupInput,
   type WebCtx,
 } from "#src/lib/player-admin/shared.ts";
@@ -39,40 +40,50 @@ export async function renamePlayer(ctx: WebCtx, input: RenamePlayerInputData) {
   if (input.currentAlias === input.newAlias) {
     throw conflict("The new alias is the same as the current alias");
   }
-  const existing = await prisma.player.findUnique({
-    where: {
-      serverId_alias: { serverId: input.guildId, alias: input.newAlias },
-    },
-  });
-  if (existing !== null) {
-    throw conflict(`A player named "${input.newAlias}" already exists`);
-  }
-
   const now = new Date();
-  return prisma.$transaction(async (tx) => {
-    const updated = await tx.player.update({
-      where: {
-        serverId_alias: { serverId: input.guildId, alias: input.currentAlias },
-      },
-      data: { alias: input.newAlias, updatedTime: now },
-    });
-    await recordAudit(
-      {
-        action: "PLAYER_RENAME",
-        actorDiscordId: ctx.user.discordId,
-        serverId: input.guildId,
-        targetPlayerId: updated.id,
-        payload: {
-          previousAlias: input.currentAlias,
-          newAlias: input.newAlias,
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const existing = await tx.player.findUnique({
+        where: {
+          serverId_alias: { serverId: input.guildId, alias: input.newAlias },
         },
-        ipAddress: ctx.webSession.ipAddress,
-        userAgent: ctx.webSession.userAgent,
-      },
-      tx,
-    );
-    return { alias: updated.alias };
-  });
+      });
+      if (existing !== null) {
+        throw conflict(`A player named "${input.newAlias}" already exists`);
+      }
+
+      const updated = await tx.player.update({
+        where: {
+          serverId_alias: {
+            serverId: input.guildId,
+            alias: input.currentAlias,
+          },
+        },
+        data: { alias: input.newAlias, updatedTime: now },
+      });
+      await recordAudit(
+        {
+          action: "PLAYER_RENAME",
+          actorDiscordId: ctx.user.discordId,
+          serverId: input.guildId,
+          targetPlayerId: updated.id,
+          payload: {
+            previousAlias: input.currentAlias,
+            newAlias: input.newAlias,
+          },
+          ipAddress: ctx.webSession.ipAddress,
+          userAgent: ctx.webSession.userAgent,
+        },
+        tx,
+      );
+      return { alias: updated.alias };
+    });
+  } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      throw conflict(`A player named "${input.newAlias}" already exists`);
+    }
+    throw error;
+  }
 }
 
 export async function linkDiscord(ctx: WebCtx, input: LinkDiscordInputData) {

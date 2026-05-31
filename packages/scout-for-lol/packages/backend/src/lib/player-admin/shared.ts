@@ -5,7 +5,7 @@ import {
   RegionSchema,
   RiotIdSchema,
 } from "@scout-for-lol/data";
-import type { User } from "#generated/prisma/client/index.js";
+import { Prisma, type User } from "#generated/prisma/client/index.js";
 import { assertGuildAdmin } from "#src/trpc/guild-guard.ts";
 import { prisma } from "#src/database/index.ts";
 
@@ -30,9 +30,22 @@ export function conflict(message: string): TRPCError {
   return new TRPCError({ code: "CONFLICT", message });
 }
 
+export function isUniqueConstraintError(error: unknown): boolean {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2002"
+  );
+}
+
 export async function assertAdmin(ctx: WebCtx, guildId: string): Promise<void> {
   await assertGuildAdmin({ user: ctx.user, guildId });
 }
+
+export const playerDetailInclude = {
+  accounts: true,
+  subscriptions: true,
+  competitionParticipants: { include: { competition: true } },
+} satisfies Prisma.PlayerInclude;
 
 export async function getPlayerOrThrow(input: {
   guildId: string;
@@ -45,11 +58,7 @@ export async function getPlayerOrThrow(input: {
         alias: input.alias,
       },
     },
-    include: {
-      accounts: true,
-      subscriptions: true,
-      competitionParticipants: { include: { competition: true } },
-    },
+    include: playerDetailInclude,
   });
   if (player === null) {
     throw notFound(`Player "${input.alias}" was not found`);
