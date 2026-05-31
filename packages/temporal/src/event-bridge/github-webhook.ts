@@ -23,9 +23,7 @@ import {
   isPostEnabled,
   runPostReviewStatus,
 } from "#activities/pr-review/post.ts";
-import {
-  STATUS_COMMENT_MARKER,
-} from "#activities/pr-review/post-render.ts";
+import { STATUS_COMMENT_MARKER } from "#activities/pr-review/post-render.ts";
 import {
   renderStatusCommentBody,
   type PostReviewStatusInput,
