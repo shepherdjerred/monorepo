@@ -55,11 +55,14 @@ Replay attempts for PR #962 and #963 were blocked before cloning or review execu
 - Addressed Greptile consensus feedback in `packages/temporal/src/activities/pr-review/consensus.ts` by requiring high-confidence-only clusters to select a verifier-backed representative.
 - Added a regression in `packages/temporal/src/activities/pr-review/consensus.test.ts` for mixed verifier-backed and unverifiable findings in the same high-confidence-only cluster.
 - Verified the latest fixes with `bun test packages/temporal/src/activities/pr-review/post.test.ts`, `bun test packages/temporal/src/activities/pr-review/consensus.test.ts`, `cd packages/temporal && bun test src/activities/pr-review src/workflows/pr-review`, `cd packages/temporal && bun run typecheck`, and `cd packages/temporal && bun run lint`.
+- Confirmed Buildkite builds #3096 and #3111 passed for the implementation and follow-up consensus fix.
+- Confirmed Greptile re-reviewed commit `58643ece073de552c77bc72c31944603f95862ea` at confidence 5/5 with no new actionable files.
 
 ### Remaining
 
-- Re-run Buildkite and automated review checks after the P2 fix commit lands.
+- No code work remains in this log; live PR readiness is tracked by the PR loop.
 
 ### Caveats
 
 - Buildkite soft failures are intentionally ignored for the PR readiness gate per operator instruction.
+- Local replay attempts still require GitHub App credentials; this environment does not have `GITHUB_APP_ID` configured.
