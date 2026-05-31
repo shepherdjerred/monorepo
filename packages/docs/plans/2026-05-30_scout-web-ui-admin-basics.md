@@ -46,3 +46,22 @@ Build functional web UI coverage for Scout's subscription, one-player lookup, an
 
 - The app production build succeeds but still emits the existing Vite warnings for `/app/init-theme.js` and large chunks.
 - Standard `dev:web` startup and Prisma `migrate deploy`/`db push` hit a generic Prisma schema engine error locally, so beta startup used the generated test template database for verification.
+
+## Session Log — 2026-05-31
+
+### Done
+
+- Addressed Greptile P1/P2 review feedback by adding cursor-backed player list pagination, collapsing the current linked player lookup to one query, and moving duplicate alias/account checks into transactional paths with Prisma unique-constraint handling.
+- Addressed follow-up rename behavior by returning the expected `NOT_FOUND` path for missing source aliases and adding negative-path coverage.
+- Addressed the final P1 account-removal race by rechecking the source account count inside the `deleteAccount` and `transferAccount` transactions.
+- Added focused backend coverage for last-account delete and transfer failures without audit rows.
+- Pushed fixes through commit `32f9002c9`; Buildkite build #3102 passed for that commit with only the requested-to-ignore Trivy soft failure.
+- Confirmed PR #980 remained mergeable and all Greptile P3-or-higher review threads were resolved.
+
+### Remaining
+
+- PR #980 remains draft unless it should be marked ready manually.
+
+### Caveats
+
+- Buildkite soft failures were intentionally ignored per request.
