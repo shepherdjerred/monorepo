@@ -64,6 +64,11 @@ try {
       [
         "Scout test template database is stale.",
         "",
+        "This can happen when:",
+        "  - A Prisma migration was added or changed",
+        "  - Season seed data (seasons.ts) was updated",
+        "  - A lockfile update changed the libsql/SQLite version",
+        "",
         "Run this from packages/scout-for-lol/packages/backend:",
         "  bun run generate:test-template",
         "",
