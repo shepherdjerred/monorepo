@@ -11,7 +11,9 @@ import { join } from "node:path";
 
 const logger = createLogger("generate-test-template-db");
 
-const templatePath = `${import.meta.dirname}/../src/testing/template.db`;
+const templatePath =
+  Bun.env["SCOUT_TEST_TEMPLATE_DB_PATH"] ??
+  `${import.meta.dirname}/../src/testing/template.db`;
 const migrationsPath = `${import.meta.dirname}/../prisma/migrations`;
 
 if (existsSync(templatePath)) {

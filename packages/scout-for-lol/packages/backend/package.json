@@ -28,6 +28,7 @@
     "evaluate-lane-priors": "bun run scripts/evaluate-lane-priors.ts",
     "db:generate": "bunx --trust prisma generate && bun run brand-types && bunx prettier --write generated/ && bun run generate:test-template",
     "generate:test-template": "RUST_LOG=info bun run scripts/generate-test-template-db.ts",
+    "check:test-template": "bun run scripts/check-test-template-db.ts",
     "brand-types": "bun run scripts/brand-prisma-types.ts",
     "db:push": "bunx prisma db push",
     "db:migrate": "bunx prisma migrate dev",

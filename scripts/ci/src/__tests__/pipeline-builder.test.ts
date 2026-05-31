@@ -393,6 +393,7 @@ describe("buildPipeline", () => {
         "knip-check",
         "gitleaks-check",
         "suppression-check",
+        "scout-test-template-check",
       ];
       for (const key of qualityKeys) {
         expect(steps.some((s) => s.key === key)).toBe(true);
@@ -445,6 +446,8 @@ describe("buildPipeline", () => {
         "gitleaks-check",
         "suppression-check",
         "env-var-names",
+        "line-endings-check",
+        "scout-test-template-check",
         "migration-guard",
         "merge-conflict-check",
         "large-file-check",
@@ -1093,6 +1096,7 @@ describe("buildPipeline", () => {
         "compliance-check",
         "env-var-names",
         "line-endings-check",
+        "scout-test-template-check",
         "migration-guard",
         "dagger-hygiene",
         "merge-conflict-check",
