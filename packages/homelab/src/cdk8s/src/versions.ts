@@ -111,7 +111,7 @@ const versions = {
   openebs: "4.4.0",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/scout-for-lol/beta":
-    "2.0.0-3146@sha256:6f7a3e46a2cfd58c49b36c1103ff2eaa5e9cfe9f2fa5ebb16bf1d1baa0fee8e4",
+    "2.0.0-3163@sha256:56321e9e31f560e6b5e33eab9d24ec4a55bd89d9f6eced82304ecb51b24080fa",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
   "shepherdjerred/scout-for-lol/prod":
     "2.0.0-2985@sha256:8b66f27b0daaff642a2ac838e838e8f8ccd64a21e2f9e09fb69730c1bbf8ff36",
@@ -123,7 +123,7 @@ const versions = {
     "2.0.0-2970@sha256:89b85d616852f61f17a5201378d0adb812b68d1255ddbe221a6f31670b9c36c2",
   // not managed by renovate
   "shepherdjerred/birmel":
-    "2.0.0-3079@sha256:5a559ee6774483aa8a40ad5d24bb7ca948a81534bc7b1043a7a5e50472b1ccf3",
+    "2.0.0-3163@sha256:ce867680b51da5ce7fbf7cc9eb248578f253c6b66d21fe5f552cd57d69c1f471",
   // not managed by renovate
   "shepherdjerred/discord-plays-pokemon":
     "2.0.0-3079@sha256:ed7e2ba4fa0eb2eb7f0153526e4188d333e716b07159ee1b5092f502769fe318",
@@ -216,7 +216,7 @@ const versions = {
   // Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3
   // not managed by renovate
   "shepherdjerred/caddy-s3proxy":
-    "2.0.0-3146@sha256:5a552187a6281dd1bd3d942676e4ec0772123bd855788dc1a28fbfb0e2837dec",
+    "2.0.0-3163@sha256:ff3a60f32cca6eb9617d45100618d4167bf477271e4fde8559a2960dced4c766",
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
@@ -224,7 +224,7 @@ const versions = {
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
-    "2.0.0-3146@sha256:66281be7df399dec2dad450d457a27bfcbfc842792d5bf09587c3749a28fc300",
+    "2.0.0-3163@sha256:5ecee07f92ca5be0adcaf1edade4bcbec4cf1eb4e81bfa92a5000bbeaf317507",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "temporalio/auto-setup":
     "1.29.6@sha256:1263120feed69d82e4ca23b8ca6f1d702c3029fe70714e382966d0192318eab6",
