@@ -23,6 +23,41 @@ describe("showcase manifest schemas", () => {
           dataKey: "games/2026/05/22/NA1_1/match.json",
         },
         {
+          kind: "discord-screenshot",
+          id: "arena-discord",
+          title: "Arena Discord Screenshot",
+          group: "Arena",
+          state: "postmatch",
+          queue: "arena",
+          playerCount: 3,
+          imageKey: "games/2026/05/22/NA1_2/report.png",
+          dataKey: "games/2026/05/22/NA1_2/match.json",
+          timestamp: "5:23 AM",
+          appName: "Scout for LoL",
+          appNameColor: "#ff5a1f",
+          botMessage: "dropped an Arena recap",
+          botAvatarText: "S",
+          botAvatarColor: "#1f2937",
+          embedImageWidth: 940,
+          chatMessagesBeforeEmbed: [
+            {
+              timestamp: "5:22 AM",
+              author: "rangedtop",
+              avatarText: "R",
+              avatarColor: "#23a559",
+              content: "drop the arena recap",
+            },
+          ],
+          chatMessagesAfterEmbed: [
+            {
+              timestamp: "5:24 AM",
+              author: "SoaringRed",
+              authorColor: "#f0b232",
+              content: "that Nocturne build was illegal",
+            },
+          ],
+        },
+        {
           kind: "competition-graph",
           id: "competition-graph",
           title: "Competition Graph",
@@ -45,7 +80,7 @@ describe("showcase manifest schemas", () => {
       ],
     });
 
-    expect(manifest.entries).toHaveLength(3);
+    expect(manifest.entries).toHaveLength(4);
   });
 
   test("rejects s3 image data validation keys without state", () => {
@@ -64,6 +99,24 @@ describe("showcase manifest schemas", () => {
         ],
       }),
     ).toThrow("s3-image entries with dataKey must include state");
+  });
+
+  test("rejects discord screenshot data validation keys without state", () => {
+    expect(() =>
+      ShowcaseManifestSchema.parse({
+        version: 1,
+        entries: [
+          {
+            kind: "discord-screenshot",
+            id: "arena-discord",
+            title: "Arena Discord Screenshot",
+            group: "Arena",
+            imageKey: "games/2026/05/22/NA1_1/report.png",
+            dataKey: "games/2026/05/22/NA1_1/match.json",
+          },
+        ],
+      }),
+    ).toThrow("discord-screenshot entries with dataKey must include state");
   });
 
   test("rejects duplicate manifest entry ids", () => {

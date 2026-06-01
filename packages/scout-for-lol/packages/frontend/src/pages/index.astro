@@ -11,7 +11,10 @@ import CTA from "../components/CTA.astro";
 import GalleryItem from "../components/GalleryItem.astro";
 import BenefitCard from "../components/BenefitCard.astro";
 import ProcessStep from "../components/ProcessStep.astro";
-import { generatedScoutShowcaseAssets } from "../data/scout-showcase";
+import {
+  generatedScoutShowcaseAssets,
+  getGeneratedScoutShowcaseAssetSrc,
+} from "../data/scout-showcase";
 import {
   DISCORD_INSTALL_CLICK_EVENT,
   DISCORD_INVITE_URL,
@@ -27,15 +30,29 @@ const findShowcaseAsset = (
 ): GeneratedScoutShowcaseAsset | undefined =>
   generatedScoutShowcaseAssets.find((asset) => asset.id === id);
 
-const showcasePreviews = [
-  "arena-3-postmatch",
-  "aram-postmatch",
-  "ranked-solo-1-postmatch",
-].flatMap((assetId) => {
-  const asset = findShowcaseAsset(assetId);
+const requireShowcaseAsset = (id: string): GeneratedScoutShowcaseAsset => {
+  const src = getGeneratedScoutShowcaseAssetSrc(id);
+  const asset = generatedScoutShowcaseAssets.find(
+    (candidate) => candidate.id === id && candidate.src === src,
+  );
 
-  return asset ? [asset] : [];
-});
+  if (asset === undefined) {
+    throw new Error(`Missing generated Scout showcase asset: ${id}`);
+  }
+
+  return asset;
+};
+
+const showcasePreviews = [
+  requireShowcaseAsset("arena-discord"),
+  ..."arena-3-postmatch aram-postmatch ranked-solo-1-postmatch"
+    .split(" ")
+    .flatMap((assetId) => {
+      const asset = findShowcaseAsset(assetId);
+
+      return asset ? [asset] : [];
+    }),
+];
 
 const initialShowcasePreview = showcasePreviews.at(0);
 ---

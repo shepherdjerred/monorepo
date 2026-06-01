@@ -17,6 +17,15 @@ const BaseEntrySchema = z.strictObject({
   playerCount: z.number().int().positive().max(10).optional(),
 });
 
+const DiscordChatMessageSchema = z.strictObject({
+  author: z.string().min(1),
+  content: z.string().min(1),
+  timestamp: z.string().min(1).optional(),
+  authorColor: z.string().min(1).optional(),
+  avatarText: z.string().min(1).optional(),
+  avatarColor: z.string().min(1).optional(),
+});
+
 export const S3ImageShowcaseEntrySchema = BaseEntrySchema.extend({
   kind: z.literal("s3-image"),
   imageKey: z.string().min(1),
@@ -27,6 +36,29 @@ export const S3ImageShowcaseEntrySchema = BaseEntrySchema.extend({
       code: "custom",
       path: ["state"],
       message: "s3-image entries with dataKey must include state",
+    });
+  }
+});
+
+export const DiscordScreenshotShowcaseEntrySchema = BaseEntrySchema.extend({
+  kind: z.literal("discord-screenshot"),
+  imageKey: z.string().min(1),
+  dataKey: z.string().min(1).optional(),
+  timestamp: z.string().min(1).optional(),
+  appName: z.string().min(1).optional(),
+  appNameColor: z.string().min(1).optional(),
+  botMessage: z.string().min(1).optional(),
+  botAvatarText: z.string().min(1).optional(),
+  botAvatarColor: z.string().min(1).optional(),
+  embedImageWidth: z.number().int().positive().max(1056).optional(),
+  chatMessagesBeforeEmbed: z.array(DiscordChatMessageSchema).max(4).optional(),
+  chatMessagesAfterEmbed: z.array(DiscordChatMessageSchema).max(4).optional(),
+}).superRefine((entry, ctx) => {
+  if (entry.dataKey !== undefined && entry.state === undefined) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["state"],
+      message: "discord-screenshot entries with dataKey must include state",
     });
   }
 });
@@ -66,6 +98,7 @@ export const UnsupportedShowcaseEntrySchema = BaseEntrySchema.extend({
 
 export const ShowcaseEntrySchema = z.discriminatedUnion("kind", [
   S3ImageShowcaseEntrySchema,
+  DiscordScreenshotShowcaseEntrySchema,
   CompetitionGraphShowcaseEntrySchema,
   ReportGraphShowcaseEntrySchema,
   UnsupportedShowcaseEntrySchema,
@@ -98,7 +131,12 @@ const BaseGeneratedAssetSchema = BaseEntrySchema.extend({
 });
 
 export const GeneratedShowcaseAssetSchema = BaseGeneratedAssetSchema.extend({
-  kind: z.enum(["s3-image", "competition-graph", "report-graph"]),
+  kind: z.enum([
+    "s3-image",
+    "discord-screenshot",
+    "competition-graph",
+    "report-graph",
+  ]),
   status: z.literal("generated"),
   fileName: z.string().min(1),
   src: z.string().min(1),
@@ -159,6 +197,7 @@ const REQUIRED_SHOWCASE_VARIANT_IDS = [
   "ranked-flex-5-postmatch",
   "arena-3-prematch",
   "arena-3-postmatch",
+  "arena-discord",
   "aram-prematch",
   "aram-postmatch",
   "aram-mayhem-prematch",
