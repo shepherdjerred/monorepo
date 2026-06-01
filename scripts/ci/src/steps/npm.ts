@@ -9,7 +9,14 @@
  */
 import { NPM_PACKAGES, PACKAGE_TO_NPM } from "../catalog.ts";
 import type { NpmPackage } from "../catalog.ts";
-import { safeKey, RETRY, DAGGER_ENV, DRYRUN_FLAG } from "../lib/buildkite.ts";
+import {
+  safeKey,
+  RETRY,
+  DAGGER_ENV,
+  DRYRUN_FLAG,
+  gitDir,
+  gitFile,
+} from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
@@ -28,7 +35,10 @@ function npmPublishStep(
   const depsKey = pkg.dir.replace(/^packages\//, "");
   const deps = WORKSPACE_DEPS[depsKey] ?? [];
   const depFlags = deps
-    .flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`])
+    .flatMap((d: string) => [
+      `--dep-names ${d}`,
+      `--dep-dirs ${gitDir(`packages/${d}`)}`,
+    ])
     .join(" ");
   const devSuffixFlag =
     mode === "dev" ? ` --dev-suffix "$BUILDKITE_BUILD_NUMBER"` : "";
@@ -39,11 +49,11 @@ function npmPublishStep(
   const pkgPath = pkg.dir.replace(/^packages\//, "");
   const cmd =
     [
-      `dagger call publish-npm --pkg-dir ./${pkg.dir} --pkg ${pkg.name}`,
+      `dagger call publish-npm --pkg-dir ${gitDir(pkg.dir)} --pkg ${pkg.name}`,
       `--pkg-path ${pkgPath}`,
       depFlags,
       `--npm-token env:NPM_TOKEN`,
-      `--tsconfig ./tsconfig.base.json`,
+      `--tsconfig ${gitFile("tsconfig.base.json")}`,
     ]
       .filter(Boolean)
       .join(" ") +

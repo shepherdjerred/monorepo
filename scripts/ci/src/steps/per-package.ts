@@ -10,8 +10,14 @@ import {
   PLAYWRIGHT_PACKAGES,
   NPM_BUILD_PACKAGES,
 } from "../catalog.ts";
-import { safeKey, RETRY, DAGGER_ENV } from "../lib/buildkite.ts";
-import { k8sPlugin } from "../lib/k8s-plugin.ts";
+import {
+  safeKey,
+  RETRY,
+  DAGGER_ENV,
+  gitDir,
+  gitFile,
+} from "../lib/buildkite.ts";
+import { k8sPlugin, k8sPluginWithCheckout } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 
 // Import the same dependency map used by the Dagger module
@@ -20,14 +26,18 @@ import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
 /**
  * Build Dagger CLI flags for per-package operations.
  * Generates --pkg-dir, --dep-names, --dep-dirs, --tsconfig flags.
+ *
+ * Paths are git-URL refs (see `gitDir`/`gitFile` in lib/buildkite.ts), so
+ * the Dagger engine fetches each subdir from the public monorepo at
+ * `$BUILDKITE_COMMIT` instead of the BK pod uploading a local working tree.
  */
 function daggerPkgFlags(pkg: string): string {
   const deps = WORKSPACE_DEPS[pkg] ?? [];
-  const flags = [`--pkg-dir ./packages/${pkg}`, `--pkg ${pkg}`];
+  const flags = [`--pkg-dir ${gitDir(`packages/${pkg}`)}`, `--pkg ${pkg}`];
   for (const dep of deps) {
-    flags.push(`--dep-names ${dep}`, `--dep-dirs ./packages/${dep}`);
+    flags.push(`--dep-names ${dep}`, `--dep-dirs ${gitDir(`packages/${dep}`)}`);
   }
-  flags.push("--tsconfig ./tsconfig.base.json");
+  flags.push(`--tsconfig ${gitFile("tsconfig.base.json")}`);
   return flags.join(" ");
 }
 
@@ -178,6 +188,7 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
 }
 
 function goPackageGroup(sk: string): BuildkiteGroup {
+  const goPkgDir = gitDir("packages/terraform-provider-asuswrt");
   return {
     group: `:dagger_knife: terraform-provider-asuswrt`,
     key: `pkg-${sk}`,
@@ -185,19 +196,19 @@ function goPackageGroup(sk: string): BuildkiteGroup {
       daggerCallStep(
         `:building_construction: Build`,
         `build-${sk}`,
-        `dagger call go-build --pkg-dir ./packages/terraform-provider-asuswrt`,
+        `dagger call go-build --pkg-dir ${goPkgDir}`,
         DEFAULT_RESOURCES,
       ),
       daggerCallStep(
         `:test_tube: Test`,
         `test-${sk}`,
-        `dagger call go-test --pkg-dir ./packages/terraform-provider-asuswrt`,
+        `dagger call go-test --pkg-dir ${goPkgDir}`,
         DEFAULT_RESOURCES,
       ),
       daggerCallStep(
         `:mag: Lint`,
         `lint-${sk}`,
-        `dagger call go-lint --pkg-dir ./packages/terraform-provider-asuswrt`,
+        `dagger call go-lint --pkg-dir ${goPkgDir}`,
         DEFAULT_RESOURCES,
       ),
     ],
@@ -212,7 +223,7 @@ function latexPackageGroup(sk: string): BuildkiteGroup {
       daggerCallStep(
         `:page_facing_up: LaTeX Build`,
         `latex-build-${sk}`,
-        `dagger call latex-build --pkg-dir ./packages/resume`,
+        `dagger call latex-build --pkg-dir ${gitDir("packages/resume")}`,
         DEFAULT_RESOURCES,
       ),
     ],
@@ -241,6 +252,18 @@ function daggerCallStep(
   return step;
 }
 
+/**
+ * iOS native deps check — runs a bash script directly against the repo
+ * working tree. **One of the two remaining checkout-bearing pod paths**
+ * (the other being the bootstrap step in `.buildkite/pipeline.yml`).
+ * Uses `k8sPluginWithCheckout` so the BK-managed `git clone` still happens
+ * for this step only.
+ *
+ * Fires only when `packages/tasks-for-obsidian` is affected, so per-pod
+ * checkout cost is amortized over a rare event. PR2 of the BK-pressure
+ * reduction plan converts this to a Dagger function and removes
+ * `k8sPluginWithCheckout` along with the `buildkite-git-mirrors` PVC.
+ */
 function tasksForObsidianNativeDepsStep(resources: {
   cpu: string;
   memory: string;
@@ -251,6 +274,8 @@ function tasksForObsidianNativeDepsStep(resources: {
     command: "bash .buildkite/scripts/tasks-for-obsidian-ios-native-deps.sh",
     timeout_in_minutes: 10,
     retry: RETRY,
-    plugins: [k8sPlugin({ cpu: resources.cpu, memory: resources.memory })],
+    plugins: [
+      k8sPluginWithCheckout({ cpu: resources.cpu, memory: resources.memory }),
+    ],
   };
 }

@@ -15,7 +15,7 @@ import {
   PRISMA_PACKAGES,
   EDITOR_CLI_PACKAGES,
 } from "../catalog.ts";
-import { safeKey, RETRY, DAGGER_ENV } from "../lib/buildkite.ts";
+import { safeKey, RETRY, DAGGER_ENV, gitDir } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
@@ -32,7 +32,10 @@ const VERSION_FLAGS = `--version "2.0.0-$BUILDKITE_BUILD_NUMBER" --git-sha "$BUI
 function depFlags(pkg: string): string {
   const deps = WORKSPACE_DEPS[pkg] ?? [];
   return deps
-    .flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`])
+    .flatMap((d: string) => [
+      `--dep-names ${d}`,
+      `--dep-dirs ${gitDir(`packages/${d}`)}`,
+    ])
     .join(" ");
 }
 
@@ -60,7 +63,7 @@ function imageBuildStep(
   } else if (img.buildFn) {
     // Custom build functions take --pkg-dir + dep flags (no --pkg)
     cmd = [
-      `dagger call ${buildFn} --pkg-dir ./packages/${pkg}`,
+      `dagger call ${buildFn} --pkg-dir ${gitDir(`packages/${pkg}`)}`,
       flags,
       VERSION_FLAGS,
     ]
@@ -73,7 +76,7 @@ function imageBuildStep(
       ? "--install-editor-clis"
       : "";
     cmd = [
-      `dagger call ${buildFn} --pkg-dir ./packages/${pkg} --pkg ${img.name}`,
+      `dagger call ${buildFn} --pkg-dir ${gitDir(`packages/${pkg}`)} --pkg ${img.name}`,
       prismaFlag,
       editorClisFlag,
       flags,
@@ -143,13 +146,16 @@ function smokeTestStep(
   if (SMOKE_NO_ARGS.has(daggerFn)) {
     cmd = `dagger call ${daggerFn}`;
   } else if (SMOKE_CUSTOM_INFRA.has(daggerFn)) {
-    cmd = [`dagger call ${daggerFn} --pkg-dir ./packages/${pkg}`, flags]
+    cmd = [
+      `dagger call ${daggerFn} --pkg-dir ${gitDir(`packages/${pkg}`)}`,
+      flags,
+    ]
       .filter(Boolean)
       .join(" ");
   } else {
     cmd = [
       `dagger call ${daggerFn}`,
-      `--pkg-dir ./packages/${pkg} --pkg ${img.name}`,
+      `--pkg-dir ${gitDir(`packages/${pkg}`)} --pkg ${img.name}`,
       flags,
     ]
       .filter(Boolean)
@@ -203,7 +209,7 @@ function imagePushStep(
   } else if (img.pushFn) {
     // Custom push functions take --pkg-dir + dep flags + tags + registry creds
     pushCall = [
-      `${pushFn} --pkg-dir ./packages/${pkg}`,
+      `${pushFn} --pkg-dir ${gitDir(`packages/${pkg}`)}`,
       flags,
       tagFlags,
       VERSION_FLAGS,
@@ -218,7 +224,7 @@ function imagePushStep(
       ? "--install-editor-clis"
       : "";
     pushCall = [
-      `push-image --pkg-dir ./packages/${pkg} --pkg ${img.name}`,
+      `push-image --pkg-dir ${gitDir(`packages/${pkg}`)} --pkg ${img.name}`,
       prismaFlag,
       editorClisFlag,
       flags,
