@@ -1,8 +1,8 @@
 import { sleep } from "@temporalio/workflow";
 import {
   anyoneHome,
-  callService,
-  getEntityState,
+  callServiceUnchecked,
+  getEntityStateUnchecked,
   sendNotification,
   shouldStopVacuum,
 } from "./util.ts";
@@ -49,21 +49,31 @@ export async function welcomeHome(firstArrival = true): Promise<void> {
     );
   }
 
-  await callService("lock", "unlock", { entity_id: FRONT_DOOR_LOCK });
+  await callServiceUnchecked("lock", "unlock", {
+    entity_id: FRONT_DOOR_LOCK,
+  });
 
-  await callService("scene", "turn_on", { entity_id: LIVING_ROOM_SCENE });
+  await callServiceUnchecked("scene", "turn_on", {
+    entity_id: LIVING_ROOM_SCENE,
+  });
 
-  const sun = await getEntityState(SUN);
+  const sun = await getEntityStateUnchecked(SUN);
   if (sun.state === "below_horizon") {
-    await callService("switch", "turn_on", { entity_id: ENTRYWAY_LIGHT });
-    await callService("switch", "turn_on", { entity_id: FRONT_DOOR_LIGHT });
+    await callServiceUnchecked("switch", "turn_on", {
+      entity_id: ENTRYWAY_LIGHT,
+    });
+    await callServiceUnchecked("switch", "turn_on", {
+      entity_id: FRONT_DOOR_LIGHT,
+    });
   }
 
   if (firstArrival) {
     for (const vacuum of VACUUMS) {
-      const state = await getEntityState(vacuum);
+      const state = await getEntityStateUnchecked(vacuum);
       if (shouldStopVacuum(state.state)) {
-        await callService("vacuum", "return_to_base", { entity_id: vacuum });
+        await callServiceUnchecked("vacuum", "return_to_base", {
+          entity_id: vacuum,
+        });
       }
     }
   }

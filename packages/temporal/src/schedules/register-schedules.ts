@@ -23,9 +23,13 @@ type ScheduleDefinition = {
 };
 
 const PR_REVIEW_EVAL_SCHEDULE_ID = "pr-review-eval-nightly";
+const PR_REVIEW_AB_WEEKLY_REPORT_SCHEDULE_ID = "pr-review-ab-weekly-report";
 const PR_REVIEW_FIXTURES_REPO_URL_ENV = "PR_REVIEW_FIXTURES_REPO_URL";
+const PR_REVIEW_EVAL_DATABASE_URL_ENV = "PR_REVIEW_EVAL_DATABASE_URL";
 const PR_REVIEW_EVAL_PAUSE_REASON =
   "Paused because PR_REVIEW_FIXTURES_REPO_URL is not configured on the Temporal worker";
+const PR_REVIEW_EVAL_DATABASE_PAUSE_REASON =
+  "Paused because PR_REVIEW_EVAL_DATABASE_URL is not configured on the Temporal worker";
 
 const SCOUT_LANE_PRIOR_UPDATE_CONFIG = {
   lanePriors: {
@@ -51,22 +55,30 @@ const HOMELAB_AUDIT_AGENT_TASK: AgentTaskInput = {
   },
   scheduleId: "homelab-audit-daily",
   allowSelfCancel: false,
-  maxTurns: 35,
+  maxTurns: 8,
+  agentTimeoutMinutes: 8,
   emailSubjectPrefix: "Homelab Audit",
   source: {
     docPath: "packages/docs/guides/2026-04-04_homelab-audit-runbook.md",
   },
   prompt: [
-    "Run the daily homelab health audit using the runbook at",
-    "`packages/docs/guides/2026-04-04_homelab-audit-runbook.md` in the checked-out repo.",
-    "Use live read-only evidence from the cluster and observability tools named in the runbook.",
+    "Run a bounded daily homelab health check. The runbook at",
+    "`packages/docs/guides/2026-04-04_homelab-audit-runbook.md` is command reference only;",
+    "do not execute the full runbook or build the full application matrix.",
+    "Use live read-only evidence from the cluster and observability tools.",
     "Do not mutate Kubernetes, GitHub, PagerDuty, Grafana, Bugsink, Cloudflare, files, or git state.",
-    "Keep the run bounded: prioritize active incidents, firing alerts, failed Temporal workflows,",
-    "and changed deltas over exhaustive historical sweeps. Avoid broad unbounded log queries.",
-    "If a tool is slow or a section would exceed the useful audit window, skip that section,",
-    "state exactly what was skipped, and return a partial report instead of continuing indefinitely.",
-    "Return a concise markdown report suitable for email. Include current status, notable regressions,",
-    "resolved items, remaining action items, and exact evidence links or commands where useful.",
+    "Ignore Bugsink entirely for this daily report.",
+    "Finish in 5-10 minutes. Use narrow commands only, and wrap slow shell commands with timeout",
+    "when available, usually 30-60 seconds. Do not run broad Loki scans, full app inventories,",
+    "or exhaustive historical sweeps.",
+    "Check exactly these areas: firing Prometheus alerts, open PagerDuty incidents, failed/stuck",
+    "Temporal workflows and schedules, unhealthy Kubernetes pods/workloads, ArgoCD degraded or",
+    "sync-error apps, and Buildkite main failures.",
+    "Emit progress markers in the report for each area as Checked, Skipped, or Failed so the",
+    "next timeout shows the last completed category. If a tool is slow, skip it and return a",
+    "partial report instead of continuing.",
+    "Return concise markdown suitable for email with current status, notable regressions,",
+    "remaining action items, and exact evidence commands where useful.",
   ].join(" "),
 };
 
@@ -110,8 +122,8 @@ export const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "30 6 * * *",
     taskQueue: TASK_QUEUES.AGENT_TASK,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "2 hours",
-    memo: "Daily homelab health audit email via generic report-only agent task (Claude -> Postal)",
+    workflowExecutionTimeout: "10 minutes",
+    memo: "Bounded daily homelab health check email via generic report-only agent task (Claude -> Postal)",
   },
   {
     id: "alert-remediation-hourly",
@@ -312,17 +324,32 @@ export function prReviewEvalFixturesConfigured(
   return (env[PR_REVIEW_FIXTURES_REPO_URL_ENV]?.trim() ?? "").length > 0;
 }
 
+export function prReviewEvalDatabaseConfigured(
+  env: Record<string, string | undefined> = Bun.env,
+): boolean {
+  return (env[PR_REVIEW_EVAL_DATABASE_URL_ENV]?.trim() ?? "").length > 0;
+}
+
 export function scheduleRequiresConfigPause(
   schedule: ScheduleDefinition,
   env: Record<string, string | undefined> = Bun.env,
 ): { paused: boolean; reason: string | undefined } {
-  if (schedule.id !== PR_REVIEW_EVAL_SCHEDULE_ID) {
+  if (schedule.id === PR_REVIEW_EVAL_SCHEDULE_ID) {
+    if (!prReviewEvalFixturesConfigured(env)) {
+      return { paused: true, reason: PR_REVIEW_EVAL_PAUSE_REASON };
+    }
+    if (!prReviewEvalDatabaseConfigured(env)) {
+      return { paused: true, reason: PR_REVIEW_EVAL_DATABASE_PAUSE_REASON };
+    }
     return { paused: false, reason: undefined };
   }
-  if (prReviewEvalFixturesConfigured(env)) {
+  if (schedule.id === PR_REVIEW_AB_WEEKLY_REPORT_SCHEDULE_ID) {
+    if (!prReviewEvalDatabaseConfigured(env)) {
+      return { paused: true, reason: PR_REVIEW_EVAL_DATABASE_PAUSE_REASON };
+    }
     return { paused: false, reason: undefined };
   }
-  return { paused: true, reason: PR_REVIEW_EVAL_PAUSE_REASON };
+  return { paused: false, reason: undefined };
 }
 
 async function reconcileSchedulePauseState(
@@ -335,9 +362,12 @@ async function reconcileSchedulePauseState(
     console.warn(`Paused schedule: ${schedule.id} (${desired.reason ?? ""})`);
     return;
   }
-  if (schedule.id === PR_REVIEW_EVAL_SCHEDULE_ID) {
+  if (
+    schedule.id === PR_REVIEW_EVAL_SCHEDULE_ID ||
+    schedule.id === PR_REVIEW_AB_WEEKLY_REPORT_SCHEDULE_ID
+  ) {
     await handle.unpause(
-      `${PR_REVIEW_FIXTURES_REPO_URL_ENV} is configured; eval schedule enabled`,
+      `Required PR review eval configuration is present; ${schedule.id} enabled`,
     );
     console.warn(`Unpaused schedule: ${schedule.id}`);
   }

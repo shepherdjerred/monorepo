@@ -158,7 +158,73 @@ describe("PR review eval schedule config", () => {
     expect(
       scheduleRequiresConfigPause(schedule, {
         PR_REVIEW_FIXTURES_REPO_URL: "https://github.com/example/private.git",
+        PR_REVIEW_EVAL_DATABASE_URL: "postgres://example",
       }),
     ).toEqual({ paused: false, reason: undefined });
+  });
+
+  test("pauses nightly eval when the eval database URL is absent", () => {
+    const schedule = SCHEDULES.find(
+      (candidate) => candidate.id === "pr-review-eval-nightly",
+    );
+    if (schedule === undefined) {
+      throw new Error("Missing pr-review-eval-nightly schedule");
+    }
+    expect(
+      scheduleRequiresConfigPause(schedule, {
+        PR_REVIEW_FIXTURES_REPO_URL: "https://github.com/example/private.git",
+      }),
+    ).toEqual({
+      paused: true,
+      reason:
+        "Paused because PR_REVIEW_EVAL_DATABASE_URL is not configured on the Temporal worker",
+    });
+  });
+});
+
+describe("PR review A/B weekly report schedule config", () => {
+  test("pauses the weekly report when the eval database URL is absent", () => {
+    const schedule = SCHEDULES.find(
+      (candidate) => candidate.id === "pr-review-ab-weekly-report",
+    );
+    if (schedule === undefined) {
+      throw new Error("Missing pr-review-ab-weekly-report schedule");
+    }
+    expect(scheduleRequiresConfigPause(schedule, {})).toEqual({
+      paused: true,
+      reason:
+        "Paused because PR_REVIEW_EVAL_DATABASE_URL is not configured on the Temporal worker",
+    });
+  });
+
+  test("does not pause the weekly report when the eval database URL is present", () => {
+    const schedule = SCHEDULES.find(
+      (candidate) => candidate.id === "pr-review-ab-weekly-report",
+    );
+    if (schedule === undefined) {
+      throw new Error("Missing pr-review-ab-weekly-report schedule");
+    }
+    expect(
+      scheduleRequiresConfigPause(schedule, {
+        PR_REVIEW_EVAL_DATABASE_URL: "postgres://example",
+      }),
+    ).toEqual({ paused: false, reason: undefined });
+  });
+});
+
+describe("homelab daily audit schedule config", () => {
+  test("uses a bounded daily report input and timeout", () => {
+    const schedule = SCHEDULES.find(
+      (candidate) => candidate.id === "homelab-audit-daily",
+    );
+    if (schedule === undefined) {
+      throw new Error("Missing homelab-audit-daily schedule");
+    }
+    expect(schedule.workflowExecutionTimeout).toBe("10 minutes");
+    expect(schedule.args[0]).toMatchObject({
+      maxTurns: 8,
+      agentTimeoutMinutes: 8,
+    });
+    expect(JSON.stringify(schedule.args[0])).toContain("Ignore Bugsink");
   });
 });

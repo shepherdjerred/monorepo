@@ -18,6 +18,15 @@ export function reportOnlyPrompt(
   input: AgentTaskInput,
   workdir: string,
 ): string {
+  const runtimeLines =
+    input.agentTimeoutMinutes === undefined
+      ? []
+      : [
+          `Runtime budget: ${String(input.agentTimeoutMinutes)} minutes.`,
+          "- Keep every shell command narrowly scoped and time-bounded; use the `timeout` command when available.",
+          "- If a command is slow or would exceed the budget, stop that section, mark it Skipped or Failed, and return the partial report.",
+          "",
+        ];
   const sourceLines =
     input.source === undefined
       ? []
@@ -47,6 +56,7 @@ export function reportOnlyPrompt(
     "- If one future report-only follow-up is needed, set followUp with either runAt or cron.",
     "- Return only JSON matching the provided schema.",
     "",
+    ...runtimeLines,
     `Task title: ${input.title}`,
     `Repository workdir: ${workdir}`,
     "",

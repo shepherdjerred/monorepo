@@ -260,6 +260,8 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
     title: parsed.title,
     model: command.model,
     workdir: input.workdir,
+    agentTimeoutMinutes: parsed.agentTimeoutMinutes,
+    maxTurns: parsed.maxTurns,
   });
 
   const githubTokenResult = await createGitHubAppInstallationToken();
@@ -442,6 +444,8 @@ async function scheduleFollowUp(
     source: input.parent.source,
     model: input.followUp.model ?? input.parent.model,
     maxTurns: input.followUp.maxTurns ?? input.parent.maxTurns,
+    agentTimeoutMinutes:
+      input.followUp.agentTimeoutMinutes ?? input.parent.agentTimeoutMinutes,
     allowSelfCancel: false,
     emailSubjectPrefix: input.parent.emailSubjectPrefix,
   });

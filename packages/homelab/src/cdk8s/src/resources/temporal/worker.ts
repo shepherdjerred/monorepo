@@ -410,6 +410,13 @@ export function createTemporalWorkerDeployment(
           },
           { optional: true },
         ),
+        PR_REVIEW_EVAL_DATABASE_URL: EnvValue.fromSecretValue(
+          {
+            secret,
+            key: "PR_REVIEW_EVAL_DATABASE_URL",
+          },
+          { optional: true },
+        ),
         GITHUB_APP_ID: EnvValue.fromSecretValue({
           secret,
           key: "GITHUB_APP_ID",

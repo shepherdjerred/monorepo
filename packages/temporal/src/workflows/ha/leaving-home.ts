@@ -1,10 +1,9 @@
 import { sleep } from "@temporalio/workflow";
 import {
-  callService,
   callServiceUnchecked,
   everyoneAway,
   getEntitiesInDomain,
-  getEntityState,
+  getEntityStateUnchecked,
   matchExact,
   sendNotification,
   shouldStartVacuum,
@@ -39,7 +38,7 @@ export async function leavingHome(): Promise<void> {
     "Goodbye! The vacuums will start cleaning soon.",
   );
 
-  await callService("lock", "lock", { entity_id: FRONT_DOOR_LOCK });
+  await callServiceUnchecked("lock", "lock", { entity_id: FRONT_DOOR_LOCK });
 
   const lights = await getEntitiesInDomain("light");
   for (const light of lights) {
@@ -59,9 +58,9 @@ export async function leavingHome(): Promise<void> {
 
   const started: (typeof VACUUMS)[number][] = [];
   for (const vacuum of VACUUMS) {
-    const state = await getEntityState(vacuum);
+    const state = await getEntityStateUnchecked(vacuum);
     if (shouldStartVacuum(state.state)) {
-      await callService("vacuum", "start", { entity_id: vacuum });
+      await callServiceUnchecked("vacuum", "start", { entity_id: vacuum });
       started.push(vacuum);
     }
   }
