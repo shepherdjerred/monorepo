@@ -85,3 +85,20 @@ The generated SQLite database contains the migrated schema plus seeded `Season` 
 ### Caveats
 
 - Buildkite soft failures are intentionally not treated as blocking for this PR-readiness loop.
+
+## Session Log — 2026-05-31 CI Follow-up
+
+### Done
+
+- Investigated Buildkite build 3131 after the `scout-test-template-check` step failed.
+- Updated `packages/scout-for-lol/packages/backend/scripts/check-test-template-db.ts` to compare a deterministic logical snapshot of schema and table contents instead of raw SQLite file bytes.
+- Preserved stale-template failure behavior for real migration or seed drift while avoiding platform-specific SQLite page-layout false positives.
+- Verified the updated checker with `bun run check:test-template`, backend `bun run typecheck`, and Prettier.
+
+### Remaining
+
+- Push the CI fix and continue monitoring the new PR head until Buildkite is green, the PR remains mergeable, and no P3-or-higher review comments remain unresolved.
+
+### Caveats
+
+- Direct Buildkite log access was unavailable in this environment due to the local escalation usage limit, so the failure was inferred from the failed Scout template status and reproduced through the equivalent local command path.
