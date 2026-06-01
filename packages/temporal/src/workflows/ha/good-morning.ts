@@ -1,7 +1,7 @@
 import { sleep } from "@temporalio/workflow";
 import {
   anyoneHome,
-  callService,
+  callServiceUnchecked,
   sendNotification,
   setOutcome,
   volumeUpBy,
@@ -32,7 +32,7 @@ export async function goodMorningWakeUp(): Promise<void> {
 
   // Start the bathroom heat cycle first so it warms while the wake routine
   // plays; it's turned off at the end after MORNING_HEAT_DURATION.
-  await callService("climate", "set_temperature", {
+  await callServiceUnchecked("climate", "set_temperature", {
     entity_id: MASTER_BATHROOM_HEAT,
     temperature: MORNING_HEAT_TEMP_C,
     hvac_mode: "heat",
@@ -40,31 +40,33 @@ export async function goodMorningWakeUp(): Promise<void> {
 
   await sendNotification("Good Morning", "Good Morning! Time to wake up.");
 
-  await callService("media_player", "unjoin", { entity_id: BEDROOM_MEDIA });
+  await callServiceUnchecked("media_player", "unjoin", {
+    entity_id: BEDROOM_MEDIA,
+  });
   await sleep("5 seconds");
-  await callService("media_player", "volume_set", {
+  await callServiceUnchecked("media_player", "volume_set", {
     entity_id: BEDROOM_MEDIA,
     volume_level: 0,
   });
   await sleep("2 seconds");
-  await callService("media_player", "play_media", {
+  await callServiceUnchecked("media_player", "play_media", {
     entity_id: BEDROOM_MEDIA,
     media: WAKE_MEDIA,
   });
-  await callService("media_player", "shuffle_set", {
+  await callServiceUnchecked("media_player", "shuffle_set", {
     entity_id: BEDROOM_MEDIA,
     shuffle: true,
   });
   await volumeUpBy(BEDROOM_MEDIA, 3, 5);
 
-  await callService("scene", "turn_on", {
+  await callServiceUnchecked("scene", "turn_on", {
     entity_id: BEDROOM_DIMMED,
     transition: 3,
   });
 
   // Hold the heat for the remainder of the cycle, then turn it off.
   await sleep(MORNING_HEAT_DURATION);
-  await callService("climate", "turn_off", {
+  await callServiceUnchecked("climate", "turn_off", {
     entity_id: MASTER_BATHROOM_HEAT,
   });
   await setOutcome("executed", "wake-routine-complete");
@@ -77,19 +79,19 @@ export async function goodMorningGetUp(): Promise<void> {
     return;
   }
 
-  await callService("scene", "turn_on", {
+  await callServiceUnchecked("scene", "turn_on", {
     entity_id: BEDROOM_BRIGHT,
     transition: 60,
   });
 
   for (const player of EXTRA_MEDIA_PLAYERS) {
-    await callService("media_player", "volume_set", {
+    await callServiceUnchecked("media_player", "volume_set", {
       entity_id: player,
       volume_level: 0,
     });
   }
 
-  await callService("media_player", "join", {
+  await callServiceUnchecked("media_player", "join", {
     entity_id: BEDROOM_MEDIA,
     group_members: EXTRA_MEDIA_PLAYERS,
   });
@@ -97,7 +99,9 @@ export async function goodMorningGetUp(): Promise<void> {
   const allPlayers = [BEDROOM_MEDIA, ...EXTRA_MEDIA_PLAYERS] as const;
   for (let step = 0; step < 2; step += 1) {
     for (const player of allPlayers) {
-      await callService("media_player", "volume_up", { entity_id: player });
+      await callServiceUnchecked("media_player", "volume_up", {
+        entity_id: player,
+      });
     }
     if (step < 1) {
       await sleep("5 seconds");
