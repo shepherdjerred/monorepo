@@ -111,7 +111,7 @@ const versions = {
   openebs: "4.4.0",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/scout-for-lol/beta":
-    "2.0.0-3079@sha256:a15b2cc903b0f06ae09bfcdf197b705fe652635a1e242827d20ec1b8b25f16ef",
+    "2.0.0-3146@sha256:6f7a3e46a2cfd58c49b36c1103ff2eaa5e9cfe9f2fa5ebb16bf1d1baa0fee8e4",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
   "shepherdjerred/scout-for-lol/prod":
     "2.0.0-2985@sha256:8b66f27b0daaff642a2ac838e838e8f8ccd64a21e2f9e09fb69730c1bbf8ff36",
@@ -216,7 +216,7 @@ const versions = {
   // Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3
   // not managed by renovate
   "shepherdjerred/caddy-s3proxy":
-    "2.0.0-3079@sha256:bc1f9486ec6dcff39e011fe5386129e4038d955e9d7e741821ffbf275e01efc7",
+    "2.0.0-3146@sha256:5a552187a6281dd1bd3d942676e4ec0772123bd855788dc1a28fbfb0e2837dec",
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
@@ -224,7 +224,7 @@ const versions = {
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
-    "2.0.0-3079@sha256:57e9f9f53aac72cadf042d6e19e45cf256df6fdd2815f379fd30251e8460a6d8",
+    "2.0.0-3146@sha256:66281be7df399dec2dad450d457a27bfcbfc842792d5bf09587c3749a28fc300",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "temporalio/auto-setup":
     "1.29.6@sha256:1263120feed69d82e4ca23b8ca6f1d702c3029fe70714e382966d0192318eab6",
@@ -237,7 +237,7 @@ const versions = {
   // Custom temporal-worker image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/temporal-worker":
-    "2.0.0-3079@sha256:d441eede43e6ab721c64a03ea581d4dab3050e4fa6f8f03612288b09c30b5149",
+    "2.0.0-3146@sha256:731ac68ad21ff16fda469e7e41c7c095fcbfe14ee2cabca754508bc5eebfb913",
   // Custom TRMNL dashboard image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/trmnl-dashboard":

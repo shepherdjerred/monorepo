@@ -82,3 +82,21 @@ Implemented a deterministic Discord-style marketing showcase image for the Scout
 ### Caveats
 
 - Local merge-commit hooks required trusting the Scout and Homelab mise configs and installing package-local dependencies for Homelab and the shared ESLint config before hooks could resolve TypeScript ESLint config dependencies.
+
+## Session Log — 2026-05-31 PR Loop
+
+### Done
+
+- Rechecked PR #999 after CI completed and confirmed all hard Buildkite contexts were green.
+- Found that GitHub still reported the PR as unmergeable after `origin/main` advanced.
+- Merged the latest `origin/main` into `codex/scout-discord-showcase`.
+- Resolved the new `packages/scout-for-lol/packages/frontend/src/pages/index.astro` conflict by preserving the compact showcase gallery from `main` and making `arena-discord` the required first generated showcase asset.
+- Verified `packages/scout-for-lol/packages/frontend` with `bun run typecheck` and `bun run lint`.
+
+### Remaining
+
+- Wait for PR #999 CI and review bots to finish again after the merge-conflict fix is pushed.
+
+### Caveats
+
+- The PR loop intentionally ignores Buildkite soft failures, per request.

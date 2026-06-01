@@ -216,4 +216,10 @@ function incrementSkippedInlineMetrics(
       summary.skippedDuplicate,
     );
   }
+  if (summary.skippedUnverified > 0) {
+    prReviewInlineCommentsTotal.inc(
+      { repo, outcome: "skipped_unverified" },
+      summary.skippedUnverified,
+    );
+  }
 }
