@@ -14,7 +14,10 @@ export type AgentTaskCommand = {
   outputPath: string | undefined;
 };
 
-function reportOnlyPrompt(input: AgentTaskInput, workdir: string): string {
+export function reportOnlyPrompt(
+  input: AgentTaskInput,
+  workdir: string,
+): string {
   const runtimeLines =
     input.agentTimeoutMinutes === undefined
       ? []

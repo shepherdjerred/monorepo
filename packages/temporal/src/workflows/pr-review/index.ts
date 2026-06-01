@@ -12,6 +12,7 @@ import type {
   PostActivities,
   PostReviewResult,
 } from "#activities/pr-review/post.ts";
+import type { PostReviewStageCounts } from "#activities/pr-review/post-render.ts";
 import type { MetricsActivities } from "#activities/pr-review/metrics.ts";
 import type { TrackActivities } from "#activities/pr-review/track.ts";
 import type { PrReviewPipelineInput } from "#shared/schemas.ts";
@@ -89,8 +90,15 @@ export type PrReviewPipelineResult = {
   inlineCommentsPosted: number;
   inlineCommentsSkippedUnanchored: number;
   inlineCommentsSkippedDuplicate: number;
+  inlineCommentsSkippedUnverified: number;
   inlineCommentsFailed: boolean;
 };
+
+function countDistinctFindingIds(
+  findings: readonly AnnotatedFinding[],
+): number {
+  return new Set(findings.map((finding) => finding.finding.id)).size;
+}
 
 async function postLifecycleStatus(
   input: PrReviewPipelineInput,
@@ -170,6 +178,7 @@ export async function prReviewPipeline(
         inlineCommentsPosted: 0,
         inlineCommentsSkippedUnanchored: 0,
         inlineCommentsSkippedDuplicate: 0,
+        inlineCommentsSkippedUnverified: 0,
         inlineCommentsFailed: false,
       };
     }
@@ -185,6 +194,8 @@ export async function prReviewPipeline(
       ...machineFindings,
       ...specialistFindings,
     ];
+    const deterministicFindingCount = countDistinctFindingIds(machineFindings);
+    const specialistFindingCount = countDistinctFindingIds(specialistFindings);
 
     const consensusFindings: Finding[] = await consensus.prReviewConsensus({
       annotated: annotatedFindings,
@@ -200,11 +211,19 @@ export async function prReviewPipeline(
       repo: input.repo,
       findings: verifiedFindings,
     });
+    const stageCounts: PostReviewStageCounts = {
+      deterministicFindings: deterministicFindingCount,
+      specialistFindings: specialistFindingCount,
+      consensusFindings: consensusFindings.length,
+      verifiedFindings: verifiedFindings.length,
+      dedupedFindings: dedupedFindings.length,
+    };
 
     const postResult: PostReviewResult = await post.prReviewPost({
       pipeline: input,
       findings: dedupedFindings,
       changedFiles: context.changedFiles,
+      stageCounts,
     });
 
     await metrics.prReviewEmitMetrics({
@@ -242,6 +261,8 @@ export async function prReviewPipeline(
       inlineCommentsSkippedUnanchored:
         postResult.inlineCommentsSkippedUnanchored,
       inlineCommentsSkippedDuplicate: postResult.inlineCommentsSkippedDuplicate,
+      inlineCommentsSkippedUnverified:
+        postResult.inlineCommentsSkippedUnverified,
       inlineCommentsFailed: postResult.inlineCommentsFailed,
     };
   } catch (error: unknown) {

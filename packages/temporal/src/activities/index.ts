@@ -5,6 +5,7 @@ import { golinkSyncActivities } from "./golink-sync.ts";
 import { haActivities } from "./ha.ts";
 import { homelabAuditActivities } from "./homelab-audit.ts";
 import { agentTaskActivities } from "./agent-task.ts";
+import { alertRemediationActivities } from "./alert-remediation.ts";
 import { zfsMaintenanceActivities } from "./zfs-maintenance.ts";
 import { bugsinkHousekeepingActivities } from "./bugsink.ts";
 import { dataDragonActivities } from "./data-dragon.ts";
@@ -23,6 +24,7 @@ export const activities = {
   ...haActivities,
   ...homelabAuditActivities,
   ...agentTaskActivities,
+  ...alertRemediationActivities,
   ...zfsMaintenanceActivities,
   ...bugsinkHousekeepingActivities,
   ...dataDragonActivities,
