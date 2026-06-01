@@ -8,7 +8,7 @@ Complete (code fix); post-deploy verification deferred — see [todos/pagerduty-
 
 Triaging open PagerDuty incidents (all on the **Homelab** service, 8 triggered). They collapsed into 4 real issues; this log covers the first:
 
-- **#5262–#5266** — five "Large PVC may impact Velero backups\n\n 🔥" incidents fired in a 5-minute window on 2026-05-29 21:32–21:37. #5264 had the summary text *tripled*. Every title ended in a literal `\n\n`.
+- **#5262–#5266** — five "Large PVC may impact Velero backups\n\n 🔥" incidents fired in a 5-minute window on 2026-05-29 21:32–21:37. #5264 had the summary text _tripled_. Every title ended in a literal `\n\n`.
 
 The other three open issues (not addressed here): #5274 SSD wear (`nvme1n1` writing 1.5→4 TB/24h), #5275 `runVacuumIfNotHome` skipped 5 days, #5296 62 HA entities unavailable (likely the root cause of #5275).
 
@@ -21,7 +21,7 @@ template at
 [prometheus.ts:192](../../homelab/src/cdk8s/src/resources/argo-applications/prometheus.ts#L192):
 
 ```js
-String.raw`{{ range .Alerts }}{{ .Annotations.summary }}\n{{ .Annotations.description }}\n{{ end }}`
+String.raw`{{ range .Alerts }}{{ .Annotations.summary }}\n{{ .Annotations.description }}\n{{ end }}`;
 ```
 
 Two defects:
@@ -50,7 +50,7 @@ real newline) that includes the namespace inline and falls back from `.message`
 to `.description`:
 
 ```js
-`{{ range .Alerts }}{{ .Annotations.summary }}{{ if .Labels.namespace }} ({{ .Labels.namespace }}){{ end }}: {{ if .Annotations.message }}{{ .Annotations.message }}{{ else }}{{ .Annotations.description }}{{ end }}\n{{ end }}`
+`{{ range .Alerts }}{{ .Annotations.summary }}{{ if .Labels.namespace }} ({{ .Labels.namespace }}){{ end }}: {{ if .Annotations.message }}{{ .Annotations.message }}{{ else }}{{ .Annotations.description }}{{ end }}\n{{ end }}`;
 ```
 
 Post-Helm, Alertmanager now renders, per alert:
@@ -137,7 +137,7 @@ So no alert can page with a bare summary anymore.
 
 - The fix is the same template used by **all** PagerDuty-routed alerts, not just
   Velero — every paged alert's description format changes (now `summary
-  (namespace): message`). This is the intended improvement but worth eyeballing
+(namespace): message`). This is the intended improvement but worth eyeballing
   one of each severity after deploy.
 - A namespace with N large PVCs still produces one incident with N lines (no
   longer identical). If that's still too noisy, narrow `group_by` or move detail
