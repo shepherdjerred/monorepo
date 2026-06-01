@@ -269,3 +269,32 @@ Cache hit ratio is the regression canary — a drop signals the git-URL refactor
 2. **Pipeline generator (`scripts/ci/src/main.ts`)** stays in a checkout-bearing bootstrap pod. One pod per build, ~1.3 GiB write — negligible. Convertible to Dagger later if architectural purity desired; not needed for the disk-pressure win.
 
 3. **Buildkite Kueue `max-in-flight: 20` raise** — once nvme1 has headroom, this becomes a CPU/memory question. Lift after PR2 metrics confirm the model. Out of scope for this plan.
+
+## Session Log — 2026-05-31
+
+### Done
+
+- Phase 1.1 gate test verified the Dagger CLI git-URL Directory pattern against the in-cluster engine v0.20.8. Confirmed `Address.directory` / `Address.file` server-side resolution, cache hits, multi-package deps, and SHA-form refs all work. The `bunBaseContainer(commit: string)` fallback path described in the plan was not needed.
+- PR1 shipped — branch `feat/bk-dagger-git-url-pr1`, commit `2e55e54ef`, PR https://github.com/shepherdjerred/monorepo/pull/1006.
+- Added `REPO_GIT_URL`, `REPO_GIT_REF`, `gitDir()`, `gitFile()` to `scripts/ci/src/lib/buildkite.ts`.
+- `scripts/ci/src/lib/k8s-plugin.ts`: `k8sPlugin()` now sets `checkout: { skip: true }` and drops the `buildkite-git-mirrors` volumeMount. Added `k8sPluginWithCheckout()` escape hatch for the two pod paths that still need a working tree (PR2 removes both).
+- Converted every dagger-call step generator to use git-URL refs: `per-package.ts` (Bun/Go/LaTeX/Prisma), `cooklang.ts`, `helm.ts`, `npm.ts`, `images.ts`, `sites.ts`, `release.ts`, `tofu.ts`, `version.ts`, `ci-image.ts`, and `quality.ts:265` (caddyfileValidateStep).
+- `plainStep()` now uses `k8sPluginWithCheckout()` so the 18 quality steps continue to work until PR2 migrates them.
+- iOS native deps step uses `k8sPluginWithCheckout()` for the same reason.
+- Inlined `collect-digests.sh` into `version.ts` (the script file lived in the working tree which is no longer materialized).
+- Replaced the `--depth=100` k8s-plugin test with new tests covering both `k8sPlugin()` (skip checkout, no mirror mount) and `k8sPluginWithCheckout()` (clone flags + mirror mount restored).
+- `bun run typecheck`: clean. `bun run test`: 181/181 pass.
+- Generated pipeline (full-build): 155 pods with `checkout: skip: true`, 144 git-URL refs, 19 escape-hatch pods (18 plain + 1 iOS), 1 remaining `--pkg-dir ./packages/` (gitleaks inside a plainStep — intentional).
+
+### Remaining
+
+- **PR1 verification (post-merge)**: capture nvme1 write-rate, per-pod p95 writes, NVMe1 controller temp peak, drive utilization, write latency, and Dagger op cache-hit ratio over a 24h window. Targets in the Verification section.
+- **PR2** — migrate the 18 plain quality steps to Dagger functions (`.dagger/src/quality.ts` with one helper per check + 14 `@func()` wrappers in `index.ts`), convert iOS native-deps step to Dagger, delete `plainStep` from `lib/buildkite.ts`, delete `k8sPluginWithCheckout`, delete the `buildkite-git-mirrors` PVC and Helm `default-checkout-params`, drop `install_{shellcheck,gitleaks,trivy,semgrep}` from `setup-tools.sh`. Will be opened after PR1's metrics land in the expected window.
+
+### Caveats
+
+- Dagger engine PVC at 75% (767 / 1024 GiB) is a separate orange flag. The git-URL refactor likely _accelerates_ fill rate (more SHAs cached). Watch `kubelet_volume_stats_used_bytes` post-PR1 and open a sizing/GC follow-up if it climbs faster than 1 GiB/day sustained.
+- `OTEL_RESOURCE_ATTRIBUTES` single-`$` interpolation precedent was the only confirmation that `$BUILDKITE_COMMIT` interpolates at upload time. If for any reason BK changes that semantics, every git-URL step would break — keep an eye on the first build's rendered step commands.
+- `validate-commit-msg.ts` accepts `root` as a scope under `EXTRA_SCOPES`; used for this PR since it touches `scripts/ci/` and `packages/docs/`.
+- iOS native deps step is now an explicit escape hatch. If `packages/tasks-for-obsidian` changes more often than expected, prioritize its Dagger migration in PR2.
+- The generated pipeline keeps `$BUILDKITE_COMMIT` literal in the JSON; the buildkite agent resolves it during `pipeline upload`. Local pipeline-render tests (e.g. dry-running `bun src/main.ts`) will show the literal string — that's expected.
