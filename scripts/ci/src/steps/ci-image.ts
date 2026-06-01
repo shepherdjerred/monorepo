@@ -12,6 +12,7 @@ import {
   DAGGER_ENV,
   DRYRUN_FLAG,
   GITHUB_APP_SECRET_ARGS,
+  REPO_GIT_REF,
 } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteStep } from "../lib/types.ts";
@@ -41,7 +42,7 @@ export function ciBaseImageBuildStep(): BuildkiteStep {
     label: ":docker: Build ci-base",
     key: "build-ci-base",
     depends_on: "quality-gate",
-    command: "dagger call build-ci-base-image --context ./.buildkite/ci-image",
+    command: `dagger call build-ci-base-image --context ${REPO_GIT_REF}:.buildkite/ci-image`,
     timeout_in_minutes: 15,
     priority: 1,
     retry: RETRY,
@@ -74,7 +75,7 @@ export function ciBaseImagePushStep(
       `if [ -z "$$GHCR_TOKEN" ] && [ -n "$$GH_TOKEN" ]; then echo "WARNING: GHCR_TOKEN unset, falling back to GH_TOKEN for GHCR push" >&2; fi`,
       '&& export GHCR_TOKEN="$${GHCR_TOKEN:-$${GH_TOKEN:-}}"',
       `&& if [ -z "$$GHCR_TOKEN" ]; then echo "ERROR: GHCR_TOKEN is empty and GH_TOKEN fallback is unavailable" >&2; exit 1; fi`,
-      `&& dagger call push-ci-base-image --context ./.buildkite/ci-image ${tagFlags}`,
+      `&& dagger call push-ci-base-image --context ${REPO_GIT_REF}:.buildkite/ci-image ${tagFlags}`,
     ].join(" "),
     timeout_in_minutes: 15,
     priority: 1,
@@ -97,7 +98,7 @@ export function ciBaseVersionCommitBackStep(
     key: "ci-base-version-commit-back",
     if: MAIN_ONLY,
     depends_on: "push-ci-base",
-    command: `dagger call ci-base-version-commit-back --source . --version "${version}" ${GITHUB_APP_SECRET_ARGS}${DRYRUN_FLAG}`,
+    command: `dagger call ci-base-version-commit-back --source ${REPO_GIT_REF} --version "${version}" ${GITHUB_APP_SECRET_ARGS}${DRYRUN_FLAG}`,
     timeout_in_minutes: 10,
     priority: 1,
     retry: RETRY,
