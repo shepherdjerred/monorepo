@@ -3,6 +3,12 @@ agents:
 
 steps:
   - label: ":pipeline: Generate Pipeline"
+    # The bootstrap pipeline-upload step is the only BK pod that still
+    # checks out the repo. It runs `bun src/main.ts` against the local
+    # working tree to compute the dynamic pipeline (change-detection +
+    # step generation). Every step it emits skips checkout and lets
+    # Dagger fetch source via git-URL refs instead — see
+    # packages/docs/plans/2026-05-31_bk-dagger-git-url-refactor.md.
     command: .buildkite/scripts/generate-pipeline.sh
     plugins:
       - kubernetes:

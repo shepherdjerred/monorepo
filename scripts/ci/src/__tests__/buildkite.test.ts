@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { daggerStep, plainStep, DAGGER_ENV } from "../lib/buildkite.ts";
+import { daggerStep, DAGGER_ENV } from "../lib/buildkite.ts";
 
 describe("daggerStep — OTel env shape", () => {
   // Regression guard: every dagger CI step must carry the OTel env that lets
@@ -78,13 +78,7 @@ describe("DAGGER_ENV", () => {
   });
 });
 
-describe("plainStep — does NOT carry OTel env", () => {
-  it("plain steps don't run dagger; OTel env would be wasted/confusing", () => {
-    const step = plainStep({
-      label: "lint",
-      key: "lint",
-      command: "bun run lint",
-    });
-    expect(step.env).toBeUndefined();
-  });
-});
+// `plainStep` was removed in PR2 of the BK-pressure reduction plan; all
+// former plain quality steps now route through `daggerStep` calling
+// `dagger call <fn> --source ${REPO_GIT_REF}`. See
+// packages/docs/plans/2026-05-31_bk-dagger-git-url-refactor.md.

@@ -54,6 +54,16 @@ export const OBSIDIAN_HEADLESS_BASE_IMAGE =
 export const HELM_IMAGE =
   "alpine/helm:4.1.4@sha256:8edcaedab4d9864886b7f443d55731be87d4b5ec7dca714c24551455707a8aac";
 
+// Quality-step scanner images (used by .dagger/src/quality.ts).
+// renovate: datasource=docker depName=aquasec/trivy
+export const TRIVY_IMAGE = "aquasec/trivy:0.70.0";
+// renovate: datasource=docker depName=semgrep/semgrep
+export const SEMGREP_IMAGE = "semgrep/semgrep:1.162.0";
+// renovate: datasource=docker depName=zricethezav/gitleaks
+export const GITLEAKS_IMAGE = "zricethezav/gitleaks:v8.30.1";
+// renovate: datasource=docker depName=koalaman/shellcheck-alpine
+export const SHELLCHECK_IMAGE = "koalaman/shellcheck-alpine:v0.11.0";
+
 // Pinned Bun version for containers that install Bun manually (e.g. Playwright)
 // renovate: datasource=npm depName=bun
 export const BUN_VERSION = "1.3.14";

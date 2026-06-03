@@ -64,6 +64,19 @@ export function createBuildkiteApp(chart: Chart) {
     },
   });
 
+  // The `buildkite-git-mirrors` PVC + `default-checkout-params.gitMirrors`
+  // Helm value are intentionally retained even after PR2: the bootstrap
+  // pipeline-upload step in `.buildkite/pipeline.yml` is the only BK pod
+  // that still checks out the repo (it runs `bun src/main.ts` against the
+  // local tree). The BK k8s agent stack auto-configures the bootstrap
+  // pod's checkout to use these mirrors via the alternates path
+  // `/buildkite/git-mirrors/<encoded-url>/objects` — without the mount,
+  // git fetch fails with "unable to normalize alternate object path".
+  // PR3 of the BK-pressure plan will move pipeline generation itself into
+  // Dagger, at which point these can be deleted; until then they cost
+  // ~1.3 GiB once per build, which is negligible compared to the per-step
+  // savings PR1 + PR2 already deliver. See
+  // packages/docs/plans/2026-05-31_bk-dagger-git-url-refactor.md.
   new KubePersistentVolumeClaim(chart, "buildkite-git-mirrors-pvc", {
     metadata: { name: "buildkite-git-mirrors", namespace: "buildkite" },
     spec: {
@@ -93,6 +106,10 @@ export function createBuildkiteApp(chart: Chart) {
               queue: "default",
               "max-in-flight": 20,
               "empty-job-grace-period": "5m",
+              // gitMirrors is intentionally retained for the bootstrap
+              // pipeline-upload step. See the long comment on the PVC
+              // declaration above for why removing this and the PVC was
+              // deferred to a follow-up PR.
               "default-checkout-params": {
                 gitMirrors: {
                   volume: {

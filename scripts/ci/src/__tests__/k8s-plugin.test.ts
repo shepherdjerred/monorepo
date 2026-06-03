@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { k8sPlugin, k8sPluginWithCheckout } from "../lib/k8s-plugin.ts";
+import { k8sPlugin } from "../lib/k8s-plugin.ts";
 
 describe("k8sPlugin", () => {
   it("returns default resources when no options given", () => {
@@ -60,26 +60,9 @@ describe("k8sPlugin", () => {
     expect(checkout["skip"]).toBe(true);
   });
 
-  it("does not mount buildkite-git-mirrors PVC in default pod spec", () => {
+  it("does not mount buildkite-git-mirrors PVC anywhere", () => {
     const plugin = k8sPlugin() as Record<string, unknown>;
     const json = JSON.stringify(plugin);
     expect(json).not.toContain("buildkite-git-mirrors");
-  });
-});
-
-describe("k8sPluginWithCheckout (escape hatch)", () => {
-  it("re-enables BK-managed checkout with shallow clone flags", () => {
-    const plugin = k8sPluginWithCheckout() as Record<string, unknown>;
-    const k8s = plugin["kubernetes"] as Record<string, unknown>;
-    const checkout = k8s["checkout"] as Record<string, string>;
-    expect(checkout["cloneFlags"]).toContain("--depth=100");
-    expect(checkout["fetchFlags"]).toContain("--depth=100");
-  });
-
-  it("re-mounts the buildkite-git-mirrors PVC read-only", () => {
-    const plugin = k8sPluginWithCheckout() as Record<string, unknown>;
-    const json = JSON.stringify(plugin);
-    expect(json).toContain("buildkite-git-mirrors");
-    expect(json).toContain("/buildkite/git-mirrors");
   });
 });
