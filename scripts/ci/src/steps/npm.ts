@@ -16,6 +16,7 @@ import {
   DRYRUN_FLAG,
   gitDir,
   gitFile,
+  DAGGER_CALL,
 } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
@@ -49,7 +50,7 @@ function npmPublishStep(
   const pkgPath = pkg.dir.replace(/^packages\//, "");
   const cmd =
     [
-      `dagger call publish-npm --pkg-dir ${gitDir(pkg.dir)} --pkg ${pkg.name}`,
+      `${DAGGER_CALL} publish-npm --pkg-dir ${gitDir(pkg.dir)} --pkg ${pkg.name}`,
       `--pkg-path ${pkgPath}`,
       depFlags,
       `--npm-token env:NPM_TOKEN`,

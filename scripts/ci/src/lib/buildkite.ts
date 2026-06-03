@@ -43,6 +43,20 @@ export function gitFile(path: string): string {
   return `${REPO_GIT_REF}:${path}`;
 }
 
+/**
+ * Dagger module ref used by every BK pod's `dagger call`. With
+ * `checkout: { skip: true }` there's no local `dagger.json` for the CLI
+ * to discover — without `-m` the CLI errors with
+ * `unknown command "<fn>" for "dagger call"`. The module-ref form uses
+ * `@<ref>` (not `#<ref>` like Directory args), and the trailing `/.dagger`
+ * matches `source` in our `dagger.json`.
+ */
+export const DAGGER_MOD_REF = `github.com/shepherdjerred/monorepo/.dagger@$BUILDKITE_COMMIT`;
+
+/** Canonical `dagger call` prefix for BK steps. Use everywhere instead of
+ *  bare `dagger call`. */
+export const DAGGER_CALL = `dagger -m ${DAGGER_MOD_REF} call`;
+
 /** Standard retry configuration for CI steps. */
 export const RETRY = {
   automatic: [

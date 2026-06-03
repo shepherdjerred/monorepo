@@ -15,6 +15,7 @@ import {
   REPO_GIT_REF,
   gitDir,
   gitFile,
+  DAGGER_CALL,
 } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup } from "../lib/types.ts";
@@ -39,7 +40,7 @@ export function cooklangReleaseGroup(pkgKey?: string): BuildkiteGroup {
         key: "cooklang-publish",
         if: MAIN_ONLY,
         depends_on: dependsOn,
-        command: `dagger call cooklang-build-and-publish --source ${REPO_GIT_REF} ${COOKLANG_PKG_FLAGS} --plugin-repo shepherdjerred/cooklang-for-obsidian ${GITHUB_APP_SECRET_ARGS}${DRYRUN_FLAG}`,
+        command: `${DAGGER_CALL} cooklang-build-and-publish --source ${REPO_GIT_REF} ${COOKLANG_PKG_FLAGS} --plugin-repo shepherdjerred/cooklang-for-obsidian ${GITHUB_APP_SECRET_ARGS}${DRYRUN_FLAG}`,
         timeout_in_minutes: 15,
         priority: 1,
         retry: RETRY,

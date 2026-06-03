@@ -14,6 +14,7 @@ import {
   safeKey,
   RETRY,
   DAGGER_ENV,
+  DAGGER_CALL,
   gitDir,
   gitFile,
 } from "../lib/buildkite.ts";
@@ -63,19 +64,19 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
       daggerCallStep(
         `:eslint: Lint`,
         `lint-${sk}`,
-        `dagger call generate-and-lint ${pf}`,
+        `${DAGGER_CALL} generate-and-lint ${pf}`,
         resources,
       ),
       daggerCallStep(
         `:typescript: Typecheck`,
         `typecheck-${sk}`,
-        `dagger call generate-and-typecheck ${pf}`,
+        `${DAGGER_CALL} generate-and-typecheck ${pf}`,
         resources,
       ),
       daggerCallStep(
         `:test_tube: Test`,
         `test-${sk}`,
-        `dagger call generate-and-test ${pf}`,
+        `${DAGGER_CALL} generate-and-test ${pf}`,
         resources,
       ),
     );
@@ -91,13 +92,13 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
     // uses the HASS_ prefix.
     const typecheckCmd =
       pkg === "temporal"
-        ? `dagger call generate-and-typecheck-with-secrets ${pf} --ha-url env:HASS_URL --ha-token env:HASS_TOKEN`
-        : `dagger call typecheck ${pf}`;
+        ? `${DAGGER_CALL} generate-and-typecheck-with-secrets ${pf} --ha-url env:HASS_URL --ha-token env:HASS_TOKEN`
+        : `${DAGGER_CALL} typecheck ${pf}`;
     steps.push(
       daggerCallStep(
         `:eslint: Lint`,
         `lint-${sk}`,
-        `dagger call lint ${pf}`,
+        `${DAGGER_CALL} lint ${pf}`,
         resources,
       ),
       daggerCallStep(
@@ -114,7 +115,7 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
         daggerCallStep(
           `:performing_arts: Playwright Test`,
           `playwright-test-${sk}`,
-          `dagger call playwright-test ${pf}`,
+          `${DAGGER_CALL} playwright-test ${pf}`,
           resources,
         ),
       );
@@ -124,7 +125,7 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
         daggerCallStep(
           `:test_tube: Test`,
           `test-${sk}`,
-          `dagger call test ${pf}${needsHelm}`,
+          `${DAGGER_CALL} test ${pf}${needsHelm}`,
           resources,
         ),
       );
@@ -144,7 +145,7 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
       daggerCallStep(
         `:building_construction: Build helm-types`,
         `build-helm-types`,
-        `dagger call build-package ${htFlags}`,
+        `${DAGGER_CALL} build-package ${htFlags}`,
         resources,
       ),
     );
@@ -155,13 +156,13 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
       daggerCallStep(
         `:rocket: Astro Check`,
         `astro-check-${sk}`,
-        `dagger call astro-check ${pf}`,
+        `${DAGGER_CALL} astro-check ${pf}`,
         resources,
       ),
       daggerCallStep(
         `:building_construction: Astro Build`,
         `astro-build-${sk}`,
-        `dagger call astro-build ${pf}`,
+        `${DAGGER_CALL} astro-build ${pf}`,
         resources,
       ),
     );
@@ -174,7 +175,7 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
       daggerCallStep(
         `:building_construction: Build`,
         `build-${sk}`,
-        `dagger call build-package ${pf}`,
+        `${DAGGER_CALL} build-package ${pf}`,
         resources,
       ),
     );
@@ -196,19 +197,19 @@ function goPackageGroup(sk: string): BuildkiteGroup {
       daggerCallStep(
         `:building_construction: Build`,
         `build-${sk}`,
-        `dagger call go-build --pkg-dir ${goPkgDir}`,
+        `${DAGGER_CALL} go-build --pkg-dir ${goPkgDir}`,
         DEFAULT_RESOURCES,
       ),
       daggerCallStep(
         `:test_tube: Test`,
         `test-${sk}`,
-        `dagger call go-test --pkg-dir ${goPkgDir}`,
+        `${DAGGER_CALL} go-test --pkg-dir ${goPkgDir}`,
         DEFAULT_RESOURCES,
       ),
       daggerCallStep(
         `:mag: Lint`,
         `lint-${sk}`,
-        `dagger call go-lint --pkg-dir ${goPkgDir}`,
+        `${DAGGER_CALL} go-lint --pkg-dir ${goPkgDir}`,
         DEFAULT_RESOURCES,
       ),
     ],
@@ -223,7 +224,7 @@ function latexPackageGroup(sk: string): BuildkiteGroup {
       daggerCallStep(
         `:page_facing_up: LaTeX Build`,
         `latex-build-${sk}`,
-        `dagger call latex-build --pkg-dir ${gitDir("packages/resume")}`,
+        `${DAGGER_CALL} latex-build --pkg-dir ${gitDir("packages/resume")}`,
         DEFAULT_RESOURCES,
       ),
     ],

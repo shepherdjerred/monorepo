@@ -15,6 +15,7 @@ import {
   REPO_GIT_REF,
   gitDir,
   gitFile,
+  DAGGER_CALL,
 } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
@@ -40,7 +41,7 @@ export function cdk8sSynthStep(dependsOn: string[]): BuildkiteStep {
     label: ":cdk8s: Build cdk8s Manifests",
     key: "homelab-cdk8s",
     depends_on: dependsOn,
-    command: `dagger call homelab-synth --pkg-dir ${gitDir("packages/homelab/src/cdk8s")} ${depFlags} --tsconfig ${gitFile("tsconfig.base.json")}`,
+    command: `${DAGGER_CALL} homelab-synth --pkg-dir ${gitDir("packages/homelab/src/cdk8s")} ${depFlags} --tsconfig ${gitFile("tsconfig.base.json")}`,
     timeout_in_minutes: 15,
     priority: 1,
     retry: RETRY,
@@ -68,7 +69,7 @@ function helmPushStep(chartName: string): BuildkiteStep {
     depends_on: ["quality-gate"],
     command:
       [
-        `dagger call helm-synth-and-package`,
+        `${DAGGER_CALL} helm-synth-and-package`,
         `--source ${REPO_GIT_REF}`,
         `--synth-pkg-dir ${gitDir("packages/homelab/src/cdk8s")}`,
         synthDepFlags,

@@ -9,6 +9,7 @@ import {
   DRYRUN_FLAG,
   GITHUB_APP_SECRET_ARGS,
   REPO_GIT_REF,
+  DAGGER_CALL,
 } from "../lib/buildkite.ts";
 import type { BuildkiteStep } from "../lib/types.ts";
 
@@ -60,7 +61,7 @@ export function versionCommitBackStep(
     label: ":bookmark: Version Commit-Back",
     key: "version-commit-back",
     // Version format: 2.0.0-BUILD (matches Docker image tags). Only updates Docker image entries in versions.ts.
-    daggerCmd: `${collectDigestsCmd(pushedVersionKeys)} && dagger call version-commit-back --source ${REPO_GIT_REF} --digests "$(cat /tmp/digests.json)" --version "2.0.0-$BUILDKITE_BUILD_NUMBER" ${GITHUB_APP_SECRET_ARGS}${DRYRUN_FLAG}`,
+    daggerCmd: `${collectDigestsCmd(pushedVersionKeys)} && ${DAGGER_CALL} version-commit-back --source ${REPO_GIT_REF} --digests "$(cat /tmp/digests.json)" --version "2.0.0-$BUILDKITE_BUILD_NUMBER" ${GITHUB_APP_SECRET_ARGS}${DRYRUN_FLAG}`,
     timeoutMinutes: 10,
     condition: MAIN_ONLY,
     dependsOn,
