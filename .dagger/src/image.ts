@@ -79,6 +79,33 @@ function withEditorClis(container: Container): Container {
 }
 
 /**
+ * Install runtime binaries required by Birmel's Discord music stack.
+ *
+ * discord-player-youtubei shells out through youtube-dl-exec. That path needs
+ * a real Node binary for the package postinstall/runtime wrapper and Python for
+ * yt-dlp itself. ffmpeg-static and @snazzah/davey are package dependencies, but
+ * this helper installs the system interpreters before dependency install so the
+ * later image smoke checks can prove the final image is voice-playback-ready.
+ */
+function withBirmelMusicRuntime(container: Container): Container {
+  return container
+    .withExec(["apt-get", "update", "-qq"])
+    .withExec([
+      "apt-get",
+      "install",
+      "-y",
+      "-qq",
+      "--no-install-recommends",
+      "ca-certificates",
+      "nodejs",
+      "python3",
+    ])
+    .withExec(["sh", "-c", "rm -rf /var/lib/apt/lists/*"])
+    .withExec(["node", "--version"])
+    .withExec(["python3", "--version"]);
+}
+
+/**
  * Hand ownership of Bun's install cache to UID 1000.
  *
  * The oven/bun base image sets `BUN_INSTALL=/usr/local`, which makes Bun
@@ -395,6 +422,10 @@ export function buildImageHelper(
     container = withEditorClis(container);
   }
 
+  if (pkg === "birmel") {
+    container = withBirmelMusicRuntime(container);
+  }
+
   container = container
     .withWorkdir("/workspace")
     .withDirectory(`/workspace/packages/${pkg}`, pkgDir, {
@@ -410,9 +441,17 @@ export function buildImageHelper(
   }
 
   // Install deps then set up the final image
-  return container
+  let image = container
     .withWorkdir(`/workspace/packages/${pkg}`)
-    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withExec(["bun", "install", "--frozen-lockfile"]);
+
+  if (pkg === "birmel") {
+    image = image
+      .withExec(["node", "node_modules/youtube-dl-exec/scripts/postinstall.js"])
+      .withExec(["test", "-x", "node_modules/youtube-dl-exec/bin/yt-dlp"]);
+  }
+
+  return image
     .withLabel(
       "org.opencontainers.image.source",
       "https://github.com/shepherdjerred/monorepo",

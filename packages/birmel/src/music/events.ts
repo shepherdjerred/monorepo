@@ -1,43 +1,7 @@
 import type { Player } from "discord-player";
-import { z } from "zod";
 import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 import { recordTrackPlay } from "@shepherdjerred/birmel/database/repositories/music-history.ts";
-
-type ChannelMetadata = {
-  send?: ((msg: string) => Promise<unknown>) | undefined;
-  id?: string | undefined;
-};
-
-const ChannelMetadataSchema = z
-  .object({
-    send: z.any().optional(),
-    id: z.string().optional(),
-  })
-  .loose();
-
-function wrapSendFunction(
-  value: unknown,
-): ((msg: string) => Promise<unknown>) | undefined {
-  if (typeof value !== "function") {
-    return undefined;
-  }
-  const fn = value;
-  return (msg: string): Promise<unknown> => {
-    const result: unknown = Reflect.apply(fn, undefined, [msg]);
-    if (result instanceof Promise) {
-      return result;
-    }
-    return Promise.resolve(result);
-  };
-}
-
-function getChannelMetadata(metadata: unknown): ChannelMetadata | undefined {
-  const result = ChannelMetadataSchema.safeParse(metadata);
-  if (!result.success) {
-    return undefined;
-  }
-  return { send: wrapSendFunction(result.data.send), id: result.data.id };
-}
+import { getChannelMetadata } from "./channel-metadata.ts";
 
 export function setupPlayerEvents(player: Player): void {
   player.events.on("playerStart", (queue, track) => {
