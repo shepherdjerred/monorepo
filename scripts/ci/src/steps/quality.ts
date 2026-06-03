@@ -4,7 +4,12 @@
 import { readFileSync, existsSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { daggerStep, plainStep, REPO_GIT_REF } from "../lib/buildkite.ts";
+import {
+  daggerStep,
+  plainStep,
+  REPO_GIT_REF,
+  DAGGER_CALL,
+} from "../lib/buildkite.ts";
 import type { BuildkiteStep } from "../lib/types.ts";
 
 /** Resolve a path relative to the monorepo root (4 levels up from this file). */
@@ -262,7 +267,7 @@ export function caddyfileValidateStep(): BuildkiteStep {
   return daggerStep({
     label: ":globe_with_meridians: Caddyfile Validate",
     key: "caddyfile-validate",
-    daggerCmd: `dagger call caddyfile-validate --source ${REPO_GIT_REF}`,
+    daggerCmd: `${DAGGER_CALL} caddyfile-validate --source ${REPO_GIT_REF}`,
     timeoutMinutes: 10,
   });
 }

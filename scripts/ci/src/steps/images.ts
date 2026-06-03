@@ -15,7 +15,13 @@ import {
   PRISMA_PACKAGES,
   EDITOR_CLI_PACKAGES,
 } from "../catalog.ts";
-import { safeKey, RETRY, DAGGER_ENV, gitDir } from "../lib/buildkite.ts";
+import {
+  safeKey,
+  RETRY,
+  DAGGER_ENV,
+  gitDir,
+  DAGGER_CALL,
+} from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
@@ -59,11 +65,11 @@ function imageBuildStep(
   const flags = depFlags(pkg);
   let cmd: string;
   if (img.buildFn && NO_SOURCE_BUILDS.has(buildFn)) {
-    cmd = [`dagger call ${buildFn}`, VERSION_FLAGS].join(" ");
+    cmd = [`${DAGGER_CALL} ${buildFn}`, VERSION_FLAGS].join(" ");
   } else if (img.buildFn) {
     // Custom build functions take --pkg-dir + dep flags (no --pkg)
     cmd = [
-      `dagger call ${buildFn} --pkg-dir ${gitDir(`packages/${pkg}`)}`,
+      `${DAGGER_CALL} ${buildFn} --pkg-dir ${gitDir(`packages/${pkg}`)}`,
       flags,
       VERSION_FLAGS,
     ]
@@ -76,7 +82,7 @@ function imageBuildStep(
       ? "--install-editor-clis"
       : "";
     cmd = [
-      `dagger call ${buildFn} --pkg-dir ${gitDir(`packages/${pkg}`)} --pkg ${img.name}`,
+      `${DAGGER_CALL} ${buildFn} --pkg-dir ${gitDir(`packages/${pkg}`)} --pkg ${img.name}`,
       prismaFlag,
       editorClisFlag,
       flags,
@@ -144,17 +150,17 @@ function smokeTestStep(
 
   let cmd: string;
   if (SMOKE_NO_ARGS.has(daggerFn)) {
-    cmd = `dagger call ${daggerFn}`;
+    cmd = `${DAGGER_CALL} ${daggerFn}`;
   } else if (SMOKE_CUSTOM_INFRA.has(daggerFn)) {
     cmd = [
-      `dagger call ${daggerFn} --pkg-dir ${gitDir(`packages/${pkg}`)}`,
+      `${DAGGER_CALL} ${daggerFn} --pkg-dir ${gitDir(`packages/${pkg}`)}`,
       flags,
     ]
       .filter(Boolean)
       .join(" ");
   } else {
     cmd = [
-      `dagger call ${daggerFn}`,
+      `${DAGGER_CALL} ${daggerFn}`,
       `--pkg-dir ${gitDir(`packages/${pkg}`)} --pkg ${img.name}`,
       flags,
     ]
@@ -242,7 +248,7 @@ function imagePushStep(
     // $$ escapes survive Buildkite interpolation so bash sees $DIGEST at runtime.
     // Dagger outputs ANSI escape codes even with DAGGER_PROGRESS=dots/plain,
     // so we strip them before grepping for the sha256 digest.
-    `&& RAW=$$(dagger call ${pushCall})`,
+    `&& RAW=$$(${DAGGER_CALL} ${pushCall})`,
     `&& CLEAN=$$(printf '%s' "$$RAW" | sed 's/\\x1b\\[[0-9;]*[a-zA-Z]//g' | tr -d '\\r')`,
     `&& DIGEST=$$(echo "$$CLEAN" | grep -oE 'sha256:[a-f0-9]+' | head -1)`,
     `&& if [ -z "$$DIGEST" ]; then echo "ERROR: empty digest for ${img.name} — raw output was: $$RAW" >&2; exit 1; fi`,

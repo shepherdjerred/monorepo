@@ -8,6 +8,7 @@ import {
   DRYRUN_FLAG,
   TOFU_GITHUB_TOKEN_ARG,
   REPO_GIT_REF,
+  DAGGER_CALL,
 } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
@@ -27,7 +28,7 @@ function tofuStackStep(stack: string, homelabPkgKey?: string): BuildkiteStep {
     depends_on: dependsOn,
     command:
       [
-        `dagger call tofu-apply --source ${REPO_GIT_REF} --stack ${stack}`,
+        `${DAGGER_CALL} tofu-apply --source ${REPO_GIT_REF} --stack ${stack}`,
         `--aws-access-key-id env:SEAWEEDFS_ACCESS_KEY_ID`,
         `--aws-secret-access-key env:SEAWEEDFS_SECRET_ACCESS_KEY`,
         stack === "github" ? TOFU_GITHUB_TOKEN_ARG : "",
@@ -62,7 +63,7 @@ function tofuPlanStep(stack: string): BuildkiteStep {
     if: PR_ONLY,
     command:
       [
-        `dagger call tofu-plan --source ${REPO_GIT_REF} --stack ${stack}`,
+        `${DAGGER_CALL} tofu-plan --source ${REPO_GIT_REF} --stack ${stack}`,
         `--aws-access-key-id env:SEAWEEDFS_ACCESS_KEY_ID`,
         `--aws-secret-access-key env:SEAWEEDFS_SECRET_ACCESS_KEY`,
         stack === "github" ? TOFU_GITHUB_TOKEN_ARG : "",
