@@ -26,18 +26,7 @@ function parseAutoArchiveDuration(
 type ThreadResult = {
   success: boolean;
   message: string;
-  data?:
-    | { threadId: string; threadName: string }
-    | {
-        messages: {
-          id: string;
-          authorId: string;
-          authorName: string;
-          isBot: boolean;
-          content: string;
-          createdAt: string;
-        }[];
-      };
+  data?: unknown;
 };
 
 type CreateFromMessageOptions = {
@@ -290,5 +279,57 @@ export async function handleGetThreadMessages(
     success: true,
     message: `Retrieved ${formattedMessages.length.toString()} messages from thread`,
     data: { messages: formattedMessages },
+  };
+}
+
+export async function handleSummarizeThread(
+  client: Client,
+  threadId: string | undefined,
+  limit: number | undefined,
+  before: string | undefined,
+): Promise<ThreadResult> {
+  const result = await handleGetThreadMessages(client, threadId, limit, before);
+  if (
+    !result.success ||
+    result.data == null ||
+    typeof result.data !== "object" ||
+    !("messages" in result.data) ||
+    !Array.isArray(result.data.messages)
+  ) {
+    return result;
+  }
+  const messages = result.data.messages.flatMap((message) => {
+    if (message == null || typeof message !== "object") {
+      return [];
+    }
+    const record = Object.fromEntries(Object.entries(message));
+    const authorName = record.authorName;
+    const content = record.content;
+    if (typeof authorName !== "string" || typeof content !== "string") {
+      return [];
+    }
+    return [{ authorName, content }];
+  });
+  const participants = new Set(messages.map((message) => message.authorName));
+  const nonEmptyMessages = messages.filter(
+    (message) => message.content.trim().length > 0,
+  );
+  const sample = nonEmptyMessages
+    .slice(0, 12)
+    .map((message) => `${message.authorName}: ${message.content}`)
+    .join("\n")
+    .slice(0, 1500);
+  return {
+    success: true,
+    message: "Thread summarized",
+    data: {
+      messageCount: messages.length,
+      participantCount: participants.size,
+      participants: [...participants],
+      summary:
+        sample.length === 0
+          ? "No non-empty text messages were found in this thread."
+          : sample,
+    },
   };
 }

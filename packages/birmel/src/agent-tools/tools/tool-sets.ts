@@ -22,9 +22,12 @@ import { playbackTools } from "./music/playback.ts";
 import { queueTools } from "./music/queue.ts";
 import { executeShellCommandTool } from "./automation/shell.ts";
 import { manageTaskTool } from "./automation/timers.ts";
+import { manageAgentJobTool } from "./automation/agent-jobs.ts";
 import { browserAutomationTool } from "./automation/browser.ts";
 import { externalServiceTool } from "./external/web.ts";
+import { webResearchTool } from "./external/research.ts";
 import { manageMemoryTool } from "./memory/index.ts";
+import { manageAgentSessionTool } from "./sessions/index.ts";
 import { sqliteTools } from "./database/sqlite-query.ts";
 import { electionTools } from "./elections/elections.ts";
 import { manageBirthdayTool } from "./birthdays/index.ts";
@@ -44,6 +47,7 @@ export const messagingToolSet = [
   ...activityTools,
   ...schedulingTools,
   manageMemoryTool,
+  manageAgentSessionTool,
 ];
 
 /**
@@ -83,8 +87,11 @@ export const musicToolSet = [...playbackTools, ...queueTools];
 export const automationToolSet = [
   executeShellCommandTool,
   manageTaskTool,
+  manageAgentJobTool,
   browserAutomationTool,
   externalServiceTool,
+  webResearchTool,
+  manageAgentSessionTool,
   ...eventTools,
   ...electionTools,
   manageBirthdayTool,
@@ -136,7 +143,7 @@ export function getToolSet(agentType: AgentType) {
 export function getAgentDescription(agentType: AgentType): string {
   switch (agentType) {
     case "messaging":
-      return "Send, edit, delete, pin messages. Create polls and threads. Schedule messages. Track activity. Store memories.";
+      return "Send, edit, delete, pin messages. Create and summarize Discord threads. Create polls. Track activity. Manage agent sessions and durable memories.";
     case "server":
       return "Get server/guild information. List, create, modify channels. Search and manage members. Query database.";
     case "moderation":
@@ -144,7 +151,7 @@ export function getAgentDescription(agentType: AgentType): string {
     case "music":
       return "Play, pause, skip, stop music. Manage queue. Control volume and loop mode.";
     case "automation":
-      return "Set reminders and timers. Run shell commands. Browser automation. Fetch weather/news. Manage elections and birthdays. Schedule events.";
+      return "Create durable cron/jobs/reminders. Run shell commands. Use PinchTab browser automation and web research. Manage elections and birthdays. Schedule events and background sessions.";
     case "editor":
       return "Edit files in allowed repositories. Create pull requests. Connect GitHub account. List available repos. Approve or reject pending changes.";
   }

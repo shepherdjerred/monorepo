@@ -7,6 +7,7 @@ import {
   OWNER_MEMORY_TEMPLATE,
 } from "@shepherdjerred/birmel/voltagent/memory/index.ts";
 import { getGuildPersona } from "@shepherdjerred/birmel/persona/guild-persona.ts";
+import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 
 const MAX_MEMORY_SIZE = 4000;
@@ -57,8 +58,10 @@ function appendToSection(
 type MemoryResult = {
   success: boolean;
   message: string;
-  data?: { memory: string };
+  data?: unknown;
 };
+
+export type MemoryScope = "server" | "owner" | "channel" | "user" | "session";
 
 export async function handleGetMemory(
   guildId: string,
@@ -222,4 +225,162 @@ export async function handleClearMemory(
     success: true,
     message: `${scopeLabel} memory cleared to default template`,
   };
+}
+
+function normalizeTags(tags: string[] | undefined): string | null {
+  if (tags == null || tags.length === 0) {
+    return null;
+  }
+  return JSON.stringify(tags);
+}
+
+function memoryScopeWhere(options: {
+  guildId: string;
+  scope: MemoryScope | undefined;
+  channelId: string | undefined;
+  userId: string | undefined;
+  sessionId: string | undefined;
+}) {
+  return {
+    guildId: options.guildId,
+    ...(options.scope == null ? {} : { scope: options.scope }),
+    ...(options.channelId == null ? {} : { channelId: options.channelId }),
+    ...(options.userId == null ? {} : { userId: options.userId }),
+    ...(options.sessionId == null ? {} : { sessionId: options.sessionId }),
+  };
+}
+
+export async function handleAddStructuredMemory(options: {
+  guildId: string;
+  scope: MemoryScope;
+  content: string | undefined;
+  key: string | undefined;
+  tags: string[] | undefined;
+  channelId: string | undefined;
+  userId: string | undefined;
+  sessionId: string | undefined;
+  sourceType: string | undefined;
+  sourceId: string | undefined;
+  salience: number | undefined;
+  embedding: string | undefined;
+}): Promise<MemoryResult> {
+  if (options.content == null || options.content.length === 0) {
+    return { success: false, message: "content is required" };
+  }
+  const memory = await prisma.agentMemory.create({
+    data: {
+      guildId: options.guildId,
+      scope: options.scope,
+      key: options.key,
+      content: options.content,
+      tags: normalizeTags(options.tags),
+      channelId: options.channelId,
+      userId: options.userId,
+      sessionId: options.sessionId,
+      sourceType: options.sourceType,
+      sourceId: options.sourceId,
+      salience: options.salience ?? 0.5,
+      embedding: options.embedding,
+    },
+  });
+  return {
+    success: true,
+    message: "Memory record added",
+    data: { memory },
+  };
+}
+
+export async function handleSearchStructuredMemory(options: {
+  guildId: string;
+  scope: MemoryScope | undefined;
+  query: string | undefined;
+  channelId: string | undefined;
+  userId: string | undefined;
+  sessionId: string | undefined;
+}): Promise<MemoryResult> {
+  const query = options.query?.trim();
+  const memories = await prisma.agentMemory.findMany({
+    where: {
+      ...memoryScopeWhere(options),
+      ...(query == null || query.length === 0
+        ? {}
+        : {
+            OR: [
+              { content: { contains: query } },
+              { key: { contains: query } },
+              { tags: { contains: query } },
+            ],
+          }),
+    },
+    orderBy: [{ salience: "desc" }, { updatedAt: "desc" }],
+    take: 25,
+  });
+  return {
+    success: true,
+    message: `Found ${String(memories.length)} memory record${memories.length === 1 ? "" : "s"}`,
+    data: { memories },
+  };
+}
+
+export async function handleGetStructuredMemory(options: {
+  guildId: string;
+  memoryId: string | undefined;
+}): Promise<MemoryResult> {
+  if (options.memoryId == null || options.memoryId.length === 0) {
+    return { success: false, message: "memoryId is required" };
+  }
+  const memory = await prisma.agentMemory.findFirst({
+    where: { id: options.memoryId, guildId: options.guildId },
+  });
+  if (memory == null) {
+    return { success: false, message: "Memory record not found" };
+  }
+  return { success: true, message: "Memory record found", data: { memory } };
+}
+
+export async function handleUpdateStructuredMemory(options: {
+  guildId: string;
+  memoryId: string | undefined;
+  content: string | undefined;
+  key: string | undefined;
+  tags: string[] | undefined;
+  salience: number | undefined;
+  embedding: string | undefined;
+}): Promise<MemoryResult> {
+  if (options.memoryId == null || options.memoryId.length === 0) {
+    return { success: false, message: "memoryId is required" };
+  }
+  const existing = await prisma.agentMemory.findFirst({
+    where: { id: options.memoryId, guildId: options.guildId },
+  });
+  if (existing == null) {
+    return { success: false, message: "Memory record not found" };
+  }
+  const memory = await prisma.agentMemory.update({
+    where: { id: existing.id },
+    data: {
+      content: options.content ?? existing.content,
+      key: options.key ?? existing.key,
+      tags: options.tags == null ? existing.tags : normalizeTags(options.tags),
+      salience: options.salience ?? existing.salience,
+      embedding: options.embedding ?? existing.embedding,
+    },
+  });
+  return { success: true, message: "Memory record updated", data: { memory } };
+}
+
+export async function handleDeleteStructuredMemory(options: {
+  guildId: string;
+  memoryId: string | undefined;
+}): Promise<MemoryResult> {
+  if (options.memoryId == null || options.memoryId.length === 0) {
+    return { success: false, message: "memoryId is required" };
+  }
+  const deleted = await prisma.agentMemory.deleteMany({
+    where: { id: options.memoryId, guildId: options.guildId },
+  });
+  if (deleted.count === 0) {
+    return { success: false, message: "Memory record not found" };
+  }
+  return { success: true, message: "Memory record deleted" };
 }
