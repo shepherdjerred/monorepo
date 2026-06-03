@@ -95,7 +95,7 @@ export const NPM_PACKAGES: NpmPackage[] = [
 // Static site deploys
 // ---------------------------------------------------------------------------
 
-export interface DeploySite {
+interface DeploySiteBase {
   bucket: string;
   name: string;
   url: string;
@@ -105,6 +105,18 @@ export interface DeploySite {
   needsPlaywright?: boolean;
   workspaceDeps?: string;
 }
+
+type DeploySiteBuildEnv =
+  | {
+      buildEnvVars?: string[];
+      buildEnvPlaceholders?: never;
+    }
+  | {
+      buildEnvVars?: never;
+      buildEnvPlaceholders?: Readonly<Record<string, string>>;
+    };
+
+export type DeploySite = DeploySiteBase & DeploySiteBuildEnv;
 
 export const DEPLOY_SITES: DeploySite[] = [
   {
@@ -142,12 +154,37 @@ export const DEPLOY_SITES: DeploySite[] = [
     distDir: "packages/cooklang-rich-preview/dist",
   },
   {
+    bucket: "stocks-sjer-red",
+    name: "stocks-sjer-red",
+    url: "https://stocks.sjer.red",
+    buildDir: "packages/stocks-sjer-red",
+    buildCmd: "bun run astro build",
+    distDir: "packages/stocks-sjer-red/dist",
+  },
+  {
     bucket: "scout-frontend",
-    name: "scout-for-lol frontend",
+    name: "scout-for-lol frontend + app (prod)",
     url: "https://scout-for-lol.com",
     buildDir: "packages/scout-for-lol",
-    buildCmd: "bun run --filter='./packages/frontend' build",
+    buildCmd: "bun run scripts/build-bucket.ts",
     distDir: "packages/scout-for-lol/packages/frontend/dist",
+    buildEnvVars: ["PUBLIC_PINTEREST_TAG_ID", "PUBLIC_REDDIT_PIXEL_ID"],
+    workspaceDeps: "packages/frontend,packages/app",
+  },
+  {
+    bucket: "scout-frontend-beta",
+    name: "scout-for-lol frontend + app (beta)",
+    url: "https://beta.scout-for-lol.com",
+    buildDir: "packages/scout-for-lol",
+    buildCmd: "bun run scripts/build-bucket.ts",
+    distDir: "packages/scout-for-lol/packages/frontend/dist",
+    // Analytics pixels intentionally omitted for beta — beta traffic must
+    // not inflate prod Pinterest/Reddit conversion data.
+    buildEnvPlaceholders: {
+      PUBLIC_PINTEREST_TAG_ID: "beta-placeholder-pinterest-tag-id",
+      PUBLIC_REDDIT_PIXEL_ID: "beta-placeholder-reddit-pixel-id",
+    },
+    workspaceDeps: "packages/frontend,packages/app",
   },
   {
     bucket: "better-skill-capped",
@@ -248,13 +285,21 @@ export const HELM_CHARTS: string[] = [
 // Package-to-site mapping (for change detection)
 // ---------------------------------------------------------------------------
 
-export const PACKAGE_TO_SITE: Record<string, string> = {
-  "sjer.red": "sjer-red",
-  resume: "resume",
-  webring: "webring",
-  "cooklang-rich-preview": "cook",
-  "scout-for-lol": "scout-frontend",
-  "better-skill-capped": "better-skill-capped",
+/**
+ * Maps a workspace package name to the deploy buckets its changes should trigger.
+ *
+ * Most packages fan out to a single bucket. `scout-for-lol` fans out to both
+ * prod and beta buckets because the merged Astro + SPA build is deployed to
+ * both stages on every main merge.
+ */
+export const PACKAGE_TO_SITE: Record<string, string[]> = {
+  "sjer.red": ["sjer-red"],
+  resume: ["resume"],
+  webring: ["webring"],
+  "cooklang-rich-preview": ["cook"],
+  "scout-for-lol": ["scout-frontend", "scout-frontend-beta"],
+  "stocks-sjer-red": ["stocks-sjer-red"],
+  "better-skill-capped": ["better-skill-capped"],
   // discord-plays-pokemon docs deployed via dedicated mkdocs step, not deploy-site
 };
 
@@ -292,6 +337,7 @@ export const ALL_PACKAGES: string[] = [
   "scout-for-lol",
   "sjer.red",
   "starlight-karma-bot",
+  "stocks-sjer-red",
   "tasknotes-server",
   "tasknotes-types",
   "temporal",

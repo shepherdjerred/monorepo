@@ -60,13 +60,13 @@ export const SEASONS: Record<SeasonId, SeasonData> = {
   "2026_SEASON_1_ACT_1": {
     id: "2026_SEASON_1_ACT_1",
     displayName: "For Demacia (Act 1)",
-    startDate: new Date("2026-01-09T00:00:00-08:00"),
-    endDate: new Date("2026-03-04T23:59:59-08:00"),
+    startDate: new Date("2026-01-08T00:00:00-08:00"),
+    endDate: new Date("2026-03-03T23:59:59-08:00"),
   },
   "2026_SEASON_1_ACT_2": {
     id: "2026_SEASON_1_ACT_2",
     displayName: "For Demacia (Act 2)",
-    startDate: new Date("2026-03-05T00:00:00-08:00"),
+    startDate: new Date("2026-03-04T00:00:00-08:00"),
     endDate: new Date("2026-04-28T23:59:59-07:00"),
   },
   "2026_SEASON_2_ACT_1": {

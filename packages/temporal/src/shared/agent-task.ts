@@ -25,6 +25,7 @@ const AgentTaskFollowUpSchemaBase = z.object({
   cron: z.string().min(1).optional(),
   model: z.string().min(1).optional(),
   maxTurns: z.number().int().positive().optional(),
+  agentTimeoutMinutes: z.number().int().positive().max(90).optional(),
 });
 
 export const AgentTaskFollowUpSchema = AgentTaskFollowUpSchemaBase.superRefine(
@@ -59,6 +60,7 @@ export const AgentTaskInputSchema = z
     source: AgentTaskSourceSchema.optional(),
     model: z.string().min(1).optional(),
     maxTurns: z.number().int().positive().optional(),
+    agentTimeoutMinutes: z.number().int().positive().max(90).optional(),
     idempotencyKey: z.string().min(1).optional(),
     allowSelfCancel: z.boolean().default(false),
     emailSubjectPrefix: z.string().min(1).optional(),
@@ -126,6 +128,7 @@ export const AGENT_TASK_OUTPUT_JSON_SCHEMA: Record<string, unknown> = {
         },
         model: { type: "string", minLength: 1 },
         maxTurns: { type: "integer", minimum: 1 },
+        agentTimeoutMinutes: { type: "integer", minimum: 1, maximum: 90 },
       },
     },
     cancelCron: {
@@ -182,6 +185,7 @@ export async function agentTaskWorkflowId(
     JSON.stringify(
       sortJson({
         provider: input.provider,
+        agentTimeoutMinutes: input.agentTimeoutMinutes,
         title: input.title,
         prompt: input.prompt,
         runAt: input.runAt,
@@ -204,6 +208,7 @@ export async function agentTaskScheduleId(
     JSON.stringify(
       sortJson({
         provider: input.provider,
+        agentTimeoutMinutes: input.agentTimeoutMinutes,
         title: input.title,
         prompt: input.prompt,
         cron: input.cron,

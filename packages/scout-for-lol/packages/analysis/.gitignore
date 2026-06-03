@@ -1,2 +1,4 @@
 data/
 __pycache__
+# Per-author analysis output (local script runs; contains Discord user history)
+out/

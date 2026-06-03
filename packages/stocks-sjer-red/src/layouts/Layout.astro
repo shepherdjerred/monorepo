@@ -1,0 +1,49 @@
+---
+import "@styles/global.css";
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = "jerred's personal hardware portfolio." } =
+  Astro.props;
+---
+
+<!doctype html>
+<html lang="en" style="background:#0a0a0a;color:#d4d4d4">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0a0a0a" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+    <style is:inline>
+      :root {
+        color-scheme: dark;
+      }
+      html,
+      body {
+        background: #0a0a0a;
+        color: #d4d4d4;
+        margin: 0;
+        font-family:
+          "IBM Plex Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+      }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap"
+    />
+  </head>
+  <body class="min-h-screen">
+    <main class="px-4 sm:px-8 py-6 max-w-7xl mx-auto">
+      <slot />
+    </main>
+  </body>
+</html>

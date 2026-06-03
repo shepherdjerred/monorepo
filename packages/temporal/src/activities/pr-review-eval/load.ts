@@ -12,9 +12,9 @@
  * `eval_runs.fixture_commit_sha`).
  *
  * Auth: the fixtures repo is private. The temporal-worker pod mounts
- * `PR_REVIEW_FIXTURES_REPO_URL` and `GH_TOKEN` via 1Password Connect. Clone
- * authenticates via `GIT_ASKPASS` — never embeds the token in the URL (per
- * AGENTS.md / data-dragon.ts precedent).
+ * `PR_REVIEW_FIXTURES_REPO_URL` and GitHub App credentials via 1Password
+ * Connect. Clone authenticates via `GIT_ASKPASS` with a short-lived
+ * installation token — never embeds the token in the URL.
  */
 import {
   mkdtemp,
@@ -27,9 +27,9 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { Context } from "@temporalio/activity";
-import { simpleGit } from "simple-git";
 import { withSpan } from "#observability/tracing.ts";
 import { FixtureSchema, type Fixture } from "#shared/pr-review/eval-fixture.ts";
+import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 
 const FIXTURES_REPO_URL_ENV = "PR_REVIEW_FIXTURES_REPO_URL";
 const COMPONENT = "pr-review-eval";
@@ -81,6 +81,112 @@ export type LoadFixtureCorpusInput = {
   pin: string;
 };
 
+export type FixtureGitEnv = {
+  GH_TOKEN: string;
+  GIT_ASKPASS: string;
+  GIT_TERMINAL_PROMPT: "0";
+};
+
+export type FixtureGitCommand = {
+  args: string[];
+  cwd?: string;
+  env: FixtureGitEnv;
+};
+
+export type FixtureGitRunner = (command: FixtureGitCommand) => Promise<string>;
+export type FixtureCheckoutPhase = "clone" | "fetch-pin";
+export type FixtureCheckoutHeartbeat = (event: {
+  phase: FixtureCheckoutPhase;
+}) => void;
+
+function redactGitOutput(output: string, env: FixtureGitEnv): string {
+  return output.split(env.GH_TOKEN).join("[redacted]");
+}
+
+export async function runFixtureGitCommand(
+  command: FixtureGitCommand,
+): Promise<string> {
+  const spawnOptions = {
+    stdin: "ignore" as const,
+    stdout: "pipe" as const,
+    stderr: "pipe" as const,
+    ...(command.cwd === undefined ? {} : { cwd: command.cwd }),
+    env: {
+      ...Bun.env,
+      ...command.env,
+    },
+  };
+  const proc = Bun.spawn(command.args, {
+    ...spawnOptions,
+  });
+  const [stdout, stderr, exitCode] = await Promise.all([
+    new Response(proc.stdout).text(),
+    new Response(proc.stderr).text(),
+    proc.exited,
+  ]);
+  if (exitCode !== 0) {
+    throw new Error(
+      `${command.args.join(" ")} failed (exit ${String(exitCode)}): ${redactGitOutput(stderr, command.env)}`,
+    );
+  }
+  return stdout;
+}
+
+export async function checkoutFixtureRepo(input: {
+  fixturesRepoUrl: string;
+  repoDir: string;
+  pin: string;
+  gitEnv: FixtureGitEnv;
+  runGit?: FixtureGitRunner;
+  heartbeat?: FixtureCheckoutHeartbeat;
+}): Promise<string> {
+  const runGit = input.runGit ?? runFixtureGitCommand;
+  input.heartbeat?.({ phase: "clone" });
+  await runGit({
+    args: [
+      "git",
+      "clone",
+      "--depth",
+      "1",
+      "--single-branch",
+      "--no-tags",
+      input.fixturesRepoUrl,
+      input.repoDir,
+    ],
+    env: input.gitEnv,
+  });
+
+  const initialRevparse = await runGit({
+    args: ["git", "rev-parse", "HEAD"],
+    cwd: input.repoDir,
+    env: input.gitEnv,
+  });
+  const initialSha = initialRevparse.trim();
+
+  if (input.pin === "" || input.pin === "main" || input.pin === initialSha) {
+    return initialSha;
+  }
+
+  input.heartbeat?.({ phase: "fetch-pin" });
+  await runGit({
+    args: ["git", "fetch", "--depth", "1", "origin", input.pin],
+    cwd: input.repoDir,
+    env: input.gitEnv,
+  });
+  await runGit({
+    args: ["git", "checkout", "FETCH_HEAD"],
+    cwd: input.repoDir,
+    env: input.gitEnv,
+  });
+
+  const pinnedRevparse = await runGit({
+    args: ["git", "rev-parse", "HEAD"],
+    cwd: input.repoDir,
+    env: input.gitEnv,
+  });
+  return pinnedRevparse.trim();
+}
+
 export type LoadFixtureCorpusResult = {
   /** Resolved commit SHA (`git rev-parse HEAD` after checkout). */
   fixtureCommitSha: string;
@@ -101,12 +207,7 @@ async function loadFixtureCorpusImpl(
     "prReviewEval.loadFixtureCorpus",
     { "fixtures.pin": input.pin },
     async () => {
-      const ghToken = Bun.env["GH_TOKEN"];
-      if (ghToken === undefined || ghToken === "") {
-        throw new Error(
-          "GH_TOKEN missing — required to clone the private fixtures repo",
-        );
-      }
+      const ghToken = await createGitHubAppInstallationToken();
       const fixturesRepoUrl = Bun.env[FIXTURES_REPO_URL_ENV]?.trim();
       if (fixturesRepoUrl === undefined || fixturesRepoUrl === "") {
         throw new Error(
@@ -118,40 +219,24 @@ async function loadFixtureCorpusImpl(
         path.join(tmpdir(), "pr-review-eval-fixtures-"),
       );
       const askpass = await writeGitAskpass(scratch);
-      const gitEnv = {
-        GH_TOKEN: ghToken,
+      const gitEnv: FixtureGitEnv = {
+        GH_TOKEN: ghToken.token,
         GIT_ASKPASS: askpass,
         GIT_TERMINAL_PROMPT: "0",
       };
 
-      Context.current().heartbeat({ phase: "clone" });
       jsonLog("info", "Cloning fixtures repo", { scratch, pin: input.pin });
       const repoDir = path.join(scratch, "repo");
-      const git = simpleGit().env(gitEnv);
-      await git.clone(fixturesRepoUrl, repoDir, [
-        "--depth",
-        "1",
-        "--single-branch",
-      ]);
-
-      const repoGit = simpleGit(repoDir).env(gitEnv);
-
-      // If the pin is the tip of main, the shallow clone already has it.
-      // Otherwise fetch the specific SHA and check it out.
-      const initialRevparse = await repoGit.revparse(["HEAD"]);
-      const initialSha = initialRevparse.trim();
-      let fixtureCommitSha = initialSha;
-      if (
-        input.pin !== "" &&
-        input.pin !== "main" &&
-        input.pin !== initialSha
-      ) {
-        Context.current().heartbeat({ phase: "fetch-pin" });
-        await repoGit.fetch(["--depth", "1", "origin", input.pin]);
-        await repoGit.checkout("FETCH_HEAD");
-        const pinnedRevparse = await repoGit.revparse(["HEAD"]);
-        fixtureCommitSha = pinnedRevparse.trim();
-      }
+      const activityContext = Context.current();
+      const fixtureCommitSha = await checkoutFixtureRepo({
+        fixturesRepoUrl,
+        repoDir,
+        pin: input.pin,
+        gitEnv,
+        heartbeat: (event) => {
+          activityContext.heartbeat(event);
+        },
+      });
       jsonLog("info", "Fixtures repo checked out", { fixtureCommitSha });
 
       Context.current().heartbeat({ phase: "parse" });

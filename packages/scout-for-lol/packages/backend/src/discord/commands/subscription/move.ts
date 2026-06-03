@@ -1,15 +1,17 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
+import { fromError } from "zod-validation-error";
 import {
+  DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data/index.ts";
-import { prisma } from "#src/database/index.ts";
-import { getErrorMessage } from "#src/utils/errors.ts";
 import { createLogger } from "#src/logger.ts";
-import { fromError } from "zod-validation-error";
+import { moveSubscription } from "#src/lib/subscription/move.ts";
+import { prisma } from "#src/database/index.ts";
+import { editReplyOnError } from "#src/discord/commands/subscription/reply-helpers.ts";
 
-const logger = createLogger("subscription-move");
+const logger = createLogger("subscription-move-command");
 
 const ArgsSchema = z.object({
   alias: z.string().min(1),
@@ -21,7 +23,7 @@ const ArgsSchema = z.object({
 export async function executeSubscriptionMove(
   interaction: ChatInputCommandInteraction,
 ) {
-  logger.info("🔀 Starting subscription move process");
+  logger.info("🔀 Starting subscription move");
 
   const parseResult = ArgsSchema.safeParse({
     alias: interaction.options.getString("alias"),
@@ -31,10 +33,8 @@ export async function executeSubscriptionMove(
   });
 
   if (!parseResult.success) {
-    logger.error(`❌ Invalid command arguments`);
-    const validationError = fromError(parseResult.error);
     await interaction.reply({
-      content: validationError.toString(),
+      content: fromError(parseResult.error).toString(),
       ephemeral: true,
     });
     return;
@@ -53,72 +53,56 @@ export async function executeSubscriptionMove(
 
   await interaction.deferReply({ ephemeral: true });
 
+  let result;
   try {
-    // Find the player by alias
-    const player = await prisma.player.findUnique({
-      where: {
-        serverId_alias: {
-          serverId: guildId,
+    result = await prisma.$transaction((tx) =>
+      moveSubscription(
+        {
+          guildId,
           alias,
+          fromChannelId: fromChannel,
+          toChannelId: toChannel,
+          actorDiscordId: DiscordAccountIdSchema.parse(interaction.user.id),
         },
-      },
-      include: {
-        subscriptions: true,
-      },
-    });
+        tx,
+      ),
+    );
+  } catch (error) {
+    await editReplyOnError(interaction, "moving subscription", error);
+    return;
+  }
 
-    if (!player) {
+  switch (result.kind) {
+    case "player-not-found":
       await interaction.editReply({
         content: `❌ **Player not found**\n\nNo player with alias "${alias}" exists in this server.`,
       });
       return;
-    }
-
-    // Find the subscription in the source channel
-    const sourceSubscription = player.subscriptions.find(
-      (sub) => sub.channelId === fromChannel,
-    );
-
-    if (!sourceSubscription) {
+    case "not-subscribed-in-from-channel":
       await interaction.editReply({
         content: `❌ **No subscription found**\n\nPlayer "${alias}" is not subscribed in <#${fromChannel}>.`,
       });
       return;
-    }
-
-    // Check if subscription already exists in the target channel
-    const existingTarget = player.subscriptions.find(
-      (sub) => sub.channelId === toChannel,
-    );
-
-    if (existingTarget) {
+    case "already-subscribed-in-to-channel":
       await interaction.editReply({
         content: `❌ **Already subscribed**\n\nPlayer "${alias}" is already subscribed in <#${toChannel}>. Remove that subscription first, or use \`/subscription delete\`.`,
       });
       return;
-    }
-
-    // Update the subscription's channel
-    await prisma.subscription.update({
-      where: {
-        id: sourceSubscription.id,
-      },
-      data: {
-        channelId: toChannel,
-      },
-    });
-
-    logger.info(
-      `✅ Moved subscription for player "${alias}" from ${fromChannel} to ${toChannel}`,
-    );
-
-    await interaction.editReply({
-      content: `✅ **Subscription moved**\n\nPlayer "${alias}" updates moved from <#${fromChannel}> to <#${toChannel}>.`,
-    });
-  } catch (error) {
-    logger.error(`❌ Error moving subscription:`, error);
-    await interaction.editReply({
-      content: `❌ **Error moving subscription**\n\n${getErrorMessage(error)}`,
-    });
+    case "same-channel":
+      await interaction.editReply({
+        content:
+          "❌ **Same channel**\n\nThe source and destination channels are the same.",
+      });
+      return;
+    case "moved":
+      await interaction.editReply({
+        content: `✅ **Subscription moved**\n\nPlayer "${alias}" updates moved from <#${fromChannel}> to <#${toChannel}>.`,
+      });
+      return;
+    case "internal-error":
+      await interaction.editReply({
+        content: `❌ **Error moving subscription**\n\n${result.message}`,
+      });
+      return;
   }
 }

@@ -14,7 +14,6 @@ import {
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
-import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export type CreateTemporalUiDeploymentProps = {
@@ -52,7 +51,7 @@ export function createTemporalUiDeployment(
         ),
         TEMPORAL_UI_PORT: EnvValue.fromValue("8080"),
         TEMPORAL_CORS_ORIGINS: EnvValue.fromValue(
-          "https://temporal-ui.tailnet-1a49.ts.net,https://temporal.sjer.red",
+          "https://temporal-ui.tailnet-1a49.ts.net",
         ),
       },
       securityContext: {
@@ -97,11 +96,6 @@ export function createTemporalUiDeployment(
   new TailscaleIngress(chart, "temporal-ui-tailscale-ingress", {
     service,
     host: "temporal-ui",
-  });
-
-  createCloudflareTunnelBinding(chart, "temporal-ui-cf-tunnel", {
-    serviceName: service.name,
-    subdomain: "temporal",
   });
 
   return { deployment, service };

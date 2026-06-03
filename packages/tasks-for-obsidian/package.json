@@ -65,5 +65,8 @@
   },
   "patchedDependencies": {
     "react-native-sound@0.13.0": "patches/react-native-sound@0.13.0.patch"
+  },
+  "overrides": {
+    "fast-xml-builder": "1.1.7"
   }
 }

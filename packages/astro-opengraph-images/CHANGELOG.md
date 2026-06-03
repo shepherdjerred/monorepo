@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.0](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.16.1...astro-opengraph-images-v1.17.0) (2026-05-27)
+
+No library behavior changes. The shipped code is identical to 1.16.1; this release exists only because of repo-level housekeeping that release-please picked up.
+
+* `react` runtime dep pinned to exact `19.2.6` (was `^19.2.5`) ([d040b0b](https://github.com/shepherdjerred/monorepo/commit/d040b0b231ca7e047a29d306aa35c5e2a5744592))
+* README links updated to the monorepo location ([4806f78](https://github.com/shepherdjerred/monorepo/commit/4806f78e4920397845536ee843a36f950b6c86dd), [aeebe5c](https://github.com/shepherdjerred/monorepo/commit/aeebe5cc6b0d4b55ebb236357f8848ebf9566e3c))
+
 ## [1.16.1](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.16.0...astro-opengraph-images-v1.16.1) (2026-04-23)
 
 

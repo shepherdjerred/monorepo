@@ -389,7 +389,7 @@
             "icon": "perk-images/Styles/Resolve/VeteranAftershock/VeteranAftershock.png",
             "name": "Aftershock",
             "shortDesc": "After <lol-uikit-tooltipped-keyword key='LinkTooltip_Description_Immobilize'>immobilizing</lol-uikit-tooltipped-keyword> an enemy champion gain defenses and later deal a burst of magic damage around you.",
-            "longDesc": "After immobilizing an enemy champion, increase your Armor and Magic Resist by 35 + 80% of your Bonus Resists for 2.5s. Then explode, dealing magic damage to nearby enemies.<br><br>Damage: 25 - 120 (+8% of your bonus health)<br>Cooldown: 20s<br><br>Resistance bonus from Aftershock capped at: 80-150 (based on level)<br>"
+            "longDesc": "After immobilizing an enemy champion, increase your Armor and Magic Resist by 45 + 75% of your Bonus Resists for 2.5s. Then explode, dealing magic damage to nearby enemies.<br><br>Damage: 25 - 120 (+8% of your bonus health)<br>Cooldown: 20s<br><br>Resistance bonus from Aftershock capped at: 80-150 (based on level)<br>"
           },
           {
             "id": 8465,
@@ -397,7 +397,7 @@
             "icon": "perk-images/Styles/Resolve/Guardian/Guardian.png",
             "name": "Guardian",
             "shortDesc": "Guard allies you cast spells on and those that are very nearby. If you or a guarded ally would take damage based on level, you're both granted a shield.",
-            "longDesc": "<i>Guard</i> allies within 350 units of you, and allies you target with spells for 2.5s. While <i>Guarding</i>, if you or the ally take more than a small amount of damage over the duration of the <i>Guard</i>, both of you gain a shield for 1.5s.<br><br>Cooldown: <scaleLevel>90 - 40</scaleLevel> seconds<br>Shield: <scaleLevel>45 - 180</scaleLevel> + <scaleAP>25%</scaleAP> of your ability power + <scalehealth>5%</scalehealth> of your bonus health<br>Proc Threshold: <scaleLevel>50 - 165</scaleLevel> postmitigation damage"
+            "longDesc": "<i>Guard</i> allies within 350 units of you, and allies you target with spells for 2.5s. While <i>Guarding</i>, if you or the ally take more than a small amount of damage over the duration of the <i>Guard</i>, both of you gain a shield for 1.5s.<br><br>Cooldown: <scaleLevel>75 - 40</scaleLevel> seconds<br>Shield: <scaleLevel>40 - 150</scaleLevel> + <scaleAP>20%</scaleAP> of your ability power + <scalehealth>6%</scalehealth> of your bonus health<br>Proc Threshold: <scaleLevel>50 - 165</scaleLevel> postmitigation damage"
           }
         ]
       },
@@ -501,7 +501,7 @@
             "icon": "perk-images/Styles/Sorcery/SummonAery/SummonAery.png",
             "name": "Summon Aery",
             "shortDesc": "Your attacks and abilities send Aery to a target, damaging enemies or shielding allies.",
-            "longDesc": "Damaging enemy champions with basic attacks or abilities sends Aery to them, dealing 10 - 50 based on level (+<scaleAP>0.05 AP</scaleAP>) (+<scaleAD>0.1 bonus AD</scaleAD>).<br><br>Empowering or protecting allies with abilities sends Aery to them, shielding them for 30 - 100 based on level (+<scaleAP>0.05 AP</scaleAP>) (+<scaleAD>0.1 bonus AD</scaleAD>).<br><br>Aery cannot be sent out again until she returns to you."
+            "longDesc": "Damaging enemy champions with basic attacks or abilities sends Aery to them, dealing 10 - 50 based on level (+<scaleAP>0.05 AP</scaleAP>) (+<scaleAD>0.1 bonus AD</scaleAD>).<br><br>Empowering or protecting allies with abilities sends Aery to them, shielding them for 20 - 100 based on level (+<scaleAP>0.05 AP</scaleAP>) (+<scaleAD>0.1 bonus AD</scaleAD>).<br><br>Aery cannot be sent out again until she returns to you."
           },
           {
             "id": 8229,
@@ -525,7 +525,7 @@
             "icon": "perk-images/Styles/Sorcery/DeathfireTouch/DEATHFIRE_TOUCH_KEYSTONE.png",
             "name": "Deathfire Touch",
             "shortDesc": "Damaging a champion with an ability burns them over time.",
-            "longDesc": "Damaging a champion with an ability burns them for 3 - 12 based on level (+<scaleAP>0.03 AP</scaleAP>) (+<scaleAD>0.07 bonus AD</scaleAD>)  adaptive damage per second. After burning for 3 seconds, the damage of the burn increases by 75% while they remain on fire.<br><rules><br>Duration:<br>Single Target: 4s<br>Area of Effect: 2s<br>Damage over Time: 1s<br></rules>"
+            "longDesc": "Damaging a champion with an ability burns them for 3 - 12 based on level (+<scaleAP>7.0% AP</scaleAP>) (+<scaleAD>2.5% bonus AD</scaleAD>)  magical damage per second. After burning for 3 seconds, the damage of the burn increases by 75% while they remain on fire.<br><rules><br>Duration:<br>Single Target: 4s<br>Area of Effect: 2s<br>Damage over Time: 1s<br></rules>"
           }
         ]
       },

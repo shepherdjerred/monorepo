@@ -53,16 +53,6 @@ export function getSessionToken(): string | null {
 }
 
 /**
- * Store a session token
- */
-export function setSessionToken(token: string): void {
-  if (!("window" in globalThis)) {
-    return;
-  }
-  localStorage.setItem("scout_session_token", token);
-}
-
-/**
  * Clear the stored session token
  */
 export function clearSessionToken(): void {
@@ -77,14 +67,4 @@ export function clearSessionToken(): void {
  */
 export function isAuthenticated(): boolean {
   return getSessionToken() !== null;
-}
-
-/**
- * Get the redirect URI for OAuth callbacks
- */
-export function getRedirectUri(): string {
-  if (!("window" in globalThis)) {
-    return `${BACKEND_URL}/app/callback`;
-  }
-  return `${globalThis.location.origin}/app/callback`;
 }

@@ -7,7 +7,6 @@ import {
 import type {
   Domain,
   EntityId,
-  EntityIdByDomain,
   EntityState,
   Service,
   ServiceDataFor,
@@ -74,6 +73,17 @@ export async function getEntityState<E extends EntityId<HaSchema>>(
   // guaranteed to equal the input. Re-stamping it here narrows the type to
   // the literal without a cast.
   return { ...state, entity_id: entityId };
+}
+
+/**
+ * Untyped state read for optional automations whose entity IDs can drift in
+ * live HA schema generation while the workflow still needs runtime checks.
+ * Prefer {@link getEntityState} for stable, schema-owned entity literals.
+ */
+export async function getEntityStateUnchecked(
+  entityId: string,
+): Promise<EntityState> {
+  return activities.getEntityState(entityId);
 }
 
 export async function getStates(): Promise<EntityState[]> {
@@ -177,12 +187,14 @@ export async function anyoneHome(): Promise<boolean> {
 }
 
 export async function volumeUpBy(
-  entityId: EntityIdByDomain<HaSchema, "media_player">,
+  entityId: string,
   steps: number,
   delayBetweenSeconds: number,
 ): Promise<void> {
   for (let i = 0; i < steps; i += 1) {
-    await callService("media_player", "volume_up", { entity_id: entityId });
+    await callServiceUnchecked("media_player", "volume_up", {
+      entity_id: entityId,
+    });
     if (i < steps - 1) {
       await sleep(delayBetweenSeconds * 1000);
     }

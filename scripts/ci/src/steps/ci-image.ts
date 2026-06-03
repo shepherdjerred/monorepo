@@ -62,7 +62,7 @@ export function ciBaseImagePushStep(
     `--tags ghcr.io/shepherdjerred/ci-base:${version}`,
     `--tags ghcr.io/shepherdjerred/ci-base:latest`,
     `--registry-username shepherdjerred`,
-    `--registry-password env:GH_TOKEN`,
+    `--registry-password env:GHCR_TOKEN`,
   ].join(" ");
 
   return {
@@ -70,7 +70,12 @@ export function ciBaseImagePushStep(
     key: "push-ci-base",
     if: MAIN_ONLY,
     depends_on: "build-ci-base",
-    command: `dagger call push-ci-base-image --context ./.buildkite/ci-image ${tagFlags}`,
+    command: [
+      `if [ -z "$$GHCR_TOKEN" ] && [ -n "$$GH_TOKEN" ]; then echo "WARNING: GHCR_TOKEN unset, falling back to GH_TOKEN for GHCR push" >&2; fi`,
+      '&& export GHCR_TOKEN="$${GHCR_TOKEN:-$${GH_TOKEN:-}}"',
+      `&& if [ -z "$$GHCR_TOKEN" ]; then echo "ERROR: GHCR_TOKEN is empty and GH_TOKEN fallback is unavailable" >&2; exit 1; fi`,
+      `&& dagger call push-ci-base-image --context ./.buildkite/ci-image ${tagFlags}`,
+    ].join(" "),
     timeout_in_minutes: 15,
     priority: 1,
     retry: RETRY,

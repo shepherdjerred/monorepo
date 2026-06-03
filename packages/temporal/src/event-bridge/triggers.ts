@@ -38,6 +38,7 @@ async function startWorkflow(
   workflowType: string,
   workflowId: string,
   options: {
+    args?: unknown[];
     workflowIdReusePolicy?: WorkflowIdReusePolicy;
     workflowIdConflictPolicy?: WorkflowIdConflictPolicy;
   } = {},
@@ -52,7 +53,7 @@ async function startWorkflow(
         workflowIdConflictPolicy: options.workflowIdConflictPolicy,
       }),
       workflowExecutionTimeout: "10 minutes",
-      args: [],
+      args: options.args ?? [],
     });
     console.warn(`Started workflow ${workflowType} id=${workflowId}`);
   } catch (error: unknown) {
@@ -126,17 +127,16 @@ export function handleStateChanged(
       return;
     }
     if (oldState === "not_home" && newState === "home") {
-      if (!(await othersAllAway(rest, parsed.data.entity_id))) {
-        console.warn(
-          `welcomeHome skipped: ${parsed.data.entity_id} arrived but others are home`,
-        );
-        return;
-      }
+      // Fire on every arrival so the door is always unlocked and lights come
+      // on, even if someone else is already home. `firstArrival` (the house was
+      // otherwise empty) gates the welcome notification and vacuum docking.
+      const firstArrival = await othersAllAway(rest, parsed.data.entity_id);
       await startWorkflow(
         client,
         "welcomeHome",
         `welcome-home-${cooldownBucket()}-${parsed.data.entity_id}`,
         {
+          args: [firstArrival],
           workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
           workflowIdConflictPolicy: WorkflowIdConflictPolicy.FAIL,
         },

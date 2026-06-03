@@ -1,13 +1,25 @@
 import { z } from "zod";
-import type { MonarchCategory } from "../monarch/types.ts";
 import type { EnrichedTransaction } from "../enrichment/types.ts";
 import type { TransactionEnrichment } from "../enrichment/types.ts";
 import type { ProposedChange, ProposedSplit } from "./types.ts";
 import type { CategoryDefinition } from "../knowledge/types.ts";
-import { callClaudeAndParse } from "./claude.ts";
+import {
+  callClaudeAndParseWithUsage,
+  getModelId,
+  getTracker,
+  isWebSearchEnabled,
+} from "./claude.ts";
 import { computeSplits } from "./claude.ts";
 import { formatCategoryDefinitions } from "../knowledge/definitions.ts";
 import { log } from "../logger.ts";
+import {
+  buildTier2CheckpointBatch,
+  getTier2BatchKey,
+  getTier2PromptHash,
+  loadTier2Checkpoint,
+  type Tier2CheckpointStore,
+  type TokenUsage,
+} from "./tier2-checkpoint.ts";
 
 function buildSplitChange(
   txn: {
@@ -91,6 +103,39 @@ const Tier2ClassificationSchema = z.object({
     }),
   ),
 });
+
+type Tier2ClassificationResult = z.infer<typeof Tier2ClassificationSchema>;
+
+export type Tier2ClassifierResult = {
+  result: Tier2ClassificationResult;
+  usage: TokenUsage | undefined;
+};
+
+export type Tier2Classifier = (
+  prompt: string,
+) => Promise<Tier2ClassifierResult>;
+
+export type Tier2Options = {
+  checkpointFile?: string | undefined;
+  classifier?: Tier2Classifier | undefined;
+};
+
+export type ClassifyTier2Params = {
+  definitions: CategoryDefinition[];
+  transactions: EnrichedTransaction[];
+  batchSize: number;
+  checkpointFile?: string | undefined;
+  classifier?: Tier2Classifier | undefined;
+};
+
+type Tier2BatchWork = {
+  batchNumber: number;
+  batch: EnrichedTransaction[];
+  prompt: string;
+  promptHash: string;
+  transactionIds: string[];
+  checkpointKey: string;
+};
 
 function formatEnrichmentContext(
   enrichment: TransactionEnrichment | undefined,
@@ -218,74 +263,225 @@ When shouldSplit is true:
 When shouldSplit is false, set "splits" to an empty array [].`;
 }
 
-export async function classifyTier2(
-  _categories: MonarchCategory[],
+function buildChangesFromResult(
+  batch: EnrichedTransaction[],
+  result: Tier2ClassificationResult,
+): ProposedChange[] {
+  const changes: ProposedChange[] = [];
+
+  for (const classification of result.transactions) {
+    const enriched = batch[classification.transactionIndex];
+    if (!enriched) continue;
+    const txn = enriched.transaction;
+
+    const isSplit =
+      classification.shouldSplit &&
+      classification.splits !== undefined &&
+      classification.splits.length > 1;
+
+    if (isSplit) {
+      changes.push(
+        buildSplitChange(
+          txn,
+          classification,
+          enriched.enrichment?.enrichmentSource,
+        ),
+      );
+    } else if (classification.categoryId !== txn.category.id) {
+      changes.push({
+        transactionId: txn.id,
+        transactionDate: txn.date,
+        merchantName: txn.merchant.name,
+        amount: txn.amount,
+        currentCategory: txn.category.name,
+        currentCategoryId: txn.category.id,
+        proposedCategory: classification.categoryName,
+        proposedCategoryId: classification.categoryId,
+        confidence: classification.confidence,
+        type: "recategorize",
+        tier: 2,
+        enrichmentSource: enriched.enrichment?.enrichmentSource,
+      });
+    }
+  }
+
+  return changes;
+}
+
+async function defaultTier2Classifier(
+  prompt: string,
+): Promise<Tier2ClassifierResult> {
+  return callClaudeAndParseWithUsage(prompt, Tier2ClassificationSchema);
+}
+
+function buildBatchWorkItems(
   definitions: CategoryDefinition[],
   transactions: EnrichedTransaction[],
   batchSize: number,
-): Promise<ProposedChange[]> {
-  const changes: ProposedChange[] = [];
-
+): Tier2BatchWork[] {
   const batches: EnrichedTransaction[][] = [];
   for (let i = 0; i < transactions.length; i += batchSize) {
     batches.push(transactions.slice(i, i + batchSize));
   }
 
+  return batches.map((batch, index) => {
+    const prompt = buildTier2Prompt(definitions, batch);
+    const transactionIds = batch.map((enriched) => enriched.transaction.id);
+    return {
+      batchNumber: index + 1,
+      batch,
+      prompt,
+      promptHash: getTier2PromptHash(prompt),
+      transactionIds,
+      checkpointKey: getTier2BatchKey({
+        prompt,
+        model: getModelId(),
+        batchSize,
+        webSearchEnabled: isWebSearchEnabled(),
+        transactionIds,
+      }),
+    };
+  });
+}
+
+function recordRecoveredUsage(usage: TokenUsage | undefined): void {
+  if (usage === undefined) return;
+  getTracker()?.recordCached(usage.inputTokens, usage.outputTokens);
+}
+
+function describeThrownValue(value: unknown): string {
+  if (value instanceof Error) return value.message;
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return "Unknown non-error throw";
+  }
+}
+
+async function classifyBatchWithCheckpoint(params: {
+  work: Tier2BatchWork;
+  classifier: Tier2Classifier;
+  checkpoint: Tier2CheckpointStore | undefined;
+  batchSize: number;
+  totalBatches: number;
+}): Promise<{ changes: ProposedChange[]; fromCheckpoint: boolean }> {
+  const { work, classifier, checkpoint, batchSize, totalBatches } = params;
+  const cached = checkpoint?.get(work.checkpointKey);
+  if (cached !== undefined) {
+    recordRecoveredUsage(cached.usage);
+    return { changes: cached.changes, fromCheckpoint: true };
+  }
+
+  const { result, usage } = await classifier(work.prompt);
+  const changes = buildChangesFromResult(work.batch, result);
+
+  if (checkpoint !== undefined) {
+    await checkpoint.set(
+      work.checkpointKey,
+      buildTier2CheckpointBatch({
+        transactionIds: work.transactionIds,
+        model: getModelId(),
+        batchSize,
+        promptHash: work.promptHash,
+        changes,
+        usage,
+      }),
+    );
+    log.info(
+      `Saved Tier 2 checkpoint batch ${String(work.batchNumber)}/${String(totalBatches)}`,
+    );
+  }
+
+  return { changes, fromCheckpoint: false };
+}
+
+export async function classifyTier2(
+  params: ClassifyTier2Params,
+): Promise<ProposedChange[]> {
+  const changes: ProposedChange[] = [];
+  const {
+    definitions,
+    transactions,
+    batchSize,
+    checkpointFile,
+    classifier: configuredClassifier,
+  } = params;
+
+  const batchWorkItems = buildBatchWorkItems(
+    definitions,
+    transactions,
+    batchSize,
+  );
+  const classifier = configuredClassifier ?? defaultTier2Classifier;
+  const checkpoint =
+    checkpointFile === undefined
+      ? undefined
+      : await loadTier2Checkpoint(checkpointFile);
+
+  if (checkpoint !== undefined) {
+    const skipped = batchWorkItems.filter(
+      (work) => checkpoint.get(work.checkpointKey) !== undefined,
+    ).length;
+    log.info(
+      `Loaded ${String(checkpoint.size())} completed Tier 2 batches from checkpoint`,
+    );
+    log.info(
+      `Skipped ${String(skipped)}/${String(batchWorkItems.length)} Tier 2 batches from checkpoint`,
+    );
+  }
+
   const concurrency = 3;
   let completed = 0;
 
-  for (let i = 0; i < batches.length; i += concurrency) {
-    const chunk = batches.slice(i, i + concurrency);
-    const results = await Promise.all(
-      chunk.map(async (batch) => {
-        const prompt = buildTier2Prompt(definitions, batch);
-        const result = await callClaudeAndParse(
-          prompt,
-          Tier2ClassificationSchema,
-        );
-        return { batch, result };
-      }),
+  for (let i = 0; i < batchWorkItems.length; i += concurrency) {
+    const chunk = batchWorkItems.slice(i, i + concurrency);
+    const results = await Promise.allSettled(
+      chunk.map((work) =>
+        classifyBatchWithCheckpoint({
+          work,
+          classifier,
+          checkpoint,
+          batchSize,
+          totalBatches: batchWorkItems.length,
+        }),
+      ),
     );
 
-    for (const { batch, result } of results) {
-      for (const classification of result.transactions) {
-        const enriched = batch[classification.transactionIndex];
-        if (!enriched) continue;
-        const txn = enriched.transaction;
-
-        const isSplit =
-          classification.shouldSplit &&
-          classification.splits !== undefined &&
-          classification.splits.length > 1;
-
-        if (isSplit) {
-          changes.push(
-            buildSplitChange(
-              txn,
-              classification,
-              enriched.enrichment?.enrichmentSource,
-            ),
-          );
-        } else if (classification.categoryId !== txn.category.id) {
-          changes.push({
-            transactionId: txn.id,
-            transactionDate: txn.date,
-            merchantName: txn.merchant.name,
-            amount: txn.amount,
-            currentCategory: txn.category.name,
-            currentCategoryId: txn.category.id,
-            proposedCategory: classification.categoryName,
-            proposedCategoryId: classification.categoryId,
-            confidence: classification.confidence,
-            type: "recategorize",
-            tier: 2,
-            enrichmentSource: enriched.enrichment?.enrichmentSource,
-          });
-        }
+    const failures: unknown[] = [];
+    for (const result of results) {
+      if (result.status === "fulfilled") {
+        changes.push(...result.value.changes);
+      } else {
+        failures.push(result.reason);
       }
-      completed += batch.length;
     }
+
+    completed += chunk
+      .filter((_, index) => results[index]?.status === "fulfilled")
+      .reduce((sum, work) => sum + work.batch.length, 0);
     log.progress(completed, transactions.length, "tier 2 classified");
+
+    if (failures.length === 1) {
+      const failure = failures[0];
+      if (failure instanceof Error) throw failure;
+      throw new Error(describeThrownValue(failure));
+    }
+
+    if (failures.length > 1) {
+      const failureDescriptions = failures
+        .map(
+          (failure, index) =>
+            `${String(index + 1)}. ${describeThrownValue(failure)}`,
+        )
+        .join("\n");
+      throw new Error(
+        `Tier 2 classification failed for ${String(failures.length)} batches:\n${failureDescriptions}`,
+      );
+    }
   }
 
   log.info(

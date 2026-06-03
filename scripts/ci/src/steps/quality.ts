@@ -207,6 +207,22 @@ export function lineEndingsCheckStep(): BuildkiteStep {
   });
 }
 
+/** Plain step: verifies Scout's committed SQLite test template matches migrations + seeds. */
+export function scoutTestTemplateCheckStep(): BuildkiteStep {
+  return plainStep({
+    label: ":floppy_disk: Scout Test Template",
+    key: "scout-test-template-check",
+    command: [
+      "cd packages/scout-for-lol",
+      "bun install --frozen-lockfile",
+      "cd packages/backend",
+      "bunx --trust prisma generate",
+      "bun run check:test-template",
+    ].join(" && "),
+    timeoutMinutes: 10,
+  });
+}
+
 /** Plain step: only needs bun (in ci-base). Guards against package exclusions. */
 export function migrationGuardStep(): BuildkiteStep {
   return plainStep({

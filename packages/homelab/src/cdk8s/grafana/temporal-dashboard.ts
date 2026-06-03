@@ -133,7 +133,7 @@ export function createTemporalDashboard() {
         id: 1,
         title: "Temporal Server Scrape",
         description: "Prometheus scrape health for Temporal server metrics",
-        expr: 'max(up{namespace="temporal", service=~"temporal-server-metrics.*"})',
+        expr: 'max(up{namespace="temporal", service=~".*temporal.*server.*metrics.*"})',
         legend: "server",
         x: 0,
         y: 0,
@@ -144,7 +144,7 @@ export function createTemporalDashboard() {
         id: 2,
         title: "Temporal Worker Scrape",
         description: "Prometheus scrape health for Temporal worker SDK metrics",
-        expr: 'max(up{namespace="temporal", service=~"temporal-worker-metrics.*"})',
+        expr: 'max(up{namespace="temporal", service=~".*temporal.*worker.*metrics.*|temporal-worker-app-metrics"})',
         legend: "worker",
         x: 8,
         y: 0,
@@ -153,10 +153,11 @@ export function createTemporalDashboard() {
       }),
       statPanel({
         id: 3,
-        title: "Data Dragon Successes",
-        description: "Successful Data Dragon updater runs in the last 7 days",
-        expr: 'sum(increase(temporal_worker_scout_data_dragon_runs_total{outcome="success"}[7d]))',
-        legend: "success",
+        title: "Data Dragon Version Current",
+        description:
+          "Latest Data Dragon version-check result. 1 means the recorded current/latest label pair is present.",
+        expr: "max by (current_version, latest_version) (scout_data_dragon_version_info) or on() vector(0)",
+        legend: "{{current_version}} / {{latest_version}}",
         x: 16,
         y: 0,
         w: 8,
@@ -168,7 +169,7 @@ export function createTemporalDashboard() {
         description: "Updater runs by mode, outcome, and reason",
         targets: [
           {
-            expr: "sum by (mode, outcome, reason) (increase(temporal_worker_scout_data_dragon_runs_total[1d]))",
+            expr: "max by (mode, outcome, reason) (scout_data_dragon_runs) or on() vector(0)",
             legend: "{{mode}} {{outcome}} {{reason}}",
           },
         ],
@@ -183,7 +184,7 @@ export function createTemporalDashboard() {
         description: "Updater runtime p95",
         targets: [
           {
-            expr: "histogram_quantile(0.95, sum(rate(temporal_worker_scout_data_dragon_duration_seconds_bucket[7d])) by (le))",
+            expr: "histogram_quantile(0.95, sum by (le) (rate(scout_data_dragon_duration_s_bucket[7d]))) or on() vector(0)",
             legend: "p95",
           },
         ],
@@ -200,7 +201,7 @@ export function createTemporalDashboard() {
           "Temporal server activity task failures by workflow/activity",
         targets: [
           {
-            expr: 'sum by (workflowType, activityType) (increase(activity_task_fail{namespace="default"}[1h]))',
+            expr: 'sum by (workflowType, activityType) (increase(activity_task_fail{namespace="default"}[1h])) or on() vector(0)',
             legend: "{{workflowType}} {{activityType}}",
           },
         ],
@@ -215,11 +216,11 @@ export function createTemporalDashboard() {
         description: "Changed files from the latest run and PR creation count",
         targets: [
           {
-            expr: "max(temporal_worker_scout_data_dragon_changed_files) by (mode, outcome)",
+            expr: "max by (mode, outcome) (scout_data_dragon_changed_files) or on() vector(0)",
             legend: "files {{mode}} {{outcome}}",
           },
           {
-            expr: "sum(increase(temporal_worker_scout_data_dragon_prs_total[7d]))",
+            expr: "max(scout_data_dragon_prs) or on() vector(0)",
             legend: "prs",
           },
         ],
@@ -274,7 +275,7 @@ export function createTemporalDashboard() {
         title: "Agent Failures (24h)",
         description:
           "Subprocess exits with non-zero code from the pr-agent claude wrapper.",
-        expr: 'sum(increase(pr_agent_subprocess_exit_total{exit_code!="0"}[24h]))',
+        expr: 'sum(increase(pr_agent_subprocess_exit_total{exit_code!="0"}[24h])) or on() vector(0)',
         legend: "fails",
         x: 18,
         y: 48,
@@ -287,7 +288,7 @@ export function createTemporalDashboard() {
         description: "pull_request events received, broken down by action.",
         targets: [
           {
-            expr: 'sum by (action) (increase(pr_webhook_received_total{event="pull_request"}[1h]))',
+            expr: 'sum by (action) (increase(pr_webhook_received_total{event="pull_request"}[1h])) or on() vector(0)',
             legend: "{{action}}",
           },
         ],
@@ -303,7 +304,7 @@ export function createTemporalDashboard() {
           "Why incoming PRs are skipped (draft, bot-author, action:<x>).",
         targets: [
           {
-            expr: "sum by (reason) (increase(pr_webhook_skipped_total[1h]))",
+            expr: "sum by (reason) (increase(pr_webhook_skipped_total[1h])) or on() vector(0)",
             legend: "{{reason}}",
           },
         ],
@@ -319,11 +320,11 @@ export function createTemporalDashboard() {
           "claude -p subprocess wall-clock duration distribution by kind (review/summary), last 7d.",
         targets: [
           {
-            expr: "histogram_quantile(0.5, sum by (le, kind) (rate(pr_agent_subprocess_duration_seconds_bucket[7d])))",
+            expr: "histogram_quantile(0.5, sum by (le, kind) (rate(pr_agent_subprocess_duration_seconds_bucket[7d]))) or on() vector(0)",
             legend: "{{kind}} p50",
           },
           {
-            expr: "histogram_quantile(0.95, sum by (le, kind) (rate(pr_agent_subprocess_duration_seconds_bucket[7d])))",
+            expr: "histogram_quantile(0.95, sum by (le, kind) (rate(pr_agent_subprocess_duration_seconds_bucket[7d]))) or on() vector(0)",
             legend: "{{kind}} p95",
           },
         ],
@@ -340,7 +341,7 @@ export function createTemporalDashboard() {
           "Token consumption of pr-agent invocations, split by direction (input/output/cache_read/cache_create).",
         targets: [
           {
-            expr: "sum by (kind, direction) (rate(pr_agent_tokens_total[1d]))",
+            expr: "sum by (kind, direction) (rate(pr_agent_tokens_total[1d])) or on() vector(0)",
             legend: "{{kind}} {{direction}}",
           },
         ],

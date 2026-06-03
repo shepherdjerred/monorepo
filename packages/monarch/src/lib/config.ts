@@ -4,7 +4,6 @@ import { Glob } from "bun";
 import path from "node:path";
 
 export type Config = {
-  monarchToken: string;
   anthropicApiKey: string;
   apply: boolean;
   limit: number;
@@ -29,6 +28,7 @@ export type Config = {
   skipCostco: boolean;
   skipResearch: boolean;
   output: string | undefined;
+  checkpointFile: string | undefined;
   rebuildKb: boolean;
   skipEnrich: boolean;
   suggest: boolean;
@@ -60,17 +60,13 @@ export function getConfig(): Config {
       "skip-costco": { type: "boolean", default: false },
       "skip-research": { type: "boolean", default: false },
       output: { type: "string" },
+      "checkpoint-file": { type: "string" },
       "rebuild-kb": { type: "boolean", default: false },
       "skip-enrich": { type: "boolean", default: false },
       suggest: { type: "boolean", default: true },
     },
     strict: true,
   });
-
-  const monarchToken = Bun.env["MONARCH_TOKEN"];
-  if (monarchToken === undefined || monarchToken === "") {
-    throw new Error("MONARCH_TOKEN environment variable is required");
-  }
 
   const anthropicApiKey = Bun.env["ANTHROPIC_API_KEY"];
   if (anthropicApiKey === undefined || anthropicApiKey === "") {
@@ -88,7 +84,6 @@ export function getConfig(): Config {
   const appleMailDir = resolveAppleMailDir(values["apple-mail-dir"]);
 
   return {
-    monarchToken,
     anthropicApiKey,
     apply: values.apply,
     limit: Number(values.limit),
@@ -114,10 +109,34 @@ export function getConfig(): Config {
     skipCostco: values["skip-costco"],
     skipResearch: values["skip-research"],
     output: values.output,
+    checkpointFile: resolveCheckpointFile(
+      values["checkpoint-file"],
+      values.output,
+    ),
     rebuildKb: values["rebuild-kb"],
     skipEnrich: values["skip-enrich"],
     suggest: values.suggest,
   };
+}
+
+export function deriveCheckpointPath(
+  outputPath: string | undefined,
+): string | undefined {
+  if (outputPath === undefined || outputPath === "") return undefined;
+  if (outputPath.endsWith(".json")) {
+    return `${outputPath.slice(0, -".json".length)}.checkpoint.json`;
+  }
+  return `${outputPath}.checkpoint.json`;
+}
+
+export function resolveCheckpointFile(
+  checkpointFile: string | undefined,
+  outputPath: string | undefined,
+): string | undefined {
+  if (checkpointFile !== undefined && checkpointFile !== "") {
+    return checkpointFile;
+  }
+  return deriveCheckpointPath(outputPath);
 }
 
 export function autoDetectAppleMailDir(

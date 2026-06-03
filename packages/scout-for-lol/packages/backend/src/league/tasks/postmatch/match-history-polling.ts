@@ -16,6 +16,7 @@ import {
   getLastProcessedMatch,
   updateLastMatchTime,
   updateLastCheckedAt,
+  prisma,
 } from "#src/database/index.ts";
 import {
   MatchIdSchema,
@@ -43,6 +44,7 @@ import {
 } from "#src/league/tasks/recovery/app-state.ts";
 import { fetchMatchIdsForTimeRange } from "#src/league/tasks/recovery/backfill-to-s3.ts";
 import { saveMatchToS3 } from "#src/storage/s3.ts";
+import { recordMatchForReportStore } from "#src/report-store/live-ingest.ts";
 
 const logger = createLogger("postmatch-match-history-polling");
 
@@ -188,6 +190,12 @@ async function processMatchAndUpdatePlayers(
   logger.info(
     `[processMatch] 🔍 ${allTrackedPlayers.length.toString()} tracked player(s) in match: ${allTrackedPlayers.map((p) => p.alias).join(", ")}`,
   );
+
+  await recordMatchForReportStore({
+    prisma,
+    match: matchData,
+    source: silent ? "postmatch_silent_backfill" : "postmatch_live",
+  });
 
   if (silent) {
     try {

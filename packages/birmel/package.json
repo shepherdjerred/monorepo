@@ -16,6 +16,8 @@
     "build": "true",
     "generate": "bun run scripts/generate-prisma.ts",
     "test": "bun --env-file=.env.test run generate && bun --env-file=.env.test test",
+    "test:e2e:music": "bun run e2e/music-playback.ts",
+    "test:e2e:youtube-stream": "bun run e2e/youtube-stream-resource.ts",
     "typecheck": "bun run generate && tsc --noEmit",
     "lint": "bun run generate && eslint ."
   },
@@ -63,8 +65,8 @@
   },
   "overrides": {
     "@opentelemetry/api": "1.9.1",
-    "axios": "^1.16.1",
-    "fast-uri": "^3.1.2",
-    "protobufjs": "^7.5.7"
+    "axios": "1.16.0",
+    "fast-uri": "3.1.2",
+    "protobufjs": "8.0.3"
   }
 }

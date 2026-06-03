@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.11.1",
   "data": {
     "Smolder": {
       "id": "Smolder",
@@ -197,7 +197,7 @@
         "mpregenperlevel": 0.7,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 60,
+        "attackdamage": 58,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 4,
         "attackspeed": 0.638

@@ -81,6 +81,32 @@ function collectSteps(steps: unknown[], allSteps: BuildkiteStep[]): void {
   }
 }
 
+function collectKeysAndDeps(
+  steps: unknown[],
+  allKeys: Set<string>,
+  allDeps: string[],
+): void {
+  for (const step of steps) {
+    if (typeof step !== "object" || step === null) continue;
+    if ("key" in step && typeof step.key === "string") {
+      allKeys.add(step.key);
+    }
+    if ("depends_on" in step && typeof step.depends_on === "string") {
+      allDeps.push(step.depends_on);
+    }
+    if ("depends_on" in step && Array.isArray(step.depends_on)) {
+      for (const dep of step.depends_on) {
+        if (typeof dep === "string") {
+          allDeps.push(dep);
+        }
+      }
+    }
+    if ("steps" in step && Array.isArray(step.steps)) {
+      collectKeysAndDeps(step.steps, allKeys, allDeps);
+    }
+  }
+}
+
 function withBuildkitePullRequest<T>(value: string, fn: () => T): T {
   const original = process.env["BUILDKITE_PULL_REQUEST"];
   process.env["BUILDKITE_PULL_REQUEST"] = value;
@@ -92,6 +118,50 @@ function withBuildkitePullRequest<T>(value: string, fn: () => T): T {
       delete process.env["BUILDKITE_PULL_REQUEST"];
     } else {
       process.env["BUILDKITE_PULL_REQUEST"] = original;
+    }
+  }
+}
+
+function withDryRun<T>(fn: () => T): T {
+  const original = process.env["DRYRUN"];
+  process.env["DRYRUN"] = "true";
+
+  try {
+    return fn();
+  } finally {
+    if (original === undefined) {
+      delete process.env["DRYRUN"];
+    } else {
+      process.env["DRYRUN"] = original;
+    }
+  }
+}
+
+function withBuildkiteBranchContext<T>(
+  branch: string,
+  defaultBranch: string,
+  fn: () => T,
+): T {
+  const originalBranch = process.env["BUILDKITE_BRANCH"];
+  const originalDefaultBranch =
+    process.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"];
+
+  process.env["BUILDKITE_BRANCH"] = branch;
+  process.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"] = defaultBranch;
+
+  try {
+    return fn();
+  } finally {
+    if (originalBranch === undefined) {
+      delete process.env["BUILDKITE_BRANCH"];
+    } else {
+      process.env["BUILDKITE_BRANCH"] = originalBranch;
+    }
+
+    if (originalDefaultBranch === undefined) {
+      delete process.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"];
+    } else {
+      process.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"] = originalDefaultBranch;
     }
   }
 }
@@ -134,6 +204,13 @@ describe("buildPipeline", () => {
       expect(push).toBeDefined();
       expect(push?.if).toBe("build.branch == pipeline.default_branch");
       expect(push?.command).toContain("ghcr.io/shepherdjerred/ci-base:");
+      expect(push?.command).toContain("--registry-password env:GHCR_TOKEN");
+      expect(push?.command).toContain(
+        "WARNING: GHCR_TOKEN unset, falling back to GH_TOKEN for GHCR push",
+      );
+      expect(push?.command).toContain(
+        'export GHCR_TOKEN="$${GHCR_TOKEN:-$${GH_TOKEN:-}}"',
+      );
       expect(commitBack).toBeDefined();
       expect(commitBack?.depends_on).toBe("push-ci-base");
       expect(commitBack?.concurrency_group).toBe(
@@ -316,6 +393,7 @@ describe("buildPipeline", () => {
         "knip-check",
         "gitleaks-check",
         "suppression-check",
+        "scout-test-template-check",
       ];
       for (const key of qualityKeys) {
         expect(steps.some((s) => s.key === key)).toBe(true);
@@ -368,6 +446,8 @@ describe("buildPipeline", () => {
         "gitleaks-check",
         "suppression-check",
         "env-var-names",
+        "line-endings-check",
+        "scout-test-template-check",
         "migration-guard",
         "merge-conflict-check",
         "large-file-check",
@@ -480,7 +560,40 @@ describe("buildPipeline", () => {
       expect(planSteps.length).toBeGreaterThan(0);
       for (const s of planSteps) {
         expect(s.if).toBe("build.branch != pipeline.default_branch");
+        if (s.key === "tofu-plan-github") {
+          expect(s.command).toContain("--github-token env:TOFU_GITHUB_TOKEN");
+        } else {
+          expect(s.command).not.toContain("TOFU_GITHUB_TOKEN");
+        }
       }
+    });
+
+    it("omits main-only release and deploy graph from pull request builds", () => {
+      const pipeline = withBuildkitePullRequest("123", () =>
+        buildPipeline(fullBuild()),
+      );
+      const groups = pipeline.steps.filter(isGroup);
+      const groupKeys = groups.map((g) => g.key);
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+      const stepKeys = allSteps.map((s) => s.key);
+
+      expect(groupKeys).toContain("build-images");
+      expect(groupKeys).toContain("homelab-tofu-plan");
+      expect(stepKeys).toContain("ci-complete");
+
+      expect(groupKeys).not.toContain("push-images");
+      expect(groupKeys).not.toContain("publish-npm");
+      expect(groupKeys).not.toContain("cooklang-release");
+      expect(groupKeys).not.toContain("deploy-sites");
+      expect(groupKeys).not.toContain("homelab-helm-push");
+      expect(groupKeys).not.toContain("homelab-tofu");
+
+      expect(stepKeys).not.toContain("release-please");
+      expect(stepKeys).not.toContain("deploy-argocd");
+      expect(stepKeys).not.toContain("argocd-health");
+      expect(stepKeys).not.toContain("version-commit-back");
+      expect(stepKeys).not.toContain("build-summary");
     });
 
     it("includes image build/push, npm, cooklang, and sites groups", () => {
@@ -495,6 +608,125 @@ describe("buildPipeline", () => {
       expect(groupKeys).toContain("deploy-sites");
     });
 
+    it("omits cooklang release on auto-generated cooklang bumps", () => {
+      const affected = emptyAffected();
+      affected.packages.add("cooklang-for-obsidian");
+      affected.cooklangChanged = true;
+      affected.isAutoGenerated = true;
+
+      const pipeline = buildPipeline(affected);
+      const groups = pipeline.steps.filter(isGroup);
+      const groupKeys = groups.map((g) => g.key);
+
+      expect(groupKeys).not.toContain("cooklang-release");
+    });
+
+    it("uses GitHub App auth for release tasks and GHCR_TOKEN for image pushes with GH_TOKEN fallback", () => {
+      const pipeline = buildPipeline(fullBuild());
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+
+      const releaseSteps = allSteps.filter((s) =>
+        ["cooklang-publish"].includes(s.key),
+      );
+      expect(releaseSteps.length).toBe(1);
+      for (const s of releaseSteps) {
+        expect(s.command).toContain("--github-app-id env:GITHUB_APP_ID");
+        expect(s.command).not.toContain("env:GH_TOKEN");
+      }
+
+      const imagePushSteps = allSteps.filter((s) => s.key.startsWith("push-"));
+      expect(imagePushSteps.length).toBeGreaterThan(0);
+      for (const s of imagePushSteps) {
+        if (s.command.includes("--registry-password")) {
+          expect(s.command).toContain("--registry-password env:GHCR_TOKEN");
+          expect(s.command).not.toContain("--registry-password env:GH_TOKEN");
+          expect(s.command).toContain(
+            "WARNING: GHCR_TOKEN unset, falling back to GH_TOKEN for GHCR push",
+          );
+          expect(s.command).toContain(
+            'export GHCR_TOKEN="$${GHCR_TOKEN:-$${GH_TOKEN:-}}"',
+          );
+        }
+      }
+    });
+
+    it("forwards Scout marketing pixel env vars into the deploy build container", () => {
+      const pipeline = withBuildkiteBranchContext("main", "main", () =>
+        buildPipeline(fullBuild()),
+      );
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+
+      const scoutDeploy = allSteps.find(
+        (s) => s.key === "deploy-scout-frontend",
+      );
+
+      expect(scoutDeploy).toBeDefined();
+      expect(scoutDeploy?.command).toContain(
+        "--build-env-names PUBLIC_PINTEREST_TAG_ID",
+      );
+      expect(scoutDeploy?.command).toContain(
+        "--build-env-values env:PUBLIC_PINTEREST_TAG_ID",
+      );
+      expect(scoutDeploy?.command).toContain(
+        "--build-env-names PUBLIC_REDDIT_PIXEL_ID",
+      );
+      expect(scoutDeploy?.command).toContain(
+        "--build-env-values env:PUBLIC_REDDIT_PIXEL_ID",
+      );
+    });
+
+    it("uses explicit Scout marketing placeholders for dry-run deploy builds", () => {
+      const pipeline = withDryRun(() => buildPipeline(fullBuild()));
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+
+      const scoutDeploy = allSteps.find(
+        (s) => s.key === "deploy-scout-frontend",
+      );
+
+      expect(scoutDeploy).toBeDefined();
+      expect(scoutDeploy?.command).not.toContain(
+        "--build-env-values env:PUBLIC_PINTEREST_TAG_ID",
+      );
+      expect(scoutDeploy?.command).not.toContain(
+        "--build-env-values env:PUBLIC_REDDIT_PIXEL_ID",
+      );
+      expect(scoutDeploy?.command).toContain(
+        "PUBLIC_PINTEREST_TAG_ID='dev-pinterest-tag-id'",
+      );
+      expect(scoutDeploy?.command).toContain(
+        "PUBLIC_REDDIT_PIXEL_ID='dev-reddit-pixel-id'",
+      );
+    });
+
+    it("uses non-tracking Scout marketing placeholders for beta deploy builds", () => {
+      const pipeline = withBuildkiteBranchContext("main", "main", () =>
+        buildPipeline(fullBuild()),
+      );
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+
+      const scoutBetaDeploy = allSteps.find(
+        (s) => s.key === "deploy-scout-frontend-beta",
+      );
+
+      expect(scoutBetaDeploy).toBeDefined();
+      expect(scoutBetaDeploy?.command).not.toContain(
+        "--build-env-values env:PUBLIC_PINTEREST_TAG_ID",
+      );
+      expect(scoutBetaDeploy?.command).not.toContain(
+        "--build-env-values env:PUBLIC_REDDIT_PIXEL_ID",
+      );
+      expect(scoutBetaDeploy?.command).toContain(
+        "PUBLIC_PINTEREST_TAG_ID='beta-placeholder-pinterest-tag-id'",
+      );
+      expect(scoutBetaDeploy?.command).toContain(
+        "PUBLIC_REDDIT_PIXEL_ID='beta-placeholder-reddit-pixel-id'",
+      );
+    });
+
     it("includes homelab track", () => {
       const pipeline = buildPipeline(fullBuild());
       const groups = pipeline.steps.filter(isGroup);
@@ -505,6 +737,40 @@ describe("buildPipeline", () => {
       expect(groupKeys).toContain("push-images");
       expect(groupKeys).toContain("homelab-helm-push");
       expect(groupKeys).toContain("homelab-tofu");
+    });
+
+    it("waits for SeaweedFS bucket reconciliation before deploying sites", () => {
+      const pipeline = buildPipeline(fullBuild());
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+
+      const scoutBetaDeploy = allSteps.find(
+        (s) => s.key === "deploy-scout-frontend-beta",
+      );
+
+      expect(scoutBetaDeploy).toBeDefined();
+      expect(scoutBetaDeploy?.depends_on).toContain("tofu-seaweedfs");
+    });
+
+    it("waits for SeaweedFS bucket reconciliation for partial homelab + site releases", () => {
+      const affected = emptyAffected();
+      affected.packages.add("homelab");
+      affected.packages.add("scout-for-lol");
+      affected.homelabChanged = true;
+      affected.hasSitePackages.add("scout-for-lol");
+
+      const pipeline = buildPipeline(affected);
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+
+      const tofuSeaweedfs = allSteps.find((s) => s.key === "tofu-seaweedfs");
+      const scoutBetaDeploy = allSteps.find(
+        (s) => s.key === "deploy-scout-frontend-beta",
+      );
+
+      expect(tofuSeaweedfs).toBeDefined();
+      expect(scoutBetaDeploy).toBeDefined();
+      expect(scoutBetaDeploy?.depends_on).toContain("tofu-seaweedfs");
     });
 
     it("includes version commit-back", () => {
@@ -605,6 +871,11 @@ describe("buildPipeline", () => {
       for (const s of tofuSteps) {
         expect(s.concurrency).toBe(1);
         expect(s.concurrency_group).toContain("monorepo/tofu-");
+        if (s.key === "tofu-github") {
+          expect(s.command).toContain("--github-token env:TOFU_GITHUB_TOKEN");
+        } else {
+          expect(s.command).not.toContain("TOFU_GITHUB_TOKEN");
+        }
       }
 
       const argoSteps = allSteps.filter((s) =>
@@ -803,6 +1074,19 @@ describe("buildPipeline", () => {
       expect(missing).toEqual([]);
     });
 
+    it("has valid depends_on references in full pull request build", () => {
+      const pipeline = withBuildkitePullRequest("123", () =>
+        buildPipeline(fullBuild()),
+      );
+      const allKeys = new Set<string>();
+      const allDeps: string[] = [];
+
+      collectKeysAndDeps(pipeline.steps, allKeys, allDeps);
+
+      const missing = allDeps.filter((dep) => !allKeys.has(dep));
+      expect(missing).toEqual([]);
+    });
+
     it("all commands use dagger call or are known plain steps", () => {
       const pipeline = buildPipeline(fullBuild());
       /** Steps that intentionally run directly on the agent (no Dagger). */
@@ -812,6 +1096,7 @@ describe("buildPipeline", () => {
         "compliance-check",
         "env-var-names",
         "line-endings-check",
+        "scout-test-template-check",
         "migration-guard",
         "dagger-hygiene",
         "merge-conflict-check",

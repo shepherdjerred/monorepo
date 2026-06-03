@@ -58,6 +58,9 @@ const EXCLUDED_FILES = [
   "packages/docs/",
   "packages/dotfiles/AGENTS.md",
   "packages/dotfiles/CLAUDE.md",
+  // Agent prompts (e.g. .dagger/prompts/refine-release-please.md) describe banned
+  // patterns by name so the agent knows what NOT to do; same exception as AGENTS.md.
+  ".dagger/prompts/",
   // Contains patterns as search strings
   "scripts/check-dagger-hygiene.ts",
   // Uses || true for grep exit code

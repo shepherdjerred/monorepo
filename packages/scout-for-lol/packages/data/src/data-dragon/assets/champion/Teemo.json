@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.11.1",
   "data": {
     "Teemo": {
       "id": "Teemo",
@@ -472,7 +472,7 @@
         "mpperlevel": 25,
         "movespeed": 330,
         "armor": 24,
-        "armorperlevel": 4.95,
+        "armorperlevel": 4.5,
         "spellblock": 30,
         "spellblockperlevel": 1.3,
         "attackrange": 500,

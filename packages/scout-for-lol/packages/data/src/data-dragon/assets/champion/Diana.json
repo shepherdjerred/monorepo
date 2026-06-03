@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.11.1",
   "data": {
     "Diana": {
       "id": "Diana",
@@ -527,6 +527,60 @@
           "name": "Dark Cosmic Diana (Quasar)",
           "chromas": false,
           "parentSkin": 64
+        },
+        {
+          "id": "131076",
+          "num": 76,
+          "name": "Eternal Aspect Diana",
+          "chromas": false
+        },
+        {
+          "id": "131077",
+          "num": 77,
+          "name": "Eclipse Eternal Aspect Diana",
+          "chromas": true
+        },
+        {
+          "id": "131078",
+          "num": 78,
+          "name": "Eternal Aspect Diana (Ruby)",
+          "chromas": false,
+          "parentSkin": 76
+        },
+        {
+          "id": "131079",
+          "num": 79,
+          "name": "Eternal Aspect Diana (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 76
+        },
+        {
+          "id": "131080",
+          "num": 80,
+          "name": "Eternal Aspect Diana (Catseye)",
+          "chromas": false,
+          "parentSkin": 76
+        },
+        {
+          "id": "131081",
+          "num": 81,
+          "name": "Eternal Aspect Diana (Emerald)",
+          "chromas": false,
+          "parentSkin": 76
+        },
+        {
+          "id": "131082",
+          "num": 82,
+          "name": "Eternal Aspect Diana (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 76
+        },
+        {
+          "id": "131083",
+          "num": 83,
+          "name": "Eternal Aspect Diana (Pearl)",
+          "chromas": false,
+          "parentSkin": 76
         }
       ],
       "lore": "Bearing her crescent moonblade, Diana fights as a warrior of the Lunari—a faith all but quashed in the lands around Mount Targon. Clad in shimmering armor the color of winter snow at night, she is a living embodiment of the silver moon's power. Imbued with the essence of an Aspect from beyond Targon's towering summit, Diana is no longer wholly human, and struggles to understand her power and purpose in this world.",

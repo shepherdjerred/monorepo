@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0](https://github.com/shepherdjerred/monorepo/compare/webring-v1.6.1...webring-v1.7.0) (2026-05-27)
+
+No public API changes.
+
+* Bump runtime deps `sanitize-html` to `^2.17.4` and `zod` to `^4.4.3` ([078bb6c](https://github.com/shepherdjerred/monorepo/commit/078bb6c248d044caf99c239266f179528b9113c9), [d040b0b](https://github.com/shepherdjerred/monorepo/commit/d040b0b231ca7e047a29d306aa35c5e2a5744592))
+* README links updated to the monorepo location ([4806f78](https://github.com/shepherdjerred/monorepo/commit/4806f78e4920397845536ee843a36f950b6c86dd), [aeebe5c](https://github.com/shepherdjerred/monorepo/commit/aeebe5cc6b0d4b55ebb236357f8848ebf9566e3c))
+
 ## [1.6.1](https://github.com/shepherdjerred/monorepo/compare/webring-v1.6.0...webring-v1.6.1) (2026-04-23)
 
 

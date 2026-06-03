@@ -1,63 +1,145 @@
-import { chromium } from "playwright";
+import { chromium, type Browser } from "playwright";
+import { saveMonarchSession } from "../src/lib/monarch/session.ts";
 
-const APP_URL = "https://app.monarchmoney.com/login";
-const ENV_PATH = ".env";
+const APP_URL = "https://app.monarch.com/login";
+const GRAPHQL_HOSTNAME = "api.monarch.com";
+const SESSION_WAIT_TIMEOUT_MS = 10 * 60 * 1000;
+
+type CapturedHeaders = {
+  origin?: string;
+  referer?: string;
+  "user-agent"?: string;
+  "x-csrftoken"?: string;
+  "monarch-client"?: string;
+  "monarch-client-version"?: string;
+};
 
 const browser = await launchBrowser();
 const context = await browser.newContext();
 const page = await context.newPage();
 
 console.log("Opening Monarch. Log in normally in the browser window.");
-console.log("Waiting for a Monarch API Authorization token...");
+console.log("Waiting for a Monarch GraphQL session...");
 
 let saved = false;
+let saving = false;
+let capturedHeaders: CapturedHeaders = {};
 let resolveSaved: () => void;
-const savedToken = new Promise<void>((resolve) => {
+let rejectSaved: (error: Error) => void;
+const savedSession = new Promise<void>((resolve, reject) => {
   resolveSaved = resolve;
+  rejectSaved = reject;
 });
 
 page.on("request", async (request) => {
-  if (saved) return;
-  if (!request.url().startsWith("https://api.monarch.com/")) return;
+  if (saved || saving) return;
+  if (request.method() !== "POST") return;
+  if (!isGraphQlRequestUrl(request.url())) return;
 
-  const authorization = request.headers()["authorization"];
-  const match = authorization?.match(/^Token\s+(.+)$/i);
-  if (!match) return;
+  saving = true;
+  const headers = request.headers();
+  capturedHeaders = pickHeaders(headers);
 
-  saved = true;
-  await upsertEnvValue("MONARCH_TOKEN", match[1]);
-  console.log(`Saved MONARCH_TOKEN to ${ENV_PATH}`);
-  resolveSaved();
+  try {
+    const cookies = await context.cookies([
+      "https://api.monarch.com",
+      "https://app.monarch.com",
+    ]);
+    const hasCsrf =
+      capturedHeaders["x-csrftoken"] !== undefined ||
+      cookies.some((cookie) => cookie.name === "csrftoken");
+    const hasSession = cookies.some(
+      (cookie) => cookie.name === "sessionid" || cookie.name === "session_id",
+    );
+
+    if (!hasCsrf || !hasSession) {
+      saving = false;
+      return;
+    }
+
+    saved = true;
+    await saveMonarchSession({
+      createdAt: new Date().toISOString(),
+      cookies,
+      headers: compactHeaders(capturedHeaders),
+    });
+    console.log("Saved Monarch session to .monarch-session.json");
+    resolveSaved();
+  } catch (error: unknown) {
+    saving = false;
+    const message = error instanceof Error ? error.message : String(error);
+    rejectSaved(new Error(message));
+  }
 });
 
 await page.goto(APP_URL);
-await savedToken;
-await browser.close();
-
-async function upsertEnvValue(key: string, value: string): Promise<void> {
-  const file = Bun.file(ENV_PATH);
-  const existing = (await file.exists()) ? await file.text() : "";
-  const lines = existing.split(/\r?\n/);
-  const nextLine = `${key}=${value}`;
-  let replaced = false;
-
-  const nextLines = lines.map((line) => {
-    if (line.startsWith(`${key}=`)) {
-      replaced = true;
-      return nextLine;
-    }
-    return line;
-  });
-
-  if (!replaced) {
-    if (nextLines.length > 0 && nextLines.at(-1) !== "") nextLines.push("");
-    nextLines.push(nextLine);
-  }
-
-  await Bun.write(ENV_PATH, `${nextLines.join("\n").replace(/\n+$/, "")}\n`);
+try {
+  await withTimeout(
+    savedSession,
+    SESSION_WAIT_TIMEOUT_MS,
+    `Timed out waiting for a Monarch GraphQL session after ${String(SESSION_WAIT_TIMEOUT_MS)}ms`,
+  );
+} finally {
+  await browser.close();
 }
 
-async function launchBrowser() {
+function isGraphQlRequestUrl(rawUrl: string): boolean {
+  try {
+    const url = new URL(rawUrl);
+    return (
+      url.hostname === GRAPHQL_HOSTNAME &&
+      (url.pathname === "/graphql" || url.pathname === "/graphql/")
+    );
+  } catch {
+    return false;
+  }
+}
+
+function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  timeoutMessage: string,
+): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error(timeoutMessage));
+    }, timeoutMs);
+
+    void promise.then(
+      (value) => {
+        clearTimeout(timeout);
+        resolve(value);
+      },
+      (error: unknown) => {
+        clearTimeout(timeout);
+        reject(error instanceof Error ? error : new Error(String(error)));
+      },
+    );
+  });
+}
+
+function pickHeaders(headers: Record<string, string>): CapturedHeaders {
+  return {
+    origin: headers.origin,
+    referer: headers.referer,
+    "user-agent": headers["user-agent"],
+    "x-csrftoken": headers["x-csrftoken"],
+    "monarch-client": headers["monarch-client"],
+    "monarch-client-version": headers["monarch-client-version"],
+  };
+}
+
+function compactHeaders(headers: CapturedHeaders): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const [key, value] of Object.entries(headers)) {
+    if (value !== undefined && value !== "") {
+      result[key] = value;
+    }
+  }
+  return result;
+}
+
+async function launchBrowser(): Promise<Browser> {
   try {
     return await chromium.launch({ channel: "chrome", headless: false });
   } catch {

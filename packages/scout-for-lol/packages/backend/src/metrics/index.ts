@@ -1,6 +1,7 @@
 import { Registry, Counter, Gauge, Histogram } from "prom-client";
 import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
+import { seedProviderIssueMetrics } from "#src/metrics/provider-issue-seeds.ts";
 
 const logger = createLogger("metrics");
 
@@ -580,7 +581,8 @@ export const scoutOpenaiBudgetExceededTotal = new Counter({
 /**
  * Provider-side AI API failures that should be handled operationally by
  * Prometheus/Alertmanager instead of Bugsink. `source` is a low-cardinality
- * callsite such as `match_review`; `kind` is `quota` or `rate_limit`.
+ * callsite such as `match_review`; `kind` is a low-cardinality operational
+ * class such as `quota`, `rate_limit`, `budget_exceeded`, or `context_limit`.
  */
 export const aiProviderErrorsTotal = new Counter({
   name: "ai_provider_errors_total",
@@ -590,7 +592,7 @@ export const aiProviderErrorsTotal = new Counter({
 });
 
 /**
- * In-process active provider issue flag. Set to 1 when a provider quota/rate
+ * In-process active provider issue flag. Set to 1 when a provider operational
  * failure is observed and reset to 0 on the next successful provider-backed
  * call from the same source.
  */
@@ -599,6 +601,10 @@ export const aiProviderIssueActive = new Gauge({
   help: "Whether an AI provider operational issue is currently active for this app/source",
   labelNames: ["app", "provider", "kind", "source"] as const,
   registers: [registry],
+});
+seedProviderIssueMetrics({
+  errorsTotal: aiProviderErrorsTotal,
+  issueActive: aiProviderIssueActive,
 });
 
 // =======================

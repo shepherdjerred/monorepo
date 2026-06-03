@@ -1,200 +1,24 @@
 /**
  * Auth Router
  *
- * Handles Discord OAuth and API token management.
+ * The Discord OAuth web sign-in flow lives in `auth-web.ts` as plain HTTP
+ * routes (`/api/auth/discord/start`, `/api/auth/discord/callback`) because
+ * setting HttpOnly cookies and 302-redirecting is awkward through tRPC.
+ * This router only carries the API-token management surface used by the
+ * desktop client and the `me` / `meWeb` profile lookups.
  */
 
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { router, publicProcedure, protectedProcedure } from "#src/trpc/trpc.ts";
+import { router, protectedProcedure, webProcedure } from "#src/trpc/trpc.ts";
 import { prisma } from "#src/database/index.ts";
 import { generateApiToken } from "#src/trpc/context.ts";
 import { createLogger } from "#src/logger.ts";
-import configuration from "#src/configuration.ts";
-import { DiscordAccountIdSchema, ApiTokenIdSchema } from "@scout-for-lol/data";
+import { ApiTokenIdSchema } from "@scout-for-lol/data";
 
 const logger = createLogger("auth-router");
 
-const DISCORD_API_BASE = "https://discord.com/api/v10";
-
-/**
- * Discord user response schema
- */
-const DiscordUserSchema = z.object({
-  id: z.string(),
-  username: z.string(),
-  discriminator: z.string(),
-  avatar: z.string().nullable(),
-  email: z.string().optional(),
-});
-
-/**
- * Discord OAuth token response schema
- */
-const DiscordTokenResponseSchema = z.object({
-  access_token: z.string(),
-  token_type: z.string(),
-  expires_in: z.number(),
-  refresh_token: z.string(),
-  scope: z.string(),
-});
-
 export const authRouter = router({
-  /**
-   * Get Discord OAuth URL for initiating login
-   */
-  getOAuthUrl: publicProcedure
-    .input(
-      z.object({
-        redirectUri: z.url(),
-        state: z.string().optional(),
-      }),
-    )
-    .query(({ input }) => {
-      const clientId = configuration.applicationId;
-      const scopes = ["identify", "email"].join(" ");
-
-      const params = new URLSearchParams({
-        client_id: clientId,
-        redirect_uri: input.redirectUri,
-        response_type: "code",
-        scope: scopes,
-      });
-
-      if (input.state !== undefined && input.state.length > 0) {
-        params.set("state", input.state);
-      }
-
-      const url = `https://discord.com/api/oauth2/authorize?${params.toString()}`;
-
-      logger.debug("Generated OAuth URL", { redirectUri: input.redirectUri });
-
-      return { url };
-    }),
-
-  /**
-   * Exchange OAuth code for session
-   */
-  exchangeCode: publicProcedure
-    .input(
-      z.object({
-        code: z.string(),
-        redirectUri: z.url(),
-      }),
-    )
-    .mutation(async ({ input }) => {
-      // Exchange code for tokens
-      const tokenResponse = await fetch(`${DISCORD_API_BASE}/oauth2/token`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          client_id: configuration.applicationId,
-          client_secret: configuration.discordClientSecret ?? "",
-          grant_type: "authorization_code",
-          code: input.code,
-          redirect_uri: input.redirectUri,
-        }),
-      });
-
-      if (!tokenResponse.ok) {
-        const error = await tokenResponse.text();
-        logger.error("Discord token exchange failed", { error });
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Failed to exchange OAuth code",
-        });
-      }
-
-      const tokensJson: unknown = await tokenResponse.json();
-      const tokensResult = DiscordTokenResponseSchema.safeParse(tokensJson);
-      if (!tokensResult.success) {
-        logger.error("Invalid Discord token response", {
-          error: tokensResult.error,
-        });
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Invalid token response from Discord",
-        });
-      }
-      const tokens = tokensResult.data;
-
-      // Get user info from Discord
-      const userResponse = await fetch(`${DISCORD_API_BASE}/users/@me`, {
-        headers: {
-          Authorization: `Bearer ${tokens.access_token}`,
-        },
-      });
-
-      if (!userResponse.ok) {
-        logger.error("Failed to fetch Discord user info");
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch user info",
-        });
-      }
-
-      const userJson: unknown = await userResponse.json();
-      const userResult = DiscordUserSchema.safeParse(userJson);
-      if (!userResult.success) {
-        logger.error("Invalid Discord user response", {
-          error: userResult.error,
-        });
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Invalid user response from Discord",
-        });
-      }
-      const discordUser = userResult.data;
-
-      // Upsert user in database
-      const discordId = DiscordAccountIdSchema.parse(discordUser.id);
-      const user = await prisma.user.upsert({
-        where: { discordId },
-        update: {
-          discordUsername: discordUser.username,
-          discordAvatar: discordUser.avatar,
-          discordAccessToken: tokens.access_token,
-          discordRefreshToken: tokens.refresh_token,
-          tokenExpiresAt: new Date(Date.now() + tokens.expires_in * 1000),
-        },
-        create: {
-          discordId,
-          discordUsername: discordUser.username,
-          discordAvatar: discordUser.avatar,
-          discordAccessToken: tokens.access_token,
-          discordRefreshToken: tokens.refresh_token,
-          tokenExpiresAt: new Date(Date.now() + tokens.expires_in * 1000),
-        },
-      });
-
-      logger.info(
-        `User logged in: ${user.discordUsername} (${user.discordId})`,
-      );
-
-      // Generate a session token for the user
-      const { token, hash } = generateApiToken();
-      await prisma.apiToken.create({
-        data: {
-          userId: user.discordId,
-          token: hash,
-          name: "Web Session",
-          scopes: "session",
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-        },
-      });
-
-      return {
-        user: {
-          discordId: user.discordId,
-          username: user.discordUsername,
-          avatar: user.discordAvatar,
-        },
-        sessionToken: token,
-      };
-    }),
-
   /**
    * Create an API token for desktop client
    */
@@ -299,6 +123,19 @@ export const authRouter = router({
    * Get current user info
    */
   me: protectedProcedure.query(({ ctx }) => {
+    return {
+      discordId: ctx.user.discordId,
+      username: ctx.user.discordUsername,
+      avatar: ctx.user.discordAvatar,
+      createdAt: ctx.user.createdAt,
+    };
+  }),
+
+  /**
+   * Get the currently signed-in web user (from scout_session cookie).
+   * Returns 401 if not signed in.
+   */
+  meWeb: webProcedure.query(({ ctx }) => {
     return {
       discordId: ctx.user.discordId,
       username: ctx.user.discordUsername,

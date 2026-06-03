@@ -6,7 +6,6 @@ import { generateDependencySummary as _generateDependencySummary } from "./deps-
 import { runDnsAudit as _runDnsAudit } from "./dns-audit.ts";
 import { syncGolinks as _syncGolinks } from "./golink-sync.ts";
 import {
-  goodMorningEarly as _goodMorningEarly,
   goodMorningGetUp as _goodMorningGetUp,
   goodMorningWakeUp as _goodMorningWakeUp,
 } from "./ha/good-morning.ts";
@@ -46,10 +45,20 @@ import {
 import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab-audit.ts";
 import type { RunHomelabAuditWorkflowInput } from "./homelab-audit.ts";
 import { agentTaskWorkflow as _agentTaskWorkflow } from "./agent-task.ts";
+import {
+  alertRemediationChildWorkflow as _alertRemediationChildWorkflow,
+  alertRemediationSweepWorkflow as _alertRemediationSweepWorkflow,
+} from "./alert-remediation.ts";
 import type { PrReviewPipelineInput, PrSummaryInput } from "#shared/schemas.ts";
 import type { PrReviewPipelineResult } from "./pr-review/index.ts";
 import type { RunSummaryResult } from "#activities/pr-review/summary.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
+import type {
+  AlertRemediationChildInput,
+  AlertRemediationChildResult,
+  AlertRemediationSweepRawInput,
+  AlertRemediationSweepResult,
+} from "#shared/alert-remediation.ts";
 
 export async function fetchSkillCappedManifest(): Promise<void> {
   return _fetchSkillCappedManifest();
@@ -67,10 +76,6 @@ export async function syncGolinks(): Promise<void> {
   return _syncGolinks();
 }
 
-export async function goodMorningEarly(): Promise<void> {
-  return _goodMorningEarly();
-}
-
 export async function goodMorningWakeUp(): Promise<void> {
   return _goodMorningWakeUp();
 }
@@ -83,8 +88,8 @@ export async function goodNight(): Promise<void> {
   return _goodNight();
 }
 
-export async function welcomeHome(): Promise<void> {
-  return _welcomeHome();
+export async function welcomeHome(firstArrival = true): Promise<void> {
+  return _welcomeHome(firstArrival);
 }
 
 export async function leavingHome(): Promise<void> {
@@ -145,6 +150,18 @@ export async function runHomelabAuditWorkflow(
 
 export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
   return _agentTaskWorkflow(input);
+}
+
+export async function alertRemediationSweepWorkflow(
+  input: AlertRemediationSweepRawInput = {},
+): Promise<AlertRemediationSweepResult> {
+  return _alertRemediationSweepWorkflow(input);
+}
+
+export async function alertRemediationChildWorkflow(
+  input: AlertRemediationChildInput,
+): Promise<AlertRemediationChildResult> {
+  return _alertRemediationChildWorkflow(input);
 }
 
 export async function prReviewEvalWorkflow(

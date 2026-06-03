@@ -28,12 +28,15 @@ const championDisplayNameAliases: Record<string, string> = {
 // case-insensitive lookup above handles Riot match-data casing quirks.
 
 export function normalizeChampionName(championName: string): string {
-  const lowerName = championName.toLowerCase();
+  const decodedChampionName = championName.includes("%")
+    ? decodeURIComponent(championName)
+    : championName;
+  const lowerName = decodedChampionName.toLowerCase();
   return (
     canonicalChampionNames[lowerName] ??
     championDisplayNameAliases[lowerName] ??
-    championNameOverrides[championName] ??
-    championName
+    championNameOverrides[decodedChampionName] ??
+    decodedChampionName
   );
 }
 

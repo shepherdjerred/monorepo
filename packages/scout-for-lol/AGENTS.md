@@ -71,6 +71,30 @@ bun run db:migrate       # Run migrations
 bun run db:studio        # Open Prisma Studio
 ```
 
+### Web UI (Local end-to-end)
+
+```bash
+bun run --filter='./packages/scout-for-lol' dev:web
+```
+
+This boots the backend on `:3000` (logging in as the BETA Discord bot) and the
+Vite dev server on `:5180` (proxying `/trpc` + `/api` to the backend). It
+applies Prisma migrations against a local `local-web-dev.db` first.
+
+Secrets are pulled at runtime via `op run --env-file=dev-web.env.tpl` — no
+plaintext credentials are written to disk. You must be `op signin`'d.
+
+**Caveats:**
+
+- While running, the deployed beta bot is disconnected from Discord (one
+  gateway connection per token). Stop with Ctrl+C and beta reconnects within
+  seconds.
+- The BETA Discord app (`1311755320745394317`) must list
+  `http://localhost:5180/api/auth/discord/callback` in its OAuth redirect
+  URIs, otherwise the token exchange returns 400.
+- The bot only sees guilds it has been invited to. To populate the guild
+  picker, make sure your test guild has the BETA bot in it.
+
 ### Desktop Package
 
 ```bash

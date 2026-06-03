@@ -74,5 +74,5 @@ export type ProposedSplit = {
   amount: number;
   categoryId: string;
   categoryName: string;
-  date?: string;
+  date?: string | undefined;
 };

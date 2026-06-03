@@ -63,8 +63,7 @@ Workflow:
 - `HA_TOKEN` — Home Assistant long-lived access token
 - `GOLINK_URL` — Golink service URL
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `S3_ENDPOINT` — S3/SeaweedFS credentials
-- `GH_TOKEN` — GitHub API token for legacy/non-PR GitHub operations.
-- `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`, `GITHUB_APP_PRIVATE_KEY` — GitHub App credentials used to mint short-lived installation tokens for PR/review/comment automation so GitHub attributes those actions to the app bot.
+- `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`, `GITHUB_APP_PRIVATE_KEY` — GitHub App credentials used to mint short-lived installation tokens for GitHub automation so GitHub attributes those actions to the app bot.
 - `OPENAI_API_KEY` — OpenAI API key
 - `CLAUDE_CODE_OAUTH_TOKEN` — Claude Code subscription token. Auth for every `claude -p` activity (currently pr-agent + homelab-audit).
 - `ANTHROPIC_API_KEY` — direct Anthropic API key. Used by the SDK-native `runPrSummaryPipeline` activity (Phase 7 of the SOTA PR review bot plan). The Anthropic TypeScript SDK only accepts the direct API key, so this is required for the SDK summary path. Shadow-mode caveat: with both `CLAUDE_CODE_OAUTH_TOKEN` and `ANTHROPIC_API_KEY` set, the legacy `claude -p` CLI prefers the API key and bills direct credits instead of the subscription — accepted for the ~2-week shadow window; Phase 13 retires the CLI path and the conflict goes away.
@@ -83,7 +82,6 @@ Workflow:
 - `APP_METRICS_PORT` — port for the application Prometheus registry (default `9465`); separate from the SDK metrics on `:9464`
 - `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, `GIT_COMMITTER_EMAIL` — bot identity for any activity that runs `git commit`
 - `GITHUB_WEBHOOK_SECRET` — HMAC secret used to verify `X-Hub-Signature-256` on incoming PR webhooks. **Required** when the webhook server is enabled; the server only starts when this is set.
-- `GITHUB_PERSONAL_ACCESS_TOKEN` — legacy token for old GitHub MCP paths. New PR review/summary/comment automation should prefer the GitHub App credentials above.
 - `GITHUB_WEBHOOK_PORT` — port for the GitHub webhook receiver (default `9466`).
 
 ## Homelab audit (daily)
@@ -163,7 +161,7 @@ The `runPrSummaryPipeline` activity (`src/activities/pr-review/summary.ts`) talk
 
 **Shadow-mode auth caveat** — the worker pod has both `CLAUDE_CODE_OAUTH_TOKEN` (subscription, used by `claude -p`) and `ANTHROPIC_API_KEY` (used by the SDK summary). When both are set, the legacy CLI prefers the API key and bills direct-API credits instead of the subscription. We accept this for the ~2-week shadow window (Phase 12 of the SOTA plan); Phase 13 retires the CLI path and the conflict goes away.
 
-**Models** — legacy review uses `claude-opus-4-7` (max-turns 30), legacy summary uses `claude-haiku-4-5-20251001` (max-turns 10), SDK summary uses `claude-haiku-4-5` via the official SDK with streaming.
+**Models** — legacy review uses `claude-opus-4-8` (max-turns 30), legacy summary uses `claude-haiku-4-5-20251001` (max-turns 10), SDK summary uses `claude-haiku-4-5` via the official SDK with streaming.
 
 ## HA presence (welcomeHome / leavingHome) — debounce model
 

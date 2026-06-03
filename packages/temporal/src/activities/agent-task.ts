@@ -9,6 +9,7 @@ import {
 } from "#observability/metrics.ts";
 import { getTraceContext } from "#observability/tracing.ts";
 import { cleanupWorkdir, provisionWorkdir } from "#lib/pr-review-workdir.ts";
+import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { startOrScheduleAgentTask } from "#lib/agent-task-scheduler.ts";
 import { buildAgentTaskCommand } from "#activities/agent-task-command.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
@@ -126,6 +127,14 @@ function safeHeartbeat(payload: Record<string, unknown>): void {
   }
 }
 
+function activityCancellationSignalOrUndefined(): AbortSignal | undefined {
+  try {
+    return Context.current().cancellationSignal;
+  } catch {
+    return undefined;
+  }
+}
+
 function workflowId(): string {
   try {
     return (
@@ -137,13 +146,16 @@ function workflowId(): string {
   }
 }
 
-function secretTokens(): readonly (string | undefined)[] {
+function secretTokens(
+  githubAppToken: string | undefined,
+): readonly (string | undefined)[] {
   return [
     Bun.env["CLAUDE_CODE_OAUTH_TOKEN"],
     Bun.env["ANTHROPIC_API_KEY"],
     Bun.env["OPENAI_API_KEY"],
-    Bun.env["GH_TOKEN"],
     Bun.env["GITHUB_PERSONAL_ACCESS_TOKEN"],
+    Bun.env["GITHUB_APP_PRIVATE_KEY"],
+    githubAppToken,
     Bun.env["POSTAL_API_KEY"],
     Bun.env["PAGERDUTY_TOKEN"],
     Bun.env["BUGSINK_TOKEN"],
@@ -153,7 +165,10 @@ function secretTokens(): readonly (string | undefined)[] {
   ];
 }
 
-function envForProvider(provider: AgentTaskProvider): Record<string, string> {
+function envForProvider(
+  provider: AgentTaskProvider,
+  githubAppToken: string,
+): Record<string, string> {
   const env: Record<string, string> = {};
   for (const [key, value] of Object.entries(Bun.env)) {
     if (typeof value !== "string") {
@@ -162,8 +177,16 @@ function envForProvider(provider: AgentTaskProvider): Record<string, string> {
     if (provider === "claude" && key === "ANTHROPIC_API_KEY") {
       continue;
     }
+    if (
+      key === "GH_TOKEN" ||
+      key === "GITHUB_PERSONAL_ACCESS_TOKEN" ||
+      key.startsWith("GITHUB_APP_")
+    ) {
+      continue;
+    }
     env[key] = value;
   }
+  env["GH_TOKEN"] = githubAppToken;
   return env;
 }
 
@@ -237,43 +260,75 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
     title: parsed.title,
     model: command.model,
     workdir: input.workdir,
+    agentTimeoutMinutes: parsed.agentTimeoutMinutes,
+    maxTurns: parsed.maxTurns,
   });
 
+  const githubTokenResult = await createGitHubAppInstallationToken();
   const startMs = Date.now();
   const proc = Bun.spawn(command.args, {
     stdin: "ignore",
     stdout: "pipe",
     stderr: "pipe",
     cwd: input.workdir,
-    env: envForProvider(provider),
+    env: envForProvider(provider, githubTokenResult.token),
   });
   const heartbeat = setInterval(() => {
     safeHeartbeat({ phase: "agent", elapsedMs: Date.now() - startMs });
   }, HEARTBEAT_INTERVAL_MS);
+  const cancellationSignal = activityCancellationSignalOrUndefined();
+  const abort = (): void => {
+    jsonLog(
+      "warning",
+      "Agent task cancellation requested; killing subprocess",
+      {
+        provider,
+        title: parsed.title,
+        model: command.model,
+        elapsedMs: Date.now() - startMs,
+      },
+    );
+    proc.kill();
+  };
+  cancellationSignal?.addEventListener("abort", abort, { once: true });
 
   let stdout: string;
   let exitCode: number;
   try {
     [stdout, , exitCode] = await Promise.all([
       new Response(proc.stdout).text(),
-      pumpStderr(proc.stderr, secretTokens(), provider),
+      pumpStderr(proc.stderr, secretTokens(githubTokenResult.token), provider),
       proc.exited,
     ]);
   } finally {
     clearInterval(heartbeat);
+    cancellationSignal?.removeEventListener("abort", abort);
   }
 
   const durationMs = Date.now() - startMs;
+  const cancelled = cancellationSignal?.aborted === true;
   agentTaskSubprocessDurationSeconds.observe(
-    { provider, model: command.model, exit_code: String(exitCode) },
+    {
+      provider,
+      model: command.model,
+      exit_code: cancelled ? "cancelled" : String(exitCode),
+    },
     durationMs / 1000,
   );
   agentTaskSubprocessExitTotal.inc({
     provider,
-    exit_code: String(exitCode),
+    exit_code: cancelled ? "cancelled" : String(exitCode),
   });
 
+  if (cancelled) {
+    agentTaskRunsTotal.inc({ provider, outcome: "cancelled" });
+    const error = new Error(`${provider} agent task cancelled`);
+    captureWithContext(error, { provider, durationMs });
+    throw error;
+  }
+
   if (exitCode !== 0) {
+    agentTaskRunsTotal.inc({ provider, outcome: "subprocess_failed" });
     const error = new Error(
       `${provider} agent task exited with code ${String(exitCode)}`,
     );
@@ -282,16 +337,24 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
   }
 
   let payload: AgentTaskResultPayload;
-  if (provider === "claude") {
-    payload = parseAgentPayload(parseClaudeResultMessage(stdout).result ?? "");
-  } else {
-    if (command.outputPath === undefined) {
-      throw new Error("Codex agent task completed without an output path");
+  try {
+    if (provider === "claude") {
+      payload = parseAgentPayload(
+        parseClaudeResultMessage(stdout).result ?? "",
+      );
+    } else {
+      if (command.outputPath === undefined) {
+        throw new Error("Codex agent task completed without an output path");
+      }
+      payload = parseAgentPayload(await Bun.file(command.outputPath).text());
     }
-    payload = parseAgentPayload(await Bun.file(command.outputPath).text());
+  } catch (error: unknown) {
+    agentTaskRunsTotal.inc({ provider, outcome: "parse_failed" });
+    captureWithContext(error, { provider, durationMs, phase: "parse-output" });
+    throw error;
   }
-
   agentTaskRunsTotal.inc({ provider, outcome: "success" });
+
   jsonLog("info", "Agent task completed", {
     provider,
     title: parsed.title,
@@ -314,16 +377,13 @@ async function prepareWorkdir(
 ): Promise<PrepareAgentTaskWorkdirResult> {
   const parsed = AgentTaskInputSchema.parse(input.input);
   const { owner, repo } = splitRepo(parsed.repo.fullName);
-  const token = Bun.env["GH_TOKEN"];
-  if (token === undefined || token === "") {
-    throw new Error("GH_TOKEN is required to clone agent task repositories");
-  }
+  const tokenResult = await createGitHubAppInstallationToken();
   const workdir = await provisionWorkdir({
     workflowId: workflowId(),
     owner,
     repo,
     ref: parsed.repo.ref ?? "main",
-    env: { GH_TOKEN: token },
+    env: { GH_TOKEN: tokenResult.token },
   });
   return { workdir };
 }
@@ -361,6 +421,10 @@ async function sendEmail(
     };
   } catch (error: unknown) {
     agentTaskEmailSentTotal.inc({ outcome: "failure" });
+    agentTaskRunsTotal.inc({
+      provider: input.result.provider,
+      outcome: "email_failed",
+    });
     captureWithContext(error, { subject });
     throw error;
   }
@@ -380,6 +444,8 @@ async function scheduleFollowUp(
     source: input.parent.source,
     model: input.followUp.model ?? input.parent.model,
     maxTurns: input.followUp.maxTurns ?? input.parent.maxTurns,
+    agentTimeoutMinutes:
+      input.followUp.agentTimeoutMinutes ?? input.parent.agentTimeoutMinutes,
     allowSelfCancel: false,
     emailSubjectPrefix: input.parent.emailSubjectPrefix,
   });

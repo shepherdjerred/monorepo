@@ -1,23 +1,14 @@
 import { describe, expect, test, beforeEach, afterEach } from "bun:test";
 import { parseVenmoCSV } from "./parser.ts";
 import path from "node:path";
-import { homedir } from "node:os";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 
-const CACHE_DIR = path.join(homedir(), ".monarch-cache");
-const CACHE_FILE = path.join(CACHE_DIR, "venmo.json");
-
-const tmpFiles: string[] = [];
-
-async function removeFile(filePath: string): Promise<void> {
-  const file = Bun.file(filePath);
-  if (await file.exists()) {
-    await Bun.spawn(["rm", "-f", filePath]).exited;
-  }
-}
+let tempDir = "";
+let cacheFile = "";
 
 async function writeTempCSV(name: string, content: string): Promise<string> {
-  const filePath = path.join(CACHE_DIR, name);
-  tmpFiles.push(filePath);
+  const filePath = path.join(tempDir, name);
   await Bun.write(filePath, content);
   return filePath;
 }
@@ -34,20 +25,17 @@ Phones,1234567890
 
 describe("parseVenmoCSV", () => {
   beforeEach(async () => {
-    await removeFile(CACHE_FILE);
+    tempDir = await mkdtemp(path.join(tmpdir(), "monarch-venmo-test-"));
+    cacheFile = path.join(tempDir, "venmo.json");
   });
 
   afterEach(async () => {
-    await removeFile(CACHE_FILE);
-    for (const f of tmpFiles) {
-      await removeFile(f);
-    }
-    tmpFiles.length = 0;
+    await rm(tempDir, { recursive: true, force: true });
   });
 
   test("parses payment transactions from CSV", async () => {
     const tmpPath = await writeTempCSV("test-venmo.csv", SAMPLE_CSV);
-    const transactions = await parseVenmoCSV(tmpPath);
+    const transactions = await parseVenmoCSV(tmpPath, { cacheFile });
 
     expect(transactions).toHaveLength(2);
     expect(transactions[0]?.id).toBe("4276717296868096443");
@@ -58,28 +46,28 @@ describe("parseVenmoCSV", () => {
 
   test("parses positive amount correctly", async () => {
     const tmpPath = await writeTempCSV("test-venmo2.csv", SAMPLE_CSV);
-    const transactions = await parseVenmoCSV(tmpPath);
+    const transactions = await parseVenmoCSV(tmpPath, { cacheFile });
 
     expect(transactions[0]?.amount).toBe(100);
   });
 
   test("parses negative amount correctly", async () => {
     const tmpPath = await writeTempCSV("test-venmo3.csv", SAMPLE_CSV);
-    const transactions = await parseVenmoCSV(tmpPath);
+    const transactions = await parseVenmoCSV(tmpPath, { cacheFile });
 
     expect(transactions[1]?.amount).toBe(-25.75);
   });
 
   test("parses fee amount correctly", async () => {
     const tmpPath = await writeTempCSV("test-venmo4.csv", SAMPLE_CSV);
-    const transactions = await parseVenmoCSV(tmpPath);
+    const transactions = await parseVenmoCSV(tmpPath, { cacheFile });
 
     expect(transactions[1]?.fee).toBe(0.75);
   });
 
   test("filters out non-Payment types", async () => {
     const tmpPath = await writeTempCSV("test-venmo5.csv", SAMPLE_CSV);
-    const transactions = await parseVenmoCSV(tmpPath);
+    const transactions = await parseVenmoCSV(tmpPath, { cacheFile });
 
     for (const txn of transactions) {
       expect(txn.type).toBe("Payment");
@@ -90,7 +78,7 @@ describe("parseVenmoCSV", () => {
 
   test("preserves note with special characters", async () => {
     const tmpPath = await writeTempCSV("test-venmo6.csv", SAMPLE_CSV);
-    const transactions = await parseVenmoCSV(tmpPath);
+    const transactions = await parseVenmoCSV(tmpPath, { cacheFile });
 
     expect(transactions[0]?.note).toBe(
       "It's not stealing if I give you money ;)",
@@ -106,9 +94,21 @@ Phones,1234567890
 ,1111111111111111111,2025-04-01T12:00:00,Payment,Complete,"Dinner, drinks, and tip",Alice Bob,Carol Dave,- $50.00,,0,,0,,,,,,,,
 `;
     const tmpPath = await writeTempCSV("test-venmo7.csv", csvWithQuotes);
-    const transactions = await parseVenmoCSV(tmpPath);
+    const transactions = await parseVenmoCSV(tmpPath, { cacheFile });
 
     expect(transactions).toHaveLength(1);
     expect(transactions[0]?.note).toBe("Dinner, drinks, and tip");
+  });
+
+  test("returns parsed transactions when cache write fails", async () => {
+    const tmpPath = await writeTempCSV("test-venmo8.csv", SAMPLE_CSV);
+    const unwritableCacheFile = path.join(tempDir, "missing-dir", "venmo.json");
+
+    const transactions = await parseVenmoCSV(tmpPath, {
+      cacheFile: unwritableCacheFile,
+    });
+
+    expect(transactions).toHaveLength(2);
+    expect(transactions[0]?.id).toBe("4276717296868096443");
   });
 });

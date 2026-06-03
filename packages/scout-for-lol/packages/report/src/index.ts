@@ -6,6 +6,12 @@ export {
   type CompetitionChartSeries,
   type CompetitionChartBar,
 } from "./html/competition-chart.ts";
+export {
+  discordScreenshotToImage,
+  discordScreenshotToSvg,
+  type DiscordChatMessage,
+  type DiscordScreenshotOptions,
+} from "./html/discord-screenshot.tsx";
 export { Report } from "./html/report.tsx";
 export { toMatch } from "./match.ts";
 export { arenaMatchToImage, arenaMatchToSvg } from "./html/arena/index.tsx";

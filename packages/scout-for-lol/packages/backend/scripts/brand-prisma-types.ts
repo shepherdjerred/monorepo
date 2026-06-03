@@ -1,503 +1,370 @@
 #!/usr/bin/env bun
 /**
- * Post-process Prisma generated types to use branded IDs
+ * Post-process Prisma generated types to use branded IDs.
  *
- * This script uses TypeScript's AST to properly transform the generated
- * Prisma types, replacing number IDs with branded types from @scout-for-lol/data
- *
- * Usage:
- *   bun run scripts/brand-prisma-types.ts
- *
- * This should be run after `prisma generate`
+ * Prisma does not currently let schema fields declare custom TypeScript output
+ * aliases, so this rewrites the generated declaration file after
+ * `prisma generate`.
  */
 
-import {
-  Project,
-  SyntaxKind,
-  type TypeAliasDeclaration,
-  type InterfaceDeclaration,
-  type PropertySignature,
-} from "ts-morph";
+import { mkdir } from "node:fs/promises";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("brand-prisma-types");
 
-// BRAND_TYPES_INPUT_DIR: directory containing the raw Prisma client (index.d.ts).
-// BRAND_TYPES_OUTPUT_DIR: directory to write branded output. If unset, saves in-place.
-// Both default to the standard local dev paths relative to this script.
 const INPUT_DIR =
   process.env["BRAND_TYPES_INPUT_DIR"] ??
   `${import.meta.dir}/../generated/prisma/client`;
 const OUTPUT_DIR = process.env["BRAND_TYPES_OUTPUT_DIR"] ?? INPUT_DIR;
 
-// Types that need to be imported
-const BRANDED_TYPES_TO_IMPORT = new Set<string>();
+type BlockRange = {
+  readonly start: number;
+  readonly end: number;
+};
 
-function main() {
-  logger.info("🔧 Branding Prisma types with AST transformation...");
+type TransformResult = {
+  readonly text: string;
+  readonly count: number;
+};
 
-  const project = new Project({
-    skipAddingFilesFromTsConfig: true, // Avoid loading all files to prevent stack overflow
-  });
+type BrandPrismaTypesResult = TransformResult & {
+  readonly importedTypes: readonly string[];
+};
 
-  const prismaTypesPath = `${INPUT_DIR}/index.d.ts`;
-  const sourceFile = project.addSourceFileAtPath(prismaTypesPath);
+type BrandPrismaTypesOptions = {
+  readonly inputDir: string;
+  readonly outputDir: string;
+};
 
-  logger.info(`📄 Processing: ${prismaTypesPath}`);
+type TransformContext = {
+  readonly brandedTypesToImport: Set<string>;
+};
 
-  // Track how many properties we transform
-  let transformCount = 0;
+export async function brandPrismaTypes(
+  options?: BrandPrismaTypesOptions,
+): Promise<BrandPrismaTypesResult> {
+  const resolvedOptions = options ?? {
+    inputDir: INPUT_DIR,
+    outputDir: OUTPUT_DIR,
+  };
 
-  // Find the Prisma namespace
-  const prismaNamespace = sourceFile.getModule("Prisma");
-  if (!prismaNamespace) {
-    logger.error("❌ Could not find Prisma namespace!");
-    return;
-  }
+  logger.info("Branding Prisma types with text transformation...");
 
-  // Process all type aliases inside the Prisma namespace
-  const typeAliases = prismaNamespace.getTypeAliases();
+  const prismaTypesPath = `${resolvedOptions.inputDir}/index.d.ts`;
+  logger.info(`Processing: ${prismaTypesPath}`);
 
-  for (const typeAlias of typeAliases) {
-    const typeName = typeAlias.getName();
+  const inputFile = Bun.file(prismaTypesPath);
+  const result = brandPrismaTypesText(await inputFile.text());
 
-    // Process Payload types (return types)
-    if (typeName.startsWith("$") && typeName.endsWith("Payload")) {
-      transformCount += transformPayloadType(typeAlias);
-    }
-    // Process Where input types (query filters)
-    else if (
-      typeName.includes("WhereUniqueInput") ||
-      typeName.includes("WhereInput")
-    ) {
-      transformCount += transformWhereType(typeAlias);
-    }
-    // Process Create input types (all variations)
-    // Patterns: CreateInput, CreateManyInput, CreateWithout...Input, Unchecked variants
-    else if (typeName.includes("Create") && typeName.endsWith("Input")) {
-      transformCount += transformInputType(typeAlias);
-    }
-    // Process Update input types (all variations)
-    // Patterns: UpdateInput, UpdateManyInput, UpdateWithout...Input, Unchecked variants
-    else if (typeName.includes("Update") && typeName.endsWith("Input")) {
-      transformCount += transformInputType(typeAlias);
-    }
-    // Process Min/Max Aggregate output types (return actual values, not counts)
-    else if (
-      typeName.includes("MinAggregateOutputType") ||
-      typeName.includes("MaxAggregateOutputType")
-    ) {
-      transformCount += transformAggregateType(typeAlias);
-    }
-    // Process GroupBy output types (return actual values)
-    else if (typeName.includes("GroupByOutputType")) {
-      transformCount += transformAggregateType(typeAlias);
-    }
-  }
+  const outputPath = `${resolvedOptions.outputDir}/index.d.ts`;
+  await mkdir(resolvedOptions.outputDir, { recursive: true });
+  await Bun.write(outputPath, result.text);
 
-  // Process all interfaces inside the Prisma namespace
-  const interfaces = prismaNamespace.getInterfaces();
-  for (const interfaceDecl of interfaces) {
-    const interfaceName = interfaceDecl.getName();
-
-    // Process FieldRefs interfaces (for query building)
-    if (interfaceName.endsWith("FieldRefs")) {
-      transformCount += transformFieldRefsInterface(interfaceDecl);
-    }
-  }
-
-  // Add imports for branded types at the top of the file
-  if (BRANDED_TYPES_TO_IMPORT.size > 0) {
-    sourceFile.insertImportDeclaration(0, {
-      moduleSpecifier: "@scout-for-lol/data",
-      namedImports: [...BRANDED_TYPES_TO_IMPORT].toSorted(),
-    });
-  }
-
-  instantiatePayloadReferences(sourceFile);
-
-  // Debug: Check if file was actually modified
-  const wasModified =
-    sourceFile.getImportDeclarations().length > 0 || transformCount > 0;
-  logger.info(`File was modified: ${wasModified.toString()}`);
-  logger.info(
-    `Import declarations before save: ${sourceFile.getImportDeclarations().length.toString()}`,
-  );
-
-  // Write branded output. When OUTPUT_DIR differs from INPUT_DIR (Bazel),
-  // this writes to a separate directory without modifying the read-only input.
-  const fs = require("node:fs");
-  const outputPath = `${OUTPUT_DIR}/index.d.ts`;
-  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-  fs.writeFileSync(outputPath, sourceFile.getFullText());
   logger.info(`Save completed: ${outputPath}`);
+  logger.info(`Transformed ${result.count.toString()} properties`);
+  logger.info(`Added imports: ${result.importedTypes.join(", ")}`);
+  logger.info("Prisma types successfully branded.");
 
-  logger.info(`✅ Transformed ${transformCount.toString()} properties`);
-  logger.info(`✅ Added imports: ${[...BRANDED_TYPES_TO_IMPORT].join(", ")}`);
-  logger.info("🎉 Prisma types successfully branded!");
+  return result;
 }
 
-function instantiatePayloadReferences(
-  sourceFile: ReturnType<Project["addSourceFileAtPath"]>,
-): void {
-  const modelNames = Object.keys(MODEL_ID_MAP)
-    .concat([
-      "MatchRankHistory",
-      "User",
-      "GuildInstall",
-      "BotState",
-      "ActiveGame",
-      "MatchAiAttempt",
-    ])
-    .toSorted((left, right) => right.length - left.length);
+export function brandPrismaTypesText(
+  inputText: string,
+): BrandPrismaTypesResult {
+  const context: TransformContext = {
+    brandedTypesToImport: new Set<string>(),
+  };
+  let text = inputText;
+  let transformCount = 0;
+
+  const payloadResult = transformPayloadTypes(text, context);
+  text = payloadResult.text;
+  transformCount += payloadResult.count;
+
+  const simpleTypeResult = transformSimpleTypeAliases(text, context);
+  text = simpleTypeResult.text;
+  transformCount += simpleTypeResult.count;
+
+  const fieldRefsResult = transformFieldRefsInterfaces(text, context);
+  text = fieldRefsResult.text;
+  transformCount += fieldRefsResult.count;
+
+  text = instantiatePayloadReferences(text);
+  text = insertBrandImports(text, context.brandedTypesToImport);
+
+  return {
+    text,
+    count: transformCount,
+    importedTypes: [...context.brandedTypesToImport].toSorted(),
+  };
+}
+
+function transformPayloadTypes(
+  text: string,
+  context: TransformContext,
+): TransformResult {
+  return transformNamedBlocks(
+    text,
+    /export type \$(\w+)Payload<[^>]+>\s*=\s*\{/g,
+    (block, modelName) => {
+      const scalarsPattern =
+        /scalars: \$Extensions\.GetPayloadResult<\{([\s\S]*?)\}, ExtArgs\["result"\]\["[^"]+"\]>/;
+      const match = scalarsPattern.exec(block);
+      const scalarsContent = match?.[1];
+      if (scalarsContent === undefined) {
+        return { text: block, count: 0 };
+      }
+
+      const transformed = transformFieldLines(
+        scalarsContent,
+        modelName,
+        context,
+      );
+      if (transformed.count === 0) {
+        return { text: block, count: 0 };
+      }
+
+      return {
+        text: block.replace(scalarsContent, transformed.text),
+        count: transformed.count,
+      };
+    },
+  );
+}
+
+function transformSimpleTypeAliases(
+  text: string,
+  context: TransformContext,
+): TransformResult {
+  return transformNamedBlocks(
+    text,
+    /export type (\w+(?:WhereUniqueInput|WhereInput|Create\w*Input|Update\w*Input|MinAggregateOutputType|MaxAggregateOutputType|GroupByOutputType))\s*=\s*\{/g,
+    (block, typeName) => {
+      const modelName = getModelNameForTypeAlias(typeName);
+      if (modelName === null) {
+        return { text: block, count: 0 };
+      }
+
+      return transformFieldLines(block, modelName, context);
+    },
+  );
+}
+
+function transformFieldRefsInterfaces(
+  text: string,
+  context: TransformContext,
+): TransformResult {
+  return transformNamedBlocks(
+    text,
+    /interface (\w+)FieldRefs\s*\{/g,
+    (block, modelName) => transformFieldRefLines(block, modelName, context),
+  );
+}
+
+function transformNamedBlocks(
+  text: string,
+  pattern: RegExp,
+  transform: (block: string, name: string) => TransformResult,
+): TransformResult {
+  const replacements: string[] = [];
+  let cursor = 0;
+  let totalCount = 0;
+  let match = pattern.exec(text);
+
+  while (match !== null) {
+    const name = match[1];
+    if (name === undefined) {
+      match = pattern.exec(text);
+      continue;
+    }
+
+    const openingBraceIndex = text.indexOf("{", match.index);
+    if (openingBraceIndex === -1) {
+      break;
+    }
+
+    const range = findBalancedBraceRange(text, openingBraceIndex);
+    if (range === null) {
+      break;
+    }
+
+    const blockStart = match.index;
+    const blockEnd = range.end + 1;
+    const block = text.slice(blockStart, blockEnd);
+    const transformed = transform(block, name);
+
+    replacements.push(text.slice(cursor, blockStart), transformed.text);
+    cursor = blockEnd;
+    totalCount += transformed.count;
+
+    pattern.lastIndex = blockEnd;
+    match = pattern.exec(text);
+  }
+
+  if (replacements.length === 0) {
+    return { text, count: 0 };
+  }
+
+  replacements.push(text.slice(cursor));
+  return { text: replacements.join(""), count: totalCount };
+}
+
+function findBalancedBraceRange(
+  text: string,
+  openingBraceIndex: number,
+): BlockRange | null {
+  let depth = 0;
+
+  for (let index = openingBraceIndex; index < text.length; index++) {
+    const char = text[index];
+    if (char === "{") {
+      depth++;
+    } else if (char === "}") {
+      depth--;
+      if (depth === 0) {
+        return { start: openingBraceIndex, end: index };
+      }
+    }
+  }
+
+  return null;
+}
+
+function transformFieldLines(
+  content: string,
+  modelName: string,
+  context: TransformContext,
+): TransformResult {
+  let count = 0;
+  const text = content.replaceAll(
+    /^(\s*)([A-Z]\w*)\??:[ \t]*(\S[^\n]*)$/gim,
+    (
+      line: string,
+      indentation: string,
+      fieldName: string,
+      typeExpression: string,
+    ) => {
+      const brandedType = getBrandedType(fieldName, modelName);
+      if (brandedType === null) {
+        return line;
+      }
+
+      const transformedType = replacePrimitiveType(typeExpression, brandedType);
+      if (transformedType === typeExpression) {
+        return line;
+      }
+
+      context.brandedTypesToImport.add(brandedType);
+      count++;
+      const optionalMarker = line.includes("?:") ? "?" : "";
+      return `${indentation}${fieldName}${optionalMarker}: ${transformedType}`;
+    },
+  );
+
+  return { text, count };
+}
+
+function replacePrimitiveType(
+  typeExpression: string,
+  brandedType: string,
+): string {
+  const numberResult = typeExpression.replace(/\bnumber\b/, brandedType);
+  if (numberResult !== typeExpression) {
+    return numberResult;
+  }
+
+  return typeExpression.replace(/\bstring\b/, brandedType);
+}
+
+function transformFieldRefLines(
+  content: string,
+  modelName: string,
+  context: TransformContext,
+): TransformResult {
+  let count = 0;
+  const text = content.replaceAll(
+    /^(\s*readonly\s+)([A-Za-z]\w*): FieldRef<"[^"]+",\s*'(?:Int|String|DateTime|Boolean|Float|Decimal|BigInt|Bytes|Json)'>$/gm,
+    (line: string, prefix: string, fieldName: string) => {
+      const brandedType = getBrandedType(fieldName, modelName);
+      if (brandedType === null) {
+        return line;
+      }
+
+      context.brandedTypesToImport.add(brandedType);
+      count++;
+      return `${prefix}${fieldName}: FieldRef<"${modelName}", ${brandedType}>`;
+    },
+  );
+
+  return { text, count };
+}
+
+function getModelNameForTypeAlias(typeName: string): string | null {
+  const modelName = typeName.replace(
+    /UncheckedCreateWithout\w+Input|UncheckedUpdateWithout\w+Input|UncheckedCreateInput|UncheckedUpdateInput|CreateWithout\w+Input|UpdateWithout\w+Input|CreateMany\w+Input|UpdateMany\w+Input|CreateInput|UpdateInput|WhereUniqueInput|WhereInput|MinAggregateOutputType|MaxAggregateOutputType|GroupByOutputType/,
+    "",
+  );
+
+  return modelName.length > 0 ? modelName : null;
+}
+
+function instantiatePayloadReferences(text: string): string {
+  const modelNames = [
+    ...Object.keys(MODEL_ID_MAP),
+    "MatchRankHistory",
+    "User",
+    "GuildInstall",
+    "BotState",
+    "ActiveGame",
+    "MatchAiAttempt",
+  ].toSorted((left, right) => right.length - left.length);
   const payloadNames = modelNames
     .map((modelName) => String.raw`\$${modelName}Payload`)
     .join("|");
 
-  const fullText = sourceFile.getFullText();
-  const transformedText = fullText
-    .replace(
+  return text
+    .replaceAll(
       new RegExp(
         String.raw`\$Result\.DefaultSelection<Prisma\.(${payloadNames})>`,
         "g",
       ),
       "$Result.DefaultSelection<Prisma.$1<$Extensions.DefaultArgs>>",
     )
-    .replace(
+    .replaceAll(
       new RegExp(
         String.raw`\$Result\.GetResult<Prisma\.(${payloadNames}),`,
         "g",
       ),
       "$Result.GetResult<Prisma.$1<ExtArgs>,",
     )
-    .replace(
+    .replaceAll(
       new RegExp(
         String.raw`\$Utils\.PayloadToResult<Prisma\.(${payloadNames})>`,
         "g",
       ),
       "$Utils.PayloadToResult<Prisma.$1<ExtArgs>>",
     );
-
-  if (transformedText !== fullText) {
-    sourceFile.replaceWithText(transformedText);
-  }
 }
 
-function transformFieldTypeInContent(
-  content: string,
-  fieldPattern: RegExp,
-  baseType: "number" | "string",
-  modelName: string,
-): { transformed: string; count: number } {
-  let transformedContent = content;
-  let count = 0;
-  let match = fieldPattern.exec(content);
-
-  while (match !== null) {
-    const fieldName = match[1];
-    if (fieldName === undefined) {
-      match = fieldPattern.exec(content);
-      continue;
-    }
-
-    const isNullable = match[2] !== undefined;
-    const originalType = `${baseType}${match[2] ?? ""}`;
-
-    const brandedType = getBrandedType(fieldName, modelName);
-    if (brandedType !== null && brandedType.length > 0) {
-      const newType = isNullable ? `${brandedType} | null` : brandedType;
-      const fieldReplacePattern = new RegExp(
-        String.raw`${fieldName}:\s*${baseType}(\s*\|\s*null)?`,
-      );
-      transformedContent = transformedContent.replace(
-        fieldReplacePattern,
-        `${fieldName}: ${newType}`,
-      );
-
-      BRANDED_TYPES_TO_IMPORT.add(brandedType);
-      count++;
-
-      logger.info(
-        `    ✓ ${modelName}.${fieldName}: ${originalType} → ${newType}`,
-      );
-    }
-
-    match = fieldPattern.exec(content);
+function insertBrandImports(
+  text: string,
+  brandedTypesToImport: ReadonlySet<string>,
+): string {
+  if (brandedTypesToImport.size === 0) {
+    return text;
   }
 
-  return { transformed: transformedContent, count };
+  const importLine = `import { ${[...brandedTypesToImport].toSorted().join(", ")} } from "@scout-for-lol/data";\n`;
+  const existingImportPattern =
+    /import(?:\s+type)?\s+\{[^}]+\}\s+from "@scout-for-lol\/data";\n/;
+
+  if (existingImportPattern.test(text)) {
+    return text.replace(existingImportPattern, importLine);
+  }
+
+  return `${importLine}${text.trimStart()}`;
 }
 
-function extractScalarsContent(prop: PropertySignature): string | null {
-  const scalarTypeNode = prop.getTypeNode();
-  if (!scalarTypeNode) {
-    return null;
-  }
-
-  const typeArgs = scalarTypeNode.getType().getAliasTypeArguments();
-  if (typeArgs.length === 0) {
-    return null;
-  }
-
-  const fullText = prop.getText();
-  const payloadPattern = /\$Extensions\.GetPayloadResult<\s*\{([^}]+)\}/;
-  const match = payloadPattern.exec(fullText);
-  return match?.[1] ?? null;
-}
-
-function transformPayloadType(typeAlias: TypeAliasDeclaration): number {
-  const payloadName = typeAlias.getName(); // e.g., "$PlayerPayload"
-  const modelName = payloadName.replace(/^\$/, "").replace(/Payload$/, ""); // e.g., "Player"
-
-  logger.info(`Processing ${modelName}...`);
-
-  const typeNode = typeAlias.getTypeNode();
-  if (typeNode?.getKind() !== SyntaxKind.TypeLiteral) {
-    return 0;
-  }
-
-  const typeLiteral = typeNode.asKindOrThrow(SyntaxKind.TypeLiteral);
-  let totalCount = 0;
-
-  // Find the 'scalars' property
-  for (const member of typeLiteral.getMembers()) {
-    if (member.getKind() !== SyntaxKind.PropertySignature) {
-      continue;
-    }
-
-    const prop = member.asKindOrThrow(SyntaxKind.PropertySignature);
-    if (prop.getName() !== "scalars") {
-      continue;
-    }
-
-    const objectContent = extractScalarsContent(prop);
-    if (objectContent === null) {
-      continue;
-    }
-
-    const fullText = prop.getText();
-
-    // Transform number fields
-    const numberResult = transformFieldTypeInContent(
-      objectContent,
-      /(\w+):\s*number(\s*\|\s*null)?/g,
-      "number",
-      modelName,
-    );
-
-    // Transform string fields
-    const stringResult = transformFieldTypeInContent(
-      numberResult.transformed,
-      /(\w+):\s*string(\s*\|\s*null)?/g,
-      "string",
-      modelName,
-    );
-
-    totalCount += numberResult.count + stringResult.count;
-
-    // Replace the entire scalars property with the transformed version
-    if (totalCount > 0) {
-      const newScalarsText = fullText.replace(
-        objectContent,
-        stringResult.transformed,
-      );
-      prop.replaceWithText(newScalarsText);
-    }
-  }
-
-  return totalCount;
-}
-
-function transformWhereType(typeAlias: TypeAliasDeclaration): number {
-  const typeName = typeAlias.getName();
-  // Extract model name: PlayerWhereUniqueInput → Player
-  const modelName = typeName.replace(/WhereUniqueInput|WhereInput/, "");
-
-  return transformSimpleObjectType(typeAlias, modelName);
-}
-
-function transformInputType(typeAlias: TypeAliasDeclaration): number {
-  const typeName = typeAlias.getName();
-  // Extract model name from various input type patterns
-  // Must check longer patterns first to avoid partial matches
-  // Patterns like "PlayerCreateWithoutSubscriptionsInput" -> "Player"
-  // Patterns like "AccountCreateManyPlayerInput" -> "Account"
-  const modelName = typeName.replace(
-    /UncheckedCreateWithout\w+Input|UncheckedUpdateWithout\w+Input|UncheckedCreateInput|UncheckedUpdateInput|CreateWithout\w+Input|UpdateWithout\w+Input|CreateMany\w+Input|UpdateMany\w+Input|CreateInput|UpdateInput/,
-    "",
-  );
-
-  return transformSimpleObjectType(typeAlias, modelName);
-}
-
-/**
- * Transform a property signature if it has a branded type
- * Returns true if transformation occurred, false otherwise
- */
-function transformPropertyType(
-  prop: PropertySignature,
-  modelName: string,
-  transformFn: (
-    fullText: string,
-    brandedType: string,
-    propName: string,
-  ) => string | null,
-): boolean {
-  const propName = prop.getName();
-  const propTypeNode = prop.getTypeNode();
-
-  if (!propTypeNode) {
-    return false;
-  }
-
-  const brandedType = getBrandedType(propName, modelName);
-  if (brandedType === null) {
-    return false;
-  }
-
-  const fullText = prop.getText();
-  const newText = transformFn(fullText, brandedType, propName);
-
-  if (newText !== null && newText.length > 0) {
-    prop.replaceWithText(newText);
-    BRANDED_TYPES_TO_IMPORT.add(brandedType);
-    return true;
-  }
-
-  return false;
-}
-
-function transformSimpleObjectType(
-  typeAlias: TypeAliasDeclaration,
-  modelName: string,
-): number {
-  const typeNode = typeAlias.getTypeNode();
-  if (typeNode?.getKind() !== SyntaxKind.TypeLiteral) {
-    return 0;
-  }
-
-  const typeLiteral = typeNode.asKindOrThrow(SyntaxKind.TypeLiteral);
-  let count = 0;
-
-  for (const member of typeLiteral.getMembers()) {
-    if (member.getKind() !== SyntaxKind.PropertySignature) {
-      continue;
-    }
-
-    const prop = member.asKindOrThrow(SyntaxKind.PropertySignature);
-
-    // Match patterns like: id?: number | IntFieldUpdateOperationsInput
-    // OR: serverId?: string | StringFilter
-    // We want to brand the primitive type part while keeping other types
-    const transformed = transformPropertyType(
-      prop,
-      modelName,
-      (fullText, brandedType, propName) => {
-        const simpleNumberPattern = new RegExp(
-          String.raw`${propName}\??:\s*number\b`,
-        );
-        const simpleStringPattern = new RegExp(
-          String.raw`${propName}\??:\s*string\b`,
-        );
-
-        const numberMatch = simpleNumberPattern.exec(fullText);
-        const stringMatch = simpleStringPattern.exec(fullText);
-
-        if (numberMatch) {
-          return fullText.replace(/:\s*number\b/, `: ${brandedType}`);
-        }
-
-        if (stringMatch) {
-          return fullText.replace(/:\s*string\b/, `: ${brandedType}`);
-        }
-
-        // Match union patterns: number | SomeOtherType OR string | SomeOtherType
-        const unionPattern = new RegExp(String.raw`${propName}\??:\s*([^\n]+)`);
-        const unionMatch = unionPattern.exec(fullText);
-        if (unionMatch?.[1] !== undefined && unionMatch[1].length > 0) {
-          const typeExpression = unionMatch[1];
-          if (typeExpression.includes("number")) {
-            return fullText.replace(/\bnumber\b/, brandedType);
-          }
-          if (typeExpression.includes("string")) {
-            return fullText.replace(/\bstring\b/, brandedType);
-          }
-        }
-
-        return null;
-      },
-    );
-
-    if (transformed) {
-      count++;
-    }
-  }
-
-  return count;
-}
-
-function transformAggregateType(typeAlias: TypeAliasDeclaration): number {
-  const typeName = typeAlias.getName();
-  // Extract model name: SubscriptionMinAggregateOutputType → Subscription
-  // or SubscriptionGroupByOutputType → Subscription
-  const modelName = typeName.replace(
-    /MinAggregateOutputType|MaxAggregateOutputType|GroupByOutputType/,
-    "",
-  );
-
-  return transformSimpleObjectType(typeAlias, modelName);
-}
-
-function transformFieldRefsInterface(
-  interfaceDecl: InterfaceDeclaration,
-): number {
-  const interfaceName = interfaceDecl.getName();
-  // Extract model name: SubscriptionFieldRefs → Subscription
-  const modelName = interfaceName.replace(/FieldRefs$/, "");
-
-  let count = 0;
-
-  for (const member of interfaceDecl.getMembers()) {
-    if (member.getKind() !== SyntaxKind.PropertySignature) {
-      continue;
-    }
-
-    const prop = member.asKindOrThrow(SyntaxKind.PropertySignature);
-
-    // FieldRef pattern: readonly channelId: FieldRef<"Subscription", 'String'>
-    // We need to replace the second type parameter with the branded type
-    // Pattern: FieldRef<"Model", 'Int'> → FieldRef<"Model", BrandedType>
-    // Pattern: FieldRef<"Model", 'String'> → FieldRef<"Model", BrandedType>
-    const transformed = transformPropertyType(
-      prop,
-      modelName,
-      (fullText, brandedType, _propName) => {
-        // Match the FieldRef type parameter (Int, String, DateTime, etc.)
-        const fieldRefPattern =
-          /FieldRef<"[^"]+",\s*'(Int|String|DateTime|Boolean|Float|Decimal|BigInt|Bytes|Json)'\s*>/;
-        const match = fieldRefPattern.exec(fullText);
-
-        if (match) {
-          // Replace the type parameter with the branded type (without quotes since it's a type, not a string literal)
-          return fullText.replace(
-            fieldRefPattern,
-            `FieldRef<"${modelName}", ${brandedType}>`,
-          );
-        }
-
-        return null;
-      },
-    );
-
-    if (transformed) {
-      count++;
-    }
-  }
-
-  return count;
-}
-
-// Model-specific ID mappings
 const MODEL_ID_MAP: Record<string, string> = {
   Player: "PlayerId",
   Account: "AccountId",
@@ -509,8 +376,6 @@ const MODEL_ID_MAP: Record<string, string> = {
   Subscription: "SubscriptionId",
   ServerPermission: "PermissionId",
   GuildPermissionError: "PermissionErrorId",
-  // Voice notification system models
-  // Note: User uses discordId as primary key, so no UserId type needed
   ApiToken: "ApiTokenId",
   SoundPack: "SoundPackId",
   DesktopClient: "DesktopClientId",
@@ -518,7 +383,6 @@ const MODEL_ID_MAP: Record<string, string> = {
   GameEventLog: "GameEventLogId",
 };
 
-// Field name to branded type mappings
 const FIELD_TYPE_MAP: Record<string, string> = {
   playerId: "PlayerId",
   competitionId: "CompetitionId",
@@ -539,7 +403,6 @@ const FIELD_TYPE_MAP: Record<string, string> = {
   snapshotType: "SnapshotType",
   permission: "PermissionType",
   seasonId: "SeasonId",
-  // Voice notification system - userId is a Discord ID foreign key
   userId: "DiscordAccountId",
 };
 
@@ -562,7 +425,6 @@ function getBrandedType(
   propName: string,
   parentTypeName: string,
 ): string | null {
-  // Check if this is an 'id' field with model-specific branding
   if (propName === "id") {
     return MODEL_ID_MAP[parentTypeName] ?? null;
   }
@@ -572,9 +434,9 @@ function getBrandedType(
     return modelFieldType;
   }
 
-  // Check other field mappings
   return FIELD_TYPE_MAP[propName] ?? null;
 }
 
-// Run the script
-main();
+if (import.meta.main) {
+  await brandPrismaTypes();
+}

@@ -11,7 +11,6 @@ import { createIntelGpuDevicePluginApp } from "@shepherdjerred/homelab/cdk8s/src
 import { createCertManagerApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/cert-manager.ts";
 import { createCloudflareOperatorApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/cloudflare-operator.ts";
 import { createNfdApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/nfd.ts";
-import { createGrafanaApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/grafana.ts";
 import { createChartMuseumApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/chartmuseum.ts";
 import { createMinecraftSjerredApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/minecraft-sjerred.ts";
 import { createMinecraftShuxinApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/minecraft-shuxin.ts";
@@ -57,6 +56,7 @@ import { createGrafanaDbApp } from "@shepherdjerred/homelab/cdk8s/src/resources/
 import { createS3StaticSitesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/s3-static-sites.ts";
 import { createKueueApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/kueue.ts";
 import { createKueueConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
+import { createCpuPowerCap } from "@shepherdjerred/homelab/cdk8s/src/resources/cpu-power-cap.ts";
 import { createKyvernoApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/kyverno.ts";
 import { createKyvernoPoliciesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/kyverno-policies.ts";
 import { createMcpGatewayApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/mcp-gateway.ts";
@@ -84,6 +84,15 @@ export async function createAppsChart(app: App) {
     },
   });
 
+  new Namespace(chart, "prometheus-namespace", {
+    metadata: {
+      name: "prometheus",
+      labels: {
+        "pod-security.kubernetes.io/enforce": "privileged",
+      },
+    },
+  });
+
   createAppsApp(chart);
   createOpenEBSApp(chart);
   createOnePasswordApp(chart);
@@ -97,7 +106,6 @@ export async function createAppsChart(app: App) {
   createCertManagerApp(chart);
   createCloudflareOperatorApp(chart);
   createNfdApp(chart);
-  createGrafanaApp(chart);
   createChartMuseumApp(chart);
   createMcRouterApp(chart);
   createMinecraftSjerredApp(chart);
@@ -114,6 +122,10 @@ export async function createAppsChart(app: App) {
   createBuildkiteApp(chart);
   createKueueApp(chart);
   createKueueConfig(chart);
+  // Caps i9-13900K package power to reduce radiated heat into the physically
+  // adjacent NVMe slot. nvme1 Composite has crossed its 81.85 °C warning
+  // threshold; NAND has hit 103.85 °C. See packages/docs/logs/2026-05-24_torvalds-thermal-investigation.md.
+  createCpuPowerCap(chart, { pl1Watts: 95, pl2Watts: 140 });
   createVeleroApp(chart);
   createKyvernoApp(chart);
   createKyvernoPoliciesApp(chart);

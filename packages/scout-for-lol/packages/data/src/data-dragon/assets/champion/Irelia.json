@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.11.1",
   "data": {
     "Irelia": {
       "id": "Irelia",
@@ -442,6 +442,68 @@
           "name": "iG Irelia (Elite)",
           "chromas": false,
           "parentSkin": 15
+        },
+        {
+          "id": "39063",
+          "num": 63,
+          "name": "Breadsticks Irelia",
+          "chromas": true
+        },
+        {
+          "id": "39064",
+          "num": 64,
+          "name": "Breadsticks Irelia (Ruby)",
+          "chromas": false,
+          "parentSkin": 63
+        },
+        {
+          "id": "39065",
+          "num": 65,
+          "name": "Breadsticks Irelia (Catseye)",
+          "chromas": false,
+          "parentSkin": 63
+        },
+        {
+          "id": "39066",
+          "num": 66,
+          "name": "Breadsticks Irelia (Turquoise)",
+          "chromas": false,
+          "parentSkin": 63
+        },
+        {
+          "id": "39067",
+          "num": 67,
+          "name": "Breadsticks Irelia (Emerald)",
+          "chromas": false,
+          "parentSkin": 63
+        },
+        {
+          "id": "39068",
+          "num": 68,
+          "name": "Breadsticks Irelia (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 63
+        },
+        {
+          "id": "39069",
+          "num": 69,
+          "name": "Breadsticks Irelia (Sapphire)",
+          "chromas": false,
+          "parentSkin": 63
+        },
+        {
+          "id": "39070",
+          "num": 70,
+          "name": "Breadsticks Irelia (Obsidian)",
+          "chromas": false,
+          "parentSkin": 63
+        },
+        {
+          "id": "39071",
+          "num": 71,
+          "name": "Breadsticks Irelia (Pearl)",
+          "chromas": false,
+          "parentSkin": 63
         }
       ],
       "lore": "The Noxian occupation of Ionia produced many heroes, none more unlikely than young Irelia of Navori. Trained in the ancient dances of her province, she adapted her art for war, using the graceful and carefully practised movements to levitate a host of deadly blades. After proving herself as a fighter, she was thrust into the role of resistance leader and figurehead, and to this day remains dedicated to the preservation of her homeland.",

@@ -23,7 +23,7 @@ export function addErrorTrackingPanels(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `smartmon_udma_crc_error_count_raw_value{${buildFilter()}} * on(disk) group_left(device_model) smartmon_device_info{${buildFilter()}}`,
+            `(smartmon_udma_crc_error_count_raw_value{${buildFilter()}} * on(disk) group_left(device_model) smartmon_device_info{${buildFilter()}}) or on() vector(0)`,
           )
           .legendFormat("{{disk}} - {{device_model}}"),
       )
@@ -50,7 +50,7 @@ export function addErrorTrackingPanels(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `smartmon_raw_read_error_rate_raw_value{${buildFilter()}} * on(disk) group_left(device_model) smartmon_device_info{${buildFilter()}}`,
+            `(smartmon_raw_read_error_rate_raw_value{${buildFilter()}} * on(disk) group_left(device_model) smartmon_device_info{${buildFilter()}}) or on() vector(0)`,
           )
           .legendFormat("{{disk}} - {{device_model}}"),
       )
@@ -165,7 +165,7 @@ export function addSectorHealthPanels(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `smartmon_current_pending_sector_raw_value{${buildFilter()}} * on(disk) group_left(device_model) smartmon_device_info{${buildFilter()}}`,
+            `(smartmon_current_pending_sector_raw_value{${buildFilter()}} * on(disk) group_left(device_model) smartmon_device_info{${buildFilter()}}) or on() vector(0)`,
           )
           .legendFormat("{{disk}} - {{device_model}}"),
       )

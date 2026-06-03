@@ -57,10 +57,12 @@ const REQUIRED_ENV_GROUPS: readonly RequiredEnvGroup[] = [
   { label: "CLOUDFLARE_API_TOKEN", names: ["CLOUDFLARE_API_TOKEN"] },
   { label: "BUILDKITE_API_TOKEN", names: ["BUILDKITE_API_TOKEN"] },
   { label: "TEMPORAL_ADDRESS", names: ["TEMPORAL_ADDRESS"] },
+  { label: "GITHUB_APP_ID", names: ["GITHUB_APP_ID"] },
   {
-    label: "GitHub token",
-    names: ["GH_TOKEN", "GITHUB_PERSONAL_ACCESS_TOKEN"],
+    label: "GITHUB_APP_INSTALLATION_ID",
+    names: ["GITHUB_APP_INSTALLATION_ID"],
   },
+  { label: "GITHUB_APP_PRIVATE_KEY", names: ["GITHUB_APP_PRIVATE_KEY"] },
   {
     label: "HOMELAB_AUDIT_ARCHIVE_BUCKET",
     names: ["HOMELAB_AUDIT_ARCHIVE_BUCKET"],

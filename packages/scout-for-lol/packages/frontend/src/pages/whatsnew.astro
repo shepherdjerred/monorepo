@@ -4,11 +4,11 @@ import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
 import Hero from "../components/Hero.astro";
 import CTA from "../components/CTA.astro";
+import { changelog, formatChangelogDate, renderChangelogToHtml } from "../data/changelog";
 import {
-  changelog,
-  formatChangelogDate,
-  renderChangelogToHtml,
-} from "../data/changelog";
+  DISCORD_INSTALL_CLICK_EVENT,
+  DISCORD_INVITE_URL,
+} from "#src/lib/marketing-constants.ts";
 ---
 
 <Layout>
@@ -25,40 +25,33 @@ import {
     <div class="py-24 sm:py-32">
       <div class="mx-auto max-w-3xl px-6 lg:px-8">
         <div class="space-y-12">
-          {
-            changelog.map((entry, index) => (
-              <div
-                class={`pb-12 ${index !== changelog.length - 1 ? "border-b border-gray-200 dark:border-gray-700" : ""}`}
-              >
-                {/* Date Header */}
-                <div class="mb-6">
-                  <div class="flex items-center gap-x-3">
-                    <div class="h-3 w-3 rounded-full bg-indigo-600 dark:bg-indigo-500" />
-                    <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">
-                      {formatChangelogDate(entry)}
-                    </h2>
-                  </div>
+          {changelog.map((entry, index) => (
+            <div
+              class={`pb-12 ${index !== changelog.length - 1 ? "border-b border-gray-200 dark:border-gray-700" : ""}`}
+            >
+              <!-- Date Header -->
+              <div class="mb-6">
+                <div class="flex items-center gap-x-3">
+                  <div class="h-3 w-3 rounded-full bg-indigo-600 dark:bg-indigo-500"></div>
+                  <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">
+                    {formatChangelogDate(entry)}
+                  </h2>
                 </div>
-
-                {/* Changes List */}
-                <div
-                  class="text-gray-600 dark:text-gray-300 prose pl-6 space-y-6"
-                  set:html={renderChangelogToHtml(entry.text)}
-                />
               </div>
-            ))
-          }
+
+              <!-- Changes List -->
+              <div class="text-gray-600 dark:text-gray-300 prose pl-6 space-y-6" set:html={renderChangelogToHtml(entry.text)} />
+            </div>
+          ))}
         </div>
 
-        {
-          changelog.length === 0 && (
-            <div class="text-center py-12">
-              <p class="text-gray-600 dark:text-gray-300">
-                No changelog entries found. Check back soon!
-              </p>
-            </div>
-          )
-        }
+        {changelog.length === 0 && (
+          <div class="text-center py-12">
+            <p class="text-gray-600 dark:text-gray-300">
+              No changelog entries found. Check back soon!
+            </p>
+          </div>
+        )}
       </div>
     </div>
 
@@ -70,10 +63,12 @@ import {
       buttons={[
         {
           text: "Add to Discord",
-          href: "https://discord.com/oauth2/authorize?client_id=1182800769188110366",
+          href: DISCORD_INVITE_URL,
           variant: "primary",
+          trackingEvent: DISCORD_INSTALL_CLICK_EVENT,
+          trackingLocation: "whatsnew",
         },
-        { text: "Read the docs", href: "/docs", variant: "secondary" },
+        { text: 'Read the docs', href: '/docs', variant: 'secondary' }
       ]}
     />
 

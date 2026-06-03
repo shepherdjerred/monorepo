@@ -3,11 +3,17 @@
 set -euo pipefail
 
 if command -v pinchtab &>/dev/null; then
+  # All pinchtab CLI calls below must target the same config the daemon reads
+  # (its launchd plist pins PINCHTAB_CONFIG here). Without this export, the
+  # `config set` calls write to ~/.pinchtab/config.json and the daemon never
+  # sees them — which is exactly how the two configs drifted apart.
+  export PINCHTAB_CONFIG="$HOME/Library/Application Support/pinchtab/config.json"
+
   pinchtab daemon install
 
   # Allow browsing the public internet with content safety enabled
   pinchtab config set security.idpi.enabled true
-  pinchtab config set security.idpi.allowedDomains '*'
+  pinchtab config set security.allowedDomains '*'
   pinchtab config set security.idpi.strictMode true
   pinchtab config set security.idpi.scanContent true
   pinchtab config set security.idpi.wrapContent true

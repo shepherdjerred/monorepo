@@ -3,7 +3,7 @@ import {
   type AgentTaskInput,
 } from "#shared/agent-task.ts";
 
-const DEFAULT_CLAUDE_MODEL = "claude-opus-4-7";
+const DEFAULT_CLAUDE_MODEL = "claude-opus-4-8";
 const DEFAULT_CODEX_MODEL = "gpt-5.5";
 const DEFAULT_MAX_TURNS = 80;
 const CLAUDE_ALLOWED_TOOLS = "Bash,Read,Grep,Glob,WebFetch";
@@ -14,7 +14,19 @@ export type AgentTaskCommand = {
   outputPath: string | undefined;
 };
 
-function reportOnlyPrompt(input: AgentTaskInput, workdir: string): string {
+export function reportOnlyPrompt(
+  input: AgentTaskInput,
+  workdir: string,
+): string {
+  const runtimeLines =
+    input.agentTimeoutMinutes === undefined
+      ? []
+      : [
+          `Runtime budget: ${String(input.agentTimeoutMinutes)} minutes.`,
+          "- Keep every shell command narrowly scoped and time-bounded; use the `timeout` command when available.",
+          "- If a command is slow or would exceed the budget, stop that section, mark it Skipped or Failed, and return the partial report.",
+          "",
+        ];
   const sourceLines =
     input.source === undefined
       ? []
@@ -44,6 +56,7 @@ function reportOnlyPrompt(input: AgentTaskInput, workdir: string): string {
     "- If one future report-only follow-up is needed, set followUp with either runAt or cron.",
     "- Return only JSON matching the provided schema.",
     "",
+    ...runtimeLines,
     `Task title: ${input.title}`,
     `Repository workdir: ${workdir}`,
     "",

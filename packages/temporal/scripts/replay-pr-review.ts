@@ -21,9 +21,9 @@ import { Octokit } from "octokit";
 import Anthropic from "@anthropic-ai/sdk";
 import {
   cleanupWorkdir,
-  enrichBootstrapWithWorkdir,
   runBootstrap,
 } from "#activities/pr-review/bootstrap.ts";
+import { enrichBootstrapWithWorkdir } from "#activities/pr-review/bootstrap-enrich.ts";
 import { deterministicSignalActivities } from "#activities/pr-review/deterministic-signals.ts";
 import {
   buildCorrectnessUserText,
@@ -44,6 +44,7 @@ import {
 } from "#activities/pr-review/specialists/runner.ts";
 import { runWithConcurrency } from "#activities/pr-review/specialists.ts";
 import {
+  buildInlineReviewComments,
   markerFor,
   renderCommentBody,
 } from "#activities/pr-review/post-render.ts";
@@ -269,7 +270,7 @@ async function runLegacyBaseline(
   }
 
   process.stderr.write(
-    "Invoking legacy correctnessReviewer baseline (Anthropic SDK, claude-opus-4-7, effort=high)...\n",
+    "Invoking legacy correctnessReviewer baseline (Anthropic SDK, claude-opus-4-8, effort=high)...\n",
   );
   const client = makeCorrectnessClient(new Anthropic({ apiKey: anthropicKey }));
   const result = await runCorrectnessReviewer(client, {
@@ -386,6 +387,12 @@ async function runCurrentPipeline(
     process.stderr.write(
       `Deterministic signals: ${String(machineFindings.length)} annotated findings\n`,
     );
+    const deterministicFindingCount = new Set(
+      machineFindings.map((finding) => finding.finding.id),
+    ).size;
+    const specialistFindingCount = new Set(
+      specialistFindings.map((finding) => finding.finding.id),
+    ).size;
 
     const annotated = [...machineFindings, ...specialistFindings];
     const consensusFindings: Finding[] = voteOnFindings({ annotated });
@@ -409,6 +416,15 @@ async function runCurrentPipeline(
     process.stderr.write(
       `Dedupe: ${String(verifiedFindings.length)} in -> ${String(dedupedFindings.length)} kept\n\n`,
     );
+    const inline = buildInlineReviewComments({
+      pipeline,
+      findings: dedupedFindings,
+      changedFiles: context.changedFiles,
+      existingMarkers: new Set<string>(),
+    });
+    process.stderr.write(
+      `Inline build: ${String(inline.summary.posted)} postable; ${String(inline.summary.skippedUnanchored)} unanchored; ${String(inline.summary.skippedUnverified)} unverified; ${String(inline.summary.skippedDuplicate)} duplicate\n\n`,
+    );
 
     if (args.keepWorkdir) {
       shouldCleanup = false;
@@ -420,8 +436,16 @@ async function runCurrentPipeline(
         pipeline,
         findings: dedupedFindings,
         changedFiles: context.changedFiles,
+        stageCounts: {
+          deterministicFindings: deterministicFindingCount,
+          specialistFindings: specialistFindingCount,
+          consensusFindings: consensusFindings.length,
+          verifiedFindings: verifiedFindings.length,
+          dedupedFindings: dedupedFindings.length,
+        },
       },
       markerFor(workflowIdFor(pipeline)),
+      inline.summary,
     );
   } finally {
     if (shouldCleanup && context.workdir.length > 0) {

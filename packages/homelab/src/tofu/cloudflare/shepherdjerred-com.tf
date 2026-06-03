@@ -1,6 +1,6 @@
 resource "cloudflare_zone" "shepherdjerred_com" {
   account = { id = var.cloudflare_account_id }
-  name       = "shepherdjerred.com"
+  name    = "shepherdjerred.com"
 }
 
 # ── CNAMEs ──────────────────────────────────────────────────────────────────
@@ -57,7 +57,7 @@ resource "cloudflare_dns_record" "shepherdjerred_com_cname_www" {
 # FastMail MX (apex)
 resource "cloudflare_dns_record" "shepherdjerred_com_mx1" {
   zone_id  = cloudflare_zone.shepherdjerred_com.id
-  ttl     = 1
+  ttl      = 1
   name     = "shepherdjerred.com"
   type     = "MX"
   content  = "in1-smtp.messagingengine.com"
@@ -66,7 +66,7 @@ resource "cloudflare_dns_record" "shepherdjerred_com_mx1" {
 
 resource "cloudflare_dns_record" "shepherdjerred_com_mx2" {
   zone_id  = cloudflare_zone.shepherdjerred_com.id
-  ttl     = 1
+  ttl      = 1
   name     = "shepherdjerred.com"
   type     = "MX"
   content  = "in2-smtp.messagingengine.com"
@@ -76,7 +76,7 @@ resource "cloudflare_dns_record" "shepherdjerred_com_mx2" {
 # FastMail MX (wildcard)
 resource "cloudflare_dns_record" "shepherdjerred_com_mx_wildcard1" {
   zone_id  = cloudflare_zone.shepherdjerred_com.id
-  ttl     = 1
+  ttl      = 1
   name     = "*"
   type     = "MX"
   content  = "in1-smtp.messagingengine.com"
@@ -85,7 +85,7 @@ resource "cloudflare_dns_record" "shepherdjerred_com_mx_wildcard1" {
 
 resource "cloudflare_dns_record" "shepherdjerred_com_mx_wildcard2" {
   zone_id  = cloudflare_zone.shepherdjerred_com.id
-  ttl     = 1
+  ttl      = 1
   name     = "*"
   type     = "MX"
   content  = "in2-smtp.messagingengine.com"
@@ -232,4 +232,107 @@ resource "cloudflare_dns_record" "shepherdjerred_com_dmarc" {
 # DNSSEC
 resource "cloudflare_zone_dnssec" "shepherdjerred_com" {
   zone_id = cloudflare_zone.shepherdjerred_com.id
+}
+
+# ── CAA: authorize CAs Cloudflare may use to issue certs for this zone ─────
+resource "cloudflare_dns_record" "shepherdjerred_com_caa_issue_letsencrypt" {
+  zone_id = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
+  name    = "shepherdjerred.com"
+  type    = "CAA"
+  data = {
+    flags = 0
+    tag   = "issue"
+    value = "letsencrypt.org"
+  }
+}
+
+resource "cloudflare_dns_record" "shepherdjerred_com_caa_issue_google_trust_services" {
+  zone_id = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
+  name    = "shepherdjerred.com"
+  type    = "CAA"
+  data = {
+    flags = 0
+    tag   = "issue"
+    value = "pki.goog; cansignhttpexchanges=yes"
+  }
+}
+
+resource "cloudflare_dns_record" "shepherdjerred_com_caa_issue_sectigo" {
+  zone_id = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
+  name    = "shepherdjerred.com"
+  type    = "CAA"
+  data = {
+    flags = 0
+    tag   = "issue"
+    value = "sectigo.com"
+  }
+}
+
+resource "cloudflare_dns_record" "shepherdjerred_com_caa_issue_ssl_com" {
+  zone_id = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
+  name    = "shepherdjerred.com"
+  type    = "CAA"
+  data = {
+    flags = 0
+    tag   = "issue"
+    value = "ssl.com"
+  }
+}
+
+resource "cloudflare_dns_record" "shepherdjerred_com_caa_issuewild_none" {
+  zone_id = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
+  name    = "shepherdjerred.com"
+  type    = "CAA"
+  data = {
+    flags = 0
+    tag   = "issuewild"
+    value = ";"
+  }
+}
+
+resource "cloudflare_dns_record" "shepherdjerred_com_caa_iodef" {
+  zone_id = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
+  name    = "shepherdjerred.com"
+  type    = "CAA"
+  data = {
+    flags = 0
+    tag   = "iodef"
+    value = "mailto:dmarc@sjer.red"
+  }
+}
+
+# ── Edge hardening: min TLS 1.2 + HSTS (1-day rollback window) ──────────────
+resource "cloudflare_zone_setting" "shepherdjerred_com_min_tls_version" {
+  zone_id    = cloudflare_zone.shepherdjerred_com.id
+  setting_id = "min_tls_version"
+  value      = "1.2"
+}
+
+resource "cloudflare_zone_setting" "shepherdjerred_com_security_header" {
+  zone_id    = cloudflare_zone.shepherdjerred_com.id
+  setting_id = "security_header"
+  value = {
+    strict_transport_security = {
+      enabled            = true
+      max_age            = 86400
+      include_subdomains = true
+      nosniff            = true
+      preload            = false
+    }
+  }
+}
+
+# ── TLSRPT: ask senders to report STARTTLS failures ─────────────────────────
+resource "cloudflare_dns_record" "shepherdjerred_com_tlsrpt" {
+  zone_id = cloudflare_zone.shepherdjerred_com.id
+  ttl     = 1
+  name    = "_smtp._tls"
+  type    = "TXT"
+  content = "v=TLSRPTv1; rua=mailto:dmarc@sjer.red"
 }

@@ -124,7 +124,7 @@ async function main(): Promise<void> {
 
   if (config.verbose) setLogLevel("debug");
 
-  await initMonarch(config.monarchToken);
+  await initMonarch();
   initClaude(config.anthropicApiKey, config.model);
   setWebSearchEnabled(!config.skipResearch);
   const hints = await loadHints();
@@ -190,12 +190,12 @@ async function main(): Promise<void> {
   const tier1Changes = classifyTier1(tier1Txns, knowledgeBase);
 
   // Tier 2: Batch classification with enrichment context
-  const tier2Changes = await classifyTier2(
-    categories,
-    categoryDefinitions,
-    tier2Txns,
-    config.batchSize,
-  );
+  const tier2Changes = await classifyTier2({
+    definitions: categoryDefinitions,
+    transactions: tier2Txns,
+    batchSize: config.batchSize,
+    checkpointFile: config.checkpointFile,
+  });
 
   // Tier 3: Agentic per-transaction classification
   const tier3Changes = await classifyTier3({

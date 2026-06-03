@@ -13,9 +13,14 @@
  * A cluster is kept iff EITHER:
  *   (a) ≥2 of N randomized passes within a single specialist produced it
  *       (within-specialist agreement), OR
- *   (b) ≥2 distinct specialist kinds produced it (cross-specialist agreement).
+ *   (b) ≥2 distinct specialist kinds produced it (cross-specialist agreement),
+ *       OR
+ *   (c) a verifier-backed high-confidence finding needs empirical verification.
  *
  * Where N = `PASSES_PER_SPECIALIST` (currently 3, so ≥2/3 is the threshold).
+ * Rule (c) prevents consensus from starving plausible single-pass findings
+ * before the verification stage can prove or contradict them; inline posting
+ * still requires `verification.status === "verified"` downstream.
  *
  * # Why the cluster key is kind-agnostic
  *
@@ -44,10 +49,10 @@
  * input — consensus is the activity that promises to populate it. PostReview
  * relies on it being present.
  *
- * # Opus 4.7 model swap from the plan
+ * # Opus 4.8 model swap from the plan
  *
- * The plan text says "Opus 4.7 specialists (24K thinking budget)". `budget_tokens`
- * is REMOVED on `claude-opus-4-7` (a 4.6-era field; sending it returns 400).
+ * The plan text says "Opus 4.8 specialists (24K thinking budget)". `budget_tokens`
+ * is REMOVED on `claude-opus-4-8` (a 4.6-era field; sending it returns 400).
  * The current canonical depth knob is `thinking: { type: "adaptive" }` +
  * `output_config: { effort: "high" | "max" }`. The specialists implement
  * the plan's intent via effort tiers; the consensus activity itself doesn't
@@ -76,6 +81,7 @@ const SEVERITY_ORDER: Record<FindingSeverity, number> = {
   warning: 1,
   critical: 2,
 };
+const SINGLE_SPECIALIST_HIGH_CONFIDENCE_THRESHOLD = 0.9;
 
 /**
  * One annotated finding entering the consensus activity. Every raw output
@@ -111,6 +117,23 @@ function jsonLog(
       ...fields,
     }),
   );
+}
+
+function isVerifierBackedHighConfidenceFinding(finding: Finding): boolean {
+  return (
+    finding.confidence >= SINGLE_SPECIALIST_HIGH_CONFIDENCE_THRESHOLD &&
+    finding.verifier !== "none" &&
+    finding.verifierTarget !== undefined
+  );
+}
+
+function pickRepresentative(findings: Finding[]): Finding | undefined {
+  return findings.toSorted((a, b) => {
+    const sevDiff = SEVERITY_ORDER[b.severity] - SEVERITY_ORDER[a.severity];
+    if (sevDiff !== 0) return sevDiff;
+    if (b.confidence !== a.confidence) return b.confidence - a.confidence;
+    return a.id.localeCompare(b.id);
+  })[0];
 }
 
 /**
@@ -167,7 +190,13 @@ export function voteOnFindings(input: ConsensusInput): Finding[] {
 
     const keptByWithin = maxWithinSpecialist >= withinThreshold;
     const keptByAcross = distinctSpecialists >= 2;
-    if (!keptByWithin && !keptByAcross) {
+    const highConfidenceFindings = members
+      .map((m) => m.annotated.finding)
+      .filter((finding) => isVerifierBackedHighConfidenceFinding(finding));
+    const keptByHighConfidence = highConfidenceFindings.length > 0;
+    const keptOnlyByHighConfidence =
+      !keptByWithin && !keptByAcross && keptByHighConfidence;
+    if (!keptByWithin && !keptByAcross && !keptByHighConfidence) {
       // dropped — fail the cluster
       for (const _m of members) {
         prReviewConsensusFindingsTotal.inc({ outcome: "dropped" });
@@ -176,18 +205,17 @@ export function voteOnFindings(input: ConsensusInput): Finding[] {
     }
 
     // Pick a representative: highest severity → highest confidence →
-    // lowest `id`. `toSorted` keeps the input array immutable.
-    const sorted = members
-      .map((m) => m.annotated.finding)
-      .toSorted((a, b) => {
-        const sevDiff = SEVERITY_ORDER[b.severity] - SEVERITY_ORDER[a.severity];
-        if (sevDiff !== 0) return sevDiff;
-        if (b.confidence !== a.confidence) return b.confidence - a.confidence;
-        return a.id.localeCompare(b.id);
-      });
-    const rep = sorted[0];
+    // lowest `id`. If the high-confidence verifier-backed rule is the only
+    // reason a cluster survived, restrict representative selection to the
+    // findings that can actually be verified downstream.
+    const representativeCandidates = keptOnlyByHighConfidence
+      ? highConfidenceFindings
+      : members.map((m) => m.annotated.finding);
+    const rep = pickRepresentative(representativeCandidates);
     if (rep === undefined) {
-      // unreachable: a cluster has at least one member by construction
+      // unreachable: a kept high-confidence cluster has at least one
+      // high-confidence member, and other kept clusters have at least one
+      // member by construction.
       continue;
     }
 
@@ -215,6 +243,7 @@ export function voteOnFindings(input: ConsensusInput): Finding[] {
       kindsObserved: [...kindsObserved],
       reasonWithin: keptByWithin,
       reasonAcross: keptByAcross,
+      reasonHighConfidence: keptByHighConfidence,
     });
   }
 

@@ -13,10 +13,29 @@ export function createArgoCdApp(chart: Chart) {
     hosts: ["argocd"],
   });
 
+  // argocd-server defaults to HTTPS-only on its single pod port (8080 with TLS
+  // auto-detection). The Service exposes port 80 → 8080 which returns 307
+  // redirect-to-HTTPS for plain HTTP — and cloudflared's default origin is
+  // http://, producing an infinite 307 loop and breaking the CI ArgoCD health
+  // check. Target HTTPS explicitly.
+  //
+  // `noTlsVerify: true` is a deliberate trade-off, not an oversight. argocd-server
+  // generates its own self-signed cert at install time (stored in the `argocd-secret`
+  // Secret, key `tls.crt`); there is no external CA to verify against, so the only
+  // way to "verify" would be to pin the cert in cloudflared's trust store and
+  // re-sync on every argocd reinstall. The actual auth boundary on this endpoint
+  // is the ArgoCD bearer token (Authorization header) — TLS-verify would only
+  // matter against an attacker that can already MITM in-cluster pod-to-pod
+  // traffic between cloudflared and argocd-server, and Cilium's WireGuard mesh
+  // already encrypts that path at L3. If we ever issue argocd-server a cert
+  // from a real CA (cert-manager + private intermediate), revisit and remove
+  // this flag.
   createCloudflareTunnelBinding(chart, "argocd-cf-tunnel", {
     serviceName: "argocd-server",
     subdomain: "argocd",
     namespace: "argocd",
+    protocol: "https",
+    noTlsVerify: true,
   });
 
   const argoCdValues: HelmValuesForChart<"argo-cd"> = {

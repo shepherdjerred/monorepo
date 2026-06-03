@@ -89,6 +89,20 @@ function createTimeseriesPanel(options: {
   return panel;
 }
 
+/**
+ * Builds the "Static Site Probes" Grafana dashboard for the homelab
+ * blackbox-exporter fleet. The dashboard surfaces probe success rate, HTTP
+ * status, request duration, and TLS expiry across all `static-site-*` jobs,
+ * with `$site` / `$endpoint` template variables for drill-down.
+ *
+ * @returns A `dashboard.Dashboard` ready to serialize to JSON.
+ *
+ * @example
+ * ```ts
+ * import { createStaticSiteProbesDashboard } from "./static-site-probes-dashboard.ts";
+ * const dashboard = createStaticSiteProbesDashboard();
+ * ```
+ */
 export function createStaticSiteProbesDashboard() {
   const siteVariable = createVariable({
     name: "site",
@@ -246,6 +260,20 @@ export function createStaticSiteProbesDashboard() {
   return builder.build();
 }
 
+/**
+ * Serializes the Static Site Probes dashboard to JSON with Helm-safe escaping
+ * applied (so values containing `{{ ... }}` survive Helm rendering when the
+ * dashboard ships in a ConfigMap template).
+ *
+ * @returns The dashboard JSON ready for inclusion in a Helm template.
+ *
+ * @example
+ * ```ts
+ * import { exportStaticSiteProbesDashboardJson } from "./static-site-probes-dashboard.ts";
+ * const json = exportStaticSiteProbesDashboardJson();
+ * // Write `json` to a ConfigMap data entry.
+ * ```
+ */
 export function exportStaticSiteProbesDashboardJson(): string {
   return exportDashboardWithHelmEscaping(createStaticSiteProbesDashboard());
 }

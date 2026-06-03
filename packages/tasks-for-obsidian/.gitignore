@@ -1,0 +1,4 @@
+# Xcode per-developer state (window positions, breakpoints, build settings).
+# Shared schemes live in xcshareddata/xcschemes/ and remain tracked.
+xcuserdata/
+*.xcuserstate

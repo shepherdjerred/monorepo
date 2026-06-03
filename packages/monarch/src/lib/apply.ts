@@ -63,7 +63,7 @@ async function applySingleChange(change: ProposedChange): Promise<boolean> {
     return true;
   } catch (error: unknown) {
     const raw = error instanceof Error ? error.message : String(error);
-    // monarch-money-api appends the full JSON response/request to error messages — strip it
+    // Monarch errors can append the full JSON response/request — strip it
     const jsonIdx = raw.indexOf('{"response":');
     const msg =
       jsonIdx > 0 ? raw.slice(0, jsonIdx).replace(/[:\s]+$/, "") : raw;

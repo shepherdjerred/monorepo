@@ -1,6 +1,6 @@
 
 [default]
-login_session = arn:aws:iam::926367030076:root
+endpoint_url = https://seaweedfs.sjer.red
 region = us-east-1
 
 [profile r2]
@@ -9,4 +9,8 @@ region = auto
 
 [profile seaweedfs]
 endpoint_url = https://seaweedfs.sjer.red
+region = us-east-1
+
+[profile aws]
+login_session = arn:aws:iam::926367030076:root
 region = us-east-1

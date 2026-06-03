@@ -3,9 +3,10 @@ import {
   aiProviderErrorsTotal,
   aiProviderIssueActive,
 } from "#src/metrics/index.ts";
+import { PROVIDER_ISSUE_KINDS } from "#src/alerts/provider-issue-kinds.ts";
 
 const ProviderSchema = z.enum(["openai", "gemini"]);
-const ProviderIssueKindSchema = z.enum(["quota", "rate_limit"]);
+const ProviderIssueKindSchema = z.enum(PROVIDER_ISSUE_KINDS);
 
 export type ProviderIssueKind = z.infer<typeof ProviderIssueKindSchema>;
 
@@ -19,6 +20,8 @@ const ProviderIssueSchema = z.object({
 export type ProviderIssue = z.infer<typeof ProviderIssueSchema>;
 
 const ProviderErrorSchema = z.looseObject({
+  name: z.string().optional(),
+  message: z.string().optional(),
   status: z.number().optional(),
   code: z.string().optional(),
   type: z.string().optional(),
@@ -30,6 +33,7 @@ const ProviderErrorSchema = z.looseObject({
     })
     .optional(),
 });
+type ProviderError = z.infer<typeof ProviderErrorSchema>;
 
 function labels(issue: ProviderIssue): {
   app: "scout-for-lol";
@@ -47,6 +51,46 @@ function labels(issue: ProviderIssue): {
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+function isBudgetExceededIssue(
+  providerError: ProviderError | undefined,
+  lowerMessage: string,
+): boolean {
+  return (
+    providerError?.name === "OpenAIBudgetExceeded" ||
+    lowerMessage.includes("openaibudgetexceeded") ||
+    lowerMessage.includes("token budget exceeded")
+  );
+}
+
+function isContextLimitIssue(status: number | undefined, lowerMessage: string) {
+  return (
+    status === 400 &&
+    (lowerMessage.includes("input tokens exceed") ||
+      lowerMessage.includes("configured limit") ||
+      lowerMessage.includes("context length") ||
+      lowerMessage.includes("context token limit") ||
+      lowerMessage.includes("input token limit"))
+  );
+}
+
+function isQuotaIssue(status: number | undefined, lowerMessage: string) {
+  return (
+    (status === 429 || lowerMessage.includes("429")) &&
+    (lowerMessage.includes("quota") ||
+      lowerMessage.includes("billing") ||
+      lowerMessage.includes("insufficient_quota"))
+  );
+}
+
+function isRateLimitIssue(status: number | undefined, lowerMessage: string) {
+  return (
+    status === 429 ||
+    lowerMessage.includes("rate limit") ||
+    lowerMessage.includes("rate_limit") ||
+    lowerMessage.includes("429")
+  );
 }
 
 export function recordProviderIssue(input: ProviderIssue): void {
@@ -70,6 +114,7 @@ export function classifyOpenAIProviderIssue(
   const nestedError = providerError?.error;
   const lowerMessage = [
     errorMessage(error),
+    providerError?.message,
     providerError?.code,
     providerError?.type,
     nestedError?.code,
@@ -80,21 +125,19 @@ export function classifyOpenAIProviderIssue(
     .join(" ")
     .toLowerCase();
 
-  if (
-    (status === 429 || lowerMessage.includes("429")) &&
-    (lowerMessage.includes("quota") ||
-      lowerMessage.includes("billing") ||
-      lowerMessage.includes("insufficient_quota"))
-  ) {
+  if (isBudgetExceededIssue(providerError, lowerMessage)) {
+    return "budget_exceeded";
+  }
+
+  if (isContextLimitIssue(status, lowerMessage)) {
+    return "context_limit";
+  }
+
+  if (isQuotaIssue(status, lowerMessage)) {
     return "quota";
   }
 
-  if (
-    status === 429 ||
-    lowerMessage.includes("rate limit") ||
-    lowerMessage.includes("rate_limit") ||
-    lowerMessage.includes("429")
-  ) {
+  if (isRateLimitIssue(status, lowerMessage)) {
     return "rate_limit";
   }
 

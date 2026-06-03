@@ -19,7 +19,7 @@ function buildFilterWithoutKind() {
 }
 
 function activeIssueExpr(filter: string) {
-  return `sum(max by (app, provider, kind, source) (ai_provider_issue_active{${filter}}))`;
+  return `sum(max by (app, provider, kind, source) (ai_provider_issue_active{${filter}})) or on() vector(0)`;
 }
 
 function createVariable(options: {
@@ -189,8 +189,8 @@ export function createAiProviderDashboard() {
     createStatPanel({
       title: "Provider Errors (24h)",
       description:
-        "Total provider quota and rate-limit classifications over the trailing 24h.",
-      query: `sum(increase(ai_provider_errors_total{${filter}}[24h]))`,
+        "Total provider operational classifications over the trailing 24h.",
+      query: `sum(increase(ai_provider_errors_total{${filter}}[24h])) or on() vector(0)`,
       legend: "errors",
       thresholds: errorThresholds,
       gridPos: { x: 18, y: 1, w: 6, h: 4 },
@@ -208,7 +208,7 @@ export function createAiProviderDashboard() {
         "Current ai_provider_issue_active series by app, provider, kind, and source. A sustained value of 1 is what triggers the alerts.",
       targets: [
         {
-          query: `max by (app, provider, kind, source) (ai_provider_issue_active{${filter}})`,
+          query: `max by (app, provider, kind, source) (ai_provider_issue_active{${filter}}) or on() vector(0)`,
           legend: "{{app}} {{provider}} {{kind}} {{source}}",
         },
       ],
@@ -227,7 +227,7 @@ export function createAiProviderDashboard() {
         "Hourly error rate grouped by app, provider, kind, and source.",
       targets: [
         {
-          query: `sum by (app, provider, kind, source) (rate(ai_provider_errors_total{${filter}}[5m])) * 3600`,
+          query: `sum by (app, provider, kind, source) (rate(ai_provider_errors_total{${filter}}[5m])) * 3600 or on() vector(0)`,
           legend: "{{app}} {{provider}} {{kind}} {{source}}",
         },
       ],
@@ -239,10 +239,10 @@ export function createAiProviderDashboard() {
     createTimeseriesPanel({
       title: "Provider Errors by App and Kind",
       description:
-        "Hourly provider errors collapsed to app/provider/kind to separate quota exhaustion from rate limiting.",
+        "Hourly provider errors collapsed to app/provider/kind to separate quota, rate-limit, budget, and context-limit failures.",
       targets: [
         {
-          query: `sum by (app, provider, kind) (rate(ai_provider_errors_total{${filter}}[5m])) * 3600`,
+          query: `sum by (app, provider, kind) (rate(ai_provider_errors_total{${filter}}[5m])) * 3600 or on() vector(0)`,
           legend: "{{app}} {{provider}} {{kind}}",
         },
       ],
@@ -257,7 +257,7 @@ export function createAiProviderDashboard() {
         "Quota-classified provider errors per hour. This is the path for insufficient-credit incidents.",
       targets: [
         {
-          query: `sum by (app, provider, source) (rate(ai_provider_errors_total{${filterWithoutKind},kind="quota"}[5m])) * 3600`,
+          query: `sum by (app, provider, source) (rate(ai_provider_errors_total{${filterWithoutKind},kind="quota"}[5m])) * 3600 or on() vector(0)`,
           legend: "{{app}} {{provider}} {{source}}",
         },
       ],
@@ -272,11 +272,41 @@ export function createAiProviderDashboard() {
         "Rate-limit-classified provider errors per hour, separate from quota exhaustion.",
       targets: [
         {
-          query: `sum by (app, provider, source) (rate(ai_provider_errors_total{${filterWithoutKind},kind="rate_limit"}[5m])) * 3600`,
+          query: `sum by (app, provider, source) (rate(ai_provider_errors_total{${filterWithoutKind},kind="rate_limit"}[5m])) * 3600 or on() vector(0)`,
           legend: "{{app}} {{provider}} {{source}}",
         },
       ],
       gridPos: { x: 12, y: 23, w: 12, h: 8 },
+    }),
+  );
+
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "Budget Exceeded per Hour",
+      description:
+        "Scout OpenAI token-budget circuit breaker events per hour. This captures expected spend-control skips outside Bugsink.",
+      targets: [
+        {
+          query: `sum by (app, provider, source) (rate(ai_provider_errors_total{${filterWithoutKind},kind="budget_exceeded"}[5m])) * 3600 or on() vector(0)`,
+          legend: "{{app}} {{provider}} {{source}}",
+        },
+      ],
+      gridPos: { x: 0, y: 31, w: 12, h: 8 },
+    }),
+  );
+
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "Context Limit Errors per Hour",
+      description:
+        "OpenAI input/context token limit errors per hour. These indicate oversized prompts or unusually large match timelines.",
+      targets: [
+        {
+          query: `sum by (app, provider, source) (rate(ai_provider_errors_total{${filterWithoutKind},kind="context_limit"}[5m])) * 3600 or on() vector(0)`,
+          legend: "{{app}} {{provider}} {{source}}",
+        },
+      ],
+      gridPos: { x: 12, y: 31, w: 12, h: 8 },
     }),
   );
 

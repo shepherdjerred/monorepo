@@ -4,7 +4,6 @@
  * Runs at pipeline generation time to catch catalog drift before
  * producing a pipeline that silently skips work.
  */
-import { readdir } from "node:fs/promises";
 import { execSync } from "node:child_process";
 
 function getRepoRoot(): string {
@@ -25,18 +24,32 @@ import {
   PLAYWRIGHT_PACKAGES,
 } from "../catalog.ts";
 
+export function getTrackedPackageNames(repoRoot: string): string[] {
+  const output = execSync("git ls-files -- packages", {
+    cwd: repoRoot,
+    encoding: "utf-8",
+  });
+  const packages = new Set<string>();
+
+  for (const file of output.split("\n")) {
+    const [root, packageName] = file.split("/");
+    if (root === "packages" && packageName) {
+      packages.add(packageName);
+    }
+  }
+
+  return [...packages].sort();
+}
+
 export async function validateCatalog(): Promise<void> {
   const errors: string[] = [];
 
-  // 1. Every packages/* directory must be in ALL_PACKAGES
-  // Pipeline generator may run from scripts/ci/ or repo root — use git to find root
+  // 1. Every tracked packages/* root must be in ALL_PACKAGES.
+  // Pipeline generator may run from scripts/ci/ or repo root — use git to find root.
+  // Use tracked files rather than raw directories so ignored local build artifacts
+  // or dependency folders do not make the validator disagree with CI checkouts.
   const repoRoot = await getRepoRoot();
-  const packageDirs = await readdir(`${repoRoot}/packages`, {
-    withFileTypes: true,
-  });
-  const actualPackages = packageDirs
-    .filter((d) => d.isDirectory())
-    .map((d) => d.name);
+  const actualPackages = getTrackedPackageNames(repoRoot);
 
   const catalogSet = new Set(ALL_PACKAGES);
   for (const dir of actualPackages) {
@@ -91,11 +104,13 @@ export async function validateCatalog(): Promise<void> {
 
   // 6. PACKAGE_TO_SITE values must match a DEPLOY_SITES bucket
   const siteBuckets = new Set(DEPLOY_SITES.map((s) => s.bucket));
-  for (const [pkg, bucket] of Object.entries(PACKAGE_TO_SITE)) {
-    if (!siteBuckets.has(bucket)) {
-      errors.push(
-        `PACKAGE_TO_SITE maps "${pkg}" to bucket "${bucket}" but no DEPLOY_SITES entry has that bucket.`,
-      );
+  for (const [pkg, buckets] of Object.entries(PACKAGE_TO_SITE)) {
+    for (const bucket of buckets) {
+      if (!siteBuckets.has(bucket)) {
+        errors.push(
+          `PACKAGE_TO_SITE maps "${pkg}" to bucket "${bucket}" but no DEPLOY_SITES entry has that bucket.`,
+        );
+      }
     }
   }
 

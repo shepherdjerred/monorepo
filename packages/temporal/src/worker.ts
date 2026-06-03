@@ -12,9 +12,12 @@ import {
 import { startPrReactionListener } from "./event-bridge/start-pr-reaction-listener.ts";
 import { initializeTracing, shutdownTracing } from "./observability/tracing.ts";
 import {
+  haEventBridgeConnected,
+  haEventBridgeStartFailuresTotal,
   startMetricsServer,
   stopMetricsServer,
 } from "./observability/metrics.ts";
+import { readPositiveIntegerEnv } from "./shared/env.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
@@ -99,6 +102,20 @@ function formatError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
+function classifyEventBridgeStartFailure(error: unknown): string {
+  const message = formatError(error).toLowerCase();
+  if (message.includes("websocket") || message.includes("web socket")) {
+    return "websocket";
+  }
+  if (message.includes("ha_url") || message.includes("ha_token")) {
+    return "config";
+  }
+  if (message.includes("401") || message.includes("unauthorized")) {
+    return "auth";
+  }
+  return "unknown";
+}
+
 type EventBridgeSupervisorState = {
   closed: boolean;
   currentHandle: EventBridgeHandle | undefined;
@@ -124,14 +141,18 @@ async function runEventBridgeSupervisor(
           return;
         }
         state.currentHandle = handle;
+        haEventBridgeConnected.set(1);
         jsonLog("info", "Event bridge started");
         return;
       } catch (error: unknown) {
         attempt += 1;
-        Sentry.captureException(error);
         const retryDelayMs = Math.min(300_000, 10_000 * attempt);
+        const reason = classifyEventBridgeStartFailure(error);
+        haEventBridgeConnected.set(0);
+        haEventBridgeStartFailuresTotal.inc({ reason });
         jsonLog("error", "Event bridge failed to start; retrying", {
           attempt,
+          reason,
           retryDelayMs,
           error: formatError(error),
         });
@@ -189,6 +210,11 @@ async function main(): Promise<void> {
 
   jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.DEFAULT });
 
+  const prReviewMaxConcurrentActivities = readPositiveIntegerEnv({
+    name: "PR_REVIEW_WORKER_MAX_CONCURRENT_ACTIVITIES",
+    defaultValue: 1,
+  });
+
   // Second worker on the pr-review task queue. Same workflow bundle and
   // activity surface, but isolated from the DEFAULT queue so the
   // long-running multi-specialist LLM activities can't head-of-line block
@@ -199,9 +225,13 @@ async function main(): Promise<void> {
     taskQueue: TASK_QUEUES.PR_REVIEW,
     workflowsPath,
     activities,
+    maxConcurrentActivityTaskExecutions: prReviewMaxConcurrentActivities,
   });
 
-  jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.PR_REVIEW });
+  jsonLog("info", "Worker created", {
+    taskQueue: TASK_QUEUES.PR_REVIEW,
+    maxConcurrentActivityTaskExecutions: prReviewMaxConcurrentActivities,
+  });
 
   // Third worker on the pr-summary task queue. Isolated from PR_REVIEW so a
   // stuck specialist activity (e.g. specialist runner waiting on Anthropic

@@ -17,6 +17,17 @@ packages/birmel/prisma/data/
 # macOS metadata
 .DS_Store
 
+# Editor / vim swap and backup files
+*.swp
+*.swo
+*~
+*.orig
+*.rej
+
+# Per-package VS Code workspace settings (machine-specific paths, personal IDE prefs).
+# Shared workspace recommendations (extensions.json, tasks.json) remain tracked.
+packages/**/.vscode/settings.json
+
 # Playwright test results
 test-results/
 
@@ -27,8 +38,12 @@ test-results/
 packages/dpp/
 
 # Claude Code local session files (root level only)
-/.claude/
+# Ignore everything under .claude/ except the checked-in project config + hooks.
+/.claude/*
 !/.claude/settings.json
+!/.claude/hooks/
+/.claude/hooks/*
+!/.claude/hooks/trust-mise.sh
 /.claude.json
 /.claude.json.*
 

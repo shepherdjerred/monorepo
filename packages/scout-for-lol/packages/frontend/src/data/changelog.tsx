@@ -190,6 +190,32 @@ export const changelog: ChangelogEntry[] = [
     },
   },
   {
+    date: "2026 05 23",
+    banner: (
+      <>
+        <strong>Privacy policy update</strong> — clarified marketing and
+        documentation use
+      </>
+    ),
+    text: (
+      <>
+        <ChangelogSection
+          title="Privacy"
+          color="blue"
+          items={[
+            "Updated the privacy policy to clarify that collected data and generated report artifacts may be used for marketing and documentation",
+            "Called out generated images, graphs, charts, reports, and related Scout output as examples of materials that may be shown in docs or promotional content",
+          ]}
+        />
+      </>
+    ),
+    formatted: {
+      year: 2026,
+      month: 5,
+      day: 23,
+    },
+  },
+  {
     date: "2026 04 20",
     banner: (
       <>

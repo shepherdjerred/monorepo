@@ -1,11 +1,17 @@
 import path from "node:path";
 import { homedir } from "node:os";
 import { z } from "zod";
-import type * as MonarchMoneyApi from "monarch-money-api";
 import type { MonarchCategory } from "./types.ts";
 import { MonarchTransactionSchema } from "./types.ts";
 import type { MonarchTransaction } from "./types.ts";
 import { log } from "../logger.ts";
+import {
+  getCategories,
+  getTransactions,
+  updateTransaction,
+  updateTransactionSplits,
+} from "./api.ts";
+import type { PayloadError } from "./api.ts";
 
 const TxnCacheSchema = z.object({
   cachedAt: z.string(),
@@ -14,14 +20,9 @@ const TxnCacheSchema = z.object({
 
 const CACHE_DIR = path.join(homedir(), ".monarch-cache");
 const CACHE_MAX_AGE_MS = 4 * 60 * 60 * 1000; // 4 hours
-let monarchApiPromise: Promise<typeof MonarchMoneyApi> | undefined;
-const noop = (): void => undefined;
 
-export async function initMonarch(token: string): Promise<void> {
-  const api = await getMonarchApi();
-  await withMutedConsole(() => {
-    api.setToken(token);
-  });
+export async function initMonarch(): Promise<void> {
+  // Authentication is loaded lazily from .monarch-session.json by gqlRequest().
 }
 
 function txnCachePath(startDate: string, endDate: string): string {
@@ -85,8 +86,7 @@ export async function fetchAllTransactions(
 
   while (offset < totalCount) {
     log.progress(offset, totalCount, "transactions fetched");
-    const api = await getMonarchApi();
-    const response = await api.getTransactions({
+    const response = await getTransactions({
       limit: pageSize,
       offset,
       startDate,
@@ -107,8 +107,7 @@ export async function fetchAllTransactions(
 }
 
 export async function fetchCategories(): Promise<MonarchCategory[]> {
-  const api = await getMonarchApi();
-  const response = await api.getCategories();
+  const response = await getCategories();
   return response.categories.filter((c) => !c.isDisabled);
 }
 
@@ -132,13 +131,37 @@ async function withRetry<T>(
   throw new Error("unreachable");
 }
 
+function formatPayloadErrors(errors: PayloadError[]): string {
+  return errors
+    .map((error) => {
+      const fieldErrors = error.fieldErrors.flatMap((fieldError) =>
+        fieldError.messages.map((message) => `${fieldError.field}: ${message}`),
+      );
+      const details =
+        fieldErrors.length === 0 ? "" : ` (${fieldErrors.join("; ")})`;
+      return `${error.code}: ${error.message}${details}`;
+    })
+    .join("; ");
+}
+
+function assertNoPayloadErrors(
+  label: string,
+  errors: PayloadError[] | null,
+): void {
+  if (errors === null || errors.length === 0) return;
+  throw new Error(`${label} failed: ${formatPayloadErrors(errors)}`);
+}
+
 export async function applyCategory(
   transactionId: string,
   categoryId: string,
 ): Promise<void> {
-  const api = await getMonarchApi();
   const result = await withRetry(`updateTransaction(${transactionId})`, () =>
-    api.updateTransaction({ transactionId, categoryId }),
+    updateTransaction({ transactionId, categoryId }),
+  );
+  assertNoPayloadErrors(
+    `updateTransaction(${transactionId})`,
+    result.updateTransaction.errors,
   );
   const actualCategoryId = result.updateTransaction.transaction.category.id;
   if (actualCategoryId !== categoryId) {
@@ -150,10 +173,16 @@ export async function applyCategory(
 }
 
 export async function flagForReview(transactionId: string): Promise<void> {
-  const api = await getMonarchApi();
-  await withRetry(`flagForReview(${transactionId})`, () =>
-    api.updateTransaction({ transactionId, needsReview: true }),
+  const result = await withRetry(`flagForReview(${transactionId})`, () =>
+    updateTransaction({ transactionId, needsReview: true }),
   );
+  assertNoPayloadErrors(
+    `flagForReview(${transactionId})`,
+    result.updateTransaction.errors,
+  );
+  if (!result.updateTransaction.transaction.needsReview) {
+    throw new Error(`Flag for review may have failed for ${transactionId}`);
+  }
   await sleep(500);
 }
 
@@ -167,68 +196,39 @@ export async function applySplits(
     date?: string;
   }[],
 ): Promise<void> {
-  const api = await getMonarchApi();
   const result = await withRetry(`applySplits(${transactionId})`, () =>
-    api.updateTransactionSplits(transactionId, splits),
+    updateTransactionSplits(transactionId, splits),
   );
-  const rawErrors: unknown = result.updateTransactionSplit.errors;
-  if (rawErrors === null) {
-    const txn = result.updateTransactionSplit.transaction;
-    log.debug(
-      `Split applied: ${String(txn.splitTransactions.length)} sub-transactions created`,
-    );
+  const rawErrors = result.updateTransactionSplit.errors;
+  assertNoPayloadErrors(`applySplits(${transactionId})`, rawErrors);
+  const txn = result.updateTransactionSplit.transaction;
+  log.debug(
+    `Split applied: ${String(txn.splitTransactions.length)} sub-transactions created`,
+  );
 
-    // Apply date overrides on sub-transactions
-    const subTxns: { id: string }[] = txn.splitTransactions;
-    for (const [i, split] of splits.entries()) {
-      const subTxn = subTxns[i];
-      if (split.date !== undefined && split.date !== "" && subTxn) {
-        const subId = subTxn.id;
-        const dateOverride = split.date;
-        log.debug(`  Moving sub-transaction ${subId} to ${dateOverride}`);
-        await withRetry(`updateDate(${subId})`, () =>
-          api.updateTransaction({ transactionId: subId, date: dateOverride }),
+  // Apply date overrides on sub-transactions
+  const subTxns: { id: string }[] = txn.splitTransactions;
+  for (const [i, split] of splits.entries()) {
+    const subTxn = subTxns[i];
+    if (split.date !== undefined && split.date !== "" && subTxn) {
+      const subId = subTxn.id;
+      const dateOverride = split.date;
+      log.debug(`  Moving sub-transaction ${subId} to ${dateOverride}`);
+      await withRetry(`updateDate(${subId})`, async () => {
+        const updateDateResult = await updateTransaction({
+          transactionId: subId,
+          date: dateOverride,
+        });
+        assertNoPayloadErrors(
+          `updateDate(${subId})`,
+          updateDateResult.updateTransaction.errors,
         );
-        await sleep(500);
-      }
+        return updateDateResult;
+      });
+      await sleep(500);
     }
-  } else {
-    log.error(
-      `Split failed for ${transactionId}: ${JSON.stringify(rawErrors)}`,
-    );
-    log.debug(`Split data: ${JSON.stringify(splits)}`);
   }
   await sleep(500);
-}
-
-async function getMonarchApi(): Promise<typeof MonarchMoneyApi> {
-  monarchApiPromise ??= importWithoutEnvToken();
-  return monarchApiPromise;
-}
-
-async function importWithoutEnvToken(): Promise<typeof MonarchMoneyApi> {
-  const token = Bun.env["MONARCH_TOKEN"];
-  delete Bun.env["MONARCH_TOKEN"];
-  try {
-    return await withMutedConsole(() => import("monarch-money-api"));
-  } finally {
-    if (token !== undefined) {
-      Bun.env["MONARCH_TOKEN"] = token;
-    }
-  }
-}
-
-async function withMutedConsole<T>(fn: () => T | Promise<T>): Promise<T> {
-  const savedConsoleLog = console.log;
-  const savedConsoleError = console.error;
-  console.log = noop;
-  console.error = noop;
-  try {
-    return await fn();
-  } finally {
-    console.log = savedConsoleLog;
-    console.error = savedConsoleError;
-  }
 }
 
 const AMAZON_MERCHANT_PATTERNS = [

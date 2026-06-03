@@ -23,7 +23,11 @@ export function createScoutChart(app: App, stage: Stage) {
 
   createScoutDeployment(chart, stage);
 
-  // NetworkPolicy: Allow ingress from Prometheus only (internal Discord bot, no external ingress)
+  // NetworkPolicy: Allow ingress from Prometheus (scrapes scout-backend
+  // metrics on :3000), in-namespace pods, and the shared s3-static-sites
+  // Caddy (reverse-proxies /trpc + /api on scout-for-lol.com to
+  // scout-service-{stage}:3000 cross-namespace). The Cloudflare Tunnel
+  // now terminates at s3-static-sites, not directly at scout-{stage}.
   new KubeNetworkPolicy(chart, "scout-ingress-netpol", {
     metadata: { name: "scout-ingress-netpol" },
     spec: {
@@ -35,6 +39,14 @@ export function createScoutChart(app: App, stage: Stage) {
             {
               namespaceSelector: {
                 matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+              },
+            },
+            { podSelector: {} },
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "s3-static-sites",
+                },
               },
             },
           ],

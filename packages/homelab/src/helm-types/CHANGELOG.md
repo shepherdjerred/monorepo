@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.2.1...helm-types-v1.3.0) (2026-05-27)
+
+* Spawn errors from the chart fetcher now preserve the original error as `.cause`, so callers can inspect what `helm` or `git` actually failed with ([c285f88](https://github.com/shepherdjerred/monorepo/commit/c285f88a7387b679980e63dde07c8543a39cc217))
+* Published `package.json` now has a cloneable `repository` URL (`git+https://github.com/shepherdjerred/monorepo.git` with `directory: packages/homelab/src/helm-types`), and corrected `bugs`/`homepage` links ([02a3c55](https://github.com/shepherdjerred/monorepo/commit/02a3c55932bc8a267cff74c44c76f75634dcfcf0))
+* Bump runtime dep `zod` to `^4.4.3` ([d040b0b](https://github.com/shepherdjerred/monorepo/commit/d040b0b231ca7e047a29d306aa35c5e2a5744592))
+
 ## [1.2.1](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.2.0...helm-types-v1.2.1) (2026-04-22)
 
 

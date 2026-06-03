@@ -19,14 +19,17 @@ Output data (gitignored): `dataset.json`, `tool-output.json`, `accuracy-report.j
 ## Workflow
 
 ```bash
+# 0. Authenticate to Monarch if .monarch-session.json is missing or expired
+bun run login
+
 # 1. Sample 500 transactions from ~/.monarch-cache/
-MONARCH_TOKEN=... bun run scripts/accuracy/sample.ts [--count 500] [--seed 42]
+bun run scripts/accuracy/sample.ts [--count 500] [--seed 42]
 
 # 2. Label via web UI at http://localhost:3847
 bun run scripts/accuracy/label-server.ts
 
 # 3. Run the classifier with JSON output
-MONARCH_TOKEN=... ANTHROPIC_API_KEY=... bun run src/index.ts --output scripts/accuracy/tool-output.json
+ANTHROPIC_API_KEY=... bun run src/index.ts --output scripts/accuracy/tool-output.json
 
 # 4. Compare and generate accuracy report
 bun run scripts/accuracy/compare.ts

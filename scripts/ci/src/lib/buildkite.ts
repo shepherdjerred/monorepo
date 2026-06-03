@@ -43,6 +43,17 @@ export const GITHUB_APP_SECRET_ARGS = [
   "--github-app-private-key env:GITHUB_APP_PRIVATE_KEY",
 ].join(" ");
 
+export const TOFU_GITHUB_TOKEN_ARG = "--github-token env:TOFU_GITHUB_TOKEN";
+
+/**
+ * Claude Code subscription token used by CI steps that invoke `claude -p`.
+ * Sourced from the `buildkite-ci-secrets` k8s secret (1Password-synced — the
+ * `CLAUDE_CODE_OAUTH_TOKEN` field must exist on item
+ * `rzk3lawpk4yspyyu5rxlz44ssi` for the env var to be present in the agent pod).
+ */
+export const CLAUDE_OAUTH_SECRET_ARG =
+  "--claude-oauth-token env:CLAUDE_CODE_OAUTH_TOKEN";
+
 /** Dagger environment variables for CI steps. */
 export const DAGGER_ENV: Record<string, string> = {
   DAGGER_NO_NAG: "1",

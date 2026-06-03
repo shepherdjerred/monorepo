@@ -22,6 +22,7 @@ import {
 } from "#shared/markdown-to-html.ts";
 import { resolvePostalAddresses, sendPostalEmail } from "#shared/postal.ts";
 import { redactSecrets } from "#shared/redact.ts";
+import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import {
   archiveAuditBody,
   archiveAuditMetadata,
@@ -39,7 +40,7 @@ const COMPONENT = "homelab-audit";
 
 const HEARTBEAT_INTERVAL_MS = 10_000;
 
-const DEFAULT_MODEL = "claude-opus-4-7";
+const DEFAULT_MODEL = "claude-opus-4-8";
 const DEFAULT_MAX_TURNS = 80;
 
 // Audit hits a wide tool surface (kubectl, talosctl, toolkit, tofu, gh) so we
@@ -151,7 +152,9 @@ function safeHeartbeat(payload: Record<string, unknown>): void {
 // 401 response, curl -v handshake, argocd verbose, or upstream library that
 // echoes a header. Listed in priority order; redactSecrets is O(N tokens × M
 // chars) so a fixed handful is fine.
-function auditSecretTokens(): readonly (string | undefined)[] {
+function auditSecretTokens(
+  githubAppToken: string | undefined,
+): readonly (string | undefined)[] {
   return [
     Bun.env["CLAUDE_CODE_OAUTH_TOKEN"],
     Bun.env["ANTHROPIC_API_KEY"],
@@ -163,11 +166,34 @@ function auditSecretTokens(): readonly (string | undefined)[] {
     Bun.env["BUILDKITE_API_TOKEN"],
     Bun.env["AWS_ACCESS_KEY_ID"],
     Bun.env["AWS_SECRET_ACCESS_KEY"],
-    Bun.env["GH_TOKEN"],
     Bun.env["GITHUB_PERSONAL_ACCESS_TOKEN"],
     Bun.env["GITHUB_APP_PRIVATE_KEY"],
+    githubAppToken,
     Bun.env["POSTAL_API_KEY"],
   ];
+}
+
+function buildAuditAgentEnv(
+  claudeToken: string,
+  githubAppToken: string,
+): Record<string, string> {
+  const env: Record<string, string> = {};
+  for (const [key, value] of Object.entries(Bun.env)) {
+    if (typeof value !== "string") {
+      continue;
+    }
+    if (
+      key === "GH_TOKEN" ||
+      key === "GITHUB_PERSONAL_ACCESS_TOKEN" ||
+      key.startsWith("GITHUB_APP_")
+    ) {
+      continue;
+    }
+    env[key] = value;
+  }
+  env["CLAUDE_CODE_OAUTH_TOKEN"] = claudeToken;
+  env["GH_TOKEN"] = githubAppToken;
+  return env;
 }
 
 function todayIsoDate(): string {
@@ -227,22 +253,20 @@ async function runAuditAgent(
     maxTurns,
   });
 
+  const githubTokenResult = await createGitHubAppInstallationToken();
   const startMs = Date.now();
   const proc = Bun.spawn(args, {
     stdin: "ignore",
     stdout: "pipe",
     stderr: "pipe",
-    env: {
-      ...Bun.env,
-      CLAUDE_CODE_OAUTH_TOKEN: claudeToken,
-    },
+    env: buildAuditAgentEnv(claudeToken, githubTokenResult.token),
   });
 
   const heartbeat = setInterval(() => {
     safeHeartbeat({ phase: "agent", elapsedMs: Date.now() - startMs });
   }, HEARTBEAT_INTERVAL_MS);
 
-  const secretTokens = auditSecretTokens();
+  const secretTokens = auditSecretTokens(githubTokenResult.token);
   const stderrPump = (async () => {
     const reader = proc.stderr.getReader();
     const decoder = new TextDecoder();

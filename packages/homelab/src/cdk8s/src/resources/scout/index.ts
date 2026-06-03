@@ -62,7 +62,9 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
   });
 
   const localPathVolume = new ZfsNvmeVolume(chart, "scout-storage-claim", {
-    storage: Size.gibibytes(8),
+    // 24Gi: the SQLite match DB (/data/db.sqlite) grows over time and filled the
+    // original 8Gi to 0B, wedging writes (2026-05). See follow-up for retention.
+    storage: Size.gibibytes(24),
   });
 
   const baseEnvVariables = {
@@ -128,6 +130,29 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     }),
     ENVIRONMENT: EnvValue.fromValue(stage),
     DATABASE_URL: EnvValue.fromValue("file:/data/db.sqlite"),
+    JWT_SIGNING_SECRET: EnvValue.fromSecretValue({
+      secret: Secret.fromSecretName(
+        chart,
+        "jwt-signing-secret",
+        onePasswordItem.name,
+      ),
+      key: "JWT_SIGNING_SECRET",
+    }),
+    DISCORD_CLIENT_SECRET: EnvValue.fromSecretValue({
+      secret: Secret.fromSecretName(
+        chart,
+        "discord-client-secret",
+        onePasswordItem.name,
+      ),
+      key: "DISCORD_CLIENT_SECRET",
+    }),
+    WEB_APP_ORIGIN: EnvValue.fromValue(
+      stage === "prod"
+        ? "https://scout-for-lol.com"
+        : "https://beta.scout-for-lol.com",
+    ),
+    OPENAI_HOURLY_TOKEN_BUDGET: EnvValue.fromValue("2000000"),
+    OPENAI_DAILY_TOKEN_BUDGET: EnvValue.fromValue("20000000"),
   };
 
   // Add AI secrets only for beta stage
@@ -150,22 +175,6 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
               onePasswordItem.name,
             ),
             key: "GEMINI_API_KEY",
-          }),
-          ELEVENLABS_API_KEY: EnvValue.fromSecretValue({
-            secret: Secret.fromSecretName(
-              chart,
-              "elevenlabs-api-key-secret",
-              onePasswordItem.name,
-            ),
-            key: "ELEVENLABS_API_KEY",
-          }),
-          ELEVENLABS_VOICE_ID: EnvValue.fromSecretValue({
-            secret: Secret.fromSecretName(
-              chart,
-              "elevenlabs-voice-id-secret",
-              onePasswordItem.name,
-            ),
-            key: "ELEVENLABS_VOICE_ID",
           }),
         }
       : baseEnvVariables;

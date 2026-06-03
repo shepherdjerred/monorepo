@@ -814,7 +814,7 @@ export class Monorepo {
     stack: string,
     awsAccessKeyId: Secret,
     awsSecretAccessKey: Secret,
-    ghToken: Secret,
+    githubToken: Secret | null = null,
     cloudflareAccountId: Secret | null = null,
     cloudflareApiToken: Secret | null = null,
     dryrun = false,
@@ -824,7 +824,7 @@ export class Monorepo {
       stack,
       awsAccessKeyId,
       awsSecretAccessKey,
-      ghToken,
+      githubToken,
       cloudflareAccountId,
       cloudflareApiToken,
       dryrun,
@@ -838,7 +838,7 @@ export class Monorepo {
     stack: string,
     awsAccessKeyId: Secret,
     awsSecretAccessKey: Secret,
-    ghToken: Secret,
+    githubToken: Secret | null = null,
     cloudflareAccountId: Secret | null = null,
     cloudflareApiToken: Secret | null = null,
     dryrun = false,
@@ -848,7 +848,7 @@ export class Monorepo {
       stack,
       awsAccessKeyId,
       awsSecretAccessKey,
-      ghToken,
+      githubToken,
       cloudflareAccountId,
       cloudflareApiToken,
       dryrun,
@@ -895,6 +895,8 @@ export class Monorepo {
     cloudflareAccountId: string = "",
     depNames: string[] = [],
     depDirs: Directory[] = [],
+    buildEnvNames: string[] = [],
+    buildEnvValues: Secret[] = [],
     dryrun = false,
     tsconfig: File | null = null,
     needsPlaywright = false,
@@ -911,6 +913,8 @@ export class Monorepo {
       cloudflareAccountId,
       depNames,
       depDirs,
+      buildEnvNames,
+      buildEnvValues,
       dryrun,
       tsconfig,
       needsPlaywright,
@@ -988,11 +992,22 @@ export class Monorepo {
   @func({ cache: "never" })
   async cooklangPublish(
     source: Directory,
-    ghToken: Secret,
+    tokenSource: Directory,
     pluginRepo: string,
+    githubAppId: Secret,
+    githubAppInstallationId: Secret,
+    githubAppPrivateKey: Secret,
     dryrun = false,
   ): Promise<string> {
-    return cooklangPublishHelper(source, ghToken, pluginRepo, dryrun).stdout();
+    return cooklangPublishHelper(
+      source,
+      tokenSource,
+      pluginRepo,
+      githubAppId,
+      githubAppInstallationId,
+      githubAppPrivateKey,
+      dryrun,
+    ).stdout();
   }
 
   /**
@@ -1003,7 +1018,6 @@ export class Monorepo {
   async cooklangBuildAndPublish(
     source: Directory,
     pkgDir: Directory,
-    ghToken: Secret,
     pluginRepo: string,
     githubAppId: Secret,
     githubAppInstallationId: Secret,
@@ -1016,8 +1030,11 @@ export class Monorepo {
     const dist = this.cooklangBuild(pkgDir, depNames, depDirs, tsconfig);
     const publishOutput = await cooklangPublishHelper(
       dist,
-      ghToken,
+      source,
       pluginRepo,
+      githubAppId,
+      githubAppInstallationId,
+      githubAppPrivateKey,
       dryrun,
     ).stdout();
     const lines = publishOutput.trim().split("\n");
@@ -1096,13 +1113,14 @@ export class Monorepo {
     ).stdout();
   }
 
-  /** Run release-please to create release PRs and GitHub releases */
+  /** Run release-please to create release PRs and GitHub releases, then refine the auto-generated CHANGELOGs via a Claude agent */
   @func({ cache: "never" })
   async releasePlease(
     source: Directory,
     githubAppId: Secret,
     githubAppInstallationId: Secret,
     githubAppPrivateKey: Secret,
+    claudeOauthToken: Secret,
     dryrun = false,
   ): Promise<string> {
     return releasePleaseHelper(
@@ -1110,6 +1128,7 @@ export class Monorepo {
       githubAppId,
       githubAppInstallationId,
       githubAppPrivateKey,
+      claudeOauthToken,
       dryrun,
     ).stdout();
   }

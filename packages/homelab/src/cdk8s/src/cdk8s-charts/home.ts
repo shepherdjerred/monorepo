@@ -2,6 +2,7 @@ import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { createHomeAssistantDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/home/homeassistant.ts";
 import { createEufySecurityWsDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/home/eufy-security-ws.ts";
+import { createScryptedDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/home/scrypted.ts";
 import { createZwaveJsUiDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/home/zwave-js-ui.ts";
 import {
   KubeNetworkPolicy,
@@ -16,6 +17,7 @@ export async function createHomeChart(app: App) {
 
   await createHomeAssistantDeployment(chart);
   createEufySecurityWsDeployment(chart);
+  createScryptedDeployment(chart);
   createZwaveJsUiDeployment(chart);
 
   // NetworkPolicy: Allow ingress to home namespace from Tailscale, Cloudflare tunnel, and LAN
@@ -59,14 +61,32 @@ export async function createHomeChart(app: App) {
             },
           ],
         },
-        // Allow HomeKit from LAN (mDNS discovery + bridge ports)
+        // Allow HomeKit from LAN (mDNS discovery + Home Assistant bridge ports)
         {
           from: [{ ipBlock: { cidr: "192.168.1.0/24" } }],
           ports: [
             { port: IntOrString.fromNumber(5353), protocol: "UDP" },
             { port: IntOrString.fromNumber(21_063), protocol: "TCP" },
             { port: IntOrString.fromNumber(21_064), protocol: "TCP" },
+            { port: IntOrString.fromNumber(21_065), protocol: "TCP" },
           ],
+        },
+      ],
+    },
+  });
+
+  // NetworkPolicy: Scrypted's HomeKit plugin allocates accessory HAP ports at
+  // runtime, so LAN Home Hubs need access to the Scrypted pod beyond the fixed
+  // Home Assistant bridge ports above. Limit the broader LAN allowance to the
+  // Scrypted pod only.
+  new KubeNetworkPolicy(chart, "scrypted-lan-ingress-policy", {
+    metadata: { name: "scrypted-lan-ingress-policy" },
+    spec: {
+      podSelector: { matchLabels: { app: "scrypted" } },
+      policyTypes: ["Ingress"],
+      ingress: [
+        {
+          from: [{ ipBlock: { cidr: "192.168.1.0/24" } }],
         },
       ],
     },

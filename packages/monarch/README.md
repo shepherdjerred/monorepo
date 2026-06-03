@@ -6,8 +6,16 @@ AI-powered transaction categorizer for [Monarch Money](https://www.monarchmoney.
 
 Set the following environment variables:
 
-- `MONARCH_TOKEN` (required) -- Monarch Money API token
 - `ANTHROPIC_API_KEY` (required) -- Anthropic API key
+
+Authenticate to Monarch with a browser session:
+
+```bash
+bun run login
+```
+
+This opens Monarch in a browser and writes `.monarch-session.json` after login.
+The session file contains cookies and is ignored by git.
 
 ## Usage
 
@@ -39,7 +47,9 @@ bun run src/index.ts --apply --interactive
 | `--interactive`                  | Approve each change individually                        |
 | `--limit <n>`                    | Limit transactions to process                           |
 | `--batch-size <n>`               | Batch size for Claude API calls (default: 25)           |
-| `--model <id>`                   | Claude model (default: `claude-sonnet-4-20250514`)      |
+| `--model <id>`                   | Claude model (default: `claude-sonnet-4-6`)             |
+| `--output <path>`                | Save proposed changes to JSON                           |
+| `--checkpoint-file <path>`       | Override Tier 2 recovery checkpoint path                |
 | `--sample <n>`                   | Sample N merchant groups for testing                    |
 | `--verbose`                      | Enable debug logging                                    |
 | `--skip-amazon`                  | Skip Amazon order processing                            |
@@ -50,6 +60,11 @@ bun run src/index.ts --apply --interactive
 | `--skip-venmo`                   | Skip Venmo processing                                   |
 | `--conservice-cookies <cookies>` | Conservice session cookies for Bilt integration         |
 | `--skip-bilt`                    | Skip Bilt processing                                    |
+
+When `--output` is set, Tier 2 batch classifications are checkpointed next to
+the output file using `.checkpoint.json`. Re-running the same command resumes
+completed Tier 2 batches unless the prompt inputs, transaction IDs, model, web
+search setting, or batch size changed.
 
 ## Data Sources
 

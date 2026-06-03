@@ -79,6 +79,10 @@ Per-session journals (one-shot fixes, Q&A answers, bug recaps). Not individually
 - [Talos/Kubernetes Connectivity Investigation](plans/2026-05-10_talos-k8s-connectivity.md) - Diagnose local Talos and Kubernetes access failures from configured contexts and network reachability
 - [Bugsink/Temporal Error Spike Investigation](plans/2026-05-10_bugsink-temporal-error-spike.md) - Correlate current Bugsink issue influx with Temporal worker/server and Kubernetes restart fallout
 
+## TODOs
+
+General issue tracking — deferred work, acceptance-testing gaps, post-merge verifications, and source `TODO(todo:<id>)` markers. Not individually indexed — see [`todos/`](todos/) for the directory listing.
+
 ## Guides
 
 - [Monarch Accuracy Test](guides/2026-02-22_monarch-accuracy-test.md) - Monarch transaction categorization accuracy testing

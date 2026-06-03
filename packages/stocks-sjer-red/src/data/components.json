@@ -1,0 +1,857 @@
+{
+  "owner": "RiotShielder",
+  "buildName": "Homelab",
+  "buildUrl": "https://pcpartpicker.com/user/RiotShielder/saved/#view=DkxRgs",
+  "updatedAt": "2026-05-24",
+  "components": [
+    {
+      "slug": "intel-i9-14900k",
+      "name": "Intel Core i9-14900K",
+      "category": "CPU",
+      "manufacturer": "Intel",
+      "partNumber": "BX8071514900K",
+      "purchases": [
+        {
+          "date": "2024-07-15",
+          "quantity": 1,
+          "pricePaid": 550
+        }
+      ],
+      "history": [
+        {
+          "date": "2024-07-01",
+          "price": 550
+        },
+        {
+          "date": "2024-08-01",
+          "price": 560
+        },
+        {
+          "date": "2024-09-01",
+          "price": 555
+        },
+        {
+          "date": "2024-10-01",
+          "price": 460
+        },
+        {
+          "date": "2024-11-01",
+          "price": 450
+        },
+        {
+          "date": "2024-12-01",
+          "price": 445
+        },
+        {
+          "date": "2025-01-01",
+          "price": 440
+        },
+        {
+          "date": "2025-02-01",
+          "price": 440
+        },
+        {
+          "date": "2025-03-01",
+          "price": 450
+        },
+        {
+          "date": "2025-04-01",
+          "price": 460
+        },
+        {
+          "date": "2025-05-01",
+          "price": 470
+        },
+        {
+          "date": "2025-06-01",
+          "price": 470
+        },
+        {
+          "date": "2025-07-01",
+          "price": 470
+        },
+        {
+          "date": "2025-08-01",
+          "price": 465
+        },
+        {
+          "date": "2025-09-01",
+          "price": 470
+        },
+        {
+          "date": "2025-10-01",
+          "price": 480
+        },
+        {
+          "date": "2025-11-01",
+          "price": 490
+        },
+        {
+          "date": "2025-12-01",
+          "price": 500
+        },
+        {
+          "date": "2026-01-01",
+          "price": 520
+        },
+        {
+          "date": "2026-02-01",
+          "price": 510
+        },
+        {
+          "date": "2026-03-01",
+          "price": 505
+        },
+        {
+          "date": "2026-04-01",
+          "price": 510
+        },
+        {
+          "date": "2026-05-01",
+          "price": 510
+        },
+        {
+          "date": "2026-05-24",
+          "price": 461.37
+        }
+      ],
+      "imageUrl": "/images/intel-i9-14900k.png",
+      "productUrl": "https://pcpartpicker.com/product/ZLjRsY/intel-core-i9-14900k-32-ghz-24-core-processor-bx8071514900k"
+    },
+    {
+      "slug": "arctic-liquid-freezer-iii-pro-240",
+      "name": "Arctic Liquid Freezer III Pro 240",
+      "category": "COOLER",
+      "manufacturer": "Arctic",
+      "partNumber": "ACFRE00178A",
+      "purchases": [
+        {
+          "date": "2025-12-17",
+          "quantity": 1,
+          "pricePaid": 70.49
+        }
+      ],
+      "history": [
+        {
+          "date": "2024-09-01",
+          "price": 85
+        },
+        {
+          "date": "2024-12-01",
+          "price": 80
+        },
+        {
+          "date": "2025-03-01",
+          "price": 78
+        },
+        {
+          "date": "2025-06-01",
+          "price": 76
+        },
+        {
+          "date": "2025-09-01",
+          "price": 74
+        },
+        {
+          "date": "2025-12-01",
+          "price": 71
+        },
+        {
+          "date": "2026-03-01",
+          "price": 72
+        },
+        {
+          "date": "2026-05-24",
+          "price": 70.49
+        }
+      ],
+      "imageUrl": "/images/arctic-liquid-freezer-iii-pro-240.png",
+      "productUrl": "https://pcpartpicker.com/product/zn8Pxr/arctic-liquid-freezer-iii-pro-77-cfm-liquid-cpu-cooler-acfre00178a"
+    },
+    {
+      "slug": "noctua-nt-h1",
+      "name": "Noctua NT-H1 3.5g Thermal Paste",
+      "category": "PASTE",
+      "manufacturer": "Noctua",
+      "partNumber": "NT-H1-3.5G",
+      "purchases": [
+        {
+          "date": "2024-07-15",
+          "quantity": 1,
+          "pricePaid": 16
+        }
+      ],
+      "history": [
+        {
+          "date": "2024-07-01",
+          "price": 16
+        },
+        {
+          "date": "2024-08-01",
+          "price": 16.2
+        },
+        {
+          "date": "2024-09-01",
+          "price": 16.25
+        },
+        {
+          "date": "2024-10-01",
+          "price": 17
+        },
+        {
+          "date": "2024-11-01",
+          "price": 17.2
+        },
+        {
+          "date": "2024-12-01",
+          "price": 17.2
+        },
+        {
+          "date": "2025-01-01",
+          "price": 17.5
+        },
+        {
+          "date": "2025-02-01",
+          "price": 17.55
+        },
+        {
+          "date": "2025-03-01",
+          "price": 17.5
+        },
+        {
+          "date": "2025-04-01",
+          "price": 17.55
+        },
+        {
+          "date": "2025-06-01",
+          "price": 18.5
+        },
+        {
+          "date": "2025-07-01",
+          "price": 18.55
+        },
+        {
+          "date": "2025-08-01",
+          "price": 19
+        },
+        {
+          "date": "2025-09-01",
+          "price": 18.95
+        },
+        {
+          "date": "2025-10-01",
+          "price": 18.5
+        },
+        {
+          "date": "2025-11-01",
+          "price": 18.3
+        },
+        {
+          "date": "2025-12-01",
+          "price": 18.4
+        },
+        {
+          "date": "2026-01-01",
+          "price": 18.5
+        },
+        {
+          "date": "2026-02-01",
+          "price": 18.8
+        },
+        {
+          "date": "2026-03-01",
+          "price": 19.2
+        },
+        {
+          "date": "2026-04-01",
+          "price": 19.5
+        },
+        {
+          "date": "2026-05-01",
+          "price": 19.7
+        },
+        {
+          "date": "2026-05-24",
+          "price": 19.5
+        }
+      ],
+      "imageUrl": "/images/noctua-nt-h1.png",
+      "productUrl": "https://pcpartpicker.com/product/sX4gXL/noctua-thermal-paste-nth1"
+    },
+    {
+      "slug": "asus-q670m-c-csm",
+      "name": "Asus Pro Q670M-C-CSM",
+      "category": "MOBO",
+      "manufacturer": "Asus",
+      "partNumber": "PRO Q670M-C/CSM",
+      "purchases": [
+        {
+          "date": "2024-07-15",
+          "quantity": 1,
+          "pricePaid": 170
+        }
+      ],
+      "history": [
+        {
+          "date": "2024-07-01",
+          "price": 170
+        },
+        {
+          "date": "2024-09-01",
+          "price": 185
+        },
+        {
+          "date": "2024-10-01",
+          "price": 185
+        },
+        {
+          "date": "2024-11-01",
+          "price": 184
+        },
+        {
+          "date": "2024-12-01",
+          "price": 184
+        },
+        {
+          "date": "2025-01-01",
+          "price": 184
+        },
+        {
+          "date": "2025-02-01",
+          "price": 184
+        },
+        {
+          "date": "2025-03-01",
+          "price": 184
+        },
+        {
+          "date": "2025-04-01",
+          "price": 184
+        },
+        {
+          "date": "2025-05-01",
+          "price": 205
+        },
+        {
+          "date": "2025-06-01",
+          "price": 203
+        },
+        {
+          "date": "2025-07-01",
+          "price": 200
+        },
+        {
+          "date": "2025-08-01",
+          "price": 200
+        },
+        {
+          "date": "2025-09-01",
+          "price": 200
+        },
+        {
+          "date": "2025-10-01",
+          "price": 199
+        },
+        {
+          "date": "2025-11-01",
+          "price": 198
+        },
+        {
+          "date": "2025-12-01",
+          "price": 198
+        },
+        {
+          "date": "2026-01-01",
+          "price": 200
+        },
+        {
+          "date": "2026-02-01",
+          "price": 198
+        },
+        {
+          "date": "2026-03-01",
+          "price": 195
+        },
+        {
+          "date": "2026-04-01",
+          "price": 192
+        },
+        {
+          "date": "2026-05-01",
+          "price": 190
+        },
+        {
+          "date": "2026-05-24",
+          "price": 179.99
+        }
+      ],
+      "imageUrl": "/images/asus-q670m-c-csm.png",
+      "productUrl": "https://pcpartpicker.com/product/N7BG3C/asus-pro-q670m-c-csm-micro-atx-lga1700-motherboard-pro-q670m-c-csm"
+    },
+    {
+      "slug": "corsair-vengeance-ddr5-6400",
+      "name": "Corsair Vengeance 64 GB (2 x 32 GB) DDR5-6400 CL32",
+      "category": "RAM",
+      "manufacturer": "Corsair",
+      "partNumber": "CMK64GX5M2B6400C32",
+      "purchases": [
+        {
+          "date": "2024-08-15",
+          "quantity": 1,
+          "pricePaid": 214
+        },
+        {
+          "date": "2025-11-25",
+          "quantity": 1,
+          "pricePaid": 700
+        }
+      ],
+      "history": [
+        {
+          "date": "2024-07-01",
+          "price": 230
+        },
+        {
+          "date": "2024-08-01",
+          "price": 220
+        },
+        {
+          "date": "2024-09-01",
+          "price": 215
+        },
+        {
+          "date": "2024-10-01",
+          "price": 210
+        },
+        {
+          "date": "2024-11-01",
+          "price": 210
+        },
+        {
+          "date": "2024-12-01",
+          "price": 210
+        },
+        {
+          "date": "2025-01-01",
+          "price": 210
+        },
+        {
+          "date": "2025-02-01",
+          "price": 210
+        },
+        {
+          "date": "2025-03-01",
+          "price": 215
+        },
+        {
+          "date": "2025-04-01",
+          "price": 225
+        },
+        {
+          "date": "2025-05-01",
+          "price": 235
+        },
+        {
+          "date": "2025-06-01",
+          "price": 245
+        },
+        {
+          "date": "2025-07-01",
+          "price": 250
+        },
+        {
+          "date": "2025-08-01",
+          "price": 265
+        },
+        {
+          "date": "2025-09-01",
+          "price": 285
+        },
+        {
+          "date": "2025-10-01",
+          "price": 350
+        },
+        {
+          "date": "2025-11-01",
+          "price": 500
+        },
+        {
+          "date": "2025-12-01",
+          "price": 900
+        },
+        {
+          "date": "2026-01-01",
+          "price": 1100
+        },
+        {
+          "date": "2026-02-01",
+          "price": 1150
+        },
+        {
+          "date": "2026-03-01",
+          "price": 1100
+        },
+        {
+          "date": "2026-04-01",
+          "price": 1100
+        },
+        {
+          "date": "2026-05-01",
+          "price": 1100
+        },
+        {
+          "date": "2026-05-24",
+          "price": 1029
+        }
+      ],
+      "imageUrl": "/images/corsair-vengeance-ddr5-6400.png",
+      "productUrl": "https://pcpartpicker.com/product/pnQKHx/corsair-vengeance-64-gb-2-x-32-gb-ddr5-6400-cl32-memory-cmk64gx5m2b6400c32"
+    },
+    {
+      "slug": "samsung-870-evo-4tb",
+      "name": "Samsung 870 EVO 4 TB",
+      "category": "SSD",
+      "manufacturer": "Samsung",
+      "partNumber": "MZ-77E4T0B/AM",
+      "purchases": [
+        {
+          "date": "2025-12-05",
+          "quantity": 6,
+          "pricePaid": 329
+        }
+      ],
+      "history": [
+        {
+          "date": "2024-07-01",
+          "price": 350
+        },
+        {
+          "date": "2024-08-01",
+          "price": 340
+        },
+        {
+          "date": "2024-09-01",
+          "price": 320
+        },
+        {
+          "date": "2024-10-01",
+          "price": 310
+        },
+        {
+          "date": "2024-11-01",
+          "price": 295
+        },
+        {
+          "date": "2024-12-01",
+          "price": 280
+        },
+        {
+          "date": "2025-01-01",
+          "price": 270
+        },
+        {
+          "date": "2025-02-01",
+          "price": 260
+        },
+        {
+          "date": "2025-03-01",
+          "price": 250
+        },
+        {
+          "date": "2025-04-01",
+          "price": 240
+        },
+        {
+          "date": "2025-05-01",
+          "price": 235
+        },
+        {
+          "date": "2025-06-01",
+          "price": 230
+        },
+        {
+          "date": "2025-07-01",
+          "price": 225
+        },
+        {
+          "date": "2025-08-01",
+          "price": 220
+        },
+        {
+          "date": "2025-09-01",
+          "price": 220
+        },
+        {
+          "date": "2025-10-01",
+          "price": 245
+        },
+        {
+          "date": "2025-11-01",
+          "price": 320
+        },
+        {
+          "date": "2025-12-01",
+          "price": 500
+        },
+        {
+          "date": "2026-01-01",
+          "price": 700
+        },
+        {
+          "date": "2026-02-01",
+          "price": 650
+        },
+        {
+          "date": "2026-03-01",
+          "price": 750
+        },
+        {
+          "date": "2026-04-01",
+          "price": 1800
+        },
+        {
+          "date": "2026-05-01",
+          "price": 1400
+        },
+        {
+          "date": "2026-05-24",
+          "price": 1399
+        }
+      ],
+      "imageUrl": "/images/samsung-870-evo-4tb.png",
+      "productUrl": "https://pcpartpicker.com/product/RBD7YJ/samsung-870-evo-4-tb-25-solid-state-drive-mz-77e4t0bam"
+    },
+    {
+      "slug": "samsung-990-pro-4tb",
+      "name": "Samsung 990 Pro w/Heatsink 4 TB NVMe",
+      "category": "NVME",
+      "manufacturer": "Samsung",
+      "partNumber": "MZ-V9P4T0CW",
+      "purchases": [
+        {
+          "date": "2024-07-15",
+          "quantity": 1,
+          "pricePaid": 350
+        },
+        {
+          "date": "2025-04-15",
+          "quantity": 1,
+          "pricePaid": 330
+        }
+      ],
+      "history": [
+        {
+          "date": "2024-07-01",
+          "price": 350
+        },
+        {
+          "date": "2024-08-01",
+          "price": 340
+        },
+        {
+          "date": "2024-09-01",
+          "price": 330
+        },
+        {
+          "date": "2024-10-01",
+          "price": 320
+        },
+        {
+          "date": "2024-11-01",
+          "price": 320
+        },
+        {
+          "date": "2024-12-01",
+          "price": 320
+        },
+        {
+          "date": "2025-01-01",
+          "price": 330
+        },
+        {
+          "date": "2025-02-01",
+          "price": 310
+        },
+        {
+          "date": "2025-03-01",
+          "price": 290
+        },
+        {
+          "date": "2025-04-01",
+          "price": 285
+        },
+        {
+          "date": "2025-05-01",
+          "price": 280
+        },
+        {
+          "date": "2025-06-01",
+          "price": 270
+        },
+        {
+          "date": "2025-07-01",
+          "price": 275
+        },
+        {
+          "date": "2025-08-01",
+          "price": 280
+        },
+        {
+          "date": "2025-09-01",
+          "price": 300
+        },
+        {
+          "date": "2025-10-01",
+          "price": 340
+        },
+        {
+          "date": "2025-11-01",
+          "price": 400
+        },
+        {
+          "date": "2025-12-01",
+          "price": 500
+        },
+        {
+          "date": "2026-01-01",
+          "price": 830
+        },
+        {
+          "date": "2026-02-01",
+          "price": 830
+        },
+        {
+          "date": "2026-03-01",
+          "price": 825
+        },
+        {
+          "date": "2026-04-01",
+          "price": 1100
+        },
+        {
+          "date": "2026-05-01",
+          "price": 850
+        },
+        {
+          "date": "2026-05-24",
+          "price": 823.99
+        }
+      ],
+      "imageUrl": "/images/samsung-990-pro-4tb.png",
+      "productUrl": "https://pcpartpicker.com/product/VWxRsY/samsung-990-pro-heatsink-4-tb-m2-2280-pcie-40-x4-nvme-solid-state-drive-mz-v9p4t0cw"
+    },
+    {
+      "slug": "meshroom-s-v2",
+      "name": "SSUPD Meshroom S V2 (Black)",
+      "category": "CASE",
+      "manufacturer": "SSUPD",
+      "partNumber": "MESHROOM-S-V2",
+      "purchases": [
+        {
+          "date": "2024-07-15",
+          "quantity": 1,
+          "pricePaid": 159.99
+        }
+      ],
+      "history": [
+        {
+          "date": "2024-07-01",
+          "price": 159.99
+        },
+        {
+          "date": "2026-05-24",
+          "price": 159.99
+        }
+      ],
+      "imageUrl": "/images/meshroom-s-v2-black.png",
+      "productUrl": "https://pcpartpicker.com/product/8fXV3C/ssupd-meshroom-s-v2-wpcie-40-riser-microatx-mini-tower-case-42249466577080"
+    },
+    {
+      "slug": "corsair-sf750",
+      "name": "Corsair SF750 (2018) 750 W SFX",
+      "category": "PSU",
+      "manufacturer": "Corsair",
+      "partNumber": "CP-9020186-NA",
+      "purchases": [
+        {
+          "date": "2024-07-15",
+          "quantity": 1,
+          "pricePaid": 170
+        }
+      ],
+      "history": [
+        {
+          "date": "2024-07-01",
+          "price": 170
+        },
+        {
+          "date": "2024-08-01",
+          "price": 180
+        },
+        {
+          "date": "2024-09-01",
+          "price": 180
+        },
+        {
+          "date": "2024-10-01",
+          "price": 185
+        },
+        {
+          "date": "2024-11-01",
+          "price": 185
+        },
+        {
+          "date": "2024-12-01",
+          "price": 185
+        },
+        {
+          "date": "2025-01-01",
+          "price": 192
+        },
+        {
+          "date": "2025-02-01",
+          "price": 185
+        },
+        {
+          "date": "2026-05-24",
+          "price": 185
+        }
+      ],
+      "imageUrl": "/images/corsair-sf750.png",
+      "productUrl": "https://pcpartpicker.com/product/nJrmP6/corsair-sf750-2018-750-w-80-platinum-certified-fully-modular-sfx-power-supply-cp-9020186-na"
+    },
+    {
+      "slug": "noctua-nf-a12x15-pwm",
+      "name": "Noctua NF-A12x15 PWM",
+      "category": "FAN",
+      "manufacturer": "Noctua",
+      "partNumber": "NF-A12x15 PWM",
+      "purchases": [
+        {
+          "date": "2025-12-17",
+          "quantity": 2,
+          "pricePaid": 23.95
+        }
+      ],
+      "imageUrl": "/images/noctua-nf-a12x15-pwm.png",
+      "history": [
+        {
+          "date": "2024-07-01",
+          "price": 22
+        },
+        {
+          "date": "2025-12-01",
+          "price": 23.5
+        },
+        {
+          "date": "2025-12-17",
+          "price": 23.95
+        },
+        {
+          "date": "2026-05-24",
+          "price": 23.95
+        }
+      ]
+    }
+  ]
+}

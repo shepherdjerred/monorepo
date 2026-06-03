@@ -1,2 +1,1 @@
-cdk8s/imports/* linguist-generated=true
-cdk8s/vendor/* linguist-generated=true
+src/cdk8s/generated/** linguist-generated=true

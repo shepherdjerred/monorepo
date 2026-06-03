@@ -6,9 +6,12 @@ import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import {
+  createGrafanaValues,
+  type PrometheusValuesWithBlackbox,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/grafana-values.ts";
 import { createPrometheusMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/prometheus.ts";
 import { createSmartctlMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/smartctl.ts";
-import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { createNvmeMetricsMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/nvme-metrics.ts";
 import { createZfsSnapshotsMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/zfs-snapshots.ts";
 import { createZfsZpoolMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/zfs-zpool.ts";
@@ -16,7 +19,6 @@ import { createR2ExporterMonitoring } from "@shepherdjerred/homelab/cdk8s/src/re
 import { createKubernetesEventExporter } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/kubernetes-event-exporter.ts";
 import { escapeHelmGoTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
 import { BLACKBOX_MODULES } from "@shepherdjerred/homelab/cdk8s/src/misc/blackbox-modules.ts";
-// import { HelmValuesForChart } from "../types/helm/index.js"; // Using 'any' for complex config
 
 export async function createPrometheusApp(chart: Chart) {
   createIngress(chart, "alertmanager-ingress", {
@@ -31,6 +33,13 @@ export async function createPrometheusApp(chart: Chart) {
     service: "prometheus-kube-prometheus-prometheus",
     port: 9090,
     hosts: ["prometheus"],
+  });
+
+  createIngress(chart, "grafana-ingress", {
+    namespace: "prometheus",
+    service: "prometheus-grafana",
+    port: 80,
+    hosts: ["grafana"],
   });
 
   const alertmanagerSecrets = new OnePasswordItem(
@@ -70,30 +79,6 @@ export async function createPrometheusApp(chart: Chart) {
   await createR2ExporterMonitoring(chart);
   createKubernetesEventExporter(chart);
 
-  // Type extension for blackbox-exporter subchart (not included in generated types)
-  type PrometheusValuesWithBlackbox =
-    HelmValuesForChart<"kube-prometheus-stack"> & {
-      "prometheus-blackbox-exporter"?: {
-        enabled?: boolean;
-        config?: {
-          modules?: Record<
-            string,
-            {
-              prober: string;
-              timeout?: string;
-              http?: {
-                valid_http_versions?: string[];
-                valid_status_codes?: number[];
-                follow_redirects?: boolean;
-                preferred_ip_protocol?: string;
-                fail_if_body_not_matches_regexp?: string[];
-              };
-            }
-          >;
-        };
-      };
-    };
-
   // Note: Some configurations bypass type checking due to incomplete generated types
   const prometheusValues: PrometheusValuesWithBlackbox = {
     // Enable blackbox-exporter for HTTP probing of static sites
@@ -127,96 +112,19 @@ export async function createPrometheusApp(chart: Chart) {
       // https://github.com/prometheus-operator/kube-prometheus/issues/718
       enabled: false,
     },
-    grafana: {
-      // Database configuration via grafana.ini using file providers
-      "grafana.ini": {
-        database: {
-          type: "postgres",
-          host: "grafana-postgresql:5432",
-          name: "grafana",
-          user: "grafana",
-          ssl_mode: "disable",
-          // Password from mounted secret file
-          password: "$__file{/etc/secrets/postgres/password}",
+    grafana: createGrafanaValues(prometheusSecrets.name),
+    nodeExporter: {
+      operatingSystems: {
+        linux: {
+          enabled: true,
         },
-        feature_toggles: {
-          provisioning: true,
-          kubernetesDashboards: true,
-          grafanaAdvisor: true,
+        aix: {
+          enabled: false,
+        },
+        darwin: {
+          enabled: false,
         },
       },
-      imageRenderer: {
-        enabled: true,
-      },
-      // Mount the auto-generated postgres-operator secret
-      extraSecretMounts: [
-        {
-          name: "postgres-secret-mount",
-          secretName:
-            "grafana.grafana-postgresql.credentials.postgresql.acid.zalan.do",
-          defaultMode: 0o440,
-          mountPath: "/etc/secrets/postgres",
-          readOnly: true,
-        },
-      ],
-      persistence: {
-        enabled: true,
-        storageClassName: NVME_STORAGE_CLASS,
-        labels: {
-          "velero.io/backup": "enabled",
-        },
-      },
-      // Deploy Grafana as a StatefulSet instead of Deployment to avoid PVC deadlock
-      // Single-replica StatefulSet handles rolling updates properly with RWO (ReadWriteOnce) PVCs
-      // by managing pod identity and volumes, so no strategy configuration is needed
-      useStatefulSet: true,
-      sidecar: {
-        datasources: {
-          alertmanager: {
-            handleGrafanaManagedAlerts: true,
-          },
-        },
-      },
-      prune: true,
-      additionalDataSources: [
-        {
-          name: "loki",
-          uid: "loki",
-          editable: false,
-          type: "loki",
-          url: "http://loki-gateway.loki",
-          version: 1,
-        },
-        {
-          name: "tempo",
-          uid: "tempo",
-          editable: false,
-          type: "tempo",
-          url: "http://tempo.tempo.svc:3200",
-          version: 1,
-          // tracesToLogsV2 links each Tempo span to the matching Loki logs.
-          // `filterByTraceID` makes Grafana append `| trace_id = "<id>"` to
-          // the generated LogQL — requires apps/Dagger CI to emit OTLP logs
-          // so trace_id rides as Loki structured metadata (loki.ts already
-          // sets allow_structured_metadata: true). `tags` maps the OTel
-          // span attribute `service.name` onto the Loki stream label
-          // `service_name`, which Loki's OTLP receiver auto-creates from
-          // the resource attribute. The ±5m time window covers clock skew
-          // and late-arriving log batches.
-          jsonData: {
-            tracesToLogsV2: {
-              datasourceUid: "loki",
-              spanStartTimeShift: "-5m",
-              spanEndTimeShift: "5m",
-              tags: [{ key: "service.name", value: "service_name" }],
-              filterByTraceID: true,
-              customQuery: false,
-            },
-            serviceMap: { datasourceUid: "prometheus" },
-            nodeGraph: { enabled: true },
-          },
-        },
-      ],
     },
     alertmanager: {
       alertmanagerSpec: {
@@ -281,8 +189,19 @@ export async function createPrometheusApp(chart: Chart) {
                 routing_key_file: `/etc/alertmanager/secrets/${alertmanagerSecrets.name}/PAGERDUTY_TOKEN`,
                 // Alertmanager will evaluate this Go template when sending to PagerDuty
                 // kube-prometheus-stack chart passes config values through without template processing
+                //
+                // NOTE: use a real newline between alerts, not a literal `\n`. Go's
+                // text/template does not interpret backslash escapes in literal template
+                // text (only inside quoted action strings), so `\n` would reach PagerDuty
+                // as the two characters "\n" and clutter the incident title.
+                //
+                // NOTE: include the namespace and fall back from `.message` to
+                // `.description`. Different rule families use different detail
+                // annotations (Velero/HA rules use `message`; createSensorAlert uses
+                // `description`). Without the fallback, message-based alerts page with
+                // only the static summary, making distinct incidents look like duplicates.
                 description: escapeHelmGoTemplate(
-                  String.raw`{{ range .Alerts }}{{ .Annotations.summary }}\n{{ .Annotations.description }}\n{{ end }}`,
+                  `{{ range .Alerts }}{{ .Annotations.summary }}{{ if .Labels.namespace }} ({{ .Labels.namespace }}){{ end }}: {{ if .Annotations.message }}{{ .Annotations.message }}{{ else }}{{ .Annotations.description }}{{ end }}\n{{ end }}`,
                 ),
                 // Map alert severity label to PagerDuty severity (critical/warning/error/info)
                 // Check if GroupLabels exists first (nil during helm lint)
@@ -392,7 +311,7 @@ export async function createPrometheusApp(chart: Chart) {
       prometheusSpec: {
         externalUrl: "https://prometheus.tailnet-1a49.ts.net",
         retention: "365d", // Keep data for 1 year
-        retentionSize: "240GB", // Safety limit - delete old data if storage exceeds this
+        retentionSize: "200GB", // Safety limit - keep headroom below PVC usage alerts
         // Required so Tempo's metrics-generator can push service-graph,
         // span-metrics, and local-blocks samples to Prometheus via remote_write.
         enableRemoteWriteReceiver: true,
@@ -400,6 +319,7 @@ export async function createPrometheusApp(chart: Chart) {
           volumeClaimTemplate: {
             metadata: {
               labels: {
+                "velero.io/backup": "disabled",
                 "velero.io/exclude-from-backup": "true",
               },
             },

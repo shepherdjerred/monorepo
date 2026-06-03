@@ -2,7 +2,6 @@ import Anthropic from "@anthropic-ai/sdk";
 import { Octokit } from "@octokit/rest";
 import { Context } from "@temporalio/activity";
 import * as Sentry from "@sentry/bun";
-import { z } from "zod/v4";
 import { traceAnthropic } from "@shepherdjerred/llm-observability";
 import {
   prSummaryCommentsTotal,
@@ -28,16 +27,13 @@ import {
   buildSummarySystemBlocks,
   buildSummaryUserPrompt,
 } from "./summary-prompts.ts";
-
-/**
- * Schema for the subset of GitHub's repos.getContent response we use.
- * The endpoint can return file | dir | symlink | submodule shapes; only
- * `type === "file"` carries the base64 `content` field we want.
- */
-const RepoContentFileSchema = z.object({
-  type: z.literal("file"),
-  content: z.string(),
-});
+import { renderOversizedSummary } from "./summary-oversized.ts";
+import { estimateCostUsd } from "./summary-cost.ts";
+import { fetchPrDiff, type OctokitForSummaryDiff } from "./summary-diff.ts";
+import {
+  loadRepoConventionsMarkdown,
+  type OctokitForSummaryConventions,
+} from "./summary-conventions.ts";
 
 /**
  * Narrow Anthropic SDK surface used by this activity — just the one path
@@ -69,19 +65,9 @@ export type AnthropicForSummary = {
  * `adaptOctokit` helper at the bottom of this module wraps a real Octokit
  * into this shape.
  */
-export type OctokitForSummary = {
-  getDiff: (params: {
-    owner: string;
-    repo: string;
-    pull_number: number;
-  }) => Promise<{ data: unknown }>;
-  getContent: (params: {
-    owner: string;
-    repo: string;
-    path: string;
-    ref: string;
-  }) => Promise<{ data: unknown }>;
-} & OctokitForUpsert;
+export type OctokitForSummary = OctokitForSummaryDiff &
+  OctokitForSummaryConventions &
+  OctokitForUpsert;
 
 const COMPONENT = "pr-summary";
 
@@ -98,9 +84,6 @@ const SUMMARY_MODEL = "claude-haiku-4-5";
  * words; this gives the model headroom without enabling rambles.
  */
 const MAX_OUTPUT_TOKENS = 2048;
-
-/** Maximum diff size we'll embed in the user prompt before we truncate. */
-const MAX_DIFF_BYTES = 200_000;
 
 const HEARTBEAT_INTERVAL_MS = 10_000;
 
@@ -123,6 +106,7 @@ export type RunSummaryResult = {
   durationMs: number;
   diffBytes: number;
   diffTruncated: boolean;
+  summaryMode: "llm" | "oversized";
 };
 
 function jsonLog(
@@ -215,63 +199,6 @@ function captureWithContext(
   });
 }
 
-/**
- * Per-token prices for Haiku 4.5 in USD per million tokens. Cache reads bill
- * at ~0.1× input, cache writes (ephemeral / 5-min TTL) at ~1.25× input. We
- * keep the constants colocated with the activity so price changes are easy
- * to spot in code review — pricing drift is one of the few things that can
- * silently blow the $0.10/summary budget.
- */
-const HAIKU_PRICING = {
-  inputPerMillionUsd: 1,
-  outputPerMillionUsd: 5,
-  cacheReadPerMillionUsd: 0.1,
-  cacheWritePerMillionUsd: 1.25,
-} as const;
-
-function estimateCostUsd(usage: Anthropic.Usage): number {
-  const inputTokens = usage.input_tokens;
-  const outputTokens = usage.output_tokens;
-  const cacheRead = usage.cache_read_input_tokens ?? 0;
-  const cacheWrite = usage.cache_creation_input_tokens ?? 0;
-
-  return (
-    (inputTokens * HAIKU_PRICING.inputPerMillionUsd) / 1_000_000 +
-    (outputTokens * HAIKU_PRICING.outputPerMillionUsd) / 1_000_000 +
-    (cacheRead * HAIKU_PRICING.cacheReadPerMillionUsd) / 1_000_000 +
-    (cacheWrite * HAIKU_PRICING.cacheWritePerMillionUsd) / 1_000_000
-  );
-}
-
-async function fetchPrDiff(
-  octokit: OctokitForSummary,
-  pr: PrSummaryInput,
-): Promise<{ diff: string; truncated: boolean; bytes: number }> {
-  // The adapter passes `mediaType: { format: "diff" }` to Octokit on our
-  // behalf so the API returns a raw unified-diff string. We narrow the
-  // returned body with a typeof check.
-  const response = await octokit.getDiff({
-    owner: pr.owner,
-    repo: pr.repo,
-    pull_number: pr.prNumber,
-  });
-
-  const body: unknown = response.data;
-  if (typeof body !== "string") {
-    throw new TypeError(
-      `Expected diff string from GitHub but got ${typeof body} for ${pr.owner}/${pr.repo}#${String(pr.prNumber)}`,
-    );
-  }
-
-  const bytes = Buffer.byteLength(body, "utf8");
-  if (bytes <= MAX_DIFF_BYTES) {
-    return { diff: body, truncated: false, bytes };
-  }
-
-  const truncated = `${body.slice(0, MAX_DIFF_BYTES)}\n\n[diff truncated at ${String(MAX_DIFF_BYTES)} bytes; original was ${String(bytes)} bytes]\n`;
-  return { diff: truncated, truncated: true, bytes };
-}
-
 async function callHaiku(
   anthropic: AnthropicForSummary,
   systemBlocks: Anthropic.TextBlockParam[],
@@ -345,14 +272,61 @@ export async function runPrSummary(
     async (span) => {
       const startMs = deps.now();
 
-      const { diff, truncated, bytes } = await fetchPrDiff(deps.octokit, pr);
+      const { diff, truncated, bytes, files, oversized } = await fetchPrDiff(
+        deps.octokit,
+        pr,
+      );
       jsonLog("info", "Fetched PR diff", {
         diffBytes: bytes,
         truncated,
+        changedFiles: files.length,
+        oversized,
         prNumber: pr.prNumber,
       });
       span.setAttribute("pr.diff_bytes", bytes);
       span.setAttribute("pr.diff_truncated", truncated);
+      span.setAttribute("pr.changed_files", files.length);
+      span.setAttribute("pr.summary.oversized", oversized);
+
+      if (oversized) {
+        const body = renderOversizedSummary(pr, files);
+        const upsert = await upsertSummaryComment({
+          octokit: deps.octokit,
+          owner: pr.owner,
+          repo: pr.repo,
+          prNumber: pr.prNumber,
+          body,
+          marker: SUMMARY_MARKER,
+        });
+        prSummaryCommentsTotal.inc({ action: upsert.action });
+        const durationMs = deps.now() - startMs;
+        prSummaryDurationSeconds.observe(
+          { model: SUMMARY_MODEL, action: upsert.action },
+          durationMs / 1000,
+        );
+        jsonLog("info", "Posted oversized PR summary", {
+          action: upsert.action,
+          commentId: upsert.commentId,
+          htmlUrl: upsert.htmlUrl,
+          durationMs,
+          changedFiles: files.length,
+          diffBytes: bytes,
+        });
+        return {
+          action: upsert.action,
+          commentId: upsert.commentId,
+          htmlUrl: upsert.htmlUrl,
+          inputTokens: 0,
+          outputTokens: 0,
+          cacheReadInputTokens: 0,
+          cacheCreationInputTokens: 0,
+          costUsd: 0,
+          durationMs,
+          diffBytes: bytes,
+          diffTruncated: true,
+          summaryMode: "oversized",
+        };
+      }
 
       const conventionsMarkdown = await deps.loadRepoConventionsMarkdown(pr);
       const systemBlocks = buildSummarySystemBlocks({
@@ -451,58 +425,19 @@ export async function runPrSummary(
         durationMs,
         diffBytes: bytes,
         diffTruncated: truncated,
+        summaryMode: "llm",
       };
     },
   );
 }
 
-/**
- * Default AGENTS.md / CLAUDE.md loader. Reads the root AGENTS.md of the
- * repo via the GitHub contents API at the PR's head commit, with CLAUDE.md as
- * a compatibility fallback for external repos. Falls back to an empty string
- * if neither file is present — the prompt is still useful without it, just
- * slightly less repo-aware.
- *
- * We deliberately do NOT read these files from disk on the worker — the
- * worker's local checkout (if any) is a different repo than the one being
- * reviewed. The contents API at the head SHA gives us the exact convention
- * doc the PR author was working against.
- */
 async function defaultLoadRepoConventionsMarkdown(
   octokit: OctokitForSummary,
   pr: PrSummaryInput,
 ): Promise<string> {
-  const candidatePaths = ["AGENTS.md", "CLAUDE.md"];
-  const errors: string[] = [];
-
-  for (const path of candidatePaths) {
-    try {
-      const response = await octokit.getContent({
-        owner: pr.owner,
-        repo: pr.repo,
-        path,
-        ref: pr.commitSha,
-      });
-      const parsed = RepoContentFileSchema.safeParse(response.data);
-      if (!parsed.success) {
-        // Not a regular file (could be dir/symlink/submodule) or shape we
-        // don't recognize. Try the next compatible conventions filename.
-        continue;
-      }
-      // GitHub returns base64 with line wraps. Buffer.from handles both.
-      return Buffer.from(parsed.data.content, "base64").toString("utf8");
-    } catch (error: unknown) {
-      errors.push(
-        `${path}: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
-  }
-
-  jsonLog("warning", "Failed to load repo instructions from PR head", {
-    errors,
-    prNumber: pr.prNumber,
+  return loadRepoConventionsMarkdown(octokit, pr, (message, fields) => {
+    jsonLog("warning", message, fields);
   });
-  return "";
 }
 
 /**
@@ -518,10 +453,10 @@ export function adaptOctokit(octokit: Octokit): OctokitForSummary {
     updateComment: (params) => octokit.rest.issues.updateComment(params),
     paginateListComments: (params) =>
       octokit.paginate.iterator(octokit.rest.issues.listComments, params),
-    getDiff: (params) =>
-      octokit.rest.pulls.get({
+    listFiles: (params) =>
+      octokit.paginate.iterator(octokit.rest.pulls.listFiles, {
         ...params,
-        mediaType: { format: "diff" },
+        per_page: 100,
       }),
     getContent: (params) => octokit.rest.repos.getContent(params),
   };
