@@ -19,6 +19,39 @@ notably `mastra-memory.db` is the real production memory store.)
   go through `resolveSendableChannel` /`resolveTextBasedChannel` so threads,
   announcement channels, and DMs work.
 
+## Responding: triggers + conversational follow-up
+
+Whether the bot replies is decided in `shouldRespond`
+(`src/discord/events/message-create.ts`). Direct triggers — an @mention or the
+dynamic wake word — always reply and mark the channel "engaged"
+(`src/discord/engagement-tracker.ts`, in-memory, `responder.engagementWindowMs`,
+default 3 min). While a channel stays engaged, non-direct messages from
+allowed users are passed to a cheap **persona-aware** classifier
+(`src/voltagent/should-respond-classifier.ts`, `openai.classifierModel` via the
+AI SDK's `generateObject`) that returns true/false — enabling natural follow-up
+without re-pinging. The classifier **fails closed** (errors → no reply). A
+successful reply re-marks the channel engaged so the window slides with the
+conversation. Persona is fed into the classifier so the should-respond decision
+itself reflects the active persona — persona is pervasive across every decision
+point (routing, tools, sending, *and* whether to respond), not just final text.
+
+## Memory: three explicit scopes + transcript
+
+`manage-memory` (`src/agent-tools/tools/memory/`) writes saved working memory at
+three scopes: **server** (permanent, shared), **channel** (per-channel, shared —
+targets the request's channel automatically), and **persona** (per persona;
+legacy `owner` is an accepted alias). Server and channel memory are NOT
+persona-keyed; only persona memory is. Channel saved-memory uses conversationId
+`channel:<id>:memory`, kept deliberately distinct from VoltAgent's auto-history
+id `channel:<id>` to avoid collision (`src/voltagent/memory/index.ts`).
+
+The message handler (`src/voltagent/message-handler.ts`) injects all three
+memory sections plus a `## Recent Channel Transcript` of recent raw messages —
+`MAX(transcriptMinMessages, messages within transcriptWindowMs)` capped at
+`transcriptMaxMessages` (`src/discord/utils/channel-history.ts`). The transcript
+supplies messages the bot never answered; VoltAgent's `conversationId`
+auto-history is still kept for the bot's own turn/tool continuity.
+
 ## OpenAI provider options
 
 Every agent and the top-level `streamText` call receive the shared

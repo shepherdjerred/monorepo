@@ -14,6 +14,23 @@ import {
 import { recordMessageActivity } from "@shepherdjerred/birmel/database/repositories/activity.ts";
 import { getOrCreateGuildOwner } from "@shepherdjerred/birmel/database/repositories/guild-owner.ts";
 import { generateWakeWord } from "@shepherdjerred/birmel/config/constants.ts";
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
+import { getGuildPersona } from "@shepherdjerred/birmel/persona/guild-persona.ts";
+import {
+  markEngaged,
+  isRecentlyEngaged,
+} from "@shepherdjerred/birmel/discord/engagement-tracker.ts";
+import { classifyShouldRespond } from "@shepherdjerred/birmel/voltagent/should-respond-classifier.ts";
+import {
+  getRecentChannelMessages,
+  formatTranscript,
+} from "@shepherdjerred/birmel/discord/utils/channel-history.ts";
+
+// How many recent messages to show the should-respond classifier. Kept small
+// and separate from the (larger) transcript the main agent receives — the
+// classifier only needs enough context to judge whether the latest message is
+// aimed at the bot.
+const CLASSIFIER_TRANSCRIPT_LIMIT = 15;
 
 const logger = loggers.discord.child("message-create");
 
@@ -77,7 +94,12 @@ const ALLOWED_USER_IDS = new Set([
 
 /**
  * Determine if the bot should respond to a message.
- * Uses direct triggers: @mention or dynamic wake word.
+ *
+ * Direct triggers (@mention or dynamic wake word) always respond and mark the
+ * channel "engaged". While a channel is engaged (the bot was talked to within
+ * `responder.engagementWindowMs`), non-direct messages from allowed users are
+ * passed to a cheap persona-aware classifier so the bot can follow a
+ * conversation without being re-pinged each turn.
  */
 async function shouldRespond(
   message: Message,
@@ -98,9 +120,12 @@ async function shouldRespond(
     return false;
   }
 
+  const channelId = message.channel.id;
+
   // Direct trigger: bot is @mentioned
   if (message.mentions.has(clientId)) {
     logger.debug("Responding: direct mention");
+    markEngaged(channelId);
     return true;
   }
 
@@ -115,7 +140,39 @@ async function shouldRespond(
       wakeWord,
       owner: guildOwner.currentOwner,
     });
+    markEngaged(channelId);
     return true;
+  }
+
+  // Conversational follow-up: only while the channel is actively engaged.
+  const config = getConfig();
+  if (
+    config.responder.enabled &&
+    isRecentlyEngaged(channelId, config.responder.engagementWindowMs)
+  ) {
+    const persona = await getGuildPersona(guildId);
+    const recent = await getRecentChannelMessages(
+      message,
+      CLASSIFIER_TRANSCRIPT_LIMIT,
+    );
+    const respond = await classifyShouldRespond({
+      persona,
+      transcript: formatTranscript(recent),
+      latestMessage: `${message.author.username}: ${message.content}`,
+      guildId,
+      channelId,
+      userId: message.author.id,
+    });
+    if (respond) {
+      logger.debug("Responding: classifier (engaged channel)", {
+        channelId,
+        persona,
+      });
+      // Extend the engagement window so the conversation can continue.
+      markEngaged(channelId);
+      return true;
+    }
+    return false;
   }
 
   // No trigger matched

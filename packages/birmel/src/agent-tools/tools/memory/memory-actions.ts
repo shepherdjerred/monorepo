@@ -1,38 +1,56 @@
 import {
   getServerWorkingMemory,
   updateServerWorkingMemory,
-  getOwnerWorkingMemory,
-  updateOwnerWorkingMemory,
+  getPersonaWorkingMemory,
+  updatePersonaWorkingMemory,
+  getChannelWorkingMemory,
+  updateChannelWorkingMemory,
   SERVER_MEMORY_TEMPLATE,
-  OWNER_MEMORY_TEMPLATE,
+  PERSONA_MEMORY_TEMPLATE,
+  CHANNEL_MEMORY_TEMPLATE,
 } from "@shepherdjerred/birmel/voltagent/memory/index.ts";
 import { getGuildPersona } from "@shepherdjerred/birmel/persona/guild-persona.ts";
 import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 
 const MAX_MEMORY_SIZE = 4000;
 
+export type MemoryScope = "server" | "channel" | "persona";
+
+/** Identifies which memory to act on. `channelId` is required for channel scope. */
+export type ScopeRef = {
+  guildId: string;
+  scope: MemoryScope;
+  channelId: string | undefined;
+};
+
 type SectionKey = "rules" | "preferences" | "notes";
 type SectionHeaders = Record<SectionKey, string>;
+
+const SECTION_HEADERS: Record<MemoryScope, SectionHeaders> = {
+  server: {
+    rules: "# Server Rules",
+    preferences: "# Preferences",
+    notes: "# Notes",
+  },
+  channel: {
+    rules: "# Channel Rules",
+    preferences: "# Channel Preferences",
+    notes: "# Channel Notes",
+  },
+  persona: {
+    rules: "# Persona Rules",
+    preferences: "# Persona Preferences",
+    notes: "# Persona Notes",
+  },
+};
 
 function appendToSection(
   memory: string,
   section: SectionKey,
   item: string,
-  scope: "server" | "owner" = "server",
+  scope: MemoryScope,
 ): string {
-  const serverSectionHeaders: SectionHeaders = {
-    rules: "# Server Rules",
-    preferences: "# Preferences",
-    notes: "# Notes",
-  };
-  const ownerSectionHeaders: SectionHeaders = {
-    rules: "# Owner Rules",
-    preferences: "# Owner Preferences",
-    notes: "# Owner Notes",
-  };
-  const sectionHeaders: SectionHeaders =
-    scope === "owner" ? ownerSectionHeaders : serverSectionHeaders;
-  const header = sectionHeaders[section];
+  const header = SECTION_HEADERS[scope][section];
 
   const lines = memory.split("\n");
   const headerIndex = lines.findIndex((line) => line.trim() === header);
@@ -60,46 +78,88 @@ type MemoryResult = {
   data?: { memory: string };
 };
 
-export async function handleGetMemory(
-  guildId: string,
-  scope: "server" | "owner",
-): Promise<MemoryResult> {
-  const persona = scope === "owner" ? await getGuildPersona(guildId) : null;
-  const scopeLabel =
-    scope === "owner" ? `owner (${persona ?? "unknown"})` : "server";
-  const template =
-    scope === "owner" ? OWNER_MEMORY_TEMPLATE : SERVER_MEMORY_TEMPLATE;
+type ScopeTarget = {
+  label: string;
+  template: string;
+  read: () => Promise<string | null>;
+  write: (content: string) => Promise<void>;
+};
 
-  let memoryContent: string | null;
-  if (scope === "owner") {
-    if (persona == null || persona.length === 0) {
+type ResolvedScope = { target: ScopeTarget } | { error: string };
+
+/**
+ * Resolve a scope to its read/write functions, template, and a human label.
+ * For `persona` scope the active persona is derived from the guild; for
+ * `channel` scope a channelId (from request context) is required. Returns a
+ * `{ error }` object when the scope cannot be resolved.
+ */
+async function resolveScopeTarget(ref: ScopeRef): Promise<ResolvedScope> {
+  const { guildId, scope, channelId } = ref;
+  switch (scope) {
+    case "server":
       return {
-        success: false,
-        message: "Could not determine persona for owner memory",
+        target: {
+          label: "server",
+          template: SERVER_MEMORY_TEMPLATE,
+          read: () => getServerWorkingMemory(guildId),
+          write: (content) => updateServerWorkingMemory(guildId, content),
+        },
+      };
+    case "channel": {
+      if (channelId == null || channelId.length === 0) {
+        return { error: "Could not determine channel for channel memory" };
+      }
+      return {
+        target: {
+          label: "channel",
+          template: CHANNEL_MEMORY_TEMPLATE,
+          read: () => getChannelWorkingMemory(channelId),
+          write: (content) => updateChannelWorkingMemory(channelId, content),
+        },
       };
     }
-    memoryContent = await getOwnerWorkingMemory(guildId, persona);
-  } else {
-    memoryContent = await getServerWorkingMemory(guildId);
+    case "persona": {
+      const persona = await getGuildPersona(guildId);
+      if (persona.length === 0) {
+        return { error: "Could not determine persona for persona memory" };
+      }
+      return {
+        target: {
+          label: `persona (${persona})`,
+          template: PERSONA_MEMORY_TEMPLATE,
+          read: () => getPersonaWorkingMemory(guildId, persona),
+          write: (content) =>
+            updatePersonaWorkingMemory(guildId, persona, content),
+        },
+      };
+    }
   }
+}
 
+export async function handleGetMemory(ref: ScopeRef): Promise<MemoryResult> {
+  const resolved = await resolveScopeTarget(ref);
+  if ("error" in resolved) {
+    return { success: false, message: resolved.error };
+  }
+  const { target } = resolved;
+
+  const memoryContent = await target.read();
   if (memoryContent == null || memoryContent.length === 0) {
     return {
       success: true,
-      message: `No ${scopeLabel} memory set yet`,
-      data: { memory: template },
+      message: `No ${target.label} memory set yet`,
+      data: { memory: target.template },
     };
   }
   return {
     success: true,
-    message: `Retrieved ${scopeLabel} memory`,
+    message: `Retrieved ${target.label} memory`,
     data: { memory: memoryContent },
   };
 }
 
 export async function handleUpdateMemory(
-  guildId: string,
-  scope: "server" | "owner",
+  ref: ScopeRef,
   memory: string | undefined,
 ): Promise<MemoryResult> {
   if (memory == null || memory.length === 0) {
@@ -112,31 +172,25 @@ export async function handleUpdateMemory(
     };
   }
 
-  const persona = scope === "owner" ? await getGuildPersona(guildId) : null;
-  const scopeLabel =
-    scope === "owner" ? `owner (${persona ?? "unknown"})` : "server";
-
-  if (scope === "owner") {
-    if (persona == null || persona.length === 0) {
-      return {
-        success: false,
-        message: "Could not determine persona for owner memory",
-      };
-    }
-    await updateOwnerWorkingMemory(guildId, persona, memory);
-  } else {
-    await updateServerWorkingMemory(guildId, memory);
+  const resolved = await resolveScopeTarget(ref);
+  if ("error" in resolved) {
+    return { success: false, message: resolved.error };
   }
-  logger.info(`${scopeLabel} memory updated`, { guildId, scope });
+  const { target } = resolved;
+
+  await target.write(memory);
+  logger.info(`${target.label} memory updated`, {
+    guildId: ref.guildId,
+    scope: ref.scope,
+  });
   return {
     success: true,
-    message: `${scopeLabel} memory updated successfully`,
+    message: `${target.label} memory updated successfully`,
   };
 }
 
 export async function handleAppendMemory(
-  guildId: string,
-  scope: "server" | "owner",
+  ref: ScopeRef,
   item: string | undefined,
   section: SectionKey | undefined,
 ): Promise<MemoryResult> {
@@ -147,26 +201,19 @@ export async function handleAppendMemory(
     };
   }
 
-  const persona = scope === "owner" ? await getGuildPersona(guildId) : null;
-  const scopeLabel =
-    scope === "owner" ? `owner (${persona ?? "unknown"})` : "server";
-  const template =
-    scope === "owner" ? OWNER_MEMORY_TEMPLATE : SERVER_MEMORY_TEMPLATE;
-
-  let current: string | null;
-  if (scope === "owner") {
-    if (persona == null || persona.length === 0) {
-      return {
-        success: false,
-        message: "Could not determine persona for owner memory",
-      };
-    }
-    current = await getOwnerWorkingMemory(guildId, persona);
-  } else {
-    current = await getServerWorkingMemory(guildId);
+  const resolved = await resolveScopeTarget(ref);
+  if ("error" in resolved) {
+    return { success: false, message: resolved.error };
   }
+  const { target } = resolved;
 
-  const updated = appendToSection(current ?? template, section, item, scope);
+  const current = await target.read();
+  const updated = appendToSection(
+    current ?? target.template,
+    section,
+    item,
+    ref.scope,
+  );
   if (updated.length > MAX_MEMORY_SIZE) {
     return {
       success: false,
@@ -174,52 +221,32 @@ export async function handleAppendMemory(
     };
   }
 
-  if (scope === "owner") {
-    if (persona == null || persona.length === 0) {
-      return {
-        success: false,
-        message: "Could not determine persona for owner memory",
-      };
-    }
-    await updateOwnerWorkingMemory(guildId, persona, updated);
-  } else {
-    await updateServerWorkingMemory(guildId, updated);
-  }
-  logger.info(`${scopeLabel} memory appended`, {
-    guildId,
-    scope,
+  await target.write(updated);
+  logger.info(`${target.label} memory appended`, {
+    guildId: ref.guildId,
+    scope: ref.scope,
     section,
   });
   return {
     success: true,
-    message: `Added to ${scopeLabel} ${section}: ${item}`,
+    message: `Added to ${target.label} ${section}: ${item}`,
   };
 }
 
-export async function handleClearMemory(
-  guildId: string,
-  scope: "server" | "owner",
-): Promise<MemoryResult> {
-  const persona = scope === "owner" ? await getGuildPersona(guildId) : null;
-  const scopeLabel =
-    scope === "owner" ? `owner (${persona ?? "unknown"})` : "server";
-  const template =
-    scope === "owner" ? OWNER_MEMORY_TEMPLATE : SERVER_MEMORY_TEMPLATE;
-
-  if (scope === "owner") {
-    if (persona == null || persona.length === 0) {
-      return {
-        success: false,
-        message: "Could not determine persona for owner memory",
-      };
-    }
-    await updateOwnerWorkingMemory(guildId, persona, template);
-  } else {
-    await updateServerWorkingMemory(guildId, template);
+export async function handleClearMemory(ref: ScopeRef): Promise<MemoryResult> {
+  const resolved = await resolveScopeTarget(ref);
+  if ("error" in resolved) {
+    return { success: false, message: resolved.error };
   }
-  logger.info(`${scopeLabel} memory cleared`, { guildId, scope });
+  const { target } = resolved;
+
+  await target.write(target.template);
+  logger.info(`${target.label} memory cleared`, {
+    guildId: ref.guildId,
+    scope: ref.scope,
+  });
   return {
     success: true,
-    message: `${scopeLabel} memory cleared to default template`,
+    message: `${target.label} memory cleared to default template`,
   };
 }

@@ -95,6 +95,25 @@ function loadFeatureConfig() {
       defaultPersona: Bun.env["PERSONA_DEFAULT"] ?? "virmel",
       styleModel: Bun.env["PERSONA_STYLE_MODEL"] ?? "gpt-5.4-nano",
     },
+    responder: {
+      enabled: parseBoolean(Bun.env["RESPONDER_ENABLED"], true),
+      engagementWindowMs: parseNumber(
+        Bun.env["RESPONDER_ENGAGEMENT_WINDOW_MS"],
+        180_000,
+      ),
+      transcriptMinMessages: parseNumber(
+        Bun.env["RESPONDER_TRANSCRIPT_MIN_MESSAGES"],
+        25,
+      ),
+      transcriptWindowMs: parseNumber(
+        Bun.env["RESPONDER_TRANSCRIPT_WINDOW_MS"],
+        3_600_000,
+      ),
+      transcriptMaxMessages: parseNumber(
+        Bun.env["RESPONDER_TRANSCRIPT_MAX_MESSAGES"],
+        100,
+      ),
+    },
     shell: {
       enabled: parseBoolean(Bun.env["SHELL_ENABLED"], true),
       defaultTimeout: parseNumber(Bun.env["SHELL_DEFAULT_TIMEOUT"], 30_000),

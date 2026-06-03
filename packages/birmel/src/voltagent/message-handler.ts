@@ -5,13 +5,20 @@ import { createMessagingAgent } from "./agents/specialized/messaging-agent.ts";
 import {
   getChannelConversationId,
   getServerWorkingMemory,
-  getOwnerWorkingMemory,
+  getPersonaWorkingMemory,
+  getChannelWorkingMemory,
 } from "./memory/index.ts";
+import {
+  getConversationTranscript,
+  formatTranscript,
+} from "@shepherdjerred/birmel/discord/utils/channel-history.ts";
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { getGuildPersona } from "@shepherdjerred/birmel/persona/guild-persona.ts";
 import { buildPersonaPrompt } from "@shepherdjerred/birmel/persona/style-transform.ts";
 import { buildMessageContent } from "@shepherdjerred/birmel/agent-tools/utils/message-builder.ts";
 import { runWithRequestContext } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import { withConversationLock } from "@shepherdjerred/birmel/voltagent/conversation-lock.ts";
+import { markEngaged } from "@shepherdjerred/birmel/discord/engagement-tracker.ts";
 import {
   setSentryContext,
   clearSentryContext,
@@ -64,27 +71,42 @@ export async function handleMessageWithStreaming(
     // 1. Send immediate placeholder with typing cursor
     const placeholderMsg = await context.message.reply(TYPING_CURSOR.trim());
 
-    // 2. Fetch persona and working-memory context in parallel.
+    // 2. Fetch persona, the three explicit memory scopes, and the recent
+    //    channel transcript in parallel.
     //
-    // We deliberately do NOT fetch recent channel messages here — VoltAgent's
-    // memory layer auto-loads conversation history via the `conversationId`
-    // we pass to streamText, so manually injecting a Discord-API-fetched
-    // transcript would duplicate context, waste tokens, and risk drift.
+    //    The transcript supplies raw recent messages — including ones the bot
+    //    never answered — which VoltAgent's auto-loaded conversation history
+    //    (keyed by `conversationId`) does not contain. We keep the VoltAgent
+    //    history for the bot's own turn/tool continuity; the small overlap with
+    //    the transcript is acceptable and worth the full-context gain.
+    const config = getConfig();
     const persona = await getGuildPersona(context.guildId);
-    const [serverMemory, ownerMemory] = await Promise.all([
-      getServerWorkingMemory(context.guildId),
-      getOwnerWorkingMemory(context.guildId, persona),
-    ]);
+    const [serverMemory, personaMemory, channelMemory, transcript] =
+      await Promise.all([
+        getServerWorkingMemory(context.guildId),
+        getPersonaWorkingMemory(context.guildId, persona),
+        getChannelWorkingMemory(context.channelId),
+        getConversationTranscript(context.message, {
+          minMessages: config.responder.transcriptMinMessages,
+          windowMs: config.responder.transcriptWindowMs,
+          maxMessages: config.responder.transcriptMaxMessages,
+        }),
+      ]);
 
-    // 3. Build memory context sections (working memory only — these are
-    //    durable user-defined rules/preferences, distinct from per-turn
-    //    conversation history).
+    // 3. Build memory context sections. Server and channel memory are shared
+    //    (not persona-keyed); persona memory is unique per persona.
     let memoryContext = "";
     if (serverMemory != null && serverMemory.length > 0) {
       memoryContext += `\n## Server Memory (permanent)\n${serverMemory}\n`;
     }
-    if (ownerMemory != null && ownerMemory.length > 0) {
-      memoryContext += `\n## Owner Memory (${persona})\n${ownerMemory}\n`;
+    if (channelMemory != null && channelMemory.length > 0) {
+      memoryContext += `\n## Channel Memory\n${channelMemory}\n`;
+    }
+    if (personaMemory != null && personaMemory.length > 0) {
+      memoryContext += `\n## Persona Memory (${persona})\n${personaMemory}\n`;
+    }
+    if (transcript.length > 0) {
+      memoryContext += `\n## Recent Channel Transcript\n${formatTranscript(transcript)}\n`;
     }
 
     // 4. Build prompt with context
@@ -163,6 +185,9 @@ ${memoryContext}`;
     });
 
     if (accumulated.length > 0) {
+      // Keep the channel "engaged" so the bot can follow up conversationally
+      // without being re-pinged. See discord/engagement-tracker.ts.
+      markEngaged(context.channelId);
       try {
         await placeholderMsg.edit(accumulated);
       } catch (editError) {
