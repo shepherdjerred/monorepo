@@ -13,6 +13,7 @@ import { createPostalChart } from "./cdk8s-charts/postal.ts";
 import { createSyncthingChart } from "./cdk8s-charts/syncthing.ts";
 import { createGolinkChart } from "./cdk8s-charts/golink.ts";
 import { createFreshRssChart } from "./cdk8s-charts/freshrss.ts";
+import { createPinchtabChart } from "./cdk8s-charts/pinchtab.ts";
 import { createPokemonChart } from "./cdk8s-charts/pokemon.ts";
 import { createGickupChart } from "./cdk8s-charts/gickup.ts";
 import { createGrafanaDbChart } from "./cdk8s-charts/grafana-db.ts";
@@ -57,6 +58,7 @@ export async function setupCharts(app: App): Promise<void> {
   createSyncthingChart(app);
   createGolinkChart(app);
   createFreshRssChart(app);
+  createPinchtabChart(app);
   createPokemonChart(app);
   await createGickupChart(app);
   createGrafanaDbChart(app);

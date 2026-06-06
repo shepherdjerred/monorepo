@@ -269,6 +269,7 @@ export const HELM_CHARTS: string[] = [
   "syncthing",
   "golink",
   "freshrss",
+  "pinchtab",
   "pokemon",
   "gickup",
   "grafana-db",
