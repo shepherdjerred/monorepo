@@ -20,6 +20,9 @@ const versions = {
   // renovate: datasource=github-releases versioning=semver
   "adyanth/cloudflare-operator": "v0.13.1",
   // renovate: datasource=docker registryUrl=https://quay.io versioning=docker
+  "ydrag0n/streambot":
+    "latest@sha256:6bb994bbc70f974092e54580002bf53152e00687dfe40469db06a6a7ef7e4368",
+  // renovate: datasource=docker registryUrl=https://quay.io versioning=docker
   // Tracked via the rolling `latest` tag because upstream redlib only publishes
   // sha-<short-commit> tags, which Renovate cannot version-compare. The global
   // pinDigests rule (renovate.json) keeps the @sha256 fresh as `latest` moves.

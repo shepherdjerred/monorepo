@@ -279,6 +279,7 @@ export const HELM_CHARTS: string[] = [
   "tasknotes",
   "temporal",
   "trmnl-dashboard",
+  "streambot",
 ];
 
 // ---------------------------------------------------------------------------
