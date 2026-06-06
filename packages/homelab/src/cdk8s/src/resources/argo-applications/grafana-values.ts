@@ -18,11 +18,23 @@ type GrafanaValuesWithStringDashboardLabel = Omit<GrafanaValues, "sidecar"> & {
   };
 };
 
+// The generated kube-state-metrics subchart type omits `metricLabelsAllowlist`
+// (a real prometheus-community/kube-state-metrics value: a list of
+// `<resource>=[label,...]` strings). Re-add it via the same Omit+intersection
+// trick used for grafana above, so it type-checks without an `as` cast.
+type KubeStateMetricsValues = NonNullable<
+  KubePrometheusStackValues["kube-state-metrics"]
+>;
+type KubeStateMetricsValuesWithAllowlist = KubeStateMetricsValues & {
+  metricLabelsAllowlist?: string[];
+};
+
 export type PrometheusValuesWithBlackbox = Omit<
   KubePrometheusStackValues,
-  "grafana"
+  "grafana" | "kube-state-metrics"
 > & {
   grafana?: GrafanaValuesWithStringDashboardLabel;
+  "kube-state-metrics"?: KubeStateMetricsValuesWithAllowlist;
   "prometheus-blackbox-exporter"?: {
     enabled?: boolean;
     config?: {

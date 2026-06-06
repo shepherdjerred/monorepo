@@ -22,15 +22,22 @@ export function getVeleroRuleGroups(): PrometheusRuleSpecGroups[] {
           ),
         },
         {
+          // Fires only for a large PVC with NO velero backup decision — neither
+          // labeled for backup (enabled/disabled) nor explicitly excluded. With
+          // kube-state-metrics now exporting the velero.io labels (see
+          // prometheus.ts metricLabelsAllowlist), an intentionally-excluded
+          // large PVC (media, dagger cache, prometheus TSDB, seaweedfs) no longer
+          // pages; only a genuinely undecided large PVC does, which is the signal
+          // worth a human decision (PagerDuty 5335-5339).
           alert: "VeleroLargePVCMayImpactBackups",
           annotations: {
-            summary: "Large PVC may impact Velero backups",
+            summary: "Large PVC has no Velero backup decision",
             message: escapePrometheusTemplate(
-              "PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} requests {{ $value | humanize1024 }}B. kube-state-metrics is not exporting velero.io labels, so review the PVC backup policy manually.",
+              "PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} requests {{ $value | humanize1024 }}B and has no velero.io backup decision. Label it velero.io/backup (enabled|disabled) or velero.io/exclude-from-backup=true.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `kube_persistentvolumeclaim_resource_requests_storage_bytes > 200 * 1024 * 1024 * 1024`,
+            `kube_persistentvolumeclaim_resource_requests_storage_bytes > 200 * 1024 * 1024 * 1024\nunless on (namespace, persistentvolumeclaim)\n  kube_persistentvolumeclaim_labels{label_velero_io_backup=~"enabled|disabled"}\nunless on (namespace, persistentvolumeclaim)\n  kube_persistentvolumeclaim_labels{label_velero_io_exclude_from_backup="true"}`,
           ),
           for: "5m",
           labels: {

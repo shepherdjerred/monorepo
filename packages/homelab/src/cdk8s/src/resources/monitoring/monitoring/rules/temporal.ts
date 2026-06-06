@@ -2,6 +2,94 @@ import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/gen
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { escapePrometheusTemplate } from "./shared.ts";
 
+type PrometheusRule = NonNullable<PrometheusRuleSpecGroups["rules"]>[number];
+
+// Check-and-skip workflows emit `temporal_workflow_outcome_total{outcome,reason}`
+// via setOutcome() (packages/temporal/src/workflows/ha/util.ts). Many of them
+// legitimately skip most runs — e.g. runVacuumIfNotHome skips whenever someone
+// is home, which is the common case for a WFH household. A skip for one of those
+// *expected* gate reasons is NOT a malfunction, so counting it toward a
+// "never executed" alert produces false pages (PagerDuty 5332).
+//
+// Each entry lists the skip `reason`s that are normal operation for that
+// workflow; the alert counts only skips whose reason is NOT benign, so it fires
+// only when the gate is stuck for an anomalous reason (e.g. an `unavailable`
+// vacuum state). A genuinely stuck presence sensor surfaces via HA
+// entity-availability alerts, not here.
+const CHECK_AND_SKIP_WORKFLOWS: {
+  workflow: string;
+  benignSkipReasons: string[];
+}[] = [
+  {
+    workflow: "runVacuumIfNotHome",
+    // someone-home = expected presence gate; cleaning/returning = the vacuum is
+    // already running. error/unavailable/unknown vacuum states are anomalous and
+    // intentionally still page.
+    benignSkipReasons: [
+      "someone-home",
+      "vacuum-state-cleaning",
+      "vacuum-state-returning",
+    ],
+  },
+  // goodMorning* skip when no one is home to wake — the expected gate.
+  { workflow: "goodMorningWakeUp", benignSkipReasons: ["no-one-home"] },
+  { workflow: "goodMorningGetUp", benignSkipReasons: ["no-one-home"] },
+];
+
+// Builds the reason-aware "skipped for 5d, never executed" rules: one tailored
+// rule per configured workflow (benign reasons excluded) plus a generic
+// fallback for any workflow not yet in the config, so coverage is never silently
+// lost when a new check-and-skip workflow is added.
+function buildCheckAndSkipOutcomeRules(): PrometheusRule[] {
+  const configured = CHECK_AND_SKIP_WORKFLOWS.map((w) => w.workflow);
+
+  const perWorkflow: PrometheusRule[] = CHECK_AND_SKIP_WORKFLOWS.map(
+    ({ workflow, benignSkipReasons }) => {
+      const benign = benignSkipReasons.join("|");
+      return {
+        alert: "TemporalCheckAndSkipNeverExecuted",
+        annotations: {
+          summary: escapePrometheusTemplate(
+            "{{ $labels.workflow }} has only skipped (anomalously) for 5 days",
+          ),
+          description: escapePrometheusTemplate(
+            "Workflow {{ $labels.workflow }} has emitted only `skipped` outcomes for 5 days with no `executed` run, excluding its expected gate reasons. The gating condition may be stuck for an anomalous reason — check the workflow in the Temporal UI and HA entity availability.",
+          ),
+        },
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          `sum by (workflow) (increase(temporal_workflow_outcome_total{workflow="${workflow}",outcome="skipped",reason!~"${benign}"}[5d])) > 5\nunless on (workflow)\n  sum by (workflow) (increase(temporal_workflow_outcome_total{workflow="${workflow}",outcome="executed"}[5d])) > 0`,
+        ),
+        for: "1h",
+        labels: {
+          severity: "warning",
+        },
+      };
+    },
+  );
+
+  const excluded = configured.join("|");
+  const fallback: PrometheusRule = {
+    alert: "TemporalCheckAndSkipNeverExecuted",
+    annotations: {
+      summary: escapePrometheusTemplate(
+        "{{ $labels.workflow }} has skipped every run for 5 days",
+      ),
+      description: escapePrometheusTemplate(
+        "Workflow {{ $labels.workflow }} has emitted only `skipped` outcomes for 5 days, never `executed`. Either the gating condition is permanently stuck, or this workflow needs a benign-skip-reason entry in CHECK_AND_SKIP_WORKFLOWS (monitoring/rules/temporal.ts). Check the Temporal UI and HA presence entities.",
+      ),
+    },
+    expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+      `sum by (workflow) (increase(temporal_workflow_outcome_total{workflow!~"${excluded}",outcome="skipped"}[5d])) > 5\nunless on (workflow)\n  sum by (workflow) (increase(temporal_workflow_outcome_total{workflow!~"${excluded}",outcome="executed"}[5d])) > 0`,
+    ),
+    for: "1h",
+    labels: {
+      severity: "warning",
+    },
+  };
+
+  return [...perWorkflow, fallback];
+}
+
 export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
     {
@@ -209,35 +297,13 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
       ],
     },
     {
+      // Surfaces drift in check-and-skip workflows: a workflow that only ever
+      // skips (never executes) for 5 days may have a stuck gate even though
+      // Temporal reports every run Completed. Reason-aware — benign gate skips
+      // (e.g. "someone is home") are excluded so normal operation doesn't page.
+      // See CHECK_AND_SKIP_WORKFLOWS above.
       name: "temporal-workflow-outcomes",
-      rules: [
-        {
-          // Surfaces drift in check-and-skip workflows: e.g. if vacuum
-          // suddenly only skips for 5 days straight, presence detection may
-          // be broken even though Temporal reports Completed.
-          //
-          // Backed by `temporal_workflow_outcome_total` (emitted by
-          // setOutcome() in workflows/ha/util.ts). Fires on the absence of
-          // any `executed` outcome over 5 days for a workflow that normally
-          // executes — heuristic but catches the silent-failure class.
-          alert: "TemporalCheckAndSkipNeverExecuted",
-          annotations: {
-            summary: escapePrometheusTemplate(
-              "{{ $labels.workflow }} has skipped every run for 5 days",
-            ),
-            description: escapePrometheusTemplate(
-              "Workflow {{ $labels.workflow }} has emitted only `skipped` outcomes for 5 days, never `executed`. Either no one was ever home/away as expected, or the gating condition is permanently stuck. Check HA presence entities.",
-            ),
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'sum by (workflow) (increase(temporal_workflow_outcome_total{outcome="skipped"}[5d])) > 5\nunless on (workflow)\n  sum by (workflow) (increase(temporal_workflow_outcome_total{outcome="executed"}[5d])) > 0',
-          ),
-          for: "1h",
-          labels: {
-            severity: "warning",
-          },
-        },
-      ],
+      rules: buildCheckAndSkipOutcomeRules(),
     },
     {
       name: "pr-bot",
