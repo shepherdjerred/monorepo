@@ -15,10 +15,11 @@ import {
   RETRY,
   DAGGER_ENV,
   DAGGER_CALL,
+  REPO_GIT_REF,
   gitDir,
   gitFile,
 } from "../lib/buildkite.ts";
-import { k8sPlugin, k8sPluginWithCheckout } from "../lib/k8s-plugin.ts";
+import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 
 // Import the same dependency map used by the Dagger module
@@ -254,16 +255,12 @@ function daggerCallStep(
 }
 
 /**
- * iOS native deps check — runs a bash script directly against the repo
- * working tree. **One of the two remaining checkout-bearing pod paths**
- * (the other being the bootstrap step in `.buildkite/pipeline.yml`).
- * Uses `k8sPluginWithCheckout` so the BK-managed `git clone` still happens
- * for this step only.
- *
- * Fires only when `packages/tasks-for-obsidian` is affected, so per-pod
- * checkout cost is amortized over a rare event. PR2 of the BK-pressure
- * reduction plan converts this to a Dagger function and removes
- * `k8sPluginWithCheckout` along with the `buildkite-git-mirrors` PVC.
+ * iOS native deps check — runs `bun install --linker hoisted` and
+ * `bun run check:ios-native-deps` for `packages/tasks-for-obsidian` inside
+ * the Dagger engine. Source comes from the git URL ref (no BK checkout).
+ * Replaces the previous plainStep that ran
+ * `.buildkite/scripts/tasks-for-obsidian-ios-native-deps.sh` against a
+ * local working tree.
  */
 function tasksForObsidianNativeDepsStep(resources: {
   cpu: string;
@@ -272,11 +269,10 @@ function tasksForObsidianNativeDepsStep(resources: {
   return {
     label: ":iphone: iOS Native Deps",
     key: "ios-native-deps-tasks-for-obsidian",
-    command: "bash .buildkite/scripts/tasks-for-obsidian-ios-native-deps.sh",
+    command: `${DAGGER_CALL} tasks-for-obsidian-ios-native-deps --source ${REPO_GIT_REF}`,
     timeout_in_minutes: 10,
     retry: RETRY,
-    plugins: [
-      k8sPluginWithCheckout({ cpu: resources.cpu, memory: resources.memory }),
-    ],
+    env: DAGGER_ENV,
+    plugins: [k8sPlugin({ cpu: resources.cpu, memory: resources.memory })],
   };
 }

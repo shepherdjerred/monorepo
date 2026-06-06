@@ -2,9 +2,18 @@
 
 ## Status
 
-In Progress — PR1 underway.
+In Progress — PR1 + PR2 both open, PR2 stacked on PR1.
 
 **Phase 1.1 (gate test): ✅ PASSED 2026-05-31.** Confirmed `dagger call lint --pkg-dir https://github.com/shepherdjerred/monorepo.git#<ref>:packages/eslint-config --tsconfig …#<ref>:tsconfig.base.json` works against the in-cluster engine (v0.20.8) with both `#main` and `#<40-char SHA>` ref forms. Engine resolves git URLs server-side and presents them as `Address.directory`/`Address.file`. Cache hits work — re-running the same call drops total Dagger time from 10.9s to 4.4s. Multi-package (homelab + deps) also works. The fallback (`bunBaseContainer` refactor to accept `commit: string`) is **not** needed.
+
+**Phase 2.1 smoke (4 of 19 new functions): ✅ PASSED 2026-05-31.** Against the in-cluster engine via `dagger call <fn> --source <URL>#main`:
+
+- `merge-conflict-check` — clean, 4.9 s
+- `env-var-names` — clean, 5.1 s
+- `line-endings-check` — clean, 9.2 s (19,005 files validated by `git ls-files --eol`)
+- `prettier` — surfaced a real existing prettier issue on `main` (exit 1 from a working check, not infrastructure)
+
+`dagger develop` regenerates the SDK cleanly and `dagger functions` lists all 19 new `@func()` wrappers.
 
 ## Context
 
