@@ -3,6 +3,7 @@ import {
   compileCheckPattern,
   evaluateGate,
   parseLinkNext,
+  parseGreptilePriority,
   type GreptileReviewCheck,
   type GreptileThread,
 } from "../wait-for-greptile.ts";
@@ -30,6 +31,7 @@ function thread(overrides: Partial<GreptileThread> = {}): GreptileThread {
     path: "scripts/ci/src/wait-for-greptile.ts",
     line: 42,
     url: "https://github.com/shepherdjerred/monorepo/pull/1026#discussion_r1",
+    priority: 2,
     ...overrides,
   };
 }
@@ -37,12 +39,14 @@ function thread(overrides: Partial<GreptileThread> = {}): GreptileThread {
 function evaluate(input: {
   reviewCheck?: GreptileReviewCheck;
   threads?: GreptileThread[];
+  maxBlockingPriority?: number;
 }) {
   return evaluateGate({
     head: HEAD,
     reviewCheck: input.reviewCheck ?? reviewCheck(),
     threads: input.threads ?? [],
     greptileLogin: GREPTILE,
+    maxBlockingPriority: input.maxBlockingPriority ?? 3,
   });
 }
 
@@ -146,6 +150,89 @@ describe("evaluateGate — comment-resolution gating", () => {
     });
     expect(result.state).toBe("failed");
     expect(result.message).toContain("(general comment)");
+  });
+
+  it("blocks on a P3 thread under the default threshold (maxBlockingPriority=3)", () => {
+    const result = evaluate({
+      threads: [thread({ priority: 3 })],
+      maxBlockingPriority: 3,
+    });
+    expect(result.state).toBe("failed");
+  });
+
+  it("does NOT block on an un-badged thread (priority: null)", () => {
+    const result = evaluate({
+      threads: [thread({ priority: null })],
+      maxBlockingPriority: 3,
+    });
+    expect(result.state).toBe("passed");
+  });
+
+  it("with maxBlockingPriority=2: a P3 thread does NOT block but a P2 thread does", () => {
+    const resultP3 = evaluate({
+      threads: [thread({ priority: 3 })],
+      maxBlockingPriority: 2,
+    });
+    expect(resultP3.state).toBe("passed");
+
+    const resultP2 = evaluate({
+      threads: [thread({ priority: 2 })],
+      maxBlockingPriority: 2,
+    });
+    expect(resultP2.state).toBe("failed");
+  });
+
+  it("failed message includes the priority label", () => {
+    const result = evaluate({
+      threads: [
+        thread({
+          priority: 2,
+          path: "scripts/ci/src/wait-for-greptile.ts",
+          line: 262,
+          url: "https://github.com/shepherdjerred/monorepo/pull/1026#discussion_r262",
+        }),
+      ],
+    });
+    expect(result.state).toBe("failed");
+    expect(result.message).toContain("P2");
+  });
+});
+
+describe("parseGreptilePriority", () => {
+  it("parses P2 from an alt=P2 style body", () => {
+    const body =
+      '<a href="#"><img alt="P2" src="https://greptile-static-assets.s3.amazonaws.com/badges/p2.svg?v=9" align="top"></a> **Title**';
+    expect(parseGreptilePriority(body)).toBe(2);
+  });
+
+  it("parses each priority from alt-attribute style", () => {
+    for (const n of [0, 1, 2, 3]) {
+      expect(parseGreptilePriority(`<img alt="P${String(n)}" />`)).toBe(n);
+    }
+  });
+
+  it("parses P3 from a badges/p3.svg style body (fallback match)", () => {
+    const body =
+      '<img src="https://greptile-static-assets.s3.amazonaws.com/badges/p3.svg" />';
+    expect(parseGreptilePriority(body)).toBe(3);
+  });
+
+  it("parses each priority from badge URL style", () => {
+    for (const n of [0, 1, 2, 3]) {
+      expect(
+        parseGreptilePriority(`<img src="badges/p${String(n)}.svg" />`),
+      ).toBe(n);
+    }
+  });
+
+  it("returns null for a body with no badge", () => {
+    expect(
+      parseGreptilePriority("This is a comment with no badge."),
+    ).toBeNull();
+  });
+
+  it("returns null for a null body", () => {
+    expect(parseGreptilePriority(null)).toBeNull();
   });
 });
 

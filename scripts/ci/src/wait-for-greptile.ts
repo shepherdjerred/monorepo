@@ -57,6 +57,7 @@ export type GreptileThread = {
   path: string | null;
   line: number | null;
   url: string | null;
+  priority: number | null;
 };
 
 export type GateDecision =
@@ -88,6 +89,7 @@ query($owner: String!, $name: String!, $number: Int!, $cursor: String) {
             nodes {
               author { login }
               url
+              body
             }
           }
         }
@@ -190,6 +192,26 @@ export function parseLinkNext(header: string | null): string | null {
   return null;
 }
 
+/**
+ * Parse the Greptile priority badge (P0..P3) from a review comment body.
+ * Greptile badges look like:
+ *   `<a href="#"><img alt="P2" src="https://…/badges/p2.svg?v=9" …></a>`
+ *
+ * Returns 0–3 on match, null when the body contains no badge or is null.
+ */
+export function parseGreptilePriority(body: string | null): number | null {
+  if (body === null) return null;
+  const altMatch = body.match(/alt="P([0-3])"/iu);
+  if (altMatch !== null && altMatch[1] !== undefined) {
+    return Number.parseInt(altMatch[1], 10);
+  }
+  const badgeMatch = body.match(/badges\/p([0-3])\.svg/iu);
+  if (badgeMatch !== null && badgeMatch[1] !== undefined) {
+    return Number.parseInt(badgeMatch[1], 10);
+  }
+  return null;
+}
+
 function repoFromEnvironment(): string {
   const explicit = process.env["GITHUB_REPOSITORY"];
   if (explicit !== undefined && explicit.trim() !== "") {
@@ -255,12 +277,22 @@ function classifyReviewCheck(check: GreptileReviewCheck): ReviewState {
   }
 }
 
-function isBlocking(thread: GreptileThread, greptileLogin: string): boolean {
+function isBlocking(
+  thread: GreptileThread,
+  greptileLogin: string,
+  maxBlockingPriority: number,
+): boolean {
   return (
     thread.authorLogin === greptileLogin &&
     !thread.isResolved &&
-    !thread.isOutdated
+    !thread.isOutdated &&
+    thread.priority !== null &&
+    thread.priority <= maxBlockingPriority
   );
+}
+
+function priorityLabel(priority: number | null): string {
+  return priority === null ? "P?" : `P${String(priority)}`;
 }
 
 function describeThread(thread: GreptileThread): string {
@@ -278,12 +310,17 @@ function describeThread(thread: GreptileThread): string {
  * Pure decision: given the head commit, Greptile's review-check state, and the
  * PR's review threads, decide whether the gate should pass, keep waiting, or
  * fail.
+ *
+ * `maxBlockingPriority` controls which priority levels are blocking:
+ * a thread blocks when its priority (0=most severe…3=least severe) is ≤ this
+ * threshold. Threads with no priority badge are never blocking.
  */
 export function evaluateGate(input: {
   head: string;
   reviewCheck: GreptileReviewCheck;
   threads: readonly GreptileThread[];
   greptileLogin: string;
+  maxBlockingPriority: number;
 }): GateDecision {
   const reviewState = classifyReviewCheck(input.reviewCheck);
 
@@ -308,18 +345,23 @@ export function evaluateGate(input: {
   }
 
   const blocking = input.threads.filter((thread) =>
-    isBlocking(thread, input.greptileLogin),
+    isBlocking(thread, input.greptileLogin, input.maxBlockingPriority),
   );
 
   if (blocking.length === 0) {
     return {
       state: "passed",
-      message: `Greptile reviewed ${input.head}; no unresolved Greptile comments remain on the latest revision.`,
+      message:
+        `Greptile reviewed ${input.head}; no unresolved Greptile comments at priority ` +
+        `P${String(input.maxBlockingPriority)} or more severe remain.`,
     };
   }
 
   const list = blocking
-    .map((thread) => `  - ${describeThread(thread)}`)
+    .map(
+      (thread) =>
+        `  - ${priorityLabel(thread.priority)} ${describeThread(thread)}`,
+    )
     .join("\n");
   return {
     state: "failed",
@@ -490,10 +532,12 @@ function parseThreadPage(payload: unknown): ThreadPage {
     const firstComment: unknown = commentNodes[0];
     let authorLogin: string | null = null;
     let url: string | null = null;
+    let priority: number | null = null;
     if (isRecord(firstComment)) {
       const author = recordField(firstComment, "author");
       authorLogin = author === null ? null : stringField(author, "login");
       url = stringField(firstComment, "url");
+      priority = parseGreptilePriority(stringField(firstComment, "body"));
     }
     threads.push({
       authorLogin,
@@ -502,6 +546,7 @@ function parseThreadPage(payload: unknown): ThreadPage {
       path: stringField(node, "path"),
       line: numberField(node, "line"),
       url,
+      priority,
     });
   }
 
@@ -585,6 +630,23 @@ async function waitForGreptile(): Promise<void> {
     DEFAULT_INTERVAL_SECONDS,
   );
 
+  const maxBlockingPriorityRaw = process.env["GREPTILE_MAX_BLOCKING_PRIORITY"];
+  const maxBlockingPriority = (() => {
+    if (
+      maxBlockingPriorityRaw === undefined ||
+      maxBlockingPriorityRaw.trim() === ""
+    ) {
+      return 3;
+    }
+    const parsed = Number.parseInt(maxBlockingPriorityRaw, 10);
+    if (!Number.isInteger(parsed) || parsed < 0 || parsed > 3) {
+      throw new Error(
+        `GREPTILE_MAX_BLOCKING_PRIORITY must be an integer in [0,3], got ${maxBlockingPriorityRaw}`,
+      );
+    }
+    return parsed;
+  })();
+
   const deadline = Date.now() + timeoutSeconds * 1000;
   let warnedMismatch = false;
 
@@ -610,6 +672,7 @@ async function waitForGreptile(): Promise<void> {
       reviewCheck,
       threads: threadResult.threads,
       greptileLogin,
+      maxBlockingPriority,
     });
 
     if (decision.state === "passed") {
