@@ -44,7 +44,8 @@ const workdirActivities = proxyActivities<AlertRemediationActivities>({
 });
 
 const agentActivities = proxyActivities<AlertRemediationActivities>({
-  startToCloseTimeout: "90 minutes",
+  // 30 min: a hung child shouldn't consume the 2h sweep window; bounded per-agent.
+  startToCloseTimeout: "30 minutes",
   heartbeatTimeout: "60 seconds",
   retry: AGENT_RETRY,
 });
@@ -198,7 +199,8 @@ async function runChild(
     return await executeChild(alertRemediationChildWorkflow, {
       args: [input],
       workflowId: alertRemediationWorkflowId(input.alert),
-      workflowExecutionTimeout: "2 hours",
+      // 35 min: a hung child shouldn't consume the 2h sweep window.
+      workflowExecutionTimeout: "35 minutes",
     });
   } catch (error: unknown) {
     return failedResult(input, error);
