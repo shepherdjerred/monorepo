@@ -50,7 +50,7 @@ hold the current creds), and refresh the 1Password copy.
   otherwise. `op item list` (metadata) works without it; `op item get` / `op read` /
   `op item edit` (contents) all require the click. No service-account token is configured.
 - **`op item edit 'section.field=...'` CREATES a section if none with that label exists.**
-  The kubeconfig item's original 3 fields live in an *unlabeled* section, so prefixing with
+  The kubeconfig item's original 3 fields live in an _unlabeled_ section, so prefixing with
   `kubeconfig.` created a stray "kubeconfig" section instead of updating them. Correct
   addressing for the original fields is the **bare label** (e.g. `client-certificate-data[concealed]=...`).
   Remove a field by setting it empty: `field[type]=`.
