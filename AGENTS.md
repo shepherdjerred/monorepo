@@ -194,6 +194,8 @@ After PR merge: `git worktree remove .claude/worktrees/<feature-slug>` and `git 
 
 See the `worktree-workflow` skill for the full workflow. Trivial single-file edits don't need a worktree — those stay in the main checkout.
 
+**If you were started in a worktree, stay in that worktree.** Keep every command, search, and file operation scoped to the worktree path you were launched in. Do not `cd` into, read from, or write to the main checkout (`/Users/jerred/git/monorepo`) — the worktree is a complete checkout with the same files, so there is no reason to reach outside it. The main checkout may hold the user's own in-progress work; only touch it when the user explicitly asks.
+
 ## Package Notes
 
 Each package has its own AGENTS.md with specific instructions:
