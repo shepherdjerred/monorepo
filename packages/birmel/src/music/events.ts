@@ -1,52 +1,16 @@
 import type { Player } from "discord-player";
-import type { MessageCreateOptions } from "discord.js";
-import { z } from "zod";
 import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 import { recordTrackPlay } from "@shepherdjerred/birmel/database/repositories/music-history.ts";
 import { buildActionEmbed, buildNowPlayingEmbed } from "./embeds.ts";
+import { getChannelMetadata } from "./channel-metadata.ts";
 import { normalizeTrack, trackDurationSeconds } from "./metadata.ts";
-
-type ChannelMetadata = {
-  send?: ((msg: string | MessageCreateOptions) => Promise<unknown>) | undefined;
-  id?: string | undefined;
-};
-
-const ChannelMetadataSchema = z
-  .object({
-    send: z.unknown().optional(),
-    id: z.string().optional(),
-  })
-  .loose();
-
-function wrapSendFunction(
-  value: unknown,
-): ((msg: string | MessageCreateOptions) => Promise<unknown>) | undefined {
-  if (typeof value !== "function") {
-    return undefined;
-  }
-  const fn = value;
-  return (msg: string | MessageCreateOptions): Promise<unknown> => {
-    const result: unknown = Reflect.apply(fn, undefined, [msg]);
-    if (result instanceof Promise) {
-      return result;
-    }
-    return Promise.resolve(result);
-  };
-}
-
-function getChannelMetadata(metadata: unknown): ChannelMetadata | undefined {
-  const result = ChannelMetadataSchema.safeParse(metadata);
-  if (!result.success) {
-    return undefined;
-  }
-  return { send: wrapSendFunction(result.data.send), id: result.data.id };
-}
 
 export function setupPlayerEvents(player: Player): void {
   player.events.on("playerStart", (queue, track) => {
     const channel = getChannelMetadata(queue.metadata);
     const trackInfo = normalizeTrack(track);
     const trackDuration = trackDurationSeconds(track);
+
     if (channel?.send != null) {
       void channel.send({
         embeds: [
@@ -113,7 +77,9 @@ export function setupPlayerEvents(player: Player): void {
     logger.error("Player playback error", error, { guildId: queue.guild.id });
     const channel = getChannelMetadata(queue.metadata);
     if (channel?.send != null) {
-      void channel.send("An error occurred during playback. Skipping...");
+      void channel.send(
+        `Music playback error: ${error.message}. Try another track or URL.`,
+      );
     }
   });
 

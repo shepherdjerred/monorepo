@@ -324,6 +324,7 @@ function buildBarOption(
         fontSize: 24,
         fontFamily: BODY_FONT,
         fontWeight: 500,
+        interval: 0,
       },
     },
     series: [
