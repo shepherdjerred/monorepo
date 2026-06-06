@@ -100,8 +100,8 @@ because audio was mostly working and further rollout risk was not worth it.
 - Ran `dagger functions` successfully after the local Dagger engine completed
   its first-start engine swap.
 - Ran `dagger call smoke-test-birmel --pkg-dir=packages/birmel --pkg=birmel
-  --dep-names=llm-observability --dep-names=eslint-config
-  --dep-dirs=packages/llm-observability --dep-dirs=packages/eslint-config`
+--dep-names=llm-observability --dep-names=eslint-config
+--dep-dirs=packages/llm-observability --dep-dirs=packages/eslint-config`
   successfully.
 
 ### Remaining
