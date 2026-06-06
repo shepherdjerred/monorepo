@@ -17,6 +17,7 @@ import {
   normalizeTrack,
   type MusicTrackInfo,
 } from "@shepherdjerred/birmel/music/metadata.ts";
+import { withoutQueueNotifications } from "@shepherdjerred/birmel/music/notification-suppression.ts";
 import { sendMusicEmbed } from "@shepherdjerred/birmel/music/responses.ts";
 import { getRecentTracks } from "@shepherdjerred/birmel/database/repositories/music-history.ts";
 import { getRequestContext } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
@@ -62,12 +63,19 @@ async function searchFirstTrack(query: string): Promise<Track | undefined> {
 async function addQueryToQueue(
   queue: GuildQueue,
   query: string,
+  suppressNotification = false,
 ): Promise<MusicTrackInfo | undefined> {
   const track = await searchFirstTrack(query);
   if (track == null) {
     return undefined;
   }
-  queue.addTrack(track);
+  if (suppressNotification) {
+    withoutQueueNotifications(queue, () => {
+      queue.addTrack(track);
+    });
+  } else {
+    queue.addTrack(track);
+  }
   return normalizeTrack(track);
 }
 
@@ -367,6 +375,7 @@ export async function playTrackInfos(
     await addQueryToQueue(
       queue,
       track.url.length > 0 ? track.url : track.title,
+      true,
     );
   }
 
