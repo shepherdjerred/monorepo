@@ -4,12 +4,49 @@ import {
   resolveAgentJobSchedule,
   type AgentJobScheduleKind,
 } from "@shepherdjerred/birmel/scheduler/agent-job-schedule.ts";
-import { runAgentJobsJob } from "@shepherdjerred/birmel/scheduler/jobs/agent-jobs.ts";
+import { runAgentJobById } from "@shepherdjerred/birmel/scheduler/jobs/agent-jobs.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
+
+const logger = loggers.automation.child("agent-job-actions");
 
 export type AgentJobToolResult = {
   success: boolean;
   message: string;
   data?: unknown;
+};
+
+type CreateAgentJobOptions = {
+  guildId: string;
+  userId?: string | undefined;
+  channelId?: string | undefined;
+  threadId?: string | undefined;
+  scheduleKind?: string | undefined;
+  scheduleValue?: string | undefined;
+  timezone?: string | undefined;
+  toolId?: string | undefined;
+  toolInput?: Record<string, unknown> | undefined;
+  message?: string | undefined;
+  name?: string | undefined;
+  description?: string | undefined;
+  maxAttempts?: number | undefined;
+  timeoutMs?: number | undefined;
+  model?: string | undefined;
+  reasoningEffort?: string | undefined;
+  textVerbosity?: string | undefined;
+};
+
+type AgentJobPayloadKind = "message" | "tool";
+
+type ValidCreateAgentJob = {
+  userId: string;
+  scheduleKind: AgentJobScheduleKind;
+  scheduleValue: string;
+  payloadKind: AgentJobPayloadKind;
+};
+
+type CreateAgentJobValidation = {
+  failure: AgentJobToolResult | null;
+  valid: ValidCreateAgentJob | null;
 };
 
 function inferScheduleKind(value: string): AgentJobScheduleKind {
@@ -30,82 +67,136 @@ function serializeInput(input: Record<string, unknown> | undefined): string {
   return JSON.stringify(input ?? {});
 }
 
-export async function createAgentJob(options: {
-  guildId: string;
-  userId: string | undefined;
-  channelId: string | undefined;
-  threadId: string | undefined;
-  scheduleKind: string | undefined;
-  scheduleValue: string | undefined;
-  timezone: string | undefined;
-  toolId: string | undefined;
-  toolInput: Record<string, unknown> | undefined;
-  message: string | undefined;
-  name: string | undefined;
-  description: string | undefined;
-  maxAttempts: number | undefined;
-  timeoutMs: number | undefined;
-  model: string | undefined;
-  reasoningEffort: string | undefined;
-  textVerbosity: string | undefined;
-}): Promise<AgentJobToolResult> {
+function validateMessagePayload(
+  options: CreateAgentJobOptions,
+): AgentJobToolResult | null {
+  if (options.message == null || options.message.length === 0) {
+    return {
+      success: false,
+      message: "message is required when toolId is not provided",
+    };
+  }
+  if (
+    (options.channelId == null || options.channelId.length === 0) &&
+    (options.threadId == null || options.threadId.length === 0)
+  ) {
+    return {
+      success: false,
+      message: "channelId or threadId is required for message jobs",
+    };
+  }
+  return null;
+}
+
+function payloadKindFor(options: CreateAgentJobOptions): AgentJobPayloadKind {
+  return options.toolId != null && options.toolId.length > 0
+    ? "tool"
+    : "message";
+}
+
+function validateCreateAgentJob(
+  options: CreateAgentJobOptions,
+): CreateAgentJobValidation {
   if (options.userId == null || options.userId.length === 0) {
-    return { success: false, message: "userId is required" };
+    return {
+      failure: { success: false, message: "userId is required" },
+      valid: null,
+    };
   }
   if (options.scheduleValue == null || options.scheduleValue.length === 0) {
-    return { success: false, message: "scheduleValue is required" };
+    return {
+      failure: { success: false, message: "scheduleValue is required" },
+      valid: null,
+    };
   }
-  const parsedKind = options.scheduleKind ?? inferScheduleKind(options.scheduleValue);
+  const parsedKind =
+    options.scheduleKind ?? inferScheduleKind(options.scheduleValue);
   const kindResult = AgentJobScheduleKindSchema.safeParse(parsedKind);
   if (!kindResult.success) {
-    return { success: false, message: `Invalid schedule kind: ${parsedKind}` };
+    return {
+      failure: {
+        success: false,
+        message: `Invalid schedule kind: ${parsedKind}`,
+      },
+      valid: null,
+    };
   }
-  const payloadKind =
-    options.toolId != null && options.toolId.length > 0 ? "tool" : "message";
+  const payloadKind = payloadKindFor(options);
   if (payloadKind === "message") {
-    if (options.message == null || options.message.length === 0) {
-      return {
-        success: false,
-        message: "message is required when toolId is not provided",
-      };
+    const validation = validateMessagePayload(options);
+    if (validation != null) {
+      return { failure: validation, valid: null };
     }
-    if (
-      (options.channelId == null || options.channelId.length === 0) &&
-      (options.threadId == null || options.threadId.length === 0)
-    ) {
-      return {
-        success: false,
-        message: "channelId or threadId is required for message jobs",
-      };
-    }
+  }
+  return {
+    failure: null,
+    valid: {
+      userId: options.userId,
+      scheduleKind: kindResult.data,
+      scheduleValue: options.scheduleValue,
+      payloadKind,
+    },
+  };
+}
+
+function runRequestedAgentJobInBackground(
+  guildId: string,
+  jobId: string,
+): void {
+  queueMicrotask(() => {
+    void (async () => {
+      try {
+        await runAgentJobById(jobId);
+      } catch (error) {
+        logger.error("Failed to run requested agent job", error, {
+          guildId,
+          jobId,
+        });
+      }
+    })();
+  });
+}
+
+export async function createAgentJob(
+  options: CreateAgentJobOptions,
+): Promise<AgentJobToolResult> {
+  const validation = validateCreateAgentJob(options);
+  if (validation.failure != null) {
+    return validation.failure;
+  }
+  if (validation.valid == null) {
+    return { success: false, message: "create validation failed" };
   }
 
   const resolved = resolveAgentJobSchedule({
-    scheduleKind: kindResult.data,
-    scheduleValue: options.scheduleValue,
+    scheduleKind: validation.valid.scheduleKind,
+    scheduleValue: validation.valid.scheduleValue,
     timezone: options.timezone,
   });
   const job = await prisma.agentJob.create({
     data: {
       guildId: options.guildId,
-      channelId: options.channelId,
-      threadId: options.threadId,
-      userId: options.userId,
-      name: options.name,
-      description: options.description,
+      channelId: options.channelId ?? null,
+      threadId: options.threadId ?? null,
+      userId: validation.valid.userId,
+      name: options.name ?? null,
+      description: options.description ?? null,
       scheduleKind: resolved.scheduleKind,
       scheduleValue: resolved.scheduleValue,
       timezone: resolved.timezone,
       nextRunAt: resolved.nextRunAt,
-      payloadKind,
-      message: options.message,
-      toolId: options.toolId,
-      toolInput: payloadKind === "tool" ? serializeInput(options.toolInput) : null,
+      payloadKind: validation.valid.payloadKind,
+      message: options.message ?? null,
+      toolId: options.toolId ?? null,
+      toolInput:
+        validation.valid.payloadKind === "tool"
+          ? serializeInput(options.toolInput)
+          : null,
       maxAttempts: options.maxAttempts ?? 3,
       timeoutMs: options.timeoutMs ?? 300_000,
-      model: options.model,
-      reasoningEffort: options.reasoningEffort,
-      textVerbosity: options.textVerbosity,
+      model: options.model ?? null,
+      reasoningEffort: options.reasoningEffort ?? null,
+      textVerbosity: options.textVerbosity ?? null,
     },
   });
 
@@ -124,7 +215,7 @@ export async function createAgentJob(options: {
 
 export async function listAgentJobs(options: {
   guildId: string;
-  includeArchived: boolean | undefined;
+  includeArchived?: boolean | undefined;
 }): Promise<AgentJobToolResult> {
   const jobs = await prisma.agentJob.findMany({
     where: {
@@ -161,7 +252,7 @@ export async function listAgentJobs(options: {
 
 export async function showAgentJob(options: {
   guildId: string;
-  jobId: string | undefined;
+  jobId?: string | undefined;
 }): Promise<AgentJobToolResult> {
   if (options.jobId == null || options.jobId.length === 0) {
     return { success: false, message: "jobId is required" };
@@ -177,18 +268,18 @@ export async function showAgentJob(options: {
 
 export async function editAgentJob(options: {
   guildId: string;
-  jobId: string | undefined;
-  scheduleKind: string | undefined;
-  scheduleValue: string | undefined;
-  timezone: string | undefined;
-  message: string | undefined;
-  toolId: string | undefined;
-  toolInput: Record<string, unknown> | undefined;
-  status: string | undefined;
-  name: string | undefined;
-  description: string | undefined;
-  maxAttempts: number | undefined;
-  timeoutMs: number | undefined;
+  jobId?: string | undefined;
+  scheduleKind?: string | undefined;
+  scheduleValue?: string | undefined;
+  timezone?: string | undefined;
+  message?: string | undefined;
+  toolId?: string | undefined;
+  toolInput?: Record<string, unknown> | undefined;
+  status?: string | undefined;
+  name?: string | undefined;
+  description?: string | undefined;
+  maxAttempts?: number | undefined;
+  timeoutMs?: number | undefined;
 }): Promise<AgentJobToolResult> {
   if (options.jobId == null || options.jobId.length === 0) {
     return { success: false, message: "jobId is required" };
@@ -202,7 +293,10 @@ export async function editAgentJob(options: {
   const scheduleKind = options.scheduleKind ?? existing.scheduleKind;
   const kindResult = AgentJobScheduleKindSchema.safeParse(scheduleKind);
   if (!kindResult.success) {
-    return { success: false, message: `Invalid schedule kind: ${scheduleKind}` };
+    return {
+      success: false,
+      message: `Invalid schedule kind: ${scheduleKind}`,
+    };
   }
   const scheduleValue = options.scheduleValue ?? existing.scheduleValue;
   const timezone = options.timezone ?? existing.timezone;
@@ -221,7 +315,9 @@ export async function editAgentJob(options: {
       message: options.message ?? existing.message,
       toolId: options.toolId ?? existing.toolId,
       toolInput:
-        options.toolInput == null ? existing.toolInput : serializeInput(options.toolInput),
+        options.toolInput == null
+          ? existing.toolInput
+          : serializeInput(options.toolInput),
       status: options.status ?? existing.status,
       name: options.name ?? existing.name,
       description: options.description ?? existing.description,
@@ -229,47 +325,64 @@ export async function editAgentJob(options: {
       timeoutMs: options.timeoutMs ?? existing.timeoutMs,
     },
   });
-  return { success: true, message: "Agent job updated", data: { job: updated } };
+  return {
+    success: true,
+    message: "Agent job updated",
+    data: { job: updated },
+  };
 }
 
 export async function cancelAgentJob(options: {
   guildId: string;
-  jobId: string | undefined;
+  jobId?: string | undefined;
+  userId?: string | undefined;
 }): Promise<AgentJobToolResult> {
   if (options.jobId == null || options.jobId.length === 0) {
     return { success: false, message: "jobId is required" };
   }
+  const jobId = options.jobId;
+  if (options.userId == null || options.userId.length === 0) {
+    return { success: false, message: "userId is required" };
+  }
   const updated = await prisma.agentJob.updateMany({
-    where: { id: options.jobId, guildId: options.guildId },
+    where: {
+      id: jobId,
+      guildId: options.guildId,
+      userId: options.userId,
+    },
     data: { status: "cancelled", nextRunAt: null },
   });
   if (updated.count === 0) {
-    return { success: false, message: "Agent job not found" };
+    return {
+      success: false,
+      message: "Agent job not found or not owned by user",
+    };
   }
   return { success: true, message: "Agent job cancelled" };
 }
 
 export async function runAgentJobNow(options: {
   guildId: string;
-  jobId: string | undefined;
+  jobId?: string | undefined;
 }): Promise<AgentJobToolResult> {
   if (options.jobId == null || options.jobId.length === 0) {
     return { success: false, message: "jobId is required" };
   }
+  const jobId = options.jobId;
   const updated = await prisma.agentJob.updateMany({
-    where: { id: options.jobId, guildId: options.guildId },
+    where: { id: jobId, guildId: options.guildId },
     data: { status: "active", nextRunAt: new Date() },
   });
   if (updated.count === 0) {
     return { success: false, message: "Agent job not found" };
   }
-  await runAgentJobsJob();
+  runRequestedAgentJobInBackground(options.guildId, jobId);
   return { success: true, message: "Agent job run requested" };
 }
 
 export async function getAgentJobRunHistory(options: {
   guildId: string;
-  jobId: string | undefined;
+  jobId?: string | undefined;
 }): Promise<AgentJobToolResult> {
   if (options.jobId == null || options.jobId.length === 0) {
     return { success: false, message: "jobId is required" };

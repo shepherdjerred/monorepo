@@ -1,5 +1,6 @@
 import { ChannelType, type Client } from "discord.js";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
+import { z } from "zod";
 
 const logger = loggers.tools.child("discord.threads");
 
@@ -28,6 +29,11 @@ type ThreadResult = {
   message: string;
   data?: unknown;
 };
+
+const ThreadMessageSummarySchema = z.object({
+  authorName: z.string(),
+  content: z.string(),
+});
 
 type CreateFromMessageOptions = {
   client: Client;
@@ -299,15 +305,11 @@ export async function handleSummarizeThread(
     return result;
   }
   const messages = result.data.messages.flatMap((message) => {
-    if (message == null || typeof message !== "object") {
+    const parsedMessage = ThreadMessageSummarySchema.safeParse(message);
+    if (!parsedMessage.success) {
       return [];
     }
-    const record = Object.fromEntries(Object.entries(message));
-    const authorName = record.authorName;
-    const content = record.content;
-    if (typeof authorName !== "string" || typeof content !== "string") {
-      return [];
-    }
+    const { authorName, content } = parsedMessage.data;
     return [{ authorName, content }];
   });
   const participants = new Set(messages.map((message) => message.authorName));

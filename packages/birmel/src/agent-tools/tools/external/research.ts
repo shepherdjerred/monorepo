@@ -21,13 +21,16 @@ function htmlToText(html: string): string {
     .trim();
 }
 
-function extractLinks(html: string, baseUrl: string): { text: string; url: string }[] {
+function extractLinks(
+  html: string,
+  baseUrl: string,
+): { text: string; url: string }[] {
   const links: { text: string; url: string }[] = [];
-  const linkRegex = /<a\b[^>]*href="(?<href>[^"]+)"[^>]*>(?<text>.*?)<\/a>/gis;
+  const linkRegex = /<a\s[^>]*href="(?<href>[^"]+)"[^>]*>(?<text>.*?)<\/a>/gis;
   let match = linkRegex.exec(html);
   while (match != null && links.length < 100) {
-    const href = match.groups?.href;
-    const text = match.groups?.text;
+    const href = match.groups?.["href"];
+    const text = match.groups?.["text"];
     if (href != null && href.length > 0) {
       links.push({
         text: htmlToText(text ?? "").slice(0, 120),

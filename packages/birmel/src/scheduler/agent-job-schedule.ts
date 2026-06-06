@@ -24,11 +24,15 @@ function durationToMilliseconds(value: string): number | null {
   if (groups == null) {
     return null;
   }
-  const amount = Number(groups.amount);
+  const amount = Number(groups["amount"]);
   if (!Number.isSafeInteger(amount) || amount <= 0) {
     return null;
   }
-  const unit = groups.unit.toLowerCase();
+  const unitValue = groups["unit"];
+  if (unitValue == null) {
+    return null;
+  }
+  const unit = unitValue.toLowerCase();
   if (["second", "seconds", "sec", "secs", "s"].includes(unit)) {
     return amount * 1000;
   }
@@ -88,7 +92,7 @@ export function resolveAgentJobSchedule(options: {
   }
 
   const parsed = parseFlexibleTime(value, from);
-  if (parsed == null || parsed.type !== "date" || !(parsed.value instanceof Date)) {
+  if (parsed?.type !== "date" || !(parsed.value instanceof Date)) {
     throw new Error(`Could not parse at schedule: ${value}`);
   }
   return {

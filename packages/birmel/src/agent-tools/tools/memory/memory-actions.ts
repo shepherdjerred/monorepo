@@ -236,10 +236,10 @@ function normalizeTags(tags: string[] | undefined): string | null {
 
 function memoryScopeWhere(options: {
   guildId: string;
-  scope: MemoryScope | undefined;
-  channelId: string | undefined;
-  userId: string | undefined;
-  sessionId: string | undefined;
+  scope?: MemoryScope | undefined;
+  channelId?: string | undefined;
+  userId?: string | undefined;
+  sessionId?: string | undefined;
 }) {
   return {
     guildId: options.guildId,
@@ -254,15 +254,15 @@ export async function handleAddStructuredMemory(options: {
   guildId: string;
   scope: MemoryScope;
   content: string | undefined;
-  key: string | undefined;
-  tags: string[] | undefined;
-  channelId: string | undefined;
-  userId: string | undefined;
-  sessionId: string | undefined;
-  sourceType: string | undefined;
-  sourceId: string | undefined;
-  salience: number | undefined;
-  embedding: string | undefined;
+  key?: string | undefined;
+  tags?: string[] | undefined;
+  channelId?: string | undefined;
+  userId?: string | undefined;
+  sessionId?: string | undefined;
+  sourceType?: string | undefined;
+  sourceId?: string | undefined;
+  salience?: number | undefined;
+  embedding?: string | undefined;
 }): Promise<MemoryResult> {
   if (options.content == null || options.content.length === 0) {
     return { success: false, message: "content is required" };
@@ -271,16 +271,16 @@ export async function handleAddStructuredMemory(options: {
     data: {
       guildId: options.guildId,
       scope: options.scope,
-      key: options.key,
+      key: options.key ?? null,
       content: options.content,
       tags: normalizeTags(options.tags),
-      channelId: options.channelId,
-      userId: options.userId,
-      sessionId: options.sessionId,
-      sourceType: options.sourceType,
-      sourceId: options.sourceId,
+      channelId: options.channelId ?? null,
+      userId: options.userId ?? null,
+      sessionId: options.sessionId ?? null,
+      sourceType: options.sourceType ?? null,
+      sourceId: options.sourceId ?? null,
       salience: options.salience ?? 0.5,
-      embedding: options.embedding,
+      embedding: options.embedding ?? null,
     },
   });
   return {
@@ -292,11 +292,11 @@ export async function handleAddStructuredMemory(options: {
 
 export async function handleSearchStructuredMemory(options: {
   guildId: string;
-  scope: MemoryScope | undefined;
-  query: string | undefined;
-  channelId: string | undefined;
-  userId: string | undefined;
-  sessionId: string | undefined;
+  scope?: MemoryScope | undefined;
+  query?: string | undefined;
+  channelId?: string | undefined;
+  userId?: string | undefined;
+  sessionId?: string | undefined;
 }): Promise<MemoryResult> {
   const query = options.query?.trim();
   const memories = await prisma.agentMemory.findMany({
@@ -324,7 +324,7 @@ export async function handleSearchStructuredMemory(options: {
 
 export async function handleGetStructuredMemory(options: {
   guildId: string;
-  memoryId: string | undefined;
+  memoryId?: string | undefined;
 }): Promise<MemoryResult> {
   if (options.memoryId == null || options.memoryId.length === 0) {
     return { success: false, message: "memoryId is required" };
@@ -340,12 +340,12 @@ export async function handleGetStructuredMemory(options: {
 
 export async function handleUpdateStructuredMemory(options: {
   guildId: string;
-  memoryId: string | undefined;
-  content: string | undefined;
-  key: string | undefined;
-  tags: string[] | undefined;
-  salience: number | undefined;
-  embedding: string | undefined;
+  memoryId?: string | undefined;
+  content?: string | undefined;
+  key?: string | undefined;
+  tags?: string[] | undefined;
+  salience?: number | undefined;
+  embedding?: string | undefined;
 }): Promise<MemoryResult> {
   if (options.memoryId == null || options.memoryId.length === 0) {
     return { success: false, message: "memoryId is required" };
@@ -371,7 +371,7 @@ export async function handleUpdateStructuredMemory(options: {
 
 export async function handleDeleteStructuredMemory(options: {
   guildId: string;
-  memoryId: string | undefined;
+  memoryId?: string | undefined;
 }): Promise<MemoryResult> {
   if (options.memoryId == null || options.memoryId.length === 0) {
     return { success: false, message: "memoryId is required" };
