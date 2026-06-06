@@ -9,7 +9,11 @@ import {
 } from "./catalog.ts";
 import type { ImageTarget } from "./catalog.ts";
 import type { AffectedPackages } from "./lib/types.ts";
-import type { PipelineStep, BuildkitePipeline } from "./lib/types.ts";
+import type {
+  BuildkiteStep,
+  PipelineStep,
+  BuildkitePipeline,
+} from "./lib/types.ts";
 import { perPackageSteps } from "./steps/per-package.ts";
 import {
   prettierStep,
@@ -32,6 +36,7 @@ import {
   migrationGuardStep,
   mergeConflictStep,
   largeFileStep,
+  greptileReviewStep,
 } from "./steps/quality.ts";
 import { releasePleaseStep } from "./steps/release.ts";
 import {
@@ -59,6 +64,10 @@ function isPullRequestBuild(): boolean {
   return pullRequest !== "" && pullRequest !== "false";
 }
 
+function greptileGateForPullRequest(): BuildkiteStep[] {
+  return isPullRequestBuild() ? [greptileReviewStep()] : [];
+}
+
 export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
   const steps: PipelineStep[] = [];
   const pullRequestBuild = isPullRequestBuild();
@@ -72,11 +81,13 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
         "echo '.buildkite/ci-image/VERSION is updated by CI after ghcr.io/shepherdjerred/ci-base is published. Revert this file from the PR.' && exit 1",
       plugins: [k8sPlugin()],
     });
+    const greptileGates = greptileGateForPullRequest();
+    steps.push(...greptileGates);
     steps.push({
       label: ":white_check_mark: CI Complete",
       key: "ci-complete",
       command: "echo 'CI complete'",
-      depends_on: ["ci-base-version-guard"],
+      depends_on: ["ci-base-version-guard", ...greptileGates.map((s) => s.key)],
       plugins: [k8sPlugin()],
     });
     return { agents: { queue: "default" }, steps };
@@ -95,11 +106,13 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
       command: "echo 'No affected targets detected, nothing to build.'",
       plugins: [k8sPlugin()],
     });
+    const greptileGates = greptileGateForPullRequest();
+    steps.push(...greptileGates);
     steps.push({
       label: ":white_check_mark: CI Complete",
       key: "ci-complete",
       command: "echo 'CI complete'",
-      depends_on: ["no-changes"],
+      depends_on: ["no-changes", ...greptileGates.map((s) => s.key)],
       plugins: [k8sPlugin()],
     });
     return { agents: { queue: "default" }, steps };
@@ -139,6 +152,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     migrationGuardStep(),
     mergeConflictStep(),
     largeFileStep(),
+    ...(pullRequestBuild ? [greptileReviewStep()] : []),
   ];
   for (const gate of blockingGates) {
     steps.push(gate);
