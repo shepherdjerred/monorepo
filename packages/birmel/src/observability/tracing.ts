@@ -155,6 +155,11 @@ export function initializeTracing(): void {
     return;
   }
 
+  // Reset OTLP log emission on every fresh init path — including the
+  // telemetry-disabled early return below — so a prior shutdownTracing()
+  // (which sets this to false) does not leave logs suppressed after re-init.
+  setOtlpLogsEnabled(true);
+
   const config = getConfig();
 
   if (!config.telemetry.enabled) {
@@ -269,9 +274,6 @@ export function initializeTracing(): void {
   // if a provider is already registered (which VoltAgent just did).
   logsAPI.disable();
   logsAPI.setGlobalLoggerProvider(loggerProvider);
-  // Re-enable OTLP log emission (a prior shutdown may have disabled it; tests
-  // re-init within one process). Safe to call before any logging happens.
-  setOtlpLogsEnabled(true);
 
   // Make this the global so every Agent (and workflow) reuses it instead of
   // calling createVoltAgentObservability() and triggering the duplicate-
