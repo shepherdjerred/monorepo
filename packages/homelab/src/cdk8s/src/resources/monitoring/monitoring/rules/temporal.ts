@@ -68,6 +68,12 @@ function buildCheckAndSkipOutcomeRules(): PrometheusRule[] {
   );
 
   const excluded = configured.join("|");
+  // When no workflows are configured, the exclusion selector must be omitted
+  // entirely: PromQL/RE2 treats `workflow!~""` as "match nothing" (the empty
+  // pattern matches every string, so the negation excludes everything), which
+  // would silently disable the fallback. An empty selector makes the fallback
+  // cover all workflows, which is the intended behavior.
+  const fallbackSelector = excluded === "" ? "" : `workflow!~"${excluded}",`;
   const fallback: PrometheusRule = {
     alert: "TemporalCheckAndSkipNeverExecuted",
     annotations: {
@@ -79,7 +85,7 @@ function buildCheckAndSkipOutcomeRules(): PrometheusRule[] {
       ),
     },
     expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-      `sum by (workflow) (increase(temporal_workflow_outcome_total{workflow!~"${excluded}",outcome="skipped"}[5d])) > 5\nunless on (workflow)\n  sum by (workflow) (increase(temporal_workflow_outcome_total{workflow!~"${excluded}",outcome="executed"}[5d])) > 0`,
+      `sum by (workflow) (increase(temporal_workflow_outcome_total{${fallbackSelector}outcome="skipped"}[5d])) > 5\nunless on (workflow)\n  sum by (workflow) (increase(temporal_workflow_outcome_total{${fallbackSelector}outcome="executed"}[5d])) > 0`,
     ),
     for: "1h",
     labels: {
